@@ -1,0 +1,16 @@
+language: node_js
+node_js:
+  - "10"
+sudo: required
+services:
+  - docker
+before_script:
+  # Buildkite step runner
+  - npm install -g bksr
+  # The buildkite agent itself
+  - curl https://download.buildkite.com/agent/stable/latest/buildkite-agent-linux-amd64 > buildkite-agent
+  - chmod +x buildkite-agent
+  - sudo mv buildkite-agent /usr/local/bin/buildkite-agent
+script:
+  # Run all the steps defined in .buildkite/pipeline.yml
+  bksr --all
