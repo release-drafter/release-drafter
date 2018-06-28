@@ -2,7 +2,7 @@
   <img src="design/logo.svg" alt="Draftah Logo" width="350" />
 </h1>
 
-<p align="center">Drafts new release notes as pull requests are merged into master. Built with <a href="https://github.com/probot/probot">Probot</a>.</p>
+<p align="center">Drafts your next release notes as pull requests are merged into master. Built with <a href="https://github.com/probot/probot">Probot</a>.</p>
 
 ---
 
