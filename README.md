@@ -2,49 +2,62 @@
   <img src="design/logo.svg" alt="Draftah Logo" width="350" />
 </h1>
 
-<p align="center">Bump version numbers in files whenever new releases are published to GitHub. Built with <a href="https://github.com/probot/probot">Probot</a>.</p>
+<p align="center">Drafts new release notes as pull requests are merged into master. Built with <a href="https://github.com/probot/probot">Probot</a>.</p>
 
 ---
 
-<p align="center"><a href="https://github.com/apps/draftah-bot"><img src="design/install-button.svg" alt="Install the GitHub App" /></a></p>
+<p align="center"><a href="https://github.com/apps/draftah"><img src="design/install-button.svg" alt="Install the GitHub App" /></a></p>
 
 ---
 
 ## Usage
 
-Firstly, you’ll need to install the [Draftah GitHub App](https://github.com/apps/draftah-bot). This listens out for any releases, or any changes to the configuration.
+Firstly, you’ll need to install the [Draftah GitHub App](https://github.com/apps/draftah). This listens out for any releases, or any changes to the configuration.
 
 Then, add a `.github/draftah.yml` configuration file to the GitHub repository where you publish new releases to.
 
 For example, given the following `.github/draftah.yml` file:
 
 ```yml
-updates:
-- path: README.md
-  pattern: 'https://someurl.com/(v.*)/download.zip'
+tag: vx.x.x
+title: vx.x.x (✏️ Code Name)
+body: |
+  ## What's Changed
+
+  $CHANGES
+
+  ## Upgrading
+
+  ```diff
+  - test-project#$PREVIOUS_TAG:
+  + test-project#vx.x.x:
+  ```
 ```
 
-And given the following `README.md` file:
+As pull requests get merged to master, a draft release is kept up to date, such as:
 
 ```markdown
-Install with `curl https://someurl.com/v1.0.0/download.zip`
+## What's Changed
+
+* 🚜 Add a new Widgets API #2 (@toolmantim)
+* 👽 Integrate alien technology #3 (@toolmantim)
+* 🐄 More cowbell #4 (@toolmantim)
+
+## Upgrading
+
+```diff
+- test-project#v1.2.0:
++ test-project#vx.x.x:
 ```
 
-Then when a new release is published (e.g. `v2.0.0`), Draftah will update the `README.md` to:
+## Template variables
 
-```markdown
-Install with `curl https://someurl.com/v2.0.0/download.zip`
-```
+You can use any of the following variables in your release template, and they'll be substituted when the tap is regenerated:
 
-## Examples
-
-### [Buildkite Plugin Readmes](https://buildkite.com/docs/agent/v3/plugins)
-
-```yml
-updates:
-- path: README.md
-  pattern: 'my-org/my-plugin#(v.*):'
-```
+|Variable|Description|
+|-|-|
+|`$CHANGES`|The markdown list of pull requests that have been merged.|
+|`$PREVIOUS_TAG`|The previous releases’s tag.|
 
 ## Configuration options
 
@@ -52,11 +65,10 @@ You can configure Draftah using the following key in your `.github/draftah.yml` 
 
 |Key|Required|Description|
 |-|-|-|
-|`updates`|Required|A list of paths and patterns to update when a new release is published.|
-|`updates.[].path`|Required|The path to the file to update.|
-|`updates.[].pattern`|Required|The regular expression containing a single group, which will be used to match and update the version number in the file.|
-|`updates.[].branch`|Optional|The branch to update. Default is the repository's default branch (e.g. `master`).|
-|`branches`|Optional|The branches to listen for configuration updates to `.github/draftah.yml`. Useful if you want to test the app on a pull request branch. Default is `"master"`.|
+|`tag`|Required|A list of paths and patterns to update when a new release is published.|
+|`title`|Required|The path to the file to update.|
+|`body`|Required|The template body for the release. Use [variables](#template-variables) to insert the values from the release.|
+|`branches`|Optional|The branches to listen for configuration updates to `.github/draftah.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch.|
 
 Draftah also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository.
 
