@@ -25,7 +25,9 @@ template: |
   $CHANGES
 ```
 
-As pull requests get merged to master, a draft release is kept up to date, ready for you to publish via GitHub when you're ready:
+As pull requests are merged, a draft release is kept up to date listing the changes, ready to publish when you’re ready:
+
+![Screenshot of generated draft release](desgin/screenshot.png)
 
 ## Template variables
 
