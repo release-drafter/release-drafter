@@ -12,9 +12,12 @@
 
 ## Usage
 
-Firstly, you’ll need to install the [Release Drafter GitHub App](https://github.com/apps/release-drafter). This listens out for any releases, or any changes to the configuration.
+1. Install the [Release Drafter GitHub App](https://github.com/apps/release-drafter) into the repositories you wish to automatically create releases in.
+2. Add a `.github/release-drafter.yml` configuration file to each repository.
 
-Then, add a `.github/release-drafter.yml` configuration file to the GitHub repository where you publish new releases to. For example, given the following `.github/release-drafter.yml` file:
+## Example
+
+For example, take the following `.github/release-drafter.yml` file in a repository:
 
 ```yml
 template: |
@@ -23,13 +26,13 @@ template: |
   $CHANGES
 ```
 
-As pull requests are merged, a draft release is kept up to date listing the changes, ready to publish when you’re ready:
+As pull requests are merged, a draft release is kept up-to-date listing the changes, ready to publish when you’re ready:
 
 <img src="design/screenshot.png" alt="Screenshot of generated draft release" width="586" />
 
 ## Template variables
 
-You can use any of the following variables in your release template, and they'll be substituted when the tap is regenerated:
+You can use any of the following variables in your template, and they’ll be substituted when the release is regenerated:
 
 |Variable|Description|
 |-|-|
