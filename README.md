@@ -27,7 +27,7 @@ template: |
 
 As pull requests are merged, a draft release is kept up to date listing the changes, ready to publish when you’re ready:
 
-![Screenshot of generated draft release](desgin/screenshot.png)
+![Screenshot of generated draft release](design/screenshot.png)
 
 ## Template variables
 
