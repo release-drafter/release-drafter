@@ -2,7 +2,7 @@ const nock = require('nock')
 const { Application } = require('probot')
 const { fn } = jest
 
-const { mockError } = require('./helpers/mock-responses')
+const { mockError, mockConfig } = require('./helpers/mock-responses')
 const releaseDrafter = require('../index')
 
 nock.disableNetConnect()
@@ -39,6 +39,31 @@ describe('release-drafter', () => {
         await app.receive({ event: 'push', payload: require('./fixtures/push-config-change') })
         expect(github.repos.createRelease).not.toHaveBeenCalled()
         expect(github.repos.editRelease).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('to a non-master branch', () => {
+      it('does nothing', async () => {
+        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
+        await app.receive({ event: 'push', payload: require('./fixtures/push-non-master-branch') })
+        expect(github.repos.createRelease).not.toHaveBeenCalled()
+        expect(github.repos.editRelease).not.toHaveBeenCalled()
+      })
+
+      describe('when configured for that branch', () => {
+        it('creates a release draft', async () => {
+          github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-non-master-branch.yml'))
+          github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
+          github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: { commits: [] } }))
+          await app.receive({ event: 'push', payload: require('./fixtures/push-non-master-branch') })
+          expect(github.repos.createRelease).toBeCalledWith(
+            expect.objectContaining({
+              body: `# What's Changed\n\n* No changes\n`,
+              draft: true,
+              tag_name: ''
+            })
+          )
+        })
       })
     })
   })
