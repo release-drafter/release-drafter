@@ -14,9 +14,7 @@
 
 Firstly, you’ll need to install the [Release Drafter GitHub App](https://github.com/apps/release-drafter). This listens out for any releases, or any changes to the configuration.
 
-Then, add a `.github/release-drafter.yml` configuration file to the GitHub repository where you publish new releases to.
-
-For example, given the following `.github/release-drafter.yml` file:
+Then, add a `.github/release-drafter.yml` configuration file to the GitHub repository where you publish new releases to. For example, given the following `.github/release-drafter.yml` file:
 
 ```yml
 template: |
