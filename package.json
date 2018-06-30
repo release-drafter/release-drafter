@@ -1,10 +1,10 @@
 {
-  "name": "draftah",
+  "name": "release-drafter",
   "version": "1.0.0",
   "description": "A GitHub app that bumps version numbers in readmes",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
   "license": "ISC",
-  "repository": "https://github.com/toolmantim/draftah.git",
+  "repository": "https://github.com/toolmantim/release-drafter.git",
   "scripts": {
     "dev": "nodemon --exec \"npm start\"",
     "start": "probot run ./index.js",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "compare-versions": "3.3.0",
-    "probot": "6.2.0",
+    "probot": "7.0.0",
     "probot-config": "0.1.0",
     "request": "2.87.0"
   },

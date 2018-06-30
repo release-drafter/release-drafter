@@ -1,6 +1,6 @@
 const crypto = require('crypto')
 const fs = require('fs')
-const { encodeContent } = require('../../lib/base46')
+const { encodeContent } = require('../../lib/base64')
 
 const mockError = (code) => {
   const err = new Error('Not found')
