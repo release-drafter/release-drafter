@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="design/logo.svg" alt="Release Drafter Logo" width="400" />
+  <img src="design/logo.svg" alt="Release Drafter Logo" width="450" />
 </h1>
 
 <p align="center">Drafts your next release notes as pull requests are merged into master. Built with <a href="https://github.com/probot/probot">Probot</a>.</p>
