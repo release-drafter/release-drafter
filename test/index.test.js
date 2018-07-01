@@ -66,5 +66,22 @@ describe('release-drafter', () => {
         })
       })
     })
+
+
+    describe('with no past releases', () => {
+      it('substitutes an empty string for $PREVIOUS_TAG')
+    })
+
+    describe('with many past releases', () => {
+      it('creates a draft listing the changes')
+    })
+    
+    describe('with no changes since the last release', () => {
+      it('creates a draft with no changes')
+    })
+
+    describe('with an existing release', () => {
+      it('updates the release body')
+    })
   })
 })
