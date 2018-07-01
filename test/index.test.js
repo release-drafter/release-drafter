@@ -36,7 +36,7 @@ describe('release-drafter', () => {
     describe('without a config', () => {
       it('does nothing', async () => {
         github.repos.getContent = fn().mockImplementationOnce(() => mockError(404))
-        await app.receive({ event: 'push', payload: require('./fixtures/push-config-change') })
+        await app.receive({ event: 'push', payload: require('./fixtures/push') })
         expect(github.repos.createRelease).not.toHaveBeenCalled()
         expect(github.repos.editRelease).not.toHaveBeenCalled()
       })
@@ -69,7 +69,24 @@ describe('release-drafter', () => {
 
 
     describe('with no past releases', () => {
-      it('substitutes an empty string for $PREVIOUS_TAG')
+      it('sets $CHANGES based on all commits, and $PREVIOUS_TAG to blank', async () => {
+        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-previous-tag.yml'))
+        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [] }))
+        github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: require('./fixtures/commits') }))
+        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        expect(github.repos.createRelease).toBeCalledWith(
+          expect.objectContaining({
+            body: `Changes:
+* Integrate alien technology (#2) @toolmantim
+* More cowbell (#1) @toolmantim
+
+Previous tag: ''
+`,
+            draft: true,
+            tag_name: ''
+          })
+        )
+      })
     })
 
     describe('with many past releases', () => {
