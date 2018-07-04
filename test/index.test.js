@@ -89,16 +89,85 @@ Previous tag: ''
       })
     })
 
-    describe('with many past releases', () => {
-      it('creates a draft listing the changes')
+    describe('with past releases', () => {
+      it('creates a new draft listing the changes', async () => {
+        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
+        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data:
+          // Tests whether it sorts releases properly
+          [ require('./fixtures/release-2'),
+            require('./fixtures/release'),
+            require('./fixtures/release-3') ]
+        }))
+        github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
+          commits: require('./fixtures/commits')
+        } }))
+        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        expect(github.repos.compareCommits).toBeCalledWith(
+          expect.objectContaining({
+            'base': 'v2.0.0',
+            'head': 'master'
+          })
+        )
+        expect(github.repos.createRelease).toBeCalledWith(
+          expect.objectContaining({
+            body: `# What's Changed
+
+* Integrate alien technology (#2) @toolmantim
+* More cowbell (#1) @toolmantim
+`,
+            draft: true,
+            tag_name: ''
+          })
+        )
+      })
     })
     
     describe('with no changes since the last release', () => {
-      it('creates a draft with no changes')
+      it('creates a new draft with no changes', async () => {
+        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
+        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data:
+          // Tests whether it sorts releases properly
+          [ require('./fixtures/release-2'),
+            require('./fixtures/release'),
+            require('./fixtures/release-3') ]
+        }))
+        github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: { commits: [] } }))
+        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        expect(github.repos.compareCommits).toBeCalledWith(
+          expect.objectContaining({
+            'base': 'v2.0.0',
+            'head': 'master'
+          })
+        )
+        expect(github.repos.createRelease).toBeCalledWith(
+          expect.objectContaining({
+            body: `# What's Changed
+
+* No changes
+`,
+            draft: true,
+            tag_name: ''
+          })
+        )
+      })
     })
 
-    describe('with an existing release', () => {
-      it('updates the release body')
+    describe('with an existing draft release', () => {
+      it('updates the existing release’s body', async () => {
+        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
+        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release-draft.json') ] }))
+        github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: require('./fixtures/commits') }))
+        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        expect(github.repos.editRelease).toBeCalledWith(
+          expect.objectContaining({
+            body: `# What's Changed
+
+* Integrate alien technology (#2) @toolmantim
+* More cowbell (#1) @toolmantim
+`
+          })
+        )
+      })
     })
   })
 })
