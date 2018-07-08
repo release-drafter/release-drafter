@@ -10,6 +10,8 @@
 
 ---
 
+[![NPM package](https://img.shields.io/npm/v/release-drafter-github-app.svg)](https://www.npmjs.com/package/release-drafter-github-app)
+
 ## Usage
 
 1. Install the [Release Drafter GitHub App](https://github.com/apps/release-drafter) into the repositories you wish to automatically create releases in.
