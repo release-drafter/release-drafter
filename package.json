@@ -4,7 +4,7 @@
   "description": "A GitHub app that bumps version numbers in readmes",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
   "license": "ISC",
-  "repository": "https://github.com/toolmantim/release-drafter.git",
+  "repository": "toolmantim/release-drafter",
   "scripts": {
     "dev": "nodemon --exec \"npm start\"",
     "start": "probot run ./index.js",
@@ -12,7 +12,8 @@
     "lint": "standard --fix",
     "test": "jest && standard",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
-    "postversion": "git push && git push --tags && npm publish && open \"$(node -e 'console.log(`${require(\"./package.json\").repository.replace(\".git\",\"\")}/releases`)')\" && npm run deploy",
+    "postversion": "git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
+    "open-releases": "open \"$(node -e 'console.log(`https://github.com/${require(\"./package.json\").repository}/releases`)')\"",
     "deploy": "now && now alias"
   },
   "dependencies": {
