@@ -80,14 +80,15 @@ Run the following command:
 git checkout master && git pull && npm version [major | minor | patch]
 ```
 
-It will:
+The command does the following:
 
-* Ensure you’re on master
-* Update the version number in package.json
-* Runs the `postversion` npm script, which will
-  * Pushes the git tag to GitHub
+* Ensures you’re on master and don't have local, un-commited changes
+* Bumps the version number in [package.json](package.json) based on major, minor or patch
+* Runs the `postversion` npm script in [package.json](package.json), which:
+  * Pushes the tag to GitHub
   * Publishes the npm release
-  * Opens GitHub releases page so you can fill out release notes
+  * Deploys to [Now](https://now.sh)
+  * Opens the GitHub releases page so you can publish the release notes
 
 ## Contributing
 
