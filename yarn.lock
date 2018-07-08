@@ -4197,14 +4197,15 @@ slice-ansi@1.0.0:
   dependencies:
     is-fullwidth-code-point "^2.0.0"
 
-smee-client@1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/smee-client/-/smee-client-1.0.1.tgz#b4add6fc3208c82032ba1a5e704330234eb0c402"
+smee-client@1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/smee-client/-/smee-client-1.0.2.tgz#2b7e72d7ab383e5d6e4a17ae00cd07503cbcf25d"
   dependencies:
     commander "^2.12.2"
     eventsource "^1.0.5"
     morgan "^1.9.0"
-    superagent "^3.8.1"
+    superagent "^3.8.3"
+    validator "^10.4.0"
 
 snapdragon-node@^2.0.1:
   version "2.1.1"
@@ -4440,7 +4441,7 @@ strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
 
-superagent@^3.8.1:
+superagent@^3.8.3:
   version "3.8.3"
   resolved "https://registry.yarnpkg.com/superagent/-/superagent-3.8.3.tgz#460ea0dbdb7d5b11bc4f78deba565f86a178e128"
   dependencies:
@@ -4755,6 +4756,10 @@ validate-npm-package-license@^3.0.1:
   dependencies:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
+
+validator@^10.4.0:
+  version "10.4.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-10.4.0.tgz#ee99a44afb3bb5ed350a159f056ca72a204cfc3c"
 
 vary@~1.1.2:
   version "1.1.2"
