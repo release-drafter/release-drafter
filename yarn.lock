@@ -16,9 +16,9 @@
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
-"@octokit/rest@^15.6.0":
-  version "15.9.3"
-  resolved "https://registry.yarnpkg.com/@octokit/rest/-/rest-15.9.3.tgz#1177ccdfad29f7073756c98afc0890347e21788f"
+"@octokit/rest@^15.9.4":
+  version "15.9.4"
+  resolved "https://registry.yarnpkg.com/@octokit/rest/-/rest-15.9.4.tgz#c6cf0f483275d9c798b18419b7c9d417493bb70f"
   dependencies:
     before-after-hook "^1.1.0"
     btoa-lite "^1.0.0"
@@ -3090,9 +3090,9 @@ negotiator@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.1.tgz#2b327184e8992101177b28563fb5e7102acd0ca9"
 
-nock@9.3.3:
-  version "9.3.3"
-  resolved "https://registry.yarnpkg.com/nock/-/nock-9.3.3.tgz#d9f4cd3c011afeadaf5ccf1b243f6e353781cda0"
+nock@9.4.1:
+  version "9.4.1"
+  resolved "https://registry.yarnpkg.com/nock/-/nock-9.4.1.tgz#d9a635f8f9cb861d4b63dc3e1318770266506239"
   dependencies:
     chai "^4.1.2"
     debug "^3.1.0"
@@ -3530,11 +3530,11 @@ probot-config@0.1.0:
   dependencies:
     js-yaml "^3.10.0"
 
-probot@7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-7.0.0.tgz#54c54263d50dc0b5953c57fbccc5d8dd21c97f8c"
+probot@7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-7.0.1.tgz#8ee68e0f39b25b840243c7a8b9ae1ce7641fb403"
   dependencies:
-    "@octokit/rest" "^15.6.0"
+    "@octokit/rest" "^15.9.4"
     "@octokit/webhooks" "^3.1.1"
     bottleneck "^2.4.0"
     bunyan "^1.8.12"
@@ -4059,14 +4059,15 @@ slice-ansi@1.0.0:
   dependencies:
     is-fullwidth-code-point "^2.0.0"
 
-smee-client@1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/smee-client/-/smee-client-1.0.1.tgz#b4add6fc3208c82032ba1a5e704330234eb0c402"
+smee-client@1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/smee-client/-/smee-client-1.0.2.tgz#2b7e72d7ab383e5d6e4a17ae00cd07503cbcf25d"
   dependencies:
     commander "^2.12.2"
     eventsource "^1.0.5"
     morgan "^1.9.0"
-    superagent "^3.8.1"
+    superagent "^3.8.3"
+    validator "^10.4.0"
 
 snapdragon-node@^2.0.1:
   version "2.1.1"
@@ -4302,7 +4303,7 @@ strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
 
-superagent@^3.8.1:
+superagent@^3.8.3:
   version "3.8.3"
   resolved "https://registry.yarnpkg.com/superagent/-/superagent-3.8.3.tgz#460ea0dbdb7d5b11bc4f78deba565f86a178e128"
   dependencies:
@@ -4617,6 +4618,10 @@ validate-npm-package-license@^3.0.1:
   dependencies:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
+
+validator@^10.4.0:
+  version "10.4.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-10.4.0.tgz#ee99a44afb3bb5ed350a159f056ca72a204cfc3c"
 
 vary@~1.1.2:
   version "1.1.2"
