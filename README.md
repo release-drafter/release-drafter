@@ -72,6 +72,23 @@ If you don't have Node installed, you can use [Docker Compose](https://docs.dock
 docker-compose run --rm app npm test
 ```
 
+## Releasing
+
+Run the following command:
+
+```bash
+git checkout master && git pull && npm version [major | minor | patch]
+```
+
+It will:
+
+* Ensure you’re on master
+* Update the version number in package.json
+* Runs the `postversion` npm script, which will
+  * Pushes the git tag to GitHub
+  * Publishes the npm release
+  * Opens GitHub releases page so you can fill out release notes
+
 ## Contributing
 
 Third-pary contributions are welcome! 🙏🏼 See [CONTRIBUTING.md](CONTRIBUTING.md) for step-by-step instructions.

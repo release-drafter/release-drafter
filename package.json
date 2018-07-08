@@ -1,5 +1,5 @@
 {
-  "name": "release-drafter",
+  "name": "release-drafter-github-app",
   "version": "1.0.0",
   "description": "A GitHub app that bumps version numbers in readmes",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
@@ -12,6 +12,7 @@
     "lint": "standard --fix",
     "test": "jest && standard",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
+    "postversion": "git push && git push --tags && npm publish && npm run deploy && open \"$(node -e 'console.log(`${require(\"./package.json\").repository.replace(\".git\",\"\")}/releases`)')\"",
     "deploy": "now && now alias"
   },
   "dependencies": {
