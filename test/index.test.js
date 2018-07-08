@@ -67,7 +67,6 @@ describe('release-drafter', () => {
       })
     })
 
-
     describe('with no past releases', () => {
       it('sets $CHANGES based on all commits, and $PREVIOUS_TAG to blank', async () => {
         github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-previous-tag.yml'))
@@ -121,7 +120,7 @@ Previous tag: ''
         )
       })
     })
-    
+
     describe('with no changes since the last release', () => {
       it('creates a new draft with no changes', async () => {
         github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
