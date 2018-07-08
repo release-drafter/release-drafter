@@ -12,7 +12,7 @@
     "lint": "standard --fix",
     "test": "jest && standard",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
-    "postversion": "git push && git push --tags && npm publish && npm run deploy && open \"$(node -e 'console.log(`${require(\"./package.json\").repository.replace(\".git\",\"\")}/releases`)')\"",
+    "postversion": "git push && git push --tags && npm publish && open \"$(node -e 'console.log(`${require(\"./package.json\").repository.replace(\".git\",\"\")}/releases`)')\" && npm run deploy",
     "deploy": "now && now alias"
   },
   "dependencies": {
