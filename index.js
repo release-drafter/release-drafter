@@ -1,7 +1,7 @@
 const getConfig = require('probot-config')
 const { isTriggerableBranch } = require('./lib/triggerable-branch')
 const { findReleases, generateReleaseBody } = require('./lib/releases')
-const { findMergedPullRequests } = require('./lib/pull-requests')
+const { findCommits, extractPullRequests } = require('./lib/commits')
 
 const configName = 'release-drafter.yml'
 
@@ -20,8 +20,8 @@ module.exports = app => {
     }
 
     const { draftRelease, lastRelease } = await findReleases({ context })
-    const mergedPullRequests = await findMergedPullRequests({ app, context, branch, lastRelease })
-
+    const commits = await findCommits({ context, branch, lastRelease })
+    const mergedPullRequests = extractPullRequests({ commits })
     const body = generateReleaseBody({ config, lastRelease, mergedPullRequests })
 
     if (!draftRelease) {
@@ -32,7 +32,7 @@ module.exports = app => {
         draft: true
       }))
     } else {
-      app.log(`Updating existing draft release`, { draftRelease })
+      app.log(`Updating existing draft release`)
       await context.github.repos.editRelease(context.repo({
         release_id: draftRelease.id,
         body: body
