@@ -12,7 +12,7 @@
     "lint": "standard --fix",
     "test": "jest && standard",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
-    "postversion": "git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
+    "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
     "open-releases": "open \"$(node -e 'console.log(`https://github.com/${require(\"./package.json\").repository}/releases`)')\"",
     "deploy": "now && now alias"
   },
