@@ -3143,9 +3143,9 @@ node-pre-gyp@^0.10.0:
     semver "^5.3.0"
     tar "^4"
 
-nodemon@1.17.5:
-  version "1.17.5"
-  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-1.17.5.tgz#e6a665c872fdf09d48bf2a81f3e85f8cfb39322a"
+nodemon@1.18.0:
+  version "1.18.0"
+  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-1.18.0.tgz#44b75d5f19065c47a262d4ab21990da3b6f8feae"
   dependencies:
     chokidar "^2.0.2"
     debug "^3.1.0"
