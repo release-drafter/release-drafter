@@ -1,5 +1,5 @@
 # Config for https://github.com/apps/release-drafter
 template: |
-  ## What's Changed!
+  ## What's Changed
 
   $CHANGES
