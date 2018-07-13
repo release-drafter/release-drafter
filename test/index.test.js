@@ -35,7 +35,9 @@ describe('release-drafter', () => {
   describe('push', () => {
     describe('without a config', () => {
       it('does nothing', async () => {
-        github.repos.getContent = fn().mockImplementationOnce(() => mockError(404))
+        github.repos.getContent = fn()
+          .mockImplementationOnce(() => mockError(404))
+          .mockImplementationOnce(() => mockError(404))
         await app.receive({ event: 'push', payload: require('./fixtures/push') })
         expect(github.repos.createRelease).not.toHaveBeenCalled()
         expect(github.repos.editRelease).not.toHaveBeenCalled()

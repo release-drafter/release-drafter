@@ -3669,9 +3669,9 @@ private@^0.1.8:
   version "0.1.8"
   resolved "https://registry.yarnpkg.com/private/-/private-0.1.8.tgz#2381edb3689f7a53d653190060fcf822d2f368ff"
 
-probot-config@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/probot-config/-/probot-config-0.1.0.tgz#b6ef11ccc468e7f28e06deb68b34e093b7c7e88e"
+probot-config@0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/probot-config/-/probot-config-0.2.0.tgz#50af0349d37c367e182a06a9dafc7e3b76a6a8b8"
   dependencies:
     js-yaml "^3.10.0"
 
