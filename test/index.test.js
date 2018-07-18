@@ -18,13 +18,13 @@ describe('release-drafter', () => {
     github = {
       // Basic mocks, so we can perform `.not.toHaveBeenCalled()` assertions
       repos: {
-        getReleases: fn(),
-        compareCommits: fn(),
-        createRelease: fn(),
-        editRelease: fn()
+        getReleases: fn().mockImplementationOnce(() => mockError(500)),
+        compareCommits: fn().mockImplementationOnce(() => mockError(500)),
+        createRelease: fn().mockImplementationOnce(() => mockError(500)),
+        editRelease: fn().mockImplementationOnce(() => mockError(500))
       },
       pullRequests: {
-        get: fn()
+        get: fn().mockImplementationOnce(() => mockError(500))
       },
       paginate: fn().mockImplementation((promise, fn) => promise.then(fn))
     }
@@ -38,7 +38,9 @@ describe('release-drafter', () => {
         github.repos.getContent = fn()
           .mockImplementationOnce(() => mockError(404))
           .mockImplementationOnce(() => mockError(404))
+
         await app.receive({ event: 'push', payload: require('./fixtures/push') })
+
         expect(github.repos.createRelease).not.toHaveBeenCalled()
         expect(github.repos.editRelease).not.toHaveBeenCalled()
       })
@@ -47,7 +49,9 @@ describe('release-drafter', () => {
     describe('to a non-master branch', () => {
       it('does nothing', async () => {
         github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
+
         await app.receive({ event: 'push', payload: require('./fixtures/push-non-master-branch') })
+
         expect(github.repos.createRelease).not.toHaveBeenCalled()
         expect(github.repos.editRelease).not.toHaveBeenCalled()
       })
@@ -57,7 +61,10 @@ describe('release-drafter', () => {
           github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-non-master-branch.yml'))
           github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
           github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: { commits: [] } }))
+          github.repos.createRelease = fn()
+
           await app.receive({ event: 'push', payload: require('./fixtures/push-non-master-branch') })
+
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
               body: `# What's Changed\n\n* No changes\n`,
@@ -74,12 +81,18 @@ describe('release-drafter', () => {
         github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-previous-tag.yml'))
         github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [] }))
         github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: require('./fixtures/commits') }))
+        github.pullRequests.get = fn()
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+        github.repos.createRelease = fn()
+
         await app.receive({ event: 'push', payload: require('./fixtures/push') })
+
         expect(github.repos.createRelease).toBeCalledWith(
           expect.objectContaining({
             body: `Changes:
-* Integrate alien technology (#2) @toolmantim
 * More cowbell (#1) @toolmantim
+* Integrate alien technology (#2) @another-user
 
 Previous tag: ''
 `,
@@ -102,7 +115,14 @@ Previous tag: ''
         github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
           commits: require('./fixtures/commits')
         } }))
+        github.pullRequests.get = fn()
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+
+        github.repos.createRelease = fn()
+
         await app.receive({ event: 'push', payload: require('./fixtures/push') })
+
         expect(github.repos.compareCommits).toBeCalledWith(
           expect.objectContaining({
             'base': 'v2.0.0',
@@ -113,8 +133,8 @@ Previous tag: ''
           expect.objectContaining({
             body: `# What's Changed
 
-* Integrate alien technology (#2) @toolmantim
 * More cowbell (#1) @toolmantim
+* Integrate alien technology (#2) @another-user
 `,
             draft: true,
             tag_name: ''
@@ -133,7 +153,10 @@ Previous tag: ''
             require('./fixtures/release-3') ]
         }))
         github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: { commits: [] } }))
+        github.repos.createRelease = fn()
+
         await app.receive({ event: 'push', payload: require('./fixtures/push') })
+
         expect(github.repos.compareCommits).toBeCalledWith(
           expect.objectContaining({
             'base': 'v2.0.0',
@@ -158,13 +181,19 @@ Previous tag: ''
         github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
         github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release-draft.json') ] }))
         github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: require('./fixtures/commits') }))
+        github.pullRequests.get = fn()
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+        github.repos.editRelease = fn()
+
         await app.receive({ event: 'push', payload: require('./fixtures/push') })
+
         expect(github.repos.editRelease).toBeCalledWith(
           expect.objectContaining({
             body: `# What's Changed
 
-* Integrate alien technology (#2) @toolmantim
 * More cowbell (#1) @toolmantim
+* Integrate alien technology (#2) @another-user
 `
           })
         )
