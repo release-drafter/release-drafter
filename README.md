@@ -50,7 +50,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 |`template`|Required|The template for the body of the draft release. Use [template variables](#template-variables) to insert values.|
 |`branches`|Optional|The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch.|
 
-Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to set a default for an entire GitHub organization. Create a `.github` repository with a `release-drafter.yml` file that contains your template.
+Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` and file named `release-drafter.yml`.
 
 ## Developing
 
