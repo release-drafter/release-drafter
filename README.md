@@ -76,7 +76,7 @@ docker-compose run --rm app npm test
 
 ## Contributing
 
-Third-pary contributions are welcome! 🙏🏼 See [CONTRIBUTING.md](CONTRIBUTING.md) for step-by-step instructions.
+Third-party contributions are welcome! 🙏🏼 See [CONTRIBUTING.md](CONTRIBUTING.md) for step-by-step instructions.
 
 If you need help or have a question, let me know via a GitHub issue.
 
