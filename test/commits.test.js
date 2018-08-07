@@ -15,7 +15,13 @@ describe('extractPullRequestNumber', () => {
   it('extracts from squash & merge commit message', () => {
     expect(
       commits.extractPullRequestNumber(mockCommit(
-        'Fixed conditional card state on 1st render (#1537)'))
+        `
+Fixed conditional card state on 1st render (#1537)
+
+* Fixed conditional card state on 1st render
+
+* Moved method to correct location
+        `.trim()))
       ).toEqual("1537");
   });
 });
