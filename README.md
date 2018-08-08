@@ -23,7 +23,7 @@ For example, take the following `.github/release-drafter.yml` file in a reposito
 
 ```yml
 template: |
-  ## What's Changed
+  ## What’s Changed
 
   $CHANGES
 ```
@@ -32,15 +32,6 @@ As pull requests are merged, a draft release is kept up-to-date listing the chan
 
 <img src="design/screenshot.png" alt="Screenshot of generated draft release" width="586" />
 
-## Template variables
-
-You can use any of the following variables in your template, and they’ll be substituted when the release is regenerated:
-
-|Variable|Description|
-|-|-|
-|`$CHANGES`|The markdown list of pull requests that have been merged.|
-|`$PREVIOUS_TAG`|The previous releases’s tag.|
-
 ## Configuration options
 
 You can configure Release Drafter using the following key in your `.github/release-drafter.yml` file:
@@ -48,9 +39,31 @@ You can configure Release Drafter using the following key in your `.github/relea
 |Key|Required|Description|
 |-|-|-|
 |`template`|Required|The template for the body of the draft release. Use [template variables](#template-variables) to insert values.|
+|`change-template`|Optional|The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `* $TITLE ($NUMBER) @$AUTHOR_USERNAME`|
+|`no-changes-template`|Optional|The template to use for when there’s no changes. Default: `* No changes`|
 |`branches`|Optional|The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch.|
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` and file named `release-drafter.yml`.
+
+
+## Template variables
+
+You can use any of the following variables in your `template`:
+
+|Variable|Description|
+|-|-|
+|`$CHANGES`|The markdown list of pull requests that have been merged.|
+|`$PREVIOUS_TAG`|The previous releases’s tag.|
+
+## Change Template variables
+
+You can use any of the following variables in `change-template`:
+
+|Variable|Description|
+|-|-|
+|`$NUMBER`|The number of the pull request, e.g. `42`|
+|`$TITLE`|The title of the pull request, e.g. `Add alien technology`|
+|`$AUTHOR_USERNAME`|The pull request author’s username, e.g. `gracehopper`|
 
 ## Developing
 
@@ -67,7 +80,7 @@ npm test
 npm start
 ```
 
-If you don't have Node installed, you can use [Docker Compose](https://docs.docker.com/compose/):
+If you don’t have Node installed, you can use [Docker Compose](https://docs.docker.com/compose/):
 
 ```sh
 # Run the tests
@@ -94,7 +107,7 @@ git checkout master && git pull && npm test && npm version [major | minor | patc
 
 The command does the following:
 
-* Ensures you’re on master and don't have local, un-commited changes
+* Ensures you’re on master and don’t have local, un-commited changes
 * Bumps the version number in [package.json](package.json) based on major, minor or patch
 * Runs the `postversion` npm script in [package.json](package.json), which:
   * Pushes the tag to GitHub
