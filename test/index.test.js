@@ -141,6 +141,32 @@ Previous tag: ''
           })
         )
       })
+
+      describe('with custom changes-template config', () => {
+        it('creates a new draft using the template', async () => {
+          github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-changes-templates.yml'))
+          github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
+          github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
+            commits: require('./fixtures/commits')
+          } }))
+          github.pullRequests.get = fn()
+            .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
+            .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+
+          github.repos.createRelease = fn()
+
+          await app.receive({ event: 'push', payload: require('./fixtures/push') })
+
+          expect(github.repos.createRelease).toBeCalledWith(
+            expect.objectContaining({
+              body: `* Change: #1 'More cowbell' @toolmantim
+* Change: #2 'Integrate alien technology' @another-user`,
+              draft: true,
+              tag_name: ''
+            })
+          )
+        })
+      })
     })
 
     describe('with no changes since the last release', () => {
@@ -173,6 +199,25 @@ Previous tag: ''
             tag_name: ''
           })
         )
+      })
+
+      describe('with custom no-changes-template config', () => {
+        it('creates a new draft with the template', async () => {
+          github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-changes-templates.yml'))
+          github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [] }))
+          github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: [] }))
+          github.repos.createRelease = fn()
+
+          await app.receive({ event: 'push', payload: require('./fixtures/push') })
+
+          expect(github.repos.createRelease).toBeCalledWith(
+            expect.objectContaining({
+              body: `* No changes mmkay`,
+              draft: true,
+              tag_name: ''
+            })
+          )
+        })
       })
     })
 
