@@ -8,7 +8,13 @@ const configName = 'release-drafter.yml'
 
 module.exports = app => {
   app.on('push', async context => {
-    const config = await getConfig(context, configName) || {}
+    const defaults = {
+      'branches': context.payload.repository.default_branch,
+      'change-template': `* $TITLE (#$NUMBER) @$AUTHOR`,
+      'no-changes-template': `* No changes`
+    }
+    const config = Object.assign(defaults, await getConfig(context, configName) || {})
+
     const branch = context.payload.ref.replace(/^refs\/heads\//, '')
 
     if (!config.template) {
