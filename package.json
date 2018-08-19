@@ -17,7 +17,7 @@
     "deploy": "now && now alias"
   },
   "dependencies": {
-    "compare-versions": "3.3.0",
+    "compare-versions": "3.3.1",
     "probot": "7.0.1",
     "probot-config": "0.2.0",
     "request": "2.88.0"
