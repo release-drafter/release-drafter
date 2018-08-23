@@ -65,6 +65,10 @@ You can use any of the following variables in `change-template`:
 |`$TITLE`|The title of the pull request, e.g. `Add alien technology`|
 |`$AUTHOR`|The pull request author’s username, e.g. `gracehopper`|
 
+## GitHub Installation Permissions
+
+Release Drafter needs to update your releases for you, and so it requires write access to the repository you want to automatically update. Unfortunately, at this time, GitHub doesn't offer a release-only write scope. **Please don't just add it to your entire GitHub account!** Only add the repositories you want to draft releases on.
+
 ## Developing
 
 If you have Node v10+ installed locally, you can run the tests, and a local app, using the following commands:
