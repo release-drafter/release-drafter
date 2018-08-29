@@ -29,7 +29,7 @@ module.exports = app => {
     const { draftRelease, lastRelease } = await findReleases({ app, context })
     const commits = await findCommits({ app, context, branch, lastRelease })
     const mergedPullRequests = await findPullRequests({ app, context, commits })
-    const body = generateReleaseBody({ config, lastRelease, mergedPullRequests })
+    const body = generateReleaseBody({ commits, config, lastRelease, mergedPullRequests })
 
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
