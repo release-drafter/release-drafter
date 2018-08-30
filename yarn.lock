@@ -1192,11 +1192,11 @@ escodegen@^1.9.0:
   optionalDependencies:
     source-map "~0.6.1"
 
-eslint-config-standard-jsx@~6.0.2:
+eslint-config-standard-jsx@6.0.2:
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/eslint-config-standard-jsx/-/eslint-config-standard-jsx-6.0.2.tgz#90c9aa16ac2c4f8970c13fc7efc608bacd02da70"
 
-eslint-config-standard@~12.0.0:
+eslint-config-standard@12.0.0:
   version "12.0.0"
   resolved "https://registry.yarnpkg.com/eslint-config-standard/-/eslint-config-standard-12.0.0.tgz#638b4c65db0bd5a41319f96bba1f15ddad2107d9"
 
@@ -4425,13 +4425,13 @@ standard-engine@~9.0.0:
     minimist "^1.1.0"
     pkg-conf "^2.0.0"
 
-standard@12.0.0:
-  version "12.0.0"
-  resolved "https://registry.yarnpkg.com/standard/-/standard-12.0.0.tgz#f978ec8f0746d372ed0c5bcfed1d1a14007fa945"
+standard@12.0.1:
+  version "12.0.1"
+  resolved "https://registry.yarnpkg.com/standard/-/standard-12.0.1.tgz#0fc5a8aa6c34c546c5562aae644242b24dae2e61"
   dependencies:
     eslint "~5.4.0"
-    eslint-config-standard "~12.0.0"
-    eslint-config-standard-jsx "~6.0.2"
+    eslint-config-standard "12.0.0"
+    eslint-config-standard-jsx "6.0.2"
     eslint-plugin-import "~2.14.0"
     eslint-plugin-node "~7.0.1"
     eslint-plugin-promise "~4.0.0"
