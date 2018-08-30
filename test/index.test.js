@@ -39,7 +39,7 @@ describe('release-drafter', () => {
           .mockImplementationOnce(() => mockError(404))
           .mockImplementationOnce(() => mockError(404))
 
-        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
         expect(github.repos.createRelease).not.toHaveBeenCalled()
         expect(github.repos.editRelease).not.toHaveBeenCalled()
@@ -50,7 +50,7 @@ describe('release-drafter', () => {
       it('does nothing', async () => {
         github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
 
-        await app.receive({ event: 'push', payload: require('./fixtures/push-non-master-branch') })
+        await app.receive({ name: 'push', payload: require('./fixtures/push-non-master-branch') })
 
         expect(github.repos.createRelease).not.toHaveBeenCalled()
         expect(github.repos.editRelease).not.toHaveBeenCalled()
@@ -63,7 +63,7 @@ describe('release-drafter', () => {
           github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: { commits: [] } }))
           github.repos.createRelease = fn()
 
-          await app.receive({ event: 'push', payload: require('./fixtures/push-non-master-branch') })
+          await app.receive({ name: 'push', payload: require('./fixtures/push-non-master-branch') })
 
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
@@ -86,7 +86,7 @@ describe('release-drafter', () => {
           .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
         github.repos.createRelease = fn()
 
-        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
         expect(github.repos.createRelease).toBeCalledWith(
           expect.objectContaining({
@@ -121,7 +121,7 @@ Previous tag: ''
 
         github.repos.createRelease = fn()
 
-        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
         expect(github.repos.compareCommits).toBeCalledWith(
           expect.objectContaining({
@@ -155,7 +155,7 @@ Previous tag: ''
 
           github.repos.createRelease = fn()
 
-          await app.receive({ event: 'push', payload: require('./fixtures/push') })
+          await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
@@ -181,7 +181,7 @@ Previous tag: ''
         github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: { commits: [] } }))
         github.repos.createRelease = fn()
 
-        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
         expect(github.repos.compareCommits).toBeCalledWith(
           expect.objectContaining({
@@ -208,7 +208,7 @@ Previous tag: ''
           github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: [] }))
           github.repos.createRelease = fn()
 
-          await app.receive({ event: 'push', payload: require('./fixtures/push') })
+          await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
@@ -231,7 +231,7 @@ Previous tag: ''
           .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
         github.repos.editRelease = fn()
 
-        await app.receive({ event: 'push', payload: require('./fixtures/push') })
+        await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
         expect(github.repos.editRelease).toBeCalledWith(
           expect.objectContaining({
