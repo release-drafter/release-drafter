@@ -167,6 +167,31 @@ Previous tag: ''
           )
         })
       })
+
+      describe('with contributors config', () => {
+        it('adds the contributors', async () => {
+          github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-contributors.yml'))
+          github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
+          github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
+            commits: require('./fixtures/commits')
+          } }))
+          github.pullRequests.get = fn()
+            .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
+            .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+
+          github.repos.createRelease = fn()
+
+          await app.receive({ name: 'push', payload: require('./fixtures/push') })
+
+          expect(github.repos.createRelease).toBeCalledWith(
+            expect.objectContaining({
+              body: `A big thanks to: @another-user, @toolmantim and Ada`,
+              draft: true,
+              tag_name: ''
+            })
+          )
+        })
+      })
     })
 
     describe('with no changes since the last release', () => {

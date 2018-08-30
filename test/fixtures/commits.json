@@ -246,13 +246,13 @@
     "node_id": "MDY6Q29tbWl0MTM4NzMyNDgxOjE1OWEwNDNlZjI4ZDcwMjNhZGM3ODAwMjk4ZWFkNDQ0YThhNTUwODQ=",
     "commit": {
       "author": {
-        "name": "Tim Lucas",
-        "email": "t@toolmantim.com",
+        "name": "Ada",
+        "email": "a@d.a",
         "date": "2018-06-30T05:05:48Z"
       },
       "committer": {
-        "name": "Tim Lucas",
-        "email": "t@toolmantim.com",
+        "name": "Ada",
+        "email": "a@d.a",
         "date": "2018-06-30T05:05:48Z"
       },
       "message": "More cowbell",
@@ -272,46 +272,8 @@
     "url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/commits/159a043ef28d7023adc7800298ead444a8a55084",
     "html_url": "https://github.com/toolmantim/release-drafter-test-repository/commit/159a043ef28d7023adc7800298ead444a8a55084",
     "comments_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/commits/159a043ef28d7023adc7800298ead444a8a55084/comments",
-    "author": {
-      "login": "toolmantim",
-      "id": 153,
-      "node_id": "MDQ6VXNlcjE1Mw==",
-      "avatar_url": "https://avatars3.githubusercontent.com/u/153?v=4",
-      "gravatar_id": "",
-      "url": "https://api.github.com/users/toolmantim",
-      "html_url": "https://github.com/toolmantim",
-      "followers_url": "https://api.github.com/users/toolmantim/followers",
-      "following_url": "https://api.github.com/users/toolmantim/following{/other_user}",
-      "gists_url": "https://api.github.com/users/toolmantim/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/toolmantim/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/toolmantim/subscriptions",
-      "organizations_url": "https://api.github.com/users/toolmantim/orgs",
-      "repos_url": "https://api.github.com/users/toolmantim/repos",
-      "events_url": "https://api.github.com/users/toolmantim/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/toolmantim/received_events",
-      "type": "User",
-      "site_admin": false
-    },
-    "committer": {
-      "login": "toolmantim",
-      "id": 153,
-      "node_id": "MDQ6VXNlcjE1Mw==",
-      "avatar_url": "https://avatars3.githubusercontent.com/u/153?v=4",
-      "gravatar_id": "",
-      "url": "https://api.github.com/users/toolmantim",
-      "html_url": "https://github.com/toolmantim",
-      "followers_url": "https://api.github.com/users/toolmantim/followers",
-      "following_url": "https://api.github.com/users/toolmantim/following{/other_user}",
-      "gists_url": "https://api.github.com/users/toolmantim/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/toolmantim/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/toolmantim/subscriptions",
-      "organizations_url": "https://api.github.com/users/toolmantim/orgs",
-      "repos_url": "https://api.github.com/users/toolmantim/repos",
-      "events_url": "https://api.github.com/users/toolmantim/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/toolmantim/received_events",
-      "type": "User",
-      "site_admin": false
-    },
+    "author": null,
+    "committer": null,
     "parents": [
       {
         "sha": "3088733478e16d11a185d48831d923ddfdb0936b",
