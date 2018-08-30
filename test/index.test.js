@@ -185,7 +185,7 @@ Previous tag: ''
 
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
-              body: `A big thanks to: @another-user, @toolmantim and @web-flow`,
+              body: `A big thanks to: @another-user, @toolmantim and Ada`,
               draft: true,
               tag_name: ''
             })
