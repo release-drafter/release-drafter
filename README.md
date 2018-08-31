@@ -39,7 +39,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 |Key|Required|Description|
 |-|-|-|
 |`template`|Required|The template for the body of the draft release. Use [template variables](#template-variables) to insert values.|
-|`change-template`|Optional|The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `* $TITLE ($NUMBER) @$AUTHOR`|
+|`change-template`|Optional|The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `* $TITLE (#$NUMBER) @$AUTHOR`|
 |`no-changes-template`|Optional|The template to use for when there’s no changes. Default: `* No changes`|
 |`branches`|Optional|The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch.|
 
