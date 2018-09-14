@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "compare-versions": "3.4.0",
-    "probot": "7.1.1",
+    "probot": "7.1.2",
     "probot-config": "0.2.0",
     "request": "2.88.0"
   },
