@@ -29,12 +29,12 @@
     node-fetch "^2.1.1"
     url-template "^2.0.8"
 
-"@octokit/webhooks@5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@octokit/webhooks/-/webhooks-5.0.0.tgz#d709e6dc9a4d78c14869aff895beb945d824026a"
+"@octokit/webhooks@^5.0.2":
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/@octokit/webhooks/-/webhooks-5.0.2.tgz#fbf31398f0d235199591cef3c4a8fef7073c6073"
   dependencies:
     buffer-equal-constant-time "^1.0.1"
-    debug "^3.1.0"
+    debug "^4.0.0"
 
 abab@^1.0.4:
   version "1.0.4"
@@ -950,6 +950,12 @@ debug@3.1.0, debug@^3.1.0:
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.1.0.tgz#5bb5a0672628b64149566ba16819e61518c67261"
   dependencies:
     ms "2.0.0"
+
+debug@^4.0.0:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-4.0.1.tgz#f9bb36d439b8d1f0dd52d8fb6b46e4ebb8c1cd5b"
+  dependencies:
+    ms "^2.1.1"
 
 decamelize@^1.0.0, decamelize@^1.1.1:
   version "1.2.0"
@@ -3716,12 +3722,12 @@ probot-config@0.2.0:
   dependencies:
     js-yaml "^3.10.0"
 
-probot@7.1.1:
-  version "7.1.1"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-7.1.1.tgz#b55aaf737b5fdf88f1cd64278601845183dff9ff"
+probot@7.1.2:
+  version "7.1.2"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-7.1.2.tgz#0326524dc56b40b812e763bb5a33d98ae722d319"
   dependencies:
     "@octokit/rest" "^15.11.0"
-    "@octokit/webhooks" "5.0.0"
+    "@octokit/webhooks" "^5.0.2"
     bottleneck "^2.8.0"
     bunyan "^1.8.12"
     bunyan-format "^0.2.1"
