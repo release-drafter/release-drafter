@@ -1,4 +1,4 @@
-FROM node:10.10.0-alpine@sha256:565dfb5f10143efd5f4c9df75a63d765adcd14b150fc61e5c1d54d70cb006e86
+FROM node:10.10.0-alpine@sha256:fcab88e96877f3a592be65131ca08d613db8558fefbc3fcc988876fd3b5a447d
 WORKDIR /src
 ADD     yarn.lock package.json /src/
 RUN     yarn
