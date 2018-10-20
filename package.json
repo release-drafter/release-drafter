@@ -1,6 +1,6 @@
 {
   "name": "release-drafter-github-app",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "A GitHub app that bumps version numbers in readmes",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
   "license": "ISC",
