@@ -82,8 +82,10 @@ yarn
 npm test
 
 # Run the app locally
-npm start
+npm run dev
 ```
+
+Once you've started the app, visit `localhost:3000` and you'll get [step-by-step instructions](https://probot.github.io/docs/development/#configuring-a-github-app) for installing it in your GitHub account so you can start pushing commits and testing it locally.
 
 If you don’t have Node installed, you can use [Docker Compose](https://docs.docker.com/compose/):
 
