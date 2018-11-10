@@ -6,6 +6,90 @@
       "author": {
         "name": "Tim Lucas",
         "email": "t@toolmantim.com",
+        "date": "2018-07-02T04:30:03Z"
+      },
+      "committer": {
+        "name": "GitHub",
+        "email": "noreply@github.com",
+        "date": "2018-07-02T04:30:03Z"
+      },
+      "message": "Merge pull request #4 from toolmantim/documentation\n\nUpdated documentation",
+      "tree": {
+        "sha": "5c46878c3029cb8ba946623e87ae84761ea94846",
+        "url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/git/trees/5c46878c3029cb8ba946623e87ae84761ea94846"
+      },
+      "url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/git/commits/3088733478e16d11a185d48831d923ddfdb0936b",
+      "comment_count": 0,
+      "verification": {
+        "verified": true,
+        "reason": "valid",
+        "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJbNwdLCRBK7hj4Ov3rIwAAdHIIADpkqFtojnWPO0E3K2rhDlld\nFHIPrZ8lj9kx77TNcboPq4XydQ3WOo0LbmDPoO1/XmeKuDea+OvhfmLLREzmgAlw\nmdy4mMvREbBd2H50OXVngEipyekrnQFj6I8p6nANW3Sf1mjQfFFHWK0k/jw7c4pd\niuVgbLKFJI2NQVOJCGfmbDJ6IEXZxH7Kacq7n9ZaAWwOShS75pDa7uCoTm1Lo86A\nkoW/EpkL3jOs5OKHO2qpadulujoaO1kp3l21NLWtVsLOUTFfbhk+UruharbhPiKi\nYy/B9BleOIRHYvF/KKf1jKFE8f6Xlqh8aDclqSikxEV/G8cgxhyxS2mFQuOBpA8=\n=Gx9i\n-----END PGP SIGNATURE-----\n",
+        "payload": "tree 5c46878c3029cb8ba946623e87ae84761ea94846\nparent 886275cd3a1167fd165d7d4d1dc63d6eb392be74\nparent e13533020407329694394d41077a5ce0dc303187\nauthor Tim Lucas <t@toolmantim.com> 1530333003 +1000\ncommitter GitHub <noreply@github.com> 1530333003 +1000\n\nMerge pull request #8 from toolmantim/great-stuff\n\n👽 Integrate Alien technology"
+      }
+    },
+    "url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/commits/3088733478e16d11a185d48831d923ddfdb0936b",
+    "html_url": "https://github.com/toolmantim/release-drafter-test-repository/commit/3088733478e16d11a185d48831d923ddfdb0936b",
+    "comments_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/commits/3088733478e16d11a185d48831d923ddfdb0936b/comments",
+    "author": {
+      "login": "toolmantim",
+      "id": 153,
+      "node_id": "MDQ6VXNlcjE1Mw==",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/153?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/toolmantim",
+      "html_url": "https://github.com/toolmantim",
+      "followers_url": "https://api.github.com/users/toolmantim/followers",
+      "following_url": "https://api.github.com/users/toolmantim/following{/other_user}",
+      "gists_url": "https://api.github.com/users/toolmantim/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/toolmantim/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/toolmantim/subscriptions",
+      "organizations_url": "https://api.github.com/users/toolmantim/orgs",
+      "repos_url": "https://api.github.com/users/toolmantim/repos",
+      "events_url": "https://api.github.com/users/toolmantim/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/toolmantim/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "web-flow",
+      "id": 19864447,
+      "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/19864447?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/web-flow",
+      "html_url": "https://github.com/web-flow",
+      "followers_url": "https://api.github.com/users/web-flow/followers",
+      "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+      "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+      "organizations_url": "https://api.github.com/users/web-flow/orgs",
+      "repos_url": "https://api.github.com/users/web-flow/repos",
+      "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/web-flow/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "886275cd3a1167fd165d7d4d1dc63d6eb392be74",
+        "url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/commits/886275cd3a1167fd165d7d4d1dc63d6eb392be74",
+        "html_url": "https://github.com/toolmantim/release-drafter-test-repository/commit/886275cd3a1167fd165d7d4d1dc63d6eb392be74"
+      },
+      {
+        "sha": "e13533020407329694394d41077a5ce0dc303187",
+        "url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/commits/e13533020407329694394d41077a5ce0dc303187",
+        "html_url": "https://github.com/toolmantim/release-drafter-test-repository/commit/e13533020407329694394d41077a5ce0dc303187"
+      }
+    ]
+  },
+  {
+    "sha": "3088733478e16d11a185d48831d923ddfdb0936b",
+    "node_id": "MDY6Q29tbWl0MTM4NzMyNDgxOjMwODg3MzM0NzhlMTZkMTFhMTg1ZDQ4ODMxZDkyM2RkZmRiMDkzNmI=",
+    "commit": {
+      "author": {
+        "name": "Tim Lucas",
+        "email": "t@toolmantim.com",
         "date": "2018-07-01T04:30:03Z"
       },
       "committer": {
