@@ -42,9 +42,9 @@ You can configure Release Drafter using the following key in your `.github/relea
 |`change-template`|Optional|The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `* $TITLE (#$NUMBER) @$AUTHOR`|
 |`no-changes-template`|Optional|The template to use for when there’s no changes. Default: `* No changes`|
 |`branches`|Optional|The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch.|
+|`categories`|Optional|Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.|
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` and file named `release-drafter.yml`.
-
 
 ## Template variables
 
@@ -65,6 +65,22 @@ You can use any of the following variables in `change-template`:
 |`$NUMBER`|The number of the pull request, e.g. `42`|
 |`$TITLE`|The title of the pull request, e.g. `Add alien technology`|
 |`$AUTHOR`|The pull request author’s username, e.g. `gracehopper`|
+
+## Categorize Pull Requests
+
+With the `categories` option you can categorize pull requests in release notes using labels. For example, append the following to your `.github/release-drafter.yml` file:
+
+```yml
+categories:
+  - label: feature
+    title: 🚀 Features
+  - label: fix
+    title: 🐛 Bug Fixes
+```
+
+Pull requests with the label "feature" or "fix" will now be grouped together like so:
+
+<img src="design/screenshot-2.png" alt="Screenshot of generated draft release with categories" width="586" />
 
 ## GitHub Installation Permissions
 
