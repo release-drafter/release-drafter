@@ -269,5 +269,74 @@ Previous tag: ''
         )
       })
     })
+
+
+    describe('with categories config', () => {
+      it('categorizes pull requests', async () => {
+        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-categories.yml'))
+        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
+        github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
+          commits: require('./fixtures/commits-2')
+        } }))
+        github.pullRequests.get = fn()
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-3')))
+
+        github.repos.createRelease = fn()
+
+        await app.receive({ name: 'push', payload: require('./fixtures/push') })
+
+        expect(github.repos.createRelease).toBeCalledWith(
+          expect.objectContaining({
+            body: `# What's Changed
+
+## Features
+
+* More cowbell (#1) @toolmantim
+
+## Bug Fixes
+
+* Integrate alien technology (#2) @another-user
+* Fixed a bug (#3) @another-user
+`,
+            draft: true,
+            tag_name: ''
+          })
+        )
+      })
+
+      it('lists uncategorized pull requests first', async () => {
+        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-categories-2.yml'))
+        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
+        github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
+          commits: require('./fixtures/commits-2')
+        } }))
+        github.pullRequests.get = fn()
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-3')))
+
+        github.repos.createRelease = fn()
+
+        await app.receive({ name: 'push', payload: require('./fixtures/push') })
+
+        expect(github.repos.createRelease).toBeCalledWith(
+          expect.objectContaining({
+            body: `# What's Changed
+
+* More cowbell (#1) @toolmantim
+
+## Bug Fixes
+
+* Integrate alien technology (#2) @another-user
+* Fixed a bug (#3) @another-user
+`,
+            draft: true,
+            tag_name: ''
+          })
+        )
+      })
+    })
   })
 })

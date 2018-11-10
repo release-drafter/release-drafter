@@ -41,7 +41,7 @@
     "assignees": [],
     "requested_reviewers": [],
     "requested_teams": [],
-    "labels": [],
+    "labels": ["fix"],
     "milestone": null,
     "commits_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15/commits",
     "review_comments_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15/comments",
