@@ -6,7 +6,5 @@ template: |
 categories:
   - label: feature
     title: Features
-    order: 0
   - label: fix
     title: Bug Fixes
-    order: 1

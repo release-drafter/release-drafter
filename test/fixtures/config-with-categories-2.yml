@@ -6,4 +6,3 @@ template: |
 categories:
   - label: fix
     title: Bug Fixes
-    order: 1
