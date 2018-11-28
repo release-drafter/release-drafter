@@ -1,0 +1,8 @@
+template: |
+  # What's Changed
+
+  $CHANGES
+
+categories:
+  - label: fix
+    title: 🐛 Bug Fixes

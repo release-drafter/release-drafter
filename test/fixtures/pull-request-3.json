@@ -1,42 +1,42 @@
 {
   "data": {
-    "url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/16",
-    "id": 201268640,
-    "node_id": "MDExOlB1bGxSZXF1ZXN0MjAxMjY4NjQw",
-    "html_url": "https://github.com/toolmantim/release-drafter-test-repository/pull/16",
-    "diff_url": "https://github.com/toolmantim/release-drafter-test-repository/pull/16.diff",
-    "patch_url": "https://github.com/toolmantim/release-drafter-test-repository/pull/16.patch",
-    "issue_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/issues/16",
-    "number": 1,
+    "url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15",
+    "id": 201266460,
+    "node_id": "MDExOlB1bGxSZXF1ZXN0MjAxMjY2NDYw",
+    "html_url": "https://github.com/toolmantim/release-drafter-test-repository/pull/15",
+    "diff_url": "https://github.com/toolmantim/release-drafter-test-repository/pull/15.diff",
+    "patch_url": "https://github.com/toolmantim/release-drafter-test-repository/pull/15.patch",
+    "issue_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/issues/15",
+    "number": 3,
     "state": "closed",
     "locked": false,
-    "title": "More cowbell",
+    "title": "Fixed a bug",
     "user": {
-      "login": "toolmantim",
+      "login": "another-user",
       "id": 153,
       "node_id": "MDQ6VXNlcjE1Mw==",
       "avatar_url": "https://avatars3.githubusercontent.com/u/153?v=4",
       "gravatar_id": "",
-      "url": "https://api.github.com/users/toolmantim",
-      "html_url": "https://github.com/toolmantim",
-      "followers_url": "https://api.github.com/users/toolmantim/followers",
-      "following_url": "https://api.github.com/users/toolmantim/following{/other_user}",
-      "gists_url": "https://api.github.com/users/toolmantim/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/toolmantim/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/toolmantim/subscriptions",
-      "organizations_url": "https://api.github.com/users/toolmantim/orgs",
-      "repos_url": "https://api.github.com/users/toolmantim/repos",
-      "events_url": "https://api.github.com/users/toolmantim/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/toolmantim/received_events",
+      "url": "https://api.github.com/users/another-user",
+      "html_url": "https://github.com/another-user",
+      "followers_url": "https://api.github.com/users/another-user/followers",
+      "following_url": "https://api.github.com/users/another-user/following{/other_user}",
+      "gists_url": "https://api.github.com/users/another-user/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/another-user/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/another-user/subscriptions",
+      "organizations_url": "https://api.github.com/users/another-user/orgs",
+      "repos_url": "https://api.github.com/users/another-user/repos",
+      "events_url": "https://api.github.com/users/another-user/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/another-user/received_events",
       "type": "User",
       "site_admin": false
     },
     "body": "",
-    "created_at": "2018-07-13T11:50:22Z",
-    "updated_at": "2018-07-13T11:50:42Z",
-    "closed_at": "2018-07-13T11:50:38Z",
-    "merged_at": "2018-07-13T11:50:38Z",
-    "merge_commit_sha": "90b3d77e3cff1b07649e92e9bf547ef2afed5303",
+    "created_at": "2018-07-13T11:39:56Z",
+    "updated_at": "2018-07-13T11:40:11Z",
+    "closed_at": "2018-07-13T11:40:10Z",
+    "merged_at": "2018-07-13T11:40:10Z",
+    "merge_commit_sha": "4efa05c624c630741b360737c3a1efea80b46a8e",
     "assignee": null,
     "assignees": [],
     "requested_reviewers": [],
@@ -44,39 +44,39 @@
     "labels": [{
       "id": 208045946,
       "node_id": "MDU6TGFiZWwyMDgwNDU5NDY=",
-      "url": "https://api.github.com/repos/octocat/Hello-World/labels/feature",
-      "name": "feature",
+      "url": "https://api.github.com/repos/octocat/Hello-World/labels/fix",
+      "name": "fix",
       "description": "",
       "color": "000000",
       "default": false
     }],
     "milestone": null,
-    "commits_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/16/commits",
-    "review_comments_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/16/comments",
+    "commits_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15/commits",
+    "review_comments_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15/comments",
     "review_comment_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/comments{/number}",
-    "comments_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/issues/16/comments",
-    "statuses_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/statuses/7f8f8627467e4008f3d46a7ee02bfadedaff38ee",
+    "comments_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/issues/15/comments",
+    "statuses_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/statuses/8cb65dd3d681136a3420c84163d703f09ce5a71e",
     "head": {
-      "label": "toolmantim:another-one",
-      "ref": "another-one",
-      "sha": "7f8f8627467e4008f3d46a7ee02bfadedaff38ee",
+      "label": "toolmantim:oh-hai-there",
+      "ref": "oh-hai-there",
+      "sha": "8cb65dd3d681136a3420c84163d703f09ce5a71e",
       "user": {
-        "login": "toolmantim",
+        "login": "another-user",
         "id": 153,
         "node_id": "MDQ6VXNlcjE1Mw==",
         "avatar_url": "https://avatars3.githubusercontent.com/u/153?v=4",
         "gravatar_id": "",
-        "url": "https://api.github.com/users/toolmantim",
-        "html_url": "https://github.com/toolmantim",
-        "followers_url": "https://api.github.com/users/toolmantim/followers",
-        "following_url": "https://api.github.com/users/toolmantim/following{/other_user}",
-        "gists_url": "https://api.github.com/users/toolmantim/gists{/gist_id}",
-        "starred_url": "https://api.github.com/users/toolmantim/starred{/owner}{/repo}",
-        "subscriptions_url": "https://api.github.com/users/toolmantim/subscriptions",
-        "organizations_url": "https://api.github.com/users/toolmantim/orgs",
-        "repos_url": "https://api.github.com/users/toolmantim/repos",
-        "events_url": "https://api.github.com/users/toolmantim/events{/privacy}",
-        "received_events_url": "https://api.github.com/users/toolmantim/received_events",
+        "url": "https://api.github.com/users/another-user",
+        "html_url": "https://github.com/another-user",
+        "followers_url": "https://api.github.com/users/another-user/followers",
+        "following_url": "https://api.github.com/users/another-user/following{/other_user}",
+        "gists_url": "https://api.github.com/users/another-user/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/another-user/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/another-user/subscriptions",
+        "organizations_url": "https://api.github.com/users/another-user/orgs",
+        "repos_url": "https://api.github.com/users/another-user/repos",
+        "events_url": "https://api.github.com/users/another-user/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/another-user/received_events",
         "type": "User",
         "site_admin": false
       },
@@ -177,7 +177,7 @@
     "base": {
       "label": "toolmantim:master",
       "ref": "master",
-      "sha": "4efa05c624c630741b360737c3a1efea80b46a8e",
+      "sha": "8c58c29bf7f4285fb8212f71adcaac323b08e4e2",
       "user": {
         "login": "toolmantim",
         "id": 153,
@@ -294,28 +294,28 @@
     },
     "_links": {
       "self": {
-        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/16"
+        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15"
       },
       "html": {
-        "href": "https://github.com/toolmantim/release-drafter-test-repository/pull/16"
+        "href": "https://github.com/toolmantim/release-drafter-test-repository/pull/15"
       },
       "issue": {
-        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/issues/16"
+        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/issues/15"
       },
       "comments": {
-        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/issues/16/comments"
+        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/issues/15/comments"
       },
       "review_comments": {
-        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/16/comments"
+        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15/comments"
       },
       "review_comment": {
         "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/comments{/number}"
       },
       "commits": {
-        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/16/commits"
+        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15/commits"
       },
       "statuses": {
-        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/statuses/7f8f8627467e4008f3d46a7ee02bfadedaff38ee"
+        "href": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/statuses/8cb65dd3d681136a3420c84163d703f09ce5a71e"
       }
     },
     "author_association": "OWNER",
@@ -360,9 +360,9 @@
     "content-encoding": "gzip",
     "content-security-policy": "default-src 'none'",
     "content-type": "application/json; charset=utf-8",
-    "date": "Wed, 18 Jul 2018 12:29:01 GMT",
-    "etag": "W/\"37a8cd22d2837439c5a03e1ee655cb69\"",
-    "last-modified": "Fri, 13 Jul 2018 11:50:42 GMT",
+    "date": "Wed, 18 Jul 2018 12:29:02 GMT",
+    "etag": "W/\"24bb87557760dcd6aa2cae64100060b9\"",
+    "last-modified": "Fri, 13 Jul 2018 11:40:11 GMT",
     "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
     "server": "GitHub.com",
     "status": "200 OK",
@@ -372,11 +372,11 @@
     "x-content-type-options": "nosniff",
     "x-frame-options": "deny",
     "x-github-media-type": "github.v3; format=json",
-    "x-github-request-id": "87D6:936F:86E80B2:AE6FCB1:5B4F328D",
+    "x-github-request-id": "A0D4:936D:70BC703:924C159:5B4F328E",
     "x-ratelimit-limit": "5000",
-    "x-ratelimit-remaining": "4993",
+    "x-ratelimit-remaining": "4992",
     "x-ratelimit-reset": "1531920508",
-    "x-runtime-rack": "0.153855",
+    "x-runtime-rack": "0.209879",
     "x-xss-protection": "1; mode=block"
   },
   "meta": {
@@ -387,9 +387,9 @@
     "content-encoding": "gzip",
     "content-security-policy": "default-src 'none'",
     "content-type": "application/json; charset=utf-8",
-    "date": "Wed, 18 Jul 2018 12:29:01 GMT",
-    "etag": "W/\"37a8cd22d2837439c5a03e1ee655cb69\"",
-    "last-modified": "Fri, 13 Jul 2018 11:50:42 GMT",
+    "date": "Wed, 18 Jul 2018 12:29:02 GMT",
+    "etag": "W/\"24bb87557760dcd6aa2cae64100060b9\"",
+    "last-modified": "Fri, 13 Jul 2018 11:40:11 GMT",
     "referrer-policy": "origin-when-cross-origin, strict-origin-when-cross-origin",
     "server": "GitHub.com",
     "status": "200 OK",
@@ -399,11 +399,11 @@
     "x-content-type-options": "nosniff",
     "x-frame-options": "deny",
     "x-github-media-type": "github.v3; format=json",
-    "x-github-request-id": "87D6:936F:86E80B2:AE6FCB1:5B4F328D",
+    "x-github-request-id": "A0D4:936D:70BC703:924C159:5B4F328E",
     "x-ratelimit-limit": "5000",
-    "x-ratelimit-remaining": "4993",
+    "x-ratelimit-remaining": "4992",
     "x-ratelimit-reset": "1531920508",
-    "x-runtime-rack": "0.153855",
+    "x-runtime-rack": "0.209879",
     "x-xss-protection": "1; mode=block"
   }
 }

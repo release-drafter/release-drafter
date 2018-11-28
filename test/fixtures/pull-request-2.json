@@ -41,7 +41,15 @@
     "assignees": [],
     "requested_reviewers": [],
     "requested_teams": [],
-    "labels": [],
+    "labels": [{
+      "id": 208045946,
+      "node_id": "MDU6TGFiZWwyMDgwNDU5NDY=",
+      "url": "https://api.github.com/repos/octocat/Hello-World/labels/fix",
+      "name": "fix",
+      "description": "",
+      "color": "000000",
+      "default": false
+    }],
     "milestone": null,
     "commits_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15/commits",
     "review_comments_url": "https://api.github.com/repos/toolmantim/release-drafter-test-repository/pulls/15/comments",

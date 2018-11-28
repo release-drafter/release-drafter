@@ -11,7 +11,8 @@ module.exports = app => {
     const defaults = {
       'branches': context.payload.repository.default_branch,
       'change-template': `* $TITLE (#$NUMBER) @$AUTHOR`,
-      'no-changes-template': `* No changes`
+      'no-changes-template': `* No changes`,
+      'categories': []
     }
     const config = Object.assign(defaults, await getConfig(context, configName) || {})
 
