@@ -3,6 +3,11 @@ sudo: required
 services:
   - docker
 before_script:
+  # Needed by bk CLI
+  - curl https://download.buildkite.com/agent/stable/latest/buildkite-agent-linux-amd64 > buildkite-agent
+  - chmod +x buildkite-agent
+  - sudo mv buildkite-agent /usr/local/bin/buildkite-agent
+  # Install the bk CLI
   - curl -L https://github.com/buildkite/cli/releases/download/v0.2.0/bk-linux-amd64-0.2.0 > bk
   - chmod +x bk
   - sudo mv bk /usr/local/bin/bk
