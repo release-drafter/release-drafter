@@ -1,0 +1,3 @@
+template: Placeholder with example. Automatically calculated values are next major=$NEXT_MAJOR_VERSION, minor=$NEXT_MINOR_VERSION, patch=$NEXT_PATCH_VERSION
+default-release-name: "v$NEXT_PATCH_VERSION (Code name: Placeholder)"
+default-release-tag: v$NEXT_PATCH_VERSION

@@ -38,7 +38,7 @@
     ]
   },
   "jest": {
-    "collectCoverage": true,
+    "collectCoverage": false,
     "collectCoverageFrom": [
       "index.js",
       "lib/**"
