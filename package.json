@@ -9,9 +9,9 @@
     "dev": "nodemon --exec \"npm start\"",
     "start": "probot run ./index.js",
     "now-start": "PRIVATE_KEY=$(echo $PRIVATE_KEY_BASE64 | base64 -d) npm start",
-    "lint": "standard --fix",
-    "test": "jest && standard",
+    "test": "jest",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
+    "prettier": "prettier --write **/*.{js,md,json}",
     "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
     "open-releases": "open \"$(node -e 'console.log(`https://github.com/${require(\"./package.json\").repository}/releases`)')\"",
     "deploy": "now && now alias"
@@ -26,16 +26,11 @@
     "jest": "23.6.0",
     "nock": "10.0.4",
     "nodemon": "1.18.9",
-    "smee-client": "1.0.2",
-    "standard": "12.0.1"
+    "prettier": "1.15.3",
+    "smee-client": "1.0.2"
   },
   "engines": {
     "node": ">= 8.3.0"
-  },
-  "standard": {
-    "env": [
-      "jest"
-    ]
   },
   "jest": {
     "collectCoverage": true,
