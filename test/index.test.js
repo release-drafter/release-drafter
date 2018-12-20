@@ -48,9 +48,14 @@ describe('release-drafter', () => {
 
     describe('to a non-master branch', () => {
       it('does nothing', async () => {
-        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
+        github.repos.getContent = fn().mockReturnValueOnce(
+          mockConfig('config.yml')
+        )
 
-        await app.receive({ name: 'push', payload: require('./fixtures/push-non-master-branch') })
+        await app.receive({
+          name: 'push',
+          payload: require('./fixtures/push-non-master-branch')
+        })
 
         expect(github.repos.createRelease).not.toHaveBeenCalled()
         expect(github.repos.editRelease).not.toHaveBeenCalled()
@@ -58,12 +63,21 @@ describe('release-drafter', () => {
 
       describe('when configured for that branch', () => {
         it('creates a release draft', async () => {
-          github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-non-master-branch.yml'))
-          github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
-          github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: { commits: [] } }))
+          github.repos.getContent = fn().mockReturnValueOnce(
+            mockConfig('config-non-master-branch.yml')
+          )
+          github.repos.getReleases = fn().mockReturnValueOnce(
+            Promise.resolve({ data: [require('./fixtures/release')] })
+          )
+          github.repos.compareCommits = fn().mockReturnValueOnce(
+            Promise.resolve({ data: { commits: [] } })
+          )
           github.repos.createRelease = fn()
 
-          await app.receive({ name: 'push', payload: require('./fixtures/push-non-master-branch') })
+          await app.receive({
+            name: 'push',
+            payload: require('./fixtures/push-non-master-branch')
+          })
 
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
@@ -78,12 +92,22 @@ describe('release-drafter', () => {
 
     describe('with no past releases', () => {
       it('sets $CHANGES based on all commits, and $PREVIOUS_TAG to blank', async () => {
-        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-previous-tag.yml'))
-        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [] }))
-        github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: require('./fixtures/commits') }))
+        github.repos.getContent = fn().mockReturnValueOnce(
+          mockConfig('config-previous-tag.yml')
+        )
+        github.repos.getReleases = fn().mockReturnValueOnce(
+          Promise.resolve({ data: [] })
+        )
+        github.repos.getCommits = fn().mockReturnValueOnce(
+          Promise.resolve({ data: require('./fixtures/commits') })
+        )
         github.pullRequests.get = fn()
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-1'))
+          )
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-2'))
+          )
         github.repos.createRelease = fn()
 
         await app.receive({ name: 'push', payload: require('./fixtures/push') })
@@ -105,19 +129,34 @@ Previous tag: ''
 
     describe('with past releases', () => {
       it('creates a new draft listing the changes', async () => {
-        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
-        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data:
-          // Tests whether it sorts releases properly
-          [ require('./fixtures/release-2'),
-            require('./fixtures/release'),
-            require('./fixtures/release-3') ]
-        }))
-        github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
-          commits: require('./fixtures/commits')
-        } }))
+        github.repos.getContent = fn().mockReturnValueOnce(
+          mockConfig('config.yml')
+        )
+        github.repos.getReleases = fn().mockReturnValueOnce(
+          Promise.resolve({
+            data:
+              // Tests whether it sorts releases properly
+              [
+                require('./fixtures/release-2'),
+                require('./fixtures/release'),
+                require('./fixtures/release-3')
+              ]
+          })
+        )
+        github.repos.compareCommits = fn().mockReturnValueOnce(
+          Promise.resolve({
+            data: {
+              commits: require('./fixtures/commits')
+            }
+          })
+        )
         github.pullRequests.get = fn()
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-1'))
+          )
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-2'))
+          )
 
         github.repos.createRelease = fn()
 
@@ -125,8 +164,8 @@ Previous tag: ''
 
         expect(github.repos.compareCommits).toBeCalledWith(
           expect.objectContaining({
-            'base': 'v2.0.0',
-            'head': 'master'
+            base: 'v2.0.0',
+            head: 'master'
           })
         )
         expect(github.repos.createRelease).toBeCalledWith(
@@ -144,18 +183,33 @@ Previous tag: ''
 
       describe('with custom changes-template config', () => {
         it('creates a new draft using the template', async () => {
-          github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-changes-templates.yml'))
-          github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
-          github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
-            commits: require('./fixtures/commits')
-          } }))
+          github.repos.getContent = fn().mockReturnValueOnce(
+            mockConfig('config-with-changes-templates.yml')
+          )
+          github.repos.getReleases = fn().mockReturnValueOnce(
+            Promise.resolve({ data: [require('./fixtures/release')] })
+          )
+          github.repos.compareCommits = fn().mockReturnValueOnce(
+            Promise.resolve({
+              data: {
+                commits: require('./fixtures/commits')
+              }
+            })
+          )
           github.pullRequests.get = fn()
-            .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
-            .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+            .mockReturnValueOnce(
+              Promise.resolve(require('./fixtures/pull-request-1'))
+            )
+            .mockReturnValueOnce(
+              Promise.resolve(require('./fixtures/pull-request-2'))
+            )
 
           github.repos.createRelease = fn()
 
-          await app.receive({ name: 'push', payload: require('./fixtures/push') })
+          await app.receive({
+            name: 'push',
+            payload: require('./fixtures/push')
+          })
 
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
@@ -170,18 +224,33 @@ Previous tag: ''
 
       describe('with contributors config', () => {
         it('adds the contributors', async () => {
-          github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-contributors.yml'))
-          github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
-          github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
-            commits: require('./fixtures/commits')
-          } }))
+          github.repos.getContent = fn().mockReturnValueOnce(
+            mockConfig('config-with-contributors.yml')
+          )
+          github.repos.getReleases = fn().mockReturnValueOnce(
+            Promise.resolve({ data: [require('./fixtures/release')] })
+          )
+          github.repos.compareCommits = fn().mockReturnValueOnce(
+            Promise.resolve({
+              data: {
+                commits: require('./fixtures/commits')
+              }
+            })
+          )
           github.pullRequests.get = fn()
-            .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
-            .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+            .mockReturnValueOnce(
+              Promise.resolve(require('./fixtures/pull-request-1'))
+            )
+            .mockReturnValueOnce(
+              Promise.resolve(require('./fixtures/pull-request-2'))
+            )
 
           github.repos.createRelease = fn()
 
-          await app.receive({ name: 'push', payload: require('./fixtures/push') })
+          await app.receive({
+            name: 'push',
+            payload: require('./fixtures/push')
+          })
 
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
@@ -196,22 +265,31 @@ Previous tag: ''
 
     describe('with no changes since the last release', () => {
       it('creates a new draft with no changes', async () => {
-        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
-        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data:
-          // Tests whether it sorts releases properly
-          [ require('./fixtures/release-2'),
-            require('./fixtures/release'),
-            require('./fixtures/release-3') ]
-        }))
-        github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: { commits: [] } }))
+        github.repos.getContent = fn().mockReturnValueOnce(
+          mockConfig('config.yml')
+        )
+        github.repos.getReleases = fn().mockReturnValueOnce(
+          Promise.resolve({
+            data:
+              // Tests whether it sorts releases properly
+              [
+                require('./fixtures/release-2'),
+                require('./fixtures/release'),
+                require('./fixtures/release-3')
+              ]
+          })
+        )
+        github.repos.compareCommits = fn().mockReturnValueOnce(
+          Promise.resolve({ data: { commits: [] } })
+        )
         github.repos.createRelease = fn()
 
         await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
         expect(github.repos.compareCommits).toBeCalledWith(
           expect.objectContaining({
-            'base': 'v2.0.0',
-            'head': 'master'
+            base: 'v2.0.0',
+            head: 'master'
           })
         )
         expect(github.repos.createRelease).toBeCalledWith(
@@ -228,12 +306,21 @@ Previous tag: ''
 
       describe('with custom no-changes-template config', () => {
         it('creates a new draft with the template', async () => {
-          github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-changes-templates.yml'))
-          github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [] }))
-          github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: [] }))
+          github.repos.getContent = fn().mockReturnValueOnce(
+            mockConfig('config-with-changes-templates.yml')
+          )
+          github.repos.getReleases = fn().mockReturnValueOnce(
+            Promise.resolve({ data: [] })
+          )
+          github.repos.getCommits = fn().mockReturnValueOnce(
+            Promise.resolve({ data: [] })
+          )
           github.repos.createRelease = fn()
 
-          await app.receive({ name: 'push', payload: require('./fixtures/push') })
+          await app.receive({
+            name: 'push',
+            payload: require('./fixtures/push')
+          })
 
           expect(github.repos.createRelease).toBeCalledWith(
             expect.objectContaining({
@@ -248,12 +335,22 @@ Previous tag: ''
 
     describe('with an existing draft release', () => {
       it('updates the existing release’s body', async () => {
-        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config.yml'))
-        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release-draft.json') ] }))
-        github.repos.getCommits = fn().mockReturnValueOnce(Promise.resolve({ data: require('./fixtures/commits') }))
+        github.repos.getContent = fn().mockReturnValueOnce(
+          mockConfig('config.yml')
+        )
+        github.repos.getReleases = fn().mockReturnValueOnce(
+          Promise.resolve({ data: [require('./fixtures/release-draft.json')] })
+        )
+        github.repos.getCommits = fn().mockReturnValueOnce(
+          Promise.resolve({ data: require('./fixtures/commits') })
+        )
         github.pullRequests.get = fn()
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-1'))
+          )
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-2'))
+          )
         github.repos.editRelease = fn()
 
         await app.receive({ name: 'push', payload: require('./fixtures/push') })
@@ -272,16 +369,32 @@ Previous tag: ''
 
     describe('with categories config', () => {
       it('categorizes pull requests', async () => {
-        github.repos.getContent = fn().mockReturnValueOnce(mockConfig('config-with-categories.yml'))
-        github.repos.getReleases = fn().mockReturnValueOnce(Promise.resolve({ data: [ require('./fixtures/release') ] }))
-        github.repos.compareCommits = fn().mockReturnValueOnce(Promise.resolve({ data: {
-          commits: require('./fixtures/commits-2')
-        } }))
+        github.repos.getContent = fn().mockReturnValueOnce(
+          mockConfig('config-with-categories.yml')
+        )
+        github.repos.getReleases = fn().mockReturnValueOnce(
+          Promise.resolve({ data: [require('./fixtures/release')] })
+        )
+        github.repos.compareCommits = fn().mockReturnValueOnce(
+          Promise.resolve({
+            data: {
+              commits: require('./fixtures/commits-2')
+            }
+          })
+        )
         github.pullRequests.get = fn()
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-1')))
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-2')))
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-3')))
-          .mockReturnValueOnce(Promise.resolve(require('./fixtures/pull-request-4')))
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-1'))
+          )
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-2'))
+          )
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-3'))
+          )
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-4'))
+          )
 
         github.repos.createRelease = fn()
 
