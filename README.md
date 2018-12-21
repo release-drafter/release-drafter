@@ -32,36 +32,46 @@ As pull requests are merged, a draft release is kept up-to-date listing the chan
 
 <img src="design/screenshot.png" alt="Screenshot of generated draft release" width="586" />
 
-## Configuration options
+## Configuration Options
 
 You can configure Release Drafter using the following key in your `.github/release-drafter.yml` file:
 
-| Key                    | Required | Description                                                                                                                                                                                                       |
-| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`             | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                                                                   |
-| `change-template`      | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `* $TITLE (#$NUMBER) @$AUTHOR`                                           |
-| `no-changes-template`  | Optional | The template to use for when there’s no changes. Default: `* No changes`                                                                                                                                          |
-| `branches`             | Optional | The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch. |
-| `categories`           | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                                                            |
-| `default-release-name` | Optional | A template to use for the name of new draft releases. Refer to [Automatic next version numbering](#automatic-next-version-numbering) to learn about this option.                                                  |
-| `default-release-tag`  | Optional | A template to use for the tag of new draft releases. Refer to [Automatic next version numbering](#automatic-next-version-numbering) to learn about this option.                                                   |
+| Key                   | Required | Description                                                                                                                                                                                                       |
+| --------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`            | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                                                                   |
+| `name-template`       | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                            |
+| `tag-template`        | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                             |
+| `change-template`     | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`                                         |
+| `no-changes-template` | Optional | The template to use for when there’s no changes. Default: `"* No changes"`                                                                                                                                        |
+| `branches`            | Optional | The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch. |
+| `categories`          | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                                                            |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` and file named `release-drafter.yml`.
 
-## Template variables
+## Template Variables
 
 You can use any of the following variables in your `template`:
 
-| Variable              | Description                                                                                                                                                       |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `$CHANGES`            | The markdown list of pull requests that have been merged.                                                                                                         |
-| `$CONTRIBUTORS`       | A comma separated list of contributors to this release (pull request authors, commit authors, and commit committers).                                             |
-| `$PREVIOUS_TAG`       | The previous releases’s tag.                                                                                                                                      |
-| `$NEXT_MAJOR_VERSION` | The next version number, as a major version increment. Refer to [Automatic next version numbering](#automatic-next-version-numbering) to learn about this option. |
-| `$NEXT_MINOR_VERSION` | The next version number, as a minor version increment. Refer to [Automatic next version numbering](#automatic-next-version-numbering) to learn about this option. |
-| `$NEXT_PATCH_VERSION` | The next version number, as a patch version increment. Refer to [Automatic next version numbering](#automatic-next-version-numbering) to learn about this option. |
+| Variable              | Description                                                                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `$CHANGES`            | The markdown list of pull requests that have been merged.                                                             |
+| `$CONTRIBUTORS`       | A comma separated list of contributors to this release (pull request authors, commit authors, and commit committers). |
+| `$PREVIOUS_TAG`       | The previous releases’s tag.                                                                                          |
+| `$NEXT_MAJOR_VERSION` | See [Automatic Versioning Variables](#automatic-versioning-variables).                                                |
+| `$NEXT_MINOR_VERSION` | See [Automatic Versioning Variables](#automatic-versioning-variables).                                                |
+| `$NEXT_PATCH_VERSION` | See [Automatic Versioning Variables](#automatic-versioning-variables).                                                |
 
-## Change Template variables
+## Automatic Versioning Variables
+
+You can use any of the following variables in your `template`, `name-template` and `tag-template`:
+
+| Variable              | Description                                                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `$NEXT_PATCH_VERSION` | The next version number, as a patch version increment. For example, if the last version was `v1.2.3` then the next major version would be `v1.2.4`. |
+| `$NEXT_MINOR_VERSION` | The next version number, as a minor version increment. For example, if the last version was `v1.2.3` then the next major version would be `v1.3.0`. |
+| `$NEXT_MAJOR_VERSION` | The next version number, as a major version increment. For example, if the last version was `v1.2.3` then the next major version would be `v2.0.0`. |
+
+## Change Template Variables
 
 You can use any of the following variables in `change-template`:
 
@@ -86,26 +96,6 @@ categories:
 Pull requests with the label "feature" or "fix" will now be grouped together like so:
 
 <img src="design/screenshot-2.png" alt="Screenshot of generated draft release with categories" width="586" />
-
-## Automatic next version numbering
-
-You can use any of the following variables in your `template`, `default-release-name` and `default-release-tag`:
-
-| Variable              | Description                                            |
-| --------------------- | ------------------------------------------------------ |
-| `$NEXT_MAJOR_VERSION` | The next version number, as a major version increment. |
-| `$NEXT_MINOR_VERSION` | The next version number, as a minor version increment. |
-| `$NEXT_PATCH_VERSION` | The next version number, as a patch version increment. |
-
-This enables configurations such as:
-
-```yaml
-default-release-name: '$NEXT_PATCH_VERSION 🎉'
-default-release-tag: v$NEXT_PATCH_VERSION
-```
-
-In the case, for example, where the last release name/tag was `v1.2.3`, the next draft version will automatically be named `1.2.4 🎉` and the tag will be `v1.2.4`.
-`$NEXT_PATCH_VERSION` is expected to be the most commonly used placeholder, but `$NEXT_MAJOR_VERSION` and `$NEXT_MINOR_VERSION` are available as well (e.g. `1.2.3` becomes `2.0.0` or `1.3.0` when these are used).
 
 ## GitHub Installation Permissions
 
