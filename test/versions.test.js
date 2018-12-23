@@ -12,7 +12,7 @@ describe('versions', () => {
     expect(versionInfo.incrementedPatch).toEqual('10.0.4')
   })
 
-  it('extracts a version-like string from the last release name', () => {
+  it('extracts a version-like string from the last release name if the tag isnt a version', () => {
     const versionInfo = getVersionInfo({
       tag_name: 'notaproperversion',
       name: '10.0.3'
@@ -23,7 +23,7 @@ describe('versions', () => {
     expect(versionInfo.incrementedPatch).toEqual('10.0.4')
   })
 
-  it('extracts a version-like string from the last tag instead of the release name, if conflicting', () => {
+  it('preferences tags over release names', () => {
     const versionInfo = getVersionInfo({
       tag_name: '10.0.3',
       name: '8.1.0'
@@ -34,10 +34,21 @@ describe('versions', () => {
     expect(versionInfo.incrementedPatch).toEqual('10.0.4')
   })
 
-  it('gives up if a semver version-like string cannot be found in either tag or release name', () => {
+  it('handles alpha/beta releases', () => {
     const versionInfo = getVersionInfo({
-      tag_name: '10.0',
-      name: 'not a proper version'
+      tag_name: 'v10.0.3-alpha',
+      name: 'Some release'
+    })
+
+    expect(versionInfo.incrementedMajor).toEqual('11.0.0')
+    expect(versionInfo.incrementedMinor).toEqual('10.1.0')
+    expect(versionInfo.incrementedPatch).toEqual('10.0.4')
+  })
+
+  it('returns undefined if no version was found in tag or name', () => {
+    const versionInfo = getVersionInfo({
+      tag_name: 'nope',
+      name: 'nope nope nope'
     })
 
     expect(versionInfo).toEqual(undefined)
