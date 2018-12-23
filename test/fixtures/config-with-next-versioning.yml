@@ -1,0 +1,3 @@
+template: Placeholder with example. Automatically calculated values are next major=$NEXT_MAJOR_VERSION, minor=$NEXT_MINOR_VERSION, patch=$NEXT_PATCH_VERSION
+name-template: "v$NEXT_PATCH_VERSION (Code name: Placeholder)"
+tag-template: v$NEXT_PATCH_VERSION

@@ -181,6 +181,42 @@ Previous tag: ''
         )
       })
 
+      it('makes next versions available as template placeholders', async () => {
+        github.repos.getContent = fn().mockReturnValueOnce(
+          mockConfig('config-with-next-versioning.yml')
+        )
+        github.repos.getReleases = fn().mockReturnValueOnce(
+          Promise.resolve({ data: [require('./fixtures/release')] })
+        )
+        github.repos.compareCommits = fn().mockReturnValueOnce(
+          Promise.resolve({
+            data: {
+              commits: require('./fixtures/commits')
+            }
+          })
+        )
+        github.pullRequests.get = fn()
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-1'))
+          )
+          .mockReturnValueOnce(
+            Promise.resolve(require('./fixtures/pull-request-2'))
+          )
+
+        github.repos.createRelease = fn()
+
+        await app.receive({ name: 'push', payload: require('./fixtures/push') })
+
+        expect(github.repos.createRelease).toBeCalledWith(
+          expect.objectContaining({
+            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1`,
+            draft: true,
+            name: 'v2.0.1 (Code name: Placeholder)',
+            tag_name: 'v2.0.1'
+          })
+        )
+      })
+
       describe('with custom changes-template config', () => {
         it('creates a new draft using the template', async () => {
           github.repos.getContent = fn().mockReturnValueOnce(
