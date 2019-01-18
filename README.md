@@ -44,7 +44,7 @@ categories:
     label: fix
   - title: 🧰 Maintenance
     label: chore
-change-template: - $TITLE @$AUTHOR (#$NUMBER)
+change-template: \- $TITLE @$AUTHOR (#$NUMBER)
 template: |
   ## Changes
 
