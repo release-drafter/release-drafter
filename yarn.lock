@@ -4154,10 +4154,10 @@ pretty-format@^24.0.0:
     ansi-regex "^4.0.0"
     ansi-styles "^3.2.0"
 
-probot-config@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/probot-config/-/probot-config-1.0.0.tgz#4da831672fd08dab26fc522b6aee0027095039d0"
-  integrity sha512-5zV1JjvVH0zy67OZcjv36I/sz7AE7gsVSCkn7rHfNw4tndJhVuKDtq0sn78MoPEPazMbqvq5k0WVYz5MM2Ajyg==
+probot-config@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/probot-config/-/probot-config-1.0.1.tgz#8d4f5eae7f0b0777e0386de8c55a173a434c0dad"
+  integrity sha512-xfQ+Fw8KuxSLj9kET/FN4kdgduVDWpibGP/vNueuhq1bmzRosiFbs/XsB3uUjpm+TWdt37TuwAvFOfvAJm7Sig==
   dependencies:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
