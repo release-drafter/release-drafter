@@ -9,12 +9,15 @@ const configName = 'release-drafter.yml'
 module.exports = app => {
   app.on('push', async context => {
     const defaults = {
-      'branches': context.payload.repository.default_branch,
+      branches: context.payload.repository.default_branch,
       'change-template': `* $TITLE (#$NUMBER) @$AUTHOR`,
       'no-changes-template': `* No changes`,
-      'categories': []
+      categories: []
     }
-    const config = Object.assign(defaults, await getConfig(context, configName) || {})
+    const config = Object.assign(
+      defaults,
+      (await getConfig(context, configName)) || {}
+    )
 
     const branch = context.payload.ref.replace(/^refs\/heads\//, '')
 
@@ -30,22 +33,31 @@ module.exports = app => {
     const { draftRelease, lastRelease } = await findReleases({ app, context })
     const commits = await findCommits({ app, context, branch, lastRelease })
     const mergedPullRequests = await findPullRequests({ app, context, commits })
-    const releaseInfo = generateReleaseInfo({ commits, config, lastRelease, mergedPullRequests })
+    const releaseInfo = generateReleaseInfo({
+      commits,
+      config,
+      lastRelease,
+      mergedPullRequests
+    })
 
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
-      await context.github.repos.createRelease(context.repo({
-        name: releaseInfo.name,
-        tag_name: releaseInfo.tag,
-        body: releaseInfo.body,
-        draft: true
-      }))
+      await context.github.repos.createRelease(
+        context.repo({
+          name: releaseInfo.name,
+          tag_name: releaseInfo.tag,
+          body: releaseInfo.body,
+          draft: true
+        })
+      )
     } else {
       log({ app, context, message: 'Updating existing draft release' })
-      await context.github.repos.editRelease(context.repo({
-        release_id: draftRelease.id,
-        body: releaseInfo.body
-      }))
+      await context.github.repos.updateRelease(
+        context.repo({
+          release_id: draftRelease.id,
+          body: releaseInfo.body
+        })
+      )
     }
   })
 }

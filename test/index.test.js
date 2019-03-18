@@ -21,7 +21,7 @@ describe('release-drafter', () => {
         listReleases: fn().mockImplementationOnce(() => mockError(500)),
         compareCommits: fn().mockImplementationOnce(() => mockError(500)),
         createRelease: fn().mockImplementationOnce(() => mockError(500)),
-        editRelease: fn().mockImplementationOnce(() => mockError(500))
+        updateRelease: fn().mockImplementationOnce(() => mockError(500))
       },
       pullRequests: {
         get: fn().mockImplementationOnce(() => mockError(500))
@@ -42,7 +42,7 @@ describe('release-drafter', () => {
         await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
         expect(github.repos.createRelease).not.toHaveBeenCalled()
-        expect(github.repos.editRelease).not.toHaveBeenCalled()
+        expect(github.repos.updateRelease).not.toHaveBeenCalled()
       })
     })
 
@@ -58,7 +58,7 @@ describe('release-drafter', () => {
         })
 
         expect(github.repos.createRelease).not.toHaveBeenCalled()
-        expect(github.repos.editRelease).not.toHaveBeenCalled()
+        expect(github.repos.updateRelease).not.toHaveBeenCalled()
       })
 
       describe('when configured for that branch', () => {
@@ -387,11 +387,11 @@ Previous tag: ''
           .mockReturnValueOnce(
             Promise.resolve(require('./fixtures/pull-request-2'))
           )
-        github.repos.editRelease = fn()
+        github.repos.updateRelease = fn()
 
         await app.receive({ name: 'push', payload: require('./fixtures/push') })
 
-        expect(github.repos.editRelease).toBeCalledWith(
+        expect(github.repos.updateRelease).toBeCalledWith(
           expect.objectContaining({
             body: `# What's Changed
 
