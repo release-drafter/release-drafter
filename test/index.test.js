@@ -18,7 +18,7 @@ describe('release-drafter', () => {
     github = {
       // Basic mocks, so we can perform `.not.toHaveBeenCalled()` assertions
       repos: {
-        getReleases: fn().mockImplementationOnce(() => mockError(500)),
+        listReleases: fn().mockImplementationOnce(() => mockError(500)),
         compareCommits: fn().mockImplementationOnce(() => mockError(500)),
         createRelease: fn().mockImplementationOnce(() => mockError(500)),
         editRelease: fn().mockImplementationOnce(() => mockError(500))
@@ -66,7 +66,7 @@ describe('release-drafter', () => {
           github.repos.getContents = fn().mockReturnValueOnce(
             mockConfig('config-non-master-branch.yml')
           )
-          github.repos.getReleases = fn().mockReturnValueOnce(
+          github.repos.listReleases = fn().mockReturnValueOnce(
             Promise.resolve({ data: [require('./fixtures/release')] })
           )
           github.repos.compareCommits = fn().mockReturnValueOnce(
@@ -95,7 +95,7 @@ describe('release-drafter', () => {
         github.repos.getContents = fn().mockReturnValueOnce(
           mockConfig('config-previous-tag.yml')
         )
-        github.repos.getReleases = fn().mockReturnValueOnce(
+        github.repos.listReleases = fn().mockReturnValueOnce(
           Promise.resolve({ data: [] })
         )
         github.repos.getCommits = fn().mockReturnValueOnce(
@@ -132,7 +132,7 @@ Previous tag: ''
         github.repos.getContents = fn().mockReturnValueOnce(
           mockConfig('config.yml')
         )
-        github.repos.getReleases = fn().mockReturnValueOnce(
+        github.repos.listReleases = fn().mockReturnValueOnce(
           Promise.resolve({
             data:
               // Tests whether it sorts releases properly
@@ -185,7 +185,7 @@ Previous tag: ''
         github.repos.getContents = fn().mockReturnValueOnce(
           mockConfig('config-with-next-versioning.yml')
         )
-        github.repos.getReleases = fn().mockReturnValueOnce(
+        github.repos.listReleases = fn().mockReturnValueOnce(
           Promise.resolve({ data: [require('./fixtures/release')] })
         )
         github.repos.compareCommits = fn().mockReturnValueOnce(
@@ -222,7 +222,7 @@ Previous tag: ''
           github.repos.getContents = fn().mockReturnValueOnce(
             mockConfig('config-with-changes-templates.yml')
           )
-          github.repos.getReleases = fn().mockReturnValueOnce(
+          github.repos.listReleases = fn().mockReturnValueOnce(
             Promise.resolve({ data: [require('./fixtures/release')] })
           )
           github.repos.compareCommits = fn().mockReturnValueOnce(
@@ -263,7 +263,7 @@ Previous tag: ''
           github.repos.getContents = fn().mockReturnValueOnce(
             mockConfig('config-with-contributors.yml')
           )
-          github.repos.getReleases = fn().mockReturnValueOnce(
+          github.repos.listReleases = fn().mockReturnValueOnce(
             Promise.resolve({ data: [require('./fixtures/release')] })
           )
           github.repos.compareCommits = fn().mockReturnValueOnce(
@@ -304,7 +304,7 @@ Previous tag: ''
         github.repos.getContents = fn().mockReturnValueOnce(
           mockConfig('config.yml')
         )
-        github.repos.getReleases = fn().mockReturnValueOnce(
+        github.repos.listReleases = fn().mockReturnValueOnce(
           Promise.resolve({
             data:
               // Tests whether it sorts releases properly
@@ -345,7 +345,7 @@ Previous tag: ''
           github.repos.getContents = fn().mockReturnValueOnce(
             mockConfig('config-with-changes-templates.yml')
           )
-          github.repos.getReleases = fn().mockReturnValueOnce(
+          github.repos.listReleases = fn().mockReturnValueOnce(
             Promise.resolve({ data: [] })
           )
           github.repos.getCommits = fn().mockReturnValueOnce(
@@ -374,7 +374,7 @@ Previous tag: ''
         github.repos.getContents = fn().mockReturnValueOnce(
           mockConfig('config.yml')
         )
-        github.repos.getReleases = fn().mockReturnValueOnce(
+        github.repos.listReleases = fn().mockReturnValueOnce(
           Promise.resolve({ data: [require('./fixtures/release-draft.json')] })
         )
         github.repos.getCommits = fn().mockReturnValueOnce(
@@ -408,7 +408,7 @@ Previous tag: ''
         github.repos.getContents = fn().mockReturnValueOnce(
           mockConfig('config-with-categories.yml')
         )
-        github.repos.getReleases = fn().mockReturnValueOnce(
+        github.repos.listReleases = fn().mockReturnValueOnce(
           Promise.resolve({ data: [require('./fixtures/release')] })
         )
         github.repos.compareCommits = fn().mockReturnValueOnce(
