@@ -98,7 +98,7 @@ describe('release-drafter', () => {
         github.repos.listReleases = fn().mockReturnValueOnce(
           Promise.resolve({ data: [] })
         )
-        github.repos.getCommits = fn().mockReturnValueOnce(
+        github.repos.listCommits = fn().mockReturnValueOnce(
           Promise.resolve({ data: require('./fixtures/commits') })
         )
         github.pullRequests.get = fn()
@@ -348,7 +348,7 @@ Previous tag: ''
           github.repos.listReleases = fn().mockReturnValueOnce(
             Promise.resolve({ data: [] })
           )
-          github.repos.getCommits = fn().mockReturnValueOnce(
+          github.repos.listCommits = fn().mockReturnValueOnce(
             Promise.resolve({ data: [] })
           )
           github.repos.createRelease = fn()
@@ -377,7 +377,7 @@ Previous tag: ''
         github.repos.listReleases = fn().mockReturnValueOnce(
           Promise.resolve({ data: [require('./fixtures/release-draft.json')] })
         )
-        github.repos.getCommits = fn().mockReturnValueOnce(
+        github.repos.listCommits = fn().mockReturnValueOnce(
           Promise.resolve({ data: require('./fixtures/commits') })
         )
         github.pullRequests.get = fn()
