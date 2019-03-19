@@ -308,12 +308,13 @@
     universal-user-agent "^2.0.1"
     url-template "^2.0.8"
 
-"@octokit/graphql@2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@octokit/graphql/-/graphql-2.0.1.tgz#0e9d7f41d6ac3305f37767e723183bd0b77af7d2"
-  integrity sha512-IBNr05yBYqffy9L37Vv3/5xQMw+swmYFtMsuwqUA5vSEUr+s/POf8DOpCaTtS8f7e9k+cEuKLC5AbOoXkdZZOA==
+"@octokit/graphql@2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@octokit/graphql/-/graphql-2.0.2.tgz#c282af5e418432b123e039f751725fe39573033a"
+  integrity sha512-q3h3WWpGKkizPChhysKhy1uGdyjTsS7THTweIap3EWG5e3FQufXy1m7UPgKV3VpXHYZuBbX+k0paD213igiLuw==
   dependencies:
-    "@octokit/request" "^2.1.2"
+    "@octokit/request" "^2.4.0"
+    universal-user-agent "^2.0.3"
 
 "@octokit/plugin-enterprise-compatibility@^1.0.0":
   version "1.1.0"
@@ -334,7 +335,7 @@
   dependencies:
     bottleneck "^2.15.3"
 
-"@octokit/request@2.4.2", "@octokit/request@^2.1.2":
+"@octokit/request@2.4.2", "@octokit/request@^2.1.2", "@octokit/request@^2.4.0":
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/@octokit/request/-/request-2.4.2.tgz#87c36e820dd1e43b1629f4f35c95b00cd456320b"
   integrity sha512-lxVlYYvwGbKSHXfbPk5vxEA8w4zHOH1wobado4a9EfsyD3Cbhuhus1w0Ye9Ro0eMubGO8kNy5d+xNFisM3Tvaw==
@@ -4493,13 +4494,13 @@ probot-config@1.0.1:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.0.1:
-  version "9.0.1"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.0.1.tgz#bcae1d0a50b8771ec59fe6a7038ebf5329eb0310"
-  integrity sha512-7xPpSL5d1LJdrxjYHTPDrXpOu1ZJc9pMg3dB+m0TG0zIMvLw2AYyHypJjWb/Zqo53A1seEQSRyJyoSBHVx/R5g==
+probot@9.0.2:
+  version "9.0.2"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.0.2.tgz#9906a265ff62e17ce875a5776573a1a2cb5b700e"
+  integrity sha512-0sDKmFEd8eoWaV/fOfGXS0BPjxSpTKInov/J93wCMbemMx5zUWZ2o/FbhhXtnQtBEQSzoi3k0xEyk2md5AgkrA==
   dependencies:
     "@octokit/app" "^2.1.0"
-    "@octokit/graphql" "2.0.1"
+    "@octokit/graphql" "2.0.2"
     "@octokit/plugin-enterprise-compatibility" "^1.0.0"
     "@octokit/plugin-retry" "^2.1.1"
     "@octokit/plugin-throttling" "^2.3.0"
@@ -5619,7 +5620,7 @@ universal-user-agent@^2.0.0:
   dependencies:
     os-name "^2.0.1"
 
-universal-user-agent@^2.0.1:
+universal-user-agent@^2.0.1, universal-user-agent@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/universal-user-agent/-/universal-user-agent-2.0.3.tgz#9f6f09f9cc33de867bb720d84c08069b14937c6c"
   integrity sha512-eRHEHhChCBHrZsA4WEhdgiOKgdvgrMIHwnwnqD0r5C6AO8kwKcG7qSku3iXdhvHL3YvsS9ZkSGN8h/hIpoFC8g==
