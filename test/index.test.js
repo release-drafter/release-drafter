@@ -1,46 +1,12 @@
 const nock = require('nock')
 const route = require('nock-knock/lib').default
 const { Probot, Octokit } = require('probot')
-const { fn } = jest
-const fs = require('fs')
-const { encodeContent } = require('../lib/base64')
-const http = require('http')
+const configFixture = require('./helpers/config-fixture')
 
 const { mockError, mockConfig } = require('./helpers/mock-responses')
 const releaseDrafter = require('../index')
 
 nock.disableNetConnect()
-
-// TODO: move to helpers
-function configFixture(fileName = 'config.yml') {
-  return {
-    type: 'file',
-    encoding: 'base64',
-    size: 5362,
-    name: 'release-drafter.yml',
-    path: '.github/release-drafter.yml',
-    content: encodeContent(
-      fs.readFileSync(`${__dirname}/fixtures/config/${fileName}`)
-    ),
-    sha: '3d21ec53a331a6f037a91c368710b99387d012c1',
-    url:
-      'https://api.github.com/repos/octokit/octokit.rb/contents/.github/release-drafter.yml',
-    git_url:
-      'https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1',
-    html_url:
-      'https://github.com/octokit/octokit.rb/blob/master/.github/release-drafter.yml',
-    download_url:
-      'https://raw.githubusercontent.com/octokit/octokit.rb/master/.github/release-drafter.yml',
-    _links: {
-      git:
-        'https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1',
-      self:
-        'https://api.github.com/repos/octokit/octokit.rb/contents/.github/release-drafter.yml',
-      html:
-        'https://github.com/octokit/octokit.rb/blob/master/.github/release-drafter.yml'
-    }
-  }
-}
 
 const cert = `-----BEGIN RSA PRIVATE KEY-----
 MIICXQIBAAKBgQC2RTg7dNjQMwPzFwF0gXFRCcRHha4H24PeK7ey6Ij39ay1hy2o
