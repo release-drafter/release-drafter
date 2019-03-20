@@ -2,8 +2,6 @@ const nock = require('nock')
 const route = require('nock-knock/lib').default
 const { Probot, Octokit } = require('probot')
 const configFixture = require('./helpers/config-fixture')
-
-const { mockError, mockConfig } = require('./helpers/mock-responses')
 const releaseDrafter = require('../index')
 
 nock.disableNetConnect()
