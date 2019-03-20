@@ -302,235 +302,263 @@ Previous tag: ''
 
       describe('with custom changes-template config', () => {
         it('creates a new draft using the template', async () => {
-          github.repos.getContents = fn().mockReturnValueOnce(
-            mockConfig('config-with-changes-templates.yml')
-          )
-          github.repos.listReleases = fn().mockReturnValueOnce(
-            Promise.resolve({ data: [require('./fixtures/release')] })
-          )
-          github.repos.compareCommits = fn().mockReturnValueOnce(
-            Promise.resolve({
-              data: {
-                commits: require('./fixtures/commits')
-              }
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
+            )
+            .reply(200, configFixture('config-with-changes-templates.yml'))
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release')])
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
+            )
+            .reply(200, {
+              commits: require('./fixtures/commits')
             })
-          )
-          github.pullRequests.get = fn()
-            .mockReturnValueOnce(
-              Promise.resolve(require('./fixtures/pull-request-1'))
-            )
-            .mockReturnValueOnce(
-              Promise.resolve(require('./fixtures/pull-request-2'))
-            )
 
-          github.repos.createRelease = fn()
+          nock('https://api.github.com')
+            .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
+            .reply(200, require('./fixtures/pull-request-1.json'))
+            .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
+            .reply(200, require('./fixtures/pull-request-2.json'))
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              body => {
+                expect(body).toMatchObject({
+                  body: `* Change: #2 'Integrate alien technology' @another-user
+* Change: #1 'More cowbell' @toolmantim`,
+                  draft: true,
+                  tag_name: ''
+                })
+                return true
+              }
+            )
+            .reply(200)
 
           await probot.receive({
             name: 'push',
             payload: require('./fixtures/push')
           })
 
-          expect(github.repos.createRelease).toBeCalledWith(
-            expect.objectContaining({
-              body: `* Change: #1 'More cowbell' @toolmantim
-* Change: #2 'Integrate alien technology' @another-user`,
-              draft: true,
-              tag_name: ''
-            })
-          )
+          expect.assertions(1)
         })
       })
 
       describe('with contributors config', () => {
         it('adds the contributors', async () => {
-          github.repos.getContents = fn().mockReturnValueOnce(
-            mockConfig('config-with-contributors.yml')
-          )
-          github.repos.listReleases = fn().mockReturnValueOnce(
-            Promise.resolve({ data: [require('./fixtures/release')] })
-          )
-          github.repos.compareCommits = fn().mockReturnValueOnce(
-            Promise.resolve({
-              data: {
-                commits: require('./fixtures/commits')
-              }
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
+            )
+            .reply(200, configFixture('config-with-contributors.yml'))
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release')])
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
+            )
+            .reply(200, {
+              commits: require('./fixtures/commits')
             })
-          )
-          github.pullRequests.get = fn()
-            .mockReturnValueOnce(
-              Promise.resolve(require('./fixtures/pull-request-1'))
-            )
-            .mockReturnValueOnce(
-              Promise.resolve(require('./fixtures/pull-request-2'))
-            )
 
-          github.repos.createRelease = fn()
+          nock('https://api.github.com')
+            .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
+            .reply(200, require('./fixtures/pull-request-1.json'))
+            .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
+            .reply(200, require('./fixtures/pull-request-2.json'))
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              body => {
+                expect(body).toMatchObject({
+                  body: `A big thanks to: @another-user, @toolmantim and Ada`,
+                  draft: true,
+                  tag_name: ''
+                })
+                return true
+              }
+            )
+            .reply(200)
 
           await probot.receive({
             name: 'push',
             payload: require('./fixtures/push')
           })
 
-          expect(github.repos.createRelease).toBeCalledWith(
-            expect.objectContaining({
-              body: `A big thanks to: @another-user, @toolmantim and Ada`,
-              draft: true,
-              tag_name: ''
-            })
-          )
+          expect.assertions(1)
         })
       })
     })
 
     describe('with no changes since the last release', () => {
       it('creates a new draft with no changes', async () => {
-        github.repos.getContents = fn().mockReturnValueOnce(
-          mockConfig('config.yml')
-        )
-        github.repos.listReleases = fn().mockReturnValueOnce(
-          Promise.resolve({
-            data:
-              // Tests whether it sorts releases properly
-              [
-                require('./fixtures/release-2'),
-                require('./fixtures/release'),
-                require('./fixtures/release-3')
-              ]
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
+          )
+          .reply(200, configFixture('config.yml'))
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [
+            require('./fixtures/release-2'),
+            require('./fixtures/release'),
+            require('./fixtures/release-3')
+          ])
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
+          )
+          .reply(200, {
+            commits: require('./fixtures/commits')
           })
-        )
-        github.repos.compareCommits = fn().mockReturnValueOnce(
-          Promise.resolve({ data: { commits: [] } })
-        )
-        github.repos.createRelease = fn()
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
+
+* No changes
+`,
+                draft: true,
+                tag_name: ''
+              })
+              return true
+            }
+          )
+          .reply(200)
 
         await probot.receive({
           name: 'push',
           payload: require('./fixtures/push')
         })
 
-        expect(github.repos.compareCommits).toBeCalledWith(
-          expect.objectContaining({
-            base: 'v2.0.0',
-            head: 'master'
-          })
-        )
-        expect(github.repos.createRelease).toBeCalledWith(
-          expect.objectContaining({
-            body: `# What's Changed
-
-* No changes
-`,
-            draft: true,
-            tag_name: ''
-          })
-        )
+        expect.assertions(1)
       })
 
       describe('with custom no-changes-template config', () => {
         it('creates a new draft with the template', async () => {
-          github.repos.getContents = fn().mockReturnValueOnce(
-            mockConfig('config-with-changes-templates.yml')
-          )
-          github.repos.listReleases = fn().mockReturnValueOnce(
-            Promise.resolve({ data: [] })
-          )
-          github.repos.listCommits = fn().mockReturnValueOnce(
-            Promise.resolve({ data: [] })
-          )
-          github.repos.createRelease = fn()
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
+            )
+            .reply(200, configFixture('config-with-changes-templates.yml'))
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [])
+            .get('/repos/toolmantim/release-drafter-test-project/commits')
+            .query(true)
+            .reply(200, require('./fixtures/commits'))
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              body => {
+                expect(body).toMatchObject({
+                  body: `* No changes mmkay`,
+                  draft: true,
+                  tag_name: ''
+                })
+                return true
+              }
+            )
+            .reply(200)
 
           await probot.receive({
             name: 'push',
             payload: require('./fixtures/push')
           })
 
-          expect(github.repos.createRelease).toBeCalledWith(
-            expect.objectContaining({
-              body: `* No changes mmkay`,
-              draft: true,
-              tag_name: ''
-            })
-          )
+          expect.assertions(1)
         })
       })
     })
 
     describe('with an existing draft release', () => {
       it('updates the existing release’s body', async () => {
-        github.repos.getContents = fn().mockReturnValueOnce(
-          mockConfig('config.yml')
-        )
-        github.repos.listReleases = fn().mockReturnValueOnce(
-          Promise.resolve({ data: [require('./fixtures/release-draft.json')] })
-        )
-        github.repos.listCommits = fn().mockReturnValueOnce(
-          Promise.resolve({ data: require('./fixtures/commits') })
-        )
-        github.pullRequests.get = fn()
-          .mockReturnValueOnce(
-            Promise.resolve(require('./fixtures/pull-request-1'))
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
           )
-          .mockReturnValueOnce(
-            Promise.resolve(require('./fixtures/pull-request-2'))
+          .reply(200, configFixture('config.yml'))
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release-draft.json')])
+          .get('/repos/toolmantim/release-drafter-test-project/commits')
+          .query(true)
+          .reply(200, require('./fixtures/commits'))
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
+          .reply(200, require('./fixtures/pull-request-1.json'))
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
+          .reply(200, require('./fixtures/pull-request-2.json'))
+
+        nock('https://api.github.com')
+          .patch(
+            '/repos/toolmantim/release-drafter-test-project/releases/11691725',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
+
+* Integrate alien technology (#2) @another-user
+* More cowbell (#1) @toolmantim
+`
+              })
+              return true
+            }
           )
-        github.repos.updateRelease = fn()
+          .reply(200)
 
         await probot.receive({
           name: 'push',
           payload: require('./fixtures/push')
         })
 
-        expect(github.repos.updateRelease).toBeCalledWith(
-          expect.objectContaining({
-            body: `# What's Changed
-
-* More cowbell (#1) @toolmantim
-* Integrate alien technology (#2) @another-user
-`
-          })
-        )
+        expect.assertions(1)
       })
     })
 
     describe('with categories config', () => {
       it('categorizes pull requests', async () => {
-        github.repos.getContents = fn().mockReturnValueOnce(
-          mockConfig('config-with-categories.yml')
-        )
-        github.repos.listReleases = fn().mockReturnValueOnce(
-          Promise.resolve({ data: [require('./fixtures/release')] })
-        )
-        github.repos.compareCommits = fn().mockReturnValueOnce(
-          Promise.resolve({
-            data: {
-              commits: require('./fixtures/commits-2')
-            }
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
+          )
+          .reply(200, configFixture('config-with-categories.yml'))
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
+          )
+          .reply(200, {
+            commits: require('./fixtures/commits-2')
           })
-        )
-        github.pullRequests.get = fn()
-          .mockReturnValueOnce(
-            Promise.resolve(require('./fixtures/pull-request-1'))
-          )
-          .mockReturnValueOnce(
-            Promise.resolve(require('./fixtures/pull-request-2'))
-          )
-          .mockReturnValueOnce(
-            Promise.resolve(require('./fixtures/pull-request-3'))
-          )
-          .mockReturnValueOnce(
-            Promise.resolve(require('./fixtures/pull-request-4'))
-          )
 
-        github.repos.createRelease = fn()
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
+          .reply(200, require('./fixtures/pull-request-1.json'))
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
+          .reply(200, require('./fixtures/pull-request-2.json'))
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/3')
+          .reply(200, require('./fixtures/pull-request-3.json'))
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/4')
+          .reply(200, require('./fixtures/pull-request-4.json'))
 
-        await probot.receive({
-          name: 'push',
-          payload: require('./fixtures/push')
-        })
-
-        expect(github.repos.createRelease).toBeCalledWith(
-          expect.objectContaining({
-            body: `# What's Changed
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
 
 * Updated documentation (#4) @another-user
 
@@ -540,13 +568,23 @@ Previous tag: ''
 
 ## 🐛 Bug Fixes
 
-* Integrate alien technology (#2) @another-user
 * Fixed a bug (#3) @another-user
+* Integrate alien technology (#2) @another-user
 `,
-            draft: true,
-            tag_name: ''
-          })
-        )
+                draft: true,
+                tag_name: ''
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
       })
     })
   })
