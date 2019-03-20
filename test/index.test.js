@@ -1,7 +1,7 @@
 const nock = require('nock')
 const route = require('nock-knock/lib').default
 const { Probot, Octokit } = require('probot')
-const configFixture = require('./helpers/config-fixture')
+const getConfigMock = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
 
 nock.disableNetConnect()
@@ -57,11 +57,9 @@ describe('release-drafter', () => {
 
     describe('to a non-master branch', () => {
       it('does nothing', async () => {
+        getConfigMock()
+
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-          )
-          .reply(200, configFixture())
           .post(route('/repos/:owner/:repo/releases'))
           .reply(200, () => {
             throw new Error("Shouldn't create a new release")
@@ -79,11 +77,9 @@ describe('release-drafter', () => {
 
       describe('when configured for that branch', () => {
         it('creates a release draft', async () => {
+          getConfigMock('config-non-master-branch.yml')
+
           nock('https://api.github.com')
-            .get(
-              '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-            )
-            .reply(200, configFixture('config-non-master-branch.yml'))
             .get('/repos/toolmantim/release-drafter-test-project/releases')
             .query(true)
             .reply(200, [require('./fixtures/release')])
@@ -115,11 +111,9 @@ describe('release-drafter', () => {
 
     describe('with no past releases', () => {
       it('sets $CHANGES based on all commits, and $PREVIOUS_TAG to blank', async () => {
+        getConfigMock('config-previous-tag.yml')
+
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-          )
-          .reply(200, configFixture('config-previous-tag.yml'))
           .get(
             '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
           )
@@ -166,11 +160,9 @@ Previous tag: ''
 
     describe('with past releases', () => {
       it('creates a new draft listing the changes', async () => {
+        getConfigMock()
+
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-          )
-          .reply(200, configFixture('config.yml'))
           .get(
             '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
           )
@@ -219,11 +211,9 @@ Previous tag: ''
       })
 
       it('makes next versions available as template placeholders', async () => {
+        getConfigMock('config-with-next-versioning.yml')
+
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-          )
-          .reply(200, configFixture('config-with-next-versioning.yml'))
           .get(
             '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
           )
@@ -266,11 +256,9 @@ Previous tag: ''
 
       describe('with custom changes-template config', () => {
         it('creates a new draft using the template', async () => {
+          getConfigMock('config-with-changes-templates.yml')
+
           nock('https://api.github.com')
-            .get(
-              '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-            )
-            .reply(200, configFixture('config-with-changes-templates.yml'))
             .get(
               '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
             )
@@ -314,11 +302,9 @@ Previous tag: ''
 
       describe('with contributors config', () => {
         it('adds the contributors', async () => {
+          getConfigMock('config-with-contributors.yml')
+
           nock('https://api.github.com')
-            .get(
-              '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-            )
-            .reply(200, configFixture('config-with-contributors.yml'))
             .get(
               '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
             )
@@ -362,11 +348,9 @@ Previous tag: ''
 
     describe('with no changes since the last release', () => {
       it('creates a new draft with no changes', async () => {
+        getConfigMock()
+
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-          )
-          .reply(200, configFixture('config.yml'))
           .get(
             '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
           )
@@ -409,11 +393,9 @@ Previous tag: ''
 
       describe('with custom no-changes-template config', () => {
         it('creates a new draft with the template', async () => {
+          getConfigMock('config-with-changes-templates.yml')
+
           nock('https://api.github.com')
-            .get(
-              '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-            )
-            .reply(200, configFixture('config-with-changes-templates.yml'))
             .get('/repos/toolmantim/release-drafter-test-project/releases')
             .query(true)
             .reply(200, [])
@@ -447,11 +429,9 @@ Previous tag: ''
 
     describe('with an existing draft release', () => {
       it('updates the existing release’s body', async () => {
+        getConfigMock()
+
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-          )
-          .reply(200, configFixture('config.yml'))
           .get('/repos/toolmantim/release-drafter-test-project/releases')
           .query(true)
           .reply(200, [require('./fixtures/release-draft.json')])
@@ -492,11 +472,9 @@ Previous tag: ''
 
     describe('with categories config', () => {
       it('categorizes pull requests', async () => {
+        getConfigMock('config-with-categories.yml')
+
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
-          )
-          .reply(200, configFixture('config-with-categories.yml'))
           .get('/repos/toolmantim/release-drafter-test-project/releases')
           .query(true)
           .reply(200, [require('./fixtures/release')])

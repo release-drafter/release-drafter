@@ -1,7 +1,8 @@
 const fs = require('fs')
+const nock = require('nock')
 const { encodeContent } = require('../../lib/base64')
 
-module.exports = function configFixture(fileName = 'config.yml') {
+function configFixture(fileName = 'config.yml') {
   return {
     type: 'file',
     encoding: 'base64',
@@ -29,4 +30,12 @@ module.exports = function configFixture(fileName = 'config.yml') {
         'https://github.com/octokit/octokit.rb/blob/master/.github/release-drafter.yml'
     }
   }
+}
+
+module.exports = function getConfigMock(fileName) {
+  return nock('https://api.github.com')
+    .get(
+      '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
+    )
+    .reply(200, configFixture(fileName))
 }
