@@ -3734,7 +3734,7 @@ nice-try@^1.0.4:
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
 
-nock-knock@^2.0.0:
+nock-knock@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/nock-knock/-/nock-knock-2.0.0.tgz#bb530fa178538584415ed21b1e78fb949ea8b6a0"
   integrity sha512-jKsAH7uMJzykgjVV1CtFObE3NazpopiptKo9sqTY1Xu80KMDgNxcgyoIUt0KjNkmMCeFoS1VVKu2ZKsnc6tcfg==
