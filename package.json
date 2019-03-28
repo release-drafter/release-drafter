@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "compare-versions": "3.4.0",
-    "probot": "9.1.0",
+    "probot": "9.1.1",
     "probot-config": "1.0.1",
     "request": "2.88.0",
     "semver": "5.6.0"

@@ -4286,10 +4286,10 @@ probot-config@1.0.1:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.1.0:
-  version "9.1.0"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.1.0.tgz#86d0fcfa43fcae27b21ae524482f15918677b127"
-  integrity sha512-S9D2pjrExBT59QbUv1jQafwz8YU8D5rLlS5UkPw+ZJpHkvi9fg9YEHgdLqG48+kUbjPwBTGvlYfWAfGVUoekeQ==
+probot@9.1.1:
+  version "9.1.1"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.1.1.tgz#e86484e4e13005e2c57ddb35dbf91a5f72d7d03d"
+  integrity sha512-GHFBdiajY0/baOSV2OrB/QpHsvO+4hW8u5fm+h9GVidTSINhcnJYHGLRxPcLIeJzLbWPx2gqmE7VRtecQqXnwg==
   dependencies:
     "@octokit/app" "^2.1.0"
     "@octokit/graphql" "2.0.2"
@@ -4320,7 +4320,7 @@ probot@9.1.0:
     qs "^6.5.2"
     raven "^2.4.2"
     resolve "^1.4.0"
-    semver "^5.5.0"
+    semver "^6.0.0"
     supports-color "^6.0.0"
     update-dotenv "^1.1.0"
     uuid "^3.2.1"
@@ -4761,6 +4761,11 @@ semver-diff@^2.0.0:
   version "5.6.0"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.6.0.tgz#7e74256fbaa49c75aa7c7a205cc22799cac80004"
   integrity sha512-RS9R6R35NYgQn++fkDWaOmqGoj4Ek9gGs+DPxNUZKuwE183xjJroKvyo1IzVFeXvUrvmALy6FWD5xrdJT25gMg==
+
+semver@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-6.0.0.tgz#05e359ee571e5ad7ed641a6eec1e547ba52dea65"
+  integrity sha512-0UewU+9rFapKFnlbirLi3byoOuhrSsli/z/ihNnvM24vgF+8sNBiI1LZPBSH9wJKUwaUbw+s3hToDLCXkrghrQ==
 
 send@0.16.2:
   version "0.16.2"
