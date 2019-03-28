@@ -37,6 +37,7 @@ module.exports = app => {
       commits,
       config,
       lastRelease,
+      draftRelease,
       mergedPullRequests
     })
 

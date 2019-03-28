@@ -79,6 +79,12 @@ describe('release-drafter', () => {
         it('creates a release draft', async () => {
           getConfigMock('config-non-master-branch.yml')
 
+          const removeVariableComments = obj => {
+            return Object.assign({}, obj, {
+              body: obj.body.replace(/<!--.*?-->\n/g, '')
+            })
+          }
+
           nock('https://api.github.com')
             .get('/repos/toolmantim/release-drafter-test-project/releases')
             .query(true)
@@ -90,7 +96,7 @@ describe('release-drafter', () => {
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               body => {
-                expect(body).toMatchObject({
+                expect(removeVariableComments(body)).toMatchObject({
                   name: '',
                   tag_name: '',
                   body: `# What's Changed\n\n* No changes\n`,
