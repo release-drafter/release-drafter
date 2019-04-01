@@ -53,4 +53,18 @@ describe('versions', () => {
 
     expect(versionInfo).toEqual(undefined)
   })
+
+  it('extracts a non-semvar version when patchVersions is false', () => {
+    const versionInfo = getVersionInfo(
+      {
+        tag_name: 'v10.0.3',
+        name: 'Some release'
+      },
+      false
+    )
+
+    expect(versionInfo.incrementedMajor).toEqual('11.0')
+    expect(versionInfo.incrementedMinor).toEqual('10.1')
+    expect(versionInfo.incrementedPatch).toBeUndefined()
+  })
 })
