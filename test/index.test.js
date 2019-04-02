@@ -529,5 +529,93 @@ Previous tag: ''
         expect.assertions(1)
       })
     })
+
+    it('when only using major.minor version template', async () => {
+      getConfigMock('config-with-major-minor-version-template.yml')
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [require('./fixtures/release')])
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
+        )
+        .reply(200, {
+          commits: require('./fixtures/commits')
+        })
+
+      nock('https://api.github.com')
+        .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
+        .reply(200, require('./fixtures/pull-request-1.json'))
+        .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
+        .reply(200, require('./fixtures/pull-request-2.json'))
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          body => {
+            expect(body).toMatchObject({
+              body: `Placeholder with example. Automatically calculated values are next major=3.0, minor=2.1, patch=2.0`,
+              draft: true,
+              name: 'v2.1 (Code name: Placeholder)',
+              tag_name: 'v2.1'
+            })
+            return true
+          }
+        )
+        .reply(200)
+
+      await probot.receive({
+        name: 'push',
+        payload: require('./fixtures/push')
+      })
+
+      expect.assertions(1)
+    })
+
+    it('when only using major version template', async () => {
+      getConfigMock('config-with-major-version-template.yml')
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [require('./fixtures/release')])
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
+        )
+        .reply(200, {
+          commits: require('./fixtures/commits')
+        })
+
+      nock('https://api.github.com')
+        .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
+        .reply(200, require('./fixtures/pull-request-1.json'))
+        .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
+        .reply(200, require('./fixtures/pull-request-2.json'))
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          body => {
+            expect(body).toMatchObject({
+              body: `Placeholder with example. Automatically calculated values are next major=3, minor=2, patch=2`,
+              draft: true,
+              name: 'v3 (Code name: Placeholder)',
+              tag_name: 'v3'
+            })
+            return true
+          }
+        )
+        .reply(200)
+
+      await probot.receive({
+        name: 'push',
+        payload: require('./fixtures/push')
+      })
+
+      expect.assertions(1)
+    })
   })
 })

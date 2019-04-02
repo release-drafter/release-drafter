@@ -12,6 +12,7 @@ module.exports = app => {
       branches: context.payload.repository.default_branch,
       'change-template': `* $TITLE (#$NUMBER) @$AUTHOR`,
       'no-changes-template': `* No changes`,
+      'version-template': `$MAJOR.$MINOR.$PATCH`,
       categories: []
     }
     const config = Object.assign(
