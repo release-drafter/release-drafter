@@ -7,6 +7,7 @@
   "env": { "node": true, "es6": true },
   "rules": {
     "prettier/prettier": "warn",
-    "no-console": "off"
+    "no-console": "off",
+    "no-unused-vars": "warn"
   }
 }
