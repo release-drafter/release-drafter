@@ -1,0 +1,10 @@
+{
+  "extends": ["eslint:recommended", "prettier"],
+  "parserOptions": {
+    "ecmaVersion": 9
+  },
+  "env": { "node": true, "es6": true },
+  "rules": {
+    "no-console": "off"
+  }
+}
