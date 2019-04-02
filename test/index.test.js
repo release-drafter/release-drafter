@@ -254,7 +254,7 @@ Previous tag: ''
         expect.assertions(1)
       })
 
-      it('makes next versions non-semver available as template placeholders', async () => {
+      it('makes next versions non-semver when patch versions is false', async () => {
         getConfigMock('config-with-no-patch-versioning.yml')
 
         nock('https://api.github.com')
