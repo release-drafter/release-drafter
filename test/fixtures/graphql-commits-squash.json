@@ -1,0 +1,100 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "target": {
+          "history": {
+            "totalCount": 4,
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "3b9d647ea21e859889135d85b02b4f6e58e43104 3"
+            },
+            "nodes": [
+              {
+                "id": "MDY6Q29tbWl0MTc5MjczODgyOjNiOWQ2NDdlYTIxZTg1OTg4OTEzNWQ4NWIwMmI0ZjZlNThlNDMxMDQ=",
+                "message": "Implement homepage (#3)\n\n* Initial version for homepage\r\n\r\n* Add styling\r\n\r\n* Add contact form to homepage",
+                "author": {
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Implement homepage",
+                      "number": 3,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjczODgyOjZkOWE0MjgxOGIyY2VlZWYxODEzZTNjZDFiOGQ5ZDk1Mjk2NjAzMTE=",
+                "message": "Add Prettier config (#2)",
+                "author": {
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add Prettier config",
+                      "number": 2,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjczODgyOmMxMTI4OGEwZTJiYWNlYTE1YjcxOTUyYWI2MmU1MzhhMjA2YmMwMmU=",
+                "message": "Add EditorConfig (#1)\n\n* Add EditorConfig\r\n\r\n* Change indent_size to 4",
+                "author": {
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add EditorConfig",
+                      "number": 1,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjczODgyOjhkYTNmYTEzZDJmNTFjNWM0Yjk5NjA3ODE0MmEzZWE2ZmU1NmQ1NjE=",
+                "message": "first commit",
+                "author": {
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
