@@ -11,6 +11,29 @@
             },
             "nodes": [
               {
+                "id": "ADY6Q29tbWl0MTc5MjYzMzk1OjczMTAxYTFiNDJmN2M0ZTU1N2E4YTMzODA1NGJhYmYyZDdlNDc5MDY=",
+                "message": "Fixed a bug",
+                "author": {
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Fixed a bug",
+                      "number": 4,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [{ "name": "fix" }]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
                 "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjczMTAxYTFiNDJmN2M0ZTU1N2E4YTMzODA1NGJhYmYyZDdlNDc5MDY=",
                 "message": "Add contact form to homepage",
                 "author": {
@@ -27,7 +50,7 @@
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": []
+                        "nodes": [{ "name": "feature" }]
                       }
                     }
                   ]
@@ -50,7 +73,7 @@
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": []
+                        "nodes": [{ "name": "feature" }]
                       }
                     }
                   ]
@@ -73,7 +96,7 @@
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": []
+                        "nodes": [{ "name": "feature" }]
                       }
                     }
                   ]

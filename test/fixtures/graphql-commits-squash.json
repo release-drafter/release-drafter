@@ -11,6 +11,29 @@
             },
             "nodes": [
               {
+                "id": "ADY6Q29tbWl0MTc5MjczODgyOjNiOWQ2NDdlYTIxZTg1OTg4OTEzNWQ4NWIwMmI0ZjZlNThlNDMxMDQ=",
+                "message": "Fixed a bug (#4)",
+                "author": {
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Fixed a bug",
+                      "number": 4,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [{ "name": "fix" }]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
                 "id": "MDY6Q29tbWl0MTc5MjczODgyOjNiOWQ2NDdlYTIxZTg1OTg4OTEzNWQ4NWIwMmI0ZjZlNThlNDMxMDQ=",
                 "message": "Implement homepage (#3)\n\n* Initial version for homepage\r\n\r\n* Add styling\r\n\r\n* Add contact form to homepage",
                 "author": {
@@ -27,7 +50,7 @@
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": []
+                        "nodes": [{ "name": "feature" }]
                       }
                     }
                   ]

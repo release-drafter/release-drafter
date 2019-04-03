@@ -83,7 +83,7 @@ describe('release-drafter', () => {
             .post('/graphql', body =>
               body.query.includes('query getCommitsWithAssociatedPullRequests')
             )
-            .reply(200, require('./fixtures/graphql-commits-empty.json'))
+            .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
 
           nock('https://api.github.com')
             .get('/repos/toolmantim/release-drafter-test-project/releases')
@@ -133,6 +133,7 @@ describe('release-drafter', () => {
             body => {
               expect(body).toMatchObject({
                 body: `Changes:
+* Fixed a bug (#4) @TimonVS
 * Implement homepage (#3) @TimonVS
 * Add Prettier config (#2) @TimonVS
 * Add EditorConfig (#1) @TimonVS
@@ -185,6 +186,7 @@ Previous tag: ''
               expect(body).toMatchObject({
                 body: `# What's Changed
 
+* Fixed a bug (#4) @TimonVS
 * Implement homepage (#3) @TimonVS
 * Add Prettier config (#2) @TimonVS
 * Add EditorConfig (#1) @TimonVS
@@ -264,8 +266,10 @@ Previous tag: ''
               '/repos/toolmantim/release-drafter-test-project/releases',
               body => {
                 expect(body).toMatchObject({
-                  body: `* Change: #2 'Integrate alien technology' @another-user
-* Change: #1 'More cowbell' @toolmantim`,
+                  body: `* Change: #4 'Fixed a bug' @TimonVS
+* Change: #3 'Implement homepage' @TimonVS
+* Change: #2 'Add Prettier config' @TimonVS
+* Change: #1 'Add EditorConfig' @TimonVS`,
                   draft: true,
                   tag_name: ''
                 })
@@ -338,10 +342,15 @@ Previous tag: ''
           ])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
-            body.query.includes('query getCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .post('/graphql', body => {
+            expect(body.variables.since).toBe(
+              require('./fixtures/release-3').published_at
+            )
+            return body.query.includes(
+              'query getCommitsWithAssociatedPullRequests'
+            )
+          })
+          .reply(200, require('./fixtures/graphql-commits-empty.json'))
 
         nock('https://api.github.com')
           .post(
@@ -365,7 +374,7 @@ Previous tag: ''
           payload: require('./fixtures/push')
         })
 
-        expect.assertions(1)
+        expect.assertions(2)
       })
 
       describe('with custom no-changes-template config', () => {
@@ -381,7 +390,7 @@ Previous tag: ''
             .post('/graphql', body =>
               body.query.includes('query getCommitsWithAssociatedPullRequests')
             )
-            .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+            .reply(200, require('./fixtures/graphql-commits-empty.json'))
 
           nock('https://api.github.com')
             .post(
@@ -429,8 +438,10 @@ Previous tag: ''
               expect(body).toMatchObject({
                 body: `# What's Changed
 
-* Integrate alien technology (#2) @another-user
-* More cowbell (#1) @toolmantim
+* Fixed a bug (#4) @TimonVS
+* Implement homepage (#3) @TimonVS
+* Add Prettier config (#2) @TimonVS
+* Add EditorConfig (#1) @TimonVS
 `
               })
               return true
@@ -469,16 +480,16 @@ Previous tag: ''
               expect(body).toMatchObject({
                 body: `# What's Changed
 
-* Updated documentation (#4) @another-user
+* Add Prettier config (#2) @TimonVS
+* Add EditorConfig (#1) @TimonVS
 
 ## 🚀 Features
 
-* More cowbell (#1) @toolmantim
+* Implement homepage (#3) @TimonVS
 
 ## 🐛 Bug Fixes
 
-* Fixed a bug (#3) @another-user
-* Integrate alien technology (#2) @another-user
+* Fixed a bug (#4) @TimonVS
 `,
                 draft: true,
                 tag_name: ''

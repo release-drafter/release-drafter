@@ -11,6 +11,29 @@
             },
             "nodes": [
               {
+                "id": "BDY6Q29tbWl0MTc5MjcyNzYyOjZjY2EwZTZjNmYyNGFiYzNmMTMyZjQ1NWEyM2MxNmUyOTY2MDYwZDA=",
+                "message": "Merge pull request #4 from TimonVS/fix/bug\n\nFixed a bug",
+                "author": {
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Fixed a bug",
+                      "number": 4,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [{ "name": "fix" }]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOjZjY2EwZTZjNmYyNGFiYzNmMTMyZjQ1NWEyM2MxNmUyOTY2MDYwZDA=",
                 "message": "Merge pull request #3 from TimonVS/feature/homepage\n\nImplement homepage",
                 "author": {
@@ -27,7 +50,7 @@
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": []
+                        "nodes": [{ "name": "feature" }]
                       }
                     }
                   ]
@@ -74,6 +97,29 @@
                       },
                       "labels": {
                         "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "ADY6Q29tbWl0MTc5MjcyNzYyOjhjZDU4ZWNjMzU0ZjdlMTE2YmI5MzBjYTA5NWNjMGU4NDhjZGQ3YjQ=",
+                "message": "Fixed a bug",
+                "author": {
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Fixed a bug",
+                      "number": 4,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [{ "name": "fix" }]
                       }
                     }
                   ]
