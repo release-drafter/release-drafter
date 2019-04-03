@@ -530,7 +530,7 @@ Previous tag: ''
       })
     })
 
-    it('when only using major.minor version template', async () => {
+    it('generates next version variables as major.minor', async () => {
       getConfigMock('config-with-major-minor-version-template.yml')
 
       nock('https://api.github.com')
@@ -574,7 +574,7 @@ Previous tag: ''
       expect.assertions(1)
     })
 
-    it('when only using major version template', async () => {
+    it('generates next version variables as major', async () => {
       getConfigMock('config-with-major-version-template.yml')
 
       nock('https://api.github.com')
