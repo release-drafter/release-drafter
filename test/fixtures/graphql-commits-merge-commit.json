@@ -14,6 +14,7 @@
                 "id": "BDY6Q29tbWl0MTc5MjcyNzYyOjZjY2EwZTZjNmYyNGFiYzNmMTMyZjQ1NWEyM2MxNmUyOTY2MDYwZDA=",
                 "message": "Merge pull request #4 from TimonVS/fix/bug\n\nFixed a bug",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -37,6 +38,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOjZjY2EwZTZjNmYyNGFiYzNmMTMyZjQ1NWEyM2MxNmUyOTY2MDYwZDA=",
                 "message": "Merge pull request #3 from TimonVS/feature/homepage\n\nImplement homepage",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -60,6 +62,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOjcxNDA5MTA4ZTRhNTg4M2VhODFmODljNjE2Y2Y5NGViMTFmN2Y5YWE=",
                 "message": "Merge pull request #2 from TimonVS/chore/prettier\n\nAdd Prettier config",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -83,6 +86,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOjgwMGViY2MxY2RmY2UxYmZmN2QyYzE1YTM1MzY2YjZkYzU5YTNjMjg=",
                 "message": "Merge pull request #1 from TimonVS/chore/editorconfig\n\nAdd EditorConfig",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -106,6 +110,7 @@
                 "id": "ADY6Q29tbWl0MTc5MjcyNzYyOjhjZDU4ZWNjMzU0ZjdlMTE2YmI5MzBjYTA5NWNjMGU4NDhjZGQ3YjQ=",
                 "message": "Fixed a bug",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -129,6 +134,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOjhjZDU4ZWNjMzU0ZjdlMTE2YmI5MzBjYTA5NWNjMGU4NDhjZGQ3YjQ=",
                 "message": "Add contact form to homepage",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -152,6 +158,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOjVkZGQ2YzAxMzlhM2QxN2Y3NmE2ZjQ3YjA1NjFkODVkMjk5NjM4MGE=",
                 "message": "Add styling",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -175,6 +182,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOmE3M2M0ZGQ0NWJjY2EwODUyNDQ2MmIyYmI2YjU3OTlkOGI1OGU2Yzg=",
                 "message": "Initial version for homepage",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -198,6 +206,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOmE2OWFlMGU1NWNkYTYwYWQ3N2IzYWI4M2IzZThmMWEwYzE2NzhjMGQ=",
                 "message": "Add Prettier config",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -221,6 +230,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOmUzN2FmMTFiZDdhZmFlNmMyMzVlM2E3NDEyZjI3ZWZlYzUyODgzYzc=",
                 "message": "Change indent_size to 4",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -244,6 +254,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOmJlZTY2YTNkNzQ0MDZmZmFhYjNkYjgwNDg5MWNkMmUzOTgwZmQzNTQ=",
                 "message": "Add EditorConfig",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -267,9 +278,8 @@
                 "id": "MDY6Q29tbWl0MTc5MjcyNzYyOjhkYTNmYTEzZDJmNTFjNWM0Yjk5NjA3ODE0MmEzZWE2ZmU1NmQ1NjE=",
                 "message": "first commit",
                 "author": {
-                  "user": {
-                    "login": "TimonVS"
-                  }
+                  "name": "Ada",
+                  "user": null
                 },
                 "associatedPullRequests": {
                   "nodes": []

@@ -308,7 +308,7 @@ Previous tag: ''
               '/repos/toolmantim/release-drafter-test-project/releases',
               body => {
                 expect(body).toMatchObject({
-                  body: `A big thanks to: @another-user, @toolmantim and Ada`,
+                  body: `A big thanks to: @TimonVS and Ada`,
                   draft: true,
                   tag_name: ''
                 })

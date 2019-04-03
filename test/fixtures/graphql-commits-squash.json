@@ -14,6 +14,7 @@
                 "id": "ADY6Q29tbWl0MTc5MjczODgyOjNiOWQ2NDdlYTIxZTg1OTg4OTEzNWQ4NWIwMmI0ZjZlNThlNDMxMDQ=",
                 "message": "Fixed a bug (#4)",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -37,6 +38,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjczODgyOjNiOWQ2NDdlYTIxZTg1OTg4OTEzNWQ4NWIwMmI0ZjZlNThlNDMxMDQ=",
                 "message": "Implement homepage (#3)\n\n* Initial version for homepage\r\n\r\n* Add styling\r\n\r\n* Add contact form to homepage",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -60,6 +62,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjczODgyOjZkOWE0MjgxOGIyY2VlZWYxODEzZTNjZDFiOGQ5ZDk1Mjk2NjAzMTE=",
                 "message": "Add Prettier config (#2)",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -83,6 +86,7 @@
                 "id": "MDY6Q29tbWl0MTc5MjczODgyOmMxMTI4OGEwZTJiYWNlYTE1YjcxOTUyYWI2MmU1MzhhMjA2YmMwMmU=",
                 "message": "Add EditorConfig (#1)\n\n* Add EditorConfig\r\n\r\n* Change indent_size to 4",
                 "author": {
+                  "name": "Timon van Spronsen",
                   "user": {
                     "login": "TimonVS"
                   }
@@ -106,9 +110,8 @@
                 "id": "MDY6Q29tbWl0MTc5MjczODgyOjhkYTNmYTEzZDJmNTFjNWM0Yjk5NjA3ODE0MmEzZWE2ZmU1NmQ1NjE=",
                 "message": "first commit",
                 "author": {
-                  "user": {
-                    "login": "TimonVS"
-                  }
+                  "name": "Ada",
+                  "user": null
                 },
                 "associatedPullRequests": {
                   "nodes": []
