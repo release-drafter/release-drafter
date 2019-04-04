@@ -21,7 +21,7 @@
     "probot": "9.2.0",
     "probot-config": "1.0.1",
     "request": "2.88.0",
-    "semver": "5.7.0"
+    "semver": "6.0.0"
   },
   "devDependencies": {
     "husky": "1.3.1",
