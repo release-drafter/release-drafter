@@ -339,12 +339,13 @@
     once "^1.4.0"
     universal-user-agent "^2.0.1"
 
-"@octokit/rest@^16.13.3":
-  version "16.19.0"
-  resolved "https://registry.yarnpkg.com/@octokit/rest/-/rest-16.19.0.tgz#238244eae904c15bc9aa863bb3819142d3369ccb"
-  integrity sha512-mUk/GU2LtV95OAM3FnvK7KFFNzUUzEGFldOhWliJnuhwBqxEag1gW85o//L6YphC9wLoTaZQOhCHmQcsCnt2ag==
+"@octokit/rest@^16.23.2":
+  version "16.23.2"
+  resolved "https://registry.yarnpkg.com/@octokit/rest/-/rest-16.23.2.tgz#975e84610427c4ab6c41bec77c24aed9b7563db4"
+  integrity sha512-ZxiZMaCuqBG/IsbgNRVfGwYsvBb5DjHuMGjJgOrinT+/b+1j1U7PiGyRkHDJdjTGA6N/PsMC2lP2ZybX9579iA==
   dependencies:
     "@octokit/request" "2.4.2"
+    atob-lite "^2.0.0"
     before-after-hook "^1.4.0"
     btoa-lite "^1.0.0"
     deprecation "^1.0.1"
@@ -669,6 +670,11 @@ asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
   integrity sha1-x57Zf380y48robyXkLzDZkdLS3k=
+
+atob-lite@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/atob-lite/-/atob-lite-2.0.0.tgz#0fef5ad46f1bd7a8502c65727f0367d5ee43d696"
+  integrity sha1-D+9a1G8b16hQLGVyfwNn1e5D1pY=
 
 atob@^2.1.1:
   version "2.1.2"
@@ -4275,17 +4281,17 @@ probot-config@1.0.1:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.1.1:
-  version "9.1.1"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.1.1.tgz#e86484e4e13005e2c57ddb35dbf91a5f72d7d03d"
-  integrity sha512-GHFBdiajY0/baOSV2OrB/QpHsvO+4hW8u5fm+h9GVidTSINhcnJYHGLRxPcLIeJzLbWPx2gqmE7VRtecQqXnwg==
+probot@9.2.0:
+  version "9.2.0"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.0.tgz#4fde10e259d4c6550e380ed08c58a5cb0c52e47c"
+  integrity sha512-0UG1a3VOXSfU5RO4QKBGzAyKj/XYQbZu2XIQyXUxq94nEeC7eSDTQP/rh80l52bv9tr5Pip0WCx0hdNhN+TEbQ==
   dependencies:
     "@octokit/app" "^2.1.0"
     "@octokit/graphql" "2.0.2"
     "@octokit/plugin-enterprise-compatibility" "^1.0.0"
     "@octokit/plugin-retry" "^2.1.1"
     "@octokit/plugin-throttling" "^2.3.0"
-    "@octokit/rest" "^16.13.3"
+    "@octokit/rest" "^16.23.2"
     "@octokit/webhooks" "^5.3.1"
     "@types/supports-color" "^5.3.0"
     bottleneck "^2.15.3"
