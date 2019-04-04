@@ -9,9 +9,9 @@ describe('template', () => {
 
   it('replaces $MAJOR.$MINOR.$PATCH with 1.0.0', () => {
     const output = template('$MAJOR.$MINOR.$PATCH', {
-      $MAJOR: '1',
-      $MINOR: '0',
-      $PATCH: '0'
+      $MAJOR: 1,
+      $MINOR: 0,
+      $PATCH: 0
     })
 
     expect(output).toEqual('1.0.0')
