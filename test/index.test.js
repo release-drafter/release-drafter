@@ -697,5 +697,151 @@ Previous tag: ''
         expect.assertions(1)
       })
     })
+
+    describe('merging strategies', () => {
+      describe('merge commit', () => {
+        it('sets $CHANGES based on all commits', async () => {
+          getConfigMock()
+
+          nock('https://api.github.com')
+            .post('/graphql', body =>
+              body.query.includes('query getCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [])
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              body => {
+                expect(body).toMatchObject({
+                  body: `# What's Changed
+
+* Fixed a bug (#4) @TimonVS
+* Implement homepage (#3) @TimonVS
+* Add Prettier config (#2) @TimonVS
+* Add EditorConfig (#1) @TimonVS
+`,
+                  draft: true,
+                  tag_name: ''
+                })
+                return true
+              }
+            )
+            .reply(200)
+
+          const payload = require('./fixtures/push')
+
+          await probot.receive({
+            name: 'push',
+            payload
+          })
+
+          expect.assertions(1)
+        })
+      })
+
+      describe('rebase merging', () => {
+        it('sets $CHANGES based on all commits', async () => {
+          getConfigMock()
+
+          nock('https://api.github.com')
+            .post('/graphql', body =>
+              body.query.includes('query getCommitsWithAssociatedPullRequests')
+            )
+            .reply(
+              200,
+              require('./fixtures/graphql-commits-rebase-merging.json')
+            )
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [])
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              body => {
+                expect(body).toMatchObject({
+                  body: `# What's Changed
+
+* Fixed a bug (#4) @TimonVS
+* Implement homepage (#3) @TimonVS
+* Add Prettier config (#2) @TimonVS
+* Add EditorConfig (#1) @TimonVS
+`,
+                  draft: true,
+                  tag_name: ''
+                })
+                return true
+              }
+            )
+            .reply(200)
+
+          const payload = require('./fixtures/push')
+
+          await probot.receive({
+            name: 'push',
+            payload
+          })
+
+          expect.assertions(1)
+        })
+      })
+
+      describe('squash merging', () => {
+        it('sets $CHANGES based on all commits', async () => {
+          getConfigMock()
+
+          nock('https://api.github.com')
+            .post('/graphql', body =>
+              body.query.includes('query getCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, require('./fixtures/graphql-commits-squash.json'))
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [])
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              body => {
+                expect(body).toMatchObject({
+                  body: `# What's Changed
+
+* Fixed a bug (#4) @TimonVS
+* Implement homepage (#3) @TimonVS
+* Add Prettier config (#2) @TimonVS
+* Add EditorConfig (#1) @TimonVS
+`,
+                  draft: true,
+                  tag_name: ''
+                })
+                return true
+              }
+            )
+            .reply(200)
+
+          const payload = require('./fixtures/push')
+
+          await probot.receive({
+            name: 'push',
+            payload
+          })
+
+          expect.assertions(1)
+        })
+      })
+    })
   })
 })
