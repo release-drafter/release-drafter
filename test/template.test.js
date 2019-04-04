@@ -30,11 +30,4 @@ describe('template', () => {
     expect(output).toEqual(expect.stringContaining('v$NEXT_PATCH_VERSION'))
     expect(output).toEqual(expect.stringContaining('NO CHANGES'))
   })
-
-  it('prototype string template function', () => {
-    const input = '$A'
-    const output = input.template({ $A: 'B' })
-
-    expect(output).toEqual('B')
-  })
 })
