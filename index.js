@@ -39,6 +39,7 @@ module.exports = app => {
     } = await findCommitsWithAssociatedPullRequests({
       app,
       context,
+      branch,
       lastRelease
     })
 
