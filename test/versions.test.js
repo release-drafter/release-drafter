@@ -7,9 +7,9 @@ describe('versions', () => {
       name: 'Some release'
     })
 
-    expect(versionInfo.incrementedMajor).toEqual('11.0.0')
-    expect(versionInfo.incrementedMinor).toEqual('10.1.0')
-    expect(versionInfo.incrementedPatch).toEqual('10.0.4')
+    expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
+    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.4')
   })
 
   it('extracts a version-like string from the last release name if the tag isnt a version', () => {
@@ -18,9 +18,9 @@ describe('versions', () => {
       name: '10.0.3'
     })
 
-    expect(versionInfo.incrementedMajor).toEqual('11.0.0')
-    expect(versionInfo.incrementedMinor).toEqual('10.1.0')
-    expect(versionInfo.incrementedPatch).toEqual('10.0.4')
+    expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
+    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.4')
   })
 
   it('preferences tags over release names', () => {
@@ -29,9 +29,9 @@ describe('versions', () => {
       name: '8.1.0'
     })
 
-    expect(versionInfo.incrementedMajor).toEqual('11.0.0')
-    expect(versionInfo.incrementedMinor).toEqual('10.1.0')
-    expect(versionInfo.incrementedPatch).toEqual('10.0.4')
+    expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
+    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.4')
   })
 
   it('handles alpha/beta releases', () => {
@@ -40,9 +40,9 @@ describe('versions', () => {
       name: 'Some release'
     })
 
-    expect(versionInfo.incrementedMajor).toEqual('11.0.0')
-    expect(versionInfo.incrementedMinor).toEqual('10.1.0')
-    expect(versionInfo.incrementedPatch).toEqual('10.0.4')
+    expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
+    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.4')
   })
 
   it('returns undefined if no version was found in tag or name', () => {
