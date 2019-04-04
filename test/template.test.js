@@ -30,4 +30,21 @@ describe('template', () => {
     expect(output).toEqual(expect.stringContaining('v$NEXT_PATCH_VERSION'))
     expect(output).toEqual(expect.stringContaining('NO CHANGES'))
   })
+
+  it('nested template', () => {
+    const output = template('$NEXT_MAJOR_VERSION', {
+      $NEXT_MAJOR_VERSION: {
+        $MAJOR: 1,
+        $MINOR: 0,
+        $PATCH: 0,
+        $THIRD: {
+          $NEST: 'THIRD LEVEL',
+          template: '$NEST'
+        },
+        template: '$MAJOR.$MINOR.$PATCH.$THIRD'
+      }
+    })
+
+    expect(output).toEqual('1.0.0.THIRD LEVEL')
+  })
 })
