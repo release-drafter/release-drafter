@@ -61,7 +61,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `template`            | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                                                                   |
 | `name-template`       | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                            |
 | `tag-template`        | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                             |
-| `version-template`    | Optional | The template for the version number of the draft release. For example: `"$MAJOR.$MINOR"` will have `"v$NEXT_PATCH_VERSION"` only return `v1.0` used for non-semver version. Default: `"$MAJOR.$MINOR.$PATCH"`     |
+| `version-template`    | Optional | The template for the version number of the draft release. For example: `"$MAJOR.$MINOR"` will have `"v$NEXT_PATCH_VERSION"` only return `v1.0`. Default: `"$MAJOR.$MINOR.$PATCH"`                                 |
 | `change-template`     | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`.                                        |
 | `no-changes-template` | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                       |
 | `branches`            | Optional | The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch. |
@@ -91,7 +91,7 @@ You can use any of the following variables in your `template`, `name-template` a
 
 ## Version Template Variables
 
-You can use any of the following variables in your `version-template` to format your `Next Version` variables:
+You can use any of the following variables in `version-template` to format the `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` variables:
 
 | Variable | Description               |
 | -------- | ------------------------- |
@@ -129,14 +129,14 @@ Adding such labels to your PRs can be automated by using [PR Labeler](https://gi
 
 ## Non-SemVer Versions
 
-With `version-template` option you can change the next version format to use your desired version number. For example append the following to your `.github/release-drafer.yml` file:
+With `version-template` option you can change the template of the generated `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` variables. For example append the following to your `.github/release-drafer.yml` file:
 
 ```yml
 version-template: $MAJOR.$MINOR
 tag-template: v$NEXT_MINOR_VERSION
 ```
 
-If current version is 1.0 the `v$NEXT_MINOR_VERSION` will turn into `v1.1`
+If the current version is 1.0, `v$NEXT_MINOR_VERSION` will turn into `v1.1`.
 
 ## GitHub Installation Permissions
 
