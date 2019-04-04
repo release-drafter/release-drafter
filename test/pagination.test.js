@@ -57,5 +57,9 @@ describe('pagination', () => {
       'e',
       'f'
     ])
+    expect(data.repository.ref.target.history.pageInfo).toEqual({
+      endCursor: 'bbb',
+      hasNextPage: false
+    })
   })
 })
