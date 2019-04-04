@@ -5,3 +5,4 @@ npm-debug.log
 coverage
 now.json
 docker-compose-logs
+package-lock.json
