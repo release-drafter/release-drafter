@@ -531,7 +531,7 @@ Previous tag: ''
     })
 
     describe('with version-template config', () => {
-      it('generates next version variables as major.minor', async () => {
+      it('generates next version variables as major.minor.patch', async () => {
         getConfigMock('config-with-major-minor-patch-version-template.yml')
 
         nock('https://api.github.com')
