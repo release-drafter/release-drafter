@@ -113,6 +113,8 @@ Pull requests with the label "feature" or "fix" will now be grouped together:
 
 <img src="design/screenshot-2.png" alt="Screenshot of generated draft release with categories" width="586" />
 
+Adding such labels to your PRs can be automated by using [PR Labeler](https://github.com/TimonVS/pr-labeler-action) or [Probot Auto Labeler](https://github.com/probot/autolabeler).
+
 ## GitHub Installation Permissions
 
 Release Drafter requires full write, because GitHub does not offer a limited scope for only writing releases. **Don't install Release Drafter to your entire GitHub account — only add the repositories you want to draft releases on.**
