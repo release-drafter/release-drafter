@@ -37,7 +37,6 @@ The following is a more complicated configuration, which categorises the changes
 ```yml
 name-template: v$NEXT_PATCH_VERSION 🌈
 tag-template: v$NEXT_PATCH_VERSION
-version-template: $MAJOR.$MINOR.$PATCH
 categories:
   - title: 🚀 Features
     label: feature
@@ -61,7 +60,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `template`            | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                                                                   |
 | `name-template`       | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                            |
 | `tag-template`        | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                             |
-| `version-template`    | Optional | The template for the version number of the draft release. For example: `"$MAJOR.$MINOR"` will have `"v$NEXT_PATCH_VERSION"` only return `v1.0`. Default: `"$MAJOR.$MINOR.$PATCH"`                                 |
+| `version-template`    | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH"`                                           |
 | `change-template`     | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`.                                        |
 | `no-changes-template` | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                       |
 | `branches`            | Optional | The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch. |
@@ -127,16 +126,11 @@ Pull requests with the label "feature" or "fix" will now be grouped together:
 
 Adding such labels to your PRs can be automated by using [PR Labeler](https://github.com/TimonVS/pr-labeler-action) or [Probot Auto Labeler](https://github.com/probot/autolabeler).
 
-## Non-SemVer Versions
+## Projects that don't use Semantic Versioning
 
-With `version-template` option you can change the template of the generated `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` variables. For example append the following to your `.github/release-drafer.yml` file:
+If your project doesn't follow [Semantic Versioning](https://semver.org) you can still use Release Drafter, but you may want to set the `version-template` option to customize how the `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` environment variables are generated.
 
-```yml
-version-template: $MAJOR.$MINOR
-tag-template: v$NEXT_MINOR_VERSION
-```
-
-If the current version is 1.0, `v$NEXT_MINOR_VERSION` will turn into `v1.1`.
+For example, if your project doesn't use patch version numbers, you can set `version-template` to `$MAJOR.$MINOR`. If the current release is version 1.0, then `$NEXT_MINOR_VERSION` will be `1.1`.
 
 ## GitHub Installation Permissions
 

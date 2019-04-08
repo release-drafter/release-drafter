@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "compare-versions": "3.4.0",
-    "lodash": "^4.17.11",
     "probot": "9.2.1",
     "probot-config": "1.0.1",
     "request": "2.88.0",
