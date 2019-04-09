@@ -310,12 +310,22 @@
     universal-user-agent "^2.0.1"
     url-template "^2.0.8"
 
-"@octokit/graphql@2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@octokit/graphql/-/graphql-2.0.2.tgz#c282af5e418432b123e039f751725fe39573033a"
-  integrity sha512-q3h3WWpGKkizPChhysKhy1uGdyjTsS7THTweIap3EWG5e3FQufXy1m7UPgKV3VpXHYZuBbX+k0paD213igiLuw==
+"@octokit/endpoint@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@octokit/endpoint/-/endpoint-4.0.0.tgz#97032a6690ef1cf9576ab1b1582c0ac837e3b5b6"
+  integrity sha512-b8sptNUekjREtCTJFpOfSIL4SKh65WaakcyxWzRcSPOk5RxkZJ/S8884NGZFxZ+jCB2rDURU66pSHn14cVgWVg==
   dependencies:
-    "@octokit/request" "^2.4.0"
+    deepmerge "3.2.0"
+    is-plain-object "^2.0.4"
+    universal-user-agent "^2.0.1"
+    url-template "^2.0.8"
+
+"@octokit/graphql@2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@octokit/graphql/-/graphql-2.1.1.tgz#29e5fb26d1af4a365898641fceff7b3fd929f08b"
+  integrity sha512-BVRBRFulb2H42u/Slt+x59tFw7lRf94xX9/Dv++mYDmYRXaY6LIOzrCTY2GYOVQVcoBjPhfEiYAMuJUCPNoe2g==
+  dependencies:
+    "@octokit/request" "^3.0.0"
     universal-user-agent "^2.0.3"
 
 "@octokit/plugin-enterprise-compatibility@^1.0.0":
@@ -337,12 +347,24 @@
   dependencies:
     bottleneck "^2.15.3"
 
-"@octokit/request@2.4.2", "@octokit/request@^2.1.2", "@octokit/request@^2.4.0":
+"@octokit/request@2.4.2", "@octokit/request@^2.1.2":
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/@octokit/request/-/request-2.4.2.tgz#87c36e820dd1e43b1629f4f35c95b00cd456320b"
   integrity sha512-lxVlYYvwGbKSHXfbPk5vxEA8w4zHOH1wobado4a9EfsyD3Cbhuhus1w0Ye9Ro0eMubGO8kNy5d+xNFisM3Tvaw==
   dependencies:
     "@octokit/endpoint" "^3.2.0"
+    deprecation "^1.0.1"
+    is-plain-object "^2.0.4"
+    node-fetch "^2.3.0"
+    once "^1.4.0"
+    universal-user-agent "^2.0.1"
+
+"@octokit/request@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@octokit/request/-/request-3.0.0.tgz#304a279036b2dc89e7fba7cb30c9e6a9b1f4d2df"
+  integrity sha512-DZqmbm66tq+a9FtcKrn0sjrUpi0UaZ9QPUCxxyk/4CJ2rseTMpAWRf6gCwOSUCzZcx/4XVIsDk+kz5BVdaeenA==
+  dependencies:
+    "@octokit/endpoint" "^4.0.0"
     deprecation "^1.0.1"
     is-plain-object "^2.0.4"
     node-fetch "^2.3.0"
@@ -4524,13 +4546,13 @@ probot-config@1.0.1:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.2.1:
-  version "9.2.1"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.1.tgz#0db64946dd779beb3fd0b6d1737b78423ba7bc91"
-  integrity sha512-CqSpkn2JpQtdweIazTPRSAaUqXRR+Bf795XJ5m5cGcNM1lmLGSf0+yOkIHaYxlVXjvHzaOQ0zSRGD2ZEwWrsrA==
+probot@9.2.2:
+  version "9.2.2"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.2.tgz#ff52133c23b6f16790f677c13eebfca59cdc7193"
+  integrity sha512-4+3PKOP1Kwgs9juBQyPCIFb6VRd5JZzCrbyIPOYs/Ivt7fnaFSZUq2KlEPnJvkQ1LvVibZDPtWfbqcb6wdS2XQ==
   dependencies:
     "@octokit/app" "^2.1.0"
-    "@octokit/graphql" "2.0.2"
+    "@octokit/graphql" "2.1.1"
     "@octokit/plugin-enterprise-compatibility" "^1.0.0"
     "@octokit/plugin-retry" "^2.1.1"
     "@octokit/plugin-throttling" "^2.3.0"
