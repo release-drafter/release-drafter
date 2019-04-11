@@ -290,12 +290,12 @@
     "@types/istanbul-lib-coverage" "^2.0.0"
     "@types/yargs" "^12.0.9"
 
-"@octokit/app@^2.1.0":
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/@octokit/app/-/app-2.2.2.tgz#a1b8248f64159eeccbe4000d888fdae4163c4ad8"
-  integrity sha512-nUwS8jW107ROGuI0Tq4Ga+Zno6CovwaS+Oen6BOKJmoFMLqqB3oXeGZ6InkidtdmUNiYhMtNq2lydb0WVLT8Zg==
+"@octokit/app@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@octokit/app/-/app-2.2.4.tgz#5104696b7acde1a8310fd8f14106fb2805b2900a"
+  integrity sha512-f/DCK0d3o0qv/RXQUirQEhN91uUS8QRRxPg7vYvEei0TZh+M6SYGy8ZAa4e0gN9zo7T8K0rD99jwE64nV5lzyA==
   dependencies:
-    "@octokit/request" "^2.1.2"
+    "@octokit/request" "^3.0.0"
     "@types/lru-cache" "^5.1.0"
     jsonwebtoken "^8.3.0"
     lru-cache "^5.1.1"
@@ -347,7 +347,7 @@
   dependencies:
     bottleneck "^2.15.3"
 
-"@octokit/request@2.4.2", "@octokit/request@^2.1.2":
+"@octokit/request@2.4.2":
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/@octokit/request/-/request-2.4.2.tgz#87c36e820dd1e43b1629f4f35c95b00cd456320b"
   integrity sha512-lxVlYYvwGbKSHXfbPk5vxEA8w4zHOH1wobado4a9EfsyD3Cbhuhus1w0Ye9Ro0eMubGO8kNy5d+xNFisM3Tvaw==
@@ -4546,12 +4546,12 @@ probot-config@1.0.1:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.2.2:
-  version "9.2.2"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.2.tgz#ff52133c23b6f16790f677c13eebfca59cdc7193"
-  integrity sha512-4+3PKOP1Kwgs9juBQyPCIFb6VRd5JZzCrbyIPOYs/Ivt7fnaFSZUq2KlEPnJvkQ1LvVibZDPtWfbqcb6wdS2XQ==
+probot@9.2.4:
+  version "9.2.4"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.4.tgz#f3924138c11444700172cf3ab6999c1d289d35d6"
+  integrity sha512-Rtmsyx4dNjdvXQFt/8KUxYGfiDbPVOKj0H9WJzOTm+r2fkptioiJ6L4eejkbWc10K3NIYNMMh/3cmoAipnWq9w==
   dependencies:
-    "@octokit/app" "^2.1.0"
+    "@octokit/app" "^2.2.4"
     "@octokit/graphql" "2.1.1"
     "@octokit/plugin-enterprise-compatibility" "^1.0.0"
     "@octokit/plugin-retry" "^2.1.1"
