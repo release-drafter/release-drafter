@@ -13,7 +13,8 @@ module.exports = app => {
       'change-template': `* $TITLE (#$NUMBER) @$AUTHOR`,
       'no-changes-template': `* No changes`,
       'version-template': `$MAJOR.$MINOR.$PATCH`,
-      categories: []
+      categories: [],
+      excludes: []
     }
     const config = Object.assign(
       defaults,
