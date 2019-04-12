@@ -530,6 +530,62 @@ Previous tag: ''
       })
     })
 
+    describe('with excludes config', () => {
+      it('excludes pull requests', async () => {
+        getConfigMock('config-with-excludes.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
+          )
+          .reply(200, {
+            commits: require('./fixtures/commits-2')
+          })
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
+          .reply(200, require('./fixtures/pull-request-1.json'))
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
+          .reply(200, require('./fixtures/pull-request-2.json'))
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/3')
+          .reply(200, require('./fixtures/pull-request-3.json'))
+          .get('/repos/toolmantim/release-drafter-test-project/pulls/4')
+          .reply(200, require('./fixtures/pull-request-4.json'))
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
+
+* Updated documentation (#4) @another-user
+
+## 🐛 Bug Fixes
+
+* Fixed a bug (#3) @another-user
+* Integrate alien technology (#2) @another-user
+`,
+                draft: true,
+                tag_name: ''
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+    })
+
     describe('with version-template config', () => {
       it('generates next version variables as major.minor.patch', async () => {
         getConfigMock('config-with-major-minor-patch-version-template.yml')
