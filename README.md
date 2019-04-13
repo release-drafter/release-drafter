@@ -65,6 +65,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `no-changes-template` | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                       |
 | `branches`            | Optional | The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch. |
 | `categories`          | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                                                            |
+| `exclude-lables`      | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                                                                     |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
@@ -125,6 +126,17 @@ Pull requests with the label "feature" or "fix" will now be grouped together:
 <img src="design/screenshot-2.png" alt="Screenshot of generated draft release with categories" width="586" />
 
 Adding such labels to your PRs can be automated by using [PR Labeler](https://github.com/TimonVS/pr-labeler-action) or [Probot Auto Labeler](https://github.com/probot/autolabeler).
+
+## Exclude Pull Requests
+
+With the `exclude-labels` option you can exclude pull requests from the release notes using labels. For example, append the following to your `.github/release-drafter.yml` file:
+
+```yml
+exclude-labels:
+  - release
+```
+
+Pull requests with the label "release" will now be excluded from the release draft.
 
 ## Projects that don't use Semantic Versioning
 
