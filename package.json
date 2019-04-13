@@ -14,7 +14,7 @@
     "lint": "eslint '**/*.js'",
     "prettier": "prettier --write **/*.{js,md,json}",
     "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
-    "open-releases": "open \"$(node -e 'console.log(`https://github.com/${require(\"./package.json\").repository}/releases`)')\"",
+    "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
     "deploy": "now && now alias"
   },
   "dependencies": {
