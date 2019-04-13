@@ -2,3 +2,4 @@ version: "3.4"
 services:
   app:
     build: .
+    command: ['npm', 'start']

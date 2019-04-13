@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "nodemon --exec \"npm start\"",
     "start": "probot run ./index.js",
+    "receive": "probot receive ./index.js",
     "now-start": "PRIVATE_KEY=$(echo $PRIVATE_KEY_BASE64 | base64 -d) npm start",
     "test": "jest",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
