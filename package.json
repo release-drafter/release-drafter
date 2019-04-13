@@ -34,7 +34,7 @@
     "nock": "10.0.6",
     "nock-knock": "2.0.0",
     "nodemon": "1.18.11",
-    "prettier": "1.16.4",
+    "prettier": "1.17.0",
     "smee-client": "1.1.0"
   },
   "engines": {
