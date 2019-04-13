@@ -530,9 +530,9 @@ Previous tag: ''
       })
     })
 
-    describe('with excludes config', () => {
+    describe('with exclude-labels config', () => {
       it('excludes pull requests', async () => {
-        getConfigMock('config-with-excludes.yml')
+        getConfigMock('config-with-exclude-labels.yml')
 
         nock('https://api.github.com')
           .get('/repos/toolmantim/release-drafter-test-project/releases')

@@ -7,5 +7,5 @@ categories:
   - label: fix
     title: 🐛 Bug Fixes
 
-excludes:
+exclude-labels:
   - feature

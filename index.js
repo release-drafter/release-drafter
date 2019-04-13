@@ -14,7 +14,7 @@ module.exports = app => {
       'no-changes-template': `* No changes`,
       'version-template': `$MAJOR.$MINOR.$PATCH`,
       categories: [],
-      excludes: []
+      'exclude-labels': []
     }
     const config = Object.assign(
       defaults,
