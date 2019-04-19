@@ -569,22 +569,15 @@ Previous tag: ''
         getConfigMock('config-with-major-minor-patch-version-template.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
           .reply(200, [require('./fixtures/release')])
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
-          )
-          .reply(200, {
-            commits: require('./fixtures/commits')
-          })
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
-          .reply(200, require('./fixtures/pull-request-1.json'))
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
-          .reply(200, require('./fixtures/pull-request-2.json'))
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
 
         nock('https://api.github.com')
           .post(
@@ -613,22 +606,15 @@ Previous tag: ''
         getConfigMock('config-with-major-minor-version-template.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
           .reply(200, [require('./fixtures/release')])
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
-          )
-          .reply(200, {
-            commits: require('./fixtures/commits')
-          })
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
-          .reply(200, require('./fixtures/pull-request-1.json'))
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
-          .reply(200, require('./fixtures/pull-request-2.json'))
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
 
         nock('https://api.github.com')
           .post(
@@ -657,22 +643,15 @@ Previous tag: ''
         getConfigMock('config-with-major-version-template.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
           .reply(200, [require('./fixtures/release')])
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
-          )
-          .reply(200, {
-            commits: require('./fixtures/commits')
-          })
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
-          .reply(200, require('./fixtures/pull-request-1.json'))
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
-          .reply(200, require('./fixtures/pull-request-2.json'))
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
 
         nock('https://api.github.com')
           .post(
