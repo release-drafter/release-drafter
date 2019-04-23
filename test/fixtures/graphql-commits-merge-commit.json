@@ -76,7 +76,7 @@
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": []
+                        "nodes": [{ "name": "skip-changelog" }]
                       }
                     }
                   ]
@@ -100,7 +100,7 @@
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": []
+                        "nodes": [{ "name": "skip-changelog" }]
                       }
                     }
                   ]

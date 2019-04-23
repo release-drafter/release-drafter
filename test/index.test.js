@@ -516,22 +516,12 @@ Previous tag: ''
           .get('/repos/toolmantim/release-drafter-test-project/releases')
           .query(true)
           .reply(200, [require('./fixtures/release')])
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/compare/v2.0.0...master'
-          )
-          .reply(200, {
-            commits: require('./fixtures/commits-2')
-          })
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
-          .reply(200, require('./fixtures/pull-request-1.json'))
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
-          .reply(200, require('./fixtures/pull-request-2.json'))
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/3')
-          .reply(200, require('./fixtures/pull-request-3.json'))
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/4')
-          .reply(200, require('./fixtures/pull-request-4.json'))
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
 
         nock('https://api.github.com')
           .post(
@@ -540,12 +530,13 @@ Previous tag: ''
               expect(body).toMatchObject({
                 body: `# What's Changed
 
-* Updated documentation (#4) @another-user
+## 🚀 Features
+
+* Implement homepage (#3) @TimonVS
 
 ## 🐛 Bug Fixes
 
-* Fixed a bug (#3) @another-user
-* Integrate alien technology (#2) @another-user
+* Fixed a bug (#4) @TimonVS
 `,
                 draft: true,
                 tag_name: ''
