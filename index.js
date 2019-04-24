@@ -14,12 +14,22 @@ module.exports = app => {
       'no-changes-template': `* No changes`,
       'version-template': `$MAJOR.$MINOR.$PATCH`,
       categories: [],
-      'exclude-labels': []
+      'exclude-labels': [],
+      replacers: []
     }
     const config = Object.assign(
       defaults,
       (await getConfig(context, configName)) || {}
     )
+    config.replacers = config.replacers.filter(replacer => {
+      try {
+        new RegExp(replacer.search, 'g')
+        return true
+      } catch (e) {
+        log({ app, context, message: 'Bad replacer regex' })
+        return false
+      }
+    })
 
     const branch = context.payload.ref.replace(/^refs\/heads\//, '')
 

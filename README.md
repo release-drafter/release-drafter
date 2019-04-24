@@ -66,6 +66,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `branches`            | Optional | The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch. |
 | `categories`          | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                                                            |
 | `exclude-lables`      | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                                                                     |
+| `replacers`           | Optional | Manual search and replace strings. Applied in order. Refer to [Replacers](#replacers) to learn more about this option.                                                                                            |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
@@ -147,6 +148,18 @@ For example, if your project doesn't use patch version numbers, you can set `ver
 ## GitHub Installation Permissions
 
 Release Drafter requires full write, because GitHub does not offer a limited scope for only writing releases. **Don't install Release Drafter to your entire GitHub account — only add the repositories you want to draft releases on.**
+
+## Replacers
+
+With the `replacers` option you can provide string replaces for your template after all other template information is finished being processed.
+
+```yml
+replacers:
+  - search: JENKINS-(\d+)
+    replace: https://issues.jenkins-ci.org/browse/JENKINS-$1
+```
+
+Multiple replacers will be applied in order, so if your replacement string matches something in the second replacer, it'll get triggered again
 
 ## Developing
 
