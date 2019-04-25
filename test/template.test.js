@@ -51,7 +51,7 @@ describe('template', () => {
     const customReplacer = validateReplacers({
       replacers: [
         {
-          search: '/\\bJENKINS-(\\d+)\\b/g',
+          regex: '/\\bJENKINS-(\\d+)\\b/g',
           replace:
             '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
         }
@@ -71,7 +71,7 @@ describe('template', () => {
     const customReplacer = validateReplacers({
       replacers: [
         {
-          search: 'JENKINS',
+          regex: 'JENKINS',
           replace: 'heyyyyyyy'
         }
       ]
@@ -101,12 +101,12 @@ describe('template', () => {
     const customReplacer = validateReplacers({
       replacers: [
         {
-          search: '/\\bJENKINS-(\\d+)\\b/g',
+          regex: '/\\bJENKINS-(\\d+)\\b/g',
           replace:
             '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
         },
         {
-          search:
+          regex:
             '/\\[\\[https://issues.jenkins-ci.org/browse/JENKINS-(\\d+)\\]\\(JENKINS-(\\d+)\\)\\]/g',
           replace:
             '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
