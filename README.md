@@ -157,6 +157,9 @@ With the `replacers` option you can provide string replaces for your template af
 replacers:
   - search: JENKINS-(\d+)
     replace: https://issues.jenkins-ci.org/browse/JENKINS-$1
+  - search: myname
+    replace: My Name
+    flags: ig
 ```
 
 Multiple replacers will be applied in order, so if your replacement string matches something in the second replacer, it'll get triggered again
