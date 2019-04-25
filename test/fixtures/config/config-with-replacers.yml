@@ -1,5 +1,5 @@
 replacers:
-  - search: Integrate alien technology \(#(\d+)
+  - search: /Integrate alien technology \(#(\d+)/g
     replace: Integrate alien technology (#1000
 
 template: |
