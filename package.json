@@ -19,8 +19,10 @@
   },
   "dependencies": {
     "compare-versions": "3.4.0",
+    "escape-string-regexp": "^2.0.0",
     "probot": "9.2.5",
     "probot-config": "1.0.1",
+    "regex-parser": "^2.2.10",
     "request": "2.88.0",
     "semver": "6.0.0"
   },

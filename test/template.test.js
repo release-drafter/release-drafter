@@ -51,16 +51,20 @@ describe('template', () => {
     const customReplacer = validateReplacers({
       replacers: [
         {
-          search: '\\bJENKINS-(\\d+)\\b',
+          search: '/\\bJENKINS-(\\d+)\\b/g',
           replace:
             '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
         }
       ]
     })
-    const output = template('This is my body JENKINS-1234', {}, customReplacer)
+    const output = template(
+      'This is my body JENKINS-1234 JENKINS-1234 JENKINS-1234',
+      {},
+      customReplacer
+    )
 
     expect(output).toEqual(
-      'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234)'
+      'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234)'
     )
   })
   it('word custom replacer', () => {
@@ -97,13 +101,13 @@ describe('template', () => {
     const customReplacer = validateReplacers({
       replacers: [
         {
-          search: '\\bJENKINS-(\\d+)\\b',
+          search: '/\\bJENKINS-(\\d+)\\b/g',
           replace:
             '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
         },
         {
           search:
-            '\\[\\[https://issues.jenkins-ci.org/browse/JENKINS-(\\d+)\\]\\(JENKINS-(\\d+)\\)\\]',
+            '/\\[\\[https://issues.jenkins-ci.org/browse/JENKINS-(\\d+)\\]\\(JENKINS-(\\d+)\\)\\]/g',
           replace:
             '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
         }
