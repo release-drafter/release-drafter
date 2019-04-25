@@ -2,6 +2,7 @@ const getConfig = require('probot-config')
 const { isTriggerableBranch } = require('./lib/triggerable-branch')
 const { findReleases, generateReleaseInfo } = require('./lib/releases')
 const { findCommits, findPullRequests } = require('./lib/commits')
+const { validateReplacers } = require('./lib/template')
 const log = require('./lib/log')
 
 const configName = 'release-drafter.yml'
@@ -21,14 +22,10 @@ module.exports = app => {
       defaults,
       (await getConfig(context, configName)) || {}
     )
-    config.replacers = config.replacers.filter(replacer => {
-      try {
-        new RegExp(replacer.search, 'g')
-        return true
-      } catch (e) {
-        log({ app, context, message: 'Bad replacer regex' })
-        return false
-      }
+    config.replacers = validateReplacers({
+      app,
+      context,
+      replacers: config.replacers
     })
 
     const branch = context.payload.ref.replace(/^refs\/heads\//, '')
