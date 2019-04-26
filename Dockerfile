@@ -13,4 +13,4 @@ WORKDIR /src
 ADD     yarn.lock package.json /src/
 RUN     yarn
 ADD     . /src
-CMD     ["npm", "receive"]
+CMD     ["npm", "run", "receive"]
