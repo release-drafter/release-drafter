@@ -1,0 +1,18 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "target": {
+          "history": {
+            "totalCount": 5,
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "83041a4962107d6bd0282e518ae402dd97ca8daf 24"
+            },
+            "nodes": []
+          }
+        }
+      }
+    }
+  }
+}
