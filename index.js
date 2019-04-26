@@ -2,6 +2,7 @@ const getConfig = require('probot-config')
 const { isTriggerableBranch } = require('./lib/triggerable-branch')
 const { findReleases, generateReleaseInfo } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
+const { validateReplacers } = require('./lib/template')
 const log = require('./lib/log')
 
 const configName = 'release-drafter.yml'
@@ -14,12 +15,18 @@ module.exports = app => {
       'no-changes-template': `* No changes`,
       'version-template': `$MAJOR.$MINOR.$PATCH`,
       categories: [],
-      'exclude-labels': []
+      'exclude-labels': [],
+      replacers: []
     }
     const config = Object.assign(
       defaults,
       (await getConfig(context, configName)) || {}
     )
+    config.replacers = validateReplacers({
+      app,
+      context,
+      replacers: config.replacers
+    })
 
     const branch = context.payload.ref.replace(/^refs\/heads\//, '')
 

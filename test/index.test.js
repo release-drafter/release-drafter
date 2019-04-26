@@ -876,5 +876,51 @@ Previous tag: ''
         expect.assertions(1)
       })
     })
+    describe('custom replacers', () => {
+      it('replaces a string', async () => {
+        getConfigMock('config-with-replacers.yml')
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [])
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
+
+* Fixed a bug (#1000) @TimonVS
+* Implement homepage (#3) @TimonVS
+* Add Prettier config (#2) @TimonVS
+* Add EditorConfig (#1) @TimonVS
+`,
+                draft: true,
+                tag_name: ''
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        const payload = require('./fixtures/push')
+
+        await probot.receive({
+          name: 'push',
+          payload
+        })
+
+        expect.assertions(1)
+      })
+    })
   })
 })
