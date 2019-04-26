@@ -151,7 +151,7 @@ Release Drafter requires full write, because GitHub does not offer a limited sco
 
 ## Replacers
 
-With the `replacers` option you can provide string replaces for your template after all other template information is finished being processed.
+You can search and replace content in the generated changelog body using the `replacers` option. Replacers support searching via regular expressions with the `regex` option, and plain strings with the `search` option. Each replacer is applied in order.
 
 ```yml
 replacers:
