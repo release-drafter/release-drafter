@@ -4,8 +4,10 @@ template: |
   $CHANGES
 
 categories:
+  - label: feature
+    title: 🚀 Features
   - label: fix
     title: 🐛 Bug Fixes
 
 exclude-labels:
-  - feature
+  - skip-changelog
