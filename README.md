@@ -155,7 +155,7 @@ With the `replacers` option you can provide string replaces for your template af
 
 ```yml
 replacers:
-  - regex: /JENKINS-(\d+)/g
+  - regex: /CVE-(\d{4})-(\d+)/g
     replace: https://issues.jenkins-ci.org/browse/JENKINS-$1
   - search: myname
     replace: My Name
