@@ -35,15 +35,15 @@ As pull requests are merged, a draft release is kept up-to-date listing the chan
 The following is a more complicated configuration, which categorises the changes into headings, and automatically suggests the next version number:
 
 ```yml
-name-template: v$NEXT_PATCH_VERSION 🌈
-tag-template: v$NEXT_PATCH_VERSION
+name-template: 'v$NEXT_PATCH_VERSION 🌈'
+tag-template: 'v$NEXT_PATCH_VERSION'
 categories:
-  - title: 🚀 Features
-    label: feature
-  - title: 🐛 Bug Fixes
-    label: fix
-  - title: 🧰 Maintenance
-    label: chore
+  - title: '🚀 Features'
+    label: 'feature'
+  - title: '🐛 Bug Fixes'
+    label: 'fix'
+  - title: '🧰 Maintenance'
+    label: 'chore'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
   ## Changes
@@ -115,10 +115,10 @@ With the `categories` option you can categorize pull requests in release notes u
 
 ```yml
 categories:
-  - title: 🚀 Features
-    label: feature
-  - title: 🐛 Bug Fixes
-    label: fix
+  - title: '🚀 Features'
+    label: 'feature'
+  - title: '🐛 Bug Fixes'
+    label: 'fix'
 ```
 
 Pull requests with the label "feature" or "fix" will now be grouped together:
@@ -133,7 +133,7 @@ With the `exclude-labels` option you can exclude pull requests from the release 
 
 ```yml
 exclude-labels:
-  - skip-changelog
+  - 'skip-changelog'
 ```
 
 Pull requests with the label "skip-changelog" will now be excluded from the release draft.
