@@ -145,10 +145,6 @@ If your project doesn't follow [Semantic Versioning](https://semver.org) you can
 
 For example, if your project doesn't use patch version numbers, you can set `version-template` to `$MAJOR.$MINOR`. If the current release is version 1.0, then `$NEXT_MINOR_VERSION` will be `1.1`.
 
-## GitHub Installation Permissions
-
-Release Drafter requires full write, because GitHub does not offer a limited scope for only writing releases. **Don't install Release Drafter to your entire GitHub account — only add the repositories you want to draft releases on.**
-
 ## Replacers
 
 You can search and replace content in the generated changelog body using the `replacers` option. Replacers support searching via regular expressions with the `regex` option, and plain strings with the `search` option. Each replacer is applied in order.
@@ -160,6 +156,10 @@ replacers:
   - search: 'myname'
     replace: 'My Name'
 ```
+
+## GitHub Installation Permissions
+
+Release Drafter requires full write, because GitHub does not offer a limited scope for only writing releases. **Don't install Release Drafter to your entire GitHub account — only add the repositories you want to draft releases on.**
 
 ## Developing
 
