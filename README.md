@@ -161,8 +161,6 @@ replacers:
     replace: My Name
 ```
 
-Multiple replacers will be applied in order, so if your replacement string matches something in the second replacer, it'll get triggered again
-
 ## Developing
 
 If you have Node v10+ installed locally, you can run the tests, and a local app, using the following commands:
