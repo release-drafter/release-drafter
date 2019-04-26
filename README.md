@@ -155,10 +155,10 @@ You can search and replace content in the generated changelog body using the `re
 
 ```yml
 replacers:
-  - regex: /CVE-(\d{4})-(\d+)/g
-    replace: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2
-  - search: myname
-    replace: My Name
+  - regex: '/CVE-(\d{4})-(\d+)/g'
+    replace: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2'
+  - search: 'myname'
+    replace: 'My Name'
 ```
 
 ## Developing
