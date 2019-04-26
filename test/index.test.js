@@ -877,23 +877,20 @@ Previous tag: ''
       })
     })
     describe('custom replacers', () => {
-      it('sets $CHANGES based on all commits, and $PREVIOUS_TAG to blank', async () => {
+      it('replaces a string', async () => {
         getConfigMock('config-with-replacers.yml')
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
 
         nock('https://api.github.com')
           .get(
             '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
           )
           .reply(200, [])
-          .get('/repos/toolmantim/release-drafter-test-project/commits')
-          .query(true)
-          .reply(200, require('./fixtures/commits'))
-
-        nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/1')
-          .reply(200, require('./fixtures/pull-request-1.json'))
-          .get('/repos/toolmantim/release-drafter-test-project/pulls/2')
-          .reply(200, require('./fixtures/pull-request-2.json'))
 
         nock('https://api.github.com')
           .post(
@@ -902,8 +899,10 @@ Previous tag: ''
               expect(body).toMatchObject({
                 body: `# What's Changed
 
-* Integrate alien technology (#1000) @another-user
-* More cowbell (#1) @toolmantim
+* Fixed a bug (#1000) @TimonVS
+* Implement homepage (#3) @TimonVS
+* Add Prettier config (#2) @TimonVS
+* Add EditorConfig (#1) @TimonVS
 `,
                 draft: true,
                 tag_name: ''
