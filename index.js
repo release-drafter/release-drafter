@@ -1,7 +1,7 @@
 const getConfig = require('probot-config')
 const { isTriggerableBranch } = require('./lib/triggerable-branch')
 const { findReleases, generateReleaseInfo } = require('./lib/releases')
-const { findCommits, findPullRequests } = require('./lib/commits')
+const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const log = require('./lib/log')
 
 const configName = 'release-drafter.yml'
@@ -33,8 +33,16 @@ module.exports = app => {
     }
 
     const { draftRelease, lastRelease } = await findReleases({ app, context })
-    const commits = await findCommits({ app, context, branch, lastRelease })
-    const mergedPullRequests = await findPullRequests({ app, context, commits })
+    const {
+      commits,
+      pullRequests: mergedPullRequests
+    } = await findCommitsWithAssociatedPullRequests({
+      app,
+      context,
+      branch,
+      lastRelease
+    })
+
     const releaseInfo = generateReleaseInfo({
       commits,
       config,

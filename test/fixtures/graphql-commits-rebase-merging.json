@@ -1,0 +1,198 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "target": {
+          "history": {
+            "totalCount": 7,
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "73101a1b42f7c4e557a8a338054babf2d7e47906 6"
+            },
+            "nodes": [
+              {
+                "id": "ADY6Q29tbWl0MTc5MjYzMzk1OjczMTAxYTFiNDJmN2M0ZTU1N2E4YTMzODA1NGJhYmYyZDdlNDc5MDY=",
+                "message": "Fixed a bug",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Fixed a bug",
+                      "number": 4,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [{ "name": "fix" }]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjczMTAxYTFiNDJmN2M0ZTU1N2E4YTMzODA1NGJhYmYyZDdlNDc5MDY=",
+                "message": "Add contact form to homepage",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Implement homepage",
+                      "number": 3,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [{ "name": "feature" }]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OmZjNDFhZjU5MDhmOThlY2NmOTliZmUxZGY5NDFkOGI1YWRmZDkyZDA=",
+                "message": "Add styling",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Implement homepage",
+                      "number": 3,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [{ "name": "feature" }]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OmY0NzRjZmFiYWMyMTQ4Mzg4MjAyOTZjMDU3NTIzMGU0MDYxNjVhZjA=",
+                "message": "Initial version for homepage",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Implement homepage",
+                      "number": 3,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [{ "name": "feature" }]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjZhZjZlMjM2NjRlMDc2NTBiNzdkYjIxOGY1YjBkMzcxYWVmN2MyMmM=",
+                "message": "Add Prettier config",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add Prettier config",
+                      "number": 2,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjFmNGM1MTliMmNiNDNhYjIyYTdhNzk0Yjg5NTM2NWJkNDg3NjkyNzY=",
+                "message": "Change indent_size to 4",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add EditorConfig",
+                      "number": 1,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OmMzM2U1ZDA0NGQ3MWY5Y2YyMjMzNDhkN2QxNTA4ODk4MTJlMmMzMTI=",
+                "message": "Add EditorConfig",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add EditorConfig",
+                      "number": 1,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjhkYTNmYTEzZDJmNTFjNWM0Yjk5NjA3ODE0MmEzZWE2ZmU1NmQ1NjE=",
+                "message": "first commit",
+                "author": {
+                  "name": "Ada",
+                  "user": null
+                },
+                "associatedPullRequests": {
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
