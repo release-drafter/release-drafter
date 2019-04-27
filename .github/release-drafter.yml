@@ -1,4 +1,7 @@
 # Config for https://github.com/apps/release-drafter
+branches:
+  - master
+  - add-github-action-support
 template: |
   ## What's Changed
 
