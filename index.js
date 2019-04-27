@@ -3,6 +3,11 @@ const { isTriggerableBranch } = require('./lib/triggerable-branch')
 const { findReleases, generateReleaseInfo } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { validateReplacers } = require('./lib/template')
+const {
+  validateSortDirection,
+  sortPullRequests,
+  SORT_DIRECTIONS
+} = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
 
 const configName = 'release-drafter.yml'
@@ -16,7 +21,8 @@ module.exports = app => {
       'version-template': `$MAJOR.$MINOR.$PATCH`,
       categories: [],
       'exclude-labels': [],
-      replacers: []
+      replacers: [],
+      'sort-direction': SORT_DIRECTIONS.descending
     }
     const config = Object.assign(
       defaults,
@@ -27,6 +33,7 @@ module.exports = app => {
       context,
       replacers: config.replacers
     })
+    config['sort-direction'] = validateSortDirection(config['sort-direction'])
 
     const branch = context.payload.ref.replace(/^refs\/heads\//, '')
 
@@ -50,11 +57,16 @@ module.exports = app => {
       lastRelease
     })
 
+    const sortedMergedPullRequests = sortPullRequests(
+      mergedPullRequests,
+      config['sort-direction']
+    )
+
     const releaseInfo = generateReleaseInfo({
       commits,
       config,
       lastRelease,
-      mergedPullRequests
+      mergedPullRequests: sortedMergedPullRequests
     })
 
     if (!draftRelease) {
