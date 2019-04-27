@@ -1,5 +1,11 @@
 version: "3.4"
 services:
+  # We override much of the default GitHub Actions oriented Dockerfile for
+  # making it easier to run the tests using Docker Compose
   app:
-    build: .
-    command: ['npm', 'start']
+    build:
+      context: .
+      args:
+        NODE_ENV: development
+    command: ['npm', 'test']
+    entrypoint: ''
