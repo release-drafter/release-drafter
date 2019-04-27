@@ -21,4 +21,5 @@ workflow "Draft Release" {
 
 action "release-drafter" {
   uses = "./"
+  secrets = ["GITHUB_TOKEN"]
 }
