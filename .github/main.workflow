@@ -1,25 +1,20 @@
-workflow "Test" {
+workflow "Push" {
   on = "push"
-  resolves = "tests"
+  resolves = ["Run Tests", "Draft Release"]
 }
 
-action "deps" {
+action "Install Dependencies" {
   uses = "docker://node:10"
   runs = ["yarn", "install", "--frozen-lockfile"]
 }
 
-action "tests" {
-  needs = ["deps"]
+action "Run Tests" {
+  needs = ["Install Dependencies"]
   uses = "docker://node:10-alpine"
   runs = ["npm", "test"]
 }
 
-workflow "Draft Release" {
-  on = "push"
-  resolves = "release-drafter"
-}
-
-action "release-drafter" {
+action "Draft Release" {
   uses = "./"
   secrets = ["GITHUB_TOKEN"]
 }
