@@ -1,6 +1,6 @@
 replacers:
-  - regex: /Fixed a bug \(#(\d+)/g
-    replace: Fixed a bug (#1000
+  - regex: /Add documentation \(#(\d+)/g
+    replace: Add documentation (#1000
 
 template: |
   # What's Changed

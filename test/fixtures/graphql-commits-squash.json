@@ -4,15 +4,15 @@
       "ref": {
         "target": {
           "history": {
-            "totalCount": 4,
+            "totalCount": 7,
             "pageInfo": {
               "hasNextPage": false,
-              "endCursor": "3b9d647ea21e859889135d85b02b4f6e58e43104 3"
+              "endCursor": "3f37d85d6f8bc9e456a93600d1648fe81316ac7c 6"
             },
             "nodes": [
               {
-                "id": "ADY6Q29tbWl0MTc5MjczODgyOjNiOWQ2NDdlYTIxZTg1OTg4OTEzNWQ4NWIwMmI0ZjZlNThlNDMxMDQ=",
-                "message": "Fixed a bug (#4)",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNmMzdkODVkNmY4YmM5ZTQ1NmE5MzYwMGQxNjQ4ZmU4MTMxNmFjN2M=",
+                "message": "Add documentation (#15)\n\n* Add documentation\r\n\r\n* Fix typo",
                 "author": {
                   "name": "Timon van Spronsen",
                   "user": {
@@ -22,21 +22,26 @@
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Fixed a bug",
-                      "number": 4,
+                      "title": "Add documentation",
+                      "number": 15,
+                      "mergedAt": "2019-04-27T13:39:24Z",
                       "author": {
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": [{ "name": "fix" }]
+                        "nodes": [
+                          {
+                            "name": "skip-changelog"
+                          }
+                        ]
                       }
                     }
                   ]
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTc5MjczODgyOjNiOWQ2NDdlYTIxZTg1OTg4OTEzNWQ4NWIwMmI0ZjZlNThlNDMxMDQ=",
-                "message": "Implement homepage (#3)\n\n* Initial version for homepage\r\n\r\n* Add styling\r\n\r\n* Add contact form to homepage",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmViMmVjZjc4YjNjZGI0Y2VlMzc2MmZkZmQ0MjY2MmMwNWM3MzQzZTM=",
+                "message": "Update dependencies (#14)\n\n* Update Express to 4.16.4\r\n\r\n* Update Mongoose to 5.5.4",
                 "author": {
                   "name": "Timon van Spronsen",
                   "user": {
@@ -46,32 +51,9 @@
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Implement homepage",
-                      "number": 3,
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "labels": {
-                        "nodes": [{ "name": "feature" }]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTc5MjczODgyOjZkOWE0MjgxOGIyY2VlZWYxODEzZTNjZDFiOGQ5ZDk1Mjk2NjAzMTE=",
-                "message": "Add Prettier config (#2)",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Add Prettier config",
-                      "number": 2,
+                      "title": "Update dependencies",
+                      "number": 14,
+                      "mergedAt": "2019-04-27T13:39:17Z",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -83,8 +65,8 @@
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTc5MjczODgyOmMxMTI4OGEwZTJiYWNlYTE1YjcxOTUyYWI2MmU1MzhhMjA2YmMwMmU=",
-                "message": "Add EditorConfig (#1)\n\n* Add EditorConfig\r\n\r\n* Change indent_size to 4",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjc5Zjc4ODBmMTU1ZWU3ZGZkZGUxNmVlMTFmYTMwZmFhMDljODhlMjU=",
+                "message": "Bug fixes (#13)\n\n* Fixed a bug\r\n\r\n* Fixed another bug",
                 "author": {
                   "name": "Timon van Spronsen",
                   "user": {
@@ -94,24 +76,100 @@
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Add EditorConfig",
-                      "number": 1,
+                      "title": "Bug fixes",
+                      "number": 13,
+                      "mergedAt": "2019-04-27T13:39:11Z",
                       "author": {
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": []
+                        "nodes": [
+                          {
+                            "name": "fix"
+                          }
+                        ]
                       }
                     }
                   ]
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTc5MjczODgyOjhkYTNmYTEzZDJmNTFjNWM0Yjk5NjA3ODE0MmEzZWE2ZmU1NmQ1NjE=",
-                "message": "first commit",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmUyMTZhODViOGNlMzU2MzRkN2IyMGNlMjU5YmRmZTA4ZjFhMGJiZGI=",
+                "message": "Add big feature (#12)\n\n* Add big feature\r\n\r\n* Adjust parameters",
                 "author": {
-                  "name": "Ada",
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add big feature",
+                      "number": 12,
+                      "mergedAt": "2019-04-27T13:39:03Z",
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQzNmM3YmU4OTBlOGEwYzY3NWYyNzUzMDk0YzYyNmQyN2RiOWI5NmM=",
+                "message": "Add alien technology (#11)",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "👽 Add alien technology",
+                      "number": 11,
+                      "mergedAt": "2019-04-27T13:38:47Z",
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
+                "message": "Add project description to README",
+                "author": {
+                  "name": "Ada Lovelace",
                   "user": null
+                },
+                "associatedPullRequests": {
+                  "nodes": []
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
+                "message": "Initial commit",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
                 },
                 "associatedPullRequests": {
                   "nodes": []

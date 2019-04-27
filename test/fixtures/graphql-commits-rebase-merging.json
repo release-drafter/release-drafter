@@ -4,14 +4,151 @@
       "ref": {
         "target": {
           "history": {
-            "totalCount": 7,
+            "totalCount": 11,
             "pageInfo": {
               "hasNextPage": false,
-              "endCursor": "73101a1b42f7c4e557a8a338054babf2d7e47906 6"
+              "endCursor": "ed0a2bec8c895bb908638795c9da64763be75120 10"
             },
             "nodes": [
               {
-                "id": "ADY6Q29tbWl0MTc5MjYzMzk1OjczMTAxYTFiNDJmN2M0ZTU1N2E4YTMzODA1NGJhYmYyZDdlNDc5MDY=",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmVkMGEyYmVjOGM4OTViYjkwODYzODc5NWM5ZGE2NDc2M2JlNzUxMjA=",
+                "message": "Fix typo",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add documentation",
+                      "number": 10,
+                      "mergedAt": "2019-04-27T13:38:32Z",
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "skip-changelog"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmZhNDQ2NGQ3MTIyNjg1OTY3MDNjNmI0OGNiNTI4NjkzNzE3NzRlYmY=",
+                "message": "Add documentation",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add documentation",
+                      "number": 10,
+                      "mergedAt": "2019-04-27T13:38:32Z",
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "skip-changelog"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjkxZjkzZTk1YTBhZGRlNzE0MTk4OTc2OWJlMWJhZTVmOWU2ZDQ4MDA=",
+                "message": "Update Mongoose to 5.5.4",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Update dependencies",
+                      "number": 9,
+                      "mergedAt": "2019-04-27T13:38:26Z",
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjk0NjY1ZWQyMWVjN2YwMTU1MzBkMmRhMWM0ODQzMTVlNTg2NmM2NzY=",
+                "message": "Update Express to 4.16.4",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Update dependencies",
+                      "number": 9,
+                      "mergedAt": "2019-04-27T13:38:26Z",
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmMyMmY2MjI0OGYzZDAzMWRmMDAxYWRiZWRkNmY0NGZkOGM3YzQyZDY=",
+                "message": "Fixed another bug",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bug fixes",
+                      "number": 8,
+                      "mergedAt": "2019-04-27T13:38:20Z",
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "fix"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQ5MDRkYWFmMzFmOGZkN2M4NjI3MzlkYWNlMjM0ZGViNGQ5MTA0ZmE=",
                 "message": "Fixed a bug",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -22,21 +159,26 @@
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Fixed a bug",
-                      "number": 4,
+                      "title": "Bug fixes",
+                      "number": 8,
+                      "mergedAt": "2019-04-27T13:38:20Z",
                       "author": {
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": [{ "name": "fix" }]
+                        "nodes": [
+                          {
+                            "name": "fix"
+                          }
+                        ]
                       }
                     }
                   ]
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjczMTAxYTFiNDJmN2M0ZTU1N2E4YTMzODA1NGJhYmYyZDdlNDc5MDY=",
-                "message": "Add contact form to homepage",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjRmMmEwNjkxOTRlYWY5MDAwMWM2ZDg3Y2EwN2RhNjA0ZDM1Zjc0YTA=",
+                "message": "Adjust parameters",
                 "author": {
                   "name": "Timon van Spronsen",
                   "user": {
@@ -46,21 +188,26 @@
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Implement homepage",
-                      "number": 3,
+                      "title": "Add big feature",
+                      "number": 7,
+                      "mergedAt": "2019-04-27T13:38:13Z",
                       "author": {
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": [{ "name": "feature" }]
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          }
+                        ]
                       }
                     }
                   ]
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OmZjNDFhZjU5MDhmOThlY2NmOTliZmUxZGY5NDFkOGI1YWRmZDkyZDA=",
-                "message": "Add styling",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjJjZjU4MTc2OTZiNTExODRlNzc5MmI4ODczYWI3MTk4ODIwYmU0ZGE=",
+                "message": "Add big feature",
                 "author": {
                   "name": "Timon van Spronsen",
                   "user": {
@@ -70,21 +217,26 @@
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Implement homepage",
-                      "number": 3,
+                      "title": "Add big feature",
+                      "number": 7,
+                      "mergedAt": "2019-04-27T13:38:13Z",
                       "author": {
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": [{ "name": "feature" }]
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          }
+                        ]
                       }
                     }
                   ]
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OmY0NzRjZmFiYWMyMTQ4Mzg4MjAyOTZjMDU3NTIzMGU0MDYxNjVhZjA=",
-                "message": "Initial version for homepage",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjIzMmM2MjQ5MTRmMzMyZmI2MmMwZDdiYmViYmYwYWE4NGIyYjJhZWU=",
+                "message": "Add alien technology",
                 "author": {
                   "name": "Timon van Spronsen",
                   "user": {
@@ -94,96 +246,42 @@
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Implement homepage",
-                      "number": 3,
+                      "title": "👽 Add alien technology",
+                      "number": 6,
+                      "mergedAt": "2019-04-27T13:37:59Z",
                       "author": {
                         "login": "TimonVS"
                       },
                       "labels": {
-                        "nodes": [{ "name": "feature" }]
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          }
+                        ]
                       }
                     }
                   ]
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjZhZjZlMjM2NjRlMDc2NTBiNzdkYjIxOGY1YjBkMzcxYWVmN2MyMmM=",
-                "message": "Add Prettier config",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
+                "message": "Add project description to README",
                 "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Add Prettier config",
-                      "number": 2,
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "labels": {
-                        "nodes": []
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjFmNGM1MTliMmNiNDNhYjIyYTdhNzk0Yjg5NTM2NWJkNDg3NjkyNzY=",
-                "message": "Change indent_size to 4",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Add EditorConfig",
-                      "number": 1,
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "labels": {
-                        "nodes": []
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OmMzM2U1ZDA0NGQ3MWY5Y2YyMjMzNDhkN2QxNTA4ODk4MTJlMmMzMTI=",
-                "message": "Add EditorConfig",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Add EditorConfig",
-                      "number": 1,
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "labels": {
-                        "nodes": []
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTc5MjYzMzk1OjhkYTNmYTEzZDJmNTFjNWM0Yjk5NjA3ODE0MmEzZWE2ZmU1NmQ1NjE=",
-                "message": "first commit",
-                "author": {
-                  "name": "Ada",
+                  "name": "Ada Lovelace",
                   "user": null
+                },
+                "associatedPullRequests": {
+                  "nodes": []
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
+                "message": "Initial commit",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
                 },
                 "associatedPullRequests": {
                   "nodes": []
