@@ -1,5 +1,5 @@
 replacers:
-  - regex: /Add documentation \(#(\d+)/g
+  - search: /Add documentation \(#(\d+)/g
     replace: Add documentation (#1000
 
 template: |
