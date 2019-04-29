@@ -148,11 +148,11 @@ For example, if your project doesn't use patch version numbers, you can set `ver
 
 ## Replacers
 
-You can search and replace content in the generated changelog body using the `replacers` option. Replacers support searching via regular expressions with the `regex` option, and plain strings with the `search` option. Each replacer is applied in order.
+You can search and replace content in the generated changelog body, using regular expressions, with the `replacers` option. Each replacer is applied in order.
 
 ```yml
 replacers:
-  - regex: '/CVE-(\d{4})-(\d+)/g'
+  - search: '/CVE-(\d{4})-(\d+)/g'
     replace: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2'
   - search: 'myname'
     replace: 'My Name'
