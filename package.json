@@ -36,7 +36,7 @@
     "lint-staged": "8.1.5",
     "nock": "10.0.6",
     "nock-knock": "2.0.0",
-    "nodemon": "1.18.11",
+    "nodemon": "1.19.0",
     "prettier": "1.17.0",
     "smee-client": "1.1.0"
   },
