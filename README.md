@@ -151,12 +151,6 @@ exclude-labels:
 
 Pull requests with the label "skip-changelog" will now be excluded from the release draft.
 
-## Projects that don't use Semantic Versioning
-
-If your project doesn't follow [Semantic Versioning](https://semver.org) you can still use Release Drafter, but you may want to set the `version-template` option to customize how the `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` environment variables are generated.
-
-For example, if your project doesn't use patch version numbers, you can set `version-template` to `$MAJOR.$MINOR`. If the current release is version 1.0, then `$NEXT_MINOR_VERSION` will be `1.1`.
-
 ## Replacers
 
 You can search and replace content in the generated changelog body, using regular expressions, with the `replacers` option. Each replacer is applied in order.
@@ -168,6 +162,12 @@ replacers:
   - search: 'myname'
     replace: 'My Name'
 ```
+
+## Projects that don't use Semantic Versioning
+
+If your project doesn't follow [Semantic Versioning](https://semver.org) you can still use Release Drafter, but you may want to set the `version-template` option to customize how the `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` environment variables are generated.
+
+For example, if your project doesn't use patch version numbers, you can set `version-template` to `$MAJOR.$MINOR`. If the current release is version 1.0, then `$NEXT_MINOR_VERSION` will be `1.1`.
 
 ## GitHub Installation Permissions
 
