@@ -23,7 +23,7 @@ workflow "Push" {
 }
 
 action "Draft Release" {
-  uses = "toolmantim/release-drafter@x.x.x"
+  uses = "toolmantim/release-drafter@v5.1.0"
   secrets = ["GITHUB_TOKEN"]
 }
 ```
