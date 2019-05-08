@@ -14,8 +14,23 @@
 
 ## Usage
 
-1. Install the [Release Drafter GitHub App](https://github.com/apps/release-drafter), choosing the repositories you want releases automatically created.
-2. Add a `.github/release-drafter.yml` configuration file to each repository.
+You can add Release Drafter as a [GitHub Action](https://github.com/features/actions), by configuring your `.github/main.workflow` file with the following:
+
+```workflow
+workflow "Push" {
+  on = "push"
+  resolves = ["Draft Release"]
+}
+
+action "Draft Release" {
+  uses = "toolmantim/release-drafter@x.x.x"
+  secrets = ["GITHUB_TOKEN"]
+}
+```
+
+You can also add the [Release Drafter GitHub App](https://github.com/apps/release-drafter), choosing the repositories you want releases automatically created.
+
+Once Release Drafter has been added, it can be enabled by adding a `.github/release-drafter.yml` configuration file to each repository.
 
 ## Example
 
