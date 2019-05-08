@@ -6,15 +6,11 @@
 
 ---
 
-<p align="center"><a href="https://github.com/apps/release-drafter"><img src="design/install-button.svg" alt="Install the GitHub App" /></a></p>
-
----
-
 [![NPM package](https://img.shields.io/npm/v/release-drafter-github-app.svg)](https://www.npmjs.com/package/release-drafter-github-app)
 
 ## Usage
 
-You can add Release Drafter as a [GitHub Action](https://github.com/features/actions), by configuring your `.github/main.workflow` file with the following:
+You can use Release Drafter as a [GitHub Action](https://github.com/features/actions), by configuring your `.github/main.workflow` file with the following:
 
 ```workflow
 workflow "Push" {
@@ -28,9 +24,9 @@ action "Draft Release" {
 }
 ```
 
-You can also add the [Release Drafter GitHub App](https://github.com/apps/release-drafter), choosing the repositories you want releases automatically created.
+You can also install the [Release Drafter GitHub App](https://github.com/apps/release-drafter), choosing the repositories you want releases automatically created.
 
-Once Release Drafter has been added, it can be enabled by adding a `.github/release-drafter.yml` configuration file to each repository.
+Once you’ve added Release Drafter to your repository, it can be enabled by adding a `.github/release-drafter.yml` configuration file to each repository.
 
 ## Example
 
