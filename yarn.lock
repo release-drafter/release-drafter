@@ -292,13 +292,12 @@
     "@types/istanbul-reports" "^1.1.1"
     "@types/yargs" "^12.0.9"
 
-"@octokit/app@^2.2.4":
-  version "2.2.4"
-  resolved "https://registry.yarnpkg.com/@octokit/app/-/app-2.2.4.tgz#5104696b7acde1a8310fd8f14106fb2805b2900a"
-  integrity sha512-f/DCK0d3o0qv/RXQUirQEhN91uUS8QRRxPg7vYvEei0TZh+M6SYGy8ZAa4e0gN9zo7T8K0rD99jwE64nV5lzyA==
+"@octokit/app@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@octokit/app/-/app-3.0.0.tgz#c2f83f302805299b46ac40cbfea568e1297e583c"
+  integrity sha512-zCj5u37H1DOhedVVVI4C/kpxXO5S/nxM25O+KnC7DT1Hf3rFWO+SDLz757IPRu9j6Br4L23YbmDpV5bvCL85eA==
   dependencies:
-    "@octokit/request" "^3.0.0"
-    "@types/lru-cache" "^5.1.0"
+    "@octokit/request" "^4.1.0"
     jsonwebtoken "^8.3.0"
     lru-cache "^5.1.1"
 
@@ -357,7 +356,7 @@
     deprecation "^2.0.0"
     once "^1.4.0"
 
-"@octokit/request@3.0.0", "@octokit/request@^3.0.0":
+"@octokit/request@3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@octokit/request/-/request-3.0.0.tgz#304a279036b2dc89e7fba7cb30c9e6a9b1f4d2df"
   integrity sha512-DZqmbm66tq+a9FtcKrn0sjrUpi0UaZ9QPUCxxyk/4CJ2rseTMpAWRf6gCwOSUCzZcx/4XVIsDk+kz5BVdaeenA==
@@ -472,11 +471,6 @@
   dependencies:
     "@types/istanbul-lib-coverage" "*"
     "@types/istanbul-lib-report" "*"
-
-"@types/lru-cache@^5.1.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@types/lru-cache/-/lru-cache-5.1.0.tgz#57f228f2b80c046b4a1bd5cac031f81f207f4f03"
-  integrity sha512-RaE0B+14ToE4l6UqdarKPnXwVDuigfFv+5j9Dze/Nqr23yyuqdNvzcZi3xB+3Agvi5R4EOgAksfv3lXX4vBt9w==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.0"
@@ -4575,12 +4569,12 @@ probot-config@1.0.1:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.2.11:
-  version "9.2.11"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.11.tgz#bc9df270d45d96e476a74162e9fd468dba664ab6"
-  integrity sha512-+tgQCi2RW8fv4hO1IpTwwXG6gzetMzGja9hcGdpXjp4PvXLK3K1yH0dsO3fmR1brgZvId8/VaFB2uxg50aJ91w==
+probot@9.2.13:
+  version "9.2.13"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.13.tgz#cd40a45248d354ebcabc2d1e5504e48f39c5cd5f"
+  integrity sha512-Tc2epcNInM7sMwTERv+0vcRN+6SV5xcax9u78TYBbYRvpk6b6qD9epybQ8RcZW6boNu+Rr9itGuU3+WH/Kzf5A==
   dependencies:
-    "@octokit/app" "^2.2.4"
+    "@octokit/app" "^3.0.0"
     "@octokit/graphql" "2.1.2"
     "@octokit/plugin-enterprise-compatibility" "^1.0.0"
     "@octokit/plugin-retry" "^2.1.1"
