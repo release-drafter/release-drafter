@@ -544,7 +544,7 @@ Previous tag: ''
     })
 
     describe('with categories config', () => {
-      it('categorizes pull requests', async () => {
+      it('categorizes pull requests with single label', async () => {
         getConfigMock('config-with-categories.yml')
 
         nock('https://api.github.com')
@@ -560,6 +560,55 @@ Previous tag: ''
             200,
             require('./fixtures/__generated__/graphql-commits-merge-commit.json')
           )
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
+
+* Add documentation (#5) @TimonVS
+* Update dependencies (#4) @TimonVS
+
+## 🚀 Features
+
+* Add big feature (#2) @TimonVS
+* 👽 Add alien technology (#1) @TimonVS
+
+## 🐛 Bug Fixes
+
+* Bug fixes (#3) @TimonVS
+`,
+                draft: true,
+                tag_name: ''
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+
+      it('categorizes pull requests with multiple labels', async () => {
+        getConfigMock('config-with-categories-2.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
 
         nock('https://api.github.com')
           .post(
