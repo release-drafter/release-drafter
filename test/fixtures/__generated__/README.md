@@ -1,0 +1,1 @@
+These fixtures are generated using the `bin/generate-fixtures.js` script and should be regenerated when the query in `lib/commits.js` changes. The fixtures are generated from https://github.com/TimonVS/release-drafter-test-repo.

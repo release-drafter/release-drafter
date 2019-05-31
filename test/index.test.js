@@ -119,7 +119,10 @@ describe('release-drafter', () => {
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .get(
@@ -178,7 +181,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .post(
@@ -222,7 +228,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .post(
@@ -261,7 +270,10 @@ Previous tag: ''
             .post('/graphql', body =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
-            .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+            )
 
           nock('https://api.github.com')
             .post(
@@ -304,7 +316,10 @@ Previous tag: ''
             .post('/graphql', body =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
-            .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+            )
 
           nock('https://api.github.com')
             .post(
@@ -432,7 +447,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .patch(
@@ -475,7 +493,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .post(
@@ -526,7 +547,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .post(
@@ -576,7 +600,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .post(
@@ -613,7 +640,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .post(
@@ -650,7 +680,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .post(
@@ -685,7 +718,10 @@ Previous tag: ''
             .post('/graphql', body =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
-            .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+            )
 
           nock('https://api.github.com')
             .get(
@@ -735,7 +771,7 @@ Previous tag: ''
             )
             .reply(
               200,
-              require('./fixtures/graphql-commits-rebase-merging.json')
+              require('./fixtures/__generated__/graphql-commits-rebase-merging.json')
             )
 
           nock('https://api.github.com')
@@ -784,7 +820,10 @@ Previous tag: ''
             .post('/graphql', body =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
-            .reply(200, require('./fixtures/graphql-commits-squash.json'))
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-squash-merging.json')
+            )
 
           nock('https://api.github.com')
             .get(
@@ -896,7 +935,10 @@ Previous tag: ''
           .post('/graphql', body =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
-          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
 
         nock('https://api.github.com')
           .get(
