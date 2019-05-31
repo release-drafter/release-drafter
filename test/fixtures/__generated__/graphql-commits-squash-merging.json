@@ -24,10 +24,11 @@
                     {
                       "title": "Add documentation",
                       "number": 15,
-                      "mergedAt": "2019-04-27T13:39:24Z",
                       "author": {
                         "login": "TimonVS"
                       },
+                      "mergedAt": "2019-04-27T13:39:24Z",
+                      "isCrossRepository": false,
                       "labels": {
                         "nodes": [
                           {
@@ -53,10 +54,11 @@
                     {
                       "title": "Update dependencies",
                       "number": 14,
-                      "mergedAt": "2019-04-27T13:39:17Z",
                       "author": {
                         "login": "TimonVS"
                       },
+                      "mergedAt": "2019-04-27T13:39:17Z",
+                      "isCrossRepository": false,
                       "labels": {
                         "nodes": []
                       }
@@ -78,10 +80,11 @@
                     {
                       "title": "Bug fixes",
                       "number": 13,
-                      "mergedAt": "2019-04-27T13:39:11Z",
                       "author": {
                         "login": "TimonVS"
                       },
+                      "mergedAt": "2019-04-27T13:39:11Z",
+                      "isCrossRepository": false,
                       "labels": {
                         "nodes": [
                           {
@@ -107,10 +110,11 @@
                     {
                       "title": "Add big feature",
                       "number": 12,
-                      "mergedAt": "2019-04-27T13:39:03Z",
                       "author": {
                         "login": "TimonVS"
                       },
+                      "mergedAt": "2019-04-27T13:39:03Z",
+                      "isCrossRepository": false,
                       "labels": {
                         "nodes": [
                           {
@@ -136,10 +140,11 @@
                     {
                       "title": "👽 Add alien technology",
                       "number": 11,
-                      "mergedAt": "2019-04-27T13:38:47Z",
                       "author": {
                         "login": "TimonVS"
                       },
+                      "mergedAt": "2019-04-27T13:38:47Z",
+                      "isCrossRepository": false,
                       "labels": {
                         "nodes": [
                           {
