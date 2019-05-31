@@ -24,7 +24,6 @@
     "probot": "9.2.11",
     "probot-config": "1.0.1",
     "regex-parser": "2.2.10",
-    "request": "2.88.0",
     "semver": "6.0.0"
   },
   "devDependencies": {
@@ -36,6 +35,7 @@
     "lint-staged": "8.1.7",
     "nock": "10.0.6",
     "nock-knock": "2.0.0",
+    "node-fetch": "^2.6.0",
     "nodemon": "1.19.0",
     "prettier": "1.17.1",
     "smee-client": "1.1.0"
