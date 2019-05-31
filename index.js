@@ -35,7 +35,11 @@ module.exports = app => {
     })
     config['sort-direction'] = validateSortDirection(config['sort-direction'])
 
-    const branch = context.payload.ref.replace(/^refs\/heads\//, '')
+    // GitHub Actions merge payloads slightly differ, in that their ref points
+    // to the PR branch instead of refs/heads/master
+    const ref = process.env['GITHUB_REF'] || context.payload.ref
+
+    const branch = ref.replace(/^refs\/heads\//, '')
 
     if (!config.template) {
       log({ app, context, message: 'No valid config found' })
