@@ -50,9 +50,14 @@ name-template: 'v$NEXT_PATCH_VERSION 🌈'
 tag-template: 'v$NEXT_PATCH_VERSION'
 categories:
   - title: '🚀 Features'
-    label: 'feature'
+    labels:
+      - 'feature'
+      - 'enhancement'
   - title: '🐛 Bug Fixes'
-    label: 'fix'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
   - title: '🧰 Maintenance'
     label: 'chore'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
@@ -131,7 +136,10 @@ categories:
   - title: '🚀 Features'
     label: 'feature'
   - title: '🐛 Bug Fixes'
-    label: 'fix'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
 ```
 
 Pull requests with the label "feature" or "fix" will now be grouped together:
