@@ -32,13 +32,11 @@ describe('release-drafter', () => {
     nock('https://api.github.com')
       .post('/app/installations/179208/access_tokens')
       .reply(200, { token: 'test' })
-  })
 
-  beforeAll(() => {
-    // If we're running our actual test process inside a GitHub Action, we don't
-    // want all the GitHub Action conditional logic to be triggered. That's for
-    // *running* inside a GitHub Action, not for *testing* using GitHub Actions.
-    // So let's just delete them all when running tests.
+    // We have to delete all the GITHUB_* envs before every test, because if
+    // we're running the tests themselves inside a GitHub Actions container
+    // they'll mess with the tests, and also because we set some of them in
+    // tests and we don't want them to leak into other tests.
     Object.keys(process.env)
       .filter(key => key.match(/^GITHUB_/))
       .forEach(key => {
