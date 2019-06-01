@@ -34,6 +34,18 @@ describe('release-drafter', () => {
       .reply(200, { token: 'test' })
   })
 
+  beforeAll(() => {
+    // If we're running our actual test process inside a GitHub Action, we don't
+    // want all the GitHub Action conditional logic to be triggered. That's for
+    // *running* inside a GitHub Action, not for *testing* using GitHub Actions.
+    // So let's just delete them all when running tests.
+    Object.keys(process.env)
+      .filter(key => key.match(/^GITHUB_/))
+      .forEach(key => {
+        delete process.env[key]
+      })
+  })
+
   afterAll(nock.restore)
   afterEach(nock.cleanAll)
 
@@ -204,6 +216,59 @@ Previous tag: ''
         await probot.receive({
           name: 'push',
           payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+
+      it('creates a new draft when run as a GitHub Actiin', async () => {
+        getConfigMock()
+
+        // GitHub actions should use the GITHUB_REF and not the payload ref
+        process.env['GITHUB_REF'] = 'refs/heads/master'
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [
+            require('./fixtures/release-2'),
+            require('./fixtures/release'),
+            require('./fixtures/release-3')
+          ])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-merge-commit.json'))
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
+
+* Add documentation (#5) @TimonVS
+* Update dependencies (#4) @TimonVS
+* Bug fixes (#3) @TimonVS
+* Add big feature (#2) @TimonVS
+* 👽 Add alien technology (#1) @TimonVS
+`,
+                draft: true,
+                tag_name: ''
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          // This payload has a different ref to GITHUB_REF, which is how GitHub
+          // Action merge push payloads behave
+          payload: require('./fixtures/push-non-master-branch')
         })
 
         expect.assertions(1)
