@@ -292,10 +292,10 @@
     "@types/istanbul-reports" "^1.1.1"
     "@types/yargs" "^12.0.9"
 
-"@octokit/app@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@octokit/app/-/app-3.0.0.tgz#c2f83f302805299b46ac40cbfea568e1297e583c"
-  integrity sha512-zCj5u37H1DOhedVVVI4C/kpxXO5S/nxM25O+KnC7DT1Hf3rFWO+SDLz757IPRu9j6Br4L23YbmDpV5bvCL85eA==
+"@octokit/app@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@octokit/app/-/app-3.0.1.tgz#072e48127eb3c004f9a8ae9c81bfbf8c1850b41d"
+  integrity sha512-uUN1XCzHJTqiKbeTKAuTYAiu/IYV5uN606smwGZsg//8xVHvlwdv7x9nwpYAs32addRk+TZB55nitwgQlzt1jw==
   dependencies:
     "@octokit/request" "^4.1.0"
     jsonwebtoken "^8.3.0"
@@ -2327,6 +2327,11 @@ has-flag@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-3.0.0.tgz#b5d454dc2199ae225699f3467e5a07f3b955bafd"
   integrity sha1-tdRU3CGZriJWmfNGfloH87lVuv0=
+
+has-flag@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-4.0.0.tgz#944771fd9c81c81265c4d6941860da06bb59479b"
+  integrity sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
 
 has-symbols@^1.0.0:
   version "1.0.0"
@@ -4568,12 +4573,12 @@ probot-config@1.0.1:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.2.13:
-  version "9.2.13"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.13.tgz#cd40a45248d354ebcabc2d1e5504e48f39c5cd5f"
-  integrity sha512-Tc2epcNInM7sMwTERv+0vcRN+6SV5xcax9u78TYBbYRvpk6b6qD9epybQ8RcZW6boNu+Rr9itGuU3+WH/Kzf5A==
+probot@9.2.15:
+  version "9.2.15"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.15.tgz#9ce82213d78860866773b092531ca78ece09214b"
+  integrity sha512-tZF1IdpbigwODWSGZEvO+6xGKemzNhRtNJMYs2sa8nPajfhZsQ0NX/g04bfX9YYWuBjC2gn7yNHRLG2+DLSzzw==
   dependencies:
-    "@octokit/app" "^3.0.0"
+    "@octokit/app" "^3.0.1"
     "@octokit/graphql" "2.1.2"
     "@octokit/plugin-enterprise-compatibility" "^1.0.0"
     "@octokit/plugin-retry" "^2.1.1"
@@ -4603,7 +4608,7 @@ probot@9.2.13:
     raven "^2.4.2"
     resolve "^1.4.0"
     semver "^6.0.0"
-    supports-color "^6.0.0"
+    supports-color "^7.0.0"
     update-dotenv "^1.1.0"
     uuid "^3.2.1"
 
@@ -5500,6 +5505,13 @@ supports-color@^6.0.0, supports-color@^6.1.0:
   integrity sha512-qe1jfm1Mg7Nq/NSh6XE24gPXROEVsWHxC1LIx//XNlD9iw7YZQGjZNjYN7xGaEG6iKdA8EtNFW6R0gjnVXp+wQ==
   dependencies:
     has-flag "^3.0.0"
+
+supports-color@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-7.0.0.tgz#f2392c50ab35bb3cae7beebf24d254a19f880c06"
+  integrity sha512-WRt32iTpYEZWYOpcetGm0NPeSvaebccx7hhS/5M6sAiqnhedtFCHFxkjzZlJvFNCPowiKSFGiZk5USQDFy83vQ==
+  dependencies:
+    has-flag "^4.0.0"
 
 symbol-observable@^1.1.0:
   version "1.2.0"
