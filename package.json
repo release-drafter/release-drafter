@@ -42,7 +42,7 @@
     "smee-client": "1.1.0"
   },
   "engines": {
-    "node": ">= 8.3.0"
+    "node": "10.x"
   },
   "jest": {
     "collectCoverage": true,
