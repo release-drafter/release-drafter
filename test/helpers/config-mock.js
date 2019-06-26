@@ -1,6 +1,9 @@
 const fs = require('fs')
 const nock = require('nock')
-const { encodeContent } = require('../../src/base64')
+
+function encodeContent(content) {
+  return Buffer.from(content).toString('base64')
+}
 
 function configFixture(fileName = 'config.yml') {
   return {
