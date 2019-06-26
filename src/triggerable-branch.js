@@ -1,4 +1,4 @@
-const log = require('./log')
+const log = require('./log').default
 
 const flatten = arr => {
   return Array.prototype.concat(...arr)

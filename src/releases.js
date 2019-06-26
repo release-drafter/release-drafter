@@ -2,7 +2,7 @@ const compareVersions = require('compare-versions')
 
 const { getVersionInfo } = require('./versions')
 const { template } = require('./template')
-const log = require('./log')
+const log = require('./log').default
 const _ = require('lodash')
 
 const UNCATEGORIZED = 'UNCATEGORIZED'

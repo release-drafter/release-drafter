@@ -1,4 +1,4 @@
-const log = require('./log')
+const log = require('./log').default
 const regexParser = require('regex-parser')
 const regexEscape = require('escape-string-regexp')
 

@@ -8,7 +8,7 @@ const {
   sortPullRequests,
   SORT_DIRECTIONS
 } = require('./sort-pull-requests')
-const log = require('./log')
+const log = require('./log').default
 
 const configName = 'release-drafter.yml'
 

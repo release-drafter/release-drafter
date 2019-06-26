@@ -1,4 +1,4 @@
-const log = require('./log')
+const log = require('./log').default
 const paginate = require('./pagination')
 const _ = require('lodash')
 
