@@ -1,14 +1,14 @@
 const getConfig = require('probot-config')
-const { isTriggerableBranch } = require('./lib/triggerable-branch')
-const { findReleases, generateReleaseInfo } = require('./lib/releases')
-const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
-const { validateReplacers } = require('./lib/template')
+const { isTriggerableBranch } = require('./triggerable-branch')
+const { findReleases, generateReleaseInfo } = require('./releases')
+const { findCommitsWithAssociatedPullRequests } = require('./commits')
+const { validateReplacers } = require('./template')
 const {
   validateSortDirection,
   sortPullRequests,
   SORT_DIRECTIONS
-} = require('./lib/sort-pull-requests')
-const log = require('./lib/log')
+} = require('./sort-pull-requests')
+const log = require('./log')
 
 const configName = 'release-drafter.yml'
 

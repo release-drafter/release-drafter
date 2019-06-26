@@ -69,9 +69,7 @@ module.exports.findCommitsWithAssociatedPullRequests = async ({
     log({
       app,
       context,
-      message: `Fetching all commits for branch ${branch} since ${
-        lastRelease.published_at
-      }`
+      message: `Fetching all commits for branch ${branch} since ${lastRelease.published_at}`
     })
 
     data = await paginate(

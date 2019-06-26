@@ -3,7 +3,7 @@
 const fs = require('fs')
 const path = require('path')
 const fetch = require('node-fetch')
-const { findCommitsWithAssociatedPullRequestsQuery } = require('../lib/commits')
+const { findCommitsWithAssociatedPullRequestsQuery } = require('../src/commits')
 
 const REPO_OWNER = 'TimonVS'
 const REPO_NAME = 'release-drafter-test-repo'

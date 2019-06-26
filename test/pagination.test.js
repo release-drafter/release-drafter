@@ -1,4 +1,4 @@
-const paginate = require('../lib/pagination')
+const paginate = require('../src/pagination')
 
 describe('pagination', () => {
   it('concats pagination results', async () => {

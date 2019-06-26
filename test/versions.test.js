@@ -1,4 +1,4 @@
-const { getVersionInfo } = require('../lib/versions')
+const { getVersionInfo } = require('../src/versions')
 
 describe('versions', () => {
   it('extracts a version-like string from the last tag', () => {

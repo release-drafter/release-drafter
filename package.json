@@ -47,8 +47,7 @@
   "jest": {
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "index.js",
-      "lib/**"
+      "src/**"
     ]
   },
   "husky": {

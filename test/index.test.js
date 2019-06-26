@@ -2,7 +2,7 @@ const nock = require('nock')
 const route = require('nock-knock/lib').default
 const { Probot, Octokit } = require('probot')
 const getConfigMock = require('./helpers/config-mock')
-const releaseDrafter = require('../index')
+const releaseDrafter = require('../src')
 
 nock.disableNetConnect()
 
