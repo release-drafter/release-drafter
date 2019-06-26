@@ -41,6 +41,7 @@
     "node-fetch": "2.6.0",
     "prettier": "1.18.2",
     "smee-client": "1.1.0",
+    "ts-jest": "^24.0.2",
     "tsc-watch": "^2.2.1",
     "typescript": "^3.5.2"
   },
@@ -48,6 +49,22 @@
     "node": ">= 10.x"
   },
   "jest": {
+    "roots": [
+      "<rootDir>/src/",
+      "<rootDir>/test/"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.[tj]sx?$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
     "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**"
