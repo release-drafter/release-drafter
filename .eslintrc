@@ -1,13 +1,17 @@
 {
-  "extends": ["eslint:recommended", "prettier"],
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "prettier/@typescript-eslint"
+  ],
   "plugins": ["prettier"],
   "parserOptions": {
-    "ecmaVersion": 9
+    "ecmaVersion": 9,
+    "sourceType": "module"
   },
   "env": { "node": true, "es6": true },
   "rules": {
-    "prettier/prettier": "warn",
-    "no-console": "off",
-    "no-unused-vars": "warn"
+    "prettier/prettier": "warn"
   }
 }
