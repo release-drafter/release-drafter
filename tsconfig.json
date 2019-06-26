@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["es2015", "es2017"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "pretty": true,
+    "strict": true,
+    "sourceMap": true,
+    "outDir": "./lib",
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "typeRoots": ["./node_modules/@types", "./types"]
+  },
+  "include": ["src/**/*"],
+  "compileOnSave": false
+}

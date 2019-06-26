@@ -6,13 +6,14 @@
   "license": "ISC",
   "repository": "https://github.com/toolmantim/release-drafter",
   "scripts": {
-    "dev": "nodemon --exec \"npm start\"",
-    "start": "probot run ./index.js",
+    "build": "tsc",
+    "dev": "tsc-watch --onSuccess \"npm start\" --onFailure \"echo TypeScript Compilation Failed\" --noClear",
+    "start": "probot run ./lib/index.js",
     "now-start": "PRIVATE_KEY=$(echo $PRIVATE_KEY_BASE64 | base64 -d) npm start",
     "test": "jest",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
     "lint": "eslint '**/*.js'",
-    "prettier": "prettier --write **/*.{js,md,json}",
+    "prettier": "prettier --write **/*.{js,ts,md,json}",
     "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
     "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
     "deploy": "now && now alias"
@@ -28,6 +29,7 @@
     "semver": "6.3.0"
   },
   "devDependencies": {
+    "@types/node": "^12.0.10",
     "eslint": "5.16.0",
     "eslint-config-prettier": "6.2.0",
     "eslint-plugin-prettier": "3.1.0",
@@ -37,9 +39,10 @@
     "nock": "11.3.3",
     "nock-knock": "2.0.0",
     "node-fetch": "2.6.0",
-    "nodemon": "1.19.2",
     "prettier": "1.18.2",
-    "smee-client": "1.1.0"
+    "smee-client": "1.1.0",
+    "tsc-watch": "^2.2.1",
+    "typescript": "^3.5.2"
   },
   "engines": {
     "node": ">= 10.x"

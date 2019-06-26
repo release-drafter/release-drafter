@@ -6,3 +6,4 @@ coverage
 now.json
 docker-compose-logs
 package-lock.json
+/lib
