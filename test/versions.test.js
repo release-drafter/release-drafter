@@ -51,6 +51,6 @@ describe('versions', () => {
       name: 'nope nope nope'
     })
 
-    expect(versionInfo).toEqual(undefined)
+    expect(versionInfo).toEqual(null)
   })
 })
