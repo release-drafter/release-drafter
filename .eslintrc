@@ -15,6 +15,8 @@
     "prettier/prettier": "warn",
     "@typescript-eslint/no-var-requires": false,
     "@typescript-eslint/no-use-before-define": false,
-    "@typescript-eslint/camelcase": false
+    "@typescript-eslint/camelcase": false,
+    "@typescript-eslint/explicit-function-return-type": false,
+    "@typescript-eslint/no-explicit-any": false
   }
 }
