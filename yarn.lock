@@ -285,12 +285,12 @@
     "@types/istanbul-reports" "^1.1.1"
     "@types/yargs" "^12.0.9"
 
-"@octokit/app@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@octokit/app/-/app-3.0.1.tgz#072e48127eb3c004f9a8ae9c81bfbf8c1850b41d"
-  integrity sha512-uUN1XCzHJTqiKbeTKAuTYAiu/IYV5uN606smwGZsg//8xVHvlwdv7x9nwpYAs32addRk+TZB55nitwgQlzt1jw==
+"@octokit/app@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@octokit/app/-/app-4.0.0.tgz#82888587f6b4f7d7eb4fa157df19771b46ff8d91"
+  integrity sha512-nc362rJnqWYu2MYVv93+fSiKs2kTfXzZKWbaOMGpikvjZyF+fvQ+uPoDCGqpITgVSXVvhPU8s0aiIvzI4kX/CA==
   dependencies:
-    "@octokit/request" "^4.1.0"
+    "@octokit/request" "^5.0.0"
     jsonwebtoken "^8.3.0"
     lru-cache "^5.1.1"
 
@@ -314,13 +314,13 @@
     universal-user-agent "^2.1.0"
     url-template "^2.0.8"
 
-"@octokit/graphql@2.1.3":
-  version "2.1.3"
-  resolved "https://registry.yarnpkg.com/@octokit/graphql/-/graphql-2.1.3.tgz#60c058a0ed5fa242eca6f938908d95fd1a2f4b92"
-  integrity sha512-XoXJqL2ondwdnMIW3wtqJWEwcBfKk37jO/rYkoxNPEVeLBDGsGO1TCWggrAlq3keGt/O+C/7VepXnukUxwt5vA==
+"@octokit/graphql@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@octokit/graphql/-/graphql-3.0.1.tgz#7559c3bb606a2aab7ba91e82633c044642b354c0"
+  integrity sha512-TiegCo0jueDPlkpcYlx8KSYa3ybs13ePBteoJutEHou0hu8sJHHhvIaQWvDH5jj4mHfJwZwD4r6/Xbl33UHLUw==
   dependencies:
     "@octokit/request" "^5.0.0"
-    universal-user-agent "^2.0.3"
+    universal-user-agent "^3.0.0"
 
 "@octokit/plugin-enterprise-compatibility@^1.0.0":
   version "1.1.0"
@@ -360,19 +360,6 @@
     node-fetch "^2.3.0"
     once "^1.4.0"
     universal-user-agent "^2.0.1"
-
-"@octokit/request@^4.1.0":
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/@octokit/request/-/request-4.1.0.tgz#e85dc377113baf2fe24433af8feb20e8a32e21b0"
-  integrity sha512-RvpQAba4i+BNH0z8i0gPRc1ShlHidj4puQjI/Tno6s+Q3/Mzb0XRSHJiOhpeFrZ22V7Mwjq1E7QS27P5CgpWYA==
-  dependencies:
-    "@octokit/endpoint" "^5.1.0"
-    "@octokit/request-error" "^1.0.1"
-    deprecation "^2.0.0"
-    is-plain-object "^3.0.0"
-    node-fetch "^2.3.0"
-    once "^1.4.0"
-    universal-user-agent "^2.1.0"
 
 "@octokit/request@^5.0.0":
   version "5.0.0"
@@ -4698,13 +4685,13 @@ probot-config@1.1.0:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.2.16:
-  version "9.2.16"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.16.tgz#837124416052f39d58d5efa9a36156f6f0643867"
-  integrity sha512-29X54OsIvJmbAvHMvIL5nFY1LyxA3a8ca7L5/zJXaLO8ym1Lgbl6Grgy78ENAKHWH5jDg4OIGGLGhZBvAcV9gQ==
+probot@9.2.19:
+  version "9.2.19"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.2.19.tgz#310dfe3283fc09e46408926651b67990d08381a8"
+  integrity sha512-ccUgs/r0c8w3jh+UTZcM9HlbPOufgXOjtBglwrvV14JNPXyLIKVVwLnE63swpXRPbImSR7oaM2sR0dO9xeIfrQ==
   dependencies:
-    "@octokit/app" "^3.0.1"
-    "@octokit/graphql" "2.1.3"
+    "@octokit/app" "^4.0.0"
+    "@octokit/graphql" "3.0.1"
     "@octokit/plugin-enterprise-compatibility" "^1.0.0"
     "@octokit/plugin-retry" "^2.1.1"
     "@octokit/plugin-throttling" "^2.3.0"
@@ -5849,7 +5836,7 @@ unique-string@^1.0.0:
   dependencies:
     crypto-random-string "^1.0.0"
 
-universal-user-agent@^2.0.0, universal-user-agent@^2.0.1, universal-user-agent@^2.0.3:
+universal-user-agent@^2.0.0, universal-user-agent@^2.0.1:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/universal-user-agent/-/universal-user-agent-2.0.3.tgz#9f6f09f9cc33de867bb720d84c08069b14937c6c"
   integrity sha512-eRHEHhChCBHrZsA4WEhdgiOKgdvgrMIHwnwnqD0r5C6AO8kwKcG7qSku3iXdhvHL3YvsS9ZkSGN8h/hIpoFC8g==
@@ -5860,6 +5847,13 @@ universal-user-agent@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/universal-user-agent/-/universal-user-agent-2.1.0.tgz#5abfbcc036a1ba490cb941f8fd68c46d3669e8e4"
   integrity sha512-8itiX7G05Tu3mGDTdNY2fB4KJ8MgZLS54RdG6PkkfwMAavrXu1mV/lls/GABx9O3Rw4PnTtasxrvbMQoBYY92Q==
+  dependencies:
+    os-name "^3.0.0"
+
+universal-user-agent@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/universal-user-agent/-/universal-user-agent-3.0.0.tgz#4cc88d68097bffd7ac42e3b7c903e7481424b4b9"
+  integrity sha512-T3siHThqoj5X0benA5H0qcDnrKGXzU8TKoX15x/tQHw1hQBvIEBHjxQ2klizYsqBOO/Q+WuxoQUihadeeqDnoA==
   dependencies:
     os-name "^3.0.0"
 
