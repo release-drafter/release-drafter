@@ -3,6 +3,7 @@ const { isTriggerableBranch } = require('./lib/triggerable-branch')
 const { findReleases, generateReleaseInfo } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { validateReplacers } = require('./lib/template')
+const { getClosedIssuesFromPRBody } = require('./lib/issues')
 const {
   validateSortDirection,
   sortPullRequests,
@@ -66,11 +67,14 @@ module.exports = app => {
       config['sort-direction']
     )
 
+    const closedIssues = getClosedIssuesFromPRBody(mergedPullRequests)
+
     const releaseInfo = generateReleaseInfo({
       commits,
       config,
       lastRelease,
-      mergedPullRequests: sortedMergedPullRequests
+      mergedPullRequests: sortedMergedPullRequests,
+      closedIssues
     })
 
     if (!draftRelease) {
