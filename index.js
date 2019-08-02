@@ -50,6 +50,7 @@ module.exports = app => {
       return
     }
 
+    const openPullRequest = await findPullRequests({ app, context, config })
     const { draftRelease, lastRelease } = await findReleases({ app, context })
     const {
       commits,
@@ -66,20 +67,21 @@ module.exports = app => {
       config['sort-direction']
     )
 
-    const releaseInfo = generateReleaseInfo({
+    const pullRequestInfo = generatePullRequestInfo({
       commits,
       config,
       lastRelease,
       mergedPullRequests: sortedMergedPullRequests
     })
 
-    if (!draftRelease) {
-      log({ app, context, message: 'Creating new draft release' })
+    if (!openPullRequest) {
+      log({ app, context, message: 'Creating new draft pull-request' })
       await context.github.repos.createRelease(
         context.repo({
-          name: releaseInfo.name,
-          tag_name: releaseInfo.tag,
-          body: releaseInfo.body,
+          title: pullRequestInfo.title,
+          head: pullRequestInfo.source,
+          base: pullRequestInfo.destination,
+          body: pullRequestInfo.body,
           draft: true
         })
       )
@@ -88,7 +90,7 @@ module.exports = app => {
       await context.github.repos.updateRelease(
         context.repo({
           release_id: draftRelease.id,
-          body: releaseInfo.body
+          body: pullRequestInfo.body
         })
       )
     }
