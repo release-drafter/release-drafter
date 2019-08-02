@@ -22,7 +22,9 @@ module.exports = app => {
       categories: [],
       'exclude-labels': [],
       replacers: [],
-      'sort-direction': SORT_DIRECTIONS.descending
+      'sort-direction': SORT_DIRECTIONS.descending,
+      'source': 'dev',
+      'destination': 'release'
     }
     const config = Object.assign(
       defaults,
