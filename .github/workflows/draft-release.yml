@@ -1,7 +1,7 @@
-name: Draft Release
+name: Release Notes
 on: [push]
 jobs:
-  release-notes:
+  release-drafter:
     runs-on: ubuntu-latest
     steps:
     - name: Draft Release
