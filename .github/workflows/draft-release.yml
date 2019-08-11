@@ -1,0 +1,10 @@
+name: Draft Release
+on: push
+jobs:
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Draft Release
+      uses: ./
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
