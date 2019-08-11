@@ -4,6 +4,7 @@ jobs:
   release-drafter:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@master
     - name: Draft Release
       uses: ./
       env:
