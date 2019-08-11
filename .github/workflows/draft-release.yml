@@ -1,5 +1,5 @@
 name: Draft Release
-on: push
+on: [push]
 jobs:
   release-notes:
     runs-on: ubuntu-latest

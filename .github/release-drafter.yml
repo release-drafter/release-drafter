@@ -1,6 +1,7 @@
 # Config for https://github.com/apps/release-drafter
 branches:
   - master
+  - new-actions-format
 template: |
   ## What's Changed
 
