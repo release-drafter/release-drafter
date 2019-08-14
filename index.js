@@ -9,6 +9,7 @@ const {
   SORT_DIRECTIONS
 } = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
+const { undoRelease } = require('./lib/undo')
 
 const configName = 'release-drafter.yml'
 
@@ -93,4 +94,5 @@ module.exports = app => {
       )
     }
   })
+  app.on('status', undoRelease)
 }
