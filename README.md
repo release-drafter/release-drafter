@@ -10,7 +10,32 @@
 
 ## Usage
 
-You can use Release Drafter as a [GitHub Action](https://github.com/features/actions), by configuring your `.github/main.workflow` file with the following:
+### GitHub Actions V2
+
+You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a [GitHub Actions V2 Workflow](https://help.github.com/en/articles/about-github-actions) by configuring a YAML-based workflow file, e.g. `.github/workflows/release-management.yml`, with the following:
+
+```yaml
+name: Release Management
+
+on:
+  push:
+    # branches to consider in the event; optional, defaults to all
+    branches:
+      - master
+
+jobs:
+  update_draft_release:
+    runs-on: ubuntu-latest
+    steps:
+      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - uses: toolmantim/release-drafter@v5.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### GitHub Actions V1
+
+You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a **deprecated** [GitHub Actions V1 Workflow](https://developer.github.com/actions/) by configuring your `.github/main.workflow` file with the following:
 
 ```workflow
 workflow "Push" {
@@ -24,11 +49,15 @@ action "Draft Release" {
 }
 ```
 
-You can also install the [Release Drafter GitHub App](https://github.com/apps/release-drafter), choosing the repositories you want releases automatically created.
+### GitHub App
 
-Once you’ve added Release Drafter to your repository, it can be enabled by adding a `.github/release-drafter.yml` configuration file to each repository.
+You can also install the [Release Drafter GitHub App](https://github.com/apps/release-drafter), choosing the repositories for which you want releases automatically created.
 
-## Example
+## Configuration
+
+Once you’ve added Release Drafter to your repository, it must be enabled by adding a `.github/release-drafter.yml` configuration file to each repository.
+
+### Example
 
 For example, take the following `.github/release-drafter.yml` file in a repository:
 
