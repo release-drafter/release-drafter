@@ -10,9 +10,9 @@
 
 ## Usage
 
-### GitHub Actions V2
+### GitHub Actions
 
-You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a [GitHub Actions V2 Workflow](https://help.github.com/en/articles/about-github-actions) by configuring a YAML-based workflow file, e.g. `.github/workflows/release-management.yml`, with the following:
+You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a [GitHub Actions Workflow](https://help.github.com/en/articles/about-github-actions) by configuring a YAML-based workflow file, e.g. `.github/workflows/release-management.yml`, with the following:
 
 ```yaml
 name: Release Management
@@ -31,22 +31,6 @@ jobs:
       - uses: toolmantim/release-drafter@v5.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### GitHub Actions V1
-
-You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a **deprecated** [GitHub Actions V1 Workflow](https://developer.github.com/actions/) by configuring your `.github/main.workflow` file with the following:
-
-```workflow
-workflow "Push" {
-  on = "push"
-  resolves = ["Draft Release"]
-}
-
-action "Draft Release" {
-  uses = "toolmantim/release-drafter@v5.2.0"
-  secrets = ["GITHUB_TOKEN"]
-}
 ```
 
 ### GitHub App
