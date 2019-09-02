@@ -1624,10 +1624,10 @@ dot-prop@^4.1.0:
   dependencies:
     is-obj "^1.0.0"
 
-dotenv@~8.0.0:
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.0.0.tgz#ed310c165b4e8a97bb745b0a9d99c31bda566440"
-  integrity sha512-30xVGqjLjiUOArT4+M5q9sYdvuR4riM6yK9wMcas9Vbp6zZa+ocC9dp6QoftuhTPhFAiLK/0C5Ni2nou/Bk8lg==
+dotenv@~8.1.0:
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.1.0.tgz#d811e178652bfb8a1e593c6dd704ec7e90d85ea2"
+  integrity sha512-GUE3gqcDCaMltj2++g6bRQ5rBJWtkWTmqmD0fo1RnnMuUqHNCt2oTPeDnS9n6fKYvlhn7AeBkb38lymBtWBQdA==
 
 dtrace-provider@~0.8:
   version "0.8.7"
@@ -2741,10 +2741,10 @@ is-arrayish@^0.2.1:
   resolved "https://registry.yarnpkg.com/is-arrayish/-/is-arrayish-0.2.1.tgz#77c99840527aa8ecb1a8ba697b80645a7a926a9d"
   integrity sha1-d8mYQFJ6qOyxqLppe4BkWnqSap0=
 
-is-base64@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/is-base64/-/is-base64-0.1.0.tgz#a6f20610c6ef4863a51cba32bc0222544b932622"
-  integrity sha512-WRRyllsGXJM7ZN7gPTCCQ/6wNPTRDwiWdPK66l5sJzcU/oOzcIcRRf0Rux8bkpox/1yjt0F6VJRsQOIG2qz5sg==
+is-base64@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/is-base64/-/is-base64-1.0.0.tgz#0bdda1a758fcfac6d78df8bb95960512bb42db61"
+  integrity sha512-7McBWBgGDHS8OHvCnPVVxl3HdzitV6XyjM1x7vVxbzXIKJUzxphU5MDL986aZ/oKf/Q+j4Vh4m54Fjwi88n75g==
 
 is-binary-path@^1.0.0:
   version "1.0.1"
@@ -4748,10 +4748,10 @@ probot-config@1.1.0:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.3.1:
-  version "9.3.1"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.3.1.tgz#7bebd2da696fd81cf04ffee0d58c376b53e51c55"
-  integrity sha512-ddSTMxafSoUilr6LMGVeOmdxiUjiffdNokPljdZ2zXcUWR6OwKzpDpfRBTxvtsALgPj/HLzk9IZZp8yG1mVbMQ==
+probot@9.3.3:
+  version "9.3.3"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.3.3.tgz#b889d98beade561e3490e3e55af00034807e3ddd"
+  integrity sha512-TwEeAWMKE6cd+It8AkM8ulwlyYGHReec85T38YTec8Y8q3IEo2pp2WZTM1q3tCky0GBJip4iJy1NI5gab609LQ==
   dependencies:
     "@octokit/app" "^4.0.0"
     "@octokit/graphql" "3.0.1"
@@ -4768,13 +4768,13 @@ probot@9.3.1:
     cache-manager "^2.4.0"
     commander "^3.0.0"
     deepmerge "^3.2.0"
-    dotenv "~8.0.0"
+    dotenv "~8.1.0"
     eventsource "^1.0.7"
     express "^4.16.2"
     express-async-errors "^3.0.0"
     hbs "^4.0.4"
     ioredis "^4.5.1"
-    is-base64 "0.1.0"
+    is-base64 "1.0.0"
     js-yaml "^3.13.1"
     jsonwebtoken "^8.1.0"
     octokit-pagination-methods "1.1.0"
