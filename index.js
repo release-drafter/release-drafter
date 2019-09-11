@@ -78,7 +78,7 @@ module.exports = app => {
     let releaseId
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
-      response = await context.github.repos.createRelease(
+      const response = await context.github.repos.createRelease(
         context.repo({
           name: releaseInfo.name,
           tag_name: releaseInfo.tag,
@@ -100,9 +100,10 @@ module.exports = app => {
 
     if (config['auto-release']) {
       context.log('Autoreleasing!')
-      const lastVersion = getVersionInfo(lastRelease)
-      // TODO template depending on PR labels
-      const thisVersion = incrementVersionBasedOnLabels(lastVersion, pullRequests)
+      const thisVersion = incrementVersionBasedOnLabels(
+        lastRelease,
+        mergedPullRequests
+      )
       await context.github.repos.editRelease(
         context.repo({
           release_id: releaseId,
