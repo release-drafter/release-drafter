@@ -1,6 +1,9 @@
-const { getVersionInfo } = require('../lib/versions')
+const {
+  getVersionInfo,
+  incrementVersionBasedOnLabels
+} = require('../lib/versions')
 
-describe('versions', () => {
+describe('version info', () => {
   it('extracts a version-like string from the last tag', () => {
     const versionInfo = getVersionInfo({
       tag_name: 'v10.0.3',
@@ -52,5 +55,60 @@ describe('versions', () => {
     })
 
     expect(versionInfo).toEqual(undefined)
+  })
+})
+
+describe('increment version based on labels', () => {
+  it('bumps by a patch number if there are no labels on PRs', () => {
+    const lastRelease = {
+      tag_name: '1.0.0',
+      name: 'Some major release'
+    }
+    const prs = [{ labels: [{ name: 'irrelevant' }] }]
+    const resolvedVersion = incrementVersionBasedOnLabels(lastRelease, prs)
+
+    expect(resolvedVersion).toEqual('1.0.1')
+  })
+  it('bumps by a patch if there are only PATCH or other irrelevant labels on PRs', () => {
+    const lastRelease = {
+      tag_name: '1.0.0',
+      name: 'Some major release'
+    }
+    const prs = [
+      { labels: [{ name: 'PATCH' }, { name: 'irrelevant' }] },
+      { labels: [{ name: 'foobar' }] }
+    ]
+    const resolvedVersion = incrementVersionBasedOnLabels(lastRelease, prs)
+
+    expect(resolvedVersion).toEqual('1.0.1')
+  })
+  it('bumps by a minor version if there are only MINOR, PATCH or irrelevant labels on PRs', () => {
+    const lastRelease = {
+      tag_name: '1.0.0',
+      name: 'Some major release'
+    }
+    const prs = [
+      { labels: [{ name: 'MINOR' }, { name: 'irrelevant' }] },
+      { labels: [{ name: 'PATCH' }] },
+      { labels: [{ name: 'foobar' }] }
+    ]
+    const resolvedVersion = incrementVersionBasedOnLabels(lastRelease, prs)
+
+    expect(resolvedVersion).toEqual('1.1.0')
+  })
+  it('bumps by a major version if there is a MAJOR label on any of the PRs', () => {
+    const lastRelease = {
+      tag_name: '1.0.0',
+      name: 'Some major release'
+    }
+    const prs = [
+      { labels: [{ name: 'MINOR' }, { name: 'irrelevant' }] },
+      { labels: [{ name: 'PATCH' }] },
+      { labels: [{ name: 'MAJOR' }] },
+      { labels: [{ name: 'foobar' }] }
+    ]
+    const resolvedVersion = incrementVersionBasedOnLabels(lastRelease, prs)
+
+    expect(resolvedVersion).toEqual('2.0.0')
   })
 })
