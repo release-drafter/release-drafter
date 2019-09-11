@@ -9,6 +9,7 @@ const {
   SORT_DIRECTIONS
 } = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
+const { incrementVersionBasedOnLabels } = require('./lib/versions')
 
 const configName = 'release-drafter.yml'
 
@@ -101,7 +102,7 @@ module.exports = app => {
       context.log('Autoreleasing!')
       const lastVersion = getVersionInfo(lastRelease)
       // TODO template depending on PR labels
-      const thisVersion = lastVersion.incrementedPatch
+      const thisVersion = incrementVersionBasedOnLabels(lastVersion, pullRequests)
       await context.github.repos.editRelease(
         context.repo({
           release_id: releaseId,
