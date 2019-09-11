@@ -34,6 +34,7 @@ module.exports = app => {
       replacers: config.replacers
     })
     config['sort-direction'] = validateSortDirection(config['sort-direction'])
+    const autoRelease = false
 
     // GitHub Actions merge payloads slightly differ, in that their ref points
     // to the PR branch instead of refs/heads/master
@@ -73,9 +74,10 @@ module.exports = app => {
       mergedPullRequests: sortedMergedPullRequests
     })
 
+    let releaseId
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
-      await context.github.repos.createRelease(
+      response = await context.github.repos.createRelease(
         context.repo({
           name: releaseInfo.name,
           tag_name: releaseInfo.tag,
@@ -83,12 +85,29 @@ module.exports = app => {
           draft: true
         })
       )
+      releaseId = response.data.id
     } else {
       log({ app, context, message: 'Updating existing draft release' })
       await context.github.repos.updateRelease(
         context.repo({
           release_id: draftRelease.id,
           body: releaseInfo.body
+        })
+      )
+      releaseId = draftRelease.id
+    }
+
+    if (autoRelease) {
+      context.log('Autoreleasing!')
+      const lastVersion = getVersionInfo(lastRelease)
+      // TODO template depending on PR labels
+      const thisVersion = lastVersion.incrementedPatch
+      await context.github.repos.editRelease(
+        context.repo({
+          release_id: releaseId,
+          draft: false,
+          name: thisVersion,
+          tag_name: thisVersion
         })
       )
     }
