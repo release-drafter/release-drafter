@@ -23,7 +23,8 @@ module.exports = app => {
       categories: [],
       'exclude-labels': [],
       replacers: [],
-      'sort-direction': SORT_DIRECTIONS.descending
+      'sort-direction': SORT_DIRECTIONS.descending,
+      'auto-release': false
     }
     const config = Object.assign(
       defaults,
@@ -35,7 +36,6 @@ module.exports = app => {
       replacers: config.replacers
     })
     config['sort-direction'] = validateSortDirection(config['sort-direction'])
-    const autoRelease = false
 
     // GitHub Actions merge payloads slightly differ, in that their ref points
     // to the PR branch instead of refs/heads/master
@@ -98,7 +98,7 @@ module.exports = app => {
       releaseId = draftRelease.id
     }
 
-    if (autoRelease) {
+    if (config['auto-release']) {
       context.log('Autoreleasing!')
       const lastVersion = getVersionInfo(lastRelease)
       // TODO template depending on PR labels
