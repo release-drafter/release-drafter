@@ -1,0 +1,6 @@
+template: |
+  # What's Changed
+
+  $CHANGES
+
+auto-release: true

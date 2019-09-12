@@ -99,12 +99,12 @@ module.exports = app => {
     }
 
     if (config['auto-release']) {
-      context.log('Autoreleasing!')
+      log({ app, context, message: 'Autoreleasing!' })
       const thisVersion = incrementVersionBasedOnLabels(
         lastRelease,
         mergedPullRequests
       )
-      await context.github.repos.editRelease(
+      await context.github.repos.updateRelease(
         context.repo({
           release_id: releaseId,
           draft: false,

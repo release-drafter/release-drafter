@@ -225,7 +225,7 @@ Previous tag: ''
         expect.assertions(1)
       })
 
-      it('creates a new draft when run as a GitHub Actiin', async () => {
+      it('creates a new draft when run as a GitHub Action', async () => {
         getConfigMock()
 
         // GitHub actions should use the GITHUB_REF and not the payload ref
@@ -1157,6 +1157,67 @@ Previous tag: ''
       })
 
       expect.assertions(1)
+    })
+  })
+
+  describe('with auto-release config', () => {
+    it('auto-releases if the config value is set', async () => {
+      getConfigMock('config-with-autorelease.yml')
+
+      // All the usual functionaltiy you'd expect:
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [
+          require('./fixtures/release-2'),
+          require('./fixtures/release'),
+          require('./fixtures/release-3')
+        ])
+
+      nock('https://api.github.com')
+        .post('/graphql', body =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(
+          200,
+          require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+        )
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          body => {
+            expect(body).toMatchObject({
+              body: `# What's Changed
+
+* Add documentation (#5) @TimonVS
+* Update dependencies (#4) @TimonVS
+* Bug fixes (#3) @TimonVS
+* Add big feature (#2) @TimonVS
+* 👽 Add alien technology (#1) @TimonVS
+`,
+              draft: true,
+              tag_name: ''
+            })
+            return true
+          }
+        )
+        .reply(200, { id: 999 })
+
+      // Plus the functionality that releases:
+      nock('https://api.github.com')
+        .patch('/repos/toolmantim/release-drafter-test-project/releases/999', {
+          draft: false,
+          name: '2.0.1',
+          tag_name: '2.0.1'
+        })
+        .reply(200)
+
+      await probot.receive({
+        name: 'push',
+        payload: require('./fixtures/push')
+      })
     })
   })
 })
