@@ -108,7 +108,7 @@ module.exports = app => {
         context.repo({
           release_id: releaseId,
           draft: false,
-          name: thisVersion,
+          name: thisVersion, // TODO - how should name and tag_name behave here?
           tag_name: thisVersion
         })
       )
