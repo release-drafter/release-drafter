@@ -9,7 +9,6 @@ const {
   SORT_DIRECTIONS
 } = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
-const { incrementVersionBasedOnLabels } = require('./lib/versions')
 
 const configName = 'release-drafter.yml'
 
@@ -72,7 +71,8 @@ module.exports = app => {
       commits,
       config,
       lastRelease,
-      mergedPullRequests: sortedMergedPullRequests
+      mergedPullRequests: sortedMergedPullRequests,
+      autoRelease: config['auto-release']
     })
 
     let releaseId
@@ -100,16 +100,10 @@ module.exports = app => {
 
     if (config['auto-release']) {
       log({ app, context, message: 'Autoreleasing!' })
-      const thisVersion = incrementVersionBasedOnLabels(
-        lastRelease,
-        mergedPullRequests
-      )
       await context.github.repos.updateRelease(
         context.repo({
           release_id: releaseId,
-          draft: false,
-          name: thisVersion, // TODO - how should name and tag_name behave here?
-          tag_name: thisVersion
+          draft: false
         })
       )
     }

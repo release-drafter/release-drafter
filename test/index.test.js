@@ -1198,7 +1198,8 @@ Previous tag: ''
 * 👽 Add alien technology (#1) @TimonVS
 `,
               draft: true,
-              tag_name: ''
+              name: '2.0.1',
+              tag_name: '2.0.1'
             })
             return true
           }
@@ -1208,9 +1209,7 @@ Previous tag: ''
       // Plus the functionality that releases:
       nock('https://api.github.com')
         .patch('/repos/toolmantim/release-drafter-test-project/releases/999', {
-          draft: false,
-          name: '2.0.1',
-          tag_name: '2.0.1'
+          draft: false
         })
         .reply(200)
 
