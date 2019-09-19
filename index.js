@@ -72,14 +72,14 @@ module.exports = app => {
       config['sort-direction']
     )
 
-    const autoRelease = config['auto-release']['enabled']
+    const autoReleaseConfig = config['auto-release']
 
     const releaseInfo = generateReleaseInfo({
       commits,
       config,
       lastRelease,
       mergedPullRequests: sortedMergedPullRequests,
-      autoRelease
+      autoReleaseConfig
     })
 
     let releaseId
@@ -105,7 +105,7 @@ module.exports = app => {
       releaseId = draftRelease.id
     }
 
-    if (autoRelease) {
+    if (autoReleaseConfig.enabled) {
       log({ app, context, message: 'Autoreleasing!' })
       await context.github.repos.updateRelease(
         context.repo({

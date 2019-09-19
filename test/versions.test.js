@@ -59,13 +59,22 @@ describe('version info', () => {
 })
 
 describe('increment version based on labels', () => {
+  const autoReleaseConfig = {
+    'patch-bump-labels': ['PATCH'],
+    'minor-bump-labels': ['MINOR'],
+    'major-bump-labels': ['MAJOR']
+  }
   it('bumps by a patch number if there are no labels on PRs', () => {
     const lastRelease = {
       tag_name: '1.0.0',
       name: 'Some major release'
     }
     const prs = [{ labels: [{ name: 'irrelevant' }] }]
-    const resolvedVersion = incrementVersionBasedOnLabels(lastRelease, prs)
+    const resolvedVersion = incrementVersionBasedOnLabels(
+      lastRelease,
+      prs,
+      autoReleaseConfig
+    )
 
     expect(resolvedVersion).toEqual('1.0.1')
   })
@@ -78,7 +87,11 @@ describe('increment version based on labels', () => {
       { labels: [{ name: 'PATCH' }, { name: 'irrelevant' }] },
       { labels: [{ name: 'foobar' }] }
     ]
-    const resolvedVersion = incrementVersionBasedOnLabels(lastRelease, prs)
+    const resolvedVersion = incrementVersionBasedOnLabels(
+      lastRelease,
+      prs,
+      autoReleaseConfig
+    )
 
     expect(resolvedVersion).toEqual('1.0.1')
   })
@@ -92,7 +105,11 @@ describe('increment version based on labels', () => {
       { labels: [{ name: 'PATCH' }] },
       { labels: [{ name: 'foobar' }] }
     ]
-    const resolvedVersion = incrementVersionBasedOnLabels(lastRelease, prs)
+    const resolvedVersion = incrementVersionBasedOnLabels(
+      lastRelease,
+      prs,
+      autoReleaseConfig
+    )
 
     expect(resolvedVersion).toEqual('1.1.0')
   })
@@ -107,7 +124,11 @@ describe('increment version based on labels', () => {
       { labels: [{ name: 'MAJOR' }] },
       { labels: [{ name: 'foobar' }] }
     ]
-    const resolvedVersion = incrementVersionBasedOnLabels(lastRelease, prs)
+    const resolvedVersion = incrementVersionBasedOnLabels(
+      lastRelease,
+      prs,
+      autoReleaseConfig
+    )
 
     expect(resolvedVersion).toEqual('2.0.0')
   })
