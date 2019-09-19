@@ -3,4 +3,5 @@ template: |
 
   $CHANGES
 
-auto-release: true
+auto-release:
+  enabled: true

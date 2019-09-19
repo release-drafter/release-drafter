@@ -23,7 +23,12 @@ module.exports = app => {
       'exclude-labels': [],
       replacers: [],
       'sort-direction': SORT_DIRECTIONS.descending,
-      'auto-release': false
+      'auto-release': {
+        enabled: false,
+        'major-bump-labels': ['major'],
+        'minor-bump-labels': ['minor'],
+        'patch-bump-labels': ['patch']
+      }
     }
     const config = Object.assign(
       defaults,
@@ -67,12 +72,14 @@ module.exports = app => {
       config['sort-direction']
     )
 
+    const autoRelease = config['auto-release']['enabled']
+
     const releaseInfo = generateReleaseInfo({
       commits,
       config,
       lastRelease,
       mergedPullRequests: sortedMergedPullRequests,
-      autoRelease: config['auto-release']
+      autoRelease
     })
 
     let releaseId
@@ -98,7 +105,7 @@ module.exports = app => {
       releaseId = draftRelease.id
     }
 
-    if (config['auto-release']) {
+    if (autoRelease) {
       log({ app, context, message: 'Autoreleasing!' })
       await context.github.repos.updateRelease(
         context.repo({
