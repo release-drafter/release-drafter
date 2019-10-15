@@ -23,8 +23,9 @@ module.exports = app => {
       'exclude-labels': [],
       replacers: [],
       'sort-direction': SORT_DIRECTIONS.descending,
-      'auto-release': {
+      'label-versioning': {
         enabled: false,
+        'auto-release': false,
         'major-bump-labels': ['major'],
         'minor-bump-labels': ['minor'],
         'patch-bump-labels': ['patch']
@@ -72,14 +73,14 @@ module.exports = app => {
       config['sort-direction']
     )
 
-    const autoReleaseConfig = config['auto-release']
+    const labelVersioningConfig = config['label-versioning']
 
     const releaseInfo = generateReleaseInfo({
       commits,
       config,
       lastRelease,
       mergedPullRequests: sortedMergedPullRequests,
-      autoReleaseConfig
+      labelVersioningConfig
     })
 
     let releaseId
@@ -105,7 +106,10 @@ module.exports = app => {
       releaseId = draftRelease.id
     }
 
-    if (autoReleaseConfig.enabled) {
+    if (
+      labelVersioningConfig.enabled &&
+      labelVersioningConfig['auto-release']
+    ) {
       log({ app, context, message: 'Autoreleasing!' })
       await context.github.repos.updateRelease(
         context.repo({

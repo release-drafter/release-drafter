@@ -3,5 +3,6 @@ template: |
 
   $CHANGES
 
-auto-release:
+label-versioning:
   enabled: true
+  auto-release: true
