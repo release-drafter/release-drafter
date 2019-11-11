@@ -4,8 +4,10 @@ const { findReleases, generateReleaseInfo } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { validateReplacers } = require('./lib/template')
 const {
+  validateSortBy,
   validateSortDirection,
   sortPullRequests,
+  SORT_BY,
   SORT_DIRECTIONS
 } = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
@@ -22,6 +24,7 @@ module.exports = app => {
       categories: [],
       'exclude-labels': [],
       replacers: [],
+      'sort-by': SORT_BY.mergedAt,
       'sort-direction': SORT_DIRECTIONS.descending
     }
     const config = Object.assign(
@@ -33,6 +36,7 @@ module.exports = app => {
       context,
       replacers: config.replacers
     })
+    config['sort-by'] = validateSortBy(config['sort-by'])
     config['sort-direction'] = validateSortDirection(config['sort-direction'])
 
     // GitHub Actions merge payloads slightly differ, in that their ref points
@@ -63,6 +67,7 @@ module.exports = app => {
 
     const sortedMergedPullRequests = sortPullRequests(
       mergedPullRequests,
+      config['sort-by'],
       config['sort-direction']
     )
 

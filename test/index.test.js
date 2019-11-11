@@ -1097,6 +1097,69 @@ Previous tag: ''
     })
   })
 
+  describe('with sort-by config', () => {
+    it('sorts by title', async () => {
+      getConfigMock('config-with-sort-by-title.yml')
+
+      nock('https://api.github.com')
+        .post('/graphql', body =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(200, require('./fixtures/graphql-commits-paginated-1.json'))
+        .post('/graphql', body =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(200, require('./fixtures/graphql-commits-paginated-2.json'))
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          body => {
+            expect(body).toMatchObject({
+              body: `# What's Changed
+
+* 🤖 Add robots (#12) @toolmantim
+* 🙅🏼‍♂️ 🐄 (#5) @toolmantim
+* 👽 Integrate Alien technology (#8) @toolmantim
+* 👽 Added alien technology (#6) @toolmantim
+* 🐒 Add monkeys technology (#3) @toolmantim
+* 🐄 More cowbell (#4) @toolmantim
+* 🐄 Moar cowbell (#10) @toolmantim
+* 🎃 More pumpkins (#11) @toolmantim
+* ❤️ Add MOAR THINGS (#14) @toolmantim
+* Oh hai (#15) @toolmantim
+* Create new-feature.md (#1) @toolmantim
+* Adds a new Widgets API (#2) @toolmantim
+* Added great distance (#16) @toolmantim
+* Add ⛰ technology (#7) @toolmantim
+* Add all the tests (#13) @toolmantim
+* 1️⃣ Switch to a monorepo (#9) @toolmantim
+`,
+              draft: true,
+              tag_name: ''
+            })
+            return true
+          }
+        )
+        .reply(200)
+
+      const payload = require('./fixtures/push')
+
+      await probot.receive({
+        name: 'push',
+        payload
+      })
+
+      expect.assertions(1)
+    })
+  })
+
   describe('with sort-direction config', () => {
     it('sorts ascending', async () => {
       getConfigMock('config-with-sort-direction-ascending.yml')
