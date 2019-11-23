@@ -17,6 +17,6 @@
     "esModuleInterop": true,
     "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
   "compileOnSave": false
 }
