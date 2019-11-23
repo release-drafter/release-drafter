@@ -4,3 +4,7 @@ export interface DefaultParams {
   app: Application
   context: Context
 }
+
+export interface PullRequest {
+  mergedAt: string
+}
