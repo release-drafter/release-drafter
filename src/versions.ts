@@ -22,13 +22,14 @@ const splitSemVer = (input: {
 
 const lastVersionSemVerIncremented = (input: {
   lastVersion: semver.SemVer
+  template: string
 }) => ({
   $NEXT_MAJOR_VERSION: splitSemVer({ ...input, inc: 'major' }),
   $NEXT_MINOR_VERSION: splitSemVer({ ...input, inc: 'minor' }),
   $NEXT_PATCH_VERSION: splitSemVer({ ...input, inc: 'patch' })
 })
 
-export const getVersionInfo = (lastRelease: Release) => {
+export const getVersionInfo = (lastRelease: Release, template: string) => {
   const lastVersion =
     semver.coerce(lastRelease.tag_name) || semver.coerce(lastRelease.name)
 
@@ -37,6 +38,7 @@ export const getVersionInfo = (lastRelease: Release) => {
   }
 
   return lastVersionSemVerIncremented({
-    lastVersion
+    lastVersion,
+    template
   })
 }
