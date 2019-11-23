@@ -1,4 +1,5 @@
 import { Application, Context } from 'probot'
+import { SortDirection } from './sort-pull-requests'
 
 export interface DefaultParams {
   app: Application
@@ -11,4 +12,11 @@ export interface PullRequest {
 
 export interface Config {
   branches: string | string[]
+  'change-template': string
+  'no-changes-template': string
+  'version-template': string
+  categories: string[]
+  'exclude-labels': string[]
+  replacers: any[]
+  'sort-direction': SortDirection
 }

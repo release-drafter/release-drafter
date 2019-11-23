@@ -1,39 +1,13 @@
-const getConfig = require('probot-config')
+const { getConfig } = require('./config')
 const { isTriggerableBranch } = require('./triggerable-branch')
 const { findReleases, generateReleaseInfo } = require('./releases')
 const { findCommitsWithAssociatedPullRequests } = require('./commits')
-const { validateReplacers } = require('./template')
-const {
-  validateSortDirection,
-  sortPullRequests,
-  SORT_DIRECTIONS
-} = require('./sort-pull-requests')
+const { sortPullRequests } = require('./sort-pull-requests')
 const log = require('./log').default
-
-const configName = 'release-drafter.yml'
 
 module.exports = app => {
   app.on('push', async context => {
-    const defaults = {
-      branches: context.payload.repository.default_branch,
-      'change-template': `* $TITLE (#$NUMBER) @$AUTHOR`,
-      'no-changes-template': `* No changes`,
-      'version-template': `$MAJOR.$MINOR.$PATCH`,
-      categories: [],
-      'exclude-labels': [],
-      replacers: [],
-      'sort-direction': SORT_DIRECTIONS.descending
-    }
-    const config = Object.assign(
-      defaults,
-      (await getConfig(context, configName)) || {}
-    )
-    config.replacers = validateReplacers({
-      app,
-      context,
-      replacers: config.replacers
-    })
-    config['sort-direction'] = validateSortDirection(config['sort-direction'])
+    const config = await getConfig({ app, context })
 
     // GitHub Actions merge payloads slightly differ, in that their ref points
     // to the PR branch instead of refs/heads/master
