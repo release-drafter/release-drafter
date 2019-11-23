@@ -1,22 +1,21 @@
+import _ from 'lodash'
 import { PullRequest } from './types'
 
-type SortDirection = keyof typeof SORT_DIRECTIONS
+export type SortDirection = keyof typeof SORT_DIRECTIONS
 
 export const SORT_DIRECTIONS = {
   ascending: 'ascending',
   descending: 'descending'
 }
 
-export function validateSortDirection(sortDirection: string) {
-  return Object.keys(SORT_DIRECTIONS).includes(sortDirection)
-    ? sortDirection
-    : SORT_DIRECTIONS.descending
+export function validateSortDirection(sortDirection: string): SortDirection {
+  return _.get(SORT_DIRECTIONS, sortDirection, SORT_DIRECTIONS.descending)
 }
 
 export function sortPullRequests(
   pullRequests: PullRequest[],
   sortDirection: SortDirection
-) {
+): PullRequest[] {
   const sortFn =
     sortDirection === SORT_DIRECTIONS.ascending
       ? dateSortAscending
