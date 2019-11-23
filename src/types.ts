@@ -8,3 +8,7 @@ export interface DefaultParams {
 export interface PullRequest {
   mergedAt: string
 }
+
+export interface Config {
+  branches: string | string[]
+}
