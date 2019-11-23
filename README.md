@@ -12,10 +12,10 @@
 
 ### GitHub Actions
 
-You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a [GitHub Actions Workflow](https://help.github.com/en/articles/about-github-actions) by configuring a YAML-based workflow file, e.g. `.github/workflows/release-management.yml`, with the following:
+You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a [GitHub Actions Workflow](https://help.github.com/en/articles/about-github-actions) by configuring a YAML-based workflow file, e.g. `.github/workflows/release-drafter.yml`, with the following:
 
 ```yaml
-name: Release Management
+name: Release Drafter
 
 on:
   push:
@@ -24,7 +24,7 @@ on:
       - master
 
 jobs:
-  update_draft_release:
+  update_release_draft:
     runs-on: ubuntu-latest
     steps:
       # Drafts your next Release notes as Pull Requests are merged into "master"
