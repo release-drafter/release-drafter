@@ -1,5 +1,9 @@
 import semver from 'semver'
-import { ReposGetReleaseResponse } from '@octokit/rest'
+
+interface Release {
+  tag_name: string
+  name: string
+}
 
 const splitSemVer = (input: {
   lastVersion: semver.SemVer
@@ -18,17 +22,13 @@ const splitSemVer = (input: {
 
 const lastVersionSemVerIncremented = (input: {
   lastVersion: semver.SemVer
-  template: string
 }) => ({
   $NEXT_MAJOR_VERSION: splitSemVer({ ...input, inc: 'major' }),
   $NEXT_MINOR_VERSION: splitSemVer({ ...input, inc: 'minor' }),
   $NEXT_PATCH_VERSION: splitSemVer({ ...input, inc: 'patch' })
 })
 
-export const getVersionInfo = (
-  lastRelease: ReposGetReleaseResponse,
-  template: string
-) => {
+export const getVersionInfo = (lastRelease: Release) => {
   const lastVersion =
     semver.coerce(lastRelease.tag_name) || semver.coerce(lastRelease.name)
 
@@ -37,7 +37,6 @@ export const getVersionInfo = (
   }
 
   return lastVersionSemVerIncremented({
-    lastVersion,
-    template
+    lastVersion
   })
 }
