@@ -1,7 +1,6 @@
-# Config for https://github.com/apps/release-drafter
 branches:
   - master
 template: |
-  ## What's Changed
+  # What's Changed
 
   $CHANGES
