@@ -1,0 +1,5 @@
+sort-by: 'title'
+template: |
+  # What's Changed
+
+  $CHANGES
