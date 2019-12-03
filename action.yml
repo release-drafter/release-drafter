@@ -1,0 +1,8 @@
+name: 'Release Drafter'
+description: 'Drafts your next release notes as pull requests are merged into master.'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+branding:
+  icon: edit-2
+  color: orange 
