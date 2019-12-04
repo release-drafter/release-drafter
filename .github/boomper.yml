@@ -1,3 +1,3 @@
 updates:
 - path: README.md
-  pattern: 'uses = "toolmantim/release-drafter@(.*)"'
+  pattern: 'uses = "release-drafter/release-drafter@(.*)"'
