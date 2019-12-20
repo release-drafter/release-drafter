@@ -89,7 +89,13 @@ module.exports = app => {
           draft: true
         })
       )
-      core.setOutput('upload_url', resp.data.upload_url)
+      const {
+        data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
+      } = resp
+      core.setOutput('upload_url', uploadUrl)
+      core.setOutput('id', releaseId)
+      core.setOutput('html_url', htmlUrl)
+      core.setOutput('upload_url', uploadUrl)
     } else {
       log({ app, context, message: 'Updating existing draft release' })
       const resp = await context.github.repos.updateRelease(
@@ -98,7 +104,13 @@ module.exports = app => {
           body: releaseInfo.body
         })
       )
-      core.setOutput('upload_url', resp.data.upload_url)
+      const {
+        data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
+      } = resp
+      core.setOutput('upload_url', uploadUrl)
+      core.setOutput('id', releaseId)
+      core.setOutput('html_url', htmlUrl)
+      core.setOutput('upload_url', uploadUrl)
     }
   })
 }
