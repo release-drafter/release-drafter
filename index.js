@@ -3,6 +3,7 @@ const { isTriggerableBranch } = require('./lib/triggerable-branch')
 const { findReleases, generateReleaseInfo } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { validateReplacers } = require('./lib/template')
+const core = require('@actions/core')
 const {
   validateSortBy,
   validateSortDirection,
@@ -80,7 +81,7 @@ module.exports = app => {
 
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
-      await context.github.repos.createRelease(
+      const resp = await context.github.repos.createRelease(
         context.repo({
           name: releaseInfo.name,
           tag_name: releaseInfo.tag,
@@ -88,14 +89,28 @@ module.exports = app => {
           draft: true
         })
       )
+      const {
+        data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
+      } = resp
+      core.setOutput('upload_url', uploadUrl)
+      core.setOutput('id', releaseId)
+      core.setOutput('html_url', htmlUrl)
+      core.setOutput('upload_url', uploadUrl)
     } else {
       log({ app, context, message: 'Updating existing draft release' })
-      await context.github.repos.updateRelease(
+      const resp = await context.github.repos.updateRelease(
         context.repo({
           release_id: draftRelease.id,
           body: releaseInfo.body
         })
       )
+      const {
+        data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
+      } = resp
+      core.setOutput('upload_url', uploadUrl)
+      core.setOutput('id', releaseId)
+      core.setOutput('html_url', htmlUrl)
+      core.setOutput('upload_url', uploadUrl)
     }
   })
 }
