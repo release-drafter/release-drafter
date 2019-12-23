@@ -34,7 +34,7 @@
     "eslint-plugin-prettier": "3.1.0",
     "husky": "3.0.5",
     "jest": "24.9.0",
-    "lint-staged": "9.2.5",
+    "lint-staged": "9.5.0",
     "nock": "11.7.0",
     "nock-knock": "2.0.0",
     "node-fetch": "2.6.0",
