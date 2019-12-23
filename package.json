@@ -29,7 +29,7 @@
     "semver": "6.3.0"
   },
   "devDependencies": {
-    "eslint": "5.16.0",
+    "eslint": "6.8.0",
     "eslint-config-prettier": "6.2.0",
     "eslint-plugin-prettier": "3.1.0",
     "husky": "3.0.5",
