@@ -11,7 +11,8 @@ module.exports = app => {
     const config = await getConfig({
       app,
       context,
-      getConfig: require('probot-config')
+      getConfig: require('probot-config'),
+      configName: process.env['CONFIG_NAME']
     })
 
     if (config === null) return
