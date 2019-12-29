@@ -53,9 +53,10 @@ module.exports = app => {
       mergedPullRequests: sortedMergedPullRequests
     })
 
+    let createOrUpdateReleaseResponse
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
-      const resp = await context.github.repos.createRelease(
+      createOrUpdateReleaseResponse = await context.github.repos.createRelease(
         context.repo({
           name: releaseInfo.name,
           tag_name: releaseInfo.tag,
@@ -63,28 +64,25 @@ module.exports = app => {
           draft: true
         })
       )
-      const {
-        data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
-      } = resp
-      core.setOutput('upload_url', uploadUrl)
-      core.setOutput('id', releaseId)
-      core.setOutput('html_url', htmlUrl)
-      core.setOutput('upload_url', uploadUrl)
     } else {
       log({ app, context, message: 'Updating existing draft release' })
-      const resp = await context.github.repos.updateRelease(
+      createOrUpdateReleaseResponse = await context.github.repos.updateRelease(
         context.repo({
           release_id: draftRelease.id,
           body: releaseInfo.body
         })
       )
-      const {
-        data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
-      } = resp
-      core.setOutput('upload_url', uploadUrl)
-      core.setOutput('id', releaseId)
-      core.setOutput('html_url', htmlUrl)
-      core.setOutput('upload_url', uploadUrl)
     }
+
+    setActionOutput(createOrUpdateReleaseResponse)
   })
+}
+
+function setActionOutput(releaseResponse) {
+  const {
+    data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
+  } = releaseResponse
+  core.setOutput('id', releaseId)
+  core.setOutput('html_url', htmlUrl)
+  core.setOutput('upload_url', uploadUrl)
 }
