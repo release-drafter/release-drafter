@@ -3,6 +3,8 @@ const route = require('nock-knock/lib').default
 const { Probot, Octokit } = require('probot')
 const getConfigMock = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
+const fs = require('fs')
+const { encodeContent } = require('../lib/base64')
 
 nock.disableNetConnect()
 
@@ -1271,6 +1273,87 @@ Previous tag: ''
           })
         })
       )
+    })
+  })
+
+  describe('with config-name input', () => {
+    it('loads from another config path', async () => {
+      /*
+        Mock
+        with:
+          config-name: 'config-name-input.yml'
+      */
+      process.env['INPUT_CONFIG-NAME'] = 'config-name-input.yml'
+
+      // Mock config request for file 'config-name-input.yml'
+      const getConfigScope = nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/contents/.github/config-name-input.yml'
+        )
+        .reply(200, {
+          type: 'file',
+          encoding: 'base64',
+          size: 5362,
+          name: 'config-name-input.yml',
+          path: '.github/config-name-input.yml',
+          content: encodeContent(
+            fs.readFileSync(
+              `${__dirname}/fixtures/config/config-name-input.yml`
+            )
+          ),
+          sha: '3d21ec53a331a6f037a91c368710b99387d012c1',
+          url:
+            'https://api.github.com/repos/octokit/octokit.rb/contents/.github/config-name-input.yml',
+          git_url:
+            'https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1',
+          html_url:
+            'https://github.com/octokit/octokit.rb/blob/master/.github/config-name-input.yml',
+          download_url:
+            'https://raw.githubusercontent.com/octokit/octokit.rb/master/.github/config-name-input.yml',
+          _links: {
+            git:
+              'https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1',
+            self:
+              'https://api.github.com/repos/octokit/octokit.rb/contents/.github/config-name-input.yml',
+            html:
+              'https://github.com/octokit/octokit.rb/blob/master/.github/config-name-input.yml'
+          }
+        })
+
+      nock('https://api.github.com')
+        .post('/graphql', body =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
+
+      nock('https://api.github.com')
+        .get('/repos/toolmantim/release-drafter-test-project/releases')
+        .query(true)
+        .reply(200, [require('./fixtures/release')])
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          body => {
+            // Assert that the correct body was used
+            expect(body).toMatchObject({
+              name: '',
+              tag_name: '',
+              body: `# There's new stuff!\n`,
+              draft: true
+            })
+            return true
+          }
+        )
+        .reply(200)
+
+      await probot.receive({
+        name: 'push',
+        payload: require('./fixtures/push')
+      })
+
+      // Assert that the GET request was called for the correct config file
+      expect(getConfigScope.isDone()).toBe(true)
+
+      expect.assertions(2)
     })
   })
 })
