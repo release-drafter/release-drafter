@@ -61,7 +61,8 @@ module.exports = app => {
           name: releaseInfo.name,
           tag_name: releaseInfo.tag,
           body: releaseInfo.body,
-          draft: true
+          draft: true,
+          prerelease: config.prerelease
         })
       )
     } else {
