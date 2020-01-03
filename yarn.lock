@@ -1287,20 +1287,15 @@ combined-stream@^1.0.6, combined-stream@~1.0.6:
   dependencies:
     delayed-stream "~1.0.0"
 
-commander@^2.12.2, commander@^2.20.0:
-  version "2.20.0"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-2.20.0.tgz#d58bb2b5c1ee8f87b0d340027e9e94e222c5a422"
-  integrity sha512-7j2y+40w61zy6YC2iRNpUe/NwhNyoXrYpHMrSunaMG64nRnaf96zO/KMQR4OyN/UnE5KLyEBnKHd4aG3rskjpQ==
+commander@^2.12.2, commander@^2.20.0, commander@~2.20.3:
+  version "2.20.3"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-2.20.3.tgz#fd485e84c03eb4881c20722ba48035e8531aeb33"
+  integrity sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==
 
 commander@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/commander/-/commander-4.0.1.tgz#b67622721785993182e807f4883633e6401ba53c"
   integrity sha512-IPF4ouhCP+qdlcmCedhxX4xiGBPyigb8v5NeUp+0LyhwLgxMqyp3S0vl7TAPfS/hiP7FC3caI/PB9lTmP8r1NA==
-
-commander@~2.20.3:
-  version "2.20.3"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-2.20.3.tgz#fd485e84c03eb4881c20722ba48035e8531aeb33"
-  integrity sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==
 
 compare-versions@3.5.1:
   version "3.5.1"
@@ -4738,10 +4733,10 @@ probot-config@1.1.0:
     deepmerge "^2.2.1"
     js-yaml "^3.10.0"
 
-probot@9.8.0:
-  version "9.8.0"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.8.0.tgz#7bd1469dadf0232955df1a54cce43ca04fc5d543"
-  integrity sha512-isEGOfNgsBUi47sh7C9ZhkSPRIRr6b4i8JwtyDpJI6YZH++zB+tDogMsdvFj5EOZxwgeqfXfZKnVtOGRdByhFQ==
+probot@9.8.1:
+  version "9.8.1"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.8.1.tgz#91b1f558ea52a33013d11bbbc4f27b3644b2fd29"
+  integrity sha512-TmECaaLWNkG+mvOdD+JlWsSi4z6PrF+wMtta4GZRRR24vd+ZCvwIkI2njGucMdGU5zsHSGnD6tv4CQ92fyEMfg==
   dependencies:
     "@octokit/app" "^4.0.0"
     "@octokit/graphql" "^4.2.0"
