@@ -5,6 +5,7 @@ const getConfigMock = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
 const fs = require('fs')
 const { encodeContent } = require('../lib/base64')
+const mockedEnv = require('mocked-env')
 
 nock.disableNetConnect()
 
@@ -27,6 +28,7 @@ Pc6zWtW2XuNIGHw9pDj7v1yDolm7feBXLg8/u9APwHDy
 describe('release-drafter', () => {
   let probot
   let logger
+  let restoreEnv
 
   beforeEach(() => {
     logger = jest.fn()
@@ -42,6 +44,8 @@ describe('release-drafter', () => {
       .post('/app/installations/179208/access_tokens')
       .reply(200, { token: 'test' })
 
+    let mockEnv = {}
+
     // We have to delete all the GITHUB_* envs before every test, because if
     // we're running the tests themselves inside a GitHub Actions container
     // they'll mess with the tests, and also because we set some of them in
@@ -49,12 +53,18 @@ describe('release-drafter', () => {
     Object.keys(process.env)
       .filter(key => key.match(/^GITHUB_/))
       .forEach(key => {
-        delete process.env[key]
+        mockEnv[key] = undefined
       })
+
+    restoreEnv = mockedEnv(mockEnv)
   })
 
   afterAll(nock.restore)
-  afterEach(nock.cleanAll)
+
+  afterEach(() => {
+    nock.cleanAll()
+    restoreEnv()
+  })
 
   describe('push', () => {
     describe('without a config', () => {
@@ -1325,6 +1335,131 @@ Previous tag: ''
       expect(getConfigScope.isDone()).toBe(true)
 
       expect.assertions(2)
+    })
+  })
+
+  describe('input version, tag and name overrides', () => {
+    // Method with all the test's logic, to prevent duplication
+    const overridesTest = async (overrides, expectedBody) => {
+      let mockEnv = {}
+
+      /*
+        Mock
+        with:
+          # any combination (or none) of these input options (examples):
+          version: '2.1.1'
+          tag: 'v2.1.1-alpha'
+          name: 'v2.1.1-alpha (Code name: Example)'
+      */
+      if (overrides) {
+        if (overrides.version) {
+          mockEnv['INPUT_VERSION'] = overrides.version
+        }
+
+        if (overrides.tag) {
+          mockEnv['INPUT_TAG'] = overrides.tag
+        }
+
+        if (overrides.name) {
+          mockEnv['INPUT_NAME'] = overrides.name
+        }
+      }
+
+      let restoreEnv = mockedEnv(mockEnv)
+
+      getConfigMock('config-with-major-minor-patch-version-template.yml')
+
+      nock('https://api.github.com')
+        .get('/repos/toolmantim/release-drafter-test-project/releases')
+        .query(true)
+        .reply(200, [require('./fixtures/release')])
+
+      nock('https://api.github.com')
+        .post('/graphql', body =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(
+          200,
+          require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+        )
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          body => {
+            expect(body).toMatchObject(expectedBody)
+            return true
+          }
+        )
+        .reply(200)
+
+      await probot.receive({
+        name: 'push',
+        payload: require('./fixtures/push')
+      })
+
+      expect.assertions(1)
+
+      restoreEnv()
+    }
+
+    describe('with just the version', () => {
+      it('forces the version on templates', async () => {
+        return overridesTest(
+          { version: '2.1.1' },
+          {
+            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.2.0, patch=2.1.1`,
+            draft: true,
+            name: 'v2.1.1 (Code name: Placeholder)',
+            tag_name: 'v2.1.1'
+          }
+        )
+      })
+    })
+
+    describe('with just the tag', () => {
+      it('gets the version from the tag and forces using the tag', async () => {
+        return overridesTest(
+          { tag: 'v2.1.1-alpha' },
+          {
+            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.2.0, patch=2.1.1`,
+            draft: true,
+            name: 'v2.1.1 (Code name: Placeholder)',
+            tag_name: 'v2.1.1-alpha'
+          }
+        )
+      })
+    })
+
+    describe('with just the name', () => {
+      it('gets the version from the name and forces using the name', async () => {
+        return overridesTest(
+          { name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)' },
+          {
+            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.2.0, patch=2.1.1`,
+            draft: true,
+            name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)',
+            tag_name: 'v2.1.1'
+          }
+        )
+      })
+    })
+
+    describe('with tag and name', () => {
+      it('gets the version from the tag and forces using the tag and name', async () => {
+        return overridesTest(
+          {
+            tag: 'v2.1.1-foxtrot-unicorn-alpha',
+            name: 'Foxtrot Unicorn'
+          },
+          {
+            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.2.0, patch=2.1.1`,
+            draft: true,
+            name: 'Foxtrot Unicorn',
+            tag_name: 'v2.1.1-foxtrot-unicorn-alpha'
+          }
+        )
+      })
     })
   })
 })

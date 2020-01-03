@@ -28,9 +28,17 @@ jobs:
         with:
           # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
           # config-name: my-config.yml
+          # (Optional) override the calculated version
+          # version: '2.1.1'
+          # (Optional) override the resulting tag
+          # version: 'v2.1.1-alpha'
+          # (Optional) override the resulting name
+          # version: 'v2.1.1-alpha (Code Name: Foxtrot Unicorn)'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+**Note:** If provided, the `version`, `tag` and `name` input options will be used (in this order) to extract a version number instead of calculating one.
 
 If you're unable to use GitHub Actions, you can use the Release Drafter GitHub App. Please refer to the [Release Drafter GitHub App documentation](docs/github-app.md) for more information.
 
