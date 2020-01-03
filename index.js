@@ -81,9 +81,12 @@ module.exports = app => {
 
 function setActionOutput(releaseResponse) {
   const {
-    data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
+    data: { name, id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
   } = releaseResponse
+  core.setOutput('name', name)
   core.setOutput('id', releaseId)
   core.setOutput('html_url', htmlUrl)
   core.setOutput('upload_url', uploadUrl)
+  core.setOutput('version', name.replace('v','')
+
 }
