@@ -14,16 +14,13 @@ module.exports = app => {
       getConfig: require('probot-config')
     })
 
+    if (config === null) return
+
     // GitHub Actions merge payloads slightly differ, in that their ref points
     // to the PR branch instead of refs/heads/master
     const ref = process.env['GITHUB_REF'] || context.payload.ref
 
     const branch = ref.replace(/^refs\/heads\//, '')
-
-    if (!config.template) {
-      log({ app, context, message: 'No valid config found' })
-      return
-    }
 
     if (!isTriggerableBranch({ branch, app, context, config })) {
       return

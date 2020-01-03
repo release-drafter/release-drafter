@@ -11,6 +11,7 @@
     "now-start": "PRIVATE_KEY=$(echo $PRIVATE_KEY_BASE64 | base64 -d) npm start",
     "test": "jest",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
+    "generate-schema": "node ./bin/generate-schema.js print",
     "lint": "eslint '**/*.js'",
     "prettier": "prettier --write **/*.{js,md,json}",
     "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@actions/core": "^1.2.0",
+    "@hapi/joi": "15.1.1",
     "compare-versions": "3.5.1",
     "escape-string-regexp": "2.0.0",
     "lodash": "4.17.15",
@@ -34,6 +36,7 @@
     "eslint-plugin-prettier": "3.1.2",
     "husky": "3.1.0",
     "jest": "24.9.0",
+    "joi-to-json-schema": "^5.1.0",
     "lint-staged": "9.5.0",
     "nock": "11.7.1",
     "nock-knock": "2.0.0",

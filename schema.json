@@ -1,0 +1,131 @@
+{
+  "title": "JSON schema for Release Drafter yaml files",
+  "id": "https://github.com/release-drafter/release-drafter/blob/master/schema.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "branches": {
+      "default": ["master"],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "change-template": {
+      "default": "* $TITLE (#$NUMBER) @$AUTHOR",
+      "type": "string"
+    },
+    "no-changes-template": {
+      "default": "* No changes",
+      "type": "string"
+    },
+    "version-template": {
+      "default": "$MAJOR.$MINOR.$PATCH",
+      "type": "string"
+    },
+    "name-template": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
+    "tag-template": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
+    "exclude-labels": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sort-by": {
+      "default": "merged_at",
+      "enum": ["merged_at", "title"],
+      "type": "string"
+    },
+    "sort-direction": {
+      "default": "descending",
+      "enum": ["ascending", "descending"],
+      "type": "string"
+    },
+    "prerelease": {
+      "default": false,
+      "type": "boolean"
+    },
+    "replacers": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "string"
+          },
+          "replace": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [""]
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "patterns": [],
+        "required": ["search", "replace"]
+      }
+    },
+    "categories": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patterns": [],
+        "required": ["title"]
+      }
+    },
+    "template": {
+      "type": "string"
+    },
+    "_extends": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "patterns": [],
+  "required": []
+}
