@@ -24,10 +24,17 @@ Pc6zWtW2XuNIGHw9pDj7v1yDolm7feBXLg8/u9APwHDy
 
 describe('release-drafter', () => {
   let probot
+  let logger
 
   beforeEach(() => {
+    logger = jest.fn()
     probot = new Probot({ id: 179208, cert, Octokit })
     probot.load(releaseDrafter)
+    probot.logger.addStream({
+      level: 'trace',
+      stream: { write: logger },
+      type: 'raw'
+    })
 
     nock('https://api.github.com')
       .post('/app/installations/179208/access_tokens')
@@ -1220,6 +1227,50 @@ Previous tag: ''
       })
 
       expect.assertions(1)
+    })
+  })
+
+  describe('config error handling', () => {
+    it('schema error', async () => {
+      getConfigMock('config-with-schema-error.yml')
+
+      const payload = require('./fixtures/push')
+
+      await probot.receive({
+        name: 'push',
+        payload
+      })
+      expect(logger).toHaveBeenCalledWith(
+        expect.objectContaining({
+          msg: expect.stringContaining('Invalid config file'),
+          err: expect.objectContaining({
+            message: expect.stringContaining(
+              '"search" is required and must be a regexp or a string'
+            )
+          })
+        })
+      )
+    })
+
+    it('yaml exception', async () => {
+      getConfigMock('config-with-yaml-exception.yml')
+
+      const payload = require('./fixtures/push')
+
+      await probot.receive({
+        name: 'push',
+        payload
+      })
+      expect(logger).toHaveBeenCalledWith(
+        expect.objectContaining({
+          msg: expect.stringContaining('Invalid config file'),
+          err: expect.objectContaining({
+            message: expect.stringContaining(
+              'end of the stream or a document separator is expected at line 1, column 18:'
+            )
+          })
+        })
+      )
     })
   })
 })
