@@ -21,6 +21,7 @@
   "dependencies": {
     "@actions/core": "^1.2.0",
     "@hapi/joi": "15.1.1",
+    "cli-table": "^0.3.1",
     "compare-versions": "3.5.1",
     "escape-string-regexp": "2.0.0",
     "lodash": "4.17.15",
