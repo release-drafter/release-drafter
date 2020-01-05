@@ -67,7 +67,8 @@ module.exports = app => {
       createOrUpdateReleaseResponse = await context.github.repos.updateRelease(
         context.repo({
           release_id: draftRelease.id,
-          body: releaseInfo.body
+          body: releaseInfo.body,
+          tag_name: draftRelease.tag_name
         })
       )
     }
