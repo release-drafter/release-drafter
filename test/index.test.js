@@ -1286,39 +1286,10 @@ Previous tag: ''
       process.env['INPUT_CONFIG-NAME'] = 'config-name-input.yml'
 
       // Mock config request for file 'config-name-input.yml'
-      const getConfigScope = nock('https://api.github.com')
-        .get(
-          '/repos/toolmantim/release-drafter-test-project/contents/.github/config-name-input.yml'
-        )
-        .reply(200, {
-          type: 'file',
-          encoding: 'base64',
-          size: 5362,
-          name: 'config-name-input.yml',
-          path: '.github/config-name-input.yml',
-          content: encodeContent(
-            fs.readFileSync(
-              `${__dirname}/fixtures/config/config-name-input.yml`
-            )
-          ),
-          sha: '3d21ec53a331a6f037a91c368710b99387d012c1',
-          url:
-            'https://api.github.com/repos/octokit/octokit.rb/contents/.github/config-name-input.yml',
-          git_url:
-            'https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1',
-          html_url:
-            'https://github.com/octokit/octokit.rb/blob/master/.github/config-name-input.yml',
-          download_url:
-            'https://raw.githubusercontent.com/octokit/octokit.rb/master/.github/config-name-input.yml',
-          _links: {
-            git:
-              'https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1',
-            self:
-              'https://api.github.com/repos/octokit/octokit.rb/contents/.github/config-name-input.yml',
-            html:
-              'https://github.com/octokit/octokit.rb/blob/master/.github/config-name-input.yml'
-          }
-        })
+      const getConfigScope = getConfigMock(
+        'config-name-input.yml',
+        'config-name-input.yml'
+      )
 
       nock('https://api.github.com')
         .post('/graphql', body =>
