@@ -33,7 +33,7 @@ jobs:
           # (Optional) override the resulting tag
           # tag: 'v2.1.1-alpha'
           # (Optional) override the resulting name
-          # version: 'v2.1.1-alpha (Code Name: Foxtrot Unicorn)'
+          # name: 'v2.1.1-alpha (Code Name: Foxtrot Unicorn)'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
