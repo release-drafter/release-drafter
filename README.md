@@ -31,7 +31,7 @@ jobs:
           # (Optional) override the calculated version
           # version: '2.1.1'
           # (Optional) override the resulting tag
-          # version: 'v2.1.1-alpha'
+          # tag: 'v2.1.1-alpha'
           # (Optional) override the resulting name
           # version: 'v2.1.1-alpha (Code Name: Foxtrot Unicorn)'
         env:
