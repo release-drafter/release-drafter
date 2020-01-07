@@ -1367,7 +1367,7 @@ Previous tag: ''
 
       let restoreEnv = mockedEnv(mockEnv)
 
-      getConfigMock('config-with-major-minor-patch-version-template.yml')
+      getConfigMock('config-with-input-version-template.yml')
 
       nock('https://api.github.com')
         .get('/repos/toolmantim/release-drafter-test-project/releases')
@@ -1408,7 +1408,7 @@ Previous tag: ''
         return overridesTest(
           { version: '2.1.1' },
           {
-            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.2.0, patch=2.1.1`,
+            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
             draft: true,
             name: 'v2.1.1 (Code name: Placeholder)',
             tag_name: 'v2.1.1'
@@ -1422,7 +1422,7 @@ Previous tag: ''
         return overridesTest(
           { tag: 'v2.1.1-alpha' },
           {
-            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.2.0, patch=2.1.1`,
+            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
             draft: true,
             name: 'v2.1.1 (Code name: Placeholder)',
             tag_name: 'v2.1.1-alpha'
@@ -1436,7 +1436,7 @@ Previous tag: ''
         return overridesTest(
           { name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)' },
           {
-            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.2.0, patch=2.1.1`,
+            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
             draft: true,
             name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)',
             tag_name: 'v2.1.1'
@@ -1453,7 +1453,7 @@ Previous tag: ''
             name: 'Foxtrot Unicorn'
           },
           {
-            body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.2.0, patch=2.1.1`,
+            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
             draft: true,
             name: 'Foxtrot Unicorn',
             tag_name: 'v2.1.1-foxtrot-unicorn-alpha'
