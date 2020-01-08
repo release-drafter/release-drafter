@@ -1293,7 +1293,9 @@ Previous tag: ''
         with:
           config-name: 'config-name-input.yml'
       */
-      process.env['INPUT_CONFIG-NAME'] = 'config-name-input.yml'
+      let restoreEnv = mockedEnv({
+        'INPUT_CONFIG-NAME': 'config-name-input.yml'
+      })
 
       // Mock config request for file 'config-name-input.yml'
       const getConfigScope = getConfigMock(
@@ -1335,6 +1337,8 @@ Previous tag: ''
       expect(getConfigScope.isDone()).toBe(true)
 
       expect.assertions(2)
+
+      restoreEnv()
     })
   })
 
