@@ -8,15 +8,14 @@
   "scripts": {
     "dev": "nodemon --exec \"npm start\"",
     "start": "probot run ./index.js",
-    "now-start": "PRIVATE_KEY=$(echo $PRIVATE_KEY_BASE64 | base64 -d) npm start",
     "test": "jest",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
     "generate-schema": "node ./bin/generate-schema.js print",
     "lint": "eslint '**/*.js'",
     "prettier": "prettier --write **/*.{js,md,json}",
     "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
-    "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
-    "deploy": "now && now alias"
+    "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").version`)')\"",
+    "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master"
   },
   "dependencies": {
     "@actions/core": "^1.2.0",
