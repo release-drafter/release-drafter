@@ -40,7 +40,7 @@
     "jest": "24.9.0",
     "joi-to-json-schema": "^5.1.0",
     "lint-staged": "9.5.0",
-    "nock": "11.7.1",
+    "nock": "11.7.2",
     "nock-knock": "2.0.0",
     "node-fetch": "2.6.0",
     "nodemon": "2.0.2",
