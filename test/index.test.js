@@ -1466,4 +1466,154 @@ Previous tag: ''
       })
     })
   })
+
+  describe('resolved version', () => {
+    describe('without previous releases, overriding the tag', () => {
+      it('resolves to the version extracted from the tag', async () => {
+        let restoreEnv = mockedEnv({ INPUT_TAG: 'v1.0.2' })
+
+        getConfigMock('config-with-resolved-version-template.yml')
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-empty.json'))
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [])
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                name: 'v1.0.2 🌈',
+                tag_name: 'v1.0.2'
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+
+        restoreEnv()
+      })
+    })
+
+    describe('with previous releases, overriding the tag', () => {
+      it('resolves to the version extracted from the tag', async () => {
+        let restoreEnv = mockedEnv({ INPUT_TAG: 'v1.0.2' })
+
+        getConfigMock('config-with-resolved-version-template.yml')
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                name: 'v1.0.2 🌈',
+                tag_name: 'v1.0.2'
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+
+        restoreEnv()
+      })
+    })
+
+    describe('without previous releases, no overrides', () => {
+      it('resolves to the calculated version, which will be empty', async () => {
+        getConfigMock('config-with-resolved-version-template.yml')
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-empty.json'))
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [])
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                name: '',
+                tag_name: ''
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+    })
+
+    describe('with previous releases, no overrides', () => {
+      it('resolves to the calculated version', async () => {
+        getConfigMock('config-with-resolved-version-template.yml')
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                name: 'v2.0.1 🌈',
+                tag_name: 'v2.0.1'
+              })
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+    })
+  })
 })
