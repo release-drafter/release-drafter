@@ -3,9 +3,9 @@
 
 
 "@actions/core@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@actions/core/-/core-1.2.0.tgz#aa5f52b26c362c821d41557e599371a42f6c0b3d"
-  integrity sha512-ZKdyhlSlyz38S6YFfPnyNgCDZuAF2T0Qv5eHflNWytPS8Qjvz39bZFMry9Bb/dpSnqWcNeav5yM2CTYpJeY+Dw==
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@actions/core/-/core-1.2.1.tgz#867e92da94d80f743e6e0503c668af832465080a"
+  integrity sha512-xD+CQd9p4lU7ZfRqmUcbJpqR+Ss51rJRVeXMyOLrZQImN9/8Sy/BEUBnHO/UKD3z03R686PVTLfEPmkropGuLw==
 
 "@babel/code-frame@^7.0.0":
   version "7.0.0"
