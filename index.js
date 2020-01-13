@@ -51,6 +51,8 @@ module.exports = app => {
       mergedPullRequests: sortedMergedPullRequests
     })
 
+    log({ app, context, message: draftRelease.tag_name })
+
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
@@ -69,7 +71,9 @@ module.exports = app => {
         context.repo({
           release_id: draftRelease.id,
           body: releaseInfo.body,
-          tag_name: draftRelease.tag_name
+          ...(draftRelease.tag_name
+            ? { tag_name: draftRelease.tag_name }
+            : null)
         })
       )
     }
