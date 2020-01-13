@@ -51,8 +51,6 @@ module.exports = app => {
       mergedPullRequests: sortedMergedPullRequests
     })
 
-    log({ app, context, message: draftRelease.tag_name })
-
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
