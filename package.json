@@ -35,7 +35,7 @@
     "eslint": "6.8.0",
     "eslint-config-prettier": "6.9.0",
     "eslint-plugin-prettier": "3.1.2",
-    "husky": "4.0.5",
+    "husky": "4.0.7",
     "jest": "24.9.0",
     "joi-to-json-schema": "^5.1.0",
     "lint-staged": "9.5.0",
