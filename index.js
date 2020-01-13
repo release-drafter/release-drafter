@@ -69,7 +69,9 @@ module.exports = app => {
         context.repo({
           release_id: draftRelease.id,
           body: releaseInfo.body,
-          tag_name: draftRelease.tag_name
+          ...(draftRelease.tag_name
+            ? { tag_name: draftRelease.tag_name }
+            : null)
         })
       )
     }
