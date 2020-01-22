@@ -32,8 +32,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-**Note:** If provided, the `version`, `tag` and `name` input options will be used (in this order) to extract a version number instead of calculating one.
-
 If you're unable to use GitHub Actions, you can use the Release Drafter GitHub App. Please refer to the [Release Drafter GitHub App documentation](docs/github-app.md) for more information.
 
 ## Configuration
