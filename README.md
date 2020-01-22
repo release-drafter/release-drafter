@@ -28,12 +28,6 @@ jobs:
         with:
           # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
           # config-name: my-config.yml
-          # (Optional) override the calculated version
-          # version: '2.1.1'
-          # (Optional) override the resulting tag
-          # tag: 'v2.1.1-alpha'
-          # (Optional) override the resulting name
-          # name: 'v2.1.1-alpha (Code Name: Foxtrot Unicorn)'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -126,8 +120,6 @@ You can use any of the following variables in your `template`, `name-template` a
 | `$NEXT_PATCH_VERSION` | The next patch version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.2.4`. This is the most commonly used value. |
 | `$NEXT_MINOR_VERSION` | The next minor version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.3.0`.                                       |
 | `$NEXT_MAJOR_VERSION` | The next major version number. For example, if the last tag or release was `v1.2.3`, the value would be `v2.0.0`.                                       |
-| `$INPUT_VERSION`      | Manually set version, extracted from the `version`, `tag` or `name` override options (in this order).                                                   |
-| `$RESOLVED_VERSION`   | The `$INPUT_VERSION` if available, or `$NEXT_PATCH_VERSION` otherwise.                                                                                  |
 
 ## Version Template Variables
 
