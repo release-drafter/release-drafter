@@ -110,7 +110,7 @@ describe('release-drafter', () => {
 
           nock('https://api.github.com')
             .post('/graphql', body =>
-              body.query.includes('query findTagCommitTimestamp')
+              body.query.includes('query findTagCommitDate')
             )
             .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -214,7 +214,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -274,7 +274,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -329,7 +329,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -377,7 +377,7 @@ Previous tag: ''
 
           nock('https://api.github.com')
             .post('/graphql', body =>
-              body.query.includes('query findTagCommitTimestamp')
+              body.query.includes('query findTagCommitDate')
             )
             .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -429,7 +429,7 @@ Previous tag: ''
 
           nock('https://api.github.com')
             .post('/graphql', body =>
-              body.query.includes('query findTagCommitTimestamp')
+              body.query.includes('query findTagCommitDate')
             )
             .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -482,7 +482,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -619,7 +619,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -677,7 +677,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -737,7 +737,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -796,7 +796,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -842,7 +842,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -888,7 +888,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -1384,7 +1384,7 @@ Previous tag: ''
 
       nock('https://api.github.com')
         .post('/graphql', body =>
-          body.query.includes('query findTagCommitTimestamp')
+          body.query.includes('query findTagCommitDate')
         )
         .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -1465,7 +1465,7 @@ Previous tag: ''
 
       nock('https://api.github.com')
         .post('/graphql', body =>
-          body.query.includes('query findTagCommitTimestamp')
+          body.query.includes('query findTagCommitDate')
         )
         .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -1606,7 +1606,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
@@ -1684,7 +1684,7 @@ Previous tag: ''
 
         nock('https://api.github.com')
           .post('/graphql', body =>
-            body.query.includes('query findTagCommitTimestamp')
+            body.query.includes('query findTagCommitDate')
           )
           .reply(200, require('./fixtures/graphql-tag-v2.0.0'))
 
