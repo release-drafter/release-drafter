@@ -1,6 +1,11 @@
 const { getConfig } = require('./lib/config')
 const { isTriggerableBranch } = require('./lib/triggerable-branch')
-const { findReleases, generateReleaseInfo } = require('./lib/releases')
+const {
+  findReleases,
+  generateReleaseInfo,
+  createDraftRelease,
+  updateDraftRelease
+} = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { sortPullRequests } = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
@@ -56,26 +61,19 @@ module.exports = app => {
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
       log({ app, context, message: 'Creating new draft release' })
-      createOrUpdateReleaseResponse = await context.github.repos.createRelease(
-        context.repo({
-          name: releaseInfo.name,
-          tag_name: releaseInfo.tag,
-          body: releaseInfo.body,
-          draft: true,
-          prerelease: config.prerelease
-        })
-      )
+      createOrUpdateReleaseResponse = await createDraftRelease({
+        context,
+        releaseInfo,
+        config
+      })
     } else {
       log({ app, context, message: 'Updating existing draft release' })
-      createOrUpdateReleaseResponse = await context.github.repos.updateRelease(
-        context.repo({
-          release_id: draftRelease.id,
-          body: releaseInfo.body,
-          ...(draftRelease.tag_name
-            ? { tag_name: draftRelease.tag_name }
-            : null)
-        })
-      )
+      createOrUpdateReleaseResponse = await updateDraftRelease({
+        context,
+        draftRelease,
+        releaseInfo,
+        config
+      })
     }
 
     setActionOutput(createOrUpdateReleaseResponse)
