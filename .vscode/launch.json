@@ -29,6 +29,23 @@
       "windows": {
         "program": "${workspaceFolder}/node_modules/jest/bin/jest"
       }
-    }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Jest Run Selected Test",
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "disableOptimisticBPs": true,
+      "windows": {
+        "program": "${workspaceFolder}/node_modules/jest/bin/jest"
+      },
+      "args": [
+        "${fileBasenameNoExtension}",
+        "-t",
+        "${selectedText}"
+      ],
+    },
   ]
 }
