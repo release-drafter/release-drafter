@@ -11,7 +11,6 @@ module.exports = app => {
     const config = await getConfig({
       app,
       context,
-      getConfig: require('probot-config'),
       configName: core.getInput('config-name')
     })
 
