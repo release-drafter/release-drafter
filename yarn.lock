@@ -404,18 +404,20 @@
     "@octokit/request-error" "^1.2.0"
     "@octokit/types" "^2.0.1"
 
-"@octokit/plugin-retry@^2.1.1":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@octokit/plugin-retry/-/plugin-retry-2.2.0.tgz#11f3957a46ccdb7b7f33caabf8c17e57b25b80b2"
-  integrity sha512-x5Kd8Lke+a4hTDCe5akZxpGmVwu1eeVt2FJX0jeo3CxHGbfHbXb4zhN5quKfGL9oBLV/EdHQIJ6zwIMjuzxOlw==
+"@octokit/plugin-retry@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@octokit/plugin-retry/-/plugin-retry-3.0.1.tgz#4f17e4349b89754fd06951b548f08e2d8e7dd311"
+  integrity sha512-X+VALkeYyE4XGMHOoOnRS1/OvwvleZ2Xe3yxshaAKJrA4pbjBYptDx7IAY9xQj5JYY9vlCKUsXEZMWLRNxfViw==
   dependencies:
+    "@octokit/types" "^2.0.1"
     bottleneck "^2.15.3"
 
-"@octokit/plugin-throttling@^2.3.0":
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/@octokit/plugin-throttling/-/plugin-throttling-2.4.0.tgz#add1bd6a797aa210ce860e8bbe7f7505ba5e4d99"
-  integrity sha512-0bYfgQdqAtWiqXvS6oKMiousTno+e3pFoaYS57LpAp8p56Far49/vpGvbEvBUuNyoUFgOcTGm5WTpO1IPptHuQ==
+"@octokit/plugin-throttling@^3.0.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@octokit/plugin-throttling/-/plugin-throttling-3.2.0.tgz#e900bb4e5976ea45ccb2c32c068d09c28fed31ef"
+  integrity sha512-4tyTbRFu7OTJFssdj6j74PdvJ8LqMVBFYeRd4+jBJm68LbqmgHunujwvyfjHGp2L+HwC69/BT36PKRWF131Vdg==
   dependencies:
+    "@octokit/types" "^2.0.1"
     bottleneck "^2.15.3"
 
 "@octokit/request-error@^1.0.1":
@@ -2640,7 +2642,18 @@ growly@^1.3.0:
   resolved "https://registry.yarnpkg.com/growly/-/growly-1.3.0.tgz#f10748cbe76af964b7c96c93c6bcc28af120c081"
   integrity sha1-8QdIy+dq+WS3yWyTxrzCivEgwIE=
 
-handlebars@4.3.5, handlebars@^4.1.2:
+handlebars@4.5.3:
+  version "4.5.3"
+  resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.5.3.tgz#5cf75bd8714f7605713511a56be7c349becb0482"
+  integrity sha512-3yPecJoJHK/4c6aZhSvxOyG4vJKDshV36VHp0iVCDVh7o9w2vwi3NSnL2MMPj3YdduqaBcu7cGbggJQM0br9xA==
+  dependencies:
+    neo-async "^2.6.0"
+    optimist "^0.6.1"
+    source-map "^0.6.1"
+  optionalDependencies:
+    uglify-js "^3.1.4"
+
+handlebars@^4.1.2:
   version "4.3.5"
   resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.3.5.tgz#d6c2d0a0f08b4479e3949f8321c0f3893bb691be"
   integrity sha512-I16T/l8X9DV3sEkY9sK9lsPRgDsj82ayBY/4pAZyP2BcX5WeRM3O06bw9kIs2GLrHvFB/DNzWWJyFvof8wQGqw==
@@ -2734,12 +2747,12 @@ has@^1.0.1, has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-hbs@^4.0.6:
-  version "4.0.6"
-  resolved "https://registry.yarnpkg.com/hbs/-/hbs-4.0.6.tgz#3054144dbd399cc7d351a39c016b3a52c9e19f5d"
-  integrity sha512-KFt3Y4zOvVQOp84TmqVaFTpBTYO1sVenBoBY712MI3vPkKxVoO6AsuEyDayIRPRAHRYZHHWnmc4spFa8fhQpLw==
+hbs@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/hbs/-/hbs-4.1.0.tgz#ddcf3d574a6be5f7abfbd8a350a3db62ef66a13c"
+  integrity sha512-YDrUBtLpwRl0H5uyCGLE2LGtGJl51VvJFBj/D+Cqyr6XMopCvwXA0ynRpd87u6aVIYCeGYZHESfZzPHbNMkOPA==
   dependencies:
-    handlebars "4.3.5"
+    handlebars "4.5.3"
     walk "2.3.14"
 
 hosted-git-info@^2.1.4:
@@ -5038,16 +5051,16 @@ pretty-format@^24.9.0:
     ansi-styles "^3.2.0"
     react-is "^16.8.4"
 
-probot@9.9.0:
-  version "9.9.0"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.9.0.tgz#3c3224717e8056a014f5b283c69cdab8abbaba0e"
-  integrity sha512-WgrkbCcWoxn2f50Q6+siVcCnLnavBmGfSky64pbnqSe6uxhA1kJXaDTLvFxbhTHdJHZGByrzImSCLWBL8WsrWA==
+probot@9.9.1:
+  version "9.9.1"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.9.1.tgz#18fb12bf3cba2663207063dcf1a09d54dbabe1bc"
+  integrity sha512-Xhgm2zQB9zIciTBAoh33cz4I0sKGqRlC6njnkj7vtEITp8CyN8ttxZED+cUVNrv12TwSI8DF8fOHKxn2bOOW4w==
   dependencies:
     "@octokit/app" "^4.0.0"
     "@octokit/graphql" "^4.2.0"
     "@octokit/plugin-enterprise-compatibility" "^1.2.1"
-    "@octokit/plugin-retry" "^2.1.1"
-    "@octokit/plugin-throttling" "^2.3.0"
+    "@octokit/plugin-retry" "^3.0.1"
+    "@octokit/plugin-throttling" "^3.0.0"
     "@octokit/request" "^5.1.0"
     "@octokit/rest" "^16.29.0"
     "@octokit/webhooks" "^6.0.0"
@@ -5063,7 +5076,7 @@ probot@9.9.0:
     eventsource "^1.0.7"
     express "^4.16.2"
     express-async-errors "^3.0.0"
-    hbs "^4.0.6"
+    hbs "^4.1.0"
     ioredis "^4.5.1"
     is-base64 "1.0.0"
     js-yaml "^3.13.1"
