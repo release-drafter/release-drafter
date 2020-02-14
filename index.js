@@ -53,7 +53,7 @@ module.exports = app => {
       name: core.getInput('name') || undefined
     })
 
-    const shouldPublish = core.getInput('publish') === 'true'
+    const shouldDraft = core.getInput('publish').toLowerCase() !== 'true'
 
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
@@ -63,7 +63,7 @@ module.exports = app => {
           name: releaseInfo.name,
           tag_name: releaseInfo.tag,
           body: releaseInfo.body,
-          draft: !shouldPublish,
+          draft: shouldDraft,
           prerelease: config.prerelease
         })
       )
@@ -73,7 +73,7 @@ module.exports = app => {
         context.repo({
           release_id: draftRelease.id,
           body: releaseInfo.body,
-          draft: !shouldPublish,
+          draft: shouldDraft,
           ...(draftRelease.tag_name
             ? { tag_name: draftRelease.tag_name }
             : null)
