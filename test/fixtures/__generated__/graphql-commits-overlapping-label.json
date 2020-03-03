@@ -1,0 +1,192 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "target": {
+          "history": {
+            "totalCount": 7,
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "b2ed3f089aa1022e91e0a9d109ab876fde688c34 6"
+            },
+            "nodes": [
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmIyZWQzZjA4OWFhMTAyMmU5MWUwYTlkMTA5YWI4NzZmZGU2ODhjMzQ=",
+                "message": "Add documentation (#22)\n\n* Add documentation\r\n\r\n* Fix typo\r\n\r\nCo-authored-by: Timon van Spronsen <timonvanspronsen@outlook.com>",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "casz"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add documentation",
+                      "number": 22,
+                      "author": {
+                        "login": "casz"
+                      },
+                      "mergedAt": "2020-02-02T13:55:50Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "skip-changelog"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI2NzdkYjY0MGQwYjljMjViYjVmYjE3NjhiMzQ3NGEyNTI5MzQ5NzM=",
+                "message": "Update dependencies (#21)\n\n* Update Express to 4.16.4\r\n\r\n* Update Mongoose to 5.5.4\r\n\r\nCo-authored-by: Timon van Spronsen <timonvanspronsen@outlook.com>",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "casz"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Update dependencies",
+                      "number": 21,
+                      "author": {
+                        "login": "casz"
+                      },
+                      "mergedAt": "2020-02-02T13:55:28Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjQ3N2FjNTBlNGNkMWMzOTRhYmJkNjcwZjFkNTkwY2I3OWJjOThhYzk=",
+                "message": "Bug fixes (#20)\n\n* Fixed a bug\r\n\r\n* Fixed another bug\r\n\r\nCo-authored-by: Timon van Spronsen <timonvanspronsen@outlook.com>",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "casz"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bug fixes",
+                      "number": 20,
+                      "author": {
+                        "login": "casz"
+                      },
+                      "mergedAt": "2020-02-02T13:55:11Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "bug"
+                          },
+                          {
+                            "name": "sentry"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjliYTBlNTQ4MmMwY2I1OWU0MDBmYzhmNWUyNGU1OWMyMDE2N2U5MGE=",
+                "message": "Add big feature (#19)\n\n* Add big feature\r\n\r\n* Adjust parameters\r\n\r\nCo-authored-by: Timon van Spronsen <timonvanspronsen@outlook.com>",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "casz"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add big feature",
+                      "number": 19,
+                      "author": {
+                        "login": "casz"
+                      },
+                      "mergedAt": "2020-02-02T13:54:54Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmY5YmYyMmMzNTI0MTcyODg0NTJhYmZkMzlkMGIxY2JhMmViYjk2MWE=",
+                "message": "Add alien technology (#18)\n\nCo-authored-by: Timon van Spronsen <timonvanspronsen@outlook.com>",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "casz"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add alien technology",
+                      "number": 18,
+                      "author": {
+                        "login": "casz"
+                      },
+                      "mergedAt": "2020-02-02T13:54:23Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
+                "message": "Add project description to README",
+                "author": {
+                  "name": "Ada Lovelace",
+                  "user": null
+                },
+                "associatedPullRequests": {
+                  "nodes": []
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
+                "message": "Initial commit",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -16,7 +16,12 @@ if (!GITHUB_TOKEN) {
   )
 }
 
-const branches = ['merge-commit', 'rebase-merging', 'squash-merging']
+const branches = [
+  'merge-commit',
+  'rebase-merging',
+  'squash-merging',
+  'overlapping-label'
+]
 
 branches.forEach(branch => {
   const options = {
@@ -44,7 +49,7 @@ branches.forEach(branch => {
           '../test/fixtures/__generated__',
           `graphql-commits-${branch}.json`
         ),
-        JSON.stringify(data, null, 2)
+        JSON.stringify(data, null, 2) + '\n'
       )
     })
     .catch(console.error)
