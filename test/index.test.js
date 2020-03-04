@@ -669,6 +669,122 @@ Previous tag: ''
 
         expect.assertions(1)
       })
+
+      it('categorizes pull requests with overlapping labels', async () => {
+        getConfigMock('config-with-categories-3.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-overlapping-label.json')
+          )
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * Add documentation (#22) @casz
+                * Update dependencies (#21) @casz
+
+                ## 🚀 Features
+
+                * Add big feature (#19) @casz
+                * Add alien technology (#18) @casz
+
+                ## 🐛 Bug Fixes
+
+                * Bug fixes (#20) @casz
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+
+      it('categorizes pull requests with overlapping labels into multiple categories', async () => {
+        getConfigMock('config-with-categories-4.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-overlapping-label.json')
+          )
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * Add documentation (#22) @casz
+                * Update dependencies (#21) @casz
+
+                ## 🚀 Features
+
+                * Add big feature (#19) @casz
+                * Add alien technology (#18) @casz
+
+                ## 🐛 Bug Fixes
+
+                * Bug fixes (#20) @casz
+
+                ## 🎖️ Sentry
+
+                * Bug fixes (#20) @casz
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200)
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
     })
 
     describe('with exclude-labels config', () => {
