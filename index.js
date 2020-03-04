@@ -3,8 +3,8 @@ const { isTriggerableBranch } = require('./lib/triggerable-branch')
 const {
   findReleases,
   generateReleaseInfo,
-  createDraftRelease,
-  updateDraftRelease
+  createRelease,
+  updateRelease
 } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { sortPullRequests } = require('./lib/sort-pull-requests')
@@ -58,20 +58,24 @@ module.exports = app => {
       name: core.getInput('name') || undefined
     })
 
+    const shouldDraft = core.getInput('publish').toLowerCase() !== 'true'
+
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
-      log({ app, context, message: 'Creating new draft release' })
-      createOrUpdateReleaseResponse = await createDraftRelease({
+      log({ app, context, message: 'Creating new release' })
+      createOrUpdateReleaseResponse = await createRelease({
         context,
         releaseInfo,
+        shouldDraft,
         config
       })
     } else {
-      log({ app, context, message: 'Updating existing draft release' })
-      createOrUpdateReleaseResponse = await updateDraftRelease({
+      log({ app, context, message: 'Updating existing release' })
+      createOrUpdateReleaseResponse = await updateRelease({
         context,
         draftRelease,
         releaseInfo,
+        shouldDraft,
         config
       })
     }
