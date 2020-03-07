@@ -244,7 +244,7 @@ Previous tag: ''
         expect.assertions(1)
       })
 
-      it('creates a new draft when run as a GitHub Actiin', async () => {
+      it('creates a new draft when run as a GitHub Action', async () => {
         getConfigMock()
 
         // GitHub actions should use the GITHUB_REF and not the payload ref
