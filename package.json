@@ -22,7 +22,7 @@
     "@actions/core": "^1.2.0",
     "@hapi/joi": "15.1.1",
     "cli-table3": "^0.5.1",
-    "compare-versions": "3.5.1",
+    "compare-versions": "3.6.0",
     "escape-string-regexp": "2.0.0",
     "lodash": "4.17.15",
     "probot": "9.10.1",
