@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@actions/core@^1.2.0":
+"@actions/core@^1.1.3", "@actions/core@^1.2.0":
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@actions/core/-/core-1.2.3.tgz#e844b4fa0820e206075445079130868f95bfca95"
   integrity sha512-Wp4xnyokakM45Uuj4WLUxdsa8fJjKVl1fDTsPbTEcTcuu0Nb26IPQbOtjmnfaCPGcaoPOOqId8H9NapZ8gii4w==
@@ -768,6 +768,11 @@
   integrity sha512-9T1auFmbPZoxHz0enUFlUuKRy3it01R+hlggyVUMtnCTQRunsQYifnSGb8hET4Xo8yiC0o0r1paW3ud5+rbURg==
   dependencies:
     "@types/yargs-parser" "*"
+
+"@zeit/ncc@^0.21.0":
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/@zeit/ncc/-/ncc-0.21.1.tgz#44fd4359c54ba34a018a5ccf7a315489db20a733"
+  integrity sha512-M9WzgquSOt2nsjRkYM9LRylBLmmlwNCwYbm3Up3PDEshfvdmIfqpFNSK8EJvR18NwZjGHE5z2avlDtYQx2JQnw==
 
 abab@^2.0.0:
   version "2.0.0"
@@ -4874,7 +4879,16 @@ pretty-format@^25.1.0:
     ansi-styles "^4.0.0"
     react-is "^16.12.0"
 
-probot@9.10.2:
+probot-actions-adapter@^1.0.2:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/probot-actions-adapter/-/probot-actions-adapter-1.0.4.tgz#c3fd5d75bc007b83bd862e090897ea151465b163"
+  integrity sha512-hvEe6FJWB2Z5w9bPryoJlypmxusywS4RP/r8o84pKS4qRI116+J61V+/Zd1vTpTtxis2Ns44q3xeYJnOoaLMpw==
+  dependencies:
+    "@actions/core" "^1.1.3"
+    probot "^9.5.3"
+    uuid "^3.3.3"
+
+probot@9.10.2, probot@^9.5.3:
   version "9.10.2"
   resolved "https://registry.yarnpkg.com/probot/-/probot-9.10.2.tgz#a8c27c39862caf6de1fc34427d2d2193c2116e4b"
   integrity sha512-7oir5mEK7W2uYSDlKunBfXkjoB3AuftIIw6eTxuDkeAYQlzKOV12kHYTk1SJZQJJqjzf7zgT5SW/1o+6Qo2NwQ==
@@ -6208,6 +6222,11 @@ uuid@3.3.2, uuid@^3.3.2:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.3.2.tgz#1b4af4955eb3077c501c23872fc6513811587131"
   integrity sha512-yXJmeNaw3DnnKAOKJE51sL/ZaYfWJRl1pK9dr19YFCu0ObS231AB1/LbqTKRAQ5kw8A90rA6fr4riOUpTZvQZA==
+
+uuid@^3.3.3:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
+  integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
 
 uuid@^7.0.0:
   version "7.0.1"
