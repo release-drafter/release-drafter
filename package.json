@@ -6,6 +6,7 @@
   "license": "ISC",
   "repository": "https://github.com/toolmantim/release-drafter",
   "scripts": {
+    "build": "ncc build --source-map action.js",
     "dev": "nodemon --exec \"npm start\"",
     "start": "probot run ./index.js",
     "test": "jest",
@@ -26,12 +27,14 @@
     "escape-string-regexp": "4.0.0",
     "lodash": "4.17.20",
     "probot": "11.0.1",
+    "probot-actions-adapter": "2.0.0",
     "regex-parser": "2.2.11",
     "request": "2.88.2",
     "semver": "7.3.2"
   },
   "devDependencies": {
     "@types/hapi__joi": "^15.0.4",
+    "@zeit/ncc": "^0.21.0",
     "eslint": "7.16.0",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-prettier": "3.1.4",
