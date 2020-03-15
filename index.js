@@ -88,7 +88,8 @@ function setActionOutput(releaseResponse) {
   const {
     data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
   } = releaseResponse
-  core.setOutput('id', releaseId)
-  core.setOutput('html_url', htmlUrl)
-  core.setOutput('upload_url', uploadUrl)
+  if (releaseId && Number.isInteger(releaseId))
+    core.setOutput('id', releaseId.toString())
+  if (htmlUrl) core.setOutput('html_url', htmlUrl)
+  if (uploadUrl) core.setOutput('upload_url', uploadUrl)
 }
