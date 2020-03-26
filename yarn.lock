@@ -4874,10 +4874,10 @@ pretty-format@^25.1.0:
     ansi-styles "^4.0.0"
     react-is "^16.12.0"
 
-probot@9.10.2:
-  version "9.10.2"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-9.10.2.tgz#a8c27c39862caf6de1fc34427d2d2193c2116e4b"
-  integrity sha512-7oir5mEK7W2uYSDlKunBfXkjoB3AuftIIw6eTxuDkeAYQlzKOV12kHYTk1SJZQJJqjzf7zgT5SW/1o+6Qo2NwQ==
+probot@9.11.2:
+  version "9.11.2"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-9.11.2.tgz#db6642a76eedb799a4e9c4a4ee9f58a016ca7de6"
+  integrity sha512-kYHzxfCku6p0ZBBD9CSXrByNHP2Sp26l4NubLxsbCj7jYwCwoi5e1S6wlXFO1deyY58vHXp0Roq8sTVH8oJwbg==
   dependencies:
     "@octokit/app" "^4.0.0"
     "@octokit/graphql" "^4.2.0"
