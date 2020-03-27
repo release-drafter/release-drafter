@@ -130,7 +130,7 @@ describe('release-drafter', () => {
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           await probot.receive({
             name: 'push',
@@ -179,7 +179,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         const payload = require('./fixtures/push')
 
@@ -234,7 +234,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -288,7 +288,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -331,7 +331,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -376,7 +376,7 @@ Previous tag: ''
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           await probot.receive({
             name: 'push',
@@ -418,7 +418,7 @@ Previous tag: ''
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           await probot.receive({
             name: 'push',
@@ -470,7 +470,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -507,7 +507,7 @@ Previous tag: ''
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           await probot.receive({
             name: 'push',
@@ -554,7 +554,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -608,7 +608,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -660,7 +660,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -716,7 +716,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -776,7 +776,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -829,7 +829,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -871,7 +871,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -911,7 +911,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -951,7 +951,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -1001,7 +1001,7 @@ Previous tag: ''
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           const payload = require('./fixtures/push')
 
@@ -1052,7 +1052,7 @@ Previous tag: ''
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           const payload = require('./fixtures/push')
 
@@ -1103,7 +1103,7 @@ Previous tag: ''
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           const payload = require('./fixtures/push')
 
@@ -1167,7 +1167,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         const payload = require('./fixtures/push')
 
@@ -1218,7 +1218,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         const payload = require('./fixtures/push')
 
@@ -1282,7 +1282,7 @@ Previous tag: ''
             return true
           }
         )
-        .reply(200)
+        .reply(200, require('./fixtures/release'))
 
       const payload = require('./fixtures/push')
 
@@ -1345,7 +1345,7 @@ Previous tag: ''
             return true
           }
         )
-        .reply(200)
+        .reply(200, require('./fixtures/release'))
 
       const payload = require('./fixtures/push')
 
@@ -1442,7 +1442,7 @@ Previous tag: ''
             return true
           }
         )
-        .reply(200)
+        .reply(200, require('./fixtures/release'))
 
       await probot.receive({
         name: 'push',
@@ -1515,7 +1515,7 @@ Previous tag: ''
             return true
           }
         )
-        .reply(200)
+        .reply(200, require('./fixtures/release'))
 
       await probot.receive({
         name: 'push',
@@ -1631,7 +1631,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -1670,7 +1670,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -1707,7 +1707,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -1742,7 +1742,7 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
