@@ -1458,7 +1458,7 @@ Previous tag: ''
     })
   })
 
-  describe('input publish, version, tag and name overrides', () => {
+  describe('input publish, prerelease, version, tag and name overrides', () => {
     // Method with all the test's logic, to prevent duplication
     const overridesTest = async (overrides, expectedBody) => {
       let mockEnv = {}
@@ -1487,11 +1487,18 @@ Previous tag: ''
         if (overrides.publish) {
           mockEnv['INPUT_PUBLISH'] = overrides.publish
         }
+
+        if (overrides.prerelease) {
+          mockEnv['INPUT_PRERELEASE'] = overrides.prerelease
+        }
       }
 
       let restoreEnv = mockedEnv(mockEnv)
 
-      getConfigMock('config-with-input-version-template.yml')
+      getConfigMock(
+        (overrides && overrides.configName) ||
+          'config-with-input-version-template.yml'
+      )
 
       nock('https://api.github.com')
         .get('/repos/toolmantim/release-drafter-test-project/releases')
@@ -1581,6 +1588,107 @@ Previous tag: ''
             draft: false,
             name: 'v2.1.1 (Code name: Placeholder)',
             tag_name: 'v2.1.1'
+          }
+        )
+      })
+    })
+
+    describe('with input prerelease: true', () => {
+      it('marks the created draft as prerelease', async () => {
+        return overridesTest(
+          {
+            prerelease: 'true'
+          },
+          {
+            draft: true,
+            prerelease: true
+          }
+        )
+      })
+    })
+
+    describe('with input prerelease: false', () => {
+      it('doesnt mark the created draft as prerelease', async () => {
+        return overridesTest(
+          {
+            prerelease: 'false'
+          },
+          {
+            draft: true,
+            prerelease: false
+          }
+        )
+      })
+    })
+
+    describe('with input prerelease and publish: true', () => {
+      it('marks the created release as a prerelease', async () => {
+        return overridesTest(
+          {
+            prerelease: 'true',
+            publish: 'true'
+          },
+          {
+            draft: false,
+            prerelease: true
+          }
+        )
+      })
+    })
+
+    describe('with input prerelease: true and config file prerelease: false', () => {
+      it('marks the created draft as prerelease', async () => {
+        return overridesTest(
+          {
+            prerelease: 'true',
+            configName: 'config-without-prerelease.yml'
+          },
+          {
+            draft: true,
+            prerelease: true
+          }
+        )
+      })
+    })
+
+    describe('with input prerelease: false and config file prerelease: true', () => {
+      it('doesnt mark the created draft as prerelease', async () => {
+        return overridesTest(
+          {
+            prerelease: 'false',
+            configName: 'config-with-prerelease.yml'
+          },
+          {
+            draft: true,
+            prerelease: false
+          }
+        )
+      })
+    })
+
+    describe('without input prerelease and config file prerelease: true', () => {
+      it('marks the created draft as a prerelease', async () => {
+        return overridesTest(
+          {
+            configName: 'config-with-prerelease.yml'
+          },
+          {
+            draft: true,
+            prerelease: true
+          }
+        )
+      })
+    })
+
+    describe('without input prerelease and config file prerelease: false', () => {
+      it('doesnt mark the created draft as a prerelease', async () => {
+        return overridesTest(
+          {
+            configName: 'config-without-prerelease.yml'
+          },
+          {
+            draft: true,
+            prerelease: false
           }
         )
       })
