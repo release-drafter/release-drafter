@@ -71,6 +71,17 @@ categories:
   - title: '🧰 Maintenance'
     label: 'chore'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
 template: |
   ## Changes
 
@@ -96,6 +107,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `sort-by`             | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                                                                  |
 | `sort-direction`      | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                                                 |
 | `prerelease`          | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                                                           |
+| `version-resolver`    | Optional | Adjust the \$RESOLVED_VERSION variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                                                      |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
@@ -118,6 +130,7 @@ You can use any of the following variables in your `template`, `name-template` a
 | `$NEXT_PATCH_VERSION` | The next patch version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.2.4`. This is the most commonly used value. |
 | `$NEXT_MINOR_VERSION` | The next minor version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.3.0`.                                       |
 | `$NEXT_MAJOR_VERSION` | The next major version number. For example, if the last tag or release was `v1.2.3`, the value would be `v2.0.0`.                                       |
+| `$RESOLVED_VERSION`   | The next resolved version number, based on GitHub labels. Refer to [Version Resolution](#version-resolution) to learn more about this.                  |
 
 ## Version Template Variables
 
@@ -128,6 +141,28 @@ You can use any of the following variables in `version-template` to format the `
 | `$PATCH` | The patch version number. |
 | `$MINOR` | The minor version number. |
 | `$MAJOR` | The major version number. |
+
+## Version Resolver
+
+With the `version-resolver` option version number incrementing can be resolved automatically based on labels of individual pull requests. Append the following to your `.github/release-drafter.yml` file:
+
+```yml
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
+```
+
+The above config controls the output of the `$RESOLVED_VERSION` variable.
+
+If a pull requests is found with the label `major`/`minor`/`patch`, the corresponding version key will be incremented from a semantic version. The maximum out of major, minor and patch found in any of the pull requests will be used to increment the version number. For pull requests without any of the assigned labels, the `default` will be assigned.
 
 ## Change Template Variables
 
