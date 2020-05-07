@@ -162,7 +162,7 @@ version-resolver:
 
 The above config controls the output of the `$RESOLVED_VERSION` variable.
 
-If a pull requests is found with the label `major`/`minor`/`patch`, the corresponding version key will be incremented from a semantic version. The maximum out of major, minor and patch found in any of the pull requests will be used to increment the version number. For pull requests without any of the assigned labels, the `default` will be assigned.
+If a pull requests is found with the label `major`/`minor`/`patch`, the corresponding version key will be incremented from a semantic version. The maximum out of major, minor and patch found in any of the pull requests will be used to increment the version number. If no pull requests are found with the assigned labels, the `default` will be assigned.
 
 ## Change Template Variables
 
