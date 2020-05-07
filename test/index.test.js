@@ -1752,5 +1752,182 @@ Previous tag: ''
         expect.assertions(1)
       })
     })
+
+    describe('with custom version resolver', () => {
+      it('uses correct default when no labels exist', async () => {
+        getConfigMock('config-with-custom-version-resolver.yml')
+
+        const response = require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, response)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `dummy`,
+                draft: true,
+                name: 'v2.1.0',
+                tag_name: 'v2.1.0'
+              })
+              return true
+            }
+          )
+          .reply(200, require('./fixtures/release'))
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+      it('when only patch label exists, use patch', async () => {
+        getConfigMock('config-with-custom-version-resolver.yml')
+
+        const response = require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+        response.data.repository.ref.target.history.nodes[0].associatedPullRequests.nodes[0].labels.nodes = [
+          { name: 'PAT' }
+        ]
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, response)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `dummy`,
+                draft: true,
+                name: 'v2.0.1',
+                tag_name: 'v2.0.1'
+              })
+              return true
+            }
+          )
+          .reply(200, require('./fixtures/release'))
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+      it('minor beats patch', async () => {
+        getConfigMock('config-with-custom-version-resolver.yml')
+
+        const response = require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+        response.data.repository.ref.target.history.nodes[0].associatedPullRequests.nodes[0].labels.nodes = [
+          { name: 'PAT' }
+        ]
+        response.data.repository.ref.target.history.nodes[1].associatedPullRequests.nodes[0].labels.nodes = [
+          { name: 'MIN' }
+        ]
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, response)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `dummy`,
+                draft: true,
+                name: 'v2.1.0',
+                tag_name: 'v2.1.0'
+              })
+              return true
+            }
+          )
+          .reply(200, require('./fixtures/release'))
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+      it('major beats others', async () => {
+        getConfigMock('config-with-custom-version-resolver.yml')
+
+        const response = require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+        response.data.repository.ref.target.history.nodes[0].associatedPullRequests.nodes[0].labels.nodes = [
+          { name: 'PAT' }
+        ]
+        response.data.repository.ref.target.history.nodes[1].associatedPullRequests.nodes[0].labels.nodes = [
+          { name: 'MIN' }
+        ]
+        response.data.repository.ref.target.history.nodes[1].associatedPullRequests.nodes[0].labels.nodes = [
+          { name: 'MAJ' }
+        ]
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, response)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `dummy`,
+                draft: true,
+                name: 'v3.0.0',
+                tag_name: 'v3.0.0'
+              })
+              return true
+            }
+          )
+          .reply(200, require('./fixtures/release'))
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+    })
   })
 })

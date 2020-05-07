@@ -187,6 +187,7 @@
         },
         "default": {
           "default": "patch",
+          "enum": ["major", "minor", "patch"],
           "type": "string"
         }
       },
