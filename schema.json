@@ -107,6 +107,7 @@
             "type": "string"
           },
           "labels": {
+            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -117,6 +118,27 @@
         "patterns": [],
         "required": ["title"]
       }
+    },
+    "increment": {
+      "type": "object",
+      "properties": {
+        "major-labels": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minor-labels": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "patterns": []
     },
     "template": {
       "type": "string"

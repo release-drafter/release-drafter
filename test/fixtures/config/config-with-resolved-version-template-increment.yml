@@ -1,0 +1,31 @@
+name-template: 'v$RESOLVED_VERSION 🌈'
+tag-template: 'v$RESOLVED_VERSION'
+branches:
+  - master
+categories:
+  - title: '🚀 Features'
+    label: 'feature'
+  - title: '🐛 Bug fixes'
+    label: 'bug'
+  - title: '📄 Documentation'
+    label: 'documentation'
+  - title: '🧰 Maintenance'
+    label: 'maintenance'
+increment:
+  major-labels:
+    - 'breaking'
+    - 'breaking-changes'
+  minor-labels: 'feature'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+template: |
+  ## What's changed
+
+  $CHANGES
+
+  ## Contributors
+
+  $CONTRIBUTORS
+
+  ## Previous release
+
+  $PREVIOUS_TAG

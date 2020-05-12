@@ -1683,7 +1683,7 @@ Previous tag: ''
       })
     })
 
-    describe('without previous releases, no overrides', () => {
+    describe('without previous releases, no version overrides', () => {
       it('resolves to the calculated version, which will be empty', async () => {
         getConfigMock('config-with-resolved-version-template.yml')
 
@@ -1718,8 +1718,8 @@ Previous tag: ''
       })
     })
 
-    describe('with previous releases, no overrides', () => {
-      it('resolves to the calculated version', async () => {
+    describe('with previous releases, no version overrides', () => {
+      it('resolves to the next PATCH version', async () => {
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
@@ -1750,6 +1750,165 @@ Previous tag: ''
         })
 
         expect.assertions(1)
+      })
+
+      describe('with version increment config', () => {
+        describe('with commits without PRs', () => {
+          it('resolves to the next PATCH version', async () => {
+            getConfigMock('config-with-resolved-version-template-increment.yml')
+
+            nock('https://api.github.com')
+              .post('/graphql', body =>
+                body.query.includes(
+                  'query findCommitsWithAssociatedPullRequests'
+                )
+              )
+              .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
+
+            nock('https://api.github.com')
+              .get('/repos/toolmantim/release-drafter-test-project/releases')
+              .query(true)
+              .reply(200, [require('./fixtures/release')])
+              .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                body => {
+                  expect(body).toMatchObject({
+                    name: 'v2.0.1 🌈',
+                    tag_name: 'v2.0.1'
+                  })
+                  return true
+                }
+              )
+              .reply(200, require('./fixtures/release'))
+
+            await probot.receive({
+              name: 'push',
+              payload: require('./fixtures/push')
+            })
+
+            expect.assertions(1)
+          })
+        })
+
+        describe('with commits containing fixes', () => {
+          it('resolves to the next PATCH version', async () => {
+            getConfigMock('config-with-resolved-version-template-increment.yml')
+
+            nock('https://api.github.com')
+              .post('/graphql', body =>
+                body.query.includes(
+                  'query findCommitsWithAssociatedPullRequests'
+                )
+              )
+              .reply(
+                200,
+                require('./fixtures/graphql-commits-only-fixes-or-no-label.json')
+              )
+
+            nock('https://api.github.com')
+              .get('/repos/toolmantim/release-drafter-test-project/releases')
+              .query(true)
+              .reply(200, [require('./fixtures/release')])
+              .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                body => {
+                  expect(body).toMatchObject({
+                    name: 'v2.0.1 🌈',
+                    tag_name: 'v2.0.1'
+                  })
+                  return true
+                }
+              )
+              .reply(200, require('./fixtures/release'))
+
+            await probot.receive({
+              name: 'push',
+              payload: require('./fixtures/push')
+            })
+
+            expect.assertions(1)
+          })
+        })
+
+        describe('with commits containing features', () => {
+          it('resolves to the next MINOR version', async () => {
+            getConfigMock('config-with-resolved-version-template-increment.yml')
+
+            nock('https://api.github.com')
+              .post('/graphql', body =>
+                body.query.includes(
+                  'query findCommitsWithAssociatedPullRequests'
+                )
+              )
+              .reply(
+                200,
+                require('./fixtures/graphql-commits-features-and-fixes.json')
+              )
+
+            nock('https://api.github.com')
+              .get('/repos/toolmantim/release-drafter-test-project/releases')
+              .query(true)
+              .reply(200, [require('./fixtures/release')])
+              .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                body => {
+                  expect(body).toMatchObject({
+                    name: 'v2.1.0 🌈',
+                    tag_name: 'v2.1.0'
+                  })
+                  return true
+                }
+              )
+              .reply(200, require('./fixtures/release'))
+
+            await probot.receive({
+              name: 'push',
+              payload: require('./fixtures/push')
+            })
+
+            expect.assertions(1)
+          })
+        })
+
+        describe('with commits containing breaking-changes', () => {
+          it('resolves to the next MAJOR version', async () => {
+            getConfigMock('config-with-resolved-version-template-increment.yml')
+
+            nock('https://api.github.com')
+              .post('/graphql', body =>
+                body.query.includes(
+                  'query findCommitsWithAssociatedPullRequests'
+                )
+              )
+              .reply(
+                200,
+                require('./fixtures/graphql-commits-breaking-changes.json')
+              )
+
+            nock('https://api.github.com')
+              .get('/repos/toolmantim/release-drafter-test-project/releases')
+              .query(true)
+              .reply(200, [require('./fixtures/release')])
+              .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                body => {
+                  expect(body).toMatchObject({
+                    name: 'v3.0.0 🌈',
+                    tag_name: 'v3.0.0'
+                  })
+                  return true
+                }
+              )
+              .reply(200, require('./fixtures/release'))
+
+            await probot.receive({
+              name: 'push',
+              payload: require('./fixtures/push')
+            })
+
+            expect.assertions(1)
+          })
+        })
       })
     })
   })

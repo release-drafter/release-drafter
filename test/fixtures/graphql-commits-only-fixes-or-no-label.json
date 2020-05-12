@@ -1,0 +1,104 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "target": {
+          "history": {
+            "totalCount": 120,
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "d1d78f7d126c56c7165213cd2dffddcbc8cee8b6 99"
+            },
+            "nodes": [
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjI1MzQ0MDhmZWI4MzZkYWNjNTFlYzdjMGFmNGYyNDdlN2JlMzlkNzQ=",
+                "message": "Merge pull request #3 from TimonVS/fix/bug-fixes\n\nBug fixes",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bug fixes",
+                      "number": 3,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "mergedAt": "2019-04-27T13:11:47Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "fix"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjdmOGY4NjI3NDY3ZTQwMDhmM2Q0NmE3ZWUwMmJmYWRlZGFmZjM4ZWU=",
+                "message": "Update README.md",
+                "author": {
+                  "name": "Tim Lucas",
+                  "user": {
+                    "login": "toolmantim"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Added great distance",
+                      "number": 16,
+                      "mergedAt": "2018-07-13T11:50:38Z",
+                      "author": {
+                        "login": "toolmantim"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjFiYmJiM2FhYWFmMTk3MDYyYmRmMjg2ODhiMDk4NTI0NjcxM2NkMTI=",
+                "message": "Fixed another bug",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bug fixes",
+                      "number": 3,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "mergedAt": "2019-04-27T13:11:47Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "fix"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "target": {
+          "history": {
+            "totalCount": 120,
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "d1d78f7d126c56c7165213cd2dffddcbc8cee8b6 99"
+            },
+            "nodes": [
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjI1MzQ0MDhmZWI4MzZkYWNjNTFlYzdjMGFmNGYyNDdlN2JlMzlkNzQ=",
+                "message": "Merge pull request #3 from TimonVS/fix/bug-fixes\n\nBug fixes",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bug fixes",
+                      "number": 3,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "mergedAt": "2019-04-27T13:11:47Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "fix"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjQ4ZTkwNTYwNWQ4ODkyNWI1MjJjMmIwMGY2NDZmNzQ0ZmQ5NzZkMjE=",
+                "message": "Merge pull request #2 from TimonVS/feature/big-feature\n\nAdd big feature",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add big feature with breaking changes",
+                      "number": 2,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "mergedAt": "2019-04-27T13:11:39Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "breaking-changes"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjdmOGY4NjI3NDY3ZTQwMDhmM2Q0NmE3ZWUwMmJmYWRlZGFmZjM4ZWU=",
+                "message": "Update README.md",
+                "author": {
+                  "name": "Tim Lucas",
+                  "user": {
+                    "login": "toolmantim"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Added great distance",
+                      "number": 16,
+                      "mergedAt": "2018-07-13T11:50:38Z",
+                      "author": {
+                        "login": "toolmantim"
+                      },
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjVmNTViZThiOTA2M2IzOWQ5Y2VkYzllNWRkOGZkMDIyMjFiZDMxZjQ=",
+                "message": "Merge pull request #1 from TimonVS/feature/alien-technology\n\n👽 Add alien technology",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "👽 Add alien technology",
+                      "number": 1,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "mergedAt": "2019-04-27T13:11:29Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjFiYmJiM2FhYWFmMTk3MDYyYmRmMjg2ODhiMDk4NTI0NjcxM2NkMTI=",
+                "message": "Fixed another bug",
+                "author": {
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bug fixes",
+                      "number": 3,
+                      "author": {
+                        "login": "TimonVS"
+                      },
+                      "mergedAt": "2019-04-27T13:11:47Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "fix"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
