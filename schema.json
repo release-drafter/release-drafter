@@ -121,6 +121,21 @@
     "template": {
       "type": "string"
     },
+    "target-commitish": {
+      "default": "master",
+      "type": "string"
+    },
+    "release-commitish-filter": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [null]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
     "_extends": {
       "type": "string"
     }

@@ -31,7 +31,13 @@ module.exports = app => {
       return
     }
 
-    const { draftRelease, lastRelease } = await findReleases({ app, context })
+    const { draftRelease, lastRelease } = await findReleases({
+      app,
+      context,
+      filters: {
+        targetCommitish: config['release-commitish-filter']
+      }
+    })
     const {
       commits,
       pullRequests: mergedPullRequests
@@ -67,7 +73,8 @@ module.exports = app => {
         context,
         releaseInfo,
         shouldDraft,
-        config
+        config,
+        target_commitish: config['target-commitish']
       })
     } else {
       log({ app, context, message: 'Updating existing release' })
@@ -75,8 +82,7 @@ module.exports = app => {
         context,
         draftRelease,
         releaseInfo,
-        shouldDraft,
-        config
+        shouldDraft
       })
     }
 
