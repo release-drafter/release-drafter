@@ -24,3 +24,5 @@ version-resolver:
     labels:
       - 'PAT'
   default: minor
+exclude-labels:
+  - skip-changelog
