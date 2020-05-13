@@ -26,7 +26,10 @@ const invalidConfigs = [
   [{ template: { '👶': 'a' } }, 'must be a string'],
   [{ template: null }, 'must be a string'],
   [{ template: '' }, 'is not allowed to be empty'],
-  [{ 'change-template': ['* $TITLE (#$NUMBER) @$AUTHOR'] }, 'must be a string'],
+  [
+    { 'change-template': ['* $TITLE (#$NUMBER) @$AUTHOR $DESC'] },
+    'must be a string'
+  ],
   [{ 'change-template': null }, 'must be a string'],
   [{ replacers: [{ search: 123 }] }, 'must be a regexp or a string'],
   [{ replacers: [{ search: '123' }] }, 'is required'],

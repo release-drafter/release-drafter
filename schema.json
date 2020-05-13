@@ -12,7 +12,7 @@
       }
     },
     "change-template": {
-      "default": "* $TITLE (#$NUMBER) @$AUTHOR",
+      "default": "* $TITLE (#$NUMBER) @$AUTHOR $DESC",
       "type": "string"
     },
     "no-changes-template": {

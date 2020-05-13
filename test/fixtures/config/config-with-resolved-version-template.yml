@@ -11,7 +11,7 @@ categories:
     label: 'documentation'
   - title: '🧰 Maintenance'
     label: 'maintenance'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER) $DESC'
 template: |
   ## What's changed
 

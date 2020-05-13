@@ -1,4 +1,4 @@
-change-template: - #$NUMBER '$TITLE' @$AUTHOR
+change-template: - #$NUMBER '$TITLE' @$AUTHOR '$DESC'
 template: |
   # What's Changed
 
