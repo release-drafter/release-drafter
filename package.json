@@ -43,7 +43,7 @@
     "nock": "12.0.3",
     "nock-knock": "2.0.0",
     "node-fetch": "2.6.0",
-    "nodemon": "2.0.2",
+    "nodemon": "2.0.3",
     "prettier": "2.0.5",
     "smee-client": "1.1.0"
   },
