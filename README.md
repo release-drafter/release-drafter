@@ -107,7 +107,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `sort-by`             | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                                                                  |
 | `sort-direction`      | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                                                 |
 | `prerelease`          | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                                                           |
-| `version-resolver`    | Optional | Adjust the \$RESOLVED_VERSION variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                                                      |
+| `version-resolver`    | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                                                      |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
