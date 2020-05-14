@@ -28,7 +28,7 @@
     "probot": "9.11.3",
     "regex-parser": "2.2.10",
     "request": "2.88.2",
-    "semver": "7.1.3"
+    "semver": "7.3.2"
   },
   "devDependencies": {
     "@types/hapi__joi": "^15.0.4",
