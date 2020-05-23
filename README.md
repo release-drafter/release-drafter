@@ -139,6 +139,7 @@ You can use any of the following variables in `change-template`:
 | `$NUMBER` | The number of the pull request, e.g. `42`.                  |
 | `$TITLE`  | The title of the pull request, e.g. `Add alien technology`. |
 | `$AUTHOR` | The pull request author’s username, e.g. `gracehopper`.     |
+| `$BODY`   | The body of the pull request e.g. `Fixed spelling mistake`. |
 
 ## Categorize Pull Requests
 
