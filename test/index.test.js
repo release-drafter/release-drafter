@@ -385,6 +385,52 @@ Previous tag: ''
         })
       })
 
+      describe('with custom changes-template config that includes a pull request body', () => {
+        it('creates a new draft using the template', async () => {
+          getConfigMock('config-with-changes-templates-and-body.yml')
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release')])
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+            )
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchObject({
+                  body: `* Change: #5 'Add documentation' ✍️ writing docs all
+* Change: #4 'Update dependencies' 📦 Package time! 📦
+* Change: #3 'Bug fixes' 🐛 squashing
+* Change: #2 'Add big feature' ![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)
+* Change: #1 '👽 Add alien technology' Space invasion 👾`,
+                  draft: true,
+                  tag_name: '',
+                })
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push'),
+          })
+
+          expect.assertions(1)
+        })
+      })
+
       describe('with contributors config', () => {
         it('adds the contributors', async () => {
           getConfigMock('config-with-contributors.yml')
@@ -693,17 +739,17 @@ Previous tag: ''
                 Object {
                   "body": "# What's Changed
 
-                * Add documentation (#22) @casz
-                * Update dependencies (#21) @casz
+                * Add documentation (#22) @jetersen
+                * Update dependencies (#21) @jetersen
 
                 ## 🚀 Features
 
-                * Add big feature (#19) @casz
-                * Add alien technology (#18) @casz
+                * Add big feature (#19) @jetersen
+                * Add alien technology (#18) @jetersen
 
                 ## 🐛 Bug Fixes
 
-                * Bug fixes (#20) @casz
+                * Bug fixes (#20) @jetersen
                 ",
                   "draft": true,
                   "name": "",
@@ -749,21 +795,21 @@ Previous tag: ''
                 Object {
                   "body": "# What's Changed
 
-                * Add documentation (#22) @casz
-                * Update dependencies (#21) @casz
+                * Add documentation (#22) @jetersen
+                * Update dependencies (#21) @jetersen
 
                 ## 🚀 Features
 
-                * Add big feature (#19) @casz
-                * Add alien technology (#18) @casz
+                * Add big feature (#19) @jetersen
+                * Add alien technology (#18) @jetersen
 
                 ## 🐛 Bug Fixes
 
-                * Bug fixes (#20) @casz
+                * Bug fixes (#20) @jetersen
 
                 ## 🎖️ Sentry
 
-                * Bug fixes (#20) @casz
+                * Bug fixes (#20) @jetersen
                 ",
                   "draft": true,
                   "name": "",
