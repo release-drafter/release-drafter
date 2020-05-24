@@ -13,19 +13,19 @@ describe('getConfig', () => {
     const context = {
       payload: { repository: { default_branch: 'master' } },
       config: createGetConfigMock({
-        template: '$CHANGES'
-      })
+        template: '$CHANGES',
+      }),
     }
 
     const config = await getConfig({
       app,
-      context
+      context,
     })
 
     expect(config).toEqual({
       ...DEFAULT_CONFIG,
       template: '$CHANGES',
-      branches: ['master']
+      branches: ['master'],
     })
   })
 
@@ -34,13 +34,13 @@ describe('getConfig', () => {
       const app = { log: { info: jest.fn(), warn: jest.fn() } }
       const context = {
         payload: { repository: { default_branch: 'master' } },
-        config: createGetConfigMock({ replacers: 'bogus' })
+        config: createGetConfigMock({ replacers: 'bogus' }),
       }
 
       expect(
         getConfig({
           app,
-          context
+          context,
         })
       ).rejects.toThrow(
         'child "replacers" fails because ["replacers" must be an array]'
@@ -53,17 +53,17 @@ describe('getConfig', () => {
         payload: { repository: { default_branch: 'master' } },
         config: createGetConfigMock({
           template: '$CHANGES',
-          replacers: [{ search: 'search', replace: 'replace' }]
-        })
+          replacers: [{ search: 'search', replace: 'replace' }],
+        }),
       }
 
       const config = await getConfig({
         app,
-        context
+        context,
       })
 
       expect(config['replacers']).toEqual([
-        { search: expect.any(RegExp), replace: 'replace' }
+        { search: expect.any(RegExp), replace: 'replace' },
       ])
     })
   })
@@ -73,13 +73,13 @@ describe('getConfig', () => {
       const app = { log: { info: jest.fn(), warn: jest.fn() } }
       const context = {
         payload: { repository: { default_branch: 'master' } },
-        config: createGetConfigMock({ 'sort-direction': 'bogus' })
+        config: createGetConfigMock({ 'sort-direction': 'bogus' }),
       }
 
       expect(
         getConfig({
           app,
-          context
+          context,
         })
       ).rejects.toThrow(
         '"sort-direction" must be one of [ascending, descending]'
@@ -92,13 +92,13 @@ describe('getConfig', () => {
         payload: { repository: { default_branch: 'master' } },
         config: createGetConfigMock({
           template: '$CHANGES',
-          'sort-direction': SORT_DIRECTIONS.ascending
-        })
+          'sort-direction': SORT_DIRECTIONS.ascending,
+        }),
       }
 
       const config = await getConfig({
         app,
-        context
+        context,
       })
 
       expect(config['sort-direction']).toBe(SORT_DIRECTIONS.ascending)
