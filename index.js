@@ -4,19 +4,19 @@ const {
   findReleases,
   generateReleaseInfo,
   createRelease,
-  updateRelease
+  updateRelease,
 } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { sortPullRequests } = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
 const core = require('@actions/core')
 
-module.exports = app => {
-  app.on('push', async context => {
+module.exports = (app) => {
+  app.on('push', async (context) => {
     const config = await getConfig({
       app,
       context,
-      configName: core.getInput('config-name')
+      configName: core.getInput('config-name'),
     })
 
     if (config === null) return
@@ -34,12 +34,12 @@ module.exports = app => {
     const { draftRelease, lastRelease } = await findReleases({ app, context })
     const {
       commits,
-      pullRequests: mergedPullRequests
+      pullRequests: mergedPullRequests,
     } = await findCommitsWithAssociatedPullRequests({
       app,
       context,
       branch,
-      lastRelease
+      lastRelease,
     })
 
     const sortedMergedPullRequests = sortPullRequests(
@@ -55,7 +55,7 @@ module.exports = app => {
       mergedPullRequests: sortedMergedPullRequests,
       version: core.getInput('version') || undefined,
       tag: core.getInput('tag') || undefined,
-      name: core.getInput('name') || undefined
+      name: core.getInput('name') || undefined,
     })
 
     const shouldDraft = core.getInput('publish').toLowerCase() !== 'true'
@@ -67,7 +67,7 @@ module.exports = app => {
         context,
         releaseInfo,
         shouldDraft,
-        config
+        config,
       })
     } else {
       log({ app, context, message: 'Updating existing release' })
@@ -76,7 +76,7 @@ module.exports = app => {
         draftRelease,
         releaseInfo,
         shouldDraft,
-        config
+        config,
       })
     }
 
@@ -86,7 +86,7 @@ module.exports = app => {
 
 function setActionOutput(releaseResponse) {
   const {
-    data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
+    data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl },
   } = releaseResponse
   if (releaseId && Number.isInteger(releaseId))
     core.setOutput('id', releaseId.toString())
