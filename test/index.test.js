@@ -838,6 +838,53 @@ Previous tag: ''
       })
     })
 
+    describe('with include-labels config', () => {
+      it('includes pull requests', async () => {
+        getConfigMock('config-with-include-labels.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
+
+## 🚀 Features
+
+* Add big feature (#2) @TimonVS
+* 👽 Add alien technology (#1) @TimonVS
+`,
+                draft: true,
+                tag_name: ''
+              })
+              return true
+            }
+          )
+          .reply(200, require('./fixtures/release'))
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push')
+        })
+
+        expect.assertions(1)
+      })
+    })
+
     describe('with version-template config', () => {
       it('generates next version variables as major.minor.patch', async () => {
         getConfigMock('config-with-major-minor-patch-version-template.yml')
