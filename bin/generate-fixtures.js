@@ -36,6 +36,7 @@ branches.forEach((branch) => {
         owner: REPO_OWNER,
         name: REPO_NAME,
         branch,
+        withPullRequestBody: true
       },
     }),
   }

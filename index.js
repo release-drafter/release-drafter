@@ -40,6 +40,7 @@ module.exports = (app) => {
       context,
       branch,
       lastRelease,
+      config,
     })
 
     const sortedMergedPullRequests = sortPullRequests(

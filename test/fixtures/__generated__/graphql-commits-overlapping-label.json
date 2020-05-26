@@ -16,7 +16,7 @@
                 "author": {
                   "name": "Joseph Petersen",
                   "user": {
-                    "login": "casz"
+                    "login": "jetersen"
                   }
                 },
                 "associatedPullRequests": {
@@ -24,8 +24,9 @@
                     {
                       "title": "Add documentation",
                       "number": 22,
+                      "body": "✍️ writing docs all",
                       "author": {
-                        "login": "casz"
+                        "login": "jetersen"
                       },
                       "mergedAt": "2020-02-02T13:55:50Z",
                       "isCrossRepository": false,
@@ -46,7 +47,7 @@
                 "author": {
                   "name": "Joseph Petersen",
                   "user": {
-                    "login": "casz"
+                    "login": "jetersen"
                   }
                 },
                 "associatedPullRequests": {
@@ -54,8 +55,9 @@
                     {
                       "title": "Update dependencies",
                       "number": 21,
+                      "body": "📦 Package time! 📦",
                       "author": {
-                        "login": "casz"
+                        "login": "jetersen"
                       },
                       "mergedAt": "2020-02-02T13:55:28Z",
                       "isCrossRepository": false,
@@ -72,7 +74,7 @@
                 "author": {
                   "name": "Joseph Petersen",
                   "user": {
-                    "login": "casz"
+                    "login": "jetersen"
                   }
                 },
                 "associatedPullRequests": {
@@ -80,8 +82,9 @@
                     {
                       "title": "Bug fixes",
                       "number": 20,
+                      "body": "🐛 squashing",
                       "author": {
-                        "login": "casz"
+                        "login": "jetersen"
                       },
                       "mergedAt": "2020-02-02T13:55:11Z",
                       "isCrossRepository": false,
@@ -105,7 +108,7 @@
                 "author": {
                   "name": "Joseph Petersen",
                   "user": {
-                    "login": "casz"
+                    "login": "jetersen"
                   }
                 },
                 "associatedPullRequests": {
@@ -113,8 +116,9 @@
                     {
                       "title": "Add big feature",
                       "number": 19,
+                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                       "author": {
-                        "login": "casz"
+                        "login": "jetersen"
                       },
                       "mergedAt": "2020-02-02T13:54:54Z",
                       "isCrossRepository": false,
@@ -135,7 +139,7 @@
                 "author": {
                   "name": "Joseph Petersen",
                   "user": {
-                    "login": "casz"
+                    "login": "jetersen"
                   }
                 },
                 "associatedPullRequests": {
@@ -143,8 +147,9 @@
                     {
                       "title": "Add alien technology",
                       "number": 18,
+                      "body": "",
                       "author": {
-                        "login": "casz"
+                        "login": "jetersen"
                       },
                       "mergedAt": "2020-02-02T13:54:23Z",
                       "isCrossRepository": false,
