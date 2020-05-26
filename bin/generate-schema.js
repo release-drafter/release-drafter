@@ -9,11 +9,11 @@ const jsonSchema = {
   id:
     'https://github.com/release-drafter/release-drafter/blob/master/schema.json',
   $schema: 'http://json-schema.org/draft-04/schema#',
-  ...convert(schema())
+  ...convert(schema()),
 }
 
 // template is only required after deep merged, should not be required in the JSON schema
-jsonSchema.required = jsonSchema.required.filter(item => item !== 'template')
+jsonSchema.required = jsonSchema.required.filter((item) => item !== 'template')
 
 if (args[0] === 'print') {
   fs.writeFileSync('./schema.json', `${JSON.stringify(jsonSchema, null, 2)}\n`)
