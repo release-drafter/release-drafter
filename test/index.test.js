@@ -3,8 +3,6 @@ const route = require('nock-knock/lib').default
 const { Probot, Octokit } = require('probot')
 const getConfigMock = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
-const fs = require('fs')
-const { encodeContent } = require('../lib/base64')
 const mockedEnv = require('mocked-env')
 
 nock.disableNetConnect()
@@ -37,7 +35,7 @@ describe('release-drafter', () => {
     probot.logger.addStream({
       level: 'trace',
       stream: { write: logger },
-      type: 'raw'
+      type: 'raw',
     })
 
     nock('https://api.github.com')
@@ -51,8 +49,8 @@ describe('release-drafter', () => {
     // they'll mess with the tests, and also because we set some of them in
     // tests and we don't want them to leak into other tests.
     Object.keys(process.env)
-      .filter(key => key.match(/^GITHUB_/))
-      .forEach(key => {
+      .filter((key) => key.match(/^GITHUB_/))
+      .forEach((key) => {
         mockEnv[key] = undefined
       })
 
@@ -79,7 +77,7 @@ describe('release-drafter', () => {
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
       })
     })
@@ -100,7 +98,7 @@ describe('release-drafter', () => {
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push-non-master-branch')
+          payload: require('./fixtures/push-non-master-branch'),
         })
       })
 
@@ -109,7 +107,7 @@ describe('release-drafter', () => {
           getConfigMock('config-non-master-branch.yml')
 
           nock('https://api.github.com')
-            .post('/graphql', body =>
+            .post('/graphql', (body) =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
             .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
@@ -120,21 +118,21 @@ describe('release-drafter', () => {
             .reply(200, [require('./fixtures/release')])
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
-              body => {
+              (body) => {
                 expect(body).toMatchObject({
                   name: '',
                   tag_name: '',
                   body: `# What's Changed\n\n* No changes\n`,
-                  draft: true
+                  draft: true,
                 })
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           await probot.receive({
             name: 'push',
-            payload: require('./fixtures/push-non-master-branch')
+            payload: require('./fixtures/push-non-master-branch'),
           })
         })
       })
@@ -145,7 +143,7 @@ describe('release-drafter', () => {
         getConfigMock('config-previous-tag.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -162,7 +160,7 @@ describe('release-drafter', () => {
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `Changes:
 * Add documentation (#5) @TimonVS
@@ -174,18 +172,18 @@ describe('release-drafter', () => {
 Previous tag: ''
 `,
                 draft: true,
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         const payload = require('./fixtures/push')
 
         await probot.receive({
           name: 'push',
-          payload
+          payload,
         })
 
         expect.assertions(1)
@@ -203,11 +201,11 @@ Previous tag: ''
           .reply(200, [
             require('./fixtures/release-2'),
             require('./fixtures/release'),
-            require('./fixtures/release-3')
+            require('./fixtures/release-3'),
           ])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -218,7 +216,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
@@ -229,22 +227,22 @@ Previous tag: ''
 * 👽 Add alien technology (#1) @TimonVS
 `,
                 draft: true,
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
       })
 
-      it('creates a new draft when run as a GitHub Actiin', async () => {
+      it('creates a new draft when run as a GitHub Action', async () => {
         getConfigMock()
 
         // GitHub actions should use the GITHUB_REF and not the payload ref
@@ -257,11 +255,11 @@ Previous tag: ''
           .reply(200, [
             require('./fixtures/release-2'),
             require('./fixtures/release'),
-            require('./fixtures/release-3')
+            require('./fixtures/release-3'),
           ])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -272,7 +270,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
@@ -283,18 +281,18 @@ Previous tag: ''
 * 👽 Add alien technology (#1) @TimonVS
 `,
                 draft: true,
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
           // This payload has a different ref to GITHUB_REF, which is how GitHub
           // Action merge push payloads behave
-          payload: require('./fixtures/push-non-master-branch')
+          payload: require('./fixtures/push-non-master-branch'),
         })
 
         expect.assertions(1)
@@ -310,7 +308,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -321,21 +319,21 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1`,
                 draft: true,
                 name: 'v2.0.1 (Code name: Placeholder)',
-                tag_name: 'v2.0.1'
+                tag_name: 'v2.0.1',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -352,7 +350,7 @@ Previous tag: ''
             .reply(200, [require('./fixtures/release')])
 
           nock('https://api.github.com')
-            .post('/graphql', body =>
+            .post('/graphql', (body) =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
             .reply(
@@ -363,7 +361,7 @@ Previous tag: ''
           nock('https://api.github.com')
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
-              body => {
+              (body) => {
                 expect(body).toMatchObject({
                   body: `* Change: #5 'Add documentation' @TimonVS
 * Change: #4 'Update dependencies' @TimonVS
@@ -371,16 +369,62 @@ Previous tag: ''
 * Change: #2 'Add big feature' @TimonVS
 * Change: #1 '👽 Add alien technology' @TimonVS`,
                   draft: true,
-                  tag_name: ''
+                  tag_name: '',
                 })
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           await probot.receive({
             name: 'push',
-            payload: require('./fixtures/push')
+            payload: require('./fixtures/push'),
+          })
+
+          expect.assertions(1)
+        })
+      })
+
+      describe('with custom changes-template config that includes a pull request body', () => {
+        it('creates a new draft using the template', async () => {
+          getConfigMock('config-with-changes-templates-and-body.yml')
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release')])
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+            )
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchObject({
+                  body: `* Change: #5 'Add documentation' ✍️ writing docs all
+* Change: #4 'Update dependencies' 📦 Package time! 📦
+* Change: #3 'Bug fixes' 🐛 squashing
+* Change: #2 'Add big feature' ![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)
+* Change: #1 '👽 Add alien technology' Space invasion 👾`,
+                  draft: true,
+                  tag_name: '',
+                })
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push'),
           })
 
           expect.assertions(1)
@@ -398,7 +442,7 @@ Previous tag: ''
             .reply(200, [require('./fixtures/release')])
 
           nock('https://api.github.com')
-            .post('/graphql', body =>
+            .post('/graphql', (body) =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
             .reply(
@@ -409,20 +453,20 @@ Previous tag: ''
           nock('https://api.github.com')
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
-              body => {
+              (body) => {
                 expect(body).toMatchObject({
                   body: `A big thanks to: @TimonVS and Ada Lovelace`,
                   draft: true,
-                  tag_name: ''
+                  tag_name: '',
                 })
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           await probot.receive({
             name: 'push',
-            payload: require('./fixtures/push')
+            payload: require('./fixtures/push'),
           })
 
           expect.assertions(1)
@@ -441,11 +485,11 @@ Previous tag: ''
           .reply(200, [
             require('./fixtures/release-2'),
             require('./fixtures/release'),
-            require('./fixtures/release-3')
+            require('./fixtures/release-3'),
           ])
 
         nock('https://api.github.com')
-          .post('/graphql', body => {
+          .post('/graphql', (body) => {
             expect(body.variables.since).toBe(
               require('./fixtures/release-3').published_at
             )
@@ -458,23 +502,23 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
 * No changes
 `,
                 draft: true,
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(2)
@@ -490,7 +534,7 @@ Previous tag: ''
             .reply(200, [])
 
           nock('https://api.github.com')
-            .post('/graphql', body =>
+            .post('/graphql', (body) =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
             .reply(200, require('./fixtures/graphql-commits-empty.json'))
@@ -498,20 +542,20 @@ Previous tag: ''
           nock('https://api.github.com')
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
-              body => {
+              (body) => {
                 expect(body).toMatchObject({
                   body: `* No changes mmkay`,
                   draft: true,
-                  tag_name: ''
+                  tag_name: '',
                 })
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           await probot.receive({
             name: 'push',
-            payload: require('./fixtures/push')
+            payload: require('./fixtures/push'),
           })
 
           expect.assertions(1)
@@ -529,7 +573,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release-draft.json')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -540,7 +584,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .patch(
             '/repos/toolmantim/release-drafter-test-project/releases/11691725',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
@@ -549,16 +593,16 @@ Previous tag: ''
 * Bug fixes (#3) @TimonVS
 * Add big feature (#2) @TimonVS
 * 👽 Add alien technology (#1) @TimonVS
-`
+`,
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -575,7 +619,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -586,7 +630,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
@@ -603,16 +647,16 @@ Previous tag: ''
 * Bug fixes (#3) @TimonVS
 `,
                 draft: true,
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -627,7 +671,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -638,7 +682,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
@@ -655,16 +699,16 @@ Previous tag: ''
 * Bug fixes (#3) @TimonVS
 `,
                 draft: true,
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -679,7 +723,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -690,22 +734,22 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "# What's Changed
 
-                * Add documentation (#22) @casz
-                * Update dependencies (#21) @casz
+                * Add documentation (#22) @jetersen
+                * Update dependencies (#21) @jetersen
 
                 ## 🚀 Features
 
-                * Add big feature (#19) @casz
-                * Add alien technology (#18) @casz
+                * Add big feature (#19) @jetersen
+                * Add alien technology (#18) @jetersen
 
                 ## 🐛 Bug Fixes
 
-                * Bug fixes (#20) @casz
+                * Bug fixes (#20) @jetersen
                 ",
                   "draft": true,
                   "name": "",
@@ -716,11 +760,11 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -735,7 +779,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -746,26 +790,26 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "# What's Changed
 
-                * Add documentation (#22) @casz
-                * Update dependencies (#21) @casz
+                * Add documentation (#22) @jetersen
+                * Update dependencies (#21) @jetersen
 
                 ## 🚀 Features
 
-                * Add big feature (#19) @casz
-                * Add alien technology (#18) @casz
+                * Add big feature (#19) @jetersen
+                * Add alien technology (#18) @jetersen
 
                 ## 🐛 Bug Fixes
 
-                * Bug fixes (#20) @casz
+                * Bug fixes (#20) @jetersen
 
                 ## 🎖️ Sentry
 
-                * Bug fixes (#20) @casz
+                * Bug fixes (#20) @jetersen
                 ",
                   "draft": true,
                   "name": "",
@@ -776,11 +820,11 @@ Previous tag: ''
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -797,7 +841,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -808,7 +852,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
@@ -824,12 +868,59 @@ Previous tag: ''
 * Bug fixes (#3) @TimonVS
 `,
                 draft: true,
+                tag_name: '',
+              })
+              return true
+            }
+          )
+          .reply(200, require('./fixtures/release'))
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push'),
+        })
+
+        expect.assertions(1)
+      })
+    })
+
+    describe('with include-labels config', () => {
+      it('includes pull requests', async () => {
+        getConfigMock('config-with-include-labels.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', body =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+          )
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            body => {
+              expect(body).toMatchObject({
+                body: `# What's Changed
+
+## 🚀 Features
+
+* Add big feature (#2) @TimonVS
+* 👽 Add alien technology (#1) @TimonVS
+`,
+                draft: true,
                 tag_name: ''
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
@@ -850,7 +941,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -861,21 +952,21 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1`,
                 draft: true,
                 name: 'v2.0.1 (Code name: Placeholder)',
-                tag_name: 'v2.0.1'
+                tag_name: 'v2.0.1',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -890,7 +981,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -901,21 +992,21 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `Placeholder with example. Automatically calculated values are next major=3.0, minor=2.1, patch=2.0`,
                 draft: true,
                 name: 'v2.1 (Code name: Placeholder)',
-                tag_name: 'v2.1'
+                tag_name: 'v2.1',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -930,7 +1021,7 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -941,21 +1032,21 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `Placeholder with example. Automatically calculated values are next major=3, minor=2, patch=2`,
                 draft: true,
                 name: 'v3 (Code name: Placeholder)',
-                tag_name: 'v3'
+                tag_name: 'v3',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -968,7 +1059,7 @@ Previous tag: ''
           getConfigMock()
 
           nock('https://api.github.com')
-            .post('/graphql', body =>
+            .post('/graphql', (body) =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
             .reply(
@@ -985,7 +1076,7 @@ Previous tag: ''
           nock('https://api.github.com')
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
-              body => {
+              (body) => {
                 expect(body).toMatchObject({
                   body: `# What's Changed
 
@@ -996,18 +1087,18 @@ Previous tag: ''
 * 👽 Add alien technology (#1) @TimonVS
 `,
                   draft: true,
-                  tag_name: ''
+                  tag_name: '',
                 })
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           const payload = require('./fixtures/push')
 
           await probot.receive({
             name: 'push',
-            payload
+            payload,
           })
 
           expect.assertions(1)
@@ -1019,7 +1110,7 @@ Previous tag: ''
           getConfigMock()
 
           nock('https://api.github.com')
-            .post('/graphql', body =>
+            .post('/graphql', (body) =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
             .reply(
@@ -1036,7 +1127,7 @@ Previous tag: ''
           nock('https://api.github.com')
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
-              body => {
+              (body) => {
                 expect(body).toMatchObject({
                   body: `# What's Changed
 
@@ -1047,18 +1138,18 @@ Previous tag: ''
 * 👽 Add alien technology (#6) @TimonVS
 `,
                   draft: true,
-                  tag_name: ''
+                  tag_name: '',
                 })
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           const payload = require('./fixtures/push')
 
           await probot.receive({
             name: 'push',
-            payload
+            payload,
           })
 
           expect.assertions(1)
@@ -1070,7 +1161,7 @@ Previous tag: ''
           getConfigMock()
 
           nock('https://api.github.com')
-            .post('/graphql', body =>
+            .post('/graphql', (body) =>
               body.query.includes('query findCommitsWithAssociatedPullRequests')
             )
             .reply(
@@ -1087,7 +1178,7 @@ Previous tag: ''
           nock('https://api.github.com')
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
-              body => {
+              (body) => {
                 expect(body).toMatchObject({
                   body: `# What's Changed
 
@@ -1098,18 +1189,18 @@ Previous tag: ''
 * 👽 Add alien technology (#11) @TimonVS
 `,
                   draft: true,
-                  tag_name: ''
+                  tag_name: '',
                 })
                 return true
               }
             )
-            .reply(200)
+            .reply(200, require('./fixtures/release'))
 
           const payload = require('./fixtures/push')
 
           await probot.receive({
             name: 'push',
-            payload
+            payload,
           })
 
           expect.assertions(1)
@@ -1122,11 +1213,11 @@ Previous tag: ''
         getConfigMock('config.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(200, require('./fixtures/graphql-commits-paginated-1.json'))
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(200, require('./fixtures/graphql-commits-paginated-2.json'))
@@ -1140,7 +1231,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
@@ -1162,18 +1253,18 @@ Previous tag: ''
 * Create new-feature.md (#1) @toolmantim
 `,
                 draft: true,
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         const payload = require('./fixtures/push')
 
         await probot.receive({
           name: 'push',
-          payload
+          payload,
         })
 
         expect.assertions(1)
@@ -1185,7 +1276,7 @@ Previous tag: ''
         getConfigMock('config-with-replacers.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(
@@ -1202,7 +1293,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 body: `# What's Changed
 
@@ -1213,18 +1304,18 @@ Previous tag: ''
 * 👽 Add alien technology (#1) @TimonVS
 `,
                 draft: true,
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         const payload = require('./fixtures/push')
 
         await probot.receive({
           name: 'push',
-          payload
+          payload,
         })
 
         expect.assertions(1)
@@ -1237,11 +1328,11 @@ Previous tag: ''
       getConfigMock('config-with-sort-by-title.yml')
 
       nock('https://api.github.com')
-        .post('/graphql', body =>
+        .post('/graphql', (body) =>
           body.query.includes('query findCommitsWithAssociatedPullRequests')
         )
         .reply(200, require('./fixtures/graphql-commits-paginated-1.json'))
-        .post('/graphql', body =>
+        .post('/graphql', (body) =>
           body.query.includes('query findCommitsWithAssociatedPullRequests')
         )
         .reply(200, require('./fixtures/graphql-commits-paginated-2.json'))
@@ -1255,7 +1346,7 @@ Previous tag: ''
       nock('https://api.github.com')
         .post(
           '/repos/toolmantim/release-drafter-test-project/releases',
-          body => {
+          (body) => {
             expect(body).toMatchObject({
               body: `# What's Changed
 
@@ -1277,18 +1368,18 @@ Previous tag: ''
 * 1️⃣ Switch to a monorepo (#9) @toolmantim
 `,
               draft: true,
-              tag_name: ''
+              tag_name: '',
             })
             return true
           }
         )
-        .reply(200)
+        .reply(200, require('./fixtures/release'))
 
       const payload = require('./fixtures/push')
 
       await probot.receive({
         name: 'push',
-        payload
+        payload,
       })
 
       expect.assertions(1)
@@ -1300,11 +1391,11 @@ Previous tag: ''
       getConfigMock('config-with-sort-direction-ascending.yml')
 
       nock('https://api.github.com')
-        .post('/graphql', body =>
+        .post('/graphql', (body) =>
           body.query.includes('query findCommitsWithAssociatedPullRequests')
         )
         .reply(200, require('./fixtures/graphql-commits-paginated-1.json'))
-        .post('/graphql', body =>
+        .post('/graphql', (body) =>
           body.query.includes('query findCommitsWithAssociatedPullRequests')
         )
         .reply(200, require('./fixtures/graphql-commits-paginated-2.json'))
@@ -1318,7 +1409,7 @@ Previous tag: ''
       nock('https://api.github.com')
         .post(
           '/repos/toolmantim/release-drafter-test-project/releases',
-          body => {
+          (body) => {
             expect(body).toMatchObject({
               body: `# What's Changed
 
@@ -1340,18 +1431,18 @@ Previous tag: ''
 * Added great distance (#16) @toolmantim
 `,
               draft: true,
-              tag_name: ''
+              tag_name: '',
             })
             return true
           }
         )
-        .reply(200)
+        .reply(200, require('./fixtures/release'))
 
       const payload = require('./fixtures/push')
 
       await probot.receive({
         name: 'push',
-        payload
+        payload,
       })
 
       expect.assertions(1)
@@ -1366,7 +1457,7 @@ Previous tag: ''
 
       await probot.receive({
         name: 'push',
-        payload
+        payload,
       })
       expect(logger).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1374,8 +1465,8 @@ Previous tag: ''
           err: expect.objectContaining({
             message: expect.stringContaining(
               '"search" is required and must be a regexp or a string'
-            )
-          })
+            ),
+          }),
         })
       )
     })
@@ -1387,7 +1478,7 @@ Previous tag: ''
 
       await probot.receive({
         name: 'push',
-        payload
+        payload,
       })
       expect(logger).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1395,8 +1486,8 @@ Previous tag: ''
           err: expect.objectContaining({
             message: expect.stringContaining(
               'end of the stream or a document separator is expected at line 1, column 18:'
-            )
-          })
+            ),
+          }),
         })
       )
     })
@@ -1410,7 +1501,7 @@ Previous tag: ''
           config-name: 'config-name-input.yml'
       */
       let restoreEnv = mockedEnv({
-        'INPUT_CONFIG-NAME': 'config-name-input.yml'
+        'INPUT_CONFIG-NAME': 'config-name-input.yml',
       })
 
       // Mock config request for file 'config-name-input.yml'
@@ -1420,7 +1511,7 @@ Previous tag: ''
       )
 
       nock('https://api.github.com')
-        .post('/graphql', body =>
+        .post('/graphql', (body) =>
           body.query.includes('query findCommitsWithAssociatedPullRequests')
         )
         .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
@@ -1431,22 +1522,22 @@ Previous tag: ''
         .reply(200, [require('./fixtures/release')])
         .post(
           '/repos/toolmantim/release-drafter-test-project/releases',
-          body => {
+          (body) => {
             // Assert that the correct body was used
             expect(body).toMatchObject({
               name: '',
               tag_name: '',
               body: `# There's new stuff!\n`,
-              draft: true
+              draft: true,
             })
             return true
           }
         )
-        .reply(200)
+        .reply(200, require('./fixtures/release'))
 
       await probot.receive({
         name: 'push',
-        payload: require('./fixtures/push')
+        payload: require('./fixtures/push'),
       })
 
       // Assert that the GET request was called for the correct config file
@@ -1458,7 +1549,7 @@ Previous tag: ''
     })
   })
 
-  describe('input version, tag and name overrides', () => {
+  describe('input publish, version, tag and name overrides', () => {
     // Method with all the test's logic, to prevent duplication
     const overridesTest = async (overrides, expectedBody) => {
       let mockEnv = {}
@@ -1483,6 +1574,10 @@ Previous tag: ''
         if (overrides.name) {
           mockEnv['INPUT_NAME'] = overrides.name
         }
+
+        if (overrides.publish) {
+          mockEnv['INPUT_PUBLISH'] = overrides.publish
+        }
       }
 
       let restoreEnv = mockedEnv(mockEnv)
@@ -1495,7 +1590,7 @@ Previous tag: ''
         .reply(200, [require('./fixtures/release')])
 
       nock('https://api.github.com')
-        .post('/graphql', body =>
+        .post('/graphql', (body) =>
           body.query.includes('query findCommitsWithAssociatedPullRequests')
         )
         .reply(
@@ -1506,16 +1601,16 @@ Previous tag: ''
       nock('https://api.github.com')
         .post(
           '/repos/toolmantim/release-drafter-test-project/releases',
-          body => {
+          (body) => {
             expect(body).toMatchObject(expectedBody)
             return true
           }
         )
-        .reply(200)
+        .reply(200, require('./fixtures/release'))
 
       await probot.receive({
         name: 'push',
-        payload: require('./fixtures/push')
+        payload: require('./fixtures/push'),
       })
 
       expect.assertions(1)
@@ -1531,7 +1626,7 @@ Previous tag: ''
             body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
             draft: true,
             name: 'v2.1.1 (Code name: Placeholder)',
-            tag_name: 'v2.1.1'
+            tag_name: 'v2.1.1',
           }
         )
       })
@@ -1545,7 +1640,7 @@ Previous tag: ''
             body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
             draft: true,
             name: 'v2.1.1 (Code name: Placeholder)',
-            tag_name: 'v2.1.1-alpha'
+            tag_name: 'v2.1.1-alpha',
           }
         )
       })
@@ -1559,7 +1654,24 @@ Previous tag: ''
             body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
             draft: true,
             name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)',
-            tag_name: 'v2.1.1'
+            tag_name: 'v2.1.1',
+          }
+        )
+      })
+    })
+
+    describe('with publish: true', () => {
+      it('immediately publishes the created draft', async () => {
+        return overridesTest(
+          {
+            version: '2.1.1',
+            publish: 'true',
+          },
+          {
+            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
+            draft: false,
+            name: 'v2.1.1 (Code name: Placeholder)',
+            tag_name: 'v2.1.1',
           }
         )
       })
@@ -1570,13 +1682,13 @@ Previous tag: ''
         return overridesTest(
           {
             tag: 'v2.1.1-foxtrot-unicorn-alpha',
-            name: 'Foxtrot Unicorn'
+            name: 'Foxtrot Unicorn',
           },
           {
             body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
             draft: true,
             name: 'Foxtrot Unicorn',
-            tag_name: 'v2.1.1-foxtrot-unicorn-alpha'
+            tag_name: 'v2.1.1-foxtrot-unicorn-alpha',
           }
         )
       })
@@ -1591,7 +1703,7 @@ Previous tag: ''
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(200, require('./fixtures/graphql-commits-empty.json'))
@@ -1602,19 +1714,19 @@ Previous tag: ''
           .reply(200, [])
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 name: 'v1.0.2 🌈',
-                tag_name: 'v1.0.2'
+                tag_name: 'v1.0.2',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -1630,7 +1742,7 @@ Previous tag: ''
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
@@ -1641,19 +1753,19 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 name: 'v1.0.2 🌈',
-                tag_name: 'v1.0.2'
+                tag_name: 'v1.0.2',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -1667,7 +1779,7 @@ Previous tag: ''
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(200, require('./fixtures/graphql-commits-empty.json'))
@@ -1678,19 +1790,19 @@ Previous tag: ''
           .reply(200, [])
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 name: '',
-                tag_name: ''
+                tag_name: '',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)
@@ -1702,7 +1814,7 @@ Previous tag: ''
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', body =>
+          .post('/graphql', (body) =>
             body.query.includes('query findCommitsWithAssociatedPullRequests')
           )
           .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
@@ -1713,19 +1825,19 @@ Previous tag: ''
           .reply(200, [require('./fixtures/release')])
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
-            body => {
+            (body) => {
               expect(body).toMatchObject({
                 name: 'v2.0.1 🌈',
-                tag_name: 'v2.0.1'
+                tag_name: 'v2.0.1',
               })
               return true
             }
           )
-          .reply(200)
+          .reply(200, require('./fixtures/release'))
 
         await probot.receive({
           name: 'push',
-          payload: require('./fixtures/push')
+          payload: require('./fixtures/push'),
         })
 
         expect.assertions(1)

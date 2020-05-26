@@ -1,4 +1,4 @@
-FROM node:13.8.0-alpine@sha256:7fa90a7c0e7118aaa81fe3b00c708cc70dfc61961dcd8701042d816e14d9a0b3
+FROM node:14.3.0-alpine@sha256:c3f1683ce9d265e46a414cc2e4bc4e2076a8545e05a3ec2d127450830adccb1a
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 LABEL "repository"="https://github.com/toolmantim/release-drafter"

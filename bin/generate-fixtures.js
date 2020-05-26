@@ -20,29 +20,30 @@ const branches = [
   'merge-commit',
   'rebase-merging',
   'squash-merging',
-  'overlapping-label'
+  'overlapping-label',
 ]
 
-branches.forEach(branch => {
+branches.forEach((branch) => {
   const options = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `bearer ${GITHUB_TOKEN}`
+      Authorization: `bearer ${GITHUB_TOKEN}`,
     },
     body: JSON.stringify({
       query: findCommitsWithAssociatedPullRequestsQuery,
       variables: {
         owner: REPO_OWNER,
         name: REPO_NAME,
-        branch
-      }
-    })
+        branch,
+        withPullRequestBody: true
+      },
+    }),
   }
 
   fetch(GITHUB_GRAPHQL_API_ENDPOINT, options)
-    .then(response => response.json())
-    .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       fs.writeFileSync(
         path.resolve(
           __dirname,

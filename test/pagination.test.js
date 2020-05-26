@@ -16,12 +16,12 @@ describe('pagination', () => {
                   nodes: ['a', 'b', 'c'],
                   pageInfo: {
                     endCursor: 'aaa',
-                    hasNextPage: true
-                  }
-                }
-              }
-            }
-          }
+                    hasNextPage: true,
+                  },
+                },
+              },
+            },
+          },
         })
       )
       .mockReturnValueOnce(
@@ -33,12 +33,12 @@ describe('pagination', () => {
                   nodes: ['d', 'e', 'f'],
                   pageInfo: {
                     endCursor: 'bbb',
-                    hasNextPage: false
-                  }
-                }
-              }
-            }
-          }
+                    hasNextPage: false,
+                  },
+                },
+              },
+            },
+          },
         })
       )
 
@@ -46,7 +46,7 @@ describe('pagination', () => {
       'repository',
       'ref',
       'target',
-      'history'
+      'history',
     ])
 
     expect(queryFn).toHaveBeenCalledTimes(2)
@@ -56,11 +56,11 @@ describe('pagination', () => {
       'c',
       'd',
       'e',
-      'f'
+      'f',
     ])
     expect(data.repository.ref.target.history.pageInfo).toEqual({
       endCursor: 'bbb',
-      hasNextPage: false
+      hasNextPage: false,
     })
   })
 

@@ -92,6 +92,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `branches`            | Optional | The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch. |
 | `categories`          | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                                                            |
 | `exclude-labels`      | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                                                                     |
+| `include-labels`      | Optional | Include only the specified pull requests using labels. Refer to [Include Pull Requests](#include-pull-requests) to learn more about this option.                                                                                     |
 | `replacers`           | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                                                                     |
 | `sort-by`             | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                                                                  |
 | `sort-direction`      | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                                                 |
@@ -138,6 +139,7 @@ You can use any of the following variables in `change-template`:
 | `$NUMBER` | The number of the pull request, e.g. `42`.                  |
 | `$TITLE`  | The title of the pull request, e.g. `Add alien technology`. |
 | `$AUTHOR` | The pull request author’s username, e.g. `gracehopper`.     |
+| `$BODY`   | The body of the pull request e.g. `Fixed spelling mistake`. |
 
 ## Categorize Pull Requests
 
@@ -171,6 +173,17 @@ exclude-labels:
 
 Pull requests with the label "skip-changelog" will now be excluded from the release draft.
 
+## Include Pull Requests
+
+With the `include-labels` option you can specify pull requests from the release notes using labels. Only pull requests that have the configured labels will be included in the pull request.  For example, append the following to your `.github/release-drafter.yml` file:
+
+```yml
+include-labels:
+  - 'app-foo'
+```
+
+Pull requests with the label "app-foo" will be the only pull requests included in the release draft.
+
 ## Replacers
 
 You can search and replace content in the generated changelog body, using regular expressions, with the `replacers` option. Each replacer is applied in order.
@@ -188,6 +201,16 @@ replacers:
 If your project doesn't follow [Semantic Versioning](https://semver.org) you can still use Release Drafter, but you may want to set the `version-template` option to customize how the `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` environment variables are generated.
 
 For example, if your project doesn't use patch version numbers, you can set `version-template` to `$MAJOR.$MINOR`. If the current release is version 1.0, then `$NEXT_MINOR_VERSION` will be `1.1`.
+
+## Action Inputs
+
+The Release Drafter GitHub Action accepts a number of optional inputs directly in your workflow configuration. These will typically override default behavior specified in your `release-drafter.yml` config.
+
+| Input     | Description                                                                                                                                                                                                                                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`    | The name that will be used in the GitHub release that's created or updated. This will override any `name-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                             |
+| `tag`     | The tag name to be associated with the GitHub release that's created or updated. This will override any `tag-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                         |
+| `publish` | A boolean indicating whether the release being created or updated should be immediately published. This may be useful if the output of a previous workflow step determines that a new version of your project has been (or will be) released, as with [`salsify/action-detect-and-tag-new-version`](https://github.com/salsify/action-detect-and-tag-new-version). |
 
 ## Action Outputs
 
