@@ -24,9 +24,12 @@
                     {
                       "title": "Add documentation",
                       "number": 22,
-                      "body": "✍️ writing docs all",
+                      "body": "✍️ writing docs all day",
                       "author": {
                         "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
                       "mergedAt": "2020-02-02T13:55:50Z",
                       "isCrossRepository": false,
@@ -59,6 +62,9 @@
                       "author": {
                         "login": "jetersen"
                       },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
                       "mergedAt": "2020-02-02T13:55:28Z",
                       "isCrossRepository": false,
                       "labels": {
@@ -85,6 +91,9 @@
                       "body": "🐛 squashing",
                       "author": {
                         "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
                       "mergedAt": "2020-02-02T13:55:11Z",
                       "isCrossRepository": false,
@@ -120,6 +129,9 @@
                       "author": {
                         "login": "jetersen"
                       },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
                       "mergedAt": "2020-02-02T13:54:54Z",
                       "isCrossRepository": false,
                       "labels": {
@@ -150,6 +162,9 @@
                       "body": "",
                       "author": {
                         "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
                       "mergedAt": "2020-02-02T13:54:23Z",
                       "isCrossRepository": false,

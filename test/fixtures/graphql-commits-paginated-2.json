@@ -251,6 +251,9 @@
                       },
                       "labels": {
                         "nodes": []
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       }
                     }
                   ]
@@ -276,6 +279,9 @@
                       },
                       "labels": {
                         "nodes": []
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       }
                     }
                   ]
