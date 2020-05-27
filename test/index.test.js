@@ -409,7 +409,7 @@ Previous tag: ''
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
                 expect(body).toMatchObject({
-                  body: `* Change: #5 'Add documentation' ✍️ writing docs all
+                  body: `* Change: #5 'Add documentation' ✍️ writing docs all day
 * Change: #4 'Update dependencies' 📦 Package time! 📦
 * Change: #3 'Bug fixes' 🐛 squashing
 * Change: #2 'Add big feature' ![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)
@@ -1201,6 +1201,60 @@ Previous tag: ''
           await probot.receive({
             name: 'push',
             payload,
+          })
+
+          expect.assertions(1)
+        })
+      })
+
+      describe('with forked pull request', () => {
+        it('exclude forked pull requests', async () => {
+          getConfigMock()
+
+          nock('https://api.github.com')
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [require('./fixtures/release')])
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-forking.json')
+            )
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "# What's Changed
+
+                  * Add documentation (#28) @jetersen
+                  * Update dependencies (#27) @jetersen
+                  * Bug fixes (#25) @jetersen
+                  * Add big feature (#24) @jetersen
+                  * Add alien technology (#23) @jetersen
+                  * Add documentation (#5) @TimonVS
+                  * Update dependencies (#4) @TimonVS
+                  ",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push'),
           })
 
           expect.assertions(1)

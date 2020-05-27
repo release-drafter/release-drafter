@@ -5,7 +5,6 @@ const path = require('path')
 const fetch = require('node-fetch')
 const { findCommitsWithAssociatedPullRequestsQuery } = require('../lib/commits')
 
-const REPO_OWNER = 'TimonVS'
 const REPO_NAME = 'release-drafter-test-repo'
 const GITHUB_GRAPHQL_API_ENDPOINT = 'https://api.github.com/graphql'
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN
@@ -16,14 +15,30 @@ if (!GITHUB_TOKEN) {
   )
 }
 
-const branches = [
-  'merge-commit',
-  'rebase-merging',
-  'squash-merging',
-  'overlapping-label',
+const repos = [
+  {
+    owner: 'TimonVS',
+    branch: 'merge-commit',
+  },
+  {
+    owner: 'TimonVS',
+    branch: 'rebase-merging',
+  },
+  {
+    owner: 'TimonVS',
+    branch: 'squash-merging',
+  },
+  {
+    owner: 'TimonVS',
+    branch: 'overlapping-label',
+  },
+  {
+    owner: 'jetersen',
+    branch: 'forking',
+  },
 ]
 
-branches.forEach((branch) => {
+repos.forEach((repo) => {
   const options = {
     method: 'POST',
     headers: {
@@ -33,9 +48,9 @@ branches.forEach((branch) => {
     body: JSON.stringify({
       query: findCommitsWithAssociatedPullRequestsQuery,
       variables: {
-        owner: REPO_OWNER,
+        owner: repo.owner,
         name: REPO_NAME,
-        branch,
+        branch: repo.branch,
         withPullRequestBody: true,
       },
     }),
@@ -44,13 +59,19 @@ branches.forEach((branch) => {
   fetch(GITHUB_GRAPHQL_API_ENDPOINT, options)
     .then((response) => response.json())
     .then((data) => {
+      // hack the generated to reduce massive rewrite inside the tests
+      // basically duplicating the possible configs 🤯
+      let string = JSON.stringify(data, null, 2).replace(
+        /TimonVS\/release-drafter-test-repo/g,
+        'toolmantim/release-drafter-test-project'
+      )
       fs.writeFileSync(
         path.resolve(
           __dirname,
           '../test/fixtures/__generated__',
-          `graphql-commits-${branch}.json`
+          `graphql-commits-${repo.branch}.json`
         ),
-        JSON.stringify(data, null, 2) + '\n'
+        string + '\n'
       )
     })
     .catch(console.error)
