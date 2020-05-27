@@ -24,6 +24,7 @@
                     {
                       "title": "Add documentation",
                       "number": 10,
+                      "body": "✍️ writing docs all",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -54,6 +55,7 @@
                     {
                       "title": "Add documentation",
                       "number": 10,
+                      "body": "✍️ writing docs all",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -84,6 +86,7 @@
                     {
                       "title": "Update dependencies",
                       "number": 9,
+                      "body": "📦 Package time! 📦",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -110,6 +113,7 @@
                     {
                       "title": "Update dependencies",
                       "number": 9,
+                      "body": "📦 Package time! 📦",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -136,6 +140,7 @@
                     {
                       "title": "Bug fixes",
                       "number": 8,
+                      "body": "🐛 squashing",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -166,6 +171,7 @@
                     {
                       "title": "Bug fixes",
                       "number": 8,
+                      "body": "🐛 squashing",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -196,6 +202,7 @@
                     {
                       "title": "Add big feature",
                       "number": 7,
+                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -226,6 +233,7 @@
                     {
                       "title": "Add big feature",
                       "number": 7,
+                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                       "author": {
                         "login": "TimonVS"
                       },
@@ -256,6 +264,7 @@
                     {
                       "title": "👽 Add alien technology",
                       "number": 6,
+                      "body": "Space invasion 👾",
                       "author": {
                         "login": "TimonVS"
                       },
