@@ -254,6 +254,8 @@ The Release Drafter GitHub Action sets a couple of outputs which can be used as 
 | Output       | Description                                                                                                                                                                                                                   |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`         | The ID of the release that was created or updated.                                                                                                                                                                            |
+| `name`       | The name of this release.                                                                                                                                                                                                     |
+| `tag_name`   | The name of the tag associated with this release.                                                                                                                                                                             |
 | `html_url`   | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                                                    |
 | `upload_url` | The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the [`@actions/upload-release-asset GitHub Action`](https://www.github.com/actions/upload-release-asset). |
 

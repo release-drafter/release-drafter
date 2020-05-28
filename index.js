@@ -87,10 +87,12 @@ module.exports = (app) => {
 
 function setActionOutput(releaseResponse) {
   const {
-    data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl },
+    data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl, tag_name: tagName, name: name },
   } = releaseResponse
   if (releaseId && Number.isInteger(releaseId))
     core.setOutput('id', releaseId.toString())
   if (htmlUrl) core.setOutput('html_url', htmlUrl)
   if (uploadUrl) core.setOutput('upload_url', uploadUrl)
+  if (tagName) core.setOutput('tag_name', tagName)
+  if (name) core.setOutput('name', name)
 }
