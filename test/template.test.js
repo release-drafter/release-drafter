@@ -11,7 +11,7 @@ describe('template', () => {
     const output = template('$MAJOR.$MINOR.$PATCH', {
       $MAJOR: 1,
       $MINOR: 0,
-      $PATCH: 0
+      $PATCH: 0,
     })
 
     expect(output).toEqual('1.0.0')
@@ -24,7 +24,7 @@ describe('template', () => {
     $CHANGES
     `
     const output = template(input, {
-      $CHANGES: 'NO CHANGES'
+      $CHANGES: 'NO CHANGES',
     })
 
     expect(output).toEqual(expect.stringContaining('v$NEXT_PATCH_VERSION'))
@@ -39,10 +39,10 @@ describe('template', () => {
         $PATCH: 0,
         $THIRD: {
           $NEST: 'THIRD LEVEL',
-          template: '$NEST'
+          template: '$NEST',
         },
-        template: '$MAJOR.$MINOR.$PATCH.$THIRD'
-      }
+        template: '$MAJOR.$MINOR.$PATCH.$THIRD',
+      },
     })
 
     expect(output).toEqual('1.0.0.THIRD LEVEL')
@@ -53,9 +53,9 @@ describe('template', () => {
         {
           search: '/\\bJENKINS-(\\d+)\\b/g',
           replace:
-            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
-        }
-      ]
+            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)',
+        },
+      ],
     })
     const output = template(
       'This is my body JENKINS-1234 JENKINS-1234 JENKINS-1234',
@@ -72,9 +72,9 @@ describe('template', () => {
       replacers: [
         {
           search: 'JENKINS',
-          replace: 'heyyyyyyy'
-        }
-      ]
+          replace: 'heyyyyyyy',
+        },
+      ],
     })
     const output = template('This is my body JENKINS-1234', {}, customReplacer)
 
@@ -85,13 +85,13 @@ describe('template', () => {
       replacers: [
         {
           search: 'JENKINS',
-          replace: 'heyyyyyyy'
+          replace: 'heyyyyyyy',
         },
         {
           search: 'heyyyyyyy',
-          replace: 'something else'
-        }
-      ]
+          replace: 'something else',
+        },
+      ],
     })
     const output = template('This is my body JENKINS-1234', {}, customReplacer)
 
@@ -103,15 +103,15 @@ describe('template', () => {
         {
           search: '/\\bJENKINS-(\\d+)\\b/g',
           replace:
-            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
+            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)',
         },
         {
           search:
             '/\\[\\[https://issues.jenkins-ci.org/browse/JENKINS-(\\d+)\\]\\(JENKINS-(\\d+)\\)\\]/g',
           replace:
-            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
-        }
-      ]
+            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)',
+        },
+      ],
     })
     const output = template(
       'This is my body [JENKINS-1234] JENKINS-456',

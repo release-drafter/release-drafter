@@ -71,6 +71,17 @@ categories:
   - title: '🧰 Maintenance'
     label: 'chore'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
 template: |
   ## Changes
 
@@ -92,10 +103,12 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `branches`            | Optional | The branches to listen for configuration updates to `.github/release-drafter.yml` and for merge commits. Useful if you want to test the app on a pull request branch. Default is the repository’s default branch. |
 | `categories`          | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                                                            |
 | `exclude-labels`      | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                                                                     |
+| `include-labels`      | Optional | Include only the specified pull requests using labels. Refer to [Include Pull Requests](#include-pull-requests) to learn more about this option.                                                                  |
 | `replacers`           | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                                                                     |
 | `sort-by`             | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                                                                  |
 | `sort-direction`      | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                                                 |
 | `prerelease`          | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                                                           |
+| `version-resolver`    | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                                                     |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
@@ -118,6 +131,7 @@ You can use any of the following variables in your `template`, `name-template` a
 | `$NEXT_PATCH_VERSION` | The next patch version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.2.4`. This is the most commonly used value. |
 | `$NEXT_MINOR_VERSION` | The next minor version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.3.0`.                                       |
 | `$NEXT_MAJOR_VERSION` | The next major version number. For example, if the last tag or release was `v1.2.3`, the value would be `v2.0.0`.                                       |
+| `$RESOLVED_VERSION`   | The next resolved version number, based on GitHub labels. Refer to [Version Resolution](#version-resolution) to learn more about this.                  |
 
 ## Version Template Variables
 
@@ -129,6 +143,28 @@ You can use any of the following variables in `version-template` to format the `
 | `$MINOR` | The minor version number. |
 | `$MAJOR` | The major version number. |
 
+## Version Resolver
+
+With the `version-resolver` option version number incrementing can be resolved automatically based on labels of individual pull requests. Append the following to your `.github/release-drafter.yml` file:
+
+```yml
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
+```
+
+The above config controls the output of the `$RESOLVED_VERSION` variable.
+
+If a pull requests is found with the label `major`/`minor`/`patch`, the corresponding version key will be incremented from a semantic version. The maximum out of major, minor and patch found in any of the pull requests will be used to increment the version number. If no pull requests are found with the assigned labels, the `default` will be assigned.
+
 ## Change Template Variables
 
 You can use any of the following variables in `change-template`:
@@ -138,6 +174,7 @@ You can use any of the following variables in `change-template`:
 | `$NUMBER` | The number of the pull request, e.g. `42`.                  |
 | `$TITLE`  | The title of the pull request, e.g. `Add alien technology`. |
 | `$AUTHOR` | The pull request author’s username, e.g. `gracehopper`.     |
+| `$BODY`   | The body of the pull request e.g. `Fixed spelling mistake`. |
 
 ## Categorize Pull Requests
 
@@ -171,6 +208,17 @@ exclude-labels:
 
 Pull requests with the label "skip-changelog" will now be excluded from the release draft.
 
+## Include Pull Requests
+
+With the `include-labels` option you can specify pull requests from the release notes using labels. Only pull requests that have the configured labels will be included in the pull request. For example, append the following to your `.github/release-drafter.yml` file:
+
+```yml
+include-labels:
+  - 'app-foo'
+```
+
+Pull requests with the label "app-foo" will be the only pull requests included in the release draft.
+
 ## Replacers
 
 You can search and replace content in the generated changelog body, using regular expressions, with the `replacers` option. Each replacer is applied in order.
@@ -189,6 +237,16 @@ If your project doesn't follow [Semantic Versioning](https://semver.org) you can
 
 For example, if your project doesn't use patch version numbers, you can set `version-template` to `$MAJOR.$MINOR`. If the current release is version 1.0, then `$NEXT_MINOR_VERSION` will be `1.1`.
 
+## Action Inputs
+
+The Release Drafter GitHub Action accepts a number of optional inputs directly in your workflow configuration. These will typically override default behavior specified in your `release-drafter.yml` config.
+
+| Input     | Description                                                                                                                                                                                                                                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`    | The name that will be used in the GitHub release that's created or updated. This will override any `name-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                             |
+| `tag`     | The tag name to be associated with the GitHub release that's created or updated. This will override any `tag-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                         |
+| `publish` | A boolean indicating whether the release being created or updated should be immediately published. This may be useful if the output of a previous workflow step determines that a new version of your project has been (or will be) released, as with [`salsify/action-detect-and-tag-new-version`](https://github.com/salsify/action-detect-and-tag-new-version). |
+
 ## Action Outputs
 
 The Release Drafter GitHub Action sets a couple of outputs which can be used as inputs to other Actions in the workflow ([example](https://github.com/actions/upload-release-asset#example-workflow---upload-a-release-asset)).
@@ -196,6 +254,8 @@ The Release Drafter GitHub Action sets a couple of outputs which can be used as 
 | Output       | Description                                                                                                                                                                                                                   |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`         | The ID of the release that was created or updated.                                                                                                                                                                            |
+| `name`       | The name of this release.                                                                                                                                                                                                     |
+| `tag_name`   | The name of the tag associated with this release.                                                                                                                                                                             |
 | `html_url`   | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                                                    |
 | `upload_url` | The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the [`@actions/upload-release-asset GitHub Action`](https://www.github.com/actions/upload-release-asset). |
 

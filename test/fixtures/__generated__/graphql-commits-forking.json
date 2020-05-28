@@ -4,69 +4,35 @@
       "ref": {
         "target": {
           "history": {
-            "totalCount": 16,
+            "totalCount": 14,
             "pageInfo": {
               "hasNextPage": false,
-              "endCursor": "00de634cb5f3c0b854eb30b0afe5b1816e372ed3 15"
+              "endCursor": "96cf76bb3470913a449d505f2011544b661652f4 13"
             },
             "nodes": [
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjAwZGU2MzRjYjVmM2MwYjg1NGViMzBiMGFmZTViMTgxNmUzNzJlZDM=",
-                "message": "Merge pull request #5 from TimonVS/add-documentation\n\nAdd documentation",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjk2Y2Y3NmJiMzQ3MDkxM2E0NDlkNTA1ZjIwMTE1NDRiNjYxNjUyZjQ=",
+                "message": "Merge pull request #1 from TimonVS/forking",
                 "author": {
-                  "name": "Timon van Spronsen",
+                  "name": "Joseph Petersen",
                   "user": {
-                    "login": "TimonVS"
+                    "login": "jetersen"
                   }
                 },
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Add documentation",
-                      "number": 5,
-                      "body": "✍️ writing docs all day",
+                      "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                      "number": 1,
+                      "body": "No thanks to forking PRs",
                       "author": {
-                        "login": "TimonVS"
+                        "login": "jetersen"
                       },
                       "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                        "nameWithOwner": "jetersen/release-drafter-test-repo"
                       },
-                      "mergedAt": "2019-04-27T13:12:08Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "skip-changelog"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQ4NTg3ZmRiMjYzNjM5Zjc2NTYxMjQ2ZDUzN2UwNDE4YTJmODZhZWU=",
-                "message": "Merge pull request #4 from TimonVS/chore/update-dependencies\n\nUpdate dependencies",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Update dependencies",
-                      "number": 4,
-                      "body": "📦 Package time! 📦",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:11:55Z",
-                      "isCrossRepository": false,
+                      "mergedAt": "2020-05-26T20:33:01Z",
+                      "isCrossRepository": true,
                       "labels": {
                         "nodes": []
                       }
@@ -75,8 +41,104 @@
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjI1MzQ0MDhmZWI4MzZkYWNjNTFlYzdjMGFmNGYyNDdlN2JlMzlkNzQ=",
-                "message": "Merge pull request #3 from TimonVS/fix/bug-fixes\n\nBug fixes",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjlhZjJlZWMyYjY4NDA0MWY5ZDE3YmFlM2IwNTAwMjYwNGU5NGE4MzM=",
+                "message": "Merge pull request #28 from TimonVS/add-documentation",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "jetersen"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add documentation",
+                      "number": 28,
+                      "body": "✍️ writing docs all day",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
+                      "mergedAt": "2020-05-26T20:30:59Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "skip-changelog"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                      "number": 1,
+                      "body": "No thanks to forking PRs",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "jetersen/release-drafter-test-repo"
+                      },
+                      "mergedAt": "2020-05-26T20:33:01Z",
+                      "isCrossRepository": true,
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjYxMTAwMDY2OWJmZTRlYjQ2NjUzYTQ0YjU2MGUzNjFkYjRhZDc5MjQ=",
+                "message": "Merge pull request #27 from TimonVS/chore/update-dependencies",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "jetersen"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Update dependencies",
+                      "number": 27,
+                      "body": "📦 Package time! 📦",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
+                      "mergedAt": "2020-05-26T20:29:54Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": []
+                      }
+                    },
+                    {
+                      "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                      "number": 1,
+                      "body": "No thanks to forking PRs",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "jetersen/release-drafter-test-repo"
+                      },
+                      "mergedAt": "2020-05-26T20:33:01Z",
+                      "isCrossRepository": true,
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjIyOWY2MWY0ODNmNDEzODFjODUwMThkNmZmMGIwZjMyYzk0NWNhMTI=",
+                "message": "Fixed another bug",
                 "author": {
                   "name": "Timon van Spronsen",
                   "user": {
@@ -87,15 +149,15 @@
                   "nodes": [
                     {
                       "title": "Bug fixes",
-                      "number": 3,
+                      "number": 25,
                       "body": "🐛 squashing",
                       "author": {
-                        "login": "TimonVS"
+                        "login": "jetersen"
                       },
                       "baseRepository": {
                         "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
-                      "mergedAt": "2019-04-27T13:11:47Z",
+                      "mergedAt": "2020-05-26T20:20:00Z",
                       "isCrossRepository": false,
                       "labels": {
                         "nodes": [
@@ -107,13 +169,29 @@
                           }
                         ]
                       }
+                    },
+                    {
+                      "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                      "number": 1,
+                      "body": "No thanks to forking PRs",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "jetersen/release-drafter-test-repo"
+                      },
+                      "mergedAt": "2020-05-26T20:33:01Z",
+                      "isCrossRepository": true,
+                      "labels": {
+                        "nodes": []
+                      }
                     }
                   ]
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjQ4ZTkwNTYwNWQ4ODkyNWI1MjJjMmIwMGY2NDZmNzQ0ZmQ5NzZkMjE=",
-                "message": "Merge pull request #2 from TimonVS/feature/big-feature\n\nAdd big feature",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmMzYThhNDY4NmFlMDkwNzdmNDk0YzcyOGJhMzc5ZTdhMDU4ZWJiYzY=",
+                "message": "Fixed a bug",
                 "author": {
                   "name": "Timon van Spronsen",
                   "user": {
@@ -123,16 +201,69 @@
                 "associatedPullRequests": {
                   "nodes": [
                     {
-                      "title": "Add big feature",
-                      "number": 2,
-                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
+                      "title": "Bug fixes",
+                      "number": 25,
+                      "body": "🐛 squashing",
                       "author": {
-                        "login": "TimonVS"
+                        "login": "jetersen"
                       },
                       "baseRepository": {
                         "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
-                      "mergedAt": "2019-04-27T13:11:39Z",
+                      "mergedAt": "2020-05-26T20:20:00Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "fix"
+                          },
+                          {
+                            "name": "patch"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                      "number": 1,
+                      "body": "No thanks to forking PRs",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "jetersen/release-drafter-test-repo"
+                      },
+                      "mergedAt": "2020-05-26T20:33:01Z",
+                      "isCrossRepository": true,
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmMwOWM2NmZkNWU2YjU2NTE3MzRlMTI1NGY4YjkzZTZkOWI1ZjI5ZmQ=",
+                "message": "Add big feature (#24)\n\nCo-authored-by: Timon van Spronsen <timonvanspronsen@outlook.com>",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "jetersen"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add big feature",
+                      "number": 24,
+                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
+                      "mergedAt": "2020-05-26T20:18:35Z",
                       "isCrossRepository": false,
                       "labels": {
                         "nodes": [
@@ -144,46 +275,81 @@
                           }
                         ]
                       }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjVmNTViZThiOTA2M2IzOWQ5Y2VkYzllNWRkOGZkMDIyMjFiZDMxZjQ=",
-                "message": "Merge pull request #1 from TimonVS/feature/alien-technology\n\n👽 Add alien technology",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
+                    },
                     {
-                      "title": "👽 Add alien technology",
+                      "title": "🙅‍♂️ Forking PR 🙅‍♂️",
                       "number": 1,
-                      "body": "Space invasion 👾",
+                      "body": "No thanks to forking PRs",
                       "author": {
-                        "login": "TimonVS"
+                        "login": "jetersen"
                       },
                       "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                        "nameWithOwner": "jetersen/release-drafter-test-repo"
                       },
-                      "mergedAt": "2019-04-27T13:11:29Z",
-                      "isCrossRepository": false,
+                      "mergedAt": "2020-05-26T20:33:01Z",
+                      "isCrossRepository": true,
                       "labels": {
-                        "nodes": [
-                          {
-                            "name": "feature"
-                          }
-                        ]
+                        "nodes": []
                       }
                     }
                   ]
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjg1ODExZmJkYmE2OTViYjk3ZDc3YTVlMmE5NjNiMzFmNTM4YTgyMjM=",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmNjNTliYjUxN2EwOGYxNDhkZThlM2JiMDIxOTkyNjQ1YTQwMGNlNzY=",
+                "message": "Merge pull request #23 from TimonVS/feature/alien-technology",
+                "author": {
+                  "name": "Joseph Petersen",
+                  "user": {
+                    "login": "jetersen"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Add alien technology",
+                      "number": 23,
+                      "body": "Space invasion 👾",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
+                      "mergedAt": "2020-05-26T20:16:44Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          },
+                          {
+                            "name": "major"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                      "number": 1,
+                      "body": "No thanks to forking PRs",
+                      "author": {
+                        "login": "jetersen"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "jetersen/release-drafter-test-repo"
+                      },
+                      "mergedAt": "2020-05-26T20:33:01Z",
+                      "isCrossRepository": true,
+                      "labels": {
+                        "nodes": []
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjg1ODExZmJkYmE2OTViYjk3ZDc3YTVlMmE5NjNiMzFmNTM4YTgyMjM=",
                 "message": "Fix typo",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -217,7 +383,7 @@
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmVkM2FmY2QzNmM4MDhlZWIxNWFhZjc0Zjg3MTNiODVkZTA2ZjBhMTk=",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmVkM2FmY2QzNmM4MDhlZWIxNWFhZjc0Zjg3MTNiODVkZTA2ZjBhMTk=",
                 "message": "Add documentation",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -251,7 +417,7 @@
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQyMTM0MjNmOTBjZjU5Y2YxMmRiNmUwMTIxYjgwNzE1NTE4NGRiNmQ=",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmQyMTM0MjNmOTBjZjU5Y2YxMmRiNmUwMTIxYjgwNzE1NTE4NGRiNmQ=",
                 "message": "Update Mongoose to 5.5.4",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -281,7 +447,7 @@
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQ5NTJjMjU1MDI5N2E4NTE1MmJlMWM4MjYwYjI1ZmI4OWYyODFkNDk=",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmQ5NTJjMjU1MDI5N2E4NTE1MmJlMWM4MjYwYjI1ZmI4OWYyODFkNDk=",
                 "message": "Update Express to 4.16.4",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -311,155 +477,7 @@
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjFiYmJiM2FhYWFmMTk3MDYyYmRmMjg2ODhiMDk4NTI0NjcxM2NkMTI=",
-                "message": "Fixed another bug",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Bug fixes",
-                      "number": 3,
-                      "body": "🐛 squashing",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:11:47Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "fix"
-                          },
-                          {
-                            "name": "patch"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNlOGE5YTc4ODA3MmRiZDcyMmMxZTkzYTU0NzEzYzI5NzEyNjI5MDY=",
-                "message": "Fixed a bug",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Bug fixes",
-                      "number": 3,
-                      "body": "🐛 squashing",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:11:47Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "fix"
-                          },
-                          {
-                            "name": "patch"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI0YWZlNDc3YTZlMmU0OWFmYzdhYTU1ZWYwODMyOTU4MWJmODRiNDM=",
-                "message": "Adjust parameters",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Add big feature",
-                      "number": 2,
-                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:11:39Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "feature"
-                          },
-                          {
-                            "name": "minor"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQwMWJjZmNjNzczMWRlYzNiOTg2OWY5ZTFkYTYwMjlhYTY2NzcyNDA=",
-                "message": "Add big feature",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Add big feature",
-                      "number": 2,
-                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:11:39Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "feature"
-                          },
-                          {
-                            "name": "minor"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjk0ZGViYjMwZTAyYjExNTc1YWQ0YzBmMDNmMWE1ZjdmOTJiMTFiMjg=",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjk0ZGViYjMwZTAyYjExNTc1YWQ0YzBmMDNmMWE1ZjdmOTJiMTFiMjg=",
                 "message": "Add alien technology",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -493,7 +511,7 @@
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
                 "message": "Add project description to README",
                 "author": {
                   "name": "Ada Lovelace",
@@ -504,7 +522,7 @@
                 }
               },
               {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
+                "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
                 "message": "Initial commit",
                 "author": {
                   "name": "Timon van Spronsen",

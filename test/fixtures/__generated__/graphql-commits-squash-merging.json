@@ -24,8 +24,12 @@
                     {
                       "title": "Add documentation",
                       "number": 15,
+                      "body": "✍️ writing docs all day",
                       "author": {
                         "login": "TimonVS"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
                       "mergedAt": "2019-04-27T13:39:24Z",
                       "isCrossRepository": false,
@@ -54,8 +58,12 @@
                     {
                       "title": "Update dependencies",
                       "number": 14,
+                      "body": "📦 Package time! 📦",
                       "author": {
                         "login": "TimonVS"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
                       "mergedAt": "2019-04-27T13:39:17Z",
                       "isCrossRepository": false,
@@ -80,8 +88,12 @@
                     {
                       "title": "Bug fixes",
                       "number": 13,
+                      "body": "🐛 squashing",
                       "author": {
                         "login": "TimonVS"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
                       "mergedAt": "2019-04-27T13:39:11Z",
                       "isCrossRepository": false,
@@ -89,6 +101,9 @@
                         "nodes": [
                           {
                             "name": "fix"
+                          },
+                          {
+                            "name": "patch"
                           }
                         ]
                       }
@@ -110,8 +125,12 @@
                     {
                       "title": "Add big feature",
                       "number": 12,
+                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                       "author": {
                         "login": "TimonVS"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
                       "mergedAt": "2019-04-27T13:39:03Z",
                       "isCrossRepository": false,
@@ -119,6 +138,9 @@
                         "nodes": [
                           {
                             "name": "feature"
+                          },
+                          {
+                            "name": "minor"
                           }
                         ]
                       }
@@ -140,8 +162,12 @@
                     {
                       "title": "👽 Add alien technology",
                       "number": 11,
+                      "body": "Space invasion 👾",
                       "author": {
                         "login": "TimonVS"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
                       },
                       "mergedAt": "2019-04-27T13:38:47Z",
                       "isCrossRepository": false,
@@ -149,6 +175,9 @@
                         "nodes": [
                           {
                             "name": "feature"
+                          },
+                          {
+                            "name": "major"
                           }
                         ]
                       }
