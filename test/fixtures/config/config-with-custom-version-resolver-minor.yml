@@ -1,0 +1,28 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+branches:
+  - master
+categories:
+  - title: '🚀 Features'
+    label: 'feature'
+  - title: '🐛 Bug fixes'
+    label: 'bug'
+  - title: '📄 Documentation'
+    label: 'documentation'
+  - title: '🧰 Maintenance'
+    label: 'maintenance'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+template: dummy
+version-resolver:
+  major:
+    labels:
+      - 'MAJ'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: minor
+exclude-labels:
+  - skip-changelog

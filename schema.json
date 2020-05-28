@@ -114,6 +114,7 @@
             "type": "string"
           },
           "labels": {
+            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -124,6 +125,63 @@
         "patterns": [],
         "required": ["title"]
       }
+    },
+    "version-resolver": {
+      "default": {
+        "major": {},
+        "minor": {},
+        "patch": {},
+        "default": "patch"
+      },
+      "type": "object",
+      "properties": {
+        "major": {
+          "type": "object",
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patterns": []
+        },
+        "minor": {
+          "type": "object",
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patterns": []
+        },
+        "patch": {
+          "type": "object",
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patterns": []
+        },
+        "default": {
+          "default": "patch",
+          "enum": ["major", "minor", "patch"],
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "patterns": []
     },
     "template": {
       "type": "string"
