@@ -1,4 +1,4 @@
-version: "3.4"
+version: '3.4'
 services:
   # We override much of the default GitHub Actions oriented Dockerfile for
   # making it easier to run the tests using Docker Compose

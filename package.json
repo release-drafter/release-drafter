@@ -12,8 +12,8 @@
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
     "generate-schema": "node ./bin/generate-schema.js print",
     "generate-fixtures": "node ./bin/generate-fixtures.js",
-    "lint": "eslint '**/*.js'",
-    "prettier": "prettier --write **/*.{js,md,json}",
+    "lint": "eslint **/*.js",
+    "prettier": "prettier --write **/*.{js,md,json,yml,yaml}",
     "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
     "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
     "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master"
