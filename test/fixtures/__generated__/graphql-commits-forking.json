@@ -163,6 +163,9 @@
                         "nodes": [
                           {
                             "name": "fix"
+                          },
+                          {
+                            "name": "patch"
                           }
                         ]
                       }
@@ -213,6 +216,9 @@
                         "nodes": [
                           {
                             "name": "fix"
+                          },
+                          {
+                            "name": "patch"
                           }
                         ]
                       }
@@ -263,6 +269,9 @@
                         "nodes": [
                           {
                             "name": "feature"
+                          },
+                          {
+                            "name": "minor"
                           }
                         ]
                       }
@@ -310,7 +319,14 @@
                       "mergedAt": "2020-05-26T20:16:44Z",
                       "isCrossRepository": false,
                       "labels": {
-                        "nodes": []
+                        "nodes": [
+                          {
+                            "name": "feature"
+                          },
+                          {
+                            "name": "major"
+                          }
+                        ]
                       }
                     },
                     {

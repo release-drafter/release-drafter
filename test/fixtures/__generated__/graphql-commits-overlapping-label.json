@@ -103,6 +103,9 @@
                             "name": "bug"
                           },
                           {
+                            "name": "patch"
+                          },
+                          {
                             "name": "sentry"
                           }
                         ]
@@ -138,6 +141,9 @@
                         "nodes": [
                           {
                             "name": "feature"
+                          },
+                          {
+                            "name": "minor"
                           }
                         ]
                       }
@@ -172,6 +178,9 @@
                         "nodes": [
                           {
                             "name": "feature"
+                          },
+                          {
+                            "name": "major"
                           }
                         ]
                       }

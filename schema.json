@@ -128,27 +128,17 @@
     },
     "version-resolver": {
       "default": {
-        "major": {
-          "labels": ["major"]
-        },
-        "minor": {
-          "labels": ["minor"]
-        },
-        "patch": {
-          "labels": ["patch"]
-        },
+        "major": {},
+        "minor": {},
+        "patch": {},
         "default": "patch"
       },
       "type": "object",
       "properties": {
         "major": {
-          "default": {
-            "labels": ["major"]
-          },
           "type": "object",
           "properties": {
             "labels": {
-              "default": ["major"],
               "type": "array",
               "items": {
                 "type": "string"
@@ -159,13 +149,9 @@
           "patterns": []
         },
         "minor": {
-          "default": {
-            "labels": ["minor"]
-          },
           "type": "object",
           "properties": {
             "labels": {
-              "default": ["minor"],
               "type": "array",
               "items": {
                 "type": "string"
@@ -176,13 +162,9 @@
           "patterns": []
         },
         "patch": {
-          "default": {
-            "labels": ["patch"]
-          },
           "type": "object",
           "properties": {
             "labels": {
-              "default": ["patch"],
               "type": "array",
               "items": {
                 "type": "string"

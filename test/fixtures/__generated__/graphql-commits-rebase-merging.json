@@ -165,6 +165,9 @@
                         "nodes": [
                           {
                             "name": "fix"
+                          },
+                          {
+                            "name": "patch"
                           }
                         ]
                       }
@@ -199,6 +202,9 @@
                         "nodes": [
                           {
                             "name": "fix"
+                          },
+                          {
+                            "name": "patch"
                           }
                         ]
                       }
@@ -233,6 +239,9 @@
                         "nodes": [
                           {
                             "name": "feature"
+                          },
+                          {
+                            "name": "minor"
                           }
                         ]
                       }
@@ -267,6 +276,9 @@
                         "nodes": [
                           {
                             "name": "feature"
+                          },
+                          {
+                            "name": "minor"
                           }
                         ]
                       }
@@ -301,6 +313,9 @@
                         "nodes": [
                           {
                             "name": "feature"
+                          },
+                          {
+                            "name": "major"
                           }
                         ]
                       }
