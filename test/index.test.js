@@ -491,7 +491,7 @@ Previous tag: ''
         nock('https://api.github.com')
           .post('/graphql', (body) => {
             expect(body.variables.since).toBe(
-              require('./fixtures/release-3').published_at
+              require('./fixtures/release-3').created_at
             )
             return body.query.includes(
               'query findCommitsWithAssociatedPullRequests'
