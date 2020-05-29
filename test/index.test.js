@@ -1205,6 +1205,52 @@ Previous tag: ''
 
           expect.assertions(1)
         })
+
+        it('Commit from previous release tag is not included', async () => {
+          getConfigMock()
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release-shared-commit-date')])
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-squash-merging.json')
+            )
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchObject({
+                  body: `# What's Changed
+
+* Add documentation (#15) @TimonVS
+* Update dependencies (#14) @TimonVS
+* Bug fixes (#13) @TimonVS
+* Add big feature (#12) @TimonVS
+`,
+                  draft: true,
+                  tag_name: '',
+                })
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push'),
+          })
+
+          expect.assertions(1)
+        })
       })
 
       describe('with forked pull request', () => {
