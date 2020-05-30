@@ -12,6 +12,7 @@
             "nodes": [
               {
                 "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNmMzdkODVkNmY4YmM5ZTQ1NmE5MzYwMGQxNjQ4ZmU4MTMxNmFjN2M=",
+                "committedDate": "2019-04-27T13:39:23Z",
                 "message": "Add documentation (#15)\n\n* Add documentation\r\n\r\n* Fix typo",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -46,6 +47,7 @@
               },
               {
                 "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmViMmVjZjc4YjNjZGI0Y2VlMzc2MmZkZmQ0MjY2MmMwNWM3MzQzZTM=",
+                "committedDate": "2019-04-27T13:39:17Z",
                 "message": "Update dependencies (#14)\n\n* Update Express to 4.16.4\r\n\r\n* Update Mongoose to 5.5.4",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -76,6 +78,7 @@
               },
               {
                 "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjc5Zjc4ODBmMTU1ZWU3ZGZkZGUxNmVlMTFmYTMwZmFhMDljODhlMjU=",
+                "committedDate": "2019-04-27T13:39:10Z",
                 "message": "Bug fixes (#13)\n\n* Fixed a bug\r\n\r\n* Fixed another bug",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -113,6 +116,7 @@
               },
               {
                 "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmUyMTZhODViOGNlMzU2MzRkN2IyMGNlMjU5YmRmZTA4ZjFhMGJiZGI=",
+                "committedDate": "2019-04-27T13:39:03Z",
                 "message": "Add big feature (#12)\n\n* Add big feature\r\n\r\n* Adjust parameters",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -150,6 +154,7 @@
               },
               {
                 "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQzNmM3YmU4OTBlOGEwYzY3NWYyNzUzMDk0YzYyNmQyN2RiOWI5NmM=",
+                "committedDate": "2019-04-27T13:38:46Z",
                 "message": "Add alien technology (#11)",
                 "author": {
                   "name": "Timon van Spronsen",
@@ -187,6 +192,7 @@
               },
               {
                 "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
+                "committedDate": "2019-04-27T12:12:59Z",
                 "message": "Add project description to README",
                 "author": {
                   "name": "Ada Lovelace",
@@ -198,6 +204,7 @@
               },
               {
                 "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
+                "committedDate": "2019-04-27T12:03:19Z",
                 "message": "Initial commit",
                 "author": {
                   "name": "Timon van Spronsen",
