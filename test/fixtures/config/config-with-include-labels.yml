@@ -8,3 +8,8 @@ categories:
     title: 🚀 Features
   - label: fix
     title: 🐛 Bug Fixes
+
+include-labels:
+  - feature
+exclude-labels:
+  - skip-changelog

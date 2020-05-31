@@ -4,21 +4,21 @@ const {
   findReleases,
   generateReleaseInfo,
   createRelease,
-  updateRelease
+  updateRelease,
 } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { sortPullRequests } = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
 const core = require('@actions/core')
 
-module.exports = app => {
-  app.on('push', async context => {
+module.exports = (app) => {
+  app.on('push', async (context) => {
     const { shouldDraft, configName, version, tag, name } = getInput()
 
     const config = await getConfig({
       app,
       context,
-      configName
+      configName,
     })
 
     const { isPreRelease } = getInput({ config })
@@ -38,12 +38,13 @@ module.exports = app => {
     const { draftRelease, lastRelease } = await findReleases({ app, context })
     const {
       commits,
-      pullRequests: mergedPullRequests
+      pullRequests: mergedPullRequests,
     } = await findCommitsWithAssociatedPullRequests({
       app,
       context,
       branch,
-      lastRelease
+      lastRelease,
+      config,
     })
 
     const sortedMergedPullRequests = sortPullRequests(
@@ -61,7 +62,7 @@ module.exports = app => {
       tag,
       name,
       isPreRelease,
-      shouldDraft
+      shouldDraft,
     })
 
     let createOrUpdateReleaseResponse
@@ -70,7 +71,7 @@ module.exports = app => {
       createOrUpdateReleaseResponse = await createRelease({
         context,
         releaseInfo,
-        config
+        config,
       })
     } else {
       log({ app, context, message: 'Updating existing release' })
@@ -78,11 +79,11 @@ module.exports = app => {
         context,
         draftRelease,
         releaseInfo,
-        config
+        config,
       })
     }
 
-    setActionOutput(createOrUpdateReleaseResponse)
+    setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
   })
 }
 
@@ -94,7 +95,7 @@ function getInput({ config } = {}) {
       configName: core.getInput('config-name'),
       version: core.getInput('version') || undefined,
       tag: core.getInput('tag') || undefined,
-      name: core.getInput('name') || undefined
+      name: core.getInput('name') || undefined,
     }
   }
 
@@ -103,16 +104,25 @@ function getInput({ config } = {}) {
   return {
     isPreRelease:
       core.getInput('prerelease').toLowerCase() === 'true' ||
-      (!core.getInput('prerelease') && config.prerelease)
+      (!core.getInput('prerelease') && config.prerelease),
   }
 }
 
-function setActionOutput(releaseResponse) {
+function setActionOutput(releaseResponse, { body }) {
   const {
-    data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
+    data: {
+      id: releaseId,
+      html_url: htmlUrl,
+      upload_url: uploadUrl,
+      tag_name: tagName,
+      name: name,
+    },
   } = releaseResponse
   if (releaseId && Number.isInteger(releaseId))
     core.setOutput('id', releaseId.toString())
   if (htmlUrl) core.setOutput('html_url', htmlUrl)
   if (uploadUrl) core.setOutput('upload_url', uploadUrl)
+  if (tagName) core.setOutput('tag_name', tagName)
+  if (name) core.setOutput('name', name)
+  core.setOutput('body', body)
 }

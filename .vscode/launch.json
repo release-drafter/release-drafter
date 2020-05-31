@@ -41,11 +41,7 @@
       "windows": {
         "program": "${workspaceFolder}/node_modules/jest/bin/jest"
       },
-      "args": [
-        "${fileBasenameNoExtension}",
-        "-t",
-        "${selectedText}"
-      ],
-    },
+      "args": ["${fileBasenameNoExtension}", "-t", "${selectedText}"]
+    }
   ]
 }

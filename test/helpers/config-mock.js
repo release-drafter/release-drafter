@@ -23,8 +23,8 @@ function configFixture(
     _links: {
       git: `https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1`,
       self: `https://api.github.com/repos/octokit/octokit.rb/contents/.github/${repoFileName}`,
-      html: `https://github.com/octokit/octokit.rb/blob/master/.github/${repoFileName}`
-    }
+      html: `https://github.com/octokit/octokit.rb/blob/master/.github/${repoFileName}`,
+    },
   }
 }
 

@@ -30,8 +30,8 @@
     "site_admin": false
   },
   "prerelease": false,
-  "created_at": "2018-06-29T05:45:15Z",
-  "published_at": "2018-06-29T05:47:08Z",
+  "created_at": "2019-04-27T13:38:46Z",
+  "published_at": "2019-04-27T13:43:00Z",
   "assets": [],
   "tarball_url": "https://api.github.com/repos/toolmantim/release-drafter-test-project/tarball/v2.0.0",
   "zipball_url": "https://api.github.com/repos/toolmantim/release-drafter-test-project/zipball/v2.0.0",

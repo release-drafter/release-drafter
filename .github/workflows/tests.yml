@@ -6,11 +6,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: actions/setup-node@v1
-      with:
-        version: 13.x
-    - name: Test
-      run: |
-        yarn install
-        yarn test
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@v1
+        with:
+          version: 13.x
+      - name: Test
+        run: |
+          yarn install
+          yarn test
