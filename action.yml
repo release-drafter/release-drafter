@@ -6,3 +6,38 @@ runs:
 branding:
   icon: edit-2
   color: orange
+inputs:
+  config-name:
+    description: |
+      If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
+      The config should still be located inside `.github` as that's where we are looking for config files.
+    required: false
+    default: 'release-drafter.yml'
+  name:
+    description: |
+      The name that will be used in the GitHub release that's created or updated.
+      This will override any `name-template` specified in your `release-drafter.yml` if defined.
+    required: false
+    default: ''
+  tag:
+    description: |
+      The tag name to be associated with the GitHub release that's created or updated.
+      This will override any `tag-template` specified in your `release-drafter.yml` if defined.
+    required: false
+    default: ''
+  version:
+    description: |
+      The version to be associated with the GitHub release that's created or updated.
+      This will override any version calculated by the release-drafter.
+    required: false
+    default: ''
+  publish:
+    description: |
+      A boolean indicating whether the release being created or updated should be immediately published.
+    required: false
+    default: ''
+  prerelease:
+    description: |
+      A boolean indicating whether the relase being created or updated is a prerelease.
+    required: false
+    default: ''

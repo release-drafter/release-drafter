@@ -101,10 +101,9 @@ function getInput({ config } = {}) {
 
   // Merges the config file with the input
   // the input takes precedence, because it's more easy to change at runtime
+  const preRelease = core.getInput('prerelease').toLowerCase()
   return {
-    isPreRelease:
-      core.getInput('prerelease').toLowerCase() === 'true' ||
-      (!core.getInput('prerelease') && config.prerelease),
+    isPreRelease: preRelease === 'true' || (!preRelease && config.prerelease),
   }
 }
 
