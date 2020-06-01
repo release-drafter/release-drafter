@@ -50,7 +50,7 @@ repos.forEach((repo) => {
       variables: {
         owner: repo.owner,
         name: REPO_NAME,
-        branch: repo.branch,
+        ref: repo.branch,
         withPullRequestBody: true,
       },
     }),
