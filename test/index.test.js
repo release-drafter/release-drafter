@@ -119,12 +119,18 @@ describe('release-drafter', () => {
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  name: '',
-                  tag_name: '',
-                  body: `# What's Changed\n\n* No changes\n`,
-                  draft: true,
-                })
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "# What's Changed
+
+                  * No changes
+                  ",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -230,19 +236,23 @@ describe('release-drafter', () => {
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `Changes:
-* Add documentation (#5) @TimonVS
-* Update dependencies (#4) @TimonVS
-* Bug fixes (#3) @TimonVS
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "Changes:
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
+                * Bug fixes (#3) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
 
-Previous tag: ''
-`,
-                draft: true,
-                tag_name: '',
-              })
+                Previous tag: ''
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -286,18 +296,22 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* Add documentation (#5) @TimonVS
-* Update dependencies (#4) @TimonVS
-* Bug fixes (#3) @TimonVS
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
+                * Bug fixes (#3) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -340,18 +354,22 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* Add documentation (#5) @TimonVS
-* Update dependencies (#4) @TimonVS
-* Bug fixes (#3) @TimonVS
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
+                * Bug fixes (#3) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -389,12 +407,15 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1`,
-                draft: true,
-                name: 'v2.0.1 (Code name: Placeholder)',
-                tag_name: 'v2.0.1',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1",
+                  "draft": true,
+                  "name": "v2.0.1 (Code name: Placeholder)",
+                  "prerelease": false,
+                  "tag_name": "v2.0.1",
+                }
+              `)
               return true
             }
           )
@@ -431,15 +452,19 @@ Previous tag: ''
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  body: `* Change: #5 'Add documentation' @TimonVS
-* Change: #4 'Update dependencies' @TimonVS
-* Change: #3 'Bug fixes' @TimonVS
-* Change: #2 'Add big feature' @TimonVS
-* Change: #1 '👽 Add alien technology' @TimonVS`,
-                  draft: true,
-                  tag_name: '',
-                })
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "* Change: #5 'Add documentation' @TimonVS
+                  * Change: #4 'Update dependencies' @TimonVS
+                  * Change: #3 'Bug fixes' @TimonVS
+                  * Change: #2 'Add big feature' @TimonVS
+                  * Change: #1 '👽 Add alien technology' @TimonVS",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -477,15 +502,19 @@ Previous tag: ''
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  body: `* Change: #5 'Add documentation' ✍️ writing docs all day
-* Change: #4 'Update dependencies' 📦 Package time! 📦
-* Change: #3 'Bug fixes' 🐛 squashing
-* Change: #2 'Add big feature' ![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)
-* Change: #1 '👽 Add alien technology' Space invasion 👾`,
-                  draft: true,
-                  tag_name: '',
-                })
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "* Change: #5 'Add documentation' ✍️ writing docs all day
+                  * Change: #4 'Update dependencies' 📦 Package time! 📦
+                  * Change: #3 'Bug fixes' 🐛 squashing
+                  * Change: #2 'Add big feature' ![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)
+                  * Change: #1 '👽 Add alien technology' Space invasion 👾",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -523,11 +552,15 @@ Previous tag: ''
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  body: `A big thanks to: @TimonVS and Ada Lovelace`,
-                  draft: true,
-                  tag_name: '',
-                })
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "A big thanks to: @TimonVS and Ada Lovelace",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -572,14 +605,18 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* No changes
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * No changes
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -612,11 +649,15 @@ Previous tag: ''
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  body: `* No changes mmkay`,
-                  draft: true,
-                  tag_name: '',
-                })
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "* No changes mmkay",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -654,16 +695,22 @@ Previous tag: ''
           .patch(
             '/repos/toolmantim/release-drafter-test-project/releases/11691725',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* Add documentation (#5) @TimonVS
-* Update dependencies (#4) @TimonVS
-* Bug fixes (#3) @TimonVS
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
-`,
-              })
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
+                * Bug fixes (#3) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "v3.0.0-beta",
+                  "prerelease": false,
+                  "tag_name": "v3.0.0-beta",
+                }
+              `)
               return true
             }
           )
@@ -700,24 +747,28 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* Add documentation (#5) @TimonVS
-* Update dependencies (#4) @TimonVS
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
 
-## 🚀 Features
+                ## 🚀 Features
 
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
 
-## 🐛 Bug Fixes
+                ## 🐛 Bug Fixes
 
-* Bug fixes (#3) @TimonVS
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * Bug fixes (#3) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -752,24 +803,28 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* Add documentation (#5) @TimonVS
-* Update dependencies (#4) @TimonVS
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
 
-## 🚀 Features
+                ## 🚀 Features
 
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
 
-## 🐛 Bug Fixes
+                ## 🐛 Bug Fixes
 
-* Bug fixes (#3) @TimonVS
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * Bug fixes (#3) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -922,23 +977,27 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* Update dependencies (#4) @TimonVS
+                * Update dependencies (#4) @TimonVS
 
-## 🚀 Features
+                ## 🚀 Features
 
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
 
-## 🐛 Bug Fixes
+                ## 🐛 Bug Fixes
 
-* Bug fixes (#3) @TimonVS
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * Bug fixes (#3) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -975,17 +1034,21 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-## 🚀 Features
+                ## 🚀 Features
 
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -1022,12 +1085,15 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1`,
-                draft: true,
-                name: 'v2.0.1 (Code name: Placeholder)',
-                tag_name: 'v2.0.1',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1",
+                  "draft": true,
+                  "name": "v2.0.1 (Code name: Placeholder)",
+                  "prerelease": false,
+                  "tag_name": "v2.0.1",
+                }
+              `)
               return true
             }
           )
@@ -1062,12 +1128,15 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `Placeholder with example. Automatically calculated values are next major=3.0, minor=2.1, patch=2.0`,
-                draft: true,
-                name: 'v2.1 (Code name: Placeholder)',
-                tag_name: 'v2.1',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0, minor=2.1, patch=2.0",
+                  "draft": true,
+                  "name": "v2.1 (Code name: Placeholder)",
+                  "prerelease": false,
+                  "tag_name": "v2.1",
+                }
+              `)
               return true
             }
           )
@@ -1102,12 +1171,15 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `Placeholder with example. Automatically calculated values are next major=3, minor=2, patch=2`,
-                draft: true,
-                name: 'v3 (Code name: Placeholder)',
-                tag_name: 'v3',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "Placeholder with example. Automatically calculated values are next major=3, minor=2, patch=2",
+                  "draft": true,
+                  "name": "v3 (Code name: Placeholder)",
+                  "prerelease": false,
+                  "tag_name": "v3",
+                }
+              `)
               return true
             }
           )
@@ -1146,18 +1218,22 @@ Previous tag: ''
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  body: `# What's Changed
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "# What's Changed
 
-* Add documentation (#5) @TimonVS
-* Update dependencies (#4) @TimonVS
-* Bug fixes (#3) @TimonVS
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
-`,
-                  draft: true,
-                  tag_name: '',
-                })
+                  * Add documentation (#5) @TimonVS
+                  * Update dependencies (#4) @TimonVS
+                  * Bug fixes (#3) @TimonVS
+                  * Add big feature (#2) @TimonVS
+                  * 👽 Add alien technology (#1) @TimonVS
+                  ",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -1197,18 +1273,22 @@ Previous tag: ''
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  body: `# What's Changed
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "# What's Changed
 
-* Add documentation (#10) @TimonVS
-* Update dependencies (#9) @TimonVS
-* Bug fixes (#8) @TimonVS
-* Add big feature (#7) @TimonVS
-* 👽 Add alien technology (#6) @TimonVS
-`,
-                  draft: true,
-                  tag_name: '',
-                })
+                  * Add documentation (#10) @TimonVS
+                  * Update dependencies (#9) @TimonVS
+                  * Bug fixes (#8) @TimonVS
+                  * Add big feature (#7) @TimonVS
+                  * 👽 Add alien technology (#6) @TimonVS
+                  ",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -1248,18 +1328,22 @@ Previous tag: ''
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  body: `# What's Changed
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "# What's Changed
 
-* Add documentation (#15) @TimonVS
-* Update dependencies (#14) @TimonVS
-* Bug fixes (#13) @TimonVS
-* Add big feature (#12) @TimonVS
-* 👽 Add alien technology (#11) @TimonVS
-`,
-                  draft: true,
-                  tag_name: '',
-                })
+                  * Add documentation (#15) @TimonVS
+                  * Update dependencies (#14) @TimonVS
+                  * Bug fixes (#13) @TimonVS
+                  * Add big feature (#12) @TimonVS
+                  * 👽 Add alien technology (#11) @TimonVS
+                  ",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -1297,17 +1381,21 @@ Previous tag: ''
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
-                expect(body).toMatchObject({
-                  body: `# What's Changed
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "# What's Changed
 
-* Add documentation (#15) @TimonVS
-* Update dependencies (#14) @TimonVS
-* Bug fixes (#13) @TimonVS
-* Add big feature (#12) @TimonVS
-`,
-                  draft: true,
-                  tag_name: '',
-                })
+                  * Add documentation (#15) @TimonVS
+                  * Update dependencies (#14) @TimonVS
+                  * Bug fixes (#13) @TimonVS
+                  * Add big feature (#12) @TimonVS
+                  ",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
                 return true
               }
             )
@@ -1401,29 +1489,33 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* Added great distance (#16) @toolmantim
-* Oh hai (#15) @toolmantim
-* ❤️ Add MOAR THINGS (#14) @toolmantim
-* Add all the tests (#13) @toolmantim
-* 🤖 Add robots (#12) @toolmantim
-* 🎃 More pumpkins (#11) @toolmantim
-* 🐄 Moar cowbell (#10) @toolmantim
-* 1️⃣ Switch to a monorepo (#9) @toolmantim
-* 👽 Integrate Alien technology (#8) @toolmantim
-* Add ⛰ technology (#7) @toolmantim
-* 👽 Added alien technology (#6) @toolmantim
-* 🙅🏼‍♂️ 🐄 (#5) @toolmantim
-* 🐄 More cowbell (#4) @toolmantim
-* 🐒 Add monkeys technology (#3) @toolmantim
-* Adds a new Widgets API (#2) @toolmantim
-* Create new-feature.md (#1) @toolmantim
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * Added great distance (#16) @toolmantim
+                * Oh hai (#15) @toolmantim
+                * ❤️ Add MOAR THINGS (#14) @toolmantim
+                * Add all the tests (#13) @toolmantim
+                * 🤖 Add robots (#12) @toolmantim
+                * 🎃 More pumpkins (#11) @toolmantim
+                * 🐄 Moar cowbell (#10) @toolmantim
+                * 1️⃣ Switch to a monorepo (#9) @toolmantim
+                * 👽 Integrate Alien technology (#8) @toolmantim
+                * Add ⛰ technology (#7) @toolmantim
+                * 👽 Added alien technology (#6) @toolmantim
+                * 🙅🏼‍♂️ 🐄 (#5) @toolmantim
+                * 🐄 More cowbell (#4) @toolmantim
+                * 🐒 Add monkeys technology (#3) @toolmantim
+                * Adds a new Widgets API (#2) @toolmantim
+                * Create new-feature.md (#1) @toolmantim
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -1463,18 +1555,22 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `# What's Changed
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
 
-* Add documentation (#1000) @TimonVS
-* Update dependencies (#4) @TimonVS
-* Bug fixes (#3) @TimonVS
-* Add big feature (#2) @TimonVS
-* 👽 Add alien technology (#1) @TimonVS
-`,
-                draft: true,
-                tag_name: '',
-              })
+                * Add documentation (#1000) @TimonVS
+                * Update dependencies (#4) @TimonVS
+                * Bug fixes (#3) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -1516,29 +1612,33 @@ Previous tag: ''
         .post(
           '/repos/toolmantim/release-drafter-test-project/releases',
           (body) => {
-            expect(body).toMatchObject({
-              body: `# What's Changed
+            expect(body).toMatchInlineSnapshot(`
+              Object {
+                "body": "# What's Changed
 
-* 🤖 Add robots (#12) @toolmantim
-* 🙅🏼‍♂️ 🐄 (#5) @toolmantim
-* 👽 Integrate Alien technology (#8) @toolmantim
-* 👽 Added alien technology (#6) @toolmantim
-* 🐒 Add monkeys technology (#3) @toolmantim
-* 🐄 More cowbell (#4) @toolmantim
-* 🐄 Moar cowbell (#10) @toolmantim
-* 🎃 More pumpkins (#11) @toolmantim
-* ❤️ Add MOAR THINGS (#14) @toolmantim
-* Oh hai (#15) @toolmantim
-* Create new-feature.md (#1) @toolmantim
-* Adds a new Widgets API (#2) @toolmantim
-* Added great distance (#16) @toolmantim
-* Add ⛰ technology (#7) @toolmantim
-* Add all the tests (#13) @toolmantim
-* 1️⃣ Switch to a monorepo (#9) @toolmantim
-`,
-              draft: true,
-              tag_name: '',
-            })
+              * 🤖 Add robots (#12) @toolmantim
+              * 🙅🏼‍♂️ 🐄 (#5) @toolmantim
+              * 👽 Integrate Alien technology (#8) @toolmantim
+              * 👽 Added alien technology (#6) @toolmantim
+              * 🐒 Add monkeys technology (#3) @toolmantim
+              * 🐄 More cowbell (#4) @toolmantim
+              * 🐄 Moar cowbell (#10) @toolmantim
+              * 🎃 More pumpkins (#11) @toolmantim
+              * ❤️ Add MOAR THINGS (#14) @toolmantim
+              * Oh hai (#15) @toolmantim
+              * Create new-feature.md (#1) @toolmantim
+              * Adds a new Widgets API (#2) @toolmantim
+              * Added great distance (#16) @toolmantim
+              * Add ⛰ technology (#7) @toolmantim
+              * Add all the tests (#13) @toolmantim
+              * 1️⃣ Switch to a monorepo (#9) @toolmantim
+              ",
+                "draft": true,
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+              }
+            `)
             return true
           }
         )
@@ -1579,29 +1679,33 @@ Previous tag: ''
         .post(
           '/repos/toolmantim/release-drafter-test-project/releases',
           (body) => {
-            expect(body).toMatchObject({
-              body: `# What's Changed
+            expect(body).toMatchInlineSnapshot(`
+              Object {
+                "body": "# What's Changed
 
-* Create new-feature.md (#1) @toolmantim
-* Adds a new Widgets API (#2) @toolmantim
-* 🐒 Add monkeys technology (#3) @toolmantim
-* 🐄 More cowbell (#4) @toolmantim
-* 🙅🏼‍♂️ 🐄 (#5) @toolmantim
-* 👽 Added alien technology (#6) @toolmantim
-* Add ⛰ technology (#7) @toolmantim
-* 👽 Integrate Alien technology (#8) @toolmantim
-* 1️⃣ Switch to a monorepo (#9) @toolmantim
-* 🐄 Moar cowbell (#10) @toolmantim
-* 🎃 More pumpkins (#11) @toolmantim
-* 🤖 Add robots (#12) @toolmantim
-* Add all the tests (#13) @toolmantim
-* ❤️ Add MOAR THINGS (#14) @toolmantim
-* Oh hai (#15) @toolmantim
-* Added great distance (#16) @toolmantim
-`,
-              draft: true,
-              tag_name: '',
-            })
+              * Create new-feature.md (#1) @toolmantim
+              * Adds a new Widgets API (#2) @toolmantim
+              * 🐒 Add monkeys technology (#3) @toolmantim
+              * 🐄 More cowbell (#4) @toolmantim
+              * 🙅🏼‍♂️ 🐄 (#5) @toolmantim
+              * 👽 Added alien technology (#6) @toolmantim
+              * Add ⛰ technology (#7) @toolmantim
+              * 👽 Integrate Alien technology (#8) @toolmantim
+              * 1️⃣ Switch to a monorepo (#9) @toolmantim
+              * 🐄 Moar cowbell (#10) @toolmantim
+              * 🎃 More pumpkins (#11) @toolmantim
+              * 🤖 Add robots (#12) @toolmantim
+              * Add all the tests (#13) @toolmantim
+              * ❤️ Add MOAR THINGS (#14) @toolmantim
+              * Oh hai (#15) @toolmantim
+              * Added great distance (#16) @toolmantim
+              ",
+                "draft": true,
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+              }
+            `)
             return true
           }
         )
@@ -1693,12 +1797,16 @@ Previous tag: ''
           '/repos/toolmantim/release-drafter-test-project/releases',
           (body) => {
             // Assert that the correct body was used
-            expect(body).toMatchObject({
-              name: '',
-              tag_name: '',
-              body: `# There's new stuff!\n`,
-              draft: true,
-            })
+            expect(body).toMatchInlineSnapshot(`
+              Object {
+                "body": "# There's new stuff!
+              ",
+                "draft": true,
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+              }
+            `)
             return true
           }
         )
@@ -1992,10 +2100,26 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                name: 'v1.0.2 🌈',
-                tag_name: 'v1.0.2',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "## What's changed
+
+                * No changes
+
+                ## Contributors
+
+                $CONTRIBUTORS
+
+                ## Previous release
+
+
+                ",
+                  "draft": true,
+                  "name": "v1.0.2 🌈",
+                  "prerelease": false,
+                  "tag_name": "v1.0.2",
+                }
+              `)
               return true
             }
           )
@@ -2031,10 +2155,26 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                name: 'v1.0.2 🌈',
-                tag_name: 'v1.0.2',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "## What's changed
+
+                * No changes
+
+                ## Contributors
+
+                @TimonVS
+
+                ## Previous release
+
+                v2.0.0
+                ",
+                  "draft": true,
+                  "name": "v1.0.2 🌈",
+                  "prerelease": false,
+                  "tag_name": "v1.0.2",
+                }
+              `)
               return true
             }
           )
@@ -2068,10 +2208,26 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                name: '',
-                tag_name: '',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "## What's changed
+
+                * No changes
+
+                ## Contributors
+
+                $CONTRIBUTORS
+
+                ## Previous release
+
+
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                }
+              `)
               return true
             }
           )
@@ -2103,10 +2259,26 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                name: 'v2.0.1 🌈',
-                tag_name: 'v2.0.1',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "## What's changed
+
+                * No changes
+
+                ## Contributors
+
+                @TimonVS
+
+                ## Previous release
+
+                v2.0.0
+                ",
+                  "draft": true,
+                  "name": "v2.0.1 🌈",
+                  "prerelease": false,
+                  "tag_name": "v2.0.1",
+                }
+              `)
               return true
             }
           )
@@ -2144,12 +2316,15 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `dummy`,
-                draft: true,
-                name: 'v2.1.0',
-                tag_name: 'v2.1.0',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "dummy",
+                  "draft": true,
+                  "name": "v2.1.0",
+                  "prerelease": false,
+                  "tag_name": "v2.1.0",
+                }
+              `)
               return true
             }
           )
@@ -2184,12 +2359,15 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `dummy`,
-                draft: true,
-                name: 'v2.0.1',
-                tag_name: 'v2.0.1',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "dummy",
+                  "draft": true,
+                  "name": "v2.0.1",
+                  "prerelease": false,
+                  "tag_name": "v2.0.1",
+                }
+              `)
               return true
             }
           )
@@ -2224,12 +2402,15 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `dummy`,
-                draft: true,
-                name: 'v2.1.0',
-                tag_name: 'v2.1.0',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "dummy",
+                  "draft": true,
+                  "name": "v2.1.0",
+                  "prerelease": false,
+                  "tag_name": "v2.1.0",
+                }
+              `)
               return true
             }
           )
@@ -2264,12 +2445,15 @@ Previous tag: ''
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              expect(body).toMatchObject({
-                body: `dummy`,
-                draft: true,
-                name: 'v3.0.0',
-                tag_name: 'v3.0.0',
-              })
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "dummy",
+                  "draft": true,
+                  "name": "v3.0.0",
+                  "prerelease": false,
+                  "tag_name": "v3.0.0",
+                }
+              `)
               return true
             }
           )
