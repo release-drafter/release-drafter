@@ -112,21 +112,6 @@ You can configure Release Drafter using the following key in your `.github/relea
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
-## References
-
-**Note**: This is only revelant for GitHub app users as `references` is ignored when running as GitHub action due to GitHub workflows more powerful [`on` conditions](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on)
-
-References takes an list and accepts strings and regex.
-If none are specified, we default to the repository’s default branch usually master.
-
-```yaml
-references:
-  - master
-  - v.+
-```
-
-Currently matching against any `ref/heads/` and `ref/tags/` references behind the scene
-
 ## Template Variables
 
 You can use any of the following variables in your `template`:
@@ -190,6 +175,21 @@ You can use any of the following variables in `change-template`:
 | `$TITLE`  | The title of the pull request, e.g. `Add alien technology`. |
 | `$AUTHOR` | The pull request author’s username, e.g. `gracehopper`.     |
 | `$BODY`   | The body of the pull request e.g. `Fixed spelling mistake`. |
+
+## References
+
+**Note**: This is only revelant for GitHub app users as `references` is ignored when running as GitHub action due to GitHub workflows more powerful [`on` conditions](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on)
+
+References takes an list and accepts strings and regex.
+If none are specified, we default to the repository’s default branch usually master.
+
+```yaml
+references:
+  - master
+  - v.+
+```
+
+Currently matching against any `ref/heads/` and `ref/tags/` references behind the scene
 
 ## Categorize Pull Requests
 
