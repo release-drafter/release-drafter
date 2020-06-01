@@ -25,7 +25,7 @@ describe('getConfig', () => {
     expect(config).toEqual({
       ...DEFAULT_CONFIG,
       template: '$CHANGES',
-      branches: ['master'],
+      references: ['master'],
     })
   })
 

@@ -138,6 +138,75 @@ describe('release-drafter', () => {
       })
     })
 
+    describe('to a tag', () => {
+      it('does nothing', async () => {
+        getConfigMock('config-tag-reference.yml')
+
+        nock('https://api.github.com')
+          .post(route('/repos/:owner/:repo/releases'))
+          .reply(200, () => {
+            throw new Error("Shouldn't create a new release")
+          })
+          .patch(route('/repos/:owner/:repo/releases/:release_id'))
+          .reply(200, () => {
+            throw new Error("Shouldn't update an existing release")
+          })
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push'),
+        })
+      })
+
+      describe('when configured for that tag', () => {
+        it('creates a release draft', async () => {
+          getConfigMock('config-tag-reference.yml')
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+            )
+
+          nock('https://api.github.com')
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [require('./fixtures/release')])
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "# What's Changed
+
+                  * Add documentation (#5) @TimonVS
+                  * Update dependencies (#4) @TimonVS
+                  * Bug fixes (#3) @TimonVS
+                  * Add big feature (#2) @TimonVS
+                  * 👽 Add alien technology (#1) @TimonVS
+                  ",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push-tag'),
+          })
+        })
+      })
+    })
+
     describe('with no past releases', () => {
       it('sets $CHANGES based on all commits, and $PREVIOUS_TAG to blank', async () => {
         getConfigMock('config-previous-tag.yml')
