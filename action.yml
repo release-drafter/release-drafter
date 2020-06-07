@@ -38,3 +38,16 @@ inputs:
       A boolean indicating whether the relase being created or updated is a prerelease.
     required: false
     default: ''
+outputs:
+  id:
+    description: The ID of therelease that was created or updated.
+  name:
+    description: The name of the release
+  tag_name:
+    description: The name of the tag associated with the release.
+  body:
+    description: The body of the drafted release.
+  html_url:
+    description: The URL users can navigate to in order to view the release
+  upload_url:
+    description: The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.
