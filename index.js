@@ -1,5 +1,5 @@
 const { getConfig } = require('./lib/config')
-const { isTriggerableBranch } = require('./lib/triggerable-branch')
+const { isTriggerableReference } = require('./lib/triggerable-reference')
 const {
   findReleases,
   generateReleaseInfo,
@@ -29,9 +29,7 @@ module.exports = (app) => {
     // to the PR branch instead of refs/heads/master
     const ref = process.env['GITHUB_REF'] || context.payload.ref
 
-    const branch = ref.replace(/^refs\/heads\//, '')
-
-    if (!isTriggerableBranch({ branch, app, context, config })) {
+    if (!isTriggerableReference({ ref, app, context, config })) {
       return
     }
 
@@ -42,7 +40,7 @@ module.exports = (app) => {
     } = await findCommitsWithAssociatedPullRequests({
       app,
       context,
-      branch,
+      ref,
       lastRelease,
       config,
     })

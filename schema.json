@@ -4,7 +4,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "branches": {
+    "references": {
       "default": ["master"],
       "type": "array",
       "items": {
@@ -128,9 +128,15 @@
     },
     "version-resolver": {
       "default": {
-        "major": {},
-        "minor": {},
-        "patch": {},
+        "major": {
+          "labels": []
+        },
+        "minor": {
+          "labels": []
+        },
+        "patch": {
+          "labels": []
+        },
         "default": "patch"
       },
       "type": "object",
