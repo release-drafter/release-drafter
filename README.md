@@ -56,8 +56,8 @@ As pull requests are merged, a draft release is kept up-to-date listing the chan
 The following is a more complicated configuration, which categorises the changes into headings, and automatically suggests the next version number:
 
 ```yml
-name-template: 'v$NEXT_PATCH_VERSION 🌈'
-tag-template: 'v$NEXT_PATCH_VERSION'
+name-template: 'v$RESOLVED_VERSION 🌈'
+tag-template: 'v$RESOLVED_VERSION'
 categories:
   - title: '🚀 Features'
     labels:
