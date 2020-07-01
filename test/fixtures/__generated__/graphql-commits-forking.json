@@ -25,6 +25,7 @@
                     {
                       "title": "🙅‍♂️ Forking PR 🙅‍♂️",
                       "number": 1,
+                      "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
                       "body": "No thanks to forking PRs",
                       "author": {
                         "login": "jetersen"
@@ -56,6 +57,7 @@
                     {
                       "title": "Add documentation",
                       "number": 28,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/28",
                       "body": "✍️ writing docs all day",
                       "author": {
                         "login": "jetersen"
@@ -76,6 +78,7 @@
                     {
                       "title": "🙅‍♂️ Forking PR 🙅‍♂️",
                       "number": 1,
+                      "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
                       "body": "No thanks to forking PRs",
                       "author": {
                         "login": "jetersen"
@@ -107,6 +110,7 @@
                     {
                       "title": "Update dependencies",
                       "number": 27,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/27",
                       "body": "📦 Package time! 📦",
                       "author": {
                         "login": "jetersen"
@@ -123,6 +127,7 @@
                     {
                       "title": "🙅‍♂️ Forking PR 🙅‍♂️",
                       "number": 1,
+                      "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
                       "body": "No thanks to forking PRs",
                       "author": {
                         "login": "jetersen"
@@ -154,6 +159,7 @@
                     {
                       "title": "Bug fixes",
                       "number": 25,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/25",
                       "body": "🐛 squashing",
                       "author": {
                         "login": "jetersen"
@@ -177,6 +183,7 @@
                     {
                       "title": "🙅‍♂️ Forking PR 🙅‍♂️",
                       "number": 1,
+                      "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
                       "body": "No thanks to forking PRs",
                       "author": {
                         "login": "jetersen"
@@ -208,6 +215,7 @@
                     {
                       "title": "Bug fixes",
                       "number": 25,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/25",
                       "body": "🐛 squashing",
                       "author": {
                         "login": "jetersen"
@@ -231,6 +239,7 @@
                     {
                       "title": "🙅‍♂️ Forking PR 🙅‍♂️",
                       "number": 1,
+                      "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
                       "body": "No thanks to forking PRs",
                       "author": {
                         "login": "jetersen"
@@ -262,6 +271,7 @@
                     {
                       "title": "Add big feature",
                       "number": 24,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/24",
                       "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                       "author": {
                         "login": "jetersen"
@@ -285,6 +295,7 @@
                     {
                       "title": "🙅‍♂️ Forking PR 🙅‍♂️",
                       "number": 1,
+                      "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
                       "body": "No thanks to forking PRs",
                       "author": {
                         "login": "jetersen"
@@ -316,6 +327,7 @@
                     {
                       "title": "Add alien technology",
                       "number": 23,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/23",
                       "body": "Space invasion 👾",
                       "author": {
                         "login": "jetersen"
@@ -339,6 +351,7 @@
                     {
                       "title": "🙅‍♂️ Forking PR 🙅‍♂️",
                       "number": 1,
+                      "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
                       "body": "No thanks to forking PRs",
                       "author": {
                         "login": "jetersen"
@@ -370,6 +383,7 @@
                     {
                       "title": "Add documentation",
                       "number": 5,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/5",
                       "body": "✍️ writing docs all day",
                       "author": {
                         "login": "TimonVS"
@@ -405,6 +419,7 @@
                     {
                       "title": "Add documentation",
                       "number": 5,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/5",
                       "body": "✍️ writing docs all day",
                       "author": {
                         "login": "TimonVS"
@@ -440,6 +455,7 @@
                     {
                       "title": "Update dependencies",
                       "number": 4,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/4",
                       "body": "📦 Package time! 📦",
                       "author": {
                         "login": "TimonVS"
@@ -471,6 +487,7 @@
                     {
                       "title": "Update dependencies",
                       "number": 4,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/4",
                       "body": "📦 Package time! 📦",
                       "author": {
                         "login": "TimonVS"
@@ -502,6 +519,7 @@
                     {
                       "title": "👽 Add alien technology",
                       "number": 1,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/1",
                       "body": "Space invasion 👾",
                       "author": {
                         "login": "TimonVS"

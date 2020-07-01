@@ -529,6 +529,56 @@ describe('release-drafter', () => {
         })
       })
 
+      describe('with custom changes-template config that includes a pull request URL', () => {
+        it('creates a new draft using the template', async () => {
+          getConfigMock('config-with-changes-templates-and-url.yml')
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release')])
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+            )
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "* Change: https://github.com/toolmantim/release-drafter-test-project/pull/5 'Add documentation' @TimonVS
+                  * Change: https://github.com/toolmantim/release-drafter-test-project/pull/4 'Update dependencies' @TimonVS
+                  * Change: https://github.com/toolmantim/release-drafter-test-project/pull/3 'Bug fixes' @TimonVS
+                  * Change: https://github.com/toolmantim/release-drafter-test-project/pull/2 'Add big feature' @TimonVS
+                  * Change: https://github.com/toolmantim/release-drafter-test-project/pull/1 '👽 Add alien technology' @TimonVS",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                  }
+                `)
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push'),
+          })
+
+          expect.assertions(1)
+        })
+      })
+
       describe('with contributors config', () => {
         it('adds the contributors', async () => {
           getConfigMock('config-with-contributors.yml')
