@@ -25,6 +25,7 @@
                     {
                       "title": "Add documentation",
                       "number": 10,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/10",
                       "body": "✍️ writing docs all day",
                       "author": {
                         "login": "TimonVS"
@@ -60,6 +61,7 @@
                     {
                       "title": "Add documentation",
                       "number": 10,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/10",
                       "body": "✍️ writing docs all day",
                       "author": {
                         "login": "TimonVS"
@@ -95,6 +97,7 @@
                     {
                       "title": "Update dependencies",
                       "number": 9,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/9",
                       "body": "📦 Package time! 📦",
                       "author": {
                         "login": "TimonVS"
@@ -126,6 +129,7 @@
                     {
                       "title": "Update dependencies",
                       "number": 9,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/9",
                       "body": "📦 Package time! 📦",
                       "author": {
                         "login": "TimonVS"
@@ -157,6 +161,7 @@
                     {
                       "title": "Bug fixes",
                       "number": 8,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/8",
                       "body": "🐛 squashing",
                       "author": {
                         "login": "TimonVS"
@@ -195,6 +200,7 @@
                     {
                       "title": "Bug fixes",
                       "number": 8,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/8",
                       "body": "🐛 squashing",
                       "author": {
                         "login": "TimonVS"
@@ -233,6 +239,7 @@
                     {
                       "title": "Add big feature",
                       "number": 7,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/7",
                       "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                       "author": {
                         "login": "TimonVS"
@@ -271,6 +278,7 @@
                     {
                       "title": "Add big feature",
                       "number": 7,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/7",
                       "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                       "author": {
                         "login": "TimonVS"
@@ -309,6 +317,7 @@
                     {
                       "title": "👽 Add alien technology",
                       "number": 6,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/6",
                       "body": "Space invasion 👾",
                       "author": {
                         "login": "TimonVS"

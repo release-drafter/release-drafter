@@ -25,6 +25,7 @@
                     {
                       "title": "Add documentation",
                       "number": 22,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/22",
                       "body": "✍️ writing docs all day",
                       "author": {
                         "login": "jetersen"
@@ -60,6 +61,7 @@
                     {
                       "title": "Update dependencies",
                       "number": 21,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/21",
                       "body": "📦 Package time! 📦",
                       "author": {
                         "login": "jetersen"
@@ -91,6 +93,7 @@
                     {
                       "title": "Bug fixes",
                       "number": 20,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/20",
                       "body": "🐛 squashing",
                       "author": {
                         "login": "jetersen"
@@ -132,6 +135,7 @@
                     {
                       "title": "Add big feature",
                       "number": 19,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/19",
                       "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                       "author": {
                         "login": "jetersen"
@@ -170,6 +174,7 @@
                     {
                       "title": "Add alien technology",
                       "number": 18,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/18",
                       "body": "",
                       "author": {
                         "login": "jetersen"
