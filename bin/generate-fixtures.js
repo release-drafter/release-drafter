@@ -52,6 +52,7 @@ repos.forEach((repo) => {
         name: REPO_NAME,
         ref: repo.branch,
         withPullRequestBody: true,
+        withPullRequestURL: true,
       },
     }),
   }
