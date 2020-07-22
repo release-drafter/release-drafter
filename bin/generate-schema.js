@@ -13,7 +13,13 @@ const jsonSchema = {
 }
 
 // template is only required after deep merged, should not be required in the JSON schema
-jsonSchema.required = jsonSchema.required.filter((item) => item !== 'template')
+// we should also remove the required field in case nothing remains after the filtering to keep draft04 compatibility
+const requiredField = jsonSchema.required.filter((item) => item !== 'template')
+if (requiredField.length) {
+  jsonSchema.required = requiredField
+} else {
+  delete jsonSchema.required
+}
 
 if (args[0] === 'print') {
   fs.writeFileSync('./schema.json', `${JSON.stringify(jsonSchema, null, 2)}\n`)
