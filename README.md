@@ -71,7 +71,7 @@ categories:
   - title: '🧰 Maintenance'
     label: 'chore'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
-change-title-escapes: '\<*_@&' # Backticks still count as code blocks
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 version-resolver:
   major:
     labels:
@@ -171,13 +171,13 @@ If a pull requests is found with the label `major`/`minor`/`patch`, the correspo
 
 You can use any of the following variables in `change-template`:
 
-| Variable  | Description                                                                                                                                                                                                                                                                                                                    |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `$NUMBER` | The number of the pull request, e.g. `42`.                                                                                                                                                                                                                                                                                     |
-| `$TITLE`  | The title of the pull request, e.g. `Add alien technology`. Any non-@ characters matching `change-title-escapes` will be prepended with a backslash so that they will appear verbatim instead of being interpreted as markdown format characters. @s will be appended with an HTML comment so that they don't become mentions. |
-| `$AUTHOR` | The pull request author’s username, e.g. `gracehopper`.                                                                                                                                                                                                                                                                        |
-| `$BODY`   | The body of the pull request e.g. `Fixed spelling mistake`.                                                                                                                                                                                                                                                                    |
-| `$URL`    | The URL of the pull request e.g. `https://github.com/octocat/repo/pull/42`.                                                                                                                                                                                                                                                    |
+| Variable  | Description                                                                                                                                                                                                                                                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `$NUMBER` | The number of the pull request, e.g. `42`.                                                                                                                                                                                                                                                                                                        |
+| `$TITLE`  | The title of the pull request, e.g. `Add alien technology`. Any characters excluding @ and # matching `change-title-escapes` will be prepended with a backslash so that they will appear verbatim instead of being interpreted as markdown format characters. @s and #s will be appended with an HTML comment so that they don't become mentions. |
+| `$AUTHOR` | The pull request author’s username, e.g. `gracehopper`.                                                                                                                                                                                                                                                                                           |
+| `$BODY`   | The body of the pull request e.g. `Fixed spelling mistake`.                                                                                                                                                                                                                                                                                       |
+| `$URL`    | The URL of the pull request e.g. `https://github.com/octocat/repo/pull/42`.                                                                                                                                                                                                                                                                       |
 
 ## References
 
