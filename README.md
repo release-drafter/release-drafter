@@ -71,6 +71,7 @@ categories:
   - title: '🧰 Maintenance'
     label: 'chore'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_' # Backticks still count as code blocks
 version-resolver:
   major:
     labels:
@@ -92,23 +93,24 @@ template: |
 
 You can configure Release Drafter using the following key in your `.github/release-drafter.yml` file:
 
-| Key                   | Required | Description                                                                                                                                                                |
-| --------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`            | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                            |
-| `name-template`       | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                     |
-| `tag-template`        | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                      |
-| `version-template`    | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH"`    |
-| `change-template`     | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`. |
-| `no-changes-template` | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                |
-| `references`          | Optional | The references to listen for configuration updates to `.github/release-drafter.yml`. Refer to [References](#references) to learn more about this                           |
-| `categories`          | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                     |
-| `exclude-labels`      | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                              |
-| `include-labels`      | Optional | Include only the specified pull requests using labels. Refer to [Include Pull Requests](#include-pull-requests) to learn more about this option.                           |
-| `replacers`           | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                              |
-| `sort-by`             | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                           |
-| `sort-direction`      | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                          |
-| `prerelease`          | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                    |
-| `version-resolver`    | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                              |
+| Key                    | Required | Description                                                                                                                                                                |
+| ---------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`             | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                            |
+| `name-template`        | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                     |
+| `tag-template`         | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                      |
+| `version-template`     | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH"`    |
+| `change-template`      | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`. |
+| `change-title-escapes` | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                     |
+| `no-changes-template`  | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                |
+| `references`           | Optional | The references to listen for configuration updates to `.github/release-drafter.yml`. Refer to [References](#references) to learn more about this                           |
+| `categories`           | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                     |
+| `exclude-labels`       | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                              |
+| `include-labels`       | Optional | Include only the specified pull requests using labels. Refer to [Include Pull Requests](#include-pull-requests) to learn more about this option.                           |
+| `replacers`            | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                              |
+| `sort-by`              | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                           |
+| `sort-direction`       | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                          |
+| `prerelease`           | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                    |
+| `version-resolver`     | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                              |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
@@ -169,13 +171,13 @@ If a pull requests is found with the label `major`/`minor`/`patch`, the correspo
 
 You can use any of the following variables in `change-template`:
 
-| Variable  | Description                                                                 |
-| --------- | --------------------------------------------------------------------------- |
-| `$NUMBER` | The number of the pull request, e.g. `42`.                                  |
-| `$TITLE`  | The title of the pull request, e.g. `Add alien technology`.                 |
-| `$AUTHOR` | The pull request author’s username, e.g. `gracehopper`.                     |
-| `$BODY`   | The body of the pull request e.g. `Fixed spelling mistake`.                 |
-| `$URL`    | The URL of the pull request e.g. `https://github.com/octocat/repo/pull/42`. |
+| Variable  | Description                                                                                                                                                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `$NUMBER` | The number of the pull request, e.g. `42`.                                                                                                                                                                                                   |
+| `$TITLE`  | The title of the pull request, e.g. `Add alien technology`. Any characters matching `change-title-escapes` will be prepended with a backslash so that they will appear verbatim instead of being interpreted as markdown format characters. |
+| `$AUTHOR` | The pull request author’s username, e.g. `gracehopper`.                                                                                                                                                                                     |
+| `$BODY`   | The body of the pull request e.g. `Fixed spelling mistake`.                                                                                                                                                                                 |
+| `$URL`    | The URL of the pull request e.g. `https://github.com/octocat/repo/pull/42`.                                                                                                                                                                 |
 
 ## References
 
