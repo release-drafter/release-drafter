@@ -18,7 +18,7 @@ describe('releases', () => {
       ]
       const changelog = generateChangeLog(pullRequests, config)
   
-      expect(changelog).toEqual('11.0.0') // Getting output...
+      expect(changelog).toEqual('* A1 (#1) @ghost\n* B2 (#2) @ghost\n* C3 (#3) @ghost') // Getting output...
     })
   })
 })
