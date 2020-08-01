@@ -22,7 +22,15 @@ describe('releases', () => {
   describe('generateChangeLog', () => {
     it('does not escape titles without setting change-title-escapes', () => {
       const changelog = generateChangeLog(pullRequests, baseConfig)
-      expect(changelog).toEqual('* A1 (#1) @ghost\n* B2 (#2) @ghost\n* Adds missing <example> (#3) @jetersen\n* `#code_block` (#4) @jetersen\n* Fixes #4 (#5) @Happypig375\n* 2*2 should equal to 4*1 (#6) @jetersen\n* Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost\n* Adds @nullable annotations to the 1*1+2*4 test in `tests.java` (#0) @Happypig375')
+      expect(changelog).toMatchInlineSnapshot(`
+        * A1 (#1) @ghost
+        * B2 (#2) @ghost
+        * Adds missing <example> (#3) @jetersen
+        * \`#code_block\` (#4) @jetersen
+        * Fixes #4 (#5) @Happypig375
+        * 2*2 should equal to 4*1 (#6) @jetersen
+        * Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost
+        * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375`)
     })
     it('escapes titles with \\s correctly', () => {
       const config = {
@@ -30,7 +38,15 @@ describe('releases', () => {
         'change-title-escapes': '\\'
       }
       const changelog = generateChangeLog(pullRequests, config)
-      expect(changelog).toEqual('* A1 (#1) @ghost\n* B2 (#2) @ghost\n* Adds missing <example> (#3) @jetersen\n* `#code_block` (#4) @jetersen\n* Fixes #4 (#5) @Happypig375\n* 2*2 should equal to 4*1 (#6) @jetersen\n* Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost\n* Adds @nullable annotations to the 1*1+2*4 test in `tests.java` (#0) @Happypig375')
+      expect(changelog).toMatchInlineSnapshot(`
+        * A1 (#1) @ghost
+        * B2 (#2) @ghost
+        * Adds missing <example> (#3) @jetersen
+        * \`#code_block\` (#4) @jetersen
+        * Fixes #4 (#5) @Happypig375
+        * 2*2 should equal to 4*1 (#6) @jetersen
+        * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
+        * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375`)
     })
     it('escapes titles with \\<*_& correctly', () => {
       const config = {
@@ -38,7 +54,15 @@ describe('releases', () => {
         'change-title-escapes': '\\<*_&'
       }
       const changelog = generateChangeLog(pullRequests, config)
-      expect(changelog).toEqual('* A1 (#1) @ghost\n* B2 (#2) @ghost\n* Adds missing \\<example> (#3) @jetersen\n* `#code_block` (#4) @jetersen\n* Fixes #4 (#5) @Happypig375\n* 2\\*2 should equal to 4\\*1 (#6) @jetersen\n* Rename \\_\\_confgs\\\\confg.yml to \\_\\_configs\\\\config.yml (#7) @ghost\n* Adds @nullable annotations to the 1\\*1+2\\*4 test in `tests.java` (#0) @Happypig375')
+      expect(changelog).toMatchInlineSnapshot(`
+        * A1 (#1) @ghost
+        * B2 (#2) @ghost
+        * Adds missing \\<example> (#3) @jetersen
+        * \`#code_block\` (#4) @jetersen
+        * Fixes #4 (#5) @Happypig375
+        * 2\\*2 should equal to 4\\*1 (#6) @jetersen
+        * Rename \\_\\_confgs\\\\confg.yml to \\_\\_configs\\\\config.yml (#7) @ghost
+        * Adds @nullable annotations to the 1\\*1+2\\*4 test in \`tests.java\` (#0) @Happypig375`)
     })
     it('escapes titles with @s correctly', () => {
       const config = {
@@ -46,7 +70,15 @@ describe('releases', () => {
         'change-title-escapes': '@'
       }
       const changelog = generateChangeLog(pullRequests, config)
-      expect(changelog).toEqual('* A1 (#1) @ghost\n* B2 (#2) @ghost\n* Adds missing <example> (#3) @jetersen\n* `#code_block` (#4) @jetersen\n* Fixes #4 (#5) @Happypig375\n* 2*2 should equal to 4*1 (#6) @jetersen\n* Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost\n* Adds @<!---->nullable annotations to the 1*1+2*4 test in `tests.java` (#0) @Happypig375')
+      expect(changelog).toMatchInlineSnapshot(`
+        * A1 (#1) @ghost
+        * B2 (#2) @ghost
+        * Adds missing <example> (#3) @jetersen
+        * \`#code_block\` (#4) @jetersen
+        * Fixes #4 (#5) @Happypig375
+        * 2*2 should equal to 4*1 (#6) @jetersen
+        * Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost
+        * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375`)
     })
     it('escapes titles with @s and #s correctly', () => {
       const config = {
@@ -54,7 +86,15 @@ describe('releases', () => {
         'change-title-escapes': '@#'
       }
       const changelog = generateChangeLog(pullRequests, config)
-      expect(changelog).toEqual('* A1 (#1) @ghost\n* B2 (#2) @ghost\n* Adds missing <example> (#3) @jetersen\n* `#code_block` (#4) @jetersen\n* Fixes #<!---->4 (#5) @Happypig375\n* 2*2 should equal to 4*1 (#6) @jetersen\n* Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost\n* Adds @<!---->nullable annotations to the 1*1+2*4 test in `tests.java` (#0) @Happypig375')
+      expect(changelog).toMatchInlineSnapshot(`
+        * A1 (#1) @ghost
+        * B2 (#2) @ghost
+        * Adds missing <example> (#3) @jetersen
+        * \`#code_block\` (#4) @jetersen
+        * Fixes #<!---->4 (#5) @Happypig375
+        * 2*2 should equal to 4*1 (#6) @jetersen
+        * Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost
+        * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375`)
     })
     it('escapes titles with \\<@*_&`# correctly', () => {
       const config = {
@@ -62,7 +102,15 @@ describe('releases', () => {
         'change-title-escapes': '\\<@*_&`#'
       }
       const changelog = generateChangeLog(pullRequests, config)
-      expect(changelog).toEqual('* A1 (#1) @ghost\n* B2 (#2) @ghost\n* Adds missing \\<example> (#3) @jetersen\n* \\`#<!---->code\\_block\\` (#4) @jetersen\n* Fixes #<!---->4 (#5) @Happypig375\n* 2\\*2 should equal to 4\\*1 (#6) @jetersen\n* Rename \\_\\_confgs\\\\confg.yml to \\_\\_configs\\\\config.yml (#7) @ghost\n* Adds @<!---->nullable annotations to the 1\\*1+2\\*4 test in \\`tests.java\\` (#0) @Happypig375')
+      expect(changelog).toMatchInlineSnapshot(`
+        * A1 (#1) @ghost
+        * B2 (#2) @ghost
+        * Adds missing \\<example> (#3) @jetersen
+        * \\\`\\#code\\_block\\\` (#4) @jetersen
+        * Fixes #<!--->4 (#5) @Happypig375
+        * 2\\*2 should equal to 4\\*1 (#6) @jetersen
+        * Rename \\_\\_confgs\\\\confg.yml to \\_\\_configs\\\\config.yml (#7) @ghost
+        * Adds @<!--->nullable annotations to the 1\\*1+2\\*4 test in \`tests.java\` (#0) @Happypig375`)
     })
   })
 })
