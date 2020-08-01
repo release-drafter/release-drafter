@@ -16,8 +16,16 @@
       "type": "string"
     },
     "change-title-escapes": {
-      "default": "",
-      "type": "string"
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
     },
     "no-changes-template": {
       "default": "* No changes",
