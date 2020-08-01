@@ -71,7 +71,7 @@ categories:
   - title: '🧰 Maintenance'
     label: 'chore'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
-change-title-escapes: '\<*_' # Backticks still count as code blocks
+change-title-escapes: '\<*_@' # Backticks still count as code blocks
 version-resolver:
   major:
     labels:
