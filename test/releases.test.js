@@ -1,5 +1,4 @@
 const { generateChangeLog } = require('../lib/releases')
-const each = require('jest-each').default
 const { DEFAULT_CONFIG } = require('../lib/default-config')
 
 const pullRequests = [

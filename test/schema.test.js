@@ -28,7 +28,7 @@ const invalidConfigs = [
   [{ template: '' }, 'is not allowed to be empty'],
   [{ 'change-template': ['* $TITLE (#$NUMBER) @$AUTHOR'] }, 'must be a string'],
   [{ 'change-template': null }, 'must be a string'],
-  [{ 'change-title-escapes': ['\<_*'] }, 'must be a string'],
+  [{ 'change-title-escapes': ['<_*'] }, 'must be a string'],
   [{ 'change-title-escapes': null }, 'must be a string'],
   [{ replacers: [{ search: 123 }] }, 'must be a regexp or a string'],
   [{ replacers: [{ search: '123' }] }, 'is required'],
