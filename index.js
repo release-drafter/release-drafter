@@ -74,6 +74,7 @@ module.exports = (app) => {
     } else {
       log({ app, context, message: 'Updating existing release' })
       createOrUpdateReleaseResponse = await updateRelease({
+        app,
         context,
         draftRelease,
         releaseInfo,
