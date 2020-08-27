@@ -12,7 +12,7 @@ const log = require('./lib/log')
 const core = require('@actions/core')
 
 module.exports = (app) => {
-  app.on('push', async (context) => {
+  app.on('*', async (context) => {
     const { shouldDraft, configName, version, tag, name } = getInput()
 
     const config = await getConfig({
