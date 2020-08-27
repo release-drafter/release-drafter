@@ -15,6 +15,18 @@
       "default": "* $TITLE (#$NUMBER) @$AUTHOR",
       "type": "string"
     },
+    "change-title-escapes": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
     "no-changes-template": {
       "default": "* No changes",
       "type": "string"
