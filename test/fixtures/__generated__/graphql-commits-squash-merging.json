@@ -1,228 +1,226 @@
 {
   "data": {
     "repository": {
-      "ref": {
-        "target": {
-          "history": {
-            "totalCount": 7,
-            "pageInfo": {
-              "hasNextPage": false,
-              "endCursor": "3f37d85d6f8bc9e456a93600d1648fe81316ac7c 6"
-            },
-            "nodes": [
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNmMzdkODVkNmY4YmM5ZTQ1NmE5MzYwMGQxNjQ4ZmU4MTMxNmFjN2M=",
-                "committedDate": "2019-04-27T13:39:23Z",
-                "message": "Add documentation (#15)\n\n* Add documentation\r\n\r\n* Fix typo",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Add documentation",
-                      "number": 15,
-                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/15",
-                      "body": "✍️ writing docs all day",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:39:24Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "skip-changelog"
-                          }
-                        ]
-                      }
+      "object": {
+        "history": {
+          "totalCount": 7,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "3f37d85d6f8bc9e456a93600d1648fe81316ac7c 6"
+          },
+          "nodes": [
+            {
+              "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNmMzdkODVkNmY4YmM5ZTQ1NmE5MzYwMGQxNjQ4ZmU4MTMxNmFjN2M=",
+              "committedDate": "2019-04-27T13:39:23Z",
+              "message": "Add documentation (#15)\n\n* Add documentation\r\n\r\n* Fix typo",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Add documentation",
+                    "number": 15,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/15",
+                    "body": "✍️ writing docs all day",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:39:24Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "skip-changelog"
+                        }
+                      ]
                     }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmViMmVjZjc4YjNjZGI0Y2VlMzc2MmZkZmQ0MjY2MmMwNWM3MzQzZTM=",
-                "committedDate": "2019-04-27T13:39:17Z",
-                "message": "Update dependencies (#14)\n\n* Update Express to 4.16.4\r\n\r\n* Update Mongoose to 5.5.4",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
                   }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Update dependencies",
-                      "number": 14,
-                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/14",
-                      "body": "📦 Package time! 📦",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:39:17Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": []
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjc5Zjc4ODBmMTU1ZWU3ZGZkZGUxNmVlMTFmYTMwZmFhMDljODhlMjU=",
-                "committedDate": "2019-04-27T13:39:10Z",
-                "message": "Bug fixes (#13)\n\n* Fixed a bug\r\n\r\n* Fixed another bug",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Bug fixes",
-                      "number": 13,
-                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/13",
-                      "body": "🐛 squashing",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:39:11Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "fix"
-                          },
-                          {
-                            "name": "patch"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmUyMTZhODViOGNlMzU2MzRkN2IyMGNlMjU5YmRmZTA4ZjFhMGJiZGI=",
-                "committedDate": "2019-04-27T13:39:03Z",
-                "message": "Add big feature (#12)\n\n* Add big feature\r\n\r\n* Adjust parameters",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Add big feature",
-                      "number": 12,
-                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/12",
-                      "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:39:03Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "feature"
-                          },
-                          {
-                            "name": "minor"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQzNmM3YmU4OTBlOGEwYzY3NWYyNzUzMDk0YzYyNmQyN2RiOWI5NmM=",
-                "committedDate": "2019-04-27T13:38:46Z",
-                "message": "Add alien technology (#11)",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "👽 Add alien technology",
-                      "number": 11,
-                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/11",
-                      "body": "Space invasion 👾",
-                      "author": {
-                        "login": "TimonVS"
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      },
-                      "mergedAt": "2019-04-27T13:38:47Z",
-                      "isCrossRepository": false,
-                      "labels": {
-                        "nodes": [
-                          {
-                            "name": "feature"
-                          },
-                          {
-                            "name": "major"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
-                "committedDate": "2019-04-27T12:12:59Z",
-                "message": "Add project description to README",
-                "author": {
-                  "name": "Ada Lovelace",
-                  "user": null
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
-                "committedDate": "2019-04-27T12:03:19Z",
-                "message": "Initial commit",
-                "author": {
-                  "name": "Timon van Spronsen",
-                  "user": {
-                    "login": "TimonVS"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
+                ]
               }
-            ]
-          }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmViMmVjZjc4YjNjZGI0Y2VlMzc2MmZkZmQ0MjY2MmMwNWM3MzQzZTM=",
+              "committedDate": "2019-04-27T13:39:17Z",
+              "message": "Update dependencies (#14)\n\n* Update Express to 4.16.4\r\n\r\n* Update Mongoose to 5.5.4",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Update dependencies",
+                    "number": 14,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/14",
+                    "body": "📦 Package time! 📦",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:39:17Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": []
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjc5Zjc4ODBmMTU1ZWU3ZGZkZGUxNmVlMTFmYTMwZmFhMDljODhlMjU=",
+              "committedDate": "2019-04-27T13:39:10Z",
+              "message": "Bug fixes (#13)\n\n* Fixed a bug\r\n\r\n* Fixed another bug",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Bug fixes",
+                    "number": 13,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/13",
+                    "body": "🐛 squashing",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:39:11Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "fix"
+                        },
+                        {
+                          "name": "patch"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmUyMTZhODViOGNlMzU2MzRkN2IyMGNlMjU5YmRmZTA4ZjFhMGJiZGI=",
+              "committedDate": "2019-04-27T13:39:03Z",
+              "message": "Add big feature (#12)\n\n* Add big feature\r\n\r\n* Adjust parameters",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Add big feature",
+                    "number": 12,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/12",
+                    "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:39:03Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "feature"
+                        },
+                        {
+                          "name": "minor"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmQzNmM3YmU4OTBlOGEwYzY3NWYyNzUzMDk0YzYyNmQyN2RiOWI5NmM=",
+              "committedDate": "2019-04-27T13:38:46Z",
+              "message": "Add alien technology (#11)",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "👽 Add alien technology",
+                    "number": 11,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/11",
+                    "body": "Space invasion 👾",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:38:47Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "feature"
+                        },
+                        {
+                          "name": "major"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTgzNzY2OTUzOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
+              "committedDate": "2019-04-27T12:12:59Z",
+              "message": "Add project description to README",
+              "author": {
+                "name": "Ada Lovelace",
+                "user": null
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
+              "committedDate": "2019-04-27T12:03:19Z",
+              "message": "Initial commit",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            }
+          ]
         }
       }
     }

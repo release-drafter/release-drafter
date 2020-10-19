@@ -10,14 +10,12 @@ describe('pagination', () => {
       .mockReturnValueOnce(
         Promise.resolve({
           repository: {
-            ref: {
-              target: {
-                history: {
-                  nodes: ['a', 'b', 'c'],
-                  pageInfo: {
-                    endCursor: 'aaa',
-                    hasNextPage: true,
-                  },
+            object: {
+              history: {
+                nodes: ['a', 'b', 'c'],
+                pageInfo: {
+                  endCursor: 'aaa',
+                  hasNextPage: true,
                 },
               },
             },
@@ -27,14 +25,12 @@ describe('pagination', () => {
       .mockReturnValueOnce(
         Promise.resolve({
           repository: {
-            ref: {
-              target: {
-                history: {
-                  nodes: ['d', 'e', 'f'],
-                  pageInfo: {
-                    endCursor: 'bbb',
-                    hasNextPage: false,
-                  },
+            object: {
+              history: {
+                nodes: ['d', 'e', 'f'],
+                pageInfo: {
+                  endCursor: 'bbb',
+                  hasNextPage: false,
                 },
               },
             },
@@ -44,13 +40,12 @@ describe('pagination', () => {
 
     const data = await paginate(queryFn, query, {}, [
       'repository',
-      'ref',
-      'target',
+      'object',
       'history',
     ])
 
     expect(queryFn).toHaveBeenCalledTimes(2)
-    expect(data.repository.ref.target.history.nodes).toEqual([
+    expect(data.repository.object.history.nodes).toEqual([
       'a',
       'b',
       'c',
@@ -58,7 +53,7 @@ describe('pagination', () => {
       'e',
       'f',
     ])
-    expect(data.repository.ref.target.history.pageInfo).toEqual({
+    expect(data.repository.object.history.pageInfo).toEqual({
       endCursor: 'bbb',
       hasNextPage: false,
     })
