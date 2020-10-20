@@ -33,7 +33,7 @@ module.exports = (app) => {
       return
     }
 
-    const { draftRelease, lastRelease } = await findReleases({ ref, app, context })
+    const { draftRelease, lastRelease } = await findReleases({ app, context })
     const {
       commits,
       pullRequests: mergedPullRequests,
