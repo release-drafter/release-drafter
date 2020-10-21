@@ -213,6 +213,5 @@
     }
   },
   "additionalProperties": false,
-  "patterns": [],
-  "required": []
+  "patterns": []
 }

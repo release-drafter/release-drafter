@@ -1,307 +1,305 @@
 {
   "data": {
     "repository": {
-      "ref": {
-        "target": {
-          "history": {
-            "totalCount": 120,
-            "pageInfo": {
-              "hasNextPage": false,
-              "endCursor": "d1d78f7d126c56c7165213cd2dffddcbc8cee8b6 119"
-            },
-            "nodes": [
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmU0MDNlZDc3MDMxN2Q3OTdlYzU4YzE3ZTlhNTJlMWU4NWI3NjBjMWU=",
-                "message": "Bump again",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
+      "object": {
+        "history": {
+          "totalCount": 120,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "d1d78f7d126c56c7165213cd2dffddcbc8cee8b6 119"
+          },
+          "nodes": [
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmU0MDNlZDc3MDMxN2Q3OTdlYzU4YzE3ZTlhNTJlMWU4NWI3NjBjMWU=",
+              "message": "Bump again",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
                 }
               },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjMwZWM0NGYwNTg2YTI2ZTY3NTNmMmFiOTAxMzNlNzM5MWM0Y2M1MDk=",
-                "message": "Bump",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjlkMWRlN2I5Y2Y1NDhiN2ExMWRkODdkYWU5M2NlMGI2ZjYwYThhYjE=",
-                "message": "Moo",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmZhYTFkYWQzNjJmZDMwNDQyMGViMDExYmFhNjdmOTNkNWQwZWY5ZGQ=",
-                "message": "Yep",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjg1ZDhhOTRjNTljYWFhYmU0MzI2ZGEzYjE5ZjZjNDllYjIxMzk1NDM=",
-                "message": "Remove wat",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmQ2MWM3MzhmZTM2ZTcwNzM0ZDUzMjY5NDA4ZWVjYTJjNjY3NWRkMTY=",
-                "message": "Hello",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjQ0YjNjOGE3ZTdiZjIwNjc3OGVlODJhYWQxYzVmMjYxMTUxNzc5ZWM=",
-                "message": "Whoops",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmYxN2U3YmQ2YWVjNjUwZjQ2OGNiOGYxNTgxNmQ2MzQyZDI2M2JmNDc=",
-                "message": "Moo",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmU4MGZkNzUwN2Y3Njc5ODFlMDg4NGMxN2E5NTI4YTlmNWM5YWVmYWY=",
-                "message": "Change",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjMzNDg0NWVjMGMyYmUzNGU3NTBhMWM1NzJhN2FkNjI1NTk0NTBjNzA=",
-                "message": "Oh hai",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmRlNjllNTQ0ZDI3NzZkYzY5NjNhOTBjNjUyZGRlY2Y1MDBmOTU5ODA=",
-                "message": "Bump",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmM1MDE1NDdiZmQxOGZjNjNlZTE4YTQzYjg4OTdjNmRmMGNkNzA1NWI=",
-                "message": "Update draftah.yml",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjU2NTExOTY1ODBlOTg0YmNjN2I1YjY5NDc1YWMzNzRmMmFkNTFjYjU=",
-                "message": "Update draftah.yml",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjIxZDcyYzAxODY1MWE3NWRiMWEwMDEyZGUyMzQ0MGIyZGU5NGZiYTA=",
-                "message": "Update draftah.yml",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjQ1YzFlODM0ZmQ1YzJjMGZjZjAzYmViM2JjMTUzMzE4MDk1MjU5OTE=",
-                "message": "Update draftah.yml",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjJkOTZhZmRhZWZhM2NhMjY3NTBmZGVkODM3ZTlmYWI5MDg0ZjkwNmM=",
-                "message": "Update draftah.yml",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjFjN2FkMDkzNDQ0MTk1YzRiMmM1NzQyZDNkYTlhMTgzNWZiMDExYTM=",
-                "message": "Create draftah.yml",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmRjZjNlYmQyNzA4YjY2OTgxZjA5OGY4N2Y4ZjU0NjUzNGM2MzVjNjY=",
-                "message": "Merge pull request #1 from toolmantim/new-feature-1\n\nCreate new-feature.md",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Create new-feature.md",
-                      "number": 1,
-                      "mergedAt": "2018-06-26T12:09:55Z",
-                      "author": {
-                        "login": "toolmantim"
-                      },
-                      "labels": {
-                        "nodes": []
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjY0MTYzM2U4OTIwM2Q1ZTdkYWY0NjU2MDVjMzUyMzc5ZjlmMGE4MjM=",
-                "message": "Create new-feature.md",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": [
-                    {
-                      "title": "Create new-feature.md",
-                      "number": 1,
-                      "mergedAt": "2018-06-26T12:09:55Z",
-                      "author": {
-                        "login": "toolmantim"
-                      },
-                      "labels": {
-                        "nodes": []
-                      },
-                      "baseRepository": {
-                        "nameWithOwner": "toolmantim/release-drafter-test-project"
-                      }
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjNlNzk1YTUyYzA4OTVhMDc3NjczMGM5NzEzNTU2NTM3NGY3OTg2MzQ=",
-                "message": "Initial commit",
-                "author": {
-                  "name": "Tim Lucas",
-                  "user": {
-                    "login": "toolmantim"
-                  }
-                },
-                "associatedPullRequests": {
-                  "nodes": []
-                }
+              "associatedPullRequests": {
+                "nodes": []
               }
-            ]
-          }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjMwZWM0NGYwNTg2YTI2ZTY3NTNmMmFiOTAxMzNlNzM5MWM0Y2M1MDk=",
+              "message": "Bump",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjlkMWRlN2I5Y2Y1NDhiN2ExMWRkODdkYWU5M2NlMGI2ZjYwYThhYjE=",
+              "message": "Moo",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmZhYTFkYWQzNjJmZDMwNDQyMGViMDExYmFhNjdmOTNkNWQwZWY5ZGQ=",
+              "message": "Yep",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjg1ZDhhOTRjNTljYWFhYmU0MzI2ZGEzYjE5ZjZjNDllYjIxMzk1NDM=",
+              "message": "Remove wat",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmQ2MWM3MzhmZTM2ZTcwNzM0ZDUzMjY5NDA4ZWVjYTJjNjY3NWRkMTY=",
+              "message": "Hello",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjQ0YjNjOGE3ZTdiZjIwNjc3OGVlODJhYWQxYzVmMjYxMTUxNzc5ZWM=",
+              "message": "Whoops",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmYxN2U3YmQ2YWVjNjUwZjQ2OGNiOGYxNTgxNmQ2MzQyZDI2M2JmNDc=",
+              "message": "Moo",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmU4MGZkNzUwN2Y3Njc5ODFlMDg4NGMxN2E5NTI4YTlmNWM5YWVmYWY=",
+              "message": "Change",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjMzNDg0NWVjMGMyYmUzNGU3NTBhMWM1NzJhN2FkNjI1NTk0NTBjNzA=",
+              "message": "Oh hai",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmRlNjllNTQ0ZDI3NzZkYzY5NjNhOTBjNjUyZGRlY2Y1MDBmOTU5ODA=",
+              "message": "Bump",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmM1MDE1NDdiZmQxOGZjNjNlZTE4YTQzYjg4OTdjNmRmMGNkNzA1NWI=",
+              "message": "Update draftah.yml",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjU2NTExOTY1ODBlOTg0YmNjN2I1YjY5NDc1YWMzNzRmMmFkNTFjYjU=",
+              "message": "Update draftah.yml",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjIxZDcyYzAxODY1MWE3NWRiMWEwMDEyZGUyMzQ0MGIyZGU5NGZiYTA=",
+              "message": "Update draftah.yml",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjQ1YzFlODM0ZmQ1YzJjMGZjZjAzYmViM2JjMTUzMzE4MDk1MjU5OTE=",
+              "message": "Update draftah.yml",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjJkOTZhZmRhZWZhM2NhMjY3NTBmZGVkODM3ZTlmYWI5MDg0ZjkwNmM=",
+              "message": "Update draftah.yml",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjFjN2FkMDkzNDQ0MTk1YzRiMmM1NzQyZDNkYTlhMTgzNWZiMDExYTM=",
+              "message": "Create draftah.yml",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOmRjZjNlYmQyNzA4YjY2OTgxZjA5OGY4N2Y4ZjU0NjUzNGM2MzVjNjY=",
+              "message": "Merge pull request #1 from toolmantim/new-feature-1\n\nCreate new-feature.md",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Create new-feature.md",
+                    "number": 1,
+                    "mergedAt": "2018-06-26T12:09:55Z",
+                    "author": {
+                      "login": "toolmantim"
+                    },
+                    "labels": {
+                      "nodes": []
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjY0MTYzM2U4OTIwM2Q1ZTdkYWY0NjU2MDVjMzUyMzc5ZjlmMGE4MjM=",
+              "message": "Create new-feature.md",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Create new-feature.md",
+                    "number": 1,
+                    "mergedAt": "2018-06-26T12:09:55Z",
+                    "author": {
+                      "login": "toolmantim"
+                    },
+                    "labels": {
+                      "nodes": []
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MTM4NzMyNDgxOjNlNzk1YTUyYzA4OTVhMDc3NjczMGM5NzEzNTU2NTM3NGY3OTg2MzQ=",
+              "message": "Initial commit",
+              "author": {
+                "name": "Tim Lucas",
+                "user": {
+                  "login": "toolmantim"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            }
+          ]
         }
       }
     }
