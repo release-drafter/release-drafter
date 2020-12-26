@@ -7,15 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
-          fetch-depth: 1
-      - uses: actions/setup-node@v1
-        with:
-          version: 13.x
+          node-version: '13'
       - run: yarn --frozen-lockfile --ignore-engines --ignore-optional --no-bin-links --non-interactive --silent --ignore-scripts --production=false
         env:
           HUSKY_SKIP_INSTALL: true
-      - uses: tinovyatkin/action-eslint@v1
+      - uses: a-b-r-o-w-n/eslint-action@v2.1.0
         with:
           repo-token: ${{secrets.GITHUB_TOKEN}}
           check-name: eslint
