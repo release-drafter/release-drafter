@@ -134,7 +134,7 @@ You can use any of the following variables in your `template`, `name-template` a
 | `$NEXT_PATCH_VERSION` | The next patch version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.2.4`. This is the most commonly used value. |
 | `$NEXT_MINOR_VERSION` | The next minor version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.3.0`.                                       |
 | `$NEXT_MAJOR_VERSION` | The next major version number. For example, if the last tag or release was `v1.2.3`, the value would be `v2.0.0`.                                       |
-| `$RESOLVED_VERSION`   | The next resolved version number, based on GitHub labels. Refer to [Version Resolution](#version-resolution) to learn more about this.                  |
+| `$RESOLVED_VERSION`   | The next resolved version number, based on GitHub labels. Refer to [Version Resolver](#version-resolver) to learn more about this.                  |
 
 ## Version Template Variables
 
