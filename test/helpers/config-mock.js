@@ -1,11 +1,7 @@
 const fs = require('fs')
 const nock = require('nock')
-const { encodeContent } = require('../../lib/base64')
 
-function configFixture(
-  fileName = 'config.yml',
-  repoFileName = 'release-drafter.yml'
-) {
+function configFixture(fileName = 'config.yml') {
   return fs.readFileSync(`${__dirname}/../fixtures/config/${fileName}`)
 }
 
