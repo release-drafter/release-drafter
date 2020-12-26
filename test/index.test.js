@@ -1,6 +1,6 @@
 const nock = require('nock')
 const route = require('nock-knock/lib').default
-const { Probot, Octokit } = require('probot')
+const { Probot, ProbotOctokit } = require('probot')
 const getConfigMock = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
 const mockedEnv = require('mocked-env')
@@ -30,22 +30,26 @@ describe('release-drafter', () => {
   let logger
   let restoreEnv
 
+  const streamLogsToOutput = new Stream.Writable({ objectMode: true })
+  streamLogsToOutput._write = (object, encoding, done) => {
+    logger.push(JSON.parse(object))
+    done()
+  }
+
+  probot = new Probot({
+    appId: 179208,
+    privateKey,
+    githubToken: 'test',
+    Octokit: ProbotOctokit.defaults({
+      retry: { enabled: false },
+      throttle: { enabled: false },
+    }),
+    log: pino(streamLogsToOutput),
+  })
+  probot.load(releaseDrafter)
+
   beforeEach(() => {
     logger = []
-    const streamLogsToOutput = new Stream.Writable({ objectMode: true })
-    streamLogsToOutput._write = (object, encoding, done) => {
-      logger.push(JSON.parse(object))
-      done()
-    }
-
-    probot = new Probot({
-      appId: 179208,
-      privateKey,
-      githubToken: 'test',
-      Octokit,
-      log: pino(streamLogsToOutput),
-    })
-    probot.load(releaseDrafter)
 
     nock('https://api.github.com')
       .post('/app/installations/179208/access_tokens')
