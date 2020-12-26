@@ -6,3 +6,4 @@ coverage
 .buildkite
 *.pem
 .git
+dist/

@@ -6,7 +6,7 @@
   "license": "ISC",
   "repository": "https://github.com/toolmantim/release-drafter",
   "scripts": {
-    "build": "ncc build --source-map action.js",
+    "build": "ncc build action.js",
     "dev": "nodemon --exec \"npm start\"",
     "start": "probot run ./index.js",
     "test": "jest",
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@types/hapi__joi": "^15.0.4",
-    "@zeit/ncc": "^0.21.0",
+    "@vercel/ncc": "0.26.1",
     "eslint": "7.16.0",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-prettier": "3.1.4",
