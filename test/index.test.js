@@ -4,10 +4,11 @@ const { Probot, Octokit } = require('probot')
 const getConfigMock = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
 const mockedEnv = require('mocked-env')
+const pino = require('pino')
 
 nock.disableNetConnect()
 
-const cert = `-----BEGIN RSA PRIVATE KEY-----
+const privateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIICXQIBAAKBgQC2RTg7dNjQMwPzFwF0gXFRCcRHha4H24PeK7ey6Ij39ay1hy2o
 H9NEZOxrmAb0bEBDuECImTsJdpgI6F3OwkJGsOkIH09xTk5tC4fkfY8N7LklK+uM
 ndN4+VUXTPSj/U8lQtCd9JnnUL/wXDc46wRJ0AAKsQtUw5n4e44f+aYggwIDAQAB
@@ -30,13 +31,14 @@ describe('release-drafter', () => {
 
   beforeEach(() => {
     logger = jest.fn()
-    probot = new Probot({ id: 179208, cert, Octokit })
-    probot.load(releaseDrafter)
-    probot.logger.addStream({
-      level: 'trace',
-      stream: { write: logger },
-      type: 'raw',
+    probot = new Probot({
+      appId: 179208,
+      privateKey,
+      githubToken: 'test',
+      Octokit,
+      log: pino(logger),
     })
+    probot.load(releaseDrafter)
 
     nock('https://api.github.com')
       .post('/app/installations/179208/access_tokens')
@@ -69,10 +71,12 @@ describe('release-drafter', () => {
       it('does nothing', async () => {
         nock('https://api.github.com')
           .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github/release-drafter.yml'
+            '/repos/toolmantim/release-drafter-test-project/contents/.github%2Frelease-drafter.yml'
           )
           .reply(404)
-          .get('/repos/toolmantim/.github/contents/.github/release-drafter.yml')
+          .get(
+            '/repos/toolmantim/.github/contents/.github%2Frelease-drafter.yml'
+          )
           .reply(404)
 
         await probot.receive({

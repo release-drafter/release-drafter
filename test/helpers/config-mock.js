@@ -34,7 +34,7 @@ module.exports = function getConfigMock(
 ) {
   return nock('https://api.github.com')
     .get(
-      `/repos/toolmantim/release-drafter-test-project/contents/.github/${repoFileName}`
+      `/repos/toolmantim/release-drafter-test-project/contents/.github%2F${repoFileName}`
     )
     .reply(200, configFixture(fileName, repoFileName))
 }
