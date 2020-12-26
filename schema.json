@@ -87,6 +87,10 @@
       "default": false,
       "type": "boolean"
     },
+    "filter-by-commitish": {
+      "default": false,
+      "type": "boolean"
+    },
     "replacers": {
       "default": [],
       "type": "array",
