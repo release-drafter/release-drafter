@@ -5,6 +5,7 @@ const getConfigMock = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
 const mockedEnv = require('mocked-env')
 const pino = require('pino')
+const Stream = require('stream')
 
 nock.disableNetConnect()
 
@@ -30,13 +31,19 @@ describe('release-drafter', () => {
   let restoreEnv
 
   beforeEach(() => {
-    logger = jest.fn()
+    logger = []
+    const streamLogsToOutput = new Stream.Writable({ objectMode: true })
+    streamLogsToOutput._write = (object, encoding, done) => {
+      logger.push(JSON.parse(object))
+      done()
+    }
+
     probot = new Probot({
       appId: 179208,
       privateKey,
       githubToken: 'test',
       Octokit,
-      log: pino(logger),
+      log: pino(streamLogsToOutput),
     })
     probot.load(releaseDrafter)
 
@@ -1786,14 +1793,12 @@ describe('release-drafter', () => {
         name: 'push',
         payload,
       })
-      expect(logger).toHaveBeenCalledWith(
+      expect(logger[0]).toEqual(
         expect.objectContaining({
           msg: expect.stringContaining('Invalid config file'),
-          err: expect.objectContaining({
-            message: expect.stringContaining(
-              '"search" is required and must be a regexp or a string'
-            ),
-          }),
+          stack: expect.stringContaining(
+            '"search" is required and must be a regexp or a string'
+          ),
         })
       )
     })
@@ -1807,14 +1812,12 @@ describe('release-drafter', () => {
         name: 'push',
         payload,
       })
-      expect(logger).toHaveBeenCalledWith(
+      expect(logger[0]).toEqual(
         expect.objectContaining({
           msg: expect.stringContaining('Invalid config file'),
-          err: expect.objectContaining({
-            message: expect.stringContaining(
-              'end of the stream or a document separator is expected at line 1, column 18:'
-            ),
-          }),
+          stack: expect.stringContaining(
+            'Configuration could not be parsed from'
+          ),
         })
       )
     })
