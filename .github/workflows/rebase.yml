@@ -1,24 +1,26 @@
 on:
   issue_comment:
-    types: [created]
+    types:
+      - created
 name: Automatic Rebase
 jobs:
   rebase:
     name: Rebase
-    if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/rebase')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: khan/pull-request-comment-trigger@master
+        id: check
+        with:
+          trigger: '/rebase'
+          reaction: rocket
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      - uses: actions/checkout@v2
+        if: steps.check.outputs.triggered == 'true'
         with:
           fetch-depth: 0
       - name: Automatic Rebase
-        uses: cirrus-actions/rebase@1.2
+        uses: cirrus-actions/rebase@1.4
+        if: steps.check.outputs.triggered == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # https://github.community/t5/GitHub-Actions/Workflow-is-failing-if-no-job-can-be-ran-due-to-condition/m-p/38186#M3250
-  always_job:
-    name: Always run job
-    runs-on: ubuntu-latest
-    steps:
-      - name: Always run
-        run: echo "This job is used to prevent the workflow to fail when all other jobs are skipped."
