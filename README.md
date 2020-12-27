@@ -17,7 +17,7 @@ on:
   push:
     # branches to consider in the event; optional, defaults to all
     branches:
-      - $default-branch
+      - master
 
 jobs:
   update_release_draft:
