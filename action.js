@@ -29,6 +29,7 @@ async function run() {
   const probot = createProbot({
     overrides: {
       githubToken: process.env.GITHUB_TOKEN,
+      logLevel: 'info',
     },
   })
 
