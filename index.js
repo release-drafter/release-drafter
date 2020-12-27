@@ -92,6 +92,7 @@ module.exports = (app) => {
     }
 
     setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+    core.info('⭐ Release drafter all done')
   })
 }
 
