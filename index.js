@@ -15,7 +15,9 @@ const { runnerIsActions } = require('./lib/utils')
 module.exports = (app) => {
   const event = runnerIsActions() ? '*' : 'push'
 
+  core.info('app loaded')
   app.on(event, async (context) => {
+    core.info('app received push event')
     const { shouldDraft, configName, version, tag, name } = getInput()
 
     const config = await getConfig({
