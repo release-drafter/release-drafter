@@ -10,9 +10,12 @@ const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { sortPullRequests } = require('./lib/sort-pull-requests')
 const log = require('./lib/log')
 const core = require('@actions/core')
+const { runnerIsActions } = require('./lib/utils')
 
 module.exports = (app) => {
-  app.on('push', async (context) => {
+  const event = runnerIsActions() ? '*' : 'push'
+
+  app.on(event, async (context) => {
     const { shouldDraft, configName, version, tag, name } = getInput()
 
     const config = await getConfig({
