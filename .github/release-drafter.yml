@@ -32,3 +32,6 @@ version-resolver:
       - 'type: docs'
       - 'type: dependencies'
       - 'type: security'
+
+exclude-labels:
+  - 'skip-changelog'
