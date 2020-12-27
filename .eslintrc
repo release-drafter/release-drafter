@@ -9,6 +9,5 @@
     "prettier/prettier": "warn",
     "no-console": "off",
     "no-unused-vars": "warn"
-  },
-  "ignorePatterns": ["dist/"]
+  }
 }

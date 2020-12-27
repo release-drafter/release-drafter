@@ -18,4 +18,6 @@ jobs:
           node-version: '13'
       - run: yarn install --frozen-lockfile
       - run: yarn test
+      - run: yarn lint --fix
+      - run: yarn prettier
       - run: .github/no-unstaged-files.sh
