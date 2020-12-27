@@ -15,9 +15,7 @@ const { runnerIsActions } = require('./lib/utils')
 module.exports = (app) => {
   const event = runnerIsActions() ? '*' : 'push'
 
-  core.info('app loaded')
   app.on(event, async (context) => {
-    core.info('app received push event')
     const { shouldDraft, configName, version, tag, name } = getInput()
 
     const config = await getConfig({
@@ -27,10 +25,7 @@ module.exports = (app) => {
 
     const { isPreRelease } = getInput({ config })
 
-    if (config === null) {
-      core.info('😰 Config file failed to load')
-      return
-    }
+    if (config === null) return
 
     // GitHub Actions merge payloads slightly differ, in that their ref points
     // to the PR branch instead of refs/heads/master
@@ -92,7 +87,6 @@ module.exports = (app) => {
     }
 
     setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
-    core.info('⭐ Release drafter all done')
   })
 }
 

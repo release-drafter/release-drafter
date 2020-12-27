@@ -32,8 +32,6 @@ async function run() {
     },
   })
 
-  core.info('Loading probot')
-
   await probot.load(app)
 
   return probot.receive({
