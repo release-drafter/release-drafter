@@ -75,14 +75,14 @@ module.exports = (app) => {
 
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
-      log({ app, context, message: 'Creating new release' })
+      log({ context, message: 'Creating new release' })
       createOrUpdateReleaseResponse = await createRelease({
         context,
         releaseInfo,
         config,
       })
     } else {
-      log({ app, context, message: 'Updating existing release' })
+      log({ context, message: 'Updating existing release' })
       createOrUpdateReleaseResponse = await updateRelease({
         context,
         draftRelease,
