@@ -21,7 +21,6 @@ module.exports = (app) => {
     const { shouldDraft, configName, version, tag, name } = getInput()
 
     const config = await getConfig({
-      app,
       context,
       configName,
     })
@@ -43,7 +42,6 @@ module.exports = (app) => {
 
     const { draftRelease, lastRelease } = await findReleases({
       ref,
-      app,
       context,
       config,
     })
@@ -51,7 +49,6 @@ module.exports = (app) => {
       commits,
       pullRequests: mergedPullRequests,
     } = await findCommitsWithAssociatedPullRequests({
-      app,
       context,
       ref,
       lastRelease,
