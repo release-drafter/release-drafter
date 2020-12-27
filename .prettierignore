@@ -1,1 +1,3 @@
 config-with-yaml-exception.yml
+dist/
+coverage/

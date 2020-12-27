@@ -19,7 +19,6 @@ module.exports = (app) => {
     const { shouldDraft, configName, version, tag, name } = getInput()
 
     const config = await getConfig({
-      app,
       context,
       configName,
     })
@@ -32,13 +31,12 @@ module.exports = (app) => {
     // to the PR branch instead of refs/heads/master
     const ref = process.env['GITHUB_REF'] || context.payload.ref
 
-    if (!isTriggerableReference({ ref, app, context, config })) {
+    if (!isTriggerableReference({ ref, context, config })) {
       return
     }
 
     const { draftRelease, lastRelease } = await findReleases({
       ref,
-      app,
       context,
       config,
     })
@@ -46,7 +44,6 @@ module.exports = (app) => {
       commits,
       pullRequests: mergedPullRequests,
     } = await findCommitsWithAssociatedPullRequests({
-      app,
       context,
       ref,
       lastRelease,
@@ -73,14 +70,14 @@ module.exports = (app) => {
 
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
-      log({ app, context, message: 'Creating new release' })
+      log({ context, message: 'Creating new release' })
       createOrUpdateReleaseResponse = await createRelease({
         context,
         releaseInfo,
         config,
       })
     } else {
-      log({ app, context, message: 'Updating existing release' })
+      log({ context, message: 'Updating existing release' })
       createOrUpdateReleaseResponse = await updateRelease({
         context,
         draftRelease,

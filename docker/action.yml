@@ -1,0 +1,53 @@
+name: 'Release Drafter'
+description: 'Drafts your next release notes as pull requests are merged into master.'
+runs:
+  using: 'docker'
+  image: '../Dockerfile'
+branding:
+  icon: edit-2
+  color: orange
+inputs:
+  config-name:
+    description: |
+      If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
+      The config should still be located inside `.github` as that's where we are looking for config files.
+    required: false
+    default: 'release-drafter.yml'
+  name:
+    description: |
+      The name that will be used in the GitHub release that's created or updated.
+      This will override any `name-template` specified in your `release-drafter.yml` if defined.
+    required: false
+  tag:
+    description: |
+      The tag name to be associated with the GitHub release that's created or updated.
+      This will override any `tag-template` specified in your `release-drafter.yml` if defined.
+    required: false
+  version:
+    description: |
+      The version to be associated with the GitHub release that's created or updated.
+      This will override any version calculated by the release-drafter.
+    required: false
+  publish:
+    description: |
+      A boolean indicating whether the release being created or updated should be immediately published.
+    required: false
+    default: ''
+  prerelease:
+    description: |
+      A boolean indicating whether the relase being created or updated is a prerelease.
+    required: false
+    default: ''
+outputs:
+  id:
+    description: The ID of therelease that was created or updated.
+  name:
+    description: The name of the release
+  tag_name:
+    description: The name of the tag associated with the release.
+  body:
+    description: The body of the drafted release.
+  html_url:
+    description: The URL users can navigate to in order to view the release
+  upload_url:
+    description: The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.

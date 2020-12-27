@@ -6,3 +6,5 @@ coverage
 now.json
 docker-compose-logs
 package-lock.json
+dist/static/
+dist/views/

@@ -16,7 +16,8 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '13'
-      - name: Test
-        run: |
-          yarn install
-          yarn test
+      - run: yarn install --frozen-lockfile
+      - run: yarn test
+      - run: yarn lint --fix
+      - run: yarn prettier
+      - run: .github/no-unstaged-files.sh
