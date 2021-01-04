@@ -34,7 +34,7 @@
   "devDependencies": {
     "@types/hapi__joi": "^15.0.4",
     "@vercel/ncc": "0.26.1",
-    "eslint": "7.16.0",
+    "eslint": "7.17.0",
     "eslint-config-prettier": "7.1.0",
     "eslint-plugin-prettier": "3.3.0",
     "husky": "4.3.6",
