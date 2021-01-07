@@ -1,6 +1,6 @@
 const { schema } = require('../lib/schema')
-const schemaJson = require('../schema.json')
-const { jsonSchema } = require('../bin/generate-schema')
+const schemaJson = require('../../../schema.json')
+const { jsonSchema } = require('../../../bin/generate-schema')
 
 const template = '$CHANGES'
 

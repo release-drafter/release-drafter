@@ -4,5 +4,15 @@
   },
   "files.exclude": {
     "dist/": true
-  }
+  },
+  "eslint.workingDirectories": [
+    {
+      "directory": "./packages/release-drafter-app",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "./packages/release-drafter-core",
+      "changeProcessCWD": true
+    }
+  ]
 }

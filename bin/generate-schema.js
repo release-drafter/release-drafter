@@ -1,7 +1,7 @@
 // joi-to-json-schema currently does not support v16 of Joi (https://github.com/lightsofapollo/joi-to-json-schema/issues/57)
 const convert = require('joi-to-json-schema')
 const fs = require('fs')
-const { schema } = require('../lib/schema')
+const { schema } = require('../packages/release-drafter-core/lib/schema')
 const args = process.argv.slice(2) || []
 
 const jsonSchema = {

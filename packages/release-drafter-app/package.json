@@ -1,0 +1,30 @@
+{
+  "name": "release-drafter-github-app",
+  "version": "5.11.0",
+  "description": "A GitHub app that draft releases based on pull-request labels",
+  "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
+  "license": "ISC",
+  "repository": "https://github.com/toolmantim/release-drafter",
+  "scripts": {
+    "dev": "nodemon --exec \"npm start\"",
+    "start": "probot run ./index.js",
+    "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
+    "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
+    "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master"
+  },
+  "dependencies": {
+    "probot": "11.0.1",
+    "release-drafter-core": "5.11.0"
+  },
+  "devDependencies": {
+    "mocked-env": "^1.3.2",
+    "nock": "13.0.5",
+    "nock-knock": "2.0.0",
+    "node-fetch": "2.6.0",
+    "nodemon": "2.0.4",
+    "smee-client": "1.2.2"
+  },
+  "engines": {
+    "node": ">= 10.x"
+  }
+}

@@ -1827,430 +1827,429 @@ describe('release-drafter', () => {
     })
   })
 
-  describe('with config-name input', () => {
-    it('loads from another config path', async () => {
-      /*
-        Mock
-        with:
-          config-name: 'config-name-input.yml'
-      */
-      let restoreEnv = mockedEnv({
-        'INPUT_CONFIG-NAME': 'config-name-input.yml',
-      })
+  // describe('with config-name input', () => {
+  //   it('loads from another config path', async () => {
+  //     /*
+  //       Mock
+  //       with:
+  //         config-name: 'config-name-input.yml'
+  //     */
+  //     let restoreEnv = mockedEnv({
+  //       'INPUT_CONFIG-NAME': 'config-name-input.yml',
+  //     })
 
-      // Mock config request for file 'config-name-input.yml'
-      const getConfigScope = getConfigMock(
-        'config-name-input.yml',
-        'config-name-input.yml'
-      )
+  //     // Mock config request for file 'config-name-input.yml'
+  //     const getConfigScope = getConfigMock(
+  //       'config-name-input.yml',
+  //       'config-name-input.yml'
+  //     )
 
-      nock('https://api.github.com')
-        .post('/graphql', (body) =>
-          body.query.includes('query findCommitsWithAssociatedPullRequests')
-        )
-        .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
+  //     nock('https://api.github.com')
+  //       .post('/graphql', (body) =>
+  //         body.query.includes('query findCommitsWithAssociatedPullRequests')
+  //       )
+  //       .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
 
-      nock('https://api.github.com')
-        .get('/repos/toolmantim/release-drafter-test-project/releases')
-        .query(true)
-        .reply(200, [require('./fixtures/release')])
-        .post(
-          '/repos/toolmantim/release-drafter-test-project/releases',
-          (body) => {
-            // Assert that the correct body was used
-            expect(body).toMatchInlineSnapshot(`
-              Object {
-                "body": "# There's new stuff!
-              ",
-                "draft": true,
-                "name": "",
-                "prerelease": false,
-                "tag_name": "",
-              }
-            `)
-            return true
-          }
-        )
-        .reply(200, require('./fixtures/release'))
+  //     nock('https://api.github.com')
+  //       .get('/repos/toolmantim/release-drafter-test-project/releases')
+  //       .query(true)
+  //       .reply(200, [require('./fixtures/release')])
+  //       .post(
+  //         '/repos/toolmantim/release-drafter-test-project/releases',
+  //         (body) => {
+  //           // Assert that the correct body was used
+  //           expect(body).toMatchInlineSnapshot(`
+  //             Object {
+  //               "body": "# There's new stuff!
+  //             ",
+  //               "draft": true,
+  //               "name": "",
+  //               "prerelease": false,
+  //               "tag_name": "",
+  //             }
+  //           `)
+  //           return true
+  //         }
+  //       )
+  //       .reply(200, require('./fixtures/release'))
 
-      await probot.receive({
-        name: 'push',
-        payload: require('./fixtures/push'),
-      })
+  //     await probot.receive({
+  //       name: 'push',
+  //       payload: require('./fixtures/push'),
+  //     })
 
-      // Assert that the GET request was called for the correct config file
-      expect(getConfigScope.isDone()).toBe(true)
+  //     // Assert that the GET request was called for the correct config file
+  //     expect(getConfigScope.isDone()).toBe(true)
 
-      expect.assertions(2)
+  //     expect.assertions(2)
 
-      restoreEnv()
-    })
-  })
+  //     restoreEnv()
+  //   })
+  // })
 
-  describe('input publish, prerelease, version, tag and name overrides', () => {
-    // Method with all the test's logic, to prevent duplication
-    const overridesTest = async (overrides, expectedBody) => {
-      let mockEnv = {}
+  // describe('input publish, prerelease, version, tag and name overrides', () => {
+  //   // Method with all the test's logic, to prevent duplication
+  //   const overridesTest = async (overrides, expectedBody) => {
+  //     let mockEnv = {}
 
-      /*
-        Mock
-        with:
-          # any combination (or none) of these input options (examples):
-          version: '2.1.1'
-          tag: 'v2.1.1-alpha'
-          name: 'v2.1.1-alpha (Code name: Example)'
-      */
-      if (overrides) {
-        if (overrides.version) {
-          mockEnv['INPUT_VERSION'] = overrides.version
-        }
+  //     /*
+  //       Mock
+  //       with:
+  //         # any combination (or none) of these input options (examples):
+  //         version: '2.1.1'
+  //         tag: 'v2.1.1-alpha'
+  //         name: 'v2.1.1-alpha (Code name: Example)'
+  //     */
+  //     if (overrides) {
+  //       if (overrides.version) {
+  //         mockEnv['INPUT_VERSION'] = overrides.version
+  //       }
 
-        if (overrides.tag) {
-          mockEnv['INPUT_TAG'] = overrides.tag
-        }
+  //       if (overrides.tag) {
+  //         mockEnv['INPUT_TAG'] = overrides.tag
+  //       }
 
-        if (overrides.name) {
-          mockEnv['INPUT_NAME'] = overrides.name
-        }
+  //       if (overrides.name) {
+  //         mockEnv['INPUT_NAME'] = overrides.name
+  //       }
 
-        if (overrides.publish) {
-          mockEnv['INPUT_PUBLISH'] = overrides.publish
-        }
+  //       if (overrides.publish) {
+  //         mockEnv['INPUT_PUBLISH'] = overrides.publish
+  //       }
 
-        if (overrides.prerelease) {
-          mockEnv['INPUT_PRERELEASE'] = overrides.prerelease
-        }
-      }
+  //       if (overrides.prerelease) {
+  //         mockEnv['INPUT_PRERELEASE'] = overrides.prerelease
+  //       }
+  //     }
 
-      let restoreEnv = mockedEnv(mockEnv)
+  //     let restoreEnv = mockedEnv(mockEnv)
 
-      getConfigMock(
-        (overrides && overrides.configName) ||
-          'config-with-input-version-template.yml'
-      )
+  //     getConfigMock(
+  //       (overrides && overrides.configName) ||
+  //         'config-with-input-version-template.yml'
+  //     )
 
-      nock('https://api.github.com')
-        .get('/repos/toolmantim/release-drafter-test-project/releases')
-        .query(true)
-        .reply(200, [require('./fixtures/release')])
+  //     nock('https://api.github.com')
+  //       .get('/repos/toolmantim/release-drafter-test-project/releases')
+  //       .query(true)
+  //       .reply(200, [require('./fixtures/release')])
 
-      nock('https://api.github.com')
-        .post('/graphql', (body) =>
-          body.query.includes('query findCommitsWithAssociatedPullRequests')
-        )
-        .reply(
-          200,
-          require('./fixtures/__generated__/graphql-commits-merge-commit.json')
-        )
+  //     nock('https://api.github.com')
+  //       .post('/graphql', (body) =>
+  //         body.query.includes('query findCommitsWithAssociatedPullRequests')
+  //       )
+  //       .reply(
+  //         200,
+  //         require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+  //       )
 
-      nock('https://api.github.com')
-        .post(
-          '/repos/toolmantim/release-drafter-test-project/releases',
-          (body) => {
-            expect(body).toMatchObject(expectedBody)
-            return true
-          }
-        )
-        .reply(200, require('./fixtures/release'))
+  //     nock('https://api.github.com')
+  //       .post(
+  //         '/repos/toolmantim/release-drafter-test-project/releases',
+  //         (body) => {
+  //           expect(body).toMatchObject(expectedBody)
+  //           return true
+  //         }
+  //       )
+  //       .reply(200, require('./fixtures/release'))
 
-      await probot.receive({
-        name: 'push',
-        payload: require('./fixtures/push'),
-      })
+  //     await probot.receive({
+  //       name: 'push',
+  //       payload: require('./fixtures/push'),
+  //     })
 
-      expect.assertions(1)
+  //     expect.assertions(1)
 
-      restoreEnv()
-    }
+  //     restoreEnv()
+  //   }
 
-    describe('with just the version', () => {
-      it('forces the version on templates', async () => {
-        return overridesTest(
-          { version: '2.1.1' },
-          {
-            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
-            draft: true,
-            name: 'v2.1.1 (Code name: Placeholder)',
-            tag_name: 'v2.1.1',
-          }
-        )
-      })
-    })
+  //   describe('with just the version', () => {
+  //     it('forces the version on templates', async () => {
+  //       return overridesTest(
+  //         { version: '2.1.1' },
+  //         {
+  //           body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
+  //           draft: true,
+  //           name: 'v2.1.1 (Code name: Placeholder)',
+  //           tag_name: 'v2.1.1',
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with just the tag', () => {
-      it('gets the version from the tag and forces using the tag', async () => {
-        return overridesTest(
-          { tag: 'v2.1.1-alpha' },
-          {
-            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
-            draft: true,
-            name: 'v2.1.1 (Code name: Placeholder)',
-            tag_name: 'v2.1.1-alpha',
-          }
-        )
-      })
-    })
+  //   describe('with just the tag', () => {
+  //     it('gets the version from the tag and forces using the tag', async () => {
+  //       return overridesTest(
+  //         { tag: 'v2.1.1-alpha' },
+  //         {
+  //           body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
+  //           draft: true,
+  //           name: 'v2.1.1 (Code name: Placeholder)',
+  //           tag_name: 'v2.1.1-alpha',
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with just the name', () => {
-      it('gets the version from the name and forces using the name', async () => {
-        return overridesTest(
-          { name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)' },
-          {
-            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
-            draft: true,
-            name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)',
-            tag_name: 'v2.1.1',
-          }
-        )
-      })
-    })
+  //   describe('with just the name', () => {
+  //     it('gets the version from the name and forces using the name', async () => {
+  //       return overridesTest(
+  //         { name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)' },
+  //         {
+  //           body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
+  //           draft: true,
+  //           name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)',
+  //           tag_name: 'v2.1.1',
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with publish: true', () => {
-      it('immediately publishes the created draft', async () => {
-        return overridesTest(
-          {
-            version: '2.1.1',
-            publish: 'true',
-          },
-          {
-            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
-            draft: false,
-            name: 'v2.1.1 (Code name: Placeholder)',
-            tag_name: 'v2.1.1',
-          }
-        )
-      })
-    })
+  //   describe('with publish: true', () => {
+  //     it('immediately publishes the created draft', async () => {
+  //       return overridesTest(
+  //         {
+  //           version: '2.1.1',
+  //           publish: 'true',
+  //         },
+  //         {
+  //           body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
+  //           draft: false,
+  //           name: 'v2.1.1 (Code name: Placeholder)',
+  //           tag_name: 'v2.1.1',
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with input prerelease: true', () => {
-      it('marks the created draft as prerelease', async () => {
-        return overridesTest(
-          {
-            prerelease: 'true',
-          },
-          {
-            draft: true,
-            prerelease: true,
-          }
-        )
-      })
-    })
+  //   describe('with input prerelease: true', () => {
+  //     it('marks the created draft as prerelease', async () => {
+  //       return overridesTest(
+  //         {
+  //           prerelease: 'true',
+  //         },
+  //         {
+  //           draft: true,
+  //           prerelease: true,
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with input prerelease: false', () => {
-      it('doesnt mark the created draft as prerelease', async () => {
-        return overridesTest(
-          {
-            prerelease: 'false',
-          },
-          {
-            draft: true,
-            prerelease: false,
-          }
-        )
-      })
-    })
+  //   describe('with input prerelease: false', () => {
+  //     it('doesnt mark the created draft as prerelease', async () => {
+  //       return overridesTest(
+  //         {
+  //           prerelease: 'false',
+  //         },
+  //         {
+  //           draft: true,
+  //           prerelease: false,
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with input prerelease and publish: true', () => {
-      it('marks the created release as a prerelease', async () => {
-        return overridesTest(
-          {
-            prerelease: 'true',
-            publish: 'true',
-          },
-          {
-            draft: false,
-            prerelease: true,
-          }
-        )
-      })
-    })
+  //   describe('with input prerelease and publish: true', () => {
+  //     it('marks the created release as a prerelease', async () => {
+  //       return overridesTest(
+  //         {
+  //           prerelease: 'true',
+  //           publish: 'true',
+  //         },
+  //         {
+  //           draft: false,
+  //           prerelease: true,
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with input prerelease: true and config file prerelease: false', () => {
-      it('marks the created draft as prerelease', async () => {
-        return overridesTest(
-          {
-            prerelease: 'true',
-            configName: 'config-without-prerelease.yml',
-          },
-          {
-            draft: true,
-            prerelease: true,
-          }
-        )
-      })
-    })
+  //   describe('with input prerelease: true and config file prerelease: false', () => {
+  //     it('marks the created draft as prerelease', async () => {
+  //       return overridesTest(
+  //         {
+  //           prerelease: 'true',
+  //           configName: 'config-without-prerelease.yml',
+  //         },
+  //         {
+  //           draft: true,
+  //           prerelease: true,
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with input prerelease: false and config file prerelease: true', () => {
-      it('doesnt mark the created draft as prerelease', async () => {
-        return overridesTest(
-          {
-            prerelease: 'false',
-            configName: 'config-with-prerelease.yml',
-          },
-          {
-            draft: true,
-            prerelease: false,
-          }
-        )
-      })
-    })
+  //   describe('with input prerelease: false and config file prerelease: true', () => {
+  //     it('doesnt mark the created draft as prerelease', async () => {
+  //       return overridesTest(
+  //         {
+  //           prerelease: 'false',
+  //           configName: 'config-with-prerelease.yml',
+  //         },
+  //         {
+  //           draft: true,
+  //           prerelease: false,
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('without input prerelease and config file prerelease: true', () => {
-      it('marks the created draft as a prerelease', async () => {
-        return overridesTest(
-          {
-            configName: 'config-with-prerelease.yml',
-          },
-          {
-            draft: true,
-            prerelease: true,
-          }
-        )
-      })
-    })
+  //   describe('without input prerelease and config file prerelease: true', () => {
+  //     it('marks the created draft as a prerelease', async () => {
+  //       return overridesTest(
+  //         {
+  //           configName: 'config-with-prerelease.yml',
+  //         },
+  //         {
+  //           draft: true,
+  //           prerelease: true,
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('without input prerelease and config file prerelease: false', () => {
-      it('doesnt mark the created draft as a prerelease', async () => {
-        return overridesTest(
-          {
-            configName: 'config-without-prerelease.yml',
-          },
-          {
-            draft: true,
-            prerelease: false,
-          }
-        )
-      })
-    })
+  //   describe('without input prerelease and config file prerelease: false', () => {
+  //     it('doesnt mark the created draft as a prerelease', async () => {
+  //       return overridesTest(
+  //         {
+  //           configName: 'config-without-prerelease.yml',
+  //         },
+  //         {
+  //           draft: true,
+  //           prerelease: false,
+  //         }
+  //       )
+  //     })
+  //   })
 
-    describe('with tag and name', () => {
-      it('gets the version from the tag and forces using the tag and name', async () => {
-        return overridesTest(
-          {
-            tag: 'v2.1.1-foxtrot-unicorn-alpha',
-            name: 'Foxtrot Unicorn',
-          },
-          {
-            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
-            draft: true,
-            name: 'Foxtrot Unicorn',
-            tag_name: 'v2.1.1-foxtrot-unicorn-alpha',
-          }
-        )
-      })
-    })
-  })
+  //   describe('with tag and name', () => {
+  //     it('gets the version from the tag and forces using the tag and name', async () => {
+  //       return overridesTest(
+  //         {
+  //           tag: 'v2.1.1-foxtrot-unicorn-alpha',
+  //           name: 'Foxtrot Unicorn',
+  //         },
+  //         {
+  //           body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.`,
+  //           draft: true,
+  //           name: 'Foxtrot Unicorn',
+  //           tag_name: 'v2.1.1-foxtrot-unicorn-alpha',
+  //         }
+  //       )
+  //     })
+  //   })
+  // })
 
   describe('resolved version', () => {
-    describe('without previous releases, overriding the tag', () => {
-      it('resolves to the version extracted from the tag', async () => {
-        let restoreEnv = mockedEnv({ INPUT_TAG: 'v1.0.2' })
+    // describe('without previous releases, overriding the tag', () => {
+    //   it('resolves to the version extracted from the tag', async () => {
+    //     let restoreEnv = mockedEnv({ INPUT_TAG: 'v1.0.2' })
 
-        getConfigMock('config-with-resolved-version-template.yml')
+    //     getConfigMock('config-with-resolved-version-template.yml')
 
-        nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, require('./fixtures/graphql-commits-empty.json'))
+    //     nock('https://api.github.com')
+    //       .post('/graphql', (body) =>
+    //         body.query.includes('query findCommitsWithAssociatedPullRequests')
+    //       )
+    //       .reply(200, require('./fixtures/graphql-commits-empty.json'))
 
-        nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/releases')
-          .query(true)
-          .reply(200, [])
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
-                Object {
-                  "body": "## What's changed
+    //     nock('https://api.github.com')
+    //       .get('/repos/toolmantim/release-drafter-test-project/releases')
+    //       .query(true)
+    //       .reply(200, [])
+    //       .post(
+    //         '/repos/toolmantim/release-drafter-test-project/releases',
+    //         (body) => {
+    //           expect(body).toMatchInlineSnapshot(`
+    //             Object {
+    //               "body": "## What's changed
 
-                * No changes
+    //             * No changes
 
-                ## Contributors
+    //             ## Contributors
 
-                $CONTRIBUTORS
+    //             $CONTRIBUTORS
 
-                ## Previous release
+    //             ## Previous release
 
+    //             ",
+    //               "draft": true,
+    //               "name": "v1.0.2 🌈",
+    //               "prerelease": false,
+    //               "tag_name": "v1.0.2",
+    //             }
+    //           `)
+    //           return true
+    //         }
+    //       )
+    //       .reply(200, require('./fixtures/release'))
 
-                ",
-                  "draft": true,
-                  "name": "v1.0.2 🌈",
-                  "prerelease": false,
-                  "tag_name": "v1.0.2",
-                }
-              `)
-              return true
-            }
-          )
-          .reply(200, require('./fixtures/release'))
+    //     await probot.receive({
+    //       name: 'push',
+    //       payload: require('./fixtures/push'),
+    //     })
 
-        await probot.receive({
-          name: 'push',
-          payload: require('./fixtures/push'),
-        })
+    //     expect.assertions(1)
 
-        expect.assertions(1)
+    //     restoreEnv()
+    //   })
+    // })
 
-        restoreEnv()
-      })
-    })
+    // describe('with previous releases, overriding the tag', () => {
+    //   it('resolves to the version extracted from the tag', async () => {
+    //     let restoreEnv = mockedEnv({ INPUT_TAG: 'v1.0.2' })
 
-    describe('with previous releases, overriding the tag', () => {
-      it('resolves to the version extracted from the tag', async () => {
-        let restoreEnv = mockedEnv({ INPUT_TAG: 'v1.0.2' })
+    //     getConfigMock('config-with-resolved-version-template.yml')
 
-        getConfigMock('config-with-resolved-version-template.yml')
+    //     nock('https://api.github.com')
+    //       .post('/graphql', (body) =>
+    //         body.query.includes('query findCommitsWithAssociatedPullRequests')
+    //       )
+    //       .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
 
-        nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, require('./fixtures/graphql-commits-no-prs.json'))
+    //     nock('https://api.github.com')
+    //       .get('/repos/toolmantim/release-drafter-test-project/releases')
+    //       .query(true)
+    //       .reply(200, [require('./fixtures/release')])
+    //       .post(
+    //         '/repos/toolmantim/release-drafter-test-project/releases',
+    //         (body) => {
+    //           expect(body).toMatchInlineSnapshot(`
+    //             Object {
+    //               "body": "## What's changed
 
-        nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/releases')
-          .query(true)
-          .reply(200, [require('./fixtures/release')])
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
-                Object {
-                  "body": "## What's changed
+    //             * No changes
 
-                * No changes
+    //             ## Contributors
 
-                ## Contributors
+    //             @TimonVS
 
-                @TimonVS
+    //             ## Previous release
 
-                ## Previous release
+    //             v2.0.0
+    //             ",
+    //               "draft": true,
+    //               "name": "v1.0.2 🌈",
+    //               "prerelease": false,
+    //               "tag_name": "v1.0.2",
+    //             }
+    //           `)
+    //           return true
+    //         }
+    //       )
+    //       .reply(200, require('./fixtures/release'))
 
-                v2.0.0
-                ",
-                  "draft": true,
-                  "name": "v1.0.2 🌈",
-                  "prerelease": false,
-                  "tag_name": "v1.0.2",
-                }
-              `)
-              return true
-            }
-          )
-          .reply(200, require('./fixtures/release'))
+    //     await probot.receive({
+    //       name: 'push',
+    //       payload: require('./fixtures/push'),
+    //     })
 
-        await probot.receive({
-          name: 'push',
-          payload: require('./fixtures/push'),
-        })
+    //     expect.assertions(1)
 
-        expect.assertions(1)
-
-        restoreEnv()
-      })
-    })
+    //     restoreEnv()
+    //   })
+    // })
 
     describe('without previous releases, no overrides', () => {
       it('resolves to the calculated version, which will be empty', async () => {
