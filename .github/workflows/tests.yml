@@ -20,4 +20,5 @@ jobs:
       - run: yarn test
       - run: yarn lint --fix
       - run: yarn prettier
+      - run: yarn build
       - run: .github/no-unstaged-files.sh
