@@ -96,6 +96,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | Key                    | Required | Description                                                                                                                                                                |
 | ---------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `template`             | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                            |
+| `category-template`    | Optional | The template to use for each category. Use [category template variables](#category-template-variables) to insert values. Default: `"## $TITLE"`.                           |
 | `name-template`        | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                     |
 | `tag-template`         | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                      |
 | `version-template`     | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH"`    |
@@ -124,6 +125,14 @@ You can use any of the following variables in your `template`:
 | `$CHANGES`      | The markdown list of pull requests that have been merged.                                                             |
 | `$CONTRIBUTORS` | A comma separated list of contributors to this release (pull request authors, commit authors, and commit committers). |
 | `$PREVIOUS_TAG` | The previous releases’s tag.                                                                                          |
+
+## Category Template Variables
+
+You can use any of the following variables in `category-template`:
+
+| Variable | Description                          |
+| -------- | ------------------------------------ |
+| `$TITLE` | The category title, e.g. `Features`. |
 
 ## Next Version Variables
 

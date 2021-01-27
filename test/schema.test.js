@@ -26,6 +26,8 @@ const invalidConfigs = [
   [{ template: { '👶': 'a' } }, 'must be a string'],
   [{ template: null }, 'must be a string'],
   [{ template: '' }, 'is not allowed to be empty'],
+  [{ 'category-template': ['## $TITLE'] }, 'must be a string'],
+  [{ 'category-template': null }, 'must be a string'],
   [{ 'change-template': ['* $TITLE (#$NUMBER) @$AUTHOR'] }, 'must be a string'],
   [{ 'change-template': null }, 'must be a string'],
   [{ 'change-title-escapes': ['<_*'] }, 'must be a string'],
