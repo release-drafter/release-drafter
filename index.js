@@ -86,7 +86,9 @@ module.exports = (app) => {
       })
     }
 
-    setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+    if (runnerIsActions()) {
+      setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+    }
   })
 }
 
