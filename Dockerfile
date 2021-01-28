@@ -11,4 +11,5 @@ LABEL "com.github.actions.color"="orange"
 WORKDIR /app
 COPY . .
 RUN yarn --frozen-lockfile
-ENTRYPOINT [ "/app/node_modules/.bin/probot", "receive", "/app/index.js" ]
+ENTRYPOINT [ "/app/node_modules/.bin/probot" ]
+CMD [ "receive", "/app/index.js" ]
