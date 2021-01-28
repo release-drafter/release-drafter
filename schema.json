@@ -205,6 +205,18 @@
       "additionalProperties": false,
       "patterns": []
     },
+    "category-template": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "## $TITLE",
+          "type": "string"
+        }
+      ]
+    },
     "template": {
       "type": "string"
     },
