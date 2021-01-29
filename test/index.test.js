@@ -144,6 +144,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -213,6 +214,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -266,6 +268,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -325,6 +328,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -383,6 +387,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -429,6 +434,7 @@ describe('release-drafter', () => {
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -478,6 +484,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -528,6 +535,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -578,6 +586,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -624,6 +633,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -680,6 +690,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -721,6 +732,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -832,6 +844,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -888,6 +901,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -944,6 +958,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1004,6 +1019,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1061,6 +1077,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1112,6 +1129,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1157,6 +1175,7 @@ describe('release-drafter', () => {
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1200,6 +1219,7 @@ describe('release-drafter', () => {
                   "name": "v2.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.1",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1243,6 +1263,7 @@ describe('release-drafter', () => {
                   "name": "v3 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v3",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1297,6 +1318,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -1352,6 +1374,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -1407,6 +1430,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -1459,6 +1483,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -1513,6 +1538,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
+                    "target_commitish": "",
                   }
                 `)
                 return true
@@ -1579,6 +1605,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1634,6 +1661,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -1702,6 +1730,7 @@ describe('release-drafter', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
+                "target_commitish": "",
               }
             `)
             return true
@@ -1769,6 +1798,7 @@ describe('release-drafter', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
+                "target_commitish": "",
               }
             `)
             return true
@@ -1866,6 +1896,7 @@ describe('release-drafter', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
+                "target_commitish": "",
               }
             `)
             return true
@@ -2179,6 +2210,7 @@ describe('release-drafter', () => {
                   "name": "v1.0.2 🌈",
                   "prerelease": false,
                   "tag_name": "v1.0.2",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -2234,6 +2266,7 @@ describe('release-drafter', () => {
                   "name": "v1.0.2 🌈",
                   "prerelease": false,
                   "tag_name": "v1.0.2",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -2287,6 +2320,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -2338,6 +2372,7 @@ describe('release-drafter', () => {
                   "name": "v2.0.1 🌈",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -2384,6 +2419,7 @@ describe('release-drafter', () => {
                   "name": "v2.1.0",
                   "prerelease": false,
                   "tag_name": "v2.1.0",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -2427,6 +2463,7 @@ describe('release-drafter', () => {
                   "name": "v2.0.1",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -2470,6 +2507,7 @@ describe('release-drafter', () => {
                   "name": "v2.1.0",
                   "prerelease": false,
                   "tag_name": "v2.1.0",
+                  "target_commitish": "",
                 }
               `)
               return true
@@ -2513,6 +2551,54 @@ describe('release-drafter', () => {
                   "name": "v3.0.0",
                   "prerelease": false,
                   "tag_name": "v3.0.0",
+                  "target_commitish": "",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, require('./fixtures/release'))
+
+        await probot.receive({
+          name: 'push',
+          payload: require('./fixtures/push'),
+        })
+
+        expect.assertions(1)
+      })
+    })
+
+    describe('with commitish', () => {
+      it('allows specification of a target commitish', async () => {
+        getConfigMock('config-with-commitish.yml')
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [require('./fixtures/release')])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(
+            200,
+            require('./fixtures/__generated__/graphql-commits-forking.json')
+          )
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "dummy",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                  "target_commitish": "staging",
                 }
               `)
               return true
