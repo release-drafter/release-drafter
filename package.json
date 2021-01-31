@@ -25,6 +25,7 @@
     "cli-table3": "0.6.0",
     "compare-versions": "3.6.0",
     "escape-string-regexp": "4.0.0",
+    "ignore": "5.1.8",
     "lodash": "4.17.20",
     "probot": "11.0.6",
     "regex-parser": "2.2.11",
