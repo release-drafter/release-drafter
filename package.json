@@ -42,7 +42,7 @@
     "joi-to-json-schema": "^5.1.0",
     "lint-staged": "10.5.3",
     "mocked-env": "^1.3.2",
-    "nock": "13.0.5",
+    "nock": "13.0.7",
     "nock-knock": "2.0.0",
     "node-fetch": "2.6.1",
     "nodemon": "2.0.7",
