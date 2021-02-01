@@ -12,8 +12,14 @@ const log = require('./lib/log')
 const core = require('@actions/core')
 const { runnerIsActions } = require('./lib/utils')
 
-module.exports = (app) => {
+module.exports = (app, { getRouter }) => {
   const event = runnerIsActions() ? '*' : 'push'
+
+  if (!runnerIsActions() && typeof getRouter === 'function') {
+    getRouter().get('/healthz', (req, res) => {
+      res.status(200).json({ status: 'pass' })
+    })
+  }
 
   app.on(event, async (context) => {
     const { shouldDraft, configName, version, tag, name } = getInput()
@@ -86,7 +92,9 @@ module.exports = (app) => {
       })
     }
 
-    setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+    if (runnerIsActions()) {
+      setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+    }
   })
 }
 
