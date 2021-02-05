@@ -38,6 +38,11 @@ inputs:
       A boolean indicating whether the relase being created or updated is a prerelease.
     required: false
     default: ''
+  commitish:
+    description: |
+      The object that the release should be created to point to.
+    required: false
+    default: ''
 outputs:
   id:
     description: The ID of therelease that was created or updated.

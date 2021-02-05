@@ -113,6 +113,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `prerelease`           | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                    |
 | `version-resolver`     | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                              |
 | `filter-by-commitish`  | Optional | Filter previous releases to consider only the target branch of the release. Default: `false`.                                                                              |
+| `commitish`            | Optional | Specify the target branch of the release. Default: the default branch of the repo.                                                                                         |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
@@ -277,6 +278,7 @@ The Release Drafter GitHub Action accepts a number of optional inputs directly i
 | `version`     | The version to be associated with the GitHub release that's created or updated. This will override any version calculated by the release-drafter.                                                                                                                                                                                                                  |
 | `publish`     | A boolean indicating whether the release being created or updated should be immediately published. This may be useful if the output of a previous workflow step determines that a new version of your project has been (or will be) released, as with [`salsify/action-detect-and-tag-new-version`](https://github.com/salsify/action-detect-and-tag-new-version). |
 | `prerelease`  | A boolean indicating whether the relase being created or updated is a prerelease.                                                                                                                                                                                                                                                                                  |
+| `commitish`   | A string specifying the target branch for the release being created.                                                                                                                                                                                                                                                                                               |
 
 ## Action Outputs
 

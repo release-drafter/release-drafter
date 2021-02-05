@@ -39,6 +39,7 @@ const invalidConfigs = [
     'is required and must be a regexp or a string',
   ],
   [{ replacers: [{ search: '123', replace: 123 }] }, 'must be a string'],
+  [{ commitish: false }, 'must be a string'],
 ]
 
 describe('schema', () => {
