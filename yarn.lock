@@ -724,7 +724,7 @@
     "@octokit/openapi-types" "^2.0.1"
     "@types/node" ">= 8"
 
-"@octokit/webhooks@^7.18.1":
+"@octokit/webhooks@7.21.0":
   version "7.21.0"
   resolved "https://registry.yarnpkg.com/@octokit/webhooks/-/webhooks-7.21.0.tgz#2aee3404aa311740a5f4ea37b070268752e21b02"
   integrity sha512-Mj7Pa6JZgSjfzQfYF3Bf5KpyhzEBv4kHbj2EjCB/vMQiZCiiW30j5rS6t/d0ZN0FBrlSOuJIT+YU8IJt30VyWA==
@@ -4955,10 +4955,10 @@ pretty-format@^26.6.2:
     ansi-styles "^4.0.0"
     react-is "^17.0.1"
 
-probot@11.0.4:
-  version "11.0.4"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-11.0.4.tgz#1186c6a8909e10da24c705a1d0cddb8bd7171d79"
-  integrity sha512-I43Ak928G8e8Rz6/vfZ0qDjm+LDzdVRLT9rQjbSncFZSmLqIRkwMed+l3aFK8n34zvfIYtiq88LOeDP4r8ODeQ==
+probot@11.0.6:
+  version "11.0.6"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-11.0.6.tgz#9ed421a8d4b89f8ee8873374668aeb9eca5760c4"
+  integrity sha512-KvX931ZXno/jveNbMk+1QeWa63XOJWfnGHDGiE1R+r54VHEg7dQAeLpaOjTX34DiZpTlFUvyulXZoFMDFnQsYQ==
   dependencies:
     "@octokit/core" "^3.2.4"
     "@octokit/plugin-enterprise-compatibility" "^1.2.8"
@@ -4967,7 +4967,7 @@ probot@11.0.4:
     "@octokit/plugin-retry" "^3.0.6"
     "@octokit/plugin-throttling" "^3.3.4"
     "@octokit/types" "^6.1.1"
-    "@octokit/webhooks" "^7.18.1"
+    "@octokit/webhooks" "7.21.0"
     "@probot/get-private-key" "^1.1.0"
     "@probot/octokit-plugin-config" "^1.0.0"
     "@probot/pino" "^2.2.0"
