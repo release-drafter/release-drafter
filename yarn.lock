@@ -733,13 +733,12 @@
     aggregate-error "^3.1.0"
     debug "^4.0.0"
 
-"@probot/adapter-github-actions@3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@probot/adapter-github-actions/-/adapter-github-actions-3.0.0.tgz#96cb58c5eab0bd9351c81e86c73125a8458b5edb"
-  integrity sha512-Add+qs4o96VjJwQO4fVa3h6qTFxpDiO3an8LpGDjYQtIen8cfMIX841rzp4FciDkNUDfLsbosnCgOpIrlwEzOQ==
+"@probot/adapter-github-actions@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@probot/adapter-github-actions/-/adapter-github-actions-3.0.1.tgz#25ba1a47c241aeb96f20ec6ff5a7610a650bd892"
+  integrity sha512-RIn7H0UF9ngR+rz9gLjY602Tub+01NjDaTvNa0MXlnCKHLnX6O8KxTs0bVTIsk6W5Y2H8+ITzY8QJK0KOaNowA==
   dependencies:
     "@actions/core" "^1.2.6"
-    nock "^13.0.7"
     pino "^6.11.0"
     probot "^11.0.6"
     through2 "^4.0.2"
@@ -4457,7 +4456,7 @@ nock-knock@2.0.0:
   dependencies:
     routable "0.0.x"
 
-nock@13.0.7, nock@^13.0.7:
+nock@13.0.7:
   version "13.0.7"
   resolved "https://registry.yarnpkg.com/nock/-/nock-13.0.7.tgz#9bc718c66bd0862dfa14601a9ba678a406127910"
   integrity sha512-WBz73VYIjdbO6BwmXODRQLtn7B5tldA9pNpWJe5QTtTEscQlY5KXU4srnGzBOK2fWakkXj69gfTnXGzmrsaRWw==
