@@ -18,6 +18,10 @@ on:
     # branches to consider in the event; optional, defaults to all
     branches:
       - master
+  # pull_request event is required only for autolabeler
+  pull_request:
+    # Only following types are handled by the action, but one can default to all as well
+    types: [opened, reopened, synchronize]
 
 jobs:
   update_release_draft:
@@ -258,6 +262,29 @@ replacers:
     replace: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2'
   - search: 'myname'
     replace: 'My Name'
+```
+
+## Autolabeler
+
+You can add automatically a label into a pull request, with the `autolabeler` option. Available matchers are `files` (glob), `branch` (regex), `title` (regex) and `body` (regex).
+
+```yml
+autolabeler:
+  - label: 'chore'
+    files:
+      - '*.md'
+    branch:
+      - '/docs{0,1}\/.+/'
+  - label: 'bug'
+    branch:
+      - '/fix\/.+/'
+    title:
+      - '/fix/i'
+  - label: 'enhancement'
+    branch:
+      - '/feature\/.+/'
+    body:
+      - '/JIRA-[0-9]{1,4}/'
 ```
 
 ## Projects that don't use Semantic Versioning
