@@ -22,6 +22,7 @@
   "dependencies": {
     "@actions/core": "1.2.6",
     "@hapi/joi": "15.1.1",
+    "@probot/adapter-github-actions": "^3.0.1",
     "cli-table3": "0.6.0",
     "compare-versions": "3.6.0",
     "escape-string-regexp": "4.0.0",
