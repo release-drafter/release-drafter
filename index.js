@@ -29,12 +29,14 @@ module.exports = (app, { getRouter }) => {
       'pull_request.synchronize',
     ],
     async (context) => {
+      const { disableAutolabeler } = getInput()
+
       const config = await getConfig({
         context,
         configName: core.getInput('config-name'),
       })
 
-      if (config === null) return
+      if (config === null || disableAutolabeler) return
 
       let issue = {
         ...context.issue({ pull_number: context.payload.pull_request.number }),
@@ -122,7 +124,14 @@ module.exports = (app, { getRouter }) => {
   )
 
   app.on(event, async (context) => {
-    const { shouldDraft, configName, version, tag, name } = getInput()
+    const {
+      shouldDraft,
+      configName,
+      version,
+      tag,
+      name,
+      disableReleaser,
+    } = getInput()
 
     const config = await getConfig({
       context,
@@ -131,7 +140,7 @@ module.exports = (app, { getRouter }) => {
 
     const { isPreRelease } = getInput({ config })
 
-    if (config === null) return
+    if (config === null || disableReleaser) return
 
     // GitHub Actions merge payloads slightly differ, in that their ref points
     // to the PR branch instead of refs/heads/master
@@ -207,6 +216,10 @@ function getInput({ config } = {}) {
       version: core.getInput('version') || undefined,
       tag: core.getInput('tag') || undefined,
       name: core.getInput('name') || undefined,
+      disableReleaser:
+        core.getInput('disable-releaser').toLowerCase() === 'true',
+      disableAutolabeler:
+        core.getInput('disable-autolabeler').toLowerCase() === 'true',
     }
   }
 
