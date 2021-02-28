@@ -35,12 +35,22 @@ inputs:
     default: ''
   prerelease:
     description: |
-      A boolean indicating whether the relase being created or updated is a prerelease.
+      A boolean indicating whether the release being created or updated is a prerelease.
     required: false
     default: ''
   commitish:
     description: |
       The object that the release should be created to point to.
+    required: false
+    default: ''
+  disable-releaser:
+    description: |
+      A boolean indicating whether the releaser mode is disabled.
+    required: false
+    default: ''
+  disable-autolabeler:
+    description: |
+      A boolean indicating whether the autolabeler mode is disabled.
     required: false
     default: ''
 outputs:
