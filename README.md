@@ -274,7 +274,7 @@ replacers:
 ## Autolabeler
 
 You can add automatically a label into a pull request, with the `autolabeler` option. Available matchers are `files` (glob), `branch` (regex), `title` (regex) and `body` (regex).
-Matchers are evaluated independently, the label will be set if at least one of the matchers meets the criteria.
+Matchers are evaluated independently; the label will be set if at least one of the matchers meets the criteria.
 
 ```yml
 autolabeler:
