@@ -234,7 +234,8 @@ Pull requests with the label "feature" or "fix" will now be grouped together:
 
 <img src="design/screenshot-2.png" alt="Screenshot of generated draft release with categories" width="586" />
 
-Adding such labels to your PRs can be automated by using [PR Labeler](https://github.com/TimonVS/pr-labeler-action) or [Probot Auto Labeler](https://github.com/probot/autolabeler).
+Adding such labels to your PRs can be automated by using the embedded Autolabeler functionality (see below),
+[PR Labeler](https://github.com/TimonVS/pr-labeler-action) or [Probot Auto Labeler](https://github.com/probot/autolabeler).
 
 ## Exclude Pull Requests
 
@@ -273,6 +274,7 @@ replacers:
 ## Autolabeler
 
 You can add automatically a label into a pull request, with the `autolabeler` option. Available matchers are `files` (glob), `branch` (regex), `title` (regex) and `body` (regex).
+Matchers are evaluated independently; the label will be set if at least one of the matchers meets the criteria.
 
 ```yml
 autolabeler:
