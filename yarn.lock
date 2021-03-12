@@ -4879,7 +4879,7 @@ pino-pretty@^4.2.1:
     split2 "^3.1.1"
     strip-json-comments "^3.1.1"
 
-pino-std-serializers@^2.4.0, pino-std-serializers@^2.4.2:
+pino-std-serializers@^2.4.0:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-2.5.0.tgz#40ead781c65a0ce7ecd9c1c33f409d31fe712315"
   integrity sha512-wXqbqSrIhE58TdrxxlfLwU9eDhrzppQDvGhBEr1gYbzzM4KKo3Y63gSjiDXRKLVS2UOXdPNR2v+KnQgNrs+xUg==
@@ -4889,19 +4889,7 @@ pino-std-serializers@^3.1.0:
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-3.2.0.tgz#b56487c402d882eb96cd67c257868016b61ad671"
   integrity sha512-EqX4pwDPrt3MuOAAUBMU0Tk5kR/YcCM5fNPEzgCO2zJ5HfX0vbiH9HbJglnyeQsN96Kznae6MWD47pZB5avTrg==
 
-pino@^6.0.0, pino@^6.7.0:
-  version "6.8.0"
-  resolved "https://registry.yarnpkg.com/pino/-/pino-6.8.0.tgz#d242f9936f2e65217fde75c0af5d5d8b4d3d3fde"
-  integrity sha512-nxq+6Jr7m0cMjYFBoTRw3bco14omZ/SQCheAHz9GVwdkbUrzKhgT+gSI/ql2Mnsca0QQKgpB/ACWhjxE4JsX3Q==
-  dependencies:
-    fast-redact "^3.0.0"
-    fast-safe-stringify "^2.0.7"
-    flatstr "^1.0.12"
-    pino-std-serializers "^2.4.2"
-    quick-format-unescaped "^4.0.1"
-    sonic-boom "^1.0.2"
-
-pino@^6.11.0:
+pino@^6.0.0, pino@^6.11.0, pino@^6.7.0:
   version "6.11.1"
   resolved "https://registry.yarnpkg.com/pino/-/pino-6.11.1.tgz#5af2d5395cfe625ead9fe64a3b51a4802cd2598e"
   integrity sha512-PoDR/4jCyaP1k2zhuQ4N0NuhaMtei+C9mUHBRRJQujexl/bq3JkeL2OC23ada6Np3zeUMHbO4TGzY2D/rwZX3w==
@@ -4991,10 +4979,10 @@ pretty-format@^26.6.2:
     ansi-styles "^4.0.0"
     react-is "^17.0.1"
 
-probot@11.0.6, probot@^11.0.6:
-  version "11.0.6"
-  resolved "https://registry.yarnpkg.com/probot/-/probot-11.0.6.tgz#9ed421a8d4b89f8ee8873374668aeb9eca5760c4"
-  integrity sha512-KvX931ZXno/jveNbMk+1QeWa63XOJWfnGHDGiE1R+r54VHEg7dQAeLpaOjTX34DiZpTlFUvyulXZoFMDFnQsYQ==
+probot@11.1.0, probot@^11.0.6:
+  version "11.1.0"
+  resolved "https://registry.yarnpkg.com/probot/-/probot-11.1.0.tgz#8cf63bf2b8c57759ac66bcc155d3769dca64f128"
+  integrity sha512-h+Bty4+mxrF+lstLlzfwBZSRO5OnTUGbYWjMWadFoYoal3dGqIf7VQFloCZZM2qNTpHqRawnqW20ZLHoErcF9Q==
   dependencies:
     "@octokit/core" "^3.2.4"
     "@octokit/plugin-enterprise-compatibility" "^1.2.8"
