@@ -27,7 +27,7 @@
     "compare-versions": "3.6.0",
     "escape-string-regexp": "4.0.0",
     "ignore": "5.1.8",
-    "lodash": "4.17.20",
+    "lodash": "4.17.21",
     "probot": "11.1.0",
     "regex-parser": "2.2.11",
     "request": "2.88.2",
