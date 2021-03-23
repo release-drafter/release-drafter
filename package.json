@@ -31,7 +31,7 @@
     "probot": "11.1.0",
     "regex-parser": "2.2.11",
     "request": "2.88.2",
-    "semver": "7.3.4"
+    "semver": "7.3.5"
   },
   "devDependencies": {
     "@types/hapi__joi": "^15.0.4",
