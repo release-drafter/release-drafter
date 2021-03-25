@@ -429,7 +429,7 @@ describe('release-drafter', () => {
             (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
-                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1",
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
                   "draft": true,
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -1170,7 +1170,7 @@ describe('release-drafter', () => {
             (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
-                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1",
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
                   "draft": true,
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -1214,7 +1214,7 @@ describe('release-drafter', () => {
             (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
-                  "body": "Placeholder with example. Automatically calculated values are next major=3.0, minor=2.1, patch=2.0",
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0 (major=3, minor=0, patch=0), minor=2.1 (major=2, minor=1, patch=0), patch=2.0 (major=2, minor=0, patch=1)",
                   "draft": true,
                   "name": "v2.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -1258,7 +1258,7 @@ describe('release-drafter', () => {
             (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
-                  "body": "Placeholder with example. Automatically calculated values are next major=3, minor=2, patch=2",
+                  "body": "Placeholder with example. Automatically calculated values are next major=3 (major=3, minor=0, patch=0), minor=2 (major=2, minor=1, patch=0), patch=2 (major=2, minor=0, patch=1)",
                   "draft": true,
                   "name": "v3 (Code name: Placeholder)",
                   "prerelease": false,
