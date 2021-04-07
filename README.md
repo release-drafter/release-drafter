@@ -46,7 +46,7 @@ If you're unable to use GitHub Actions, you can use the Release Drafter GitHub A
 
 ## Configuration
 
-Once you’ve added Release Drafter to your repository, it must be enabled by adding a `.github/release-drafter.yml` configuration file to each repository.
+Once you’ve added Release Drafter to your repository, it must be enabled by adding a `.github/release-drafter.yml` configuration file to each repository. The configuration file **must** reside in your default branch, no other configurations will be accepted.
 
 ### Example
 
