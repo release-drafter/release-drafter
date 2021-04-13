@@ -1138,10 +1138,10 @@
   dependencies:
     "@types/yargs-parser" "*"
 
-"@vercel/ncc@0.27.0":
-  version "0.27.0"
-  resolved "https://registry.yarnpkg.com/@vercel/ncc/-/ncc-0.27.0.tgz#c0cfeebb0bebb56052719efa4a0ecc090a932c76"
-  integrity sha512-DllIJQapnU2YwewIhh/4dYesmMQw3h2cFtabECc/zSJHqUbNa0eJuEkRa6DXbZvh1YPWBtYQoPV17NlDpBw1Vw==
+"@vercel/ncc@0.28.3":
+  version "0.28.3"
+  resolved "https://registry.yarnpkg.com/@vercel/ncc/-/ncc-0.28.3.tgz#9461bdbf334d616759b0e7e5415e2f480b9aa30f"
+  integrity sha512-g3gk4D9itbhUQa5MtN7TOdeoQnNLkPDCox5SBaQ/H3Or5lo59TOaZWrLb+x47StiAJ+8DXZS/9MJ67cIBWSsRw==
 
 abab@^2.0.3:
   version "2.0.3"
