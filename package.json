@@ -28,14 +28,14 @@
     "escape-string-regexp": "4.0.0",
     "ignore": "5.1.8",
     "lodash": "4.17.21",
-    "probot": "11.1.0",
+    "probot": "11.3.0",
     "regex-parser": "2.2.11",
     "request": "2.88.2",
     "semver": "7.3.4"
   },
   "devDependencies": {
     "@types/hapi__joi": "^15.0.4",
-    "@vercel/ncc": "0.27.0",
+    "@vercel/ncc": "0.28.4",
     "eslint": "7.22.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-prettier": "3.3.1",
