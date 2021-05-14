@@ -131,6 +131,7 @@ module.exports = (app, { getRouter }) => {
       tag,
       name,
       disableReleaser,
+      commitish,
     } = getInput()
 
     const config = await getConfig({
@@ -181,6 +182,7 @@ module.exports = (app, { getRouter }) => {
       name,
       isPreRelease,
       shouldDraft,
+      commitish,
     })
 
     let createOrUpdateReleaseResponse
@@ -220,6 +222,7 @@ function getInput({ config } = {}) {
         core.getInput('disable-releaser').toLowerCase() === 'true',
       disableAutolabeler:
         core.getInput('disable-autolabeler').toLowerCase() === 'true',
+      commitish: core.getInput('commitish') || undefined,
     }
   }
 
