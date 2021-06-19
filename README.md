@@ -117,6 +117,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `categories`           | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                     |
 | `exclude-labels`       | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                              |
 | `include-labels`       | Optional | Include only the specified pull requests using labels. Refer to [Include Pull Requests](#include-pull-requests) to learn more about this option.                           |
+| `exclude-contributors` | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.            |
 | `replacers`            | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                              |
 | `sort-by`              | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                           |
 | `sort-direction`       | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                          |
@@ -258,6 +259,15 @@ include-labels:
 ```
 
 Pull requests with the label "app-foo" will be the only pull requests included in the release draft.
+
+## Exclude Contributors
+
+By default, the `$CONTRIBUTORS` variable will contain the names or usernames of all the contributors of a release. The `exclude-contributors` option allows you to remove certain usernames from that list. This can be useful if don't wish to include yourself, to better highlight only the third-party contributions.
+
+```yml
+exclude-contributors:
+  - 'myusername'
+```
 
 ## Replacers
 
