@@ -648,6 +648,48 @@ describe('release-drafter', () => {
 
           expect.assertions(1)
         })
+
+        it('uses no-contributors-template when there are no contributors', async () => {
+          getConfigMock('config-with-contributors.yml')
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release')])
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, require('./fixtures/graphql-commits-empty.json'))
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "A big thanks to: Nobody",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                    "target_commitish": "",
+                  }
+                `)
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push'),
+          })
+
+          expect.assertions(1)
+        })
       })
 
       describe('with exclude-contributors config', () => {
@@ -2247,7 +2289,7 @@ describe('release-drafter', () => {
 
                 ## Contributors
 
-                $CONTRIBUTORS
+                No contributors
 
                 ## Previous release
 
@@ -2357,7 +2399,7 @@ describe('release-drafter', () => {
 
                 ## Contributors
 
-                $CONTRIBUTORS
+                No contributors
 
                 ## Previous release
 
