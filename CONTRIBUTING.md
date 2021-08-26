@@ -12,7 +12,7 @@ Please note that this project is released with a [Contributor Code of Conduct][c
 ## Submitting a pull request
 
 1. [Fork][fork] and clone the repository
-1. Configure and install the dependencies: `npm install`
+1. Configure and install the dependencies: `yarn install`
 1. Make sure the tests pass on your machine: `npm test`, note: these tests also apply the linter, so no need to lint seperately
 1. Create a new branch: `git checkout -b my-branch-name`
 1. Make your change, add tests, and make sure the tests still pass
