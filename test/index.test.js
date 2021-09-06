@@ -429,7 +429,7 @@ describe('release-drafter', () => {
             (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
-                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1",
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
                   "draft": true,
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -629,6 +629,95 @@ describe('release-drafter', () => {
                 expect(body).toMatchInlineSnapshot(`
                   Object {
                     "body": "A big thanks to: @TimonVS and Ada Lovelace",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                    "target_commitish": "",
+                  }
+                `)
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push'),
+          })
+
+          expect.assertions(1)
+        })
+
+        it('uses no-contributors-template when there are no contributors', async () => {
+          getConfigMock('config-with-contributors.yml')
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release')])
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, require('./fixtures/graphql-commits-empty.json'))
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "A big thanks to: Nobody",
+                    "draft": true,
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                    "target_commitish": "",
+                  }
+                `)
+                return true
+              }
+            )
+            .reply(200, require('./fixtures/release'))
+
+          await probot.receive({
+            name: 'push',
+            payload: require('./fixtures/push'),
+          })
+
+          expect.assertions(1)
+        })
+      })
+
+      describe('with exclude-contributors config', () => {
+        it('excludes matching contributors by username', async () => {
+          getConfigMock('config-with-exclude-contributors.yml')
+
+          nock('https://api.github.com')
+            .get(
+              '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [require('./fixtures/release')])
+
+          nock('https://api.github.com')
+            .post('/graphql', (body) =>
+              body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(
+              200,
+              require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+            )
+
+          nock('https://api.github.com')
+            .post(
+              '/repos/toolmantim/release-drafter-test-project/releases',
+              (body) => {
+                expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "A big thanks to: Ada Lovelace",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -1170,7 +1259,7 @@ describe('release-drafter', () => {
             (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
-                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0, minor=2.1.0, patch=2.0.1",
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
                   "draft": true,
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -1214,7 +1303,7 @@ describe('release-drafter', () => {
             (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
-                  "body": "Placeholder with example. Automatically calculated values are next major=3.0, minor=2.1, patch=2.0",
+                  "body": "Placeholder with example. Automatically calculated values are next major=3.0 (major=3, minor=0, patch=0), minor=2.1 (major=2, minor=1, patch=0), patch=2.0 (major=2, minor=0, patch=1)",
                   "draft": true,
                   "name": "v2.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -1258,7 +1347,7 @@ describe('release-drafter', () => {
             (body) => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
-                  "body": "Placeholder with example. Automatically calculated values are next major=3, minor=2, patch=2",
+                  "body": "Placeholder with example. Automatically calculated values are next major=3 (major=3, minor=0, patch=0), minor=2 (major=2, minor=1, patch=0), patch=2 (major=2, minor=0, patch=1)",
                   "draft": true,
                   "name": "v3 (Code name: Placeholder)",
                   "prerelease": false,
@@ -2200,7 +2289,7 @@ describe('release-drafter', () => {
 
                 ## Contributors
 
-                $CONTRIBUTORS
+                No contributors
 
                 ## Previous release
 
@@ -2310,7 +2399,7 @@ describe('release-drafter', () => {
 
                 ## Contributors
 
-                $CONTRIBUTORS
+                No contributors
 
                 ## Previous release
 
