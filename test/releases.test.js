@@ -8,6 +8,8 @@ const pullRequests = [
     body: 'A1 body',
     url: 'https://github.com',
     labels: { nodes: [{ name: 'bug' }] },
+    baseRefName: 'master',
+    headRefName: 'fix-bug',
   },
   {
     title: 'B2',
@@ -15,6 +17,8 @@ const pullRequests = [
     body: 'B2 body',
     url: 'https://github.com',
     labels: { nodes: [{ name: 'feature' }] },
+    baseRefName: 'master',
+    headRefName: 'implement-feature',
   },
   {
     title: 'Adds missing <example>',
@@ -23,6 +27,8 @@ const pullRequests = [
     url: 'https://github.com',
     labels: { nodes: [{ name: 'bug' }] },
     author: { login: 'jetersen' },
+    baseRefName: 'master',
+    headRefName: 'fix-bug',
   },
   {
     title: '`#code_block`',
@@ -31,6 +37,8 @@ const pullRequests = [
     url: 'https://github.com',
     labels: { nodes: [{ name: 'bug' }] },
     author: { login: 'jetersen' },
+    baseRefName: 'master',
+    headRefName: 'fix-bug',
   },
   {
     title: 'Fixes #4',
@@ -39,6 +47,8 @@ const pullRequests = [
     url: 'https://github.com',
     labels: { nodes: [{ name: 'bug' }] },
     author: { login: 'Happypig375' },
+    baseRefName: 'master',
+    headRefName: 'fix-bug',
   },
   {
     title: '2*2 should equal to 4*1',
@@ -47,6 +57,8 @@ const pullRequests = [
     url: 'https://github.com',
     labels: { nodes: [{ name: 'bug' }] },
     author: { login: 'jetersen' },
+    baseRefName: 'master',
+    headRefName: 'fix-bug',
   },
   {
     title: 'Rename __confgs\\confg.yml to __configs\\config.yml',
@@ -55,6 +67,8 @@ const pullRequests = [
     url: 'https://github.com',
     labels: { nodes: [{ name: 'bugfix' }] },
     author: { login: 'ghost' },
+    baseRefName: 'master',
+    headRefName: 'fix-bug',
   },
   {
     title: 'Adds @nullable annotations to the 1*1+2*4 test in `tests.java`',
@@ -63,6 +77,8 @@ const pullRequests = [
     url: 'https://github.com',
     labels: { nodes: [{ name: 'feature' }] },
     author: { login: 'Happypig375' },
+    baseRefName: 'master',
+    headRefName: 'implement-feature',
   },
 ]
 const baseConfig = {
