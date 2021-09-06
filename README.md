@@ -162,11 +162,12 @@ You can use any of the following variables in your `template`, `name-template` a
 
 You can use any of the following variables in `version-template` to format the `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` variables:
 
-| Variable | Description               |
-| -------- | ------------------------- |
-| `$PATCH` | The patch version number. |
-| `$MINOR` | The minor version number. |
-| `$MAJOR` | The major version number. |
+| Variable    | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| `$PATCH`    | The patch version number.                                    |
+| `$MINOR`    | The minor version number.                                    |
+| `$MAJOR`    | The major version number.                                    |
+| `$COMPLETE` | The complete version string (including any prerelease info). |
 
 ## Version Resolver
 

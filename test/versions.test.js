@@ -131,7 +131,8 @@ describe('versions', () => {
         tag_name: 'v10.0.3-alpha',
         name: 'Some release',
       },
-      '$MAJOR.$MINOR.$PATCH'
+      '$MAJOR.$MINOR.$PATCH',
+      'v10.0.3-alpha'
     )
 
     expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
@@ -145,6 +146,10 @@ describe('versions', () => {
     expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.version).toEqual('11.0.0')
     expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.template).toEqual('$PATCH')
     expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.3')
+    expect(versionInfo.$INPUT_VERSION.version).toEqual('10.0.3-alpha')
+    expect(versionInfo.$RESOLVED_VERSION.version).toEqual('10.0.3-alpha')
+
     expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual(
       '$MAJOR.$MINOR.$PATCH'
     )
@@ -154,15 +159,15 @@ describe('versions', () => {
     expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.template).toEqual('$MINOR')
     expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.version).toEqual('10.1.0')
     expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.4')
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.3')
     expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual(
       '$MAJOR.$MINOR.$PATCH'
     )
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.version).toEqual('10.0.4')
+    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.version).toEqual('10.0.3')
     expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.version).toEqual('10.0.4')
+    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.version).toEqual('10.0.3')
     expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.version).toEqual('10.0.4')
+    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.version).toEqual('10.0.3')
     expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.template).toEqual('$PATCH')
   })
 
