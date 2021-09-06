@@ -73,6 +73,17 @@
         "type": "string"
       }
     },
+    "exclude-contributors": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "no-contributors-template": {
+      "default": "No contributors",
+      "type": "string"
+    },
     "sort-by": {
       "default": "merged_at",
       "enum": ["merged_at", "title"],

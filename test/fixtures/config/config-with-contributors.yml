@@ -1,1 +1,2 @@
 template: 'A big thanks to: $CONTRIBUTORS'
+no-contributors-template: 'Nobody'
