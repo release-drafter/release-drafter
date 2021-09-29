@@ -20,7 +20,7 @@
     "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master"
   },
   "dependencies": {
-    "@actions/core": "1.2.6",
+    "@actions/core": "1.6.0",
     "@hapi/joi": "15.1.1",
     "@probot/adapter-github-actions": "^3.0.1",
     "cli-table3": "0.6.0",
