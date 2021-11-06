@@ -36,7 +36,7 @@ describe('getConfig', () => {
         log: { info: jest.fn(), warn: jest.fn() },
       }
 
-      expect(
+      await expect(
         getConfig({
           context,
         })
@@ -73,7 +73,7 @@ describe('getConfig', () => {
         log: { info: jest.fn(), warn: jest.fn() },
       }
 
-      expect(
+      await expect(
         getConfig({
           context,
         })
