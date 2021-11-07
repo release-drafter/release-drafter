@@ -30,19 +30,28 @@ describe('getConfig', () => {
 
   describe('`replacers` option', () => {
     it('validates `replacers` option', async () => {
+      let infoMessage
+      let warnMessage
       const context = {
         payload: { repository: { default_branch: 'master' } },
         config: createGetConfigMock({ replacers: 'bogus' }),
-        log: { info: jest.fn(), warn: jest.fn() },
+        log: {
+          info: jest.fn((m) => {
+            infoMessage = m
+          }),
+          warn: jest.fn((_, m) => {
+            warnMessage = m
+          }),
+        },
       }
 
-      await expect(
-        getConfig({
-          context,
-        })
-      ).rejects.toThrow(
-        'child "replacers" fails because ["replacers" must be an array]'
-      )
+      const config = await getConfig({
+        context,
+      })
+
+      expect(config).toBeNull()
+      expect(warnMessage).toContain('Invalid config file')
+      expect(infoMessage).toContain('"replacers" must be an array')
     })
 
     it('accepts valid `replacers`', async () => {
@@ -67,17 +76,28 @@ describe('getConfig', () => {
 
   describe('`sort-direction` option', () => {
     it('validates `sort-direction` option', async () => {
+      let infoMessage
+      let warnMessage
       const context = {
         payload: { repository: { default_branch: 'master' } },
         config: createGetConfigMock({ 'sort-direction': 'bogus' }),
-        log: { info: jest.fn(), warn: jest.fn() },
+        log: {
+          info: jest.fn((m) => {
+            infoMessage = m
+          }),
+          warn: jest.fn((_, m) => {
+            warnMessage = m
+          }),
+        },
       }
 
-      await expect(
-        getConfig({
-          context,
-        })
-      ).rejects.toThrow(
+      const config = await getConfig({
+        context,
+      })
+
+      expect(config).toBeNull()
+      expect(warnMessage).toContain('Invalid config file')
+      expect(infoMessage).toContain(
         '"sort-direction" must be one of [ascending, descending]'
       )
     })
