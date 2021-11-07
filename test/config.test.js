@@ -28,6 +28,34 @@ describe('getConfig', () => {
     })
   })
 
+  it('config file does not exist', async () => {
+    let warnMessage
+    let warnStack
+    const context = {
+      payload: { repository: { default_branch: 'master' } },
+      config: null,
+      log: {
+        info: jest.fn(),
+        warn: jest.fn((e, m) => {
+          warnMessage = m
+          warnStack = e.stack
+        }),
+      },
+    }
+
+    const config = await getConfig({
+      context,
+    })
+
+    expect(config).toBeNull()
+    expect(warnMessage).toContain('Invalid config file')
+    expect(warnStack).toContain(
+      'context.config is not a function'
+      // In the test, this message is set by Probot. Actually the message below:
+      // 'Configuration file .github/release-drafter.yml is not found. The configuration file must reside in your default branch.'
+    )
+  })
+
   describe('`replacers` option', () => {
     it('validates `replacers` option', async () => {
       let infoMessage
