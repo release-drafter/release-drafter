@@ -29,57 +29,50 @@ describe('getConfig', () => {
   })
 
   it('config file does not exist', async () => {
-    let warnMessage
-    let warnStack
     const context = {
       payload: { repository: { default_branch: 'master' } },
       config: null,
-      log: {
-        info: jest.fn(),
-        warn: jest.fn((e, m) => {
-          warnMessage = m
-          warnStack = e.stack
-        }),
-      },
+      log: { info: jest.fn(), warn: jest.fn() },
     }
+    const warnSpy = jest.spyOn(context.log, 'warn')
 
     const config = await getConfig({
       context,
     })
 
     expect(config).toBeNull()
-    expect(warnMessage).toContain('Invalid config file')
-    expect(warnStack).toContain(
-      'context.config is not a function'
-      // In the test, this message is set by Probot. Actually the message below:
-      // 'Configuration file .github/release-drafter.yml is not found. The configuration file must reside in your default branch.'
+    expect(warnSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        stack: expect.stringMatching(/context.config is not a function/),
+        // In the test, this message is set by Probot. Actually the message below:
+        // 'Configuration file .github/release-drafter.yml is not found. The configuration file must reside in your default branch.'
+      }),
+      expect.stringMatching(/Invalid config file/)
     )
   })
 
   describe('`replacers` option', () => {
     it('validates `replacers` option', async () => {
-      let infoMessage
-      let warnMessage
       const context = {
         payload: { repository: { default_branch: 'master' } },
         config: createGetConfigMock({ replacers: 'bogus' }),
-        log: {
-          info: jest.fn((m) => {
-            infoMessage = m
-          }),
-          warn: jest.fn((_, m) => {
-            warnMessage = m
-          }),
-        },
+        log: { info: jest.fn(), warn: jest.fn() },
       }
+      const warnSpy = jest.spyOn(context.log, 'warn')
+      const infoSpy = jest.spyOn(context.log, 'info')
 
       const config = await getConfig({
         context,
       })
 
       expect(config).toBeNull()
-      expect(warnMessage).toContain('Invalid config file')
-      expect(infoMessage).toContain('"replacers" must be an array')
+      expect(warnSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({}),
+        expect.stringMatching(/Invalid config file/)
+      )
+      expect(infoSpy).toHaveBeenLastCalledWith(
+        expect.stringMatching(/"replacers" must be an array/)
+      )
     })
 
     it('accepts valid `replacers`', async () => {
@@ -104,29 +97,27 @@ describe('getConfig', () => {
 
   describe('`sort-direction` option', () => {
     it('validates `sort-direction` option', async () => {
-      let infoMessage
-      let warnMessage
       const context = {
         payload: { repository: { default_branch: 'master' } },
         config: createGetConfigMock({ 'sort-direction': 'bogus' }),
-        log: {
-          info: jest.fn((m) => {
-            infoMessage = m
-          }),
-          warn: jest.fn((_, m) => {
-            warnMessage = m
-          }),
-        },
+        log: { info: jest.fn(), warn: jest.fn() },
       }
+      const warnSpy = jest.spyOn(context.log, 'warn')
+      const infoSpy = jest.spyOn(context.log, 'info')
 
       const config = await getConfig({
         context,
       })
 
       expect(config).toBeNull()
-      expect(warnMessage).toContain('Invalid config file')
-      expect(infoMessage).toContain(
-        '"sort-direction" must be one of [ascending, descending]'
+      expect(warnSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({}),
+        expect.stringMatching(/Invalid config file/)
+      )
+      expect(infoSpy).toHaveBeenLastCalledWith(
+        expect.stringMatching(
+          /"sort-direction" must be one of \[ascending, descending\]/
+        )
       )
     })
 
