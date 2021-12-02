@@ -6,7 +6,8 @@ const fetch = require('node-fetch')
 const { findCommitsWithAssociatedPullRequestsQuery } = require('../lib/commits')
 
 const REPO_NAME = 'release-drafter-test-repo'
-const GITHUB_GRAPHQL_API_ENDPOINT = 'https://api.github.com/graphql'
+const GITHUB_BASE_URL = process.env.GITHUB_BASE_URL || 'https://api.github.com'
+const GITHUB_GRAPHQL_API_ENDPOINT = GITHUB_BASE_URL + '/graphql'
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 
 if (!GITHUB_TOKEN) {
