@@ -20,6 +20,8 @@ on:
       - master
   # pull_request event is required only for autolabeler
   pull_request:
+  # pull_request_target event is required for autolabeler to support PRs from forks
+  # pull_request_target:
     # Only following types are handled by the action, but one can default to all as well
     types: [opened, reopened, synchronize]
 
