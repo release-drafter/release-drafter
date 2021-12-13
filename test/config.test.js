@@ -28,6 +28,29 @@ describe('getConfig', () => {
     })
   })
 
+  it('config file does not exist', async () => {
+    const context = {
+      payload: { repository: { default_branch: 'master' } },
+      config: null,
+      log: { info: jest.fn(), warn: jest.fn() },
+    }
+    const warnSpy = jest.spyOn(context.log, 'warn')
+
+    const config = await getConfig({
+      context,
+    })
+
+    expect(config).toBeNull()
+    expect(warnSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        stack: expect.stringMatching(/context.config is not a function/),
+        // In the test, this message is set by Probot. Actually the message below:
+        // 'Configuration file .github/release-drafter.yml is not found. The configuration file must reside in your default branch.'
+      }),
+      expect.stringMatching(/Invalid config file/)
+    )
+  })
+
   describe('`replacers` option', () => {
     it('validates `replacers` option', async () => {
       const context = {
@@ -35,13 +58,20 @@ describe('getConfig', () => {
         config: createGetConfigMock({ replacers: 'bogus' }),
         log: { info: jest.fn(), warn: jest.fn() },
       }
+      const warnSpy = jest.spyOn(context.log, 'warn')
+      const infoSpy = jest.spyOn(context.log, 'info')
 
-      expect(
-        getConfig({
-          context,
-        })
-      ).rejects.toThrow(
-        'child "replacers" fails because ["replacers" must be an array]'
+      const config = await getConfig({
+        context,
+      })
+
+      expect(config).toBeNull()
+      expect(warnSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({}),
+        expect.stringMatching(/Invalid config file/)
+      )
+      expect(infoSpy).toHaveBeenLastCalledWith(
+        expect.stringMatching(/"replacers" must be an array/)
       )
     })
 
@@ -72,13 +102,22 @@ describe('getConfig', () => {
         config: createGetConfigMock({ 'sort-direction': 'bogus' }),
         log: { info: jest.fn(), warn: jest.fn() },
       }
+      const warnSpy = jest.spyOn(context.log, 'warn')
+      const infoSpy = jest.spyOn(context.log, 'info')
 
-      expect(
-        getConfig({
-          context,
-        })
-      ).rejects.toThrow(
-        '"sort-direction" must be one of [ascending, descending]'
+      const config = await getConfig({
+        context,
+      })
+
+      expect(config).toBeNull()
+      expect(warnSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({}),
+        expect.stringMatching(/Invalid config file/)
+      )
+      expect(infoSpy).toHaveBeenLastCalledWith(
+        expect.stringMatching(
+          /"sort-direction" must be one of \[ascending, descending\]/
+        )
       )
     })
 
