@@ -103,8 +103,16 @@
       "type": "boolean"
     },
     "commitish": {
-      "default": "",
-      "type": "string"
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
     },
     "replacers": {
       "default": [],
