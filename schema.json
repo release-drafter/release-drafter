@@ -102,6 +102,10 @@
       "default": false,
       "type": "boolean"
     },
+    "commitish": {
+      "default": "",
+      "type": "string"
+    },
     "replacers": {
       "default": [],
       "type": "array",
