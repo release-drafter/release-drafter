@@ -102,6 +102,18 @@
       "default": false,
       "type": "boolean"
     },
+    "commitish": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
     "replacers": {
       "default": [],
       "type": "array",
