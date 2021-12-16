@@ -28,6 +28,10 @@ module.exports = (app, { getRouter }) => {
       'pull_request.reopened',
       'pull_request.synchronize',
       'pull_request.edited',
+      'pull_request_target.opened',
+      'pull_request_target.reopened',
+      'pull_request_target.synchronize',
+      'pull_request_target.edited',
     ],
     async (context) => {
       const { disableAutolabeler } = getInput()
