@@ -59,6 +59,18 @@
         }
       ]
     },
+    "tag-prefix": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
     "exclude-labels": {
       "default": [],
       "type": "array",
