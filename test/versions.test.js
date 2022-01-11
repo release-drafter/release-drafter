@@ -1,5 +1,4 @@
-const { getVersionInfo } = require('../lib/versions')
-const each = require('jest-each').default
+import { getVersionInfo } from '../lib/versions'
 
 describe('versions', () => {
   it('extracts a version-like string from the last tag', () => {
@@ -180,11 +179,11 @@ describe('versions', () => {
     expect(versionInfo).toEqual(undefined)
   })
 
-  each([
+  it.each([
     ['patch', '10.0.4'],
     ['minor', '10.1.0'],
     ['major', '11.0.0'],
-  ]).it(
+  ])(
     "when the resolver versionKey increment is '%s'",
     (versionKey, expected) => {
       const versionInfo = getVersionInfo(

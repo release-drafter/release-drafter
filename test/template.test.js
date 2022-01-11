@@ -1,4 +1,4 @@
-const { template, validateReplacers } = require('../lib/template')
+import { template, validateReplacers } from '../lib/template'
 
 describe('template', () => {
   it('replaces $A with B', () => {

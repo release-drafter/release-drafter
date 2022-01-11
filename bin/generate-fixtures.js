@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-const fs = require('fs')
-const path = require('path')
-const fetch = require('node-fetch')
-const { findCommitsWithAssociatedPullRequestsQuery } = require('../lib/commits')
+import fs from 'node:fs'
+import path from 'node:path'
+import url from 'node:url'
+import fetch from 'node-fetch'
+import { findCommitsWithAssociatedPullRequestsQuery } from '../lib/commits'
 
 const REPO_NAME = 'release-drafter-test-repo'
 const GITHUB_GRAPHQL_API_ENDPOINT = 'https://api.github.com/graphql'
@@ -38,7 +39,7 @@ const repos = [
   },
 ]
 
-repos.forEach((repo) => {
+for (const repo of repos) {
   const options = {
     method: 'POST',
     headers: {
@@ -68,7 +69,7 @@ repos.forEach((repo) => {
       )
       fs.writeFileSync(
         path.resolve(
-          __dirname,
+          path.dirname(url.fileURLToPath(import.meta.url)),
           '../test/fixtures/__generated__',
           `graphql-commits-${repo.branch}.json`
         ),
@@ -76,4 +77,4 @@ repos.forEach((repo) => {
       )
     })
     .catch(console.error)
-})
+}

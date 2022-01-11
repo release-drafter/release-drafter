@@ -8,40 +8,42 @@
       "type": "node",
       "request": "launch",
       "name": "Jest All",
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["--runInBand"],
+      "args": [
+        "--experimental-vm-modules",
+        "${workspaceFolder}/node_modules/.bin/jest",
+        "--runInBand"
+      ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true,
-      "windows": {
-        "program": "${workspaceFolder}/node_modules/jest/bin/jest"
-      }
+      "disableOptimisticBPs": true
     },
     {
       "type": "node",
       "request": "launch",
       "name": "Jest Current File",
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["${fileBasenameNoExtension}"],
+      "args": [
+        "--experimental-vm-modules",
+        "${workspaceFolder}/node_modules/.bin/jest",
+        "${fileBasenameNoExtension}"
+      ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true,
-      "windows": {
-        "program": "${workspaceFolder}/node_modules/jest/bin/jest"
-      }
+      "disableOptimisticBPs": true
     },
     {
       "type": "node",
       "request": "launch",
       "name": "Jest Run Selected Test",
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "disableOptimisticBPs": true,
-      "windows": {
-        "program": "${workspaceFolder}/node_modules/jest/bin/jest"
-      },
-      "args": ["${fileBasenameNoExtension}", "-t", "${selectedText}"]
+      "args": [
+        "--experimental-vm-modules",
+        "${workspaceFolder}/node_modules/.bin/jest",
+        "${fileBasenameNoExtension}",
+        "-t",
+        "${selectedText}"
+      ]
     }
   ]
 }

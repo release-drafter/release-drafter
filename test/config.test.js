@@ -1,6 +1,7 @@
-const { DEFAULT_CONFIG } = require('../lib/default-config')
-const { getConfig } = require('../lib/config')
-const { SORT_DIRECTIONS } = require('../lib/sort-pull-requests')
+import { jest } from '@jest/globals'
+import { DEFAULT_CONFIG } from '../lib/default-config'
+import { getConfig } from '../lib/config'
+import { SORT_DIRECTIONS } from '../lib/sort-pull-requests'
 
 function createGetConfigMock(config) {
   return (context, configName, defaults) =>
@@ -116,7 +117,7 @@ describe('getConfig', () => {
       )
       expect(infoSpy).toHaveBeenLastCalledWith(
         expect.stringMatching(
-          /"sort-direction" must be one of \[ascending, descending\]/
+          /"sort-direction" must be one of \[ascending, descending]/
         )
       )
     })
