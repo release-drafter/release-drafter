@@ -1,5 +1,0 @@
-language: minimal
-sudo: required
-services:
-  - docker
-script: docker-compose run app npm test
