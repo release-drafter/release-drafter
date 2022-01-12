@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import paginate from '../lib/pagination'
+import { paginate } from '../lib/pagination'
 
 describe('pagination', () => {
   it('concats pagination results', async () => {

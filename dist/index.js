@@ -99851,7 +99851,7 @@ var __webpack_exports__ = {};
 
 
 
-(0,_probot_adapter_github_actions__WEBPACK_IMPORTED_MODULE_1__.run)(_index__WEBPACK_IMPORTED_MODULE_2__).catch((error) => {
+(0,_probot_adapter_github_actions__WEBPACK_IMPORTED_MODULE_1__.run)(_index__WEBPACK_IMPORTED_MODULE_2__.app).catch((error) => {
   _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(`💥 Release drafter failed with error: ${error.message}`)
 })
 

@@ -8,7 +8,7 @@ import {
 } from './lib/releases'
 import { findCommitsWithAssociatedPullRequests } from './lib/commits'
 import { sortPullRequests } from './lib/sort-pull-requests'
-import log from './lib/log'
+import { log } from './lib/log'
 import core from '@actions/core'
 import { runnerIsActions } from './lib/utils'
 import ignore from 'ignore'
@@ -263,5 +263,3 @@ function setActionOutput(releaseResponse, { body }) {
   if (name) core.setOutput('name', name)
   core.setOutput('body', body)
 }
-
-export default app
