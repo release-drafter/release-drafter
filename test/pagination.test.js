@@ -1,12 +1,13 @@
-const paginate = require('../lib/pagination')
+import { jest } from '@jest/globals'
+import { paginate } from '../lib/pagination'
 
 describe('pagination', () => {
   it('concats pagination results', async () => {
-    const queryFn = jest.fn()
+    const queryFunction = jest.fn()
     // query is empty because we mock the result
     const query = ``
 
-    queryFn
+    queryFunction
       .mockReturnValueOnce(
         Promise.resolve({
           repository: {
@@ -38,13 +39,13 @@ describe('pagination', () => {
         })
       )
 
-    const data = await paginate(queryFn, query, {}, [
+    const data = await paginate(queryFunction, query, {}, [
       'repository',
       'object',
       'history',
     ])
 
-    expect(queryFn).toHaveBeenCalledTimes(2)
+    expect(queryFunction).toHaveBeenCalledTimes(2)
     expect(data.repository.object.history.nodes).toEqual([
       'a',
       'b',
@@ -60,12 +61,12 @@ describe('pagination', () => {
   })
 
   it("throws when query doesn't return `nodes` or `pageInfo` fields", async () => {
-    const queryFn = jest.fn()
+    const queryFunction = jest.fn()
     // query is empty because we mock the result
     const query = ``
 
-    queryFn.mockReturnValueOnce(Promise.resolve({}))
+    queryFunction.mockReturnValueOnce(Promise.resolve({}))
 
-    expect(paginate(queryFn, query, {}, [])).rejects.toThrow()
+    expect(paginate(queryFunction, query, {}, [])).rejects.toThrow()
   })
 })

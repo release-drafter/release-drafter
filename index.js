@@ -1,24 +1,22 @@
-const { getConfig } = require('./lib/config')
-const { isTriggerableReference } = require('./lib/triggerable-reference')
-const {
+import { getConfig } from './lib/config'
+import { isTriggerableReference } from './lib/triggerable-reference'
+import {
   findReleases,
   generateReleaseInfo,
   createRelease,
   updateRelease,
-} = require('./lib/releases')
-const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
-const { sortPullRequests } = require('./lib/sort-pull-requests')
-const log = require('./lib/log')
-const core = require('@actions/core')
-const { runnerIsActions } = require('./lib/utils')
-const ignore = require('ignore')
+} from './lib/releases'
+import { findCommitsWithAssociatedPullRequests } from './lib/commits'
+import { sortPullRequests } from './lib/sort-pull-requests'
+import { log } from './lib/log'
+import core from '@actions/core'
+import { runnerIsActions } from './lib/utils'
+import ignore from 'ignore'
 
-module.exports = (app, { getRouter }) => {
-  const event = runnerIsActions() ? '*' : 'push'
-
+export const app = (app, { getRouter }) => {
   if (!runnerIsActions() && typeof getRouter === 'function') {
-    getRouter().get('/healthz', (req, res) => {
-      res.status(200).json({ status: 'pass' })
+    getRouter().get('/healthz', (request, response) => {
+      response.status(200).json({ status: 'pass' })
     })
   }
 
@@ -48,7 +46,7 @@ module.exports = (app, { getRouter }) => {
       }
       const changedFiles = await context.octokit.paginate(
         context.octokit.pulls.listFiles.endpoint.merge(issue),
-        (res) => res.data.map((file) => file.filename)
+        (response) => response.data.map((file) => file.filename)
       )
       const labels = new Set()
 
@@ -57,7 +55,7 @@ module.exports = (app, { getRouter }) => {
         // check modified files
         if (!found && autolabel.files.length > 0) {
           const matcher = ignore().add(autolabel.files)
-          if (changedFiles.find((file) => matcher.ignores(file))) {
+          if (changedFiles.some((file) => matcher.ignores(file))) {
             labels.add(autolabel.label)
             found = true
             log({
@@ -69,7 +67,7 @@ module.exports = (app, { getRouter }) => {
         // check branch names
         if (!found && autolabel.branch.length > 0) {
           for (const matcher of autolabel.branch) {
-            if (context.payload.pull_request.head.ref.match(matcher)) {
+            if (matcher.test(context.payload.pull_request.head.ref)) {
               labels.add(autolabel.label)
               found = true
               log({
@@ -83,7 +81,7 @@ module.exports = (app, { getRouter }) => {
         // check pr title
         if (!found && autolabel.title.length > 0) {
           for (const matcher of autolabel.title) {
-            if (context.payload.pull_request.title.match(matcher)) {
+            if (matcher.test(context.payload.pull_request.title)) {
               labels.add(autolabel.label)
               found = true
               log({
@@ -101,7 +99,7 @@ module.exports = (app, { getRouter }) => {
           autolabel.body.length > 0
         ) {
           for (const matcher of autolabel.body) {
-            if (context.payload.pull_request.body.match(matcher)) {
+            if (matcher.test(context.payload.pull_request.body)) {
               labels.add(autolabel.label)
               found = true
               log({
@@ -114,7 +112,7 @@ module.exports = (app, { getRouter }) => {
         }
       }
 
-      const labelsToAdd = Array.from(labels)
+      const labelsToAdd = [...labels]
       if (labelsToAdd.length > 0) {
         let labelIssue = {
           ...context.issue({
@@ -132,7 +130,7 @@ module.exports = (app, { getRouter }) => {
     }
   )
 
-  app.on(event, async (context) => {
+  const drafter = async (context) => {
     const {
       shouldDraft,
       configName,
@@ -165,15 +163,13 @@ module.exports = (app, { getRouter }) => {
       context,
       config,
     })
-    const {
-      commits,
-      pullRequests: mergedPullRequests,
-    } = await findCommitsWithAssociatedPullRequests({
-      context,
-      ref,
-      lastRelease,
-      config,
-    })
+    const { commits, pullRequests: mergedPullRequests } =
+      await findCommitsWithAssociatedPullRequests({
+        context,
+        ref,
+        lastRelease,
+        config,
+      })
 
     const sortedMergedPullRequests = sortPullRequests(
       mergedPullRequests,
@@ -215,7 +211,13 @@ module.exports = (app, { getRouter }) => {
     if (runnerIsActions()) {
       setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
     }
-  })
+  }
+
+  if (runnerIsActions()) {
+    app.onAny(drafter)
+  } else {
+    app.on('push', drafter)
+  }
 }
 
 function getInput({ config } = {}) {

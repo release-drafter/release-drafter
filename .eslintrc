@@ -1,13 +1,16 @@
 {
-  "extends": ["eslint:recommended", "prettier"],
+  "extends": ["eslint:recommended", "prettier", "plugin:unicorn/recommended"],
   "plugins": ["prettier"],
   "parserOptions": {
-    "ecmaVersion": 9
+    "ecmaVersion": 12,
+    "sourceType": "module"
   },
   "env": { "node": true, "es6": true },
   "rules": {
     "prettier/prettier": "warn",
     "no-console": "off",
-    "no-unused-vars": "warn"
+    "no-unused-vars": "warn",
+    "unicorn/no-null": "off",
+    "unicorn/prevent-abbreviations": "off"
   }
 }

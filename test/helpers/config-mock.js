@@ -1,14 +1,17 @@
-const fs = require('fs')
-const nock = require('nock')
+import fs from 'node:fs'
+import path from 'node:path'
+import url from 'node:url'
+import nock from 'nock'
 
 function configFixture(fileName = 'config.yml') {
-  return fs.readFileSync(`${__dirname}/../fixtures/config/${fileName}`)
+  return fs.readFileSync(
+    `${path.dirname(
+      url.fileURLToPath(import.meta.url)
+    )}/../fixtures/config/${fileName}`
+  )
 }
 
-module.exports = function getConfigMock(
-  fileName,
-  repoFileName = 'release-drafter.yml'
-) {
+export function getConfigMock(fileName, repoFileName = 'release-drafter.yml') {
   return nock('https://api.github.com')
     .get(
       `/repos/toolmantim/release-drafter-test-project/contents/.github%2F${repoFileName}`

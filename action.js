@@ -1,7 +1,7 @@
-const core = require('@actions/core')
-const { run } = require('@probot/adapter-github-actions')
-const app = require('./index')
+import core from '@actions/core'
+import { run } from '@probot/adapter-github-actions'
+import { app } from './index'
 
-run(app).catch((err) => {
-  core.setFailed(`💥 Release drafter failed with error: ${err.message}`)
+run(app).catch((error) => {
+  core.setFailed(`💥 Release drafter failed with error: ${error.message}`)
 })
