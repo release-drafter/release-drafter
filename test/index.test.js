@@ -352,6 +352,7 @@ describe('release-drafter', () => {
 
         // GitHub actions should use the GITHUB_REF and not the payload ref
         process.env['GITHUB_REF'] = 'refs/heads/master'
+        process.env['GITHUB_ACTIONS'] = 'true'
 
         nock('https://api.github.com')
           .get(

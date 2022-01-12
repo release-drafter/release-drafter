@@ -14,8 +14,6 @@ import { runnerIsActions } from './lib/utils'
 import ignore from 'ignore'
 
 export const app = (app, { getRouter }) => {
-  const event = runnerIsActions() ? '*' : 'push'
-
   if (!runnerIsActions() && typeof getRouter === 'function') {
     getRouter().get('/healthz', (request, response) => {
       response.status(200).json({ status: 'pass' })
@@ -132,7 +130,7 @@ export const app = (app, { getRouter }) => {
     }
   )
 
-  app.on(event, async (context) => {
+  const drafter = async (context) => {
     const {
       shouldDraft,
       configName,
@@ -213,7 +211,13 @@ export const app = (app, { getRouter }) => {
     if (runnerIsActions()) {
       setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
     }
-  })
+  }
+
+  if (runnerIsActions()) {
+    app.onAny(drafter)
+  } else {
+    app.on('push', drafter)
+  }
 }
 
 function getInput({ config } = {}) {
