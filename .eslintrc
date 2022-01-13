@@ -2,8 +2,7 @@
   "extends": ["eslint:recommended", "prettier", "plugin:unicorn/recommended"],
   "plugins": ["prettier"],
   "parserOptions": {
-    "ecmaVersion": 12,
-    "sourceType": "module"
+    "ecmaVersion": 12
   },
   "env": { "node": true, "es6": true },
   "rules": {
@@ -11,6 +10,7 @@
     "no-console": "off",
     "no-unused-vars": "warn",
     "unicorn/no-null": "off",
+    "unicorn/prefer-module": "off",
     "unicorn/prevent-abbreviations": "off"
   }
 }

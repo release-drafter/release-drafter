@@ -1,27 +1,27 @@
-import nock from 'nock'
-import { Probot, ProbotOctokit } from 'probot'
-import { getConfigMock } from './helpers/config-mock'
-import { app as releaseDrafter } from '../index'
-import mockedEnv from 'mocked-env'
-import pino from 'pino'
-import Stream from 'node:stream'
-import pushPayload from './fixtures/push.json'
-import pushTagPayload from './fixtures/push-tag.json'
-import releasePayload from './fixtures/release.json'
-import release2Payload from './fixtures/release-2.json'
-import release3Payload from './fixtures/release-3.json'
-import pushNonMasterPayload from './fixtures/push-non-master-branch.json'
-import graphqlCommitsNoPRsPayload from './fixtures/graphql-commits-no-prs.json'
-import graphqlCommitsMergeCommit from './fixtures/__generated__/graphql-commits-merge-commit.json'
-import graphqlCommitsEmpty from './fixtures/graphql-commits-empty.json'
-import releaseDrafterFixture from './fixtures/release-draft.json'
-import graphqlCommitsOverlappingLabel from './fixtures/__generated__/graphql-commits-overlapping-label.json'
-import graphqlCommitsRebaseMerging from './fixtures/__generated__/graphql-commits-rebase-merging.json'
-import graphqlCommitsSquashMerging from './fixtures/__generated__/graphql-commits-squash-merging.json'
-import releaseSharedCommitDate from './fixtures/release-shared-commit-date.json'
-import graphqlCommitsForking from './fixtures/__generated__/graphql-commits-forking.json'
-import graphqlCommitsPaginated1 from './fixtures/graphql-commits-paginated-1.json'
-import graphqlCommitsPaginated2 from './fixtures/graphql-commits-paginated-2.json'
+const nock = require('nock')
+const { Probot, ProbotOctokit } = require('probot')
+const { getConfigMock } = require('./helpers/config-mock')
+const { releaseDrafter } = require('../index')
+const mockedEnv = require('mocked-env')
+const pino = require('pino')
+const Stream = require('stream')
+const pushPayload = require('./fixtures/push.json')
+const pushTagPayload = require('./fixtures/push-tag.json')
+const releasePayload = require('./fixtures/release.json')
+const release2Payload = require('./fixtures/release-2.json')
+const release3Payload = require('./fixtures/release-3.json')
+const pushNonMasterPayload = require('./fixtures/push-non-master-branch.json')
+const graphqlCommitsNoPRsPayload = require('./fixtures/graphql-commits-no-prs.json')
+const graphqlCommitsMergeCommit = require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+const graphqlCommitsEmpty = require('./fixtures/graphql-commits-empty.json')
+const releaseDrafterFixture = require('./fixtures/release-draft.json')
+const graphqlCommitsOverlappingLabel = require('./fixtures/__generated__/graphql-commits-overlapping-label.json')
+const graphqlCommitsRebaseMerging = require('./fixtures/__generated__/graphql-commits-rebase-merging.json')
+const graphqlCommitsSquashMerging = require('./fixtures/__generated__/graphql-commits-squash-merging.json')
+const releaseSharedCommitDate = require('./fixtures/release-shared-commit-date.json')
+const graphqlCommitsForking = require('./fixtures/__generated__/graphql-commits-forking.json')
+const graphqlCommitsPaginated1 = require('./fixtures/graphql-commits-paginated-1.json')
+const graphqlCommitsPaginated2 = require('./fixtures/graphql-commits-paginated-2.json')
 
 nock.disableNetConnect()
 
