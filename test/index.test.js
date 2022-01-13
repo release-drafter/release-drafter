@@ -1,7 +1,7 @@
 const nock = require('nock')
 const { Probot, ProbotOctokit } = require('probot')
 const { getConfigMock } = require('./helpers/config-mock')
-const { releaseDrafter } = require('../index')
+const releaseDrafter = require('../index')
 const mockedEnv = require('mocked-env')
 const pino = require('pino')
 const Stream = require('stream')

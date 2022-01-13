@@ -13,7 +13,7 @@ const core = require('@actions/core')
 const { runnerIsActions } = require('./lib/utils')
 const ignore = require('ignore')
 
-exports.releaseDrafter = (app, { getRouter }) => {
+module.exports = (app, { getRouter }) => {
   if (!runnerIsActions() && typeof getRouter === 'function') {
     getRouter().get('/healthz', (request, response) => {
       response.status(200).json({ status: 'pass' })
