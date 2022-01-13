@@ -18,7 +18,8 @@
     "prettier": "prettier --write **/*.{js,md,json,yml,yaml}",
     "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
     "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
-    "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master"
+    "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@actions/core": "1.6.0",
@@ -64,11 +65,6 @@
       "index.js",
       "lib/**"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "lint-staged": {
     "*.js": [
