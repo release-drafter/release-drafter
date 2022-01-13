@@ -1,19 +1,19 @@
-import { getConfig } from './lib/config'
-import { isTriggerableReference } from './lib/triggerable-reference'
-import {
+const { getConfig } = require('./lib/config')
+const { isTriggerableReference } = require('./lib/triggerable-reference')
+const {
   findReleases,
   generateReleaseInfo,
   createRelease,
   updateRelease,
-} from './lib/releases'
-import { findCommitsWithAssociatedPullRequests } from './lib/commits'
-import { sortPullRequests } from './lib/sort-pull-requests'
-import { log } from './lib/log'
-import core from '@actions/core'
-import { runnerIsActions } from './lib/utils'
-import ignore from 'ignore'
+} = require('./lib/releases')
+const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
+const { sortPullRequests } = require('./lib/sort-pull-requests')
+const { log } = require('./lib/log')
+const core = require('@actions/core')
+const { runnerIsActions } = require('./lib/utils')
+const ignore = require('ignore')
 
-export const app = (app, { getRouter }) => {
+exports.releaseDrafter = (app, { getRouter }) => {
   if (!runnerIsActions() && typeof getRouter === 'function') {
     getRouter().get('/healthz', (request, response) => {
       response.status(200).json({ status: 'pass' })

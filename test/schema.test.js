@@ -1,6 +1,6 @@
-import { schema } from '../lib/schema'
-import schemaJson from '../schema.json'
-import { jsonSchema } from '../bin/generate-schema'
+const { schema } = require('../lib/schema')
+const schemaJson = require('../schema.json')
+const { jsonSchema } = require('../bin/generate-schema')
 
 const template = '$CHANGES'
 

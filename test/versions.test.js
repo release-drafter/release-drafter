@@ -1,4 +1,4 @@
-import { getVersionInfo } from '../lib/versions'
+const { getVersionInfo } = require('../lib/versions')
 
 describe('versions', () => {
   it('extracts a version-like string from the last tag', () => {

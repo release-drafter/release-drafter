@@ -1,5 +1,5 @@
-import { generateChangeLog } from '../lib/releases'
-import { DEFAULT_CONFIG } from '../lib/default-config'
+const { generateChangeLog } = require('../lib/releases')
+const { DEFAULT_CONFIG } = require('../lib/default-config')
 
 const pullRequests = [
   {
