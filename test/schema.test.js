@@ -1,4 +1,4 @@
-const { schema } = require('../lib/schema')
+const { schema, validateSchema } = require('../lib/schema')
 const schemaJson = require('../schema.json')
 const { jsonSchema } = require('../bin/generate-schema')
 
@@ -72,5 +72,38 @@ describe('schema', () => {
 
   it('current schema matches the generated JSON Schema, update schema with `yarn generate-schema`', () => {
     expect(jsonSchema).toMatchObject(schemaJson)
+  })
+
+  describe('validateSchema', () => {
+    it('Multiple other categories', () => {
+      expect(() => {
+        validateSchema(context, {
+          template,
+          categories: [
+            {
+              title: '📝 Other Changes',
+            },
+            {
+              title: '📝 Yet Other Changes',
+            },
+          ],
+        })
+      }).toThrowErrorMatchingInlineSnapshot(`
+        "Multiple categories detected with no labels.
+        Only one category with no labels is supported for uncategorized pull requests."
+      `)
+    })
+
+    it('Single other categories', () => {
+      const expected = {
+        template,
+        categories: [
+          {
+            title: '📝 Other Changes',
+          },
+        ],
+      }
+      expect(validateSchema(context, expected)).toMatchObject(expected)
+    })
   })
 })

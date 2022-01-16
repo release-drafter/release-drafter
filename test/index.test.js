@@ -916,6 +916,62 @@ describe('release-drafter', () => {
         expect.assertions(1)
       })
 
+      it('categorizes pull requests with other category at the bottom', async () => {
+        getConfigMock('config-with-categories-with-other-category.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [releasePayload])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, graphqlCommitsMergeCommit)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                ## 🚀 Features
+
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+
+                ## 🐛 Bug Fixes
+
+                * Bug fixes (#3) @TimonVS
+
+                ## 📝 Other Changes
+
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                  "target_commitish": "",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, releasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+      })
+
       it('categorizes pull requests with multiple labels', async () => {
         getConfigMock('config-with-categories-2.yml')
 
