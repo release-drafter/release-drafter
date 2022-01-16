@@ -40,7 +40,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -72,7 +75,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -111,7 +117,10 @@
                           "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "fix/bug-fixes"
                   }
                 ]
               }
@@ -150,7 +159,10 @@
                           "name": "minor"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "feature/big-feature"
                   }
                 ]
               }
@@ -186,7 +198,10 @@
                           "name": "feature"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "feature/alien-technology"
                   }
                 ]
               }
@@ -222,7 +237,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -258,7 +276,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -290,7 +311,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -322,7 +346,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -361,7 +388,10 @@
                           "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "fix/bug-fixes"
                   }
                 ]
               }
@@ -400,7 +430,10 @@
                           "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "fix/bug-fixes"
                   }
                 ]
               }
@@ -439,7 +472,10 @@
                           "name": "minor"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "feature/big-feature"
                   }
                 ]
               }
@@ -478,7 +514,10 @@
                           "name": "minor"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "feature/big-feature"
                   }
                 ]
               }
@@ -514,7 +553,10 @@
                           "name": "feature"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "feature/alien-technology"
                   }
                 ]
               }

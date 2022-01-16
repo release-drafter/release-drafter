@@ -3,7 +3,9 @@
 const fs = require('fs')
 const path = require('path')
 const fetch = require('node-fetch')
+const dotenv = require('dotenv')
 const { findCommitsWithAssociatedPullRequestsQuery } = require('../lib/commits')
+dotenv.config()
 
 const REPO_NAME = 'release-drafter-test-repo'
 const GITHUB_GRAPHQL_API_ENDPOINT = 'https://api.github.com/graphql'
@@ -53,6 +55,8 @@ for (const repo of repos) {
         ref: repo.branch,
         withPullRequestBody: true,
         withPullRequestURL: true,
+        withBaseRefName: true,
+        withHeadRefName: true,
       },
     }),
   }

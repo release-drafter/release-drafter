@@ -36,7 +36,10 @@
                     "isCrossRepository": true,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
                   }
                 ]
               }
@@ -72,7 +75,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "add-documentation"
                   },
                   {
                     "title": "🙅‍♂️ Forking PR 🙅‍♂️",
@@ -89,7 +95,10 @@
                     "isCrossRepository": true,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
                   }
                 ]
               }
@@ -121,7 +130,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "chore/update-dependencies"
                   },
                   {
                     "title": "🙅‍♂️ Forking PR 🙅‍♂️",
@@ -138,7 +150,10 @@
                     "isCrossRepository": true,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
                   }
                 ]
               }
@@ -177,7 +192,10 @@
                           "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "fix/bug-fixes"
                   },
                   {
                     "title": "🙅‍♂️ Forking PR 🙅‍♂️",
@@ -194,7 +212,10 @@
                     "isCrossRepository": true,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
                   }
                 ]
               }
@@ -233,7 +254,10 @@
                           "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "fix/bug-fixes"
                   },
                   {
                     "title": "🙅‍♂️ Forking PR 🙅‍♂️",
@@ -250,7 +274,10 @@
                     "isCrossRepository": true,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
                   }
                 ]
               }
@@ -289,7 +316,10 @@
                           "name": "minor"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "feature/big-feature"
                   },
                   {
                     "title": "🙅‍♂️ Forking PR 🙅‍♂️",
@@ -306,7 +336,10 @@
                     "isCrossRepository": true,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
                   }
                 ]
               }
@@ -345,7 +378,10 @@
                           "name": "major"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "feature/alien-technology"
                   },
                   {
                     "title": "🙅‍♂️ Forking PR 🙅‍♂️",
@@ -362,7 +398,10 @@
                     "isCrossRepository": true,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
                   }
                 ]
               }
@@ -398,7 +437,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -434,7 +476,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -466,7 +511,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -498,7 +546,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -534,7 +585,10 @@
                           "name": "feature"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "feature/alien-technology"
                   }
                 ]
               }
