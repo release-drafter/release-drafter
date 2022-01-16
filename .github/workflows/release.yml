@@ -41,9 +41,10 @@ jobs:
       - name: version
         id: version
         run: |
-          version=${{ github.event.release.tag_name }}
-          version=${version#v}
+          tag=${GITHUB_REF/refs\/tags\//}
+          version=${tag#v}
           major=${version%%.*}
+          echo "::set-output name=tag::${tag}"
           echo "::set-output name=version::${version}"
           echo "::set-output name=major::${major}"
 
@@ -56,5 +57,5 @@ jobs:
 
       - name: force update major tag
         run: |
-          git tag v${{ steps.version.outputs.major }} ${{ github.event.release.tag_name }} -f
+          git tag v${{ steps.version.outputs.major }} ${{ steps.version.outputs.tag }} -f
           git push origin refs/tags/v${{ steps.version.outputs.major }} -f
