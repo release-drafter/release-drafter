@@ -15,6 +15,7 @@ categories:
     label: 'type: maintenance'
   - title: 'Documentation'
     label: 'type: docs'
+  - title: 'Other changes'
   - title: 'Dependency Updates'
     label: 'type: dependencies'
 
