@@ -861,6 +861,64 @@ describe('release-drafter', () => {
       })
     })
 
+    describe('with owner and repository templating', () => {
+      it('include full-changelog link in output', async () => {
+        getConfigMock('config-with-compare-link.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [releasePayload])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, graphqlCommitsMergeCommit)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
+
+                ## 🚀 Features
+
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+
+                ## 🐛 Bug Fixes
+
+                * Bug fixes (#3) @TimonVS
+
+                **Full Changelog**: https://github.com/toolmantim/release-drafter-test-project/compare/v2.0.0...v2.0.1
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                  "target_commitish": "",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, releasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+      })
+    })
+
     describe('with categories config', () => {
       it('categorizes pull requests with single label', async () => {
         getConfigMock('config-with-categories.yml')

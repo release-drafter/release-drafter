@@ -178,6 +178,7 @@ module.exports = (app, { getRouter }) => {
     )
 
     const releaseInfo = generateReleaseInfo({
+      context,
       commits,
       config,
       lastRelease,
