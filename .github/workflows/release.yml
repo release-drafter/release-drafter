@@ -2,7 +2,7 @@ name: Release
 on:
   push:
     tags:
-      - v*
+      - v*.*.*
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -39,7 +39,9 @@ jobs:
         run: |
           version=${{ github.event.release.tag_name }}
           version=${version#v}
+          major=${version%%.*}
           echo "::set-output name=version::${version}"
+          echo "::set-output name=major::${major}"
 
       - uses: release-drafter/release-drafter@master
         with:
@@ -47,3 +49,8 @@ jobs:
           publish: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: force update major tag
+        run: |
+          git tag v{{ steps.version.outputs.major }} ${{ github.event.release.tag_name }} -f
+          git push origin refs/tags/v{{ steps.version.outputs.major }} -f
