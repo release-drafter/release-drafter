@@ -40,7 +40,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "squash-merging",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -72,7 +75,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "squash-merging",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -111,7 +117,10 @@
                           "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "squash-merging",
+                    "headRefName": "fix/bug-fixes"
                   }
                 ]
               }
@@ -150,7 +159,10 @@
                           "name": "minor"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "squash-merging",
+                    "headRefName": "feature/big-feature"
                   }
                 ]
               }
@@ -189,7 +201,10 @@
                           "name": "major"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "squash-merging",
+                    "headRefName": "feature/alien-technology"
                   }
                 ]
               }

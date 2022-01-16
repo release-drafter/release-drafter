@@ -40,7 +40,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -76,7 +79,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -108,7 +114,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -140,7 +149,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -179,7 +191,10 @@
                           "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "fix/bug-fixes"
                   }
                 ]
               }
@@ -218,7 +233,10 @@
                           "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "fix/bug-fixes"
                   }
                 ]
               }
@@ -257,7 +275,10 @@
                           "name": "minor"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "feature/big-feature"
                   }
                 ]
               }
@@ -296,7 +317,10 @@
                           "name": "minor"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "feature/big-feature"
                   }
                 ]
               }
@@ -335,7 +359,10 @@
                           "name": "major"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "rebase-merging",
+                    "headRefName": "feature/alien-technology"
                   }
                 ]
               }

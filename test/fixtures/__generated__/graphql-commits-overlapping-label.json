@@ -40,7 +40,10 @@
                           "name": "skip-changelog"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "overlapping-label",
+                    "headRefName": "add-documentation"
                   }
                 ]
               }
@@ -72,7 +75,10 @@
                     "isCrossRepository": false,
                     "labels": {
                       "nodes": []
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "overlapping-label",
+                    "headRefName": "chore/update-dependencies"
                   }
                 ]
               }
@@ -108,13 +114,16 @@
                           "name": "bug"
                         },
                         {
-                          "name": "patch"
+                          "name": "sentry"
                         },
                         {
-                          "name": "sentry"
+                          "name": "patch"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "overlapping-label",
+                    "headRefName": "fix/bug-fixes"
                   }
                 ]
               }
@@ -153,7 +162,10 @@
                           "name": "minor"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "overlapping-label",
+                    "headRefName": "feature/big-feature"
                   }
                 ]
               }
@@ -192,7 +204,10 @@
                           "name": "major"
                         }
                       ]
-                    }
+                    },
+                    "merged": true,
+                    "baseRefName": "overlapping-label",
+                    "headRefName": "feature/alien-technology"
                   }
                 ]
               }
