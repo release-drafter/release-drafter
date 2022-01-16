@@ -1,0 +1,56 @@
+name: Release
+on:
+  push:
+    tags:
+      - v*.*.*
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: yarn
+          registry-url: https://registry.npmjs.org
+
+      - name: yarn install
+        run: yarn install --frozen-lockfile
+
+      - name: yarn test
+        run: yarn test
+
+      - name: yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
+        run: yarn publish --access public
+
+      - name: Deploy to Heroku
+        env:
+          HEROKU_API_TOKEN: ${{ secrets.HEROKU_API_TOKEN }}
+          HEROKU_APP_NAME: release-drafter
+        run: git push https://heroku:$HEROKU_API_TOKEN@git.heroku.com/$HEROKU_APP_NAME.git origin/master:master
+
+      - name: version
+        id: version
+        run: |
+          version=${{ github.event.release.tag_name }}
+          version=${version#v}
+          major=${version%%.*}
+          echo "::set-output name=version::${version}"
+          echo "::set-output name=major::${major}"
+
+      - uses: release-drafter/release-drafter@master
+        with:
+          version: '{{ steps.version.outputs.version }}'
+          publish: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: force update major tag
+        run: |
+          git tag v{{ steps.version.outputs.major }} ${{ github.event.release.tag_name }} -f
+          git push origin refs/tags/v{{ steps.version.outputs.major }} -f

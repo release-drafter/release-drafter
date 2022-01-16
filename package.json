@@ -5,7 +5,7 @@
   "description": "A GitHub app that draft releases based on pull-request labels",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
   "license": "ISC",
-  "repository": "https://github.com/toolmantim/release-drafter",
+  "repository": "https://github.com/release-drafter/release-drafter",
   "scripts": {
     "build": "ncc build action.js --target es2021",
     "dev": "nodemon --exec \"npm start\"",
@@ -16,7 +16,7 @@
     "generate-fixtures": "node ./bin/generate-fixtures.js",
     "lint": "eslint bin/*.js lib/*.js action.js index.js test/**/*.js",
     "prettier": "prettier --write **/*.{js,md,json,yml,yaml}",
-    "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
+    "postversion": "npm run test && git push && git push --tags",
     "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
     "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master",
     "prepare": "husky install"
