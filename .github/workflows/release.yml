@@ -49,12 +49,12 @@ jobs:
 
       - uses: release-drafter/release-drafter@master
         with:
-          version: '{{ steps.version.outputs.version }}'
+          version: ${{ steps.version.outputs.version }}
           publish: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: force update major tag
         run: |
-          git tag v{{ steps.version.outputs.major }} ${{ github.event.release.tag_name }} -f
-          git push origin refs/tags/v{{ steps.version.outputs.major }} -f
+          git tag v${{ steps.version.outputs.major }} ${{ github.event.release.tag_name }} -f
+          git push origin refs/tags/v${{ steps.version.outputs.major }} -f
