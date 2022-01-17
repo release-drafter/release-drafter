@@ -33,11 +33,9 @@
     "lodash": "4.17.21",
     "probot": "12.2.0",
     "regex-parser": "2.2.11",
-    "request": "2.88.2",
     "semver": "7.3.5"
   },
   "devDependencies": {
-    "@types/hapi__joi": "^15.0.4",
     "@vercel/ncc": "0.33.1",
     "eslint": "8.7.0",
     "eslint-config-prettier": "8.3.0",
@@ -49,11 +47,9 @@
     "lint-staged": "12.1.7",
     "mocked-env": "^1.3.5",
     "nock": "13.2.2",
-    "nock-knock": "2.0.0",
     "node-fetch": "2.6.7",
     "nodemon": "2.0.15",
-    "prettier": "2.5.1",
-    "smee-client": "1.2.2"
+    "prettier": "2.5.1"
   },
   "engines": {
     "node": ">=16.0.0"
