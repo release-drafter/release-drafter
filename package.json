@@ -1,7 +1,7 @@
 {
   "name": "release-drafter-github-app",
   "type": "commonjs",
-  "version": "5.17.5",
+  "version": "5.17.6",
   "description": "A GitHub app that draft releases based on pull-request labels",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
   "license": "ISC",
