@@ -62,13 +62,5 @@
       "index.js",
       "lib/**"
     ]
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix"
-    ],
-    "*.{json,css,md}": [
-      "prettier --write"
-    ]
   }
 }
