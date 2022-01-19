@@ -1,0 +1,41 @@
+name: Dependabot post-update
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    branches:
+      - 'master'
+
+env:
+  HUSKY: '0'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  post-update:
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout out pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr checkout ${{ github.event.pull_request.number }}
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'yarn'
+
+      - run: yarn install --frozen-lockfile
+
+      - run: yarn build
+
+      - name: Commit and push if needed
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply dist/index.js changes
