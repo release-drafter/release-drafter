@@ -2,17 +2,12 @@
 # yarn lockfile v1
 
 
-"@actions/core@1.6.0":
+"@actions/core@1.6.0", "@actions/core@^1.2.6":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@actions/core/-/core-1.6.0.tgz#0568e47039bfb6a9170393a73f3b7eb3b22462cb"
   integrity sha512-NB1UAZomZlCV/LmJqkLhNTqtKfFXJZAUPcfl/zqG7EfsQdeUJtaWO98SGbuQ3pydJ3fHl2CvI/51OKYlCYYcaw==
   dependencies:
     "@actions/http-client" "^1.0.11"
-
-"@actions/core@^1.2.6":
-  version "1.2.6"
-  resolved "https://registry.yarnpkg.com/@actions/core/-/core-1.2.6.tgz#a78d49f41a4def18e88ce47c2cac615d5694bf09"
-  integrity sha512-ZQYitnqiyBc3D+k7LsgSBmMDVkOVidaagDG7j3fOym77jNunWRuYx7VSHa9GNfFZh+zh61xsCjRj4JxMZlDqTA==
 
 "@actions/http-client@^1.0.11":
   version "1.0.11"
@@ -859,14 +854,14 @@
     "@octokit/webhooks-types" "5.2.0"
     aggregate-error "^3.1.0"
 
-"@probot/adapter-github-actions@3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@probot/adapter-github-actions/-/adapter-github-actions-3.1.0.tgz#67b83cd9e43ec87bc6498d7505385e4dbded9e80"
-  integrity sha512-2pxOy15UuqQifEB5/EpNLHbdGEeAyO8xHmRXLZ684xOWha02XhKRx/5Zw5Ier8mkXiLSDx+suzSK5zQb4pmfcw==
+"@probot/adapter-github-actions@3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@probot/adapter-github-actions/-/adapter-github-actions-3.1.1.tgz#5bb6933e8c6b6c9e5e9c8bf0a3cca2725f8d08e1"
+  integrity sha512-Lqka0ZxYZcgzC9vZY/H9b9/s9niBAzb9xfSTiV5GHvQbe5U3sChxo+GW4Csw473jSF+W+pOLhKLy6rRWSs6i/g==
   dependencies:
     "@actions/core" "^1.2.6"
     pino "^6.11.0"
-    probot "^12.1.4"
+    probot "^12.2.1"
     through2 "^4.0.2"
 
 "@probot/get-private-key@^1.1.0":
@@ -4357,7 +4352,7 @@ pretty-format@^27.4.6:
     ansi-styles "^5.0.0"
     react-is "^17.0.1"
 
-probot@12.2.1, probot@^12.1.4:
+probot@12.2.1, probot@^12.2.1:
   version "12.2.1"
   resolved "https://registry.yarnpkg.com/probot/-/probot-12.2.1.tgz#8328b3283957f094bd5f5123c56bbf4cf63d3a20"
   integrity sha512-CpqulMQFwfkh/3J+TcizxQgXeTgIVhw8ZpYq4TU4uHoo1iSC8Xmyrfv2BHRNI1OWRQhCnpJXIWh5EzhpX24Fvw==
