@@ -44,7 +44,7 @@
     "eslint-plugin-unicorn": "^40.0.0",
     "husky": "7.0.4",
     "jest": "27.4.7",
-    "lint-staged": "12.2.0",
+    "lint-staged": "12.2.1",
     "mocked-env": "^1.3.5",
     "nock": "13.2.2",
     "node-fetch": "2.6.7",
