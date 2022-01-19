@@ -48,7 +48,6 @@
     "mocked-env": "^1.3.5",
     "nock": "13.2.2",
     "node-fetch": "2.6.7",
-    "nodemon": "2.0.15",
     "prettier": "2.5.1"
   },
   "engines": {
