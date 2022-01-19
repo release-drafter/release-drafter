@@ -3,6 +3,10 @@ on:
   push:
     tags:
       - v*.*.*
+
+env:
+  HUSKY: '0'
+
 jobs:
   build:
     runs-on: ubuntu-latest
