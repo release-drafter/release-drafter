@@ -118553,13 +118553,22 @@ const schema = (context) => {
       'version-resolver': Joi.object()
         .keys({
           major: Joi.object({
-            labels: Joi.array().items(Joi.string()).single(),
+            labels: Joi.array()
+              .items(Joi.string())
+              .single()
+              .default(DEFAULT_CONFIG['version-resolver']['major']['labels']),
           }),
           minor: Joi.object({
-            labels: Joi.array().items(Joi.string()).single(),
+            labels: Joi.array()
+              .items(Joi.string())
+              .single()
+              .default(DEFAULT_CONFIG['version-resolver']['minor']['labels']),
           }),
           patch: Joi.object({
-            labels: Joi.array().items(Joi.string()).single(),
+            labels: Joi.array()
+              .items(Joi.string())
+              .single()
+              .default(DEFAULT_CONFIG['version-resolver']['patch']['labels']),
           }),
           default: Joi.string()
             .valid('major', 'minor', 'patch')

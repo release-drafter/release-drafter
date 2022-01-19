@@ -227,6 +227,7 @@
           "type": "object",
           "properties": {
             "labels": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
@@ -240,6 +241,7 @@
           "type": "object",
           "properties": {
             "labels": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
@@ -253,6 +255,7 @@
           "type": "object",
           "properties": {
             "labels": {
+              "default": [],
               "type": "array",
               "items": {
                 "type": "string"
