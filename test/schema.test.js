@@ -49,7 +49,7 @@ describe('schema', () => {
         const { error, value } = schema(context).validate(example, {
           abortEarly: false,
         })
-        expect(error).toBeNull()
+        expect(error).toBeUndefined()
         expect(value).toMatchObject(expected)
         if (value.replacers) {
           for (const [index, arrayValue] of value.replacers.entries())

@@ -1,5 +1,5 @@
 // joi-to-json-schema currently does not support v16 of Joi (https://github.com/lightsofapollo/joi-to-json-schema/issues/57)
-const convert = require('joi-to-json-schema')
+const { convert } = require('@koa-lite/joi-schema')
 const fs = require('fs')
 const { schema } = require('../lib/schema')
 const inputArguments = process.argv.slice(2) || []
