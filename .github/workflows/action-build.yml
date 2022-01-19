@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Checkout
+      - name: Checkout out pull request
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -29,6 +29,7 @@ jobs:
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
+
       - run: yarn build
 
       - name: Commit and push if needed
