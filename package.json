@@ -29,7 +29,7 @@
     "deepmerge": "4.2.2",
     "escape-string-regexp": "4.0.0",
     "ignore": "5.2.0",
-    "joi": "17.5.0",
+    "joi": "17.6.0",
     "lodash": "4.17.21",
     "probot": "12.2.1",
     "regex-parser": "2.2.11",
