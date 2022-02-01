@@ -1,3 +1,3 @@
 template: Placeholder with example. Automatically calculated values based on previous releases are next major=$NEXT_MAJOR_VERSION, minor=$NEXT_MINOR_VERSION, patch=$NEXT_PATCH_VERSION.
-name-template: 'v1.2.3 (Code name: Hello World)'
-tag-template: v3.4.5
+name-template: 'v$RESOLVED_VERSION-beta (Code name: Hello World)'
+tag-template: v$RESOLVED_VERSION-beta

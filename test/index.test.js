@@ -2153,14 +2153,14 @@ describe('release-drafter', () => {
       it('gets the version from the tag and expands variables in it', async () => {
         return overridesTest(
           {
-            tag: 'v$RESOLVED_VERSION-beta',
+            tag: 'v$RESOLVED_VERSION-RC1',
             configName: 'config-with-name-and-tag-template.yml',
           },
           {
             body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1.`,
             draft: true,
-            name: 'v1.2.3 (Code name: Hello World)',
-            tag_name: 'v2.0.1-beta',
+            name: 'v1.0.0-beta (Code name: Hello World)',
+            tag_name: 'v1.0.0-RC1',
           }
         )
       })
@@ -2184,14 +2184,14 @@ describe('release-drafter', () => {
       it('gets the version from the name and expands variables in it', async () => {
         return overridesTest(
           {
-            name: 'v$RESOLVED_VERSION-beta (Code name: Mega Unicorn)',
+            name: 'v$RESOLVED_VERSION-RC1 (Code name: Hello World)',
             configName: 'config-with-name-and-tag-template.yml',
           },
           {
             body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1.`,
             draft: true,
-            name: 'v2.0.1-beta (Code name: Mega Unicorn)',
-            tag_name: 'v3.4.5',
+            name: 'v1.0.0-RC1 (Code name: Hello World)',
+            tag_name: 'v1.0.0-beta',
           }
         )
       })
