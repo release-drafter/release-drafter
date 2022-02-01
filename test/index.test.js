@@ -2149,6 +2149,23 @@ describe('release-drafter', () => {
       })
     })
 
+    describe('with just the tag containing variables', () => {
+      it('gets the version from the tag and expands variables in it', async () => {
+        return overridesTest(
+          {
+            tag: 'v$RESOLVED_VERSION-RC1',
+            configName: 'config-with-name-and-tag-template.yml',
+          },
+          {
+            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1.`,
+            draft: true,
+            name: 'v1.0.0-beta (Code name: Hello World)',
+            tag_name: 'v1.0.0-RC1',
+          }
+        )
+      })
+    })
+
     describe('with just the name', () => {
       it('gets the version from the name and forces using the name', async () => {
         return overridesTest(
@@ -2158,6 +2175,23 @@ describe('release-drafter', () => {
             draft: true,
             name: 'v2.1.1-alpha (Code name: Foxtrot Unicorn)',
             tag_name: 'v2.1.1',
+          }
+        )
+      })
+    })
+
+    describe('with just the name containing variables', () => {
+      it('gets the version from the name and expands variables in it', async () => {
+        return overridesTest(
+          {
+            name: 'v$RESOLVED_VERSION-RC1 (Code name: Hello World)',
+            configName: 'config-with-name-and-tag-template.yml',
+          },
+          {
+            body: `Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1.`,
+            draft: true,
+            name: 'v1.0.0-RC1 (Code name: Hello World)',
+            tag_name: 'v1.0.0-beta',
           }
         )
       })
