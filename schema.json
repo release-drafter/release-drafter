@@ -286,7 +286,13 @@
         }
       ]
     },
+    "header": {
+      "type": "string"
+    },
     "template": {
+      "type": "string"
+    },
+    "footer": {
       "type": "string"
     },
     "_extends": {

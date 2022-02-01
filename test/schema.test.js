@@ -17,6 +17,9 @@ const validConfigs = [
   [{ template, replacers: [{ search: '123', replace: '' }] }],
   [{ template, replacers: [{ search: '/123/gi', replace: '' }] }],
   [{ template, replacers: [{ search: '/123/gi', replace: '123' }] }],
+  [{ template, header: 'I am on top' }],
+  [{ template, footer: 'I am on bottm' }],
+  [{ template, header: 'I am on top', footer: 'I am on bottm' }],
 ]
 
 const invalidConfigs = [
@@ -26,6 +29,16 @@ const invalidConfigs = [
   [{ template: { '👶': 'a' } }, 'must be a string'],
   [{ template: null }, 'must be a string'],
   [{ template: '' }, 'is not allowed to be empty'],
+  [{ header: true }, 'must be a string'],
+  [{ header: 1 }, 'must be a string'],
+  [{ header: ['👶'] }, 'must be a string'],
+  [{ header: { '👶': 'a' } }, 'must be a string'],
+  [{ header: null }, 'must be a string'],
+  [{ footer: true }, 'must be a string'],
+  [{ footer: 1 }, 'must be a string'],
+  [{ footer: ['👶'] }, 'must be a string'],
+  [{ footer: { '👶': 'a' } }, 'must be a string'],
+  [{ footer: null }, 'must be a string'],
   [{ 'category-template': ['## $TITLE'] }, 'must be a string'],
   [{ 'category-template': null }, 'must be a string'],
   [{ 'change-template': ['* $TITLE (#$NUMBER) @$AUTHOR'] }, 'must be a string'],

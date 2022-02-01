@@ -109,6 +109,8 @@ You can configure Release Drafter using the following key in your `.github/relea
 | Key                        | Required | Description                                                                                                                                                                |
 | -------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `template`                 | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                            |
+| `header`                   | Optional | Will be prepended to `template`. Use [template variables](#template-variables) to insert values.                                                                           |
+| `footer`                   | Optional | Will be appended to `template`. Use [template variables](#template-variables) to insert values.                                                                            |
 | `category-template`        | Optional | The template to use for each category. Use [category template variables](#category-template-variables) to insert values. Default: `"## $TITLE"`.                           |
 | `name-template`            | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                     |
 | `tag-template`             | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                      |
@@ -134,7 +136,7 @@ Release Drafter also supports [Probot Config](https://github.com/probot/probot-c
 
 ## Template Variables
 
-You can use any of the following variables in your `template`:
+You can use any of the following variables in your `template`, `header` and `footer`:
 
 | Variable        | Description                                                                                                           |
 | --------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -154,7 +156,7 @@ You can use any of the following variables in `category-template`:
 
 ## Next Version Variables
 
-You can use any of the following variables in your `template`, `name-template` and `tag-template`:
+You can use any of the following variables in your `template`, `header`, `footer`, `name-template` and `tag-template`:
 
 | Variable              | Description                                                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |

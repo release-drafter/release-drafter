@@ -1,0 +1,5 @@
+template: |
+  This is the template in the middle
+
+header: |
+  This is at top
