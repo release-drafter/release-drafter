@@ -167,6 +167,7 @@ module.exports = (app, { getRouter }) => {
       await findCommitsWithAssociatedPullRequests({
         context,
         ref,
+        up_to_commitish: commitish,
         lastRelease,
         config,
       })
