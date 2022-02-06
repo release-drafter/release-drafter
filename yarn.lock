@@ -762,9 +762,9 @@
     is-base64 "^1.1.0"
 
 "@probot/octokit-plugin-config@^1.0.0":
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/@probot/octokit-plugin-config/-/octokit-plugin-config-1.1.4.tgz#31516fbc77732c781d64b084c0a0e98fc6ee3ce3"
-  integrity sha512-/wPms7XaP7vohb7iLw0FKGCju5wXdaeEU2jfb0ysLv2u5u5Ex5cJhRooS/1pMkPhkQPNRwo1NFrodT/vha/ZQw==
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@probot/octokit-plugin-config/-/octokit-plugin-config-1.1.5.tgz#169f6da21261c39443681f16c4b37c294d46a437"
+  integrity sha512-dPrccDkb5QVZYZ3Gq3aDEdfsuqid687iu+z3jBKFI1LwgQuRaUsmihR0ZLHdXKX6HK6rUw/5Jxg5ZUo0OWWUSA==
   dependencies:
     "@types/js-yaml" "^4.0.5"
     js-yaml "^4.1.0"
