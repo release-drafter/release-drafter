@@ -227,7 +227,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "refs/tags/v1.0.0",
+                    "target_commitish": "",
                   }
                 `)
                 return true
