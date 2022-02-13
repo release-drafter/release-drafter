@@ -134,7 +134,7 @@ describe('release-drafter', () => {
       })
 
       describe('when configured for that branch', () => {
-        it('creates a release draft', async () => {
+        it('creates a release draft targeting that branch', async () => {
           getConfigMock('config-non-master-branch.yml')
 
           nock('https://api.github.com')
@@ -160,7 +160,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/some-branch",
                   }
                 `)
                 return true
@@ -278,7 +278,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -331,7 +331,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -384,7 +384,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -428,7 +428,7 @@ describe('release-drafter', () => {
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -475,7 +475,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -523,7 +523,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -571,7 +571,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -615,7 +615,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -657,7 +657,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -701,7 +701,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -752,7 +752,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -794,7 +794,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -845,6 +845,7 @@ describe('release-drafter', () => {
                   "name": "v3.0.0-beta",
                   "prerelease": false,
                   "tag_name": "v3.0.0-beta",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -902,7 +903,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -958,7 +959,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1014,7 +1015,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1068,7 +1069,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1122,7 +1123,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1180,7 +1181,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1235,7 +1236,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1284,7 +1285,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1327,7 +1328,7 @@ describe('release-drafter', () => {
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1368,7 +1369,7 @@ describe('release-drafter', () => {
                   "name": "v2.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.1",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1409,7 +1410,7 @@ describe('release-drafter', () => {
                   "name": "v3 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v3",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1454,7 +1455,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1496,7 +1497,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1539,7 +1540,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1581,7 +1582,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1633,7 +1634,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -1686,7 +1687,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -1739,7 +1740,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -1789,7 +1790,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -1841,7 +1842,7 @@ describe('release-drafter', () => {
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
-                    "target_commitish": "",
+                    "target_commitish": "refs/heads/master",
                   }
                 `)
                 return true
@@ -1908,7 +1909,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -1961,7 +1962,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2030,7 +2031,7 @@ describe('release-drafter', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "",
+                "target_commitish": "refs/heads/master",
               }
             `)
             return true
@@ -2098,7 +2099,7 @@ describe('release-drafter', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "",
+                "target_commitish": "refs/heads/master",
               }
             `)
             return true
@@ -2196,7 +2197,7 @@ describe('release-drafter', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "",
+                "target_commitish": "refs/heads/master",
               }
             `)
             return true
@@ -2543,7 +2544,7 @@ describe('release-drafter', () => {
                   "name": "v1.0.2 🌈",
                   "prerelease": false,
                   "tag_name": "v1.0.2",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2599,7 +2600,7 @@ describe('release-drafter', () => {
                   "name": "v1.0.2 🌈",
                   "prerelease": false,
                   "tag_name": "v1.0.2",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2653,7 +2654,7 @@ describe('release-drafter', () => {
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2705,7 +2706,7 @@ describe('release-drafter', () => {
                   "name": "v2.0.1 🌈",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2749,7 +2750,7 @@ describe('release-drafter', () => {
                   "name": "v2.1.0",
                   "prerelease": false,
                   "tag_name": "v2.1.0",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2790,7 +2791,7 @@ describe('release-drafter', () => {
                   "name": "v2.0.1",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2831,7 +2832,7 @@ describe('release-drafter', () => {
                   "name": "v2.1.0",
                   "prerelease": false,
                   "tag_name": "v2.1.0",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2872,7 +2873,7 @@ describe('release-drafter', () => {
                   "name": "v3.0.0",
                   "prerelease": false,
                   "tag_name": "v3.0.0",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
@@ -2914,7 +2915,7 @@ describe('release-drafter', () => {
                   "name": "v3.0.0",
                   "prerelease": false,
                   "tag_name": "v3.0.0",
-                  "target_commitish": "",
+                  "target_commitish": "refs/heads/master",
                 }
               `)
               return true
