@@ -1,4 +1,4 @@
-const { getVersionInfo } = require('../lib/versions')
+const { getVersionInfo, defaultVersionInfo } = require('../lib/versions')
 
 describe('versions', () => {
   it('extracts a version-like string from the last tag', () => {
@@ -170,13 +170,10 @@ describe('versions', () => {
     expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.template).toEqual('$PATCH')
   })
 
-  it('returns undefined if no version was found in tag or name', () => {
-    const versionInfo = getVersionInfo({
-      tag_name: 'nope',
-      name: 'nope nope nope',
-    })
+  it('returns default version info if no version was found in tag or name', () => {
+    const versionInfo = getVersionInfo({})
 
-    expect(versionInfo).toEqual(undefined)
+    expect(versionInfo).toEqual(defaultVersionInfo)
   })
 
   it.each([

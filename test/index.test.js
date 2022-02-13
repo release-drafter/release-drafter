@@ -2620,7 +2620,7 @@ describe('release-drafter', () => {
     })
 
     describe('without previous releases, no overrides', () => {
-      it('resolves to the calculated version, which will be empty', async () => {
+      it('resolves to the calculated version, which will be default', async () => {
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
@@ -2651,9 +2651,9 @@ describe('release-drafter', () => {
 
                 ",
                   "draft": true,
-                  "name": "",
+                  "name": "v0.1.0 🌈",
                   "prerelease": false,
-                  "tag_name": "",
+                  "tag_name": "v0.1.0",
                   "target_commitish": "refs/heads/master",
                 }
               `)
