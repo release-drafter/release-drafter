@@ -7,5 +7,5 @@ services:
       context: .
       args:
         NODE_ENV: development
-    command: ['npm', 'test']
+    command: ['yarn', 'test']
     entrypoint: ''

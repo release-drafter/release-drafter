@@ -370,7 +370,7 @@ If you don’t have Node installed, you can use [Docker Compose](https://docs.do
 
 ```sh
 # Run the tests
-docker-compose run --rm app npm test
+docker-compose run --rm app
 ```
 
 ## Contributing
