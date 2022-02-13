@@ -31,6 +31,7 @@
     "ignore": "5.2.0",
     "joi": "17.6.0",
     "lodash": "4.17.21",
+    "nodemon": "2.0.15",
     "probot": "12.2.1",
     "regex-parser": "2.2.11",
     "semver": "7.3.5"
