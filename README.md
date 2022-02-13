@@ -361,7 +361,7 @@ yarn install
 yarn test
 
 # Run the app locally
-yarn dev
+yarn test:watch
 ```
 
 Once you've started the app, visit `localhost:3000` and you'll get [step-by-step instructions](https://probot.github.io/docs/development/#configuring-a-github-app) for installing it in your GitHub account so you can start pushing commits and testing it locally.
