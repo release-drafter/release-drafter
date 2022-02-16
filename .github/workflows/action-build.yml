@@ -36,9 +36,14 @@ jobs:
       - run: yarn build
 
       - name: Commit and push if needed
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Apply dist/index.js changes
-          commit_user_name: 'github-actions[bot]'
-          commit_user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
+        run: |
+          git add .
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "💾 no changes to dist/index.js"
+            exit 0
+          fi
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "Apply dist/index.js changes"
+          git push
+          echo "💾 pushed dist/index.js changes"
