@@ -156,6 +156,7 @@ describe('release-drafter', () => {
 
                   * No changes
                   ",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -223,6 +224,7 @@ describe('release-drafter', () => {
                   * Add big feature (#2) @TimonVS
                   * 👽 Add alien technology (#1) @TimonVS
                   ",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -274,6 +276,7 @@ describe('release-drafter', () => {
 
                 Previous tag: ''
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -327,6 +330,7 @@ describe('release-drafter', () => {
                 * Add big feature (#2) @TimonVS
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -380,6 +384,7 @@ describe('release-drafter', () => {
                 * Add big feature (#2) @TimonVS
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -424,6 +429,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -471,6 +477,7 @@ describe('release-drafter', () => {
                   * Change: #3 'Bug fixes' @TimonVS
                   * Change: #2 'Add big feature' @TimonVS
                   * Change: #1 '👽 Add alien technology' @TimonVS",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -519,6 +526,7 @@ describe('release-drafter', () => {
                   * Change: #3 'Bug fixes' 🐛 squashing
                   * Change: #2 'Add big feature' ![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)
                   * Change: #1 '👽 Add alien technology' Space invasion 👾",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -567,6 +575,7 @@ describe('release-drafter', () => {
                   * Change: https://github.com/toolmantim/release-drafter-test-project/pull/3 'Bug fixes' @TimonVS
                   * Change: https://github.com/toolmantim/release-drafter-test-project/pull/2 'Add big feature' @TimonVS
                   * Change: https://github.com/toolmantim/release-drafter-test-project/pull/1 '👽 Add alien technology' @TimonVS",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -611,6 +620,7 @@ describe('release-drafter', () => {
                 expect(body).toMatchInlineSnapshot(`
                   Object {
                     "body": "A big thanks to: @TimonVS and Ada Lovelace",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -653,6 +663,7 @@ describe('release-drafter', () => {
                 expect(body).toMatchInlineSnapshot(`
                   Object {
                     "body": "A big thanks to: Nobody",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -697,6 +708,7 @@ describe('release-drafter', () => {
                 expect(body).toMatchInlineSnapshot(`
                   Object {
                     "body": "A big thanks to: Ada Lovelace",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -748,6 +760,7 @@ describe('release-drafter', () => {
 
                 * No changes
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -790,6 +803,7 @@ describe('release-drafter', () => {
                 expect(body).toMatchInlineSnapshot(`
                   Object {
                     "body": "* No changes mmkay",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -899,6 +913,7 @@ describe('release-drafter', () => {
 
                 **Full Changelog**: https://github.com/toolmantim/release-drafter-test-project/compare/v2.0.0...v2.0.1
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -955,6 +970,7 @@ describe('release-drafter', () => {
 
                 * Bug fixes (#3) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1011,6 +1027,7 @@ describe('release-drafter', () => {
                 * Add documentation (#5) @TimonVS
                 * Update dependencies (#4) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1065,6 +1082,7 @@ describe('release-drafter', () => {
 
                 * Bug fixes (#3) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1119,6 +1137,7 @@ describe('release-drafter', () => {
 
                 * Bug fixes (#20) @jetersen
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1177,6 +1196,7 @@ describe('release-drafter', () => {
 
                 * Bug fixes (#20) @jetersen
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1232,6 +1252,7 @@ describe('release-drafter', () => {
 
                 * Bug fixes (#3) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1281,6 +1302,7 @@ describe('release-drafter', () => {
                 * Add big feature (#2) @TimonVS
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1324,6 +1346,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -1365,6 +1388,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "Placeholder with example. Automatically calculated values are next major=3.0 (major=3, minor=0, patch=0), minor=2.1 (major=2, minor=1, patch=0), patch=2.0 (major=2, minor=0, patch=1)",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v2.1 (Code name: Placeholder)",
                   "prerelease": false,
@@ -1406,6 +1430,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "Placeholder with example. Automatically calculated values are next major=3 (major=3, minor=0, patch=0), minor=2 (major=2, minor=1, patch=0), patch=2 (major=2, minor=0, patch=1)",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v3 (Code name: Placeholder)",
                   "prerelease": false,
@@ -1451,6 +1476,7 @@ describe('release-drafter', () => {
                   "body": "This is at top
                 This is the template in the middle
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1493,6 +1519,7 @@ describe('release-drafter', () => {
                   "body": "This is the template in the middle
                 This is at bottom
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1536,6 +1563,7 @@ describe('release-drafter', () => {
                 This is the template in the middle
                 This is at bottom
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1578,6 +1606,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "This is at topThis is the template in the middleThis is at bottom",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1630,6 +1659,7 @@ describe('release-drafter', () => {
                   * Add big feature (#2) @TimonVS
                   * 👽 Add alien technology (#1) @TimonVS
                   ",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -1683,6 +1713,7 @@ describe('release-drafter', () => {
                   * Add big feature (#7) @TimonVS
                   * 👽 Add alien technology (#6) @TimonVS
                   ",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -1736,6 +1767,7 @@ describe('release-drafter', () => {
                   * Add big feature (#12) @TimonVS
                   * 👽 Add alien technology (#11) @TimonVS
                   ",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -1786,6 +1818,7 @@ describe('release-drafter', () => {
                   * Bug fixes (#13) @TimonVS
                   * Add big feature (#12) @TimonVS
                   ",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -1838,6 +1871,7 @@ describe('release-drafter', () => {
                   * Add documentation (#5) @TimonVS
                   * Update dependencies (#4) @TimonVS
                   ",
+                    "discussion_category_name": "",
                     "draft": true,
                     "name": "",
                     "prerelease": false,
@@ -1905,6 +1939,7 @@ describe('release-drafter', () => {
                 * Adds a new Widgets API (#2) @toolmantim
                 * Create new-feature.md (#1) @toolmantim
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -1958,6 +1993,7 @@ describe('release-drafter', () => {
                 * Add big feature (#2) @TimonVS
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
@@ -2027,6 +2063,7 @@ describe('release-drafter', () => {
               * Add all the tests (#13) @toolmantim
               * 1️⃣ Switch to a monorepo (#9) @toolmantim
               ",
+                "discussion_category_name": "",
                 "draft": true,
                 "name": "",
                 "prerelease": false,
@@ -2095,6 +2132,7 @@ describe('release-drafter', () => {
               * Oh hai (#15) @toolmantim
               * Added great distance (#16) @toolmantim
               ",
+                "discussion_category_name": "",
                 "draft": true,
                 "name": "",
                 "prerelease": false,
@@ -2193,6 +2231,7 @@ describe('release-drafter', () => {
               Object {
                 "body": "# There's new stuff!
               ",
+                "discussion_category_name": "",
                 "draft": true,
                 "name": "",
                 "prerelease": false,
@@ -2540,6 +2579,7 @@ describe('release-drafter', () => {
 
 
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v1.0.2 🌈",
                   "prerelease": false,
@@ -2596,6 +2636,7 @@ describe('release-drafter', () => {
 
                 v2.0.0
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v1.0.2 🌈",
                   "prerelease": false,
@@ -2650,6 +2691,7 @@ describe('release-drafter', () => {
 
 
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v0.1.0 🌈",
                   "prerelease": false,
@@ -2702,6 +2744,7 @@ describe('release-drafter', () => {
 
                 v2.0.0
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v2.0.1 🌈",
                   "prerelease": false,
@@ -2746,6 +2789,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v2.1.0",
                   "prerelease": false,
@@ -2787,6 +2831,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v2.0.1",
                   "prerelease": false,
@@ -2828,6 +2873,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v2.1.0",
                   "prerelease": false,
@@ -2869,6 +2915,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v3.0.0",
                   "prerelease": false,
@@ -2911,6 +2958,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v3.0.0",
                   "prerelease": false,
@@ -2955,6 +3003,7 @@ describe('release-drafter', () => {
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "",
                   "prerelease": false,
