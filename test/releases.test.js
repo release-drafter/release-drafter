@@ -1,5 +1,10 @@
-const { generateChangeLog } = require('../lib/releases')
+const { generateChangeLog, generateReleaseInfo } = require('../lib/releases')
 const { DEFAULT_CONFIG } = require('../lib/default-config')
+
+function createGetConfigMock(config) {
+  return (context, configName, defaults) =>
+    Promise.resolve({ ...defaults, ...config })
+}
 
 const pullRequests = [
   {
@@ -186,6 +191,62 @@ describe('releases', () => {
         * Rename \\\\_\\\\_confgs\\\\\\\\confg.yml to \\\\_\\\\_configs\\\\\\\\config.yml (#7) @ghost
         * Adds @<!---->nullable annotations to the 1\\\\*1+2\\\\*4 test in \\\\\`tests.java\\\\\` (#0) @Happypig375"
       `)
+    })
+  })
+  describe('generateReleaseInfo', () => {
+    it('Changelog contains discussion name', () => {
+      // const generateReleaseInfo = ({
+      //   context,
+      //   commits,
+      //   config,
+      //   lastRelease,
+      //   mergedPullRequests,
+      //   version,
+      //   tag,
+      //   name,
+      //   isPreRelease,
+      //   shouldDraft,
+      //   commitish,
+      //   discussion_category_name,
+      // })
+      // const context = {
+      //   payload: { repository: { default_branch: 'master' } },
+      //   config: createGetConfigMock({
+      //     template: '$CHANGES',
+      //   }),
+      //   log: { info: jest.fn(), warn: jest.fn() },
+      // }
+      // const commits = require('./fixtures/graphql-commits-paginated-2.json')
+      const input = {
+        context: {
+          payload: { repository: { default_branch: 'master' } },
+          config: createGetConfigMock({
+            template: '$CHANGES',
+          }),
+          log: { info: jest.fn(), warn: jest.fn() },
+          repo: () => {
+            return {
+              owner: {},
+              repo: {},
+            }
+          },
+        },
+        commits: [],
+        config: baseConfig,
+        lastRelease: {},
+        mergedPullRequests: pullRequests,
+        version: {},
+        tag: {},
+        name: 'test',
+        isPreRelease: false,
+        shouldDraft: false,
+        commitish: {},
+        discussion_category_name: 'Discussion Category',
+      }
+      const releaseInfo = generateReleaseInfo(input)
+      expect(releaseInfo.discussion_category_name).toEqual(
+        input.discussion_category_name
+      )
     })
   })
 })

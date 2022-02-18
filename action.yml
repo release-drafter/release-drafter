@@ -53,6 +53,11 @@ inputs:
       A boolean indicating whether the autolabeler mode is disabled.
     required: false
     default: ''
+  discussion-category-name:
+    description: |
+      If specified, a discussion of the specified category is created and linked to the release. The value must be a category that already exists in the repository.
+    required: false
+    default: ''
 outputs:
   id:
     description: The ID of therelease that was created or updated.
