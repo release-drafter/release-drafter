@@ -855,6 +855,7 @@ describe('release-drafter', () => {
                 * Add big feature (#2) @TimonVS
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
+                  "discussion_category_name": "",
                   "draft": true,
                   "name": "v3.0.0-beta",
                   "prerelease": false,

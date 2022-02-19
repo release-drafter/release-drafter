@@ -160,6 +160,7 @@ module.exports = (app, { getRouter }) => {
 
     const targetCommitish = commitish || config['commitish'] || ref
     const filterByCommitish = config['filter-by-commitish']
+    const discussionCategoryName = config['discussion-category-name'] || ''
 
     const { draftRelease, lastRelease } = await findReleases({
       context,
@@ -193,6 +194,7 @@ module.exports = (app, { getRouter }) => {
       isPreRelease,
       shouldDraft,
       targetCommitish,
+      discussionCategoryName,
     })
 
     let createOrUpdateReleaseResponse
