@@ -195,28 +195,6 @@ describe('releases', () => {
   })
   describe('generateReleaseInfo', () => {
     it('Changelog contains discussion name', () => {
-      // const generateReleaseInfo = ({
-      //   context,
-      //   commits,
-      //   config,
-      //   lastRelease,
-      //   mergedPullRequests,
-      //   version,
-      //   tag,
-      //   name,
-      //   isPreRelease,
-      //   shouldDraft,
-      //   commitish,
-      //   discussion_category_name,
-      // })
-      // const context = {
-      //   payload: { repository: { default_branch: 'master' } },
-      //   config: createGetConfigMock({
-      //     template: '$CHANGES',
-      //   }),
-      //   log: { info: jest.fn(), warn: jest.fn() },
-      // }
-      // const commits = require('./fixtures/graphql-commits-paginated-2.json')
       const input = {
         context: {
           payload: { repository: { default_branch: 'master' } },
