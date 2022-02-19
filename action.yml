@@ -71,3 +71,5 @@ outputs:
     description: The URL users can navigate to in order to view the release
   upload_url:
     description: The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.
+  discussion_url:
+    description: The URL to the discussion if one is created
