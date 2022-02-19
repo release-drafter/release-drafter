@@ -139,6 +139,7 @@ module.exports = (app, { getRouter }) => {
       name,
       disableReleaser,
       commitish,
+      discussionCategoryName,
     } = getInput()
 
     const config = await getConfig({
@@ -160,7 +161,6 @@ module.exports = (app, { getRouter }) => {
 
     const targetCommitish = commitish || config['commitish'] || ref
     const filterByCommitish = config['filter-by-commitish']
-    const discussionCategoryName = config['discussion-category-name'] || ''
 
     const { draftRelease, lastRelease } = await findReleases({
       context,
@@ -241,6 +241,8 @@ function getInput({ config } = {}) {
       disableAutolabeler:
         core.getInput('disable-autolabeler').toLowerCase() === 'true',
       commitish: core.getInput('commitish') || undefined,
+      discussionCategoryName:
+        core.getInput('discussion-category-name') || undefined,
     }
   }
 
