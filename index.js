@@ -142,6 +142,8 @@ module.exports = (app, { getRouter }) => {
       discussionCategoryName,
     } = getInput()
 
+    core.debug('discussion_name: ' + discussionCategoryName)
+
     const config = await getConfig({
       context,
       configName,
@@ -197,6 +199,8 @@ module.exports = (app, { getRouter }) => {
       discussion_category_name: discussionCategoryName,
     })
 
+    core.debug(releaseInfo)
+
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
       log({ context, message: 'Creating new release' })
@@ -214,6 +218,8 @@ module.exports = (app, { getRouter }) => {
         config,
       })
     }
+
+    core.debug(createOrUpdateReleaseResponse)
 
     if (runnerIsActions()) {
       setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
@@ -254,7 +260,7 @@ function getInput({ config } = {}) {
   }
 }
 
-function setActionOutput(releaseResponse, { body }) {
+function setActionOutput(releaseResponse, { body, discussion_category_name }) {
   const {
     data: {
       id: releaseId,
@@ -262,13 +268,16 @@ function setActionOutput(releaseResponse, { body }) {
       upload_url: uploadUrl,
       tag_name: tagName,
       name: name,
+      discussion_url: discussionUrl,
     },
   } = releaseResponse
   if (releaseId && Number.isInteger(releaseId))
     core.setOutput('id', releaseId.toString())
   if (htmlUrl) core.setOutput('html_url', htmlUrl)
   if (uploadUrl) core.setOutput('upload_url', uploadUrl)
+  if (uploadUrl) core.setOutput('upload_url', uploadUrl)
   if (tagName) core.setOutput('tag_name', tagName)
   if (name) core.setOutput('name', name)
+  if (discussionUrl) core.setOutput('discussion_url', discussionUrl)
   core.setOutput('body', body)
 }
