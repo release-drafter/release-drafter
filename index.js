@@ -194,7 +194,7 @@ module.exports = (app, { getRouter }) => {
       isPreRelease,
       shouldDraft,
       targetCommitish,
-      discussionCategoryName,
+      discussion_category_name: discussionCategoryName,
     })
 
     let createOrUpdateReleaseResponse
