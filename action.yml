@@ -55,7 +55,7 @@ inputs:
     default: ''
   discussion-category-name:
     description: |
-      If specified, a discussion of the specified category is created and linked to the release. The value must be a category that already exists in the repository.
+      If specified, a discussion of the specified category is created and linked to the release. The value must be a category that already exists in the repository. Note: Only works with publish: true
     required: false
     default: ''
 outputs:
