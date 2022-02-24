@@ -38,25 +38,14 @@ const repos = [
   },
 ]
 
-for (const repo of repos) {
+const runQuery = (kind, repo, body) => {
   const options = {
+    body,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `bearer ${GITHUB_TOKEN}`,
     },
-    body: JSON.stringify({
-      query: findCommitsWithAssociatedPullRequestsQuery,
-      variables: {
-        owner: repo.owner,
-        name: REPO_NAME,
-        targetCommitish: repo.branch,
-        withPullRequestBody: true,
-        withPullRequestURL: true,
-        withBaseRefName: true,
-        withHeadRefName: true,
-      },
-    }),
   }
 
   fetch(GITHUB_GRAPHQL_API_ENDPOINT, options)
@@ -72,10 +61,29 @@ for (const repo of repos) {
         path.resolve(
           __dirname,
           '../test/fixtures/__generated__',
-          `graphql-commits-${repo.branch}.json`
+          `graphql-${kind}-${repo.branch}.json`
         ),
         string + '\n'
       )
     })
     .catch(console.error)
+}
+
+for (const repo of repos) {
+  runQuery(
+    'commits',
+    repo,
+    JSON.stringify({
+      query: findCommitsWithAssociatedPullRequestsQuery,
+      variables: {
+        owner: repo.owner,
+        name: REPO_NAME,
+        targetCommitish: repo.branch,
+        withPullRequestBody: true,
+        withPullRequestURL: true,
+        withBaseRefName: true,
+        withHeadRefName: true,
+      },
+    })
+  )
 }
