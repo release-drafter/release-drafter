@@ -50,7 +50,7 @@ for (const repo of repos) {
       variables: {
         owner: repo.owner,
         name: REPO_NAME,
-        ref: repo.branch,
+        targetCommitish: repo.branch,
         withPullRequestBody: true,
         withPullRequestURL: true,
         withBaseRefName: true,
