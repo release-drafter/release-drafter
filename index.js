@@ -165,6 +165,7 @@ module.exports = (app, { getRouter }) => {
       context,
       targetCommitish,
       filterByCommitish,
+      config,
     })
 
     const { commits, pullRequests: mergedPullRequests } =
