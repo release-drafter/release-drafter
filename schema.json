@@ -73,6 +73,13 @@
         "type": "string"
       }
     },
+    "include-paths": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "exclude-contributors": {
       "default": [],
       "type": "array",
