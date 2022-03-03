@@ -3,7 +3,10 @@
 const fs = require('fs')
 const path = require('path')
 const fetch = require('node-fetch')
-const { findCommitsWithAssociatedPullRequestsQuery } = require('../lib/commits')
+const {
+  findCommitsWithAssociatedPullRequestsQuery,
+  findCommitsWithPathChangesQuery,
+} = require('../lib/commits')
 
 const REPO_NAME = 'release-drafter-test-repo'
 const GITHUB_GRAPHQL_API_ENDPOINT = 'https://api.github.com/graphql'
@@ -83,6 +86,42 @@ for (const repo of repos) {
         withPullRequestURL: true,
         withBaseRefName: true,
         withHeadRefName: true,
+      },
+    })
+  )
+
+  runQuery(
+    'include-null-path',
+    repo,
+    JSON.stringify({
+      query: findCommitsWithPathChangesQuery,
+      variables: {
+        owner: repo.owner,
+        name: REPO_NAME,
+        targetCommitish: repo.branch,
+        withPullRequestBody: true,
+        withPullRequestURL: true,
+        withBaseRefName: true,
+        withHeadRefName: true,
+        path: null,
+      },
+    })
+  )
+
+  runQuery(
+    'include-path-src-5.md',
+    repo,
+    JSON.stringify({
+      query: findCommitsWithPathChangesQuery,
+      variables: {
+        owner: repo.owner,
+        name: REPO_NAME,
+        targetCommitish: repo.branch,
+        withPullRequestBody: true,
+        withPullRequestURL: true,
+        withBaseRefName: true,
+        withHeadRefName: true,
+        path: 'src/5.md',
       },
     })
   )
