@@ -216,7 +216,6 @@ describe('releases', () => {
         categories: [{ title: 'Feature', collapse: true, labels: 'feature' }],
       }
       const changelog = generateChangeLog(pullRequests, config)
-      console.log(changelog)
       expect(changelog).toMatchInlineSnapshot(`
         "* A1 (#1) @ghost
         * Adds missing <example> (#3) @jetersen
