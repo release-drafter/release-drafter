@@ -2831,6 +2831,58 @@ describe('release-drafter', () => {
       })
     })
 
+    describe('with tag-prefix', () => {
+      it('gets the version from the tag, stripping the prefix', async () => {
+        getConfigMock('config-with-tag-prefix.yml')
+        // Explicitly include a RC suffix in order to differentiate the
+        // behaviour of semver.parse vs semver.coerce in versions.js
+        //
+        // We expect the release to be 2.1.4, not 2.1.5
+        const alteredReleasePayload = {
+          ...releasePayload,
+          tag_name: 'static-tag-prefix-v2.1.4-RC3',
+        }
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, graphqlCommitsNoPRsPayload)
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [alteredReleasePayload])
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "## Previous release
+
+                static-tag-prefix-v2.1.4-RC3
+                ",
+                  "draft": true,
+                  "name": "static-tag-prefix-v2.1.4 🌈",
+                  "prerelease": false,
+                  "tag_name": "static-tag-prefix-v2.1.4",
+                  "target_commitish": "refs/heads/master",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, alteredReleasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+      })
+    })
+
     describe('with custom version resolver', () => {
       it('uses correct default when no labels exist', async () => {
         getConfigMock('config-with-custom-version-resolver-none.yml')
