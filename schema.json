@@ -199,6 +199,10 @@
           "title": {
             "type": "string"
           },
+          "collapse": {
+            "default": false,
+            "type": "boolean"
+          },
           "label": {
             "type": "string"
           },
