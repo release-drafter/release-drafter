@@ -47,6 +47,18 @@
         }
       ]
     },
+    "tag-prefix": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
     "tag-template": {
       "anyOf": [
         {
