@@ -187,5 +187,49 @@ describe('releases', () => {
         * Adds @<!---->nullable annotations to the 1\\\\*1+2\\\\*4 test in \\\\\`tests.java\\\\\` (#0) @Happypig375"
       `)
     })
+    it('adds proper details/summary markdown when collapse is set to true and more then 3 PRs', () => {
+      const config = {
+        ...baseConfig,
+        categories: [{ title: 'Bugs', collapse: true, labels: 'bug' }],
+      }
+      const changelog = generateChangeLog(pullRequests, config)
+      expect(changelog).toMatchInlineSnapshot(`
+        "* B2 (#2) @ghost
+        * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
+        * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
+
+        ## Bugs
+        <details>
+        <summary>5 changes</summary>
+
+        * A1 (#1) @ghost
+        * Adds missing <example> (#3) @jetersen
+        * \`#code_block\` (#4) @jetersen
+        * Fixes #4 (#5) @Happypig375
+        * 2*2 should equal to 4*1 (#6) @jetersen
+        </details>"
+      `)
+    })
+    it('does not add proper details/summary markdown when collapse is set to true and less then 3 PRs', () => {
+      const config = {
+        ...baseConfig,
+        categories: [{ title: 'Feature', collapse: true, labels: 'feature' }],
+      }
+      const changelog = generateChangeLog(pullRequests, config)
+      console.log(changelog)
+      expect(changelog).toMatchInlineSnapshot(`
+        "* A1 (#1) @ghost
+        * Adds missing <example> (#3) @jetersen
+        * \`#code_block\` (#4) @jetersen
+        * Fixes #4 (#5) @Happypig375
+        * 2*2 should equal to 4*1 (#6) @jetersen
+        * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
+
+        ## Feature
+
+        * B2 (#2) @ghost
+        * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375"
+      `)
+    })
   })
 })

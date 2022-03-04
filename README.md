@@ -254,8 +254,9 @@ Optionally you can add a `collapse` boolean to your category item, if the catego
 ```yml
 categories:
   - title: '⬆️ Dependencies'
-    label: 'dependencies'
     collapse: true
+    labels:
+      - 'dependencies'
 ```
 
 ## Exclude Pull Requests
