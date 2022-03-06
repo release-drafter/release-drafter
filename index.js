@@ -159,12 +159,16 @@ module.exports = (app, { getRouter }) => {
     }
 
     const targetCommitish = commitish || config['commitish'] || ref
-    const filterByCommitish = config['filter-by-commitish']
+    const {
+      'filter-by-commitish': filterByCommitish,
+      'tag-prefix': tagPrefix,
+    } = config
 
     const { draftRelease, lastRelease } = await findReleases({
       context,
       targetCommitish,
       filterByCommitish,
+      tagPrefix,
     })
 
     const { commits, pullRequests: mergedPullRequests } =

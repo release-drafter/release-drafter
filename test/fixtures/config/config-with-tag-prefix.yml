@@ -1,0 +1,7 @@
+name-template: 'static-tag-prefix-v$RESOLVED_VERSION 🌈'
+tag-template: 'static-tag-prefix-v$RESOLVED_VERSION'
+tag-prefix: static-tag-prefix-v
+template: |
+  ## Previous release
+
+  $PREVIOUS_TAG
