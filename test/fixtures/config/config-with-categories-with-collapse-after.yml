@@ -5,7 +5,7 @@ template: |
 
 categories:
   - title: 🚀 All the things!
-    collapse: true
+    collapse-after: 3
     labels:
       - feature
       - enhancement

@@ -1200,7 +1200,7 @@ describe('release-drafter', () => {
       })
 
       it('categorizes pull requests with a collapsed category', async () => {
-        getConfigMock('config-with-categories-with-collapse.yml')
+        getConfigMock('config-with-categories-with-collapse-after.yml')
 
         nock('https://api.github.com')
           .get('/repos/toolmantim/release-drafter-test-project/releases')
@@ -1224,6 +1224,7 @@ describe('release-drafter', () => {
                 * Update dependencies (#4) @TimonVS
 
                 ## 🚀 All the things!
+
                 <details>
                 <summary>4 changes</summary>
 

@@ -249,12 +249,12 @@ Pull requests with the label "feature" or "fix" will now be grouped together:
 Adding such labels to your PRs can be automated by using the embedded Autolabeler functionality (see below),
 [PR Labeler](https://github.com/TimonVS/pr-labeler-action) or [Probot Auto Labeler](https://github.com/probot/autolabeler).
 
-Optionally you can add a `collapse` boolean to your category item, if the category has more than 3 pull requests then it will show all pull requests collapsed for that category. Append the `collapse` boolean to your category as following:
+Optionally you can add a `collapse-after` entry to your category item, if the category has more than the defined `collapse-after` pull requests then it will show all pull requests collapsed for that category. Append the `collapse-after` integer to your category as following:
 
 ```yml
 categories:
   - title: '⬆️ Dependencies'
-    collapse: true
+    collapse-after: 3
     labels:
       - 'dependencies'
 ```

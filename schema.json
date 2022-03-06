@@ -199,9 +199,10 @@
           "title": {
             "type": "string"
           },
-          "collapse": {
-            "default": false,
-            "type": "boolean"
+          "collapse-after": {
+            "default": 1.7976931348623157e308,
+            "type": "integer",
+            "minimum": 0
           },
           "label": {
             "type": "string"

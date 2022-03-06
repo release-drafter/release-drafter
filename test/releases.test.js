@@ -187,10 +187,10 @@ describe('releases', () => {
         * Adds @<!---->nullable annotations to the 1\\\\*1+2\\\\*4 test in \\\\\`tests.java\\\\\` (#0) @Happypig375"
       `)
     })
-    it('adds proper details/summary markdown when collapse is set to true and more than 3 PRs', () => {
+    it('adds proper details/summary markdown when collapse-after is set and more than 3 PRs', () => {
       const config = {
         ...baseConfig,
-        categories: [{ title: 'Bugs', collapse: true, labels: 'bug' }],
+        categories: [{ title: 'Bugs', 'collapse-after': 3, labels: 'bug' }],
       }
       const changelog = generateChangeLog(pullRequests, config)
       expect(changelog).toMatchInlineSnapshot(`
@@ -199,6 +199,7 @@ describe('releases', () => {
         * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
 
         ## Bugs
+
         <details>
         <summary>5 changes</summary>
 
@@ -210,10 +211,12 @@ describe('releases', () => {
         </details>"
       `)
     })
-    it('does not add proper details/summary markdown when collapse is set to true and less than 3 PRs', () => {
+    it('does not add proper details/summary markdown when collapse-after is set and less than 3 PRs', () => {
       const config = {
         ...baseConfig,
-        categories: [{ title: 'Feature', collapse: true, labels: 'feature' }],
+        categories: [
+          { title: 'Feature', 'collapse-after': 3, labels: 'feature' },
+        ],
       }
       const changelog = generateChangeLog(pullRequests, config)
       expect(changelog).toMatchInlineSnapshot(`
