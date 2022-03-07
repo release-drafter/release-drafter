@@ -211,6 +211,11 @@
           "title": {
             "type": "string"
           },
+          "collapse-after": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0
+          },
           "label": {
             "type": "string"
           },

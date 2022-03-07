@@ -251,6 +251,16 @@ Pull requests with the label "feature" or "fix" will now be grouped together:
 Adding such labels to your PRs can be automated by using the embedded Autolabeler functionality (see below),
 [PR Labeler](https://github.com/TimonVS/pr-labeler-action) or [Probot Auto Labeler](https://github.com/probot/autolabeler).
 
+Optionally you can add a `collapse-after` entry to your category item, if the category has more than the defined `collapse-after` pull requests then it will show all pull requests collapsed for that category. Append the `collapse-after` integer to your category as following:
+
+```yml
+categories:
+  - title: '⬆️ Dependencies'
+    collapse-after: 3
+    labels:
+      - 'dependencies'
+```
+
 ## Exclude Pull Requests
 
 With the `exclude-labels` option you can exclude pull requests from the release notes using labels. For example, append the following to your `.github/release-drafter.yml` file:

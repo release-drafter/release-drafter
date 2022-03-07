@@ -1198,6 +1198,61 @@ describe('release-drafter', () => {
 
         expect.assertions(1)
       })
+
+      it('categorizes pull requests with a collapsed category', async () => {
+        getConfigMock('config-with-categories-with-collapse-after.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [releasePayload])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, graphqlCommitsMergeCommit)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * Update dependencies (#4) @TimonVS
+
+                ## 🚀 All the things!
+
+                <details>
+                <summary>4 changes</summary>
+
+                * Add documentation (#5) @TimonVS
+                * Bug fixes (#3) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+                </details>
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                  "target_commitish": "refs/heads/master",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, releasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+      })
     })
 
     describe('with exclude-labels config', () => {
