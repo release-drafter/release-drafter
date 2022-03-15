@@ -200,25 +200,32 @@ module.exports = (app, { getRouter }) => {
     })
 
     let createOrUpdateReleaseResponse
-    if (!draftRelease) {
-      log({ context, message: 'Creating new release' })
-      createOrUpdateReleaseResponse = await createRelease({
+    if (commits.length === 0) {
+      log({
         context,
-        releaseInfo,
-        config,
+        message: 'Not creating a release, no commits to categorize',
       })
     } else {
-      log({ context, message: 'Updating existing release' })
-      createOrUpdateReleaseResponse = await updateRelease({
-        context,
-        draftRelease,
-        releaseInfo,
-        config,
-      })
-    }
+      if (!draftRelease) {
+        log({ context, message: 'Creating new release' })
+        createOrUpdateReleaseResponse = await createRelease({
+          context,
+          releaseInfo,
+          config,
+        })
+      } else {
+        log({ context, message: 'Updating existing release' })
+        createOrUpdateReleaseResponse = await updateRelease({
+          context,
+          draftRelease,
+          releaseInfo,
+          config,
+        })
+      }
 
-    if (runnerIsActions()) {
-      setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+      if (runnerIsActions()) {
+        setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+      }
     }
   }
 
