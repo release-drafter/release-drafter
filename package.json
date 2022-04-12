@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@koa-lite/joi-schema": "0.0.1",
-    "@vercel/ncc": "0.33.3",
+    "@vercel/ncc": "0.33.4",
     "eslint": "8.13.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.0.0",
