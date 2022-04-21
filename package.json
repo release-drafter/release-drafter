@@ -32,7 +32,7 @@
     "lodash": "4.17.21",
     "probot": "12.2.2",
     "regex-parser": "2.2.11",
-    "semver": "7.3.6"
+    "semver": "7.3.7"
   },
   "devDependencies": {
     "@koa-lite/joi-schema": "0.0.1",
