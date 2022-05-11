@@ -311,13 +311,31 @@
       ]
     },
     "header": {
-      "type": "string"
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
     },
     "template": {
       "type": "string"
     },
     "footer": {
-      "type": "string"
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
     },
     "_extends": {
       "type": "string"

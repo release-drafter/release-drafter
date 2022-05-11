@@ -1654,6 +1654,54 @@ describe('release-drafter', () => {
 
         expect.assertions(1)
       })
+      it('only header from input', async () => {
+        getConfigMock('config-with-header-template.yml')
+
+        let restoreEnvironment = mockedEnv({
+          INPUT_HEADER:
+            'I AM AWESOME_mockenv_strips_newline_and_trailing_spaces_',
+        })
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [releasePayload])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, graphqlCommitsMergeCommit)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "I AM AWESOME_mockenv_strips_newline_and_trailing_spaces_This is the template in the middle
+                ",
+                  "draft": true,
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                  "target_commitish": "refs/heads/master",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, releasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+
+        restoreEnvironment()
+      })
     })
 
     describe('merging strategies', () => {
