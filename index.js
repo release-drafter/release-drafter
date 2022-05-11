@@ -164,6 +164,16 @@ module.exports = (app, { getRouter }) => {
       'tag-prefix': tagPrefix,
     } = config
 
+    // override header and footer when passed as input
+    const header = core.getInput('header')
+    const footer = core.getInput('footer')
+    if (header) {
+      config['header'] = header
+    }
+    if (footer) {
+      config['footer'] = footer
+    }
+
     const { draftRelease, lastRelease } = await findReleases({
       context,
       targetCommitish,
@@ -249,6 +259,7 @@ function getInput({ config } = {}) {
   // Merges the config file with the input
   // the input takes precedence, because it's more easy to change at runtime
   const preRelease = core.getInput('prerelease').toLowerCase()
+
   return {
     isPreRelease: preRelease === 'true' || (!preRelease && config.prerelease),
   }
