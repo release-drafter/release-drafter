@@ -86,6 +86,9 @@ for (const repo of repos) {
         withPullRequestURL: true,
         withBaseRefName: true,
         withHeadRefName: true,
+        withPullRequestClosingIssues: true,
+        withClosingIssueBody: true,
+        withClosingIssueURL: true,
       },
     })
   )
