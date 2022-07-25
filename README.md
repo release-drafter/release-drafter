@@ -418,5 +418,5 @@ The command does the following:
 - Runs the `postversion` npm script in [package.json](package.json), which:
   - Pushes the tag to GitHub
   - Publishes the npm release
-  - Deploys to [Now](https://now.sh)
+  - Deploys to [Vercel](https://vercel.com)
   - Opens the GitHub releases page so you can publish the release notes
