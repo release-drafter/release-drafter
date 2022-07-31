@@ -416,7 +416,8 @@ The command does the following:
 - Ensures you’re on master and don’t have local, un-commited changes
 - Bumps the version number in [package.json](package.json) based on major, minor or patch
 - Runs the `postversion` npm script in [package.json](package.json), which:
-  - Pushes the tag to GitHub
-  - Publishes the npm release
-  - Deploys to [Vercel](https://vercel.com)
-  - Opens the GitHub releases page so you can publish the release notes
+  - Runs test
+  - Pushes the tag to GitHub, which triggers GitHub Action that does the following:
+    - Push GitHub app to Heroku
+    - Releases NPM
+    - Publish the Release Draft!
