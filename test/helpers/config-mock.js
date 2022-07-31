@@ -1,4 +1,4 @@
-const fs = require('fs')
+const fs = require('node:fs')
 const nock = require('nock')
 
 function configFixture(fileName = 'config.yml') {

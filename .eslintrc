@@ -11,6 +11,7 @@
     "no-unused-vars": "warn",
     "unicorn/no-null": "off",
     "unicorn/prefer-module": "off",
-    "unicorn/prevent-abbreviations": "off"
+    "unicorn/prevent-abbreviations": "off",
+    "unicorn/prefer-top-level-await": "off"
   }
 }
