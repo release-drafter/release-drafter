@@ -12,7 +12,7 @@
       }
     },
     "change-template": {
-      "default": "* $TITLE (#$NUMBER) @$AUTHOR",
+      "default": "'* $TITLE (#$NUMBER) @$AUTHOR'",
       "type": "string"
     },
     "change-title-escapes": {
@@ -28,7 +28,7 @@
       ]
     },
     "no-changes-template": {
-      "default": "* No changes",
+      "default": "'* No changes'",
       "type": "string"
     },
     "version-template": {

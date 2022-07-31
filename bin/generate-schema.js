@@ -22,6 +22,12 @@ if (requiredField.length > 0) {
   delete jsonSchema.required
 }
 
+for (const [key, value] of Object.entries(jsonSchema.properties)) {
+  if (typeof value.default === 'string' && value.default.includes('*')) {
+    jsonSchema.properties[key].default = `'${value.default}'`
+  }
+}
+
 if (inputArguments[0] === 'print') {
   fs.writeFileSync(
     './schema.json',
