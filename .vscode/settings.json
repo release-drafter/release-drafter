@@ -4,5 +4,6 @@
   },
   "files.exclude": {
     "dist/": true
-  }
+  },
+  "eslint.format.enable": true
 }
