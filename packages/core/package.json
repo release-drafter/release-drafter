@@ -1,0 +1,63 @@
+{
+	"name": "@release-drafter/core",
+	"version": "1.0.0",
+	"description": "",
+	"main": "lib/src/index.js",
+	"exports": "./lib/src/index.js",
+	"types": "./lib/src/index.d.ts",
+	"type": "module",
+	"scripts": {
+		"build": "tsc",
+		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"jest": {
+		"verbose": true,
+		"modulePaths": [
+			"<rootDir>"
+		],
+		"transform": {},
+		"collectCoverage": true,
+		"collectCoverageFrom": [
+			"src/**"
+		],
+		"preset": "ts-jest/presets/default-esm",
+		"globals": {
+			"ts-jest": {
+				"useESM": true
+			}
+		},
+		"moduleNameMapper": {
+			"^(\\.{1,2}/.*)\\.js$": "$1"
+		}
+	},
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"dependencies": {
+		"@octokit/core": "^4.0.4",
+		"@octokit/plugin-paginate-rest": "^3.1.0",
+		"@octokit/plugin-rest-endpoint-methods": "^6.2.0",
+		"@probot/octokit-plugin-config": "^1.1.6",
+		"cli-table3": "0.6.2",
+		"compare-versions": "4.1.3",
+		"deepmerge": "4.2.2",
+		"escape-string-regexp": "4.0.0",
+		"ignore": "5.2.0",
+		"joi": "17.6.0",
+		"regex-parser": "2.2.11",
+		"semver": "7.3.7"
+	},
+	"devDependencies": {
+		"@jest/globals": "^28.1.3",
+		"@types/jest": "^28.1.6",
+		"@types/node": "^16.0.0",
+		"@types/semver": "^7.3.10",
+		"cross-env": "^7.0.3",
+		"jest": "^28.1.3",
+		"ts-jest": "^28.0.7",
+		"typescript": "^4.7.4"
+	}
+}

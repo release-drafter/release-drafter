@@ -12,10 +12,10 @@ Please note that this project is released with a [Contributor Code of Conduct][c
 ## Submitting a pull request
 
 1. [Fork][fork] and clone the repository
-1. Configure and install the dependencies: `yarn install`
-1. Make sure the tests pass on your machine: `yarn test`, note: these tests also apply the linter, so no need to lint seperately
+1. Configure and install the dependencies: `pnpm install`
+1. Make sure the tests pass on your machine: `pnpm test`, note: these tests also apply the linter, so no need to lint seperately
 1. Create a new branch: `git checkout -b my-branch-name`
-1. Make your change, add tests, build with `yarn prettier && yarn lint --fix && yarn build` and make sure the tests still pass
+1. Make your change, add tests, build with `pnpm prettier && pnpm lint --fix && pnpm build` and make sure the tests still pass
 1. Push to your fork and [submit a pull request][pr]
 1. Give yourself a high five, and wait for your pull request to be reviewed and merged.
 
