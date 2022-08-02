@@ -26,14 +26,18 @@ jobs:
         run: |
           gh pr checkout ${{ github.event.pull_request.number }}
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
-          cache: 'yarn'
+          cache: 'pnpm'
 
-      - run: yarn install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      - run: yarn build
+      - run: pnpm build
 
       - name: Commit and push if needed
         run: |

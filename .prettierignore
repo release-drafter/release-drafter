@@ -1,3 +1,5 @@
 config-with-yaml-exception.yml
+pnpm-lock.yaml
 dist/
 coverage/
+lib/
