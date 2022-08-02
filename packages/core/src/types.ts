@@ -38,6 +38,11 @@ export type ReleaseDrafterVersionResolver = {
 	patch: ReleaseDrafterLabels
 }
 
+export type ReleaseDrafterReplacerStrings = {
+	search: string
+	replace: string
+}
+
 export type ReleaseDrafterReplacer = {
 	search: RegExp
 	replace: string
@@ -51,10 +56,47 @@ export type ReleaseDrafterCategory = {
 
 export type ReleaseDrafterAutolabeler = {
 	label: string
-	files: RegExp[]
+	files: string[]
 	branch: RegExp[]
 	title: RegExp[]
 	body: RegExp[]
+}
+
+export type ReleaseDrafterAutolabelerStrings = {
+	label: string
+	files: string[]
+	branch: string[]
+	title: string[]
+	body: string[]
+}
+
+export type ReleaseDrafterConfigStrings = {
+	autolabeler: ReleaseDrafterAutolabelerStrings[]
+	categories: ReleaseDrafterCategory[]
+	categoryTemplate: string
+	changeTemplate: string
+	changeTitleEscapes: string
+	commitish: string
+	excludeContributors: string[]
+	excludeLabels: string[]
+	filterByCommitish: boolean
+	footer: string
+	header: string
+	includeLabels: string[]
+	includePaths: string[]
+	nameTemplate: string
+	noChangesTemplate: string
+	noContributorsTemplate: string
+	prerelease: boolean
+	references: string[]
+	replacers: ReleaseDrafterReplacerStrings[]
+	sortBy: SORT_BY
+	sortDirection: SORT_DIRECTIONS
+	tagPrefix: string
+	tagTemplate: string
+	template: string
+	versionResolver: ReleaseDrafterVersionResolver
+	versionTemplate: string
 }
 
 export type ReleaseDrafterConfig = {
