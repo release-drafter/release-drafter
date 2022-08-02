@@ -7,8 +7,7 @@ import {
 	validateAutolabeler,
 	validateCategories,
 } from './template.js'
-import merge from 'deepmerge'
-import { ReleaseDrafterConfig } from './types.js'
+import { ReleaseDrafterConfig, ReleaseDrafterConfigStrings } from './types.js'
 
 const renames = [
 	{ from: 'branches', to: 'references' },
@@ -34,7 +33,7 @@ const renames = [
 
 export function schema(defaultBranch = 'master') {
 	const joiObject = Joi.object<
-		ReleaseDrafterConfig & { _extends: string },
+		ReleaseDrafterConfigStrings & { _extends: string },
 		true
 	>().keys({
 		references: Joi.array().items(Joi.string()).default([defaultBranch]),
@@ -180,11 +179,10 @@ export function schema(defaultBranch = 'master') {
 
 export function validateSchema(
 	context: Context,
-	repoConfig: ReleaseDrafterConfig,
+	repoConfig: ReleaseDrafterConfigStrings,
 ): ReleaseDrafterConfig {
-	const mergedRepoConfig = merge.all([DEFAULT_CONFIG, repoConfig])
 	const { error, value: config } = schema(context.defaultBranch).validate(
-		mergedRepoConfig,
+		repoConfig,
 		{
 			abortEarly: false,
 			allowUnknown: true,
@@ -195,13 +193,11 @@ export function validateSchema(
 
 	validateCategories(config.categories)
 
-	if (config.replacers.length > 0) {
-		config.replacers = validateReplacers(config.replacers)
+	const convertedConfig: ReleaseDrafterConfig = {
+		...config,
+		replacers: validateReplacers(config.replacers),
+		autolabeler: validateAutolabeler(config.autolabeler),
 	}
 
-	if (config.autolabeler.length > 0) {
-		config.autolabeler = validateAutolabeler(config.autolabeler)
-	}
-
-	return config
+	return convertedConfig
 }

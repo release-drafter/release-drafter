@@ -1,7 +1,9 @@
 import {
 	ReleaseDrafterAutolabeler,
+	ReleaseDrafterAutolabelerStrings,
 	ReleaseDrafterCategory,
 	ReleaseDrafterReplacer,
+	ReleaseDrafterReplacerStrings,
 } from './types.js'
 import regexParser from 'regex-parser'
 import regexEscape from 'escape-string-regexp'
@@ -44,13 +46,15 @@ function toRegex(search: string) {
 		: new RegExp(regexEscape(search), 'g')
 }
 
-export function validateReplacers(replacers: ReleaseDrafterReplacer[]) {
+export function validateReplacers(
+	replacers: ReleaseDrafterReplacerStrings[],
+): ReleaseDrafterReplacer[] {
 	return replacers
 		.map((replacer) => {
 			try {
 				return {
 					...replacer,
-					search: toRegex(replacer.search as unknown as string),
+					search: toRegex(replacer.search),
 				}
 			} catch {
 				throw new Error(
@@ -65,20 +69,22 @@ export function validateReplacers(replacers: ReleaseDrafterReplacer[]) {
 		.filter(Boolean)
 }
 
-export function validateAutolabeler(autolabeler: ReleaseDrafterAutolabeler[]) {
+export function validateAutolabeler(
+	autolabeler: ReleaseDrafterAutolabelerStrings[],
+): ReleaseDrafterAutolabeler[] {
 	return autolabeler
 		.map((autolabel) => {
 			try {
 				return {
 					...autolabel,
 					branch: autolabel.branch.map((reg) => {
-						return toRegex(reg as unknown as string)
+						return toRegex(reg)
 					}),
 					title: autolabel.title.map((reg) => {
-						return toRegex(reg as unknown as string)
+						return toRegex(reg)
 					}),
 					body: autolabel.body.map((reg) => {
-						return toRegex(reg as unknown as string)
+						return toRegex(reg)
 					}),
 				}
 			} catch {
