@@ -16,18 +16,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: '16'
-          cache: yarn
+          cache: 'pnpm'
           registry-url: https://registry.npmjs.org
 
-      - name: yarn install
-        run: yarn install --frozen-lockfile
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      - name: yarn test
-        run: yarn test
+      - name: pnpm test
+        run: pnpm test
 
       - name: Deploy to Heroku
         env:
@@ -37,10 +41,10 @@ jobs:
           git fetch origin master
           git push https://heroku:$HEROKU_API_TOKEN@git.heroku.com/$HEROKU_APP_NAME.git origin/master:master --force
 
-      - name: yarn publish
+      - name: pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
-        run: yarn publish --access public
+        run: pnpm publish --access public
 
       - name: version
         id: version

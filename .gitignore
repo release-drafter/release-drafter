@@ -8,6 +8,10 @@ docker-compose-logs
 package-lock.json
 dist/static/
 dist/views/
+lib/
+
+# TypeScript
+tsconfig.tsbuildinfo
 
 # OS
 .DS_Store

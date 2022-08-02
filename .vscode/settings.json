@@ -1,8 +1,14 @@
 {
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "files.exclude": {
-    "dist/": true
-  }
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	},
+	"files.exclude": {
+		"dist/": true
+	},
+	"json.schemas": [
+		{
+			"fileMatch": ["/schema.json"],
+			"url": "https://json-schema.org/draft-06/schema#"
+		}
+	]
 }

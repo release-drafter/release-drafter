@@ -1,8 +1,0 @@
-replacers:
-  - search:
-    replace: ''
-
-template: |
-  # What's Changed
-
-  $CHANGES
