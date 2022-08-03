@@ -4,5 +4,5 @@
 		"outDir": "lib"
 	},
 	"references": [{ "path": "../core" }],
-	"include": ["src/**/*.ts"]
+	"include": ["src/**/*.ts", "tests/**/*.test.ts"]
 }
