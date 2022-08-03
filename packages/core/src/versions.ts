@@ -1,15 +1,15 @@
-import semver, { ReleaseType, SemVer } from 'semver'
+import semver from 'semver'
 
 const splitSemVersion = (input: {
-	version?: SemVer
+	version?: semver.SemVer
 	template: string
-	inc?: ReleaseType
+	inc?: semver.ReleaseType
 }) => {
 	if (!input.version) {
 		return
 	}
 
-	const version: SemVer | string = input.inc
+	const version: semver.SemVer | string = input.inc
 		? (semver.inc(input.version, input.inc, true) as string)
 		: input.version.version
 
@@ -158,10 +158,10 @@ export const defaultVersionInfo = {
 }
 
 export function getTemplatableVersion(input: {
-	version: SemVer
+	version: semver.SemVer
 	template: string
-	versionInput?: SemVer
-	versionKeyIncrement?: ReleaseType
+	versionInput?: semver.SemVer
+	versionKeyIncrement?: semver.ReleaseType
 }) {
 	const templatableVersion = {
 		$NEXT_MAJOR_VERSION: splitSemVersion({ ...input, inc: 'major' }),
@@ -225,7 +225,7 @@ export function getTemplatableVersion(input: {
 	return templatableVersion
 }
 
-function toSemver(version: string): SemVer | undefined {
+function toSemver(version: string): semver.SemVer | undefined {
 	const result = semver.parse(version)
 	if (result) {
 		return result
@@ -238,7 +238,7 @@ function toSemver(version: string): SemVer | undefined {
 function coerceVersion(
 	input?: string | { tag_name: string; name: string },
 	tagPrefix?: string,
-): SemVer | undefined {
+): semver.SemVer | undefined {
 	if (!input) {
 		return
 	}
@@ -256,7 +256,7 @@ function coerceVersion(
 export function getVersionInfo(
 	release: { tag_name: string; name: string },
 	template: string,
-	versionKeyIncrement?: ReleaseType,
+	versionKeyIncrement?: semver.ReleaseType,
 	inputVersion?: string,
 	tagPrefix?: string,
 ) {
