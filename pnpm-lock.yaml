@@ -4,6 +4,7 @@ importers:
 
   .:
     specifiers:
+      '@types/node': ^16.0.0
       '@typescript-eslint/eslint-plugin': ^5.31.0
       '@typescript-eslint/parser': ^5.31.0
       eslint: 8.20.0
@@ -15,6 +16,7 @@ importers:
       prettier: 2.7.1
       typescript: ^4.7.4
     devDependencies:
+      '@types/node': 16.11.47
       '@typescript-eslint/eslint-plugin': 5.31.0_d5zwcxr4bwkhmuo464cb3a2puu
       '@typescript-eslint/parser': 5.31.0_he2ccbldppg44uulnyq4rwocfa
       eslint: 8.20.0
@@ -99,6 +101,7 @@ importers:
 
   packages/core:
     specifiers:
+      '@antongolub/git-root': ^1.5.7
       '@jest/globals': ^28.1.3
       '@octokit/core': ^4.0.4
       '@octokit/plugin-paginate-rest': ^3.1.0
@@ -114,11 +117,11 @@ importers:
       escape-string-regexp: 4.0.0
       ignore: 5.2.0
       jest: ^28.1.3
-      joi: 17.6.0
       regex-parser: 2.2.11
       semver: 7.3.7
       ts-jest: ^28.0.7
       typescript: ^4.7.4
+      zod: ^3.17.10
     dependencies:
       '@octokit/core': 4.0.4
       '@octokit/plugin-paginate-rest': 3.1.0_@octokit+core@4.0.4
@@ -129,10 +132,11 @@ importers:
       deepmerge: 4.2.2
       escape-string-regexp: 4.0.0
       ignore: 5.2.0
-      joi: 17.6.0
       regex-parser: 2.2.11
       semver: 7.3.7
+      zod: 3.17.10
     devDependencies:
+      '@antongolub/git-root': 1.5.7
       '@jest/globals': 28.1.3
       '@types/jest': 28.1.6
       '@types/node': 16.11.47
@@ -144,8 +148,8 @@ importers:
 
   packages/schema:
     specifiers:
+      '@antongolub/git-root': ^1.5.7
       '@jest/globals': ^28.1.3
-      '@koa-lite/joi-schema': 0.0.1
       '@release-drafter/core': workspace:../core
       '@types/jest': ^28.1.6
       '@types/node': ^16.0.0
@@ -153,9 +157,13 @@ importers:
       jest: ^28.1.3
       ts-jest: ^28.0.7
       typescript: ^4.7.4
+      zod: ^3.17.10
+      zod-to-json-schema: ^3.17.1
     dependencies:
-      '@koa-lite/joi-schema': 0.0.1
+      '@antongolub/git-root': 1.5.7
       '@release-drafter/core': link:../core
+      zod: 3.17.10
+      zod-to-json-schema: 3.17.1_zod@3.17.10
     devDependencies:
       '@jest/globals': 28.1.3
       '@types/jest': 28.1.6
@@ -186,6 +194,13 @@ packages:
       '@jridgewell/gen-mapping': 0.1.1
       '@jridgewell/trace-mapping': 0.3.14
     dev: true
+
+  /@antongolub/git-root/1.5.7:
+    resolution: {integrity: sha512-UsaKzLELgOwPJWeeC3tgqcu95HJWUzRBdVaC4JjCDxQTU9zv/KkwoYpXubCDcFZRPcIknIxWyD58s7hMGCG+aw==}
+    dependencies:
+      '@qiwi/substrate': 1.20.14
+      find-up: 5.0.0
+      tslib: 2.4.0
 
   /@babel/code-frame/7.16.7:
     resolution: {integrity: sha512-iAXqUn8IIeBTNd72xsFlgaXHkMBMt6y4HJp1tIaK465CWLT/fG1aqB7ykr95gHHmlBdGbFeWWfyB4NJJ0nmeIg==}
@@ -543,16 +558,6 @@ packages:
     resolution: {integrity: sha512-WEezM1FWztfbzqIUbsDzFRVMxSoLy3HugVcux6KDDtTqzPsLE8NDRHfXvev66aH1i2oOKKar3/XDjbvh/OUBdg==}
     dev: false
 
-  /@hapi/hoek/9.2.1:
-    resolution: {integrity: sha512-gfta+H8aziZsm8pZa0vj04KO6biEiisppNgA1kbJvFrrWu9Vm7eaUEy76DIxsuTaWvti5fkJVhllWc6ZTE+Mdw==}
-    dev: false
-
-  /@hapi/topo/5.1.0:
-    resolution: {integrity: sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==}
-    dependencies:
-      '@hapi/hoek': 9.2.1
-    dev: false
-
   /@humanwhocodes/config-array/0.9.2:
     resolution: {integrity: sha512-UXOuFCGcwciWckOpmfKDq/GyhlTf9pN/BzG//x8p8zTOFEcGuA68ANXheFS0AGvy3qgZqLBUkMs7hqzqCKOVwA==}
     engines: {node: '>=10.10.0'}
@@ -835,12 +840,6 @@ packages:
       '@jridgewell/resolve-uri': 3.1.0
       '@jridgewell/sourcemap-codec': 1.4.14
     dev: true
-
-  /@koa-lite/joi-schema/0.0.1:
-    resolution: {integrity: sha512-t7PcCPAz6pThH8SiaKBJXG/V97Yg9Yuhx6zJ7xLFM7fqHaw6oE8RCvD06t9yfF/mrDuoliYrvrmqY6luNm/XkA==}
-    dependencies:
-      joi: 17.6.0
-    dev: false
 
   /@nodelib/fs.scandir/2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1206,6 +1205,28 @@ packages:
       - supports-color
     dev: false
 
+  /@qiwi/substrate-abstract/1.20.8:
+    resolution: {integrity: sha512-qc7y1+OVOX8GkhDtlo7uddepZboUu3ZtkL/j9YC8zixjKrqp+SDMf8PgSgxa/JVg//Ra+znjtwpC8PyRQm7UHQ==}
+    dependencies:
+      '@qiwi/substrate-types': 1.54.0
+
+  /@qiwi/substrate-std/1.3.9:
+    resolution: {integrity: sha512-jd3ZjDN5nsAkKoiieFJufpRkg852lQPbTNPJSaI6ZXPuTTpv6knubHXbcPGI2lq/BHtItap6bPyxnCMtT+Om6w==}
+    dependencies:
+      '@qiwi/substrate-types': 1.54.0
+      tslib: 2.4.0
+
+  /@qiwi/substrate-types/1.54.0:
+    resolution: {integrity: sha512-1Od6k93T5o/GZTJXys25N1fULUUI8ySrMKNw22t6ljpbcsyVNDDk2BjDLuVGyRnwF0Iq7j2322M3om0ASmqNzg==}
+
+  /@qiwi/substrate/1.20.14:
+    resolution: {integrity: sha512-QjwYhY14m2gLvPMuokYidmZYI1vx7K+baT0Xvf9C9hMo405x8NZCYHvN5vtqdy9YMKE4uwKD5U4zuo/C01MqsQ==}
+    dependencies:
+      '@qiwi/substrate-abstract': 1.20.8
+      '@qiwi/substrate-std': 1.3.9
+      '@qiwi/substrate-types': 1.54.0
+      tslib: 2.4.0
+
   /@sentry/core/6.16.1:
     resolution: {integrity: sha512-UFI0264CPUc5cR1zJH+S2UPOANpm6dLJOnsvnIGTjsrwzR0h8Hdl6rC2R/GPq+WNbnipo9hkiIwDlqbqvIU5vw==}
     engines: {node: '>=6'}
@@ -1274,20 +1295,6 @@ packages:
     dependencies:
       '@sentry/types': 6.16.1
       tslib: 1.14.1
-    dev: false
-
-  /@sideway/address/4.1.3:
-    resolution: {integrity: sha512-8ncEUtmnTsMmL7z1YPB47kPUq7LpKWJNFPsRzHiIajGC5uXlWGn+AmkYPcHNl8S4tcEGx+cnORnNYaw2wvL+LQ==}
-    dependencies:
-      '@hapi/hoek': 9.2.1
-    dev: false
-
-  /@sideway/formula/3.0.0:
-    resolution: {integrity: sha512-vHe7wZ4NOXVfkoRb8T5otiENVlT7a3IAiw7H5M2+GO+9CDgcVUUsX1zalAztCmwyOr2RUTGJdgB+ZvSVqmdHmg==}
-    dev: false
-
-  /@sideway/pinpoint/2.0.0:
-    resolution: {integrity: sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==}
     dev: false
 
   /@sinclair/typebox/0.24.25:
@@ -2660,6 +2667,13 @@ packages:
       path-exists: 4.0.0
     dev: true
 
+  /find-up/5.0.0:
+    resolution: {integrity: sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng==}
+    engines: {node: '>=10'}
+    dependencies:
+      locate-path: 6.0.0
+      path-exists: 4.0.0
+
   /flat-cache/3.0.4:
     resolution: {integrity: sha512-dm9s5Pw7Jc0GvMYbshN6zchCA9RgQlzzEZX3vylR9IqFfS8XciblUXOKfW6SiuJ0e13eDYZoZV5wdrev7P3Nwg==}
     engines: {node: ^10.12.0 || >=12.0.0}
@@ -3484,16 +3498,6 @@ packages:
     engines: {node: '>= 0.6.0'}
     dev: false
 
-  /joi/17.6.0:
-    resolution: {integrity: sha512-OX5dG6DTbcr/kbMFj0KGYxuew69HPcAE3K/sZpEV2nP6e/j/C0HV+HNiBPCASxdx5T7DMoa0s8UeHWMnb6n2zw==}
-    dependencies:
-      '@hapi/hoek': 9.2.1
-      '@hapi/topo': 5.1.0
-      '@sideway/address': 4.1.3
-      '@sideway/formula': 3.0.0
-      '@sideway/pinpoint': 2.0.0
-    dev: false
-
   /joycon/3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -3674,6 +3678,12 @@ packages:
     dependencies:
       p-locate: 4.1.0
     dev: true
+
+  /locate-path/6.0.0:
+    resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
+    engines: {node: '>=10'}
+    dependencies:
+      p-locate: 5.0.0
 
   /lodash.defaults/4.2.0:
     resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
@@ -3981,7 +3991,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       yocto-queue: 0.1.0
-    dev: true
 
   /p-locate/3.0.0:
     resolution: {integrity: sha512-x+12w/To+4GFfgJhBEpiDcLozRJGegY+Ei7/z0tSLkMmxGZNybVMSfWj9aJn8Z5Fc7dBUNJOOVgPv2H7IwulSQ==}
@@ -3996,6 +4005,12 @@ packages:
     dependencies:
       p-limit: 2.3.0
     dev: true
+
+  /p-locate/5.0.0:
+    resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
+    engines: {node: '>=10'}
+    dependencies:
+      p-limit: 3.1.0
 
   /p-map/2.1.0:
     resolution: {integrity: sha512-y3b8Kpd8OAN444hxfBbFfj1FY/RjtTd8tzYwhUqNYXx0fXx2iX4maP4Qr6qhIKbQXI02wTLAda4fYUbDagTUFw==}
@@ -4051,7 +4066,6 @@ packages:
   /path-exists/4.0.0:
     resolution: {integrity: sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==}
     engines: {node: '>=8'}
-    dev: true
 
   /path-is-absolute/1.0.1:
     resolution: {integrity: sha512-AVbw3UJ2e9bq64vSaS9Am0fje1Pa8pbGqTTsmXfaIiMpnr5DlDhfJOuLj9Sf95ZPVDAUerDfEk88MPmPe7UCQg==}
@@ -4838,6 +4852,9 @@ packages:
     resolution: {integrity: sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==}
     dev: true
 
+  /tslib/2.4.0:
+    resolution: {integrity: sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==}
+
   /tsutils/3.21.0_typescript@4.7.4:
     resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}
     engines: {node: '>= 6'}
@@ -5089,4 +5106,15 @@ packages:
   /yocto-queue/0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
-    dev: true
+
+  /zod-to-json-schema/3.17.1_zod@3.17.10:
+    resolution: {integrity: sha512-h1WLfvkdwM6lcRt5q09ytNh2OKcU13vY9D0FetN/7Erdd7lVraIiMkEnObg3KELm5EQlMqvi0r5nzMa0EA+8qw==}
+    peerDependencies:
+      zod: ^3.17.10
+    dependencies:
+      zod: 3.17.10
+    dev: false
+
+  /zod/3.17.10:
+    resolution: {integrity: sha512-IHXnQYQuOOOL/XgHhgl8YjNxBHi3xX0mVcHmqsvJgcxKkEczPshoWdxqyFwsARpf41E0v9U95WUROqsHHxt0UQ==}
+    dev: false

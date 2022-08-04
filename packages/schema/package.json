@@ -6,7 +6,7 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"build": "tsc && node ./lib/main.js",
+		"build": "tsc && node ./lib/src/main.js",
 		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
 	},
 	"keywords": [],
@@ -36,8 +36,10 @@
 		"node": ">=16.0.0"
 	},
 	"dependencies": {
-		"@koa-lite/joi-schema": "0.0.1",
-		"@release-drafter/core": "workspace:../core"
+		"@antongolub/git-root": "^1.5.7",
+		"@release-drafter/core": "workspace:../core",
+		"zod": "^3.17.10",
+		"zod-to-json-schema": "^3.17.1"
 	},
 	"devDependencies": {
 		"@jest/globals": "^28.1.3",
