@@ -3,11 +3,7 @@ import {
 	GetOptions,
 } from '@probot/octokit-plugin-config/dist-types/types.d.js'
 
-import {
-	ReleaseDrafterMajorMinorPatch,
-	SORT_BY,
-	SORT_DIRECTIONS,
-} from './default-config.js'
+import { MajorMinorPatch, SORT_BY, SORT_DIRECTIONS } from './enums.js'
 
 export type PullRequest = {
 	mergedAt: string
@@ -27,23 +23,18 @@ export type PullRequest = {
 	}
 }
 
-export type ReleaseDrafterLabels = {
+export type Labels = {
 	labels: string[]
 }
 
-export type ReleaseDrafterVersionResolver = {
-	default: ReleaseDrafterMajorMinorPatch
-	major: ReleaseDrafterLabels
-	minor: ReleaseDrafterLabels
-	patch: ReleaseDrafterLabels
+export type VersionResolver = {
+	default: MajorMinorPatch
+	major: Labels
+	minor: Labels
+	patch: Labels
 }
 
-export type ReleaseDrafterReplacerStrings = {
-	search: string
-	replace: string
-}
-
-export type ReleaseDrafterReplacer = {
+export type Replacer = {
 	search: RegExp
 	replace: string
 }
@@ -54,7 +45,7 @@ export type ReleaseDrafterCategory = {
 	labels: string[]
 }
 
-export type ReleaseDrafterAutolabeler = {
+export type Autolabeler = {
 	label: string
 	files: string[]
 	branch: RegExp[]
@@ -62,45 +53,14 @@ export type ReleaseDrafterAutolabeler = {
 	body: RegExp[]
 }
 
-export type ReleaseDrafterAutolabelerStrings = {
-	label: string
-	files: string[]
-	branch: string[]
-	title: string[]
-	body: string[]
-}
-
-export type ReleaseDrafterConfigStrings = {
-	autolabeler: ReleaseDrafterAutolabelerStrings[]
-	categories: ReleaseDrafterCategory[]
-	categoryTemplate: string
-	changeTemplate: string
-	changeTitleEscapes: string
-	commitish: string
-	excludeContributors: string[]
-	excludeLabels: string[]
-	filterByCommitish: boolean
-	footer: string
-	header: string
-	includeLabels: string[]
-	includePaths: string[]
-	nameTemplate: string
-	noChangesTemplate: string
-	noContributorsTemplate: string
-	prerelease: boolean
-	references: string[]
-	replacers: ReleaseDrafterReplacerStrings[]
-	sortBy: SORT_BY
-	sortDirection: SORT_DIRECTIONS
-	tagPrefix: string
-	tagTemplate: string
-	template: string
-	versionResolver: ReleaseDrafterVersionResolver
-	versionTemplate: string
+export type GitHubRelease = {
+	tag_name: string
+	name: string
+	created_at?: string
 }
 
 export type ReleaseDrafterConfig = {
-	autolabeler: ReleaseDrafterAutolabeler[]
+	autolabeler: Autolabeler[]
 	categories: ReleaseDrafterCategory[]
 	categoryTemplate: string
 	changeTemplate: string
@@ -118,13 +78,13 @@ export type ReleaseDrafterConfig = {
 	noContributorsTemplate: string
 	prerelease: boolean
 	references: string[]
-	replacers: ReleaseDrafterReplacer[]
+	replacers: Replacer[]
 	sortBy: SORT_BY
 	sortDirection: SORT_DIRECTIONS
 	tagPrefix: string
 	tagTemplate: string
 	template: string
-	versionResolver: ReleaseDrafterVersionResolver
+	versionResolver: VersionResolver
 	versionTemplate: string
 }
 

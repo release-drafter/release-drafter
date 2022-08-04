@@ -1,20 +1,5 @@
+import { MajorMinorPatch, SORT_BY, SORT_DIRECTIONS } from './enums.js'
 import { ReleaseDrafterConfig } from './types.js'
-
-export enum ReleaseDrafterMajorMinorPatch {
-	Major = 'major',
-	Minor = 'minor',
-	Patch = 'patch',
-}
-
-export const enum SORT_BY {
-	mergedAt = 'merged_at',
-	title = 'title',
-}
-
-export const enum SORT_DIRECTIONS {
-	ascending = 'ascending',
-	descending = 'descending',
-}
 
 export const DEFAULT_CONFIG: ReleaseDrafterConfig = Object.freeze({
 	autolabeler: [],
@@ -34,7 +19,7 @@ export const DEFAULT_CONFIG: ReleaseDrafterConfig = Object.freeze({
 	noChangesTemplate: `* No changes`,
 	noContributorsTemplate: 'No contributors',
 	prerelease: false,
-	references: ['master'],
+	references: ['main'],
 	replacers: [],
 	sortBy: SORT_BY.mergedAt,
 	sortDirection: SORT_DIRECTIONS.descending,
@@ -46,6 +31,6 @@ export const DEFAULT_CONFIG: ReleaseDrafterConfig = Object.freeze({
 		major: { labels: [] },
 		minor: { labels: [] },
 		patch: { labels: [] },
-		default: ReleaseDrafterMajorMinorPatch.Patch,
+		default: MajorMinorPatch.patch,
 	},
 })

@@ -1,12 +1,4 @@
-import {
-	ReleaseDrafterAutolabeler,
-	ReleaseDrafterAutolabelerStrings,
-	ReleaseDrafterCategory,
-	ReleaseDrafterReplacer,
-	ReleaseDrafterReplacerStrings,
-} from './types.js'
-import regexParser from 'regex-parser'
-import regexEscape from 'escape-string-regexp'
+import { Replacer } from './types.js'
 
 /**
  * replaces all uppercase dollar templates with their string representation from object
@@ -16,7 +8,7 @@ import regexEscape from 'escape-string-regexp'
 export function template(
 	string: string,
 	object: Record<string, unknown>,
-	customReplacers?: ReleaseDrafterReplacer[],
+	customReplacers?: Replacer[],
 ): string {
 	let input: string = string.replace(/(\$[A-Z_]+)/g, (_, k) => {
 		let result: string
@@ -38,74 +30,4 @@ export function template(
 		}
 	}
 	return input
-}
-
-function toRegex(search: string) {
-	return /^\/.+\/[AJUXgimsux]*$/.test(search)
-		? regexParser(search)
-		: new RegExp(regexEscape(search), 'g')
-}
-
-export function validateReplacers(
-	replacers: ReleaseDrafterReplacerStrings[],
-): ReleaseDrafterReplacer[] {
-	return replacers
-		.map((replacer) => {
-			try {
-				return {
-					...replacer,
-					search: toRegex(replacer.search),
-				}
-			} catch {
-				throw new Error(
-					`Invalid regex in replacer: ${JSON.stringify(
-						replacer,
-						undefined,
-						2,
-					)}`,
-				)
-			}
-		})
-		.filter(Boolean)
-}
-
-export function validateAutolabeler(
-	autolabeler: ReleaseDrafterAutolabelerStrings[],
-): ReleaseDrafterAutolabeler[] {
-	return autolabeler
-		.map((autolabel) => {
-			try {
-				return {
-					...autolabel,
-					branch: autolabel.branch.map((reg) => {
-						return toRegex(reg)
-					}),
-					title: autolabel.title.map((reg) => {
-						return toRegex(reg)
-					}),
-					body: autolabel.body.map((reg) => {
-						return toRegex(reg)
-					}),
-				}
-			} catch {
-				throw new Error(
-					`Invalid regex in autolabeler: ${JSON.stringify(
-						autolabel,
-						undefined,
-						2,
-					)}`,
-				)
-			}
-		})
-		.filter(Boolean)
-}
-
-export function validateCategories(categories: ReleaseDrafterCategory[]) {
-	if (
-		categories.filter((category) => category.labels.length === 0).length > 1
-	) {
-		throw new Error(
-			'Multiple categories detected with no labels.\nOnly one category with no labels is supported for uncategorized pull requests.',
-		)
-	}
 }

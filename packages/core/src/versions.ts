@@ -1,4 +1,5 @@
 import semver from 'semver'
+import { GitHubRelease } from './types.js'
 
 const splitSemVersion = (input: {
 	version?: semver.SemVer
@@ -236,7 +237,7 @@ function toSemver(version: string): semver.SemVer | undefined {
 }
 
 function coerceVersion(
-	input?: string | { tag_name: string; name: string },
+	input?: string | GitHubRelease,
 	tagPrefix?: string,
 ): semver.SemVer | undefined {
 	if (!input) {
@@ -254,7 +255,7 @@ function coerceVersion(
 }
 
 export function getVersionInfo(
-	release: { tag_name: string; name: string },
+	release: GitHubRelease,
 	template: string,
 	versionKeyIncrement?: semver.ReleaseType,
 	inputVersion?: string,

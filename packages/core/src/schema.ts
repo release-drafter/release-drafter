@@ -1,203 +1,159 @@
+import { z } from 'zod'
+import regexParser from 'regex-parser'
+import regexEscape from 'escape-string-regexp'
 import { Context } from './context.js'
+import { DEFAULT_CONFIG } from './default-config.js'
+import { ReleaseDrafterConfig, ReleaseDrafterCategory } from './types.js'
+import { MajorMinorPatch, SORT_BY, SORT_DIRECTIONS } from './enums.js'
 
-import Joi from 'joi'
-import { DEFAULT_CONFIG, SORT_BY, SORT_DIRECTIONS } from './default-config.js'
-import {
-	validateReplacers,
-	validateAutolabeler,
-	validateCategories,
-} from './template.js'
-import { ReleaseDrafterConfig, ReleaseDrafterConfigStrings } from './types.js'
+export function toRegex(search: string) {
+	return /^\/.+\/[AJUXgimsux]*$/.test(search)
+		? regexParser(search)
+		: new RegExp(regexEscape(search), 'g')
+}
 
-const renames = [
-	{ from: 'branches', to: 'references' },
-	{ from: 'change-template', to: 'cangeTemplate' },
-	{ from: 'change-title-escapes', to: 'changeTitleEscapes' },
-	{ from: 'no-changes-template', to: 'noChangesTemplate' },
-	{ from: 'version-template', to: 'versionTemplate' },
-	{ from: 'name-template', to: 'nameTemplate' },
-	{ from: 'tag-prefix', to: 'tagPrefix' },
-	{ from: 'tag-template', to: 'tagTemplate' },
-	{ from: 'exclude-labels', to: 'excludeLabels' },
-	{ from: 'include-labels', to: 'includeLabels' },
-	{ from: 'include-paths', to: 'includePaths' },
-	{ from: 'exclude-contributors', to: 'excludeContributors' },
-	{ from: 'no-contributors-template', to: 'noContributorsTemplate' },
-	{ from: 'sort-by', to: 'sortBy' },
-	{ from: 'sort-direction', to: 'sortDirection' },
-	{ from: 'filter-by-commitish', to: 'filterByCommitish' },
-	{ from: 'collapse-after', to: 'collapseAfter' },
-	{ from: 'version-resolver', to: 'versionResolver' },
-	{ from: 'category-template', to: 'categoryTemplate' },
-]
+/**
+ * This is used to check if multiple categories have no labels.
+ * We only allow a single category to have no labels.
+ *
+ * if length is greater than 1 return false
+ * falsy values are meant to signal failure in zod refine validation
+ */
+function validateOnlyOneUncategorizedCategoryExist(
+	categories: ReleaseDrafterCategory[],
+) {
+	const length = categories.filter(
+		(category) => category.labels.length === 0,
+	).length
+	return length <= 1
+}
 
-export function schema(defaultBranch = 'master') {
-	const joiObject = Joi.object<
-		ReleaseDrafterConfigStrings & { _extends: string },
-		true
-	>().keys({
-		references: Joi.array().items(Joi.string()).default([defaultBranch]),
+export function schema(defaultBranch = 'main') {
+	return z.object({
+		references: z.array(z.string()).default([defaultBranch]),
 
-		changeTemplate: Joi.string().default(DEFAULT_CONFIG.changeTemplate),
+		changeTemplate: z.string().default(DEFAULT_CONFIG.changeTemplate),
 
-		changeTitleEscapes: Joi.string()
-			.allow('')
-			.default(DEFAULT_CONFIG.changeTitleEscapes),
+		changeTitleEscapes: z.string().default(DEFAULT_CONFIG.changeTitleEscapes),
 
-		noChangesTemplate: Joi.string().default(DEFAULT_CONFIG.noChangesTemplate),
+		noChangesTemplate: z.string().default(DEFAULT_CONFIG.noChangesTemplate),
 
-		versionTemplate: Joi.string().default(DEFAULT_CONFIG.versionTemplate),
+		versionTemplate: z.string().default(DEFAULT_CONFIG.versionTemplate),
 
-		nameTemplate: Joi.string().allow('').default(DEFAULT_CONFIG.nameTemplate),
+		nameTemplate: z.string().default(DEFAULT_CONFIG.nameTemplate),
 
-		tagPrefix: Joi.string().allow('').default(DEFAULT_CONFIG.tagPrefix),
+		tagPrefix: z.string().default(DEFAULT_CONFIG.tagPrefix),
 
-		tagTemplate: Joi.string().allow('').default(DEFAULT_CONFIG.tagTemplate),
+		tagTemplate: z.string().default(DEFAULT_CONFIG.tagTemplate),
 
-		excludeLabels: Joi.array()
-			.items(Joi.string())
-			.default(DEFAULT_CONFIG.excludeLabels),
+		excludeLabels: z.array(z.string()).default(DEFAULT_CONFIG.excludeLabels),
 
-		includeLabels: Joi.array()
-			.items(Joi.string())
-			.default(DEFAULT_CONFIG.includeLabels),
+		includeLabels: z.array(z.string()).default(DEFAULT_CONFIG.includeLabels),
 
-		includePaths: Joi.array()
-			.items(Joi.string())
-			.default(DEFAULT_CONFIG.includePaths),
+		includePaths: z.array(z.string()).default(DEFAULT_CONFIG.includePaths),
 
-		excludeContributors: Joi.array()
-			.items(Joi.string())
+		excludeContributors: z
+			.array(z.string())
 			.default(DEFAULT_CONFIG.excludeContributors),
 
-		noContributorsTemplate: Joi.string().default(
-			DEFAULT_CONFIG.noContributorsTemplate,
-		),
+		noContributorsTemplate: z
+			.string()
+			.default(DEFAULT_CONFIG.noContributorsTemplate),
 
-		sortBy: Joi.string()
-			.valid(SORT_BY.mergedAt, SORT_BY.title)
+		sortBy: z
+			.enum([SORT_BY.mergedAt, SORT_BY.title])
 			.default(DEFAULT_CONFIG.sortBy),
 
-		sortDirection: Joi.string()
-			.valid(SORT_DIRECTIONS.ascending, SORT_DIRECTIONS.descending)
+		sortDirection: z
+			.enum([SORT_DIRECTIONS.ascending, SORT_DIRECTIONS.descending])
 			.default(DEFAULT_CONFIG.sortDirection),
 
-		prerelease: Joi.boolean().default(DEFAULT_CONFIG.prerelease),
+		prerelease: z.boolean().default(DEFAULT_CONFIG.prerelease),
 
-		filterByCommitish: Joi.boolean().default(DEFAULT_CONFIG.filterByCommitish),
+		filterByCommitish: z.boolean().default(DEFAULT_CONFIG.filterByCommitish),
 
-		commitish: Joi.string().allow('').default(DEFAULT_CONFIG.commitish),
+		commitish: z.string().default(DEFAULT_CONFIG.commitish),
 
-		replacers: Joi.array()
-			.items(
-				Joi.object().keys({
-					search: Joi.string()
-						.required()
-						.error(
-							new Error(
-								'"search" is required and must be a regexp or a string',
-							),
-						),
-					replace: Joi.string().allow('').required(),
+		replacers: z
+			.array(
+				z.object({
+					search: z.string().transform((value) => toRegex(value)),
+					replace: z.string().or(z.literal('')),
 				}),
 			)
-			.default(DEFAULT_CONFIG.replacers),
+			.default([]),
 
-		autolabeler: Joi.array()
-			.items(
-				Joi.object().keys({
-					label: Joi.string().required(),
-					files: Joi.array().items(Joi.string()).single().default([]),
-					branch: Joi.array().items(Joi.string()).single().default([]),
-					title: Joi.array().items(Joi.string()).single().default([]),
-					body: Joi.array().items(Joi.string()).single().default([]),
+		autolabeler: z
+			.array(
+				z.object({
+					label: z.string(),
+					files: z.array(z.string()).default([]),
+					branch: z
+						.array(z.string().transform((value) => toRegex(value)))
+						.default([]),
+					title: z
+						.array(z.string().transform((value) => toRegex(value)))
+						.default([]),
+					body: z
+						.array(z.string().transform((value) => toRegex(value)))
+						.default([]),
 				}),
 			)
-			.default(DEFAULT_CONFIG.autolabeler),
+			.default([]),
 
-		categories: Joi.array()
-			.items(
-				Joi.object()
-					.keys({
-						title: Joi.string().required(),
-						collapseAfter: Joi.number().integer().min(0).default(0),
-						label: Joi.string(),
-						labels: Joi.array().items(Joi.string()).single().default([]),
-					})
-					.rename('label', 'labels', {
-						ignoreUndefined: true,
-						override: true,
-					}),
+		categories: z
+			.array(
+				z.object({
+					title: z.string(),
+					collapseAfter: z.number().nonnegative().default(0),
+					labels: z.array(z.string()).default([]),
+				}),
 			)
-			.default(DEFAULT_CONFIG.categories),
+			.default(DEFAULT_CONFIG.categories)
+			.refine(
+				(categories) => validateOnlyOneUncategorizedCategoryExist(categories),
+				{
+					message:
+						'Multiple categories detected with no labels.\nOnly one category with no labels is supported for uncategorized pull requests.',
+				},
+			),
 
-		versionResolver: Joi.object()
-			.keys({
-				major: Joi.object({
-					labels: Joi.array()
-						.items(Joi.string())
-						.single()
-						.default(DEFAULT_CONFIG.versionResolver.major.labels),
+		versionResolver: z
+			.object({
+				major: z.object({
+					labels: z.array(z.string()).default([]),
 				}),
-				minor: Joi.object({
-					labels: Joi.array()
-						.items(Joi.string())
-						.single()
-						.default(DEFAULT_CONFIG.versionResolver.minor.labels),
+				minor: z.object({
+					labels: z.array(z.string()).default([]),
 				}),
-				patch: Joi.object({
-					labels: Joi.array()
-						.items(Joi.string())
-						.single()
-						.default(DEFAULT_CONFIG.versionResolver.patch.labels),
+				patch: z.object({
+					labels: z.array(z.string()).default([]),
 				}),
-				default: Joi.string().valid('major', 'minor', 'patch').default('patch'),
+				default: z
+					.enum([
+						MajorMinorPatch.major,
+						MajorMinorPatch.minor,
+						MajorMinorPatch.patch,
+					])
+					.default(MajorMinorPatch.patch),
 			})
 			.default(DEFAULT_CONFIG.versionResolver),
 
-		categoryTemplate: Joi.string()
-			.allow('')
-			.default(DEFAULT_CONFIG.categoryTemplate),
+		categoryTemplate: z.string().default(DEFAULT_CONFIG.categoryTemplate),
 
-		header: Joi.string().allow('').default(DEFAULT_CONFIG.header),
+		header: z.string().default(DEFAULT_CONFIG.header),
 
-		template: Joi.string().required(),
+		template: z.string().min(1).default(DEFAULT_CONFIG.template),
 
-		footer: Joi.string().allow('').default(DEFAULT_CONFIG.footer),
+		footer: z.string().default(DEFAULT_CONFIG.footer),
 
-		_extends: Joi.string(),
+		_extends: z.string().optional(),
 	})
-
-	for (const rename of renames) {
-		joiObject.rename(rename.from, rename.to, {
-			ignoreUndefined: true,
-			override: true,
-		})
-	}
-	return joiObject
 }
 
 export function validateSchema(
 	context: Context,
-	repoConfig: ReleaseDrafterConfigStrings,
+	repoConfig: ReleaseDrafterConfig,
 ): ReleaseDrafterConfig {
-	const { error, value: config } = schema(context.defaultBranch).validate(
-		repoConfig,
-		{
-			abortEarly: false,
-			allowUnknown: true,
-		},
-	)
-
-	if (error) throw error
-
-	validateCategories(config.categories)
-
-	const convertedConfig: ReleaseDrafterConfig = {
-		...config,
-		replacers: validateReplacers(config.replacers),
-		autolabeler: validateAutolabeler(config.autolabeler),
-	}
-
-	return convertedConfig
+	return schema(context.defaultBranch).parse(repoConfig)
 }
