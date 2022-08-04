@@ -1,346 +1,279 @@
 {
 	"title": "JSON schema for Release Drafter yaml files",
 	"$id": "https://raw.githubusercontent.com/release-drafter/release-drafter/master/schema.json",
-	"$schema": "http://json-schema.org/draft-04/schema",
-	"type": "object",
-	"properties": {
-		"references": {
-			"default": ["master"],
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
-		},
-		"changeTemplate": {
-			"default": "* $TITLE (#$NUMBER) @$AUTHOR",
-			"type": "string"
-		},
-		"changeTitleEscapes": {
-			"anyOf": [
-				{
-					"type": "string",
-					"enum": [""]
-				},
-				{
-					"default": "",
-					"type": "string"
-				}
-			]
-		},
-		"noChangesTemplate": {
-			"default": "* No changes",
-			"type": "string"
-		},
-		"versionTemplate": {
-			"default": "$MAJOR.$MINOR.$PATCH",
-			"type": "string"
-		},
-		"nameTemplate": {
-			"anyOf": [
-				{
-					"type": "string",
-					"enum": [""]
-				},
-				{
-					"default": "",
-					"type": "string"
-				}
-			]
-		},
-		"tagPrefix": {
-			"anyOf": [
-				{
-					"type": "string",
-					"enum": [""]
-				},
-				{
-					"default": "",
-					"type": "string"
-				}
-			]
-		},
-		"tagTemplate": {
-			"anyOf": [
-				{
-					"type": "string",
-					"enum": [""]
-				},
-				{
-					"default": "",
-					"type": "string"
-				}
-			]
-		},
-		"excludeLabels": {
-			"default": [],
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
-		},
-		"includeLabels": {
-			"default": [],
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
-		},
-		"includePaths": {
-			"default": [],
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
-		},
-		"excludeContributors": {
-			"default": [],
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
-		},
-		"noContributorsTemplate": {
-			"default": "No contributors",
-			"type": "string"
-		},
-		"sortBy": {
-			"default": "merged_at",
-			"enum": ["merged_at", "title"],
-			"type": "string"
-		},
-		"sortDirection": {
-			"default": "descending",
-			"enum": ["ascending", "descending"],
-			"type": "string"
-		},
-		"prerelease": {
-			"default": false,
-			"type": "boolean"
-		},
-		"filterByCommitish": {
-			"default": false,
-			"type": "boolean"
-		},
-		"commitish": {
-			"anyOf": [
-				{
-					"type": "string",
-					"enum": [""]
-				},
-				{
-					"default": "",
-					"type": "string"
-				}
-			]
-		},
-		"replacers": {
-			"default": [],
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"search": {
-						"type": "string"
-					},
-					"replace": {
-						"anyOf": [
-							{
-								"type": "string",
-								"enum": [""]
-							},
-							{
-								"type": "string"
-							}
-						]
-					}
-				},
-				"additionalProperties": false,
-				"patterns": [],
-				"required": ["search", "replace"]
-			}
-		},
-		"autolabeler": {
-			"default": [],
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"label": {
-						"type": "string"
-					},
-					"files": {
-						"default": [],
-						"type": "array",
-						"items": {
-							"type": "string"
-						}
-					},
-					"branch": {
-						"default": [],
-						"type": "array",
-						"items": {
-							"type": "string"
-						}
-					},
-					"title": {
-						"default": [],
-						"type": "array",
-						"items": {
-							"type": "string"
-						}
-					},
-					"body": {
-						"default": [],
-						"type": "array",
-						"items": {
-							"type": "string"
-						}
-					}
-				},
-				"additionalProperties": false,
-				"patterns": [],
-				"required": ["label"]
-			}
-		},
-		"categories": {
-			"default": [],
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"title": {
-						"type": "string"
-					},
-					"collapseAfter": {
-						"default": 0,
-						"type": "integer",
-						"minimum": 0
-					},
-					"label": {
-						"type": "string"
-					},
-					"labels": {
-						"default": [],
-						"type": "array",
-						"items": {
-							"type": "string"
-						}
-					}
-				},
-				"additionalProperties": false,
-				"patterns": [],
-				"required": ["title"]
-			}
-		},
-		"versionResolver": {
-			"default": {
-				"major": {
-					"labels": []
-				},
-				"minor": {
-					"labels": []
-				},
-				"patch": {
-					"labels": []
-				},
-				"default": "patch"
-			},
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$ref": "#/definitions/ReleaseDrafter",
+	"definitions": {
+		"ReleaseDrafter": {
 			"type": "object",
 			"properties": {
-				"major": {
+				"references": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": ["main"]
+				},
+				"changeTemplate": {
+					"type": "string",
+					"default": "* $TITLE (#$NUMBER) @$AUTHOR"
+				},
+				"changeTitleEscapes": {
+					"type": "string",
+					"default": ""
+				},
+				"noChangesTemplate": {
+					"type": "string",
+					"default": "* No changes"
+				},
+				"versionTemplate": {
+					"type": "string",
+					"default": "$MAJOR.$MINOR.$PATCH"
+				},
+				"nameTemplate": {
+					"type": "string",
+					"default": ""
+				},
+				"tagPrefix": {
+					"type": "string",
+					"default": ""
+				},
+				"tagTemplate": {
+					"type": "string",
+					"default": ""
+				},
+				"excludeLabels": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": []
+				},
+				"includeLabels": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": []
+				},
+				"includePaths": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": []
+				},
+				"excludeContributors": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": []
+				},
+				"noContributorsTemplate": {
+					"type": "string",
+					"default": "No contributors"
+				},
+				"sortBy": {
+					"type": "string",
+					"enum": ["merged_at", "title"],
+					"default": "merged_at"
+				},
+				"sortDirection": {
+					"type": "string",
+					"enum": ["ascending", "descending"],
+					"default": "descending"
+				},
+				"prerelease": {
+					"type": "boolean",
+					"default": false
+				},
+				"filterByCommitish": {
+					"type": "boolean",
+					"default": false
+				},
+				"commitish": {
+					"type": "string",
+					"default": ""
+				},
+				"replacers": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"search": {
+								"type": "string"
+							},
+							"replace": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"type": "string",
+										"const": ""
+									}
+								]
+							}
+						},
+						"required": ["search", "replace"],
+						"additionalProperties": false
+					},
+					"default": []
+				},
+				"autolabeler": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"label": {
+								"type": "string"
+							},
+							"files": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"default": []
+							},
+							"branch": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"default": []
+							},
+							"title": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"default": []
+							},
+							"body": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"default": []
+							}
+						},
+						"required": ["label"],
+						"additionalProperties": false
+					},
+					"default": []
+				},
+				"categories": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"title": {
+								"type": "string"
+							},
+							"collapseAfter": {
+								"type": "number",
+								"minimum": 0,
+								"default": 0
+							},
+							"labels": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"default": []
+							}
+						},
+						"required": ["title"],
+						"additionalProperties": false
+					},
+					"default": []
+				},
+				"versionResolver": {
 					"type": "object",
 					"properties": {
-						"labels": {
-							"default": [],
-							"type": "array",
-							"items": {
-								"type": "string"
-							}
+						"major": {
+							"type": "object",
+							"properties": {
+								"labels": {
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"default": []
+								}
+							},
+							"additionalProperties": false
+						},
+						"minor": {
+							"type": "object",
+							"properties": {
+								"labels": {
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"default": []
+								}
+							},
+							"additionalProperties": false
+						},
+						"patch": {
+							"type": "object",
+							"properties": {
+								"labels": {
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"default": []
+								}
+							},
+							"additionalProperties": false
+						},
+						"default": {
+							"type": "string",
+							"enum": ["major", "minor", "patch"],
+							"default": "patch"
 						}
 					},
+					"required": ["major", "minor", "patch"],
 					"additionalProperties": false,
-					"patterns": []
+					"default": {
+						"major": {
+							"labels": []
+						},
+						"minor": {
+							"labels": []
+						},
+						"patch": {
+							"labels": []
+						},
+						"default": "patch"
+					}
 				},
-				"minor": {
-					"type": "object",
-					"properties": {
-						"labels": {
-							"default": [],
-							"type": "array",
-							"items": {
-								"type": "string"
-							}
-						}
-					},
-					"additionalProperties": false,
-					"patterns": []
+				"categoryTemplate": {
+					"type": "string",
+					"default": "## $TITLE"
 				},
-				"patch": {
-					"type": "object",
-					"properties": {
-						"labels": {
-							"default": [],
-							"type": "array",
-							"items": {
-								"type": "string"
-							}
-						}
-					},
-					"additionalProperties": false,
-					"patterns": []
+				"header": {
+					"type": "string",
+					"default": ""
 				},
-				"default": {
-					"default": "patch",
-					"enum": ["major", "minor", "patch"],
+				"template": {
+					"type": "string",
+					"minLength": 1,
+					"default": "## What’s Changed\n\n$CHANGES"
+				},
+				"footer": {
+					"type": "string",
+					"default": ""
+				},
+				"_extends": {
 					"type": "string"
 				}
 			},
-			"additionalProperties": false,
-			"patterns": []
-		},
-		"categoryTemplate": {
-			"anyOf": [
-				{
-					"type": "string",
-					"enum": [""]
-				},
-				{
-					"default": "## $TITLE",
-					"type": "string"
-				}
-			]
-		},
-		"header": {
-			"anyOf": [
-				{
-					"type": "string",
-					"enum": [""]
-				},
-				{
-					"default": "",
-					"type": "string"
-				}
-			]
-		},
-		"template": {
-			"type": "string"
-		},
-		"footer": {
-			"anyOf": [
-				{
-					"type": "string",
-					"enum": [""]
-				},
-				{
-					"default": "",
-					"type": "string"
-				}
-			]
-		},
-		"_extends": {
-			"type": "string"
+			"additionalProperties": false
 		}
-	},
-	"additionalProperties": false,
-	"patterns": []
+	}
 }

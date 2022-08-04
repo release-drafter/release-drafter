@@ -1,4 +1,4 @@
-import { SORT_BY, SORT_DIRECTIONS } from './default-config.js'
+import { SORT_BY, SORT_DIRECTIONS } from './enums.js'
 import { PullRequest } from './types.js'
 
 export function sortPullRequests(
