@@ -1,19 +1,18 @@
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import { schema } from '@release-drafter/core'
+import { z } from 'zod'
 
+/**
+ * Add _extends to the schema which is coming from octokit config plugin
+ */
 function convertSchema() {
-	const converted = zodToJsonSchema(schema(), 'ReleaseDrafter')
-	// template is only required after deep merged, should not be required in the JSON schema
-	// we should also remove the required field in case nothing remains after the filtering to keep draft04 compatibility
-	// const requiredField = converted.required.filter(
-	// 	(item: string) => item !== 'template',
-	// )
-	// if (requiredField.length > 0) {
-	// 	converted.required = requiredField
-	// } else {
-	// 	delete converted.required
-	// }
-	return converted
+	// noinspection TypeScriptValidateJSTypes
+	const zodSchema = schema().merge(
+		z.object({
+			_extends: z.string().optional(),
+		}),
+	)
+	return zodToJsonSchema(zodSchema, 'ReleaseDrafter')
 }
 
 export const jsonSchema = {

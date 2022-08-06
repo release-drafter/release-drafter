@@ -38,6 +38,8 @@
 	"dependencies": {
 		"@antongolub/git-root": "^1.5.7",
 		"@release-drafter/core": "workspace:../core",
+		"prettier": "2.7.1",
+		"ts-node": "^10.9.1",
 		"zod": "^3.17.10",
 		"zod-to-json-schema": "^3.17.1"
 	},
