@@ -9,65 +9,40 @@
 			"properties": {
 				"references": {
 					"type": "array",
-					"items": {
-						"type": "string"
-					},
+					"items": { "type": "string" },
 					"default": ["main"]
 				},
 				"changeTemplate": {
 					"type": "string",
 					"default": "* $TITLE (#$NUMBER) @$AUTHOR"
 				},
-				"changeTitleEscapes": {
-					"type": "string",
-					"default": ""
-				},
-				"noChangesTemplate": {
-					"type": "string",
-					"default": "* No changes"
-				},
+				"changeTitleEscapes": { "type": "string", "default": "" },
+				"noChangesTemplate": { "type": "string", "default": "* No changes" },
 				"versionTemplate": {
 					"type": "string",
 					"default": "$MAJOR.$MINOR.$PATCH"
 				},
-				"nameTemplate": {
-					"type": "string",
-					"default": ""
-				},
-				"tagPrefix": {
-					"type": "string",
-					"default": ""
-				},
-				"tagTemplate": {
-					"type": "string",
-					"default": ""
-				},
+				"nameTemplate": { "type": "string", "default": "" },
+				"tagPrefix": { "type": "string", "default": "" },
+				"tagTemplate": { "type": "string", "default": "" },
 				"excludeLabels": {
 					"type": "array",
-					"items": {
-						"type": "string"
-					},
+					"items": { "type": "string" },
 					"default": []
 				},
 				"includeLabels": {
 					"type": "array",
-					"items": {
-						"type": "string"
-					},
+					"items": { "type": "string" },
 					"default": []
 				},
 				"includePaths": {
 					"type": "array",
-					"items": {
-						"type": "string"
-					},
+					"items": { "type": "string" },
 					"default": []
 				},
 				"excludeContributors": {
 					"type": "array",
-					"items": {
-						"type": "string"
-					},
+					"items": { "type": "string" },
 					"default": []
 				},
 				"noContributorsTemplate": {
@@ -84,35 +59,19 @@
 					"enum": ["ascending", "descending"],
 					"default": "descending"
 				},
-				"prerelease": {
-					"type": "boolean",
-					"default": false
-				},
-				"filterByCommitish": {
-					"type": "boolean",
-					"default": false
-				},
-				"commitish": {
-					"type": "string",
-					"default": ""
-				},
+				"prerelease": { "type": "boolean", "default": false },
+				"filterByCommitish": { "type": "boolean", "default": false },
+				"commitish": { "type": "string", "default": "" },
 				"replacers": {
 					"type": "array",
 					"items": {
 						"type": "object",
 						"properties": {
-							"search": {
-								"type": "string"
-							},
+							"search": { "type": "string" },
 							"replace": {
 								"anyOf": [
-									{
-										"type": "string"
-									},
-									{
-										"type": "string",
-										"const": ""
-									}
+									{ "type": "string" },
+									{ "type": "string", "const": "" }
 								]
 							}
 						},
@@ -126,35 +85,25 @@
 					"items": {
 						"type": "object",
 						"properties": {
-							"label": {
-								"type": "string"
-							},
+							"label": { "type": "string" },
 							"files": {
 								"type": "array",
-								"items": {
-									"type": "string"
-								},
+								"items": { "type": "string" },
 								"default": []
 							},
 							"branch": {
 								"type": "array",
-								"items": {
-									"type": "string"
-								},
+								"items": { "type": "string" },
 								"default": []
 							},
 							"title": {
 								"type": "array",
-								"items": {
-									"type": "string"
-								},
+								"items": { "type": "string" },
 								"default": []
 							},
 							"body": {
 								"type": "array",
-								"items": {
-									"type": "string"
-								},
+								"items": { "type": "string" },
 								"default": []
 							}
 						},
@@ -168,19 +117,11 @@
 					"items": {
 						"type": "object",
 						"properties": {
-							"title": {
-								"type": "string"
-							},
-							"collapseAfter": {
-								"type": "number",
-								"minimum": 0,
-								"default": 0
-							},
+							"title": { "type": "string" },
+							"collapseAfter": { "type": "number", "minimum": 0, "default": 0 },
 							"labels": {
 								"type": "array",
-								"items": {
-									"type": "string"
-								},
+								"items": { "type": "string" },
 								"default": []
 							}
 						},
@@ -197,9 +138,7 @@
 							"properties": {
 								"labels": {
 									"type": "array",
-									"items": {
-										"type": "string"
-									},
+									"items": { "type": "string" },
 									"default": []
 								}
 							},
@@ -210,9 +149,7 @@
 							"properties": {
 								"labels": {
 									"type": "array",
-									"items": {
-										"type": "string"
-									},
+									"items": { "type": "string" },
 									"default": []
 								}
 							},
@@ -223,9 +160,7 @@
 							"properties": {
 								"labels": {
 									"type": "array",
-									"items": {
-										"type": "string"
-									},
+									"items": { "type": "string" },
 									"default": []
 								}
 							},
@@ -240,38 +175,21 @@
 					"required": ["major", "minor", "patch"],
 					"additionalProperties": false,
 					"default": {
-						"major": {
-							"labels": []
-						},
-						"minor": {
-							"labels": []
-						},
-						"patch": {
-							"labels": []
-						},
+						"major": { "labels": [] },
+						"minor": { "labels": [] },
+						"patch": { "labels": [] },
 						"default": "patch"
 					}
 				},
-				"categoryTemplate": {
-					"type": "string",
-					"default": "## $TITLE"
-				},
-				"header": {
-					"type": "string",
-					"default": ""
-				},
+				"categoryTemplate": { "type": "string", "default": "## $TITLE" },
+				"header": { "type": "string", "default": "" },
 				"template": {
 					"type": "string",
 					"minLength": 1,
 					"default": "## What’s Changed\n\n$CHANGES"
 				},
-				"footer": {
-					"type": "string",
-					"default": ""
-				},
-				"_extends": {
-					"type": "string"
-				}
+				"footer": { "type": "string", "default": "" },
+				"_extends": { "type": "string" }
 			},
 			"additionalProperties": false
 		}
