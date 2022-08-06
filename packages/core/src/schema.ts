@@ -146,8 +146,6 @@ export function schema(defaultBranch = 'main') {
 		template: z.string().min(1).default(DEFAULT_CONFIG.template),
 
 		footer: z.string().default(DEFAULT_CONFIG.footer),
-
-		_extends: z.string().optional(),
 	})
 }
 
