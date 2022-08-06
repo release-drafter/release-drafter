@@ -1,4 +1,10 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-[ ! -x "$(command -v yarn)" ] || yarn lint-staged
+# Issue https://github.com/okonet/lint-staged/issues/1164
+# Workaround https://github.com/typicode/husky/issues/968#issuecomment-1176848345
+if [ -t 2 ]; then
+  exec >/dev/tty 2>&1
+fi
+
+[ ! -x "$(command -v npx)" ] || npx lint-staged
