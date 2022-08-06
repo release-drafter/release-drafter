@@ -2,6 +2,7 @@ node_modules
 *.log
 *.pem
 .env
+.run/
 coverage/
 now.json
 docker-compose-logs
