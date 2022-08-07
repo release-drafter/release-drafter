@@ -17,3 +17,5 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 ARG PNPM_VERSION="7.8.0"
 # Install more global node modules
 RUN sudo -u node npm install -g pnpm@${PNPM_VERSION}
+
+ENV HUSKY=0

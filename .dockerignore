@@ -7,3 +7,4 @@ coverage
 *.pem
 .git
 dist/
+.pnpm-store
