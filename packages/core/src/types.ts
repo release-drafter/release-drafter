@@ -12,8 +12,6 @@ export type Labels = {
 }
 
 export type VersionResolver = {
-	[key: string]: Labels
-} & {
 	default: MajorMinorPatch
 	major: Labels
 	minor: Labels

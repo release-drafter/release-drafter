@@ -109,7 +109,7 @@ export function schema(defaultBranch = 'main') {
 					labels: z.array(z.string()).default([]),
 				}),
 			)
-			.default(DEFAULT_CONFIG.categories)
+			.default([])
 			.refine(
 				(categories) => validateOnlyOneUncategorizedCategoryExist(categories),
 				{
