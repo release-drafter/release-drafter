@@ -6,6 +6,7 @@ import {
 import { MajorMinorPatch, SORT_BY, SORT_DIRECTIONS } from './enums.js'
 import { Context } from './context.js'
 import { PullRequest } from '@octokit/graphql-schema'
+import { ReleaseType, SemVer } from 'semver'
 
 export type Labels = {
 	labels: string[]
@@ -87,3 +88,30 @@ export type ReleaseDrafterConfig = {
 export type ReleaseDrafterGetOptions = GetOptions<
 	ReleaseDrafterConfig & Configuration
 >
+
+export type VersionTemplate = {
+	$MAJOR: number
+	$MINOR: number
+	$PATCH: number
+	inc?: ReleaseType
+	version: string
+	template: string
+	versionInput?: SemVer
+}
+
+export type VersionInfo = {
+	$NEXT_MAJOR_VERSION?: VersionTemplate
+	$NEXT_MINOR_VERSION?: VersionTemplate
+	$NEXT_PATCH_VERSION?: VersionTemplate
+	$NEXT_MAJOR_VERSION_MAJOR?: VersionTemplate
+	$NEXT_MAJOR_VERSION_MINOR?: VersionTemplate
+	$NEXT_MAJOR_VERSION_PATCH?: VersionTemplate
+	$NEXT_MINOR_VERSION_MAJOR?: VersionTemplate
+	$NEXT_MINOR_VERSION_MINOR?: VersionTemplate
+	$NEXT_MINOR_VERSION_PATCH?: VersionTemplate
+	$NEXT_PATCH_VERSION_MAJOR?: VersionTemplate
+	$NEXT_PATCH_VERSION_MINOR?: VersionTemplate
+	$NEXT_PATCH_VERSION_PATCH?: VersionTemplate
+	$INPUT_VERSION?: VersionTemplate
+	$RESOLVED_VERSION?: VersionTemplate
+}

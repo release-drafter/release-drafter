@@ -1,5 +1,5 @@
 import semver from 'semver'
-import { GitHubRelease } from './types.js'
+import { GitHubRelease, VersionInfo } from './types.js'
 
 const splitSemVersion = (input: {
 	version?: semver.SemVer
@@ -24,12 +24,11 @@ const splitSemVersion = (input: {
 	}
 }
 
-export const defaultVersionInfo = {
+export const defaultVersionInfo: VersionInfo = {
 	$NEXT_MAJOR_VERSION: {
 		version: '1.0.0',
 		template: '$MAJOR.$MINOR.$PATCH',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'major',
 		$MAJOR: 1,
 		$MINOR: 0,
@@ -38,8 +37,7 @@ export const defaultVersionInfo = {
 	$NEXT_MAJOR_VERSION_MAJOR: {
 		version: '1.0.0',
 		template: '$MAJOR',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'major',
 		$MAJOR: 1,
 		$MINOR: 0,
@@ -48,8 +46,7 @@ export const defaultVersionInfo = {
 	$NEXT_MAJOR_VERSION_MINOR: {
 		version: '1.0.0',
 		template: '$MINOR',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'major',
 		$MAJOR: 1,
 		$MINOR: 0,
@@ -58,8 +55,7 @@ export const defaultVersionInfo = {
 	$NEXT_MAJOR_VERSION_PATCH: {
 		version: '1.0.0',
 		template: '$PATCH',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'major',
 		$MAJOR: 1,
 		$MINOR: 0,
@@ -68,8 +64,7 @@ export const defaultVersionInfo = {
 	$NEXT_MINOR_VERSION: {
 		version: '0.1.0',
 		template: '$MAJOR.$MINOR.$PATCH',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'minor',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -78,8 +73,7 @@ export const defaultVersionInfo = {
 	$NEXT_MINOR_VERSION_MAJOR: {
 		version: '0.1.0',
 		template: '$MAJOR',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'minor',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -88,8 +82,7 @@ export const defaultVersionInfo = {
 	$NEXT_MINOR_VERSION_MINOR: {
 		version: '0.1.0',
 		template: '$MINOR',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'minor',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -98,8 +91,7 @@ export const defaultVersionInfo = {
 	$NEXT_MINOR_VERSION_PATCH: {
 		version: '0.1.0',
 		template: '$PATCH',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'minor',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -108,8 +100,7 @@ export const defaultVersionInfo = {
 	$NEXT_PATCH_VERSION: {
 		version: '0.1.0',
 		template: '$MAJOR.$MINOR.$PATCH',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'patch',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -118,8 +109,7 @@ export const defaultVersionInfo = {
 	$NEXT_PATCH_VERSION_MAJOR: {
 		version: '0.1.0',
 		template: '$MAJOR',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'patch',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -128,8 +118,7 @@ export const defaultVersionInfo = {
 	$NEXT_PATCH_VERSION_MINOR: {
 		version: '0.1.0',
 		template: '$MINOR',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'patch',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -138,8 +127,7 @@ export const defaultVersionInfo = {
 	$NEXT_PATCH_VERSION_PATCH: {
 		version: '0.1.0',
 		template: '$PATCH',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'patch',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -149,8 +137,7 @@ export const defaultVersionInfo = {
 	$RESOLVED_VERSION: {
 		version: '0.1.0',
 		template: '$MAJOR.$MINOR.$PATCH',
-		inputVersion: undefined,
-		versionKeyIncrement: 'patch',
+		versionInput: undefined,
 		inc: 'patch',
 		$MAJOR: 0,
 		$MINOR: 1,
@@ -163,7 +150,7 @@ export function getTemplatableVersion(input: {
 	template: string
 	versionInput?: semver.SemVer
 	versionKeyIncrement?: semver.ReleaseType
-}) {
+}): VersionInfo {
 	const templatableVersion = {
 		$NEXT_MAJOR_VERSION: splitSemVersion({ ...input, inc: 'major' }),
 		$NEXT_MAJOR_VERSION_MAJOR: splitSemVersion({
@@ -260,7 +247,7 @@ export function getVersionInfo(
 	inputVersion?: string,
 	versionKeyIncrement?: semver.ReleaseType,
 	tagPrefix?: string,
-) {
+): VersionInfo {
 	const releaseVersion = coerceVersion(release, tagPrefix)
 	const versionInput = coerceVersion(inputVersion, tagPrefix)
 	const version =
