@@ -257,8 +257,8 @@ function coerceVersion(
 export function getVersionInfo(
 	release: GitHubRelease,
 	template: string,
-	versionKeyIncrement?: semver.ReleaseType,
 	inputVersion?: string,
+	versionKeyIncrement?: semver.ReleaseType,
 	tagPrefix?: string,
 ) {
 	const releaseVersion = coerceVersion(release, tagPrefix)

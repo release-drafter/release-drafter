@@ -4,35 +4,23 @@ import {
 } from '@probot/octokit-plugin-config/dist-types/types.d.js'
 
 import { MajorMinorPatch, SORT_BY, SORT_DIRECTIONS } from './enums.js'
-
-export type PullRequest = {
-	mergedAt: string
-	title: string
-	baseRefName: string
-	headRefName: string
-	url: string
-	body: string
-	number: number
-	author?: {
-		login?: string
-	}
-	labels: {
-		nodes: {
-			name: string
-		}
-	}
-}
+import { Context } from './context.js'
+import { PullRequest } from '@octokit/graphql-schema'
 
 export type Labels = {
 	labels: string[]
 }
 
 export type VersionResolver = {
+	[key: string]: Labels
+} & {
 	default: MajorMinorPatch
 	major: Labels
 	minor: Labels
 	patch: Labels
 }
+
+export type ReleaseDrafterContext = InstanceType<typeof Context>
 
 export type Replacer = {
 	search: RegExp
@@ -40,9 +28,16 @@ export type Replacer = {
 }
 
 export type ReleaseDrafterCategory = {
-	title: string
+	title?: string
 	collapseAfter: number
 	labels: string[]
+}
+
+export type ReleaseDrafterCategorizedPullRequest = {
+	title?: string
+	collapseAfter: number
+	labels: string[]
+	pullRequests: PullRequest[]
 }
 
 export type Autolabeler = {
@@ -56,7 +51,10 @@ export type Autolabeler = {
 export type GitHubRelease = {
 	tag_name: string
 	name: string
-	created_at?: string
+	id: number
+	created_at: string
+	target_commitish: string
+	draft: boolean
 }
 
 export type ReleaseDrafterConfig = {
