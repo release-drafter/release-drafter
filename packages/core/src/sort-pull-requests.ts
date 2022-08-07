@@ -1,5 +1,5 @@
+import { PullRequest } from '@octokit/graphql-schema'
 import { SORT_BY, SORT_DIRECTIONS } from './enums.js'
-import { PullRequest } from './types.js'
 
 export function sortPullRequests(
 	pullRequests: PullRequest[],
