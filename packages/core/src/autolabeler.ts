@@ -15,7 +15,7 @@ export async function autolabeler(context: Context) {
 		{
 			owner: context.owner,
 			repo: context.repo,
-			pull_number: context.pull_number,
+			pull_number: context.pullRequest,
 			per_page: 100,
 		},
 		(response) => response.data.map((fileData) => fileData.filename),

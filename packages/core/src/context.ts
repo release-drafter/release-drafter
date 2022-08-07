@@ -6,12 +6,13 @@ import { DEFAULT_CONFIG } from './default-config.js'
 
 export class Context {
 	public octokit: InstanceType<typeof ReleaseDrafterOctokit>
-	public owner: string
-	public repo: string
-	public configName: string
-	public defaultBranch: string
-	public pull_number: number
-	public branch: string
+	public readonly owner: string
+	public readonly repo: string
+	public readonly pullRequest: number
+	public readonly issueNumber: number
+	public readonly configName: string
+	public readonly defaultBranch: string
+	public readonly branch: string
 
 	constructor(
 		octokit: InstanceType<typeof ReleaseDrafterOctokit>,
@@ -19,27 +20,23 @@ export class Context {
 		{
 			owner,
 			repo,
-			pull_number,
-		}: { owner: string; repo: string; pull_number?: number },
+			issue,
+			pullRequest,
+		}: { owner: string; repo: string; issue?: number; pullRequest?: number },
 		branch?: string,
 		configName?: string,
 	) {
 		this.octokit = octokit
 		this.owner = owner
 		this.repo = repo
-		this.pull_number = pull_number || 0
+		this.issueNumber = issue || 0
+		this.pullRequest = pullRequest || 0
 		this.defaultBranch = defaultBranch || 'master'
 		this.branch = branch || this.defaultBranch
 		this.configName = configName || 'release-drafter.yml'
 	}
 
-	public pullRequest(pullRequestNumber: number) {
-		return {
-			owner: this.owner,
-			repo: this.repo,
-			pull_number: pullRequestNumber,
-		}
-	}
+	public ownerRepo = () => `${this.owner}/${this.repo}`
 
 	public async config(): Promise<ReleaseDrafterConfig> {
 		const parameters: ReleaseDrafterGetOptions = {

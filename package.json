@@ -1,5 +1,5 @@
 {
-	"name": "release-drafter-github-app",
+	"name": "@release-drafter/mono",
 	"type": "module",
 	"description": "A GitHub app that draft releases based on pull-request labels",
 	"private": true,
