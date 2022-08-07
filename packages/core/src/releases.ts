@@ -324,14 +324,14 @@ export const generateChangeLog = (
 	return changeLog.join('').trim()
 }
 
-type VersionResolverKey = keyof VersionResolver
+type VersionResolverKeys = keyof Omit<VersionResolver, 'default'>
 
 const resolveVersionKeyIncrement = (
 	mergedPullRequests: PullRequest[],
 	config: ReleaseDrafterConfig,
 ) => {
 	const priorityMap: {
-		[key: string]: number
+		[key in VersionResolverKeys]: number
 	} = {
 		patch: 1,
 		minor: 2,
@@ -341,10 +341,9 @@ const resolveVersionKeyIncrement = (
 		Object.keys(priorityMap)
 			.flatMap((key) => {
 				return [
-					config.versionResolver[key].labels.map((label: string) => [
-						label,
-						key,
-					]),
+					config.versionResolver[key as VersionResolverKeys].labels.map(
+						(label: string) => [label, key],
+					),
 				]
 			})
 			.flat(),
@@ -359,10 +358,12 @@ const resolveVersionKeyIncrement = (
 			pr.labels?.nodes?.map((node) => labelToKeyMap[node?.name ?? '']),
 		)
 		.filter(Boolean)
-	const keyPriorities = keys.map((key) => priorityMap[key])
+	const keyPriorities = keys.map(
+		(key) => priorityMap[key as VersionResolverKeys],
+	)
 	const priority = Math.max(...keyPriorities)
 	const versionKey = Object.keys(priorityMap).find(
-		(key) => priorityMap[key] === priority,
+		(key) => priorityMap[key as VersionResolverKeys] === priority,
 	)
 	return (versionKey || config.versionResolver.default) as ReleaseType
 }
