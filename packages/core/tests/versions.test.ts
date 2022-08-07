@@ -2,9 +2,10 @@ import { describe, it, expect } from '@jest/globals'
 
 import { getVersionInfo, defaultVersionInfo } from '../src/versions.js'
 import { ReleaseType } from 'semver'
+import { VersionInfo } from '../src/types.js'
 
 function expected(
-	versionInfo: any,
+	versionInfo: VersionInfo,
 	major = '11.0.0',
 	minor = '10.1.0',
 	patch = '10.0.4',
