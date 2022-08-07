@@ -8,6 +8,7 @@ now.json
 docker-compose-logs
 package-lock.json
 yarn.lock
+.pnpm-store/
 
 # TypeScript dist/lib
 lib/
