@@ -102,18 +102,18 @@ const contributorsSentence = ({
 	commits: Commit[]
 	pullRequests: PullRequest[]
 	config: ReleaseDrafterConfig
-}) => {
+}): string => {
 	const { excludeContributors, noContributorsTemplate } = config
 
-	const contributors = new Set()
+	const contributors = new Set<string>()
 
 	for (const commit of commits) {
 		if (commit.author?.user) {
 			if (!excludeContributors.includes(commit.author.user.login)) {
 				contributors.add(`@${commit.author.user.login}`)
 			}
-		} else {
-			contributors.add(commit.author?.name)
+		} else if (commit.author?.name) {
+			contributors.add(commit.author.name)
 		}
 	}
 

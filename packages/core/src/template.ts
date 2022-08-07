@@ -1,33 +1,34 @@
-import { Replacer } from './types.js'
+import { Replacer, VersionTemplate } from './types.js'
+import { z } from 'zod'
 
 /**
- * replaces all uppercase dollar templates with their string representation from object
- * if replacement is undefined in object the dollar template string is left untouched
+ * replaces all uppercase dollar templates with their string representation from objectReplacer
+ * if replacement is undefined in objectReplacer the dollar template string is left untouched
  */
 
+const templateReplacer = z.object({ template: z.string() }).passthrough()
+
 export function template(
-	string: string,
-	object: Record<string, unknown>,
+	input: string,
+	objectReplacer: { [x: string]: string | number | VersionTemplate },
 	customReplacers?: Replacer[],
 ): string {
-	let input: string = string.replace(/(\$[A-Z_]+)/g, (_, k) => {
-		let result: string
-		if (object[k] === undefined || object[k] === null) {
-			result = k
-		} else if (typeof object[k] === 'object') {
-			result = template(
-				((object[k] as Record<string, unknown>)?.template as string) ?? '',
-				object[k] as Record<string, unknown>,
-			)
-		} else {
-			result = `${object[k]}`
+	let output: string = input.replace(/(\$[A-Z_]+)/g, (_, k) => {
+		if (!(k in objectReplacer)) {
+			return k
 		}
-		return result
+
+		const replacer = templateReplacer.safeParse(objectReplacer[k])
+		if (replacer.success) {
+			return template(replacer.data.template, replacer.data)
+		}
+
+		return objectReplacer[k]
 	})
 	if (customReplacers) {
 		for (const { search, replace } of customReplacers) {
-			input = input.replace(search, replace)
+			output = output.replace(search, replace)
 		}
 	}
-	return input
+	return output
 }

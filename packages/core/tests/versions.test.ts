@@ -110,6 +110,42 @@ describe('versions', () => {
 		expected(versionInfo, undefined, undefined, '10.0.3')
 	})
 
+	it('handles stripping of the tag_name', () => {
+		const versionInfo = getVersionInfo(
+			{
+				tag_name: 'v10.0.3-alpha',
+				name: 'Some release',
+				created_at: createdAt,
+				target_commitish: 'master',
+				id: 1,
+				draft: false,
+			},
+			'$MAJOR.$MINOR.$PATCH',
+			'v10.0.4-alpha',
+			undefined,
+			'v',
+		)
+
+		expect(versionInfo).toEqual(versionInfo)
+	})
+
+	it('handles input version over version being empty', () => {
+		const versionInfo = getVersionInfo(
+			{
+				tag_name: '',
+				name: '',
+				created_at: createdAt,
+				target_commitish: 'master',
+				id: 1,
+				draft: false,
+			},
+			'$MAJOR.$MINOR.$PATCH',
+			'v10.0.4-alpha',
+		)
+
+		expect(versionInfo).toEqual(versionInfo)
+	})
+
 	it('returns default version info if no version was found in tag or name', () => {
 		const versionInfo = getVersionInfo(
 			{
