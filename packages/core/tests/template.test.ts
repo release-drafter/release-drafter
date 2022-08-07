@@ -47,7 +47,7 @@ describe('template', () => {
 					template: '$NEST',
 				},
 				template: '$MAJOR.$MINOR.$PATCH.$THIRD',
-			},
+			} as never,
 		})
 
 		expect(output).toEqual('1.0.0.THIRD LEVEL')
