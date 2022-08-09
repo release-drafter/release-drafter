@@ -2,11 +2,11 @@ import {
 	Configuration,
 	GetOptions,
 } from '@probot/octokit-plugin-config/dist-types/types.d.js'
+import { PullRequest } from '@octokit/graphql-schema'
+import { ReleaseType, SemVer } from 'semver'
 
 import { MajorMinorPatch, SORT_BY, SORT_DIRECTIONS } from './enums.js'
 import { Context } from './context.js'
-import { PullRequest } from '@octokit/graphql-schema'
-import { ReleaseType, SemVer } from 'semver'
 
 export type Labels = {
 	labels: string[]
