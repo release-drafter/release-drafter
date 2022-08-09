@@ -18,7 +18,7 @@ dist/
 !packages/action/dist
 
 # TypeScript
-tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # OS
 .DS_Store
