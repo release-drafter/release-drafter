@@ -1,7 +1,18 @@
 import _ from 'lodash'
 import { paginate } from './pagination.js'
 import { GitHubRelease, ReleaseDrafterContext } from './types.js'
-import type { GraphQlQueryResponseData } from '@octokit/graphql'
+
+export type CommitsWithPathChanges = {
+	repository: {
+		object: {
+			history: {
+				nodes: {
+					id: string
+				}
+			}
+		}
+	}
+}
 
 export const findCommitsWithPathChangesQuery = /* GraphQL */ `
 	query findCommitsWithPathChangesQuery(
@@ -29,6 +40,54 @@ export const findCommitsWithPathChangesQuery = /* GraphQL */ `
 		}
 	}
 `
+
+export type CommitsWithAssociatedPullRequests = {
+	repository: {
+		object: {
+			history: {
+				pageInfo: {
+					hasNextPage: boolean
+					endCursor: string
+				}
+				nodes: {
+					id: string
+					committedDate: string
+					message: string
+					author: {
+						name: string
+						user: {
+							login: string
+						}
+					}
+					associatedPullRequests: {
+						nodes: {
+							title: string
+							number: number
+							mergedAt: string
+							isCrossRepository: boolean
+							merged: boolean
+							url?: string
+							body?: string
+							baseRefName?: string
+							headRefName?: string
+							author: {
+								login: string
+							}
+							baseRepository: {
+								nameWithOwner: string
+							}
+							labels: {
+								nodes: {
+									name: string
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 export const findCommitsWithAssociatedPullRequestsQuery = /* GraphQL */ `
 	query findCommitsWithAssociatedPullRequests(
@@ -111,19 +170,19 @@ export const findCommitsWithAssociatedPullRequests = async ({
 		withPullRequestURL: config.changeTemplate.includes('$URL'),
 		withBaseRefName: config.changeTemplate.includes('$BASE_REF_NAME'),
 		withHeadRefName: config.changeTemplate.includes('$HEAD_REF_NAME'),
+		since: lastRelease?.created_at ?? undefined,
 	}
 	const includePaths = config.includePaths
 	const dataPath = ['repository', 'object', 'history']
 	const repoNameWithOwner = context.ownerRepo()
 
-	let data = {}
 	const allCommits = []
 	const includedIds: Record<string, Set<string>> = {}
 
 	if (includePaths.length > 0) {
 		let anyChanges = false
 		for (const path of includePaths) {
-			const pathData: GraphQlQueryResponseData = await paginate(
+			const pathData = await paginate<CommitsWithPathChanges>(
 				context.octokit.graphql,
 				findCommitsWithPathChangesQuery,
 				lastRelease
@@ -146,18 +205,18 @@ export const findCommitsWithAssociatedPullRequests = async ({
 		}
 	}
 
+	const data = await paginate<CommitsWithAssociatedPullRequests>(
+		context.octokit.graphql,
+		findCommitsWithAssociatedPullRequestsQuery,
+		variables,
+		dataPath,
+	)
+
 	if (lastRelease) {
 		// log({
 		// 	context,
 		// 	message: `Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`,
 		// })
-
-		data = await paginate(
-			context.octokit.graphql,
-			findCommitsWithAssociatedPullRequestsQuery,
-			{ ...variables, since: lastRelease.created_at },
-			dataPath,
-		)
 		// GraphQL call is inclusive of commits from the specified dates.  This means the final
 		// commit from the last tag is included, so we remove this here.
 		allCommits.push(
@@ -169,12 +228,6 @@ export const findCommitsWithAssociatedPullRequests = async ({
 	} else {
 		// log({ context, message: `Fetching parent commits of ${targetCommitish}` })
 
-		data = await paginate(
-			context.octokit.graphql,
-			findCommitsWithAssociatedPullRequestsQuery,
-			variables,
-			dataPath,
-		)
 		allCommits.push(_.get(data, [...dataPath, 'nodes']))
 	}
 
