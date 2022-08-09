@@ -5,32 +5,12 @@
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
-		"build": "tsc",
+		"build": "tsc -p tsconfig.build.json",
 		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
-	"jest": {
-		"verbose": true,
-		"modulePaths": [
-			"<rootDir>"
-		],
-		"transform": {},
-		"collectCoverage": true,
-		"collectCoverageFrom": [
-			"src/**"
-		],
-		"preset": "ts-jest/presets/default-esm",
-		"globals": {
-			"ts-jest": {
-				"useESM": true
-			}
-		},
-		"moduleNameMapper": {
-			"^(\\.{1,2}/.*)\\.js$": "$1"
-		}
-	},
 	"engines": {
 		"node": ">=16.0.0"
 	},
