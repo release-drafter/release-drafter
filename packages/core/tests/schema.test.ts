@@ -1,4 +1,5 @@
 /* eslint-disable unicorn/no-null */
+import { describe, it, expect } from '@jest/globals'
 import { schema, validateSchema } from '../src/schema.js'
 import { DEFAULT_CONFIG } from '../src/default-config.js'
 import { ZodError } from 'zod'

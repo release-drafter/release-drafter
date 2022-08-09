@@ -10,7 +10,7 @@ import { RequestParameters } from '@octokit/plugin-paginate-rest/dist-types/type
  * @param {RequestParameters} variables
  * @param {string[]} paginatePath - path to field to paginate
  */
-export async function paginate(
+export async function paginate<T extends object>(
 	queryFunction: graphql,
 	query: string,
 	variables: RequestParameters,
@@ -20,9 +20,9 @@ export async function paginate(
 	const pageInfoPath = [...paginatePath, 'pageInfo']
 	const endCursorPath = [...pageInfoPath, 'endCursor']
 	const hasNextPagePath = [...pageInfoPath, 'hasNextPage']
-	const hasNextPage = (data: unknown) => _.get(data, hasNextPagePath)
+	const hasNextPage = (data: T) => _.get(data, hasNextPagePath)
 
-	const data = await queryFunction<object>(query, variables)
+	const data = await queryFunction<T>(query, variables)
 
 	if (!_.has(data, nodesPath)) {
 		throw new Error(
