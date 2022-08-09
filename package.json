@@ -1,75 +1,64 @@
 {
   "name": "release-drafter-github-app",
-  "version": "5.3.1",
-  "description": "A GitHub app that bumps version numbers in readmes",
+  "type": "commonjs",
+  "version": "5.20.0",
+  "description": "A GitHub app that draft releases based on pull-request labels",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
   "license": "ISC",
-  "repository": "https://github.com/toolmantim/release-drafter",
+  "repository": "https://github.com/release-drafter/release-drafter",
   "scripts": {
-    "dev": "nodemon --exec \"npm start\"",
+    "build": "ncc build action.js --target es2021",
     "start": "probot run ./index.js",
-    "test": "jest",
-    "test:watch": "jest --watch --notify --notifyMode=change --coverage",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --notify --notifyMode=change --coverage",
     "generate-schema": "node ./bin/generate-schema.js print",
     "generate-fixtures": "node ./bin/generate-fixtures.js",
-    "lint": "eslint '**/*.js'",
-    "prettier": "prettier --write **/*.{js,md,json}",
-    "postversion": "npm run test && git push && git push --tags && npm publish && npm run deploy && npm run open-releases",
+    "lint": "eslint bin/*.js lib/*.js action.js index.js test/**/*.js",
+    "prettier": "prettier --write **/*.{js,md,json,yml}",
+    "postversion": "npm run test && git push && git push --tags",
     "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
-    "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master"
+    "deploy": "git push -f heroku \"$(node -e 'console.log(`v${require(\"./package.json\").version}`)')\":master",
+    "prepare": "husky install"
   },
   "dependencies": {
-    "@actions/core": "^1.2.0",
-    "@hapi/joi": "15.1.1",
-    "cli-table3": "^0.5.1",
-    "compare-versions": "3.6.0",
-    "escape-string-regexp": "2.0.0",
-    "lodash": "4.17.15",
-    "probot": "9.10.2",
-    "regex-parser": "2.2.10",
-    "request": "2.88.2",
-    "semver": "7.1.3"
+    "@actions/core": "1.9.0",
+    "@probot/adapter-github-actions": "3.1.1",
+    "cli-table3": "0.6.2",
+    "compare-versions": "4.1.3",
+    "deepmerge": "4.2.2",
+    "escape-string-regexp": "4.0.0",
+    "ignore": "5.2.0",
+    "joi": "17.6.0",
+    "lodash": "4.17.21",
+    "probot": "12.2.5",
+    "regex-parser": "2.2.11",
+    "semver": "7.3.7"
   },
   "devDependencies": {
-    "@types/hapi__joi": "^15.0.4",
-    "eslint": "6.8.0",
-    "eslint-config-prettier": "6.10.0",
-    "eslint-plugin-prettier": "3.1.2",
-    "husky": "4.2.3",
-    "jest": "25.1.0",
-    "joi-to-json-schema": "^5.1.0",
-    "lint-staged": "10.0.8",
-    "mocked-env": "^1.3.2",
-    "nock": "12.0.3",
-    "nock-knock": "2.0.0",
-    "node-fetch": "2.6.0",
-    "nodemon": "2.0.2",
-    "prettier": "1.19.1",
-    "smee-client": "1.1.0"
+    "@koa-lite/joi-schema": "0.0.1",
+    "@vercel/ncc": "0.34.0",
+    "eslint": "8.20.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-unicorn": "^43.0.2",
+    "husky": "8.0.1",
+    "jest": "28.1.3",
+    "lint-staged": "13.0.3",
+    "mocked-env": "^1.3.5",
+    "nock": "13.2.9",
+    "node-fetch": "2.6.7",
+    "prettier": "2.7.1"
   },
   "engines": {
-    "node": ">= 10.x"
+    "node": ">=16.0.0"
   },
   "jest": {
+    "testEnvironment": "jest-environment-node",
+    "transform": {},
     "collectCoverage": true,
     "collectCoverageFrom": [
       "index.js",
       "lib/**"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "git add"
-    ],
-    "*.{json,css,md}": [
-      "prettier --write",
-      "git add"
     ]
   }
 }

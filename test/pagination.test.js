@@ -1,76 +1,71 @@
-const paginate = require('../lib/pagination')
+const { paginate } = require('../lib/pagination')
 
 describe('pagination', () => {
   it('concats pagination results', async () => {
-    const queryFn = jest.fn()
+    const queryFunction = jest.fn()
     // query is empty because we mock the result
     const query = ``
 
-    queryFn
+    queryFunction
       .mockReturnValueOnce(
         Promise.resolve({
           repository: {
-            ref: {
-              target: {
-                history: {
-                  nodes: ['a', 'b', 'c'],
-                  pageInfo: {
-                    endCursor: 'aaa',
-                    hasNextPage: true
-                  }
-                }
-              }
-            }
-          }
+            object: {
+              history: {
+                nodes: ['a', 'b', 'c'],
+                pageInfo: {
+                  endCursor: 'aaa',
+                  hasNextPage: true,
+                },
+              },
+            },
+          },
         })
       )
       .mockReturnValueOnce(
         Promise.resolve({
           repository: {
-            ref: {
-              target: {
-                history: {
-                  nodes: ['d', 'e', 'f'],
-                  pageInfo: {
-                    endCursor: 'bbb',
-                    hasNextPage: false
-                  }
-                }
-              }
-            }
-          }
+            object: {
+              history: {
+                nodes: ['d', 'e', 'f'],
+                pageInfo: {
+                  endCursor: 'bbb',
+                  hasNextPage: false,
+                },
+              },
+            },
+          },
         })
       )
 
-    const data = await paginate(queryFn, query, {}, [
+    const data = await paginate(queryFunction, query, {}, [
       'repository',
-      'ref',
-      'target',
-      'history'
+      'object',
+      'history',
     ])
 
-    expect(queryFn).toHaveBeenCalledTimes(2)
-    expect(data.repository.ref.target.history.nodes).toEqual([
+    expect(queryFunction).toHaveBeenCalledTimes(2)
+    expect(data.repository.object.history.nodes).toEqual([
       'a',
       'b',
       'c',
       'd',
       'e',
-      'f'
+      'f',
     ])
-    expect(data.repository.ref.target.history.pageInfo).toEqual({
+    expect(data.repository.object.history.pageInfo).toEqual({
       endCursor: 'bbb',
-      hasNextPage: false
+      hasNextPage: false,
     })
   })
 
   it("throws when query doesn't return `nodes` or `pageInfo` fields", async () => {
-    const queryFn = jest.fn()
+    const queryFunction = jest.fn()
     // query is empty because we mock the result
     const query = ``
 
-    queryFn.mockReturnValueOnce(Promise.resolve({}))
+    queryFunction.mockReturnValueOnce(Promise.resolve({}))
 
-    expect(paginate(queryFn, query, {}, [])).rejects.toThrow()
+    expect(paginate(queryFunction, query, {}, [])).rejects.toThrow()
   })
 })

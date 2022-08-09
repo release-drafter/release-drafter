@@ -4,7 +4,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "branches": {
+    "references": {
       "default": ["master"],
       "type": "array",
       "items": {
@@ -12,11 +12,23 @@
       }
     },
     "change-template": {
-      "default": "* $TITLE (#$NUMBER) @$AUTHOR",
+      "default": "'* $TITLE (#$NUMBER) @$AUTHOR'",
       "type": "string"
     },
+    "change-title-escapes": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
     "no-changes-template": {
-      "default": "* No changes",
+      "default": "'* No changes'",
       "type": "string"
     },
     "version-template": {
@@ -24,6 +36,18 @@
       "type": "string"
     },
     "name-template": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
+    "tag-prefix": {
       "anyOf": [
         {
           "type": "string",
@@ -54,6 +78,31 @@
         "type": "string"
       }
     },
+    "include-labels": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "include-paths": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exclude-contributors": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "no-contributors-template": {
+      "default": "No contributors",
+      "type": "string"
+    },
     "sort-by": {
       "default": "merged_at",
       "enum": ["merged_at", "title"],
@@ -67,6 +116,22 @@
     "prerelease": {
       "default": false,
       "type": "boolean"
+    },
+    "filter-by-commitish": {
+      "default": false,
+      "type": "boolean"
+    },
+    "commitish": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
     },
     "replacers": {
       "default": [],
@@ -94,6 +159,49 @@
         "required": ["search", "replace"]
       }
     },
+    "autolabeler": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "files": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "branch": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "title": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "body": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "patterns": [],
+        "required": ["label"]
+      }
+    },
     "categories": {
       "default": [],
       "type": "array",
@@ -103,10 +211,16 @@
           "title": {
             "type": "string"
           },
+          "collapse-after": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0
+          },
           "label": {
             "type": "string"
           },
           "labels": {
+            "default": [],
             "type": "array",
             "items": {
               "type": "string"
@@ -118,14 +232,115 @@
         "required": ["title"]
       }
     },
+    "version-resolver": {
+      "default": {
+        "major": {
+          "labels": []
+        },
+        "minor": {
+          "labels": []
+        },
+        "patch": {
+          "labels": []
+        },
+        "default": "patch"
+      },
+      "type": "object",
+      "properties": {
+        "major": {
+          "type": "object",
+          "properties": {
+            "labels": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patterns": []
+        },
+        "minor": {
+          "type": "object",
+          "properties": {
+            "labels": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patterns": []
+        },
+        "patch": {
+          "type": "object",
+          "properties": {
+            "labels": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "patterns": []
+        },
+        "default": {
+          "default": "patch",
+          "enum": ["major", "minor", "patch"],
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "patterns": []
+    },
+    "category-template": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "## $TITLE",
+          "type": "string"
+        }
+      ]
+    },
+    "header": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
     "template": {
       "type": "string"
+    },
+    "footer": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
     },
     "_extends": {
       "type": "string"
     }
   },
   "additionalProperties": false,
-  "patterns": [],
-  "required": []
+  "patterns": []
 }

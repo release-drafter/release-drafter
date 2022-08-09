@@ -1,0 +1,627 @@
+{
+  "data": {
+    "repository": {
+      "object": {
+        "history": {
+          "totalCount": 14,
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "96cf76bb3470913a449d505f2011544b661652f4 13"
+          },
+          "nodes": [
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjk2Y2Y3NmJiMzQ3MDkxM2E0NDlkNTA1ZjIwMTE1NDRiNjYxNjUyZjQ=",
+              "committedDate": "2020-05-26T20:33:00Z",
+              "message": "Merge pull request #1 from TimonVS/forking",
+              "author": {
+                "name": "Joseph Petersen",
+                "user": {
+                  "login": "jetersen"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                    "number": 1,
+                    "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
+                    "body": "No thanks to forking PRs",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "jetersen/release-drafter-test-repo"
+                    },
+                    "mergedAt": "2020-05-26T20:33:01Z",
+                    "isCrossRepository": true,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjlhZjJlZWMyYjY4NDA0MWY5ZDE3YmFlM2IwNTAwMjYwNGU5NGE4MzM=",
+              "committedDate": "2020-05-26T20:30:59Z",
+              "message": "Merge pull request #28 from TimonVS/add-documentation",
+              "author": {
+                "name": "Joseph Petersen",
+                "user": {
+                  "login": "jetersen"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Add documentation",
+                    "number": 28,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/28",
+                    "body": "✍️ writing docs all day",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2020-05-26T20:30:59Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "skip-changelog"
+                        }
+                      ]
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "add-documentation"
+                  },
+                  {
+                    "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                    "number": 1,
+                    "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
+                    "body": "No thanks to forking PRs",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "jetersen/release-drafter-test-repo"
+                    },
+                    "mergedAt": "2020-05-26T20:33:01Z",
+                    "isCrossRepository": true,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjYxMTAwMDY2OWJmZTRlYjQ2NjUzYTQ0YjU2MGUzNjFkYjRhZDc5MjQ=",
+              "committedDate": "2020-05-26T20:29:54Z",
+              "message": "Merge pull request #27 from TimonVS/chore/update-dependencies",
+              "author": {
+                "name": "Joseph Petersen",
+                "user": {
+                  "login": "jetersen"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Update dependencies",
+                    "number": 27,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/27",
+                    "body": "📦 Package time! 📦",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2020-05-26T20:29:54Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "chore/update-dependencies"
+                  },
+                  {
+                    "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                    "number": 1,
+                    "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
+                    "body": "No thanks to forking PRs",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "jetersen/release-drafter-test-repo"
+                    },
+                    "mergedAt": "2020-05-26T20:33:01Z",
+                    "isCrossRepository": true,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjIyOWY2MWY0ODNmNDEzODFjODUwMThkNmZmMGIwZjMyYzk0NWNhMTI=",
+              "committedDate": "2020-05-26T20:19:59Z",
+              "message": "Fixed another bug",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Bug fixes",
+                    "number": 25,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/25",
+                    "body": "🐛 squashing",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2020-05-26T20:20:00Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "fix"
+                        },
+                        {
+                          "name": "patch"
+                        }
+                      ]
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "fix/bug-fixes"
+                  },
+                  {
+                    "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                    "number": 1,
+                    "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
+                    "body": "No thanks to forking PRs",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "jetersen/release-drafter-test-repo"
+                    },
+                    "mergedAt": "2020-05-26T20:33:01Z",
+                    "isCrossRepository": true,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmMzYThhNDY4NmFlMDkwNzdmNDk0YzcyOGJhMzc5ZTdhMDU4ZWJiYzY=",
+              "committedDate": "2020-05-26T20:19:59Z",
+              "message": "Fixed a bug",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Bug fixes",
+                    "number": 25,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/25",
+                    "body": "🐛 squashing",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2020-05-26T20:20:00Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "fix"
+                        },
+                        {
+                          "name": "patch"
+                        }
+                      ]
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "fix/bug-fixes"
+                  },
+                  {
+                    "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                    "number": 1,
+                    "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
+                    "body": "No thanks to forking PRs",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "jetersen/release-drafter-test-repo"
+                    },
+                    "mergedAt": "2020-05-26T20:33:01Z",
+                    "isCrossRepository": true,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmMwOWM2NmZkNWU2YjU2NTE3MzRlMTI1NGY4YjkzZTZkOWI1ZjI5ZmQ=",
+              "committedDate": "2020-05-26T20:18:34Z",
+              "message": "Add big feature (#24)\n\nCo-authored-by: Timon van Spronsen <timonvanspronsen@outlook.com>",
+              "author": {
+                "name": "Joseph Petersen",
+                "user": {
+                  "login": "jetersen"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Add big feature",
+                    "number": 24,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/24",
+                    "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2020-05-26T20:18:35Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "feature"
+                        },
+                        {
+                          "name": "minor"
+                        }
+                      ]
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "feature/big-feature"
+                  },
+                  {
+                    "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                    "number": 1,
+                    "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
+                    "body": "No thanks to forking PRs",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "jetersen/release-drafter-test-repo"
+                    },
+                    "mergedAt": "2020-05-26T20:33:01Z",
+                    "isCrossRepository": true,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmNjNTliYjUxN2EwOGYxNDhkZThlM2JiMDIxOTkyNjQ1YTQwMGNlNzY=",
+              "committedDate": "2020-05-26T20:16:43Z",
+              "message": "Merge pull request #23 from TimonVS/feature/alien-technology",
+              "author": {
+                "name": "Joseph Petersen",
+                "user": {
+                  "login": "jetersen"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Add alien technology",
+                    "number": 23,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/23",
+                    "body": "Space invasion 👾",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2020-05-26T20:16:44Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "feature"
+                        },
+                        {
+                          "name": "major"
+                        }
+                      ]
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "feature/alien-technology"
+                  },
+                  {
+                    "title": "🙅‍♂️ Forking PR 🙅‍♂️",
+                    "number": 1,
+                    "url": "https://github.com/jetersen/release-drafter-test-repo/pull/1",
+                    "body": "No thanks to forking PRs",
+                    "author": {
+                      "login": "jetersen"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "jetersen/release-drafter-test-repo"
+                    },
+                    "mergedAt": "2020-05-26T20:33:01Z",
+                    "isCrossRepository": true,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "forking",
+                    "headRefName": "forking"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjg1ODExZmJkYmE2OTViYjk3ZDc3YTVlMmE5NjNiMzFmNTM4YTgyMjM=",
+              "committedDate": "2019-04-27T13:05:51Z",
+              "message": "Fix typo",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Add documentation",
+                    "number": 5,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/5",
+                    "body": "✍️ writing docs all day",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:12:08Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "skip-changelog"
+                        }
+                      ]
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "add-documentation"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmVkM2FmY2QzNmM4MDhlZWIxNWFhZjc0Zjg3MTNiODVkZTA2ZjBhMTk=",
+              "committedDate": "2019-04-27T13:05:41Z",
+              "message": "Add documentation",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Add documentation",
+                    "number": 5,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/5",
+                    "body": "✍️ writing docs all day",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:12:08Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "skip-changelog"
+                        }
+                      ]
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "add-documentation"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmQyMTM0MjNmOTBjZjU5Y2YxMmRiNmUwMTIxYjgwNzE1NTE4NGRiNmQ=",
+              "committedDate": "2019-04-27T13:03:56Z",
+              "message": "Update Mongoose to 5.5.4",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Update dependencies",
+                    "number": 4,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/4",
+                    "body": "📦 Package time! 📦",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:11:55Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "chore/update-dependencies"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmQ5NTJjMjU1MDI5N2E4NTE1MmJlMWM4MjYwYjI1ZmI4OWYyODFkNDk=",
+              "committedDate": "2019-04-27T13:03:27Z",
+              "message": "Update Express to 4.16.4",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "Update dependencies",
+                    "number": 4,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/4",
+                    "body": "📦 Package time! 📦",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:11:55Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": []
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "chore/update-dependencies"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjk0ZGViYjMwZTAyYjExNTc1YWQ0YzBmMDNmMWE1ZjdmOTJiMTFiMjg=",
+              "committedDate": "2019-04-27T12:59:03Z",
+              "message": "Add alien technology",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": [
+                  {
+                    "title": "👽 Add alien technology",
+                    "number": 1,
+                    "url": "https://github.com/toolmantim/release-drafter-test-project/pull/1",
+                    "body": "Space invasion 👾",
+                    "author": {
+                      "login": "TimonVS"
+                    },
+                    "baseRepository": {
+                      "nameWithOwner": "toolmantim/release-drafter-test-project"
+                    },
+                    "mergedAt": "2019-04-27T13:11:29Z",
+                    "isCrossRepository": false,
+                    "labels": {
+                      "nodes": [
+                        {
+                          "name": "feature"
+                        }
+                      ]
+                    },
+                    "merged": true,
+                    "baseRefName": "merge-commit",
+                    "headRefName": "feature/alien-technology"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOjNhYmJhNTkxOGZmN2QxMmZhYjMyMjA1N2ZiZGMyM2I1MzVlNzZkMDE=",
+              "committedDate": "2019-04-27T12:12:59Z",
+              "message": "Add project description to README",
+              "author": {
+                "name": "Ada Lovelace",
+                "user": null
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            },
+            {
+              "id": "MDY6Q29tbWl0MjY3MTQyMTYxOmI5YWI2MGVlNGI4ZjNmYTg0Mjg2NDQ0NjViZGI1YTg4ZDcyZTY1M2E=",
+              "committedDate": "2019-04-27T12:03:19Z",
+              "message": "Initial commit",
+              "author": {
+                "name": "Timon van Spronsen",
+                "user": {
+                  "login": "TimonVS"
+                }
+              },
+              "associatedPullRequests": {
+                "nodes": []
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+template: |
+  # What's Changed
+  $CHANGES
+name-template: 'v$INPUT_VERSION (Code name: Placeholder)'
+tag-template: v$INPUT_VERSION
+version-template: $MAJOR.$MINOR.$PATCH
+include-paths:
+  - src/5.md
