@@ -142,10 +142,6 @@ describe('schema', () => {
 			test(`${number + 1} is valid`, () => {
 				const value = schema().parse(example)
 				expect(value).toMatchObject(expected)
-				if (value.replacers) {
-					for (const [index, arrayValue] of value.replacers.entries())
-						expect(arrayValue.search).toEqual(expected.replacers[index].search)
-				}
 			})
 		}
 	})
