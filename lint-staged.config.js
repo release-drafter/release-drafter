@@ -2,10 +2,10 @@ import micromatch from 'micromatch'
 
 export default {
 	'*': (files) => {
-		const typescriptFiles = micromatch(files, ['*.ts'], undefined)
+		const typescriptFiles = micromatch(files, ['*.ts'], {})
 		const allOther = micromatch.not(files, ['*.ts'])
 		const tasks = []
-		if (typescriptFiles.length !== 0) {
+		if (typescriptFiles.length > 0) {
 			tasks.push(`eslint --fix ${typescriptFiles.join(' ')}`)
 		}
 		tasks.push(`prettier --ignore-unknown --write ${allOther.join(' ')}`)
