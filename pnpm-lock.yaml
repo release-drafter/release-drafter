@@ -11,6 +11,7 @@ importers:
       cross-env: ^7.0.3
       eslint: 8.20.0
       eslint-config-prettier: 8.5.0
+      eslint-plugin-jest: ^26.8.2
       eslint-plugin-prettier: 4.2.1
       eslint-plugin-unicorn: ^43.0.2
       husky: 8.0.1
@@ -29,6 +30,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.20.0
       eslint-config-prettier: 8.5.0_eslint@8.20.0
+      eslint-plugin-jest: 26.8.2_k3qndmf4xu66im2kw5sexmlhpq
       eslint-plugin-prettier: 4.2.1_g4fztgbwjyq2fvmcscny2sj6fy
       eslint-plugin-unicorn: 43.0.2_eslint@8.20.0
       husky: 8.0.1
@@ -2419,6 +2421,28 @@ packages:
       eslint: '>=7.0.0'
     dependencies:
       eslint: 8.20.0
+    dev: true
+
+  /eslint-plugin-jest/26.8.2_k3qndmf4xu66im2kw5sexmlhpq:
+    resolution: {integrity: sha512-67oh0FKaku9y48OpLzL3uK9ckrgLb83Sp5gxxTbtOGDw9lq6D8jw/Psj/9CipkbK406I2M7mvx1q+pv/MdbvxA==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      '@typescript-eslint/eslint-plugin': ^5.0.0
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
+      jest: '*'
+    peerDependenciesMeta:
+      '@typescript-eslint/eslint-plugin':
+        optional: true
+      jest:
+        optional: true
+    dependencies:
+      '@typescript-eslint/eslint-plugin': 5.31.0_d5zwcxr4bwkhmuo464cb3a2puu
+      '@typescript-eslint/utils': 5.31.0_he2ccbldppg44uulnyq4rwocfa
+      eslint: 8.20.0
+      jest: 28.1.3_pqtjtaupojlaguyui6z2iois64
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
     dev: true
 
   /eslint-plugin-prettier/4.2.1_g4fztgbwjyq2fvmcscny2sj6fy:
