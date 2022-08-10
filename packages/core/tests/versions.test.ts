@@ -2,44 +2,58 @@ import { describe, it, expect } from '@jest/globals'
 
 import { getVersionInfo, defaultVersionInfo } from '../src/versions.js'
 import { ReleaseType } from 'semver'
-import { VersionInfo } from '../src/types.js'
 
-function expected(
-	versionInfo: VersionInfo,
-	major = '11.0.0',
-	minor = '10.1.0',
-	patch = '10.0.4',
-) {
-	expect(versionInfo.$NEXT_MAJOR_VERSION?.version).toEqual(major)
-	expect(versionInfo.$NEXT_MAJOR_VERSION?.template).toEqual(
-		'$MAJOR.$MINOR.$PATCH',
-	)
-	expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR?.version).toEqual(major)
-	expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR?.template).toEqual('$MAJOR')
-	expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR?.version).toEqual(major)
-	expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR?.template).toEqual('$MINOR')
-	expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH?.version).toEqual(major)
-	expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH?.template).toEqual('$PATCH')
-	expect(versionInfo.$NEXT_MINOR_VERSION?.version).toEqual(minor)
-	expect(versionInfo.$NEXT_MINOR_VERSION?.template).toEqual(
-		'$MAJOR.$MINOR.$PATCH',
-	)
-	expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR?.version).toEqual(minor)
-	expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR?.template).toEqual('$MAJOR')
-	expect(versionInfo.$NEXT_MINOR_VERSION_MINOR?.version).toEqual(minor)
-	expect(versionInfo.$NEXT_MINOR_VERSION_MINOR?.template).toEqual('$MINOR')
-	expect(versionInfo.$NEXT_MINOR_VERSION_PATCH?.version).toEqual(minor)
-	expect(versionInfo.$NEXT_MINOR_VERSION_PATCH?.template).toEqual('$PATCH')
-	expect(versionInfo.$NEXT_PATCH_VERSION?.version).toEqual(patch)
-	expect(versionInfo.$NEXT_PATCH_VERSION?.template).toEqual(
-		'$MAJOR.$MINOR.$PATCH',
-	)
-	expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR?.version).toEqual(patch)
-	expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR?.template).toEqual('$MAJOR')
-	expect(versionInfo.$NEXT_PATCH_VERSION_MINOR?.version).toEqual(patch)
-	expect(versionInfo.$NEXT_PATCH_VERSION_MINOR?.template).toEqual('$MINOR')
-	expect(versionInfo.$NEXT_PATCH_VERSION_PATCH?.version).toEqual(patch)
-	expect(versionInfo.$NEXT_PATCH_VERSION_PATCH?.template).toEqual('$PATCH')
+function expected(major = '11.0.0', minor = '10.1.0', patch = '10.0.4') {
+	return {
+		$NEXT_MAJOR_VERSION: {
+			version: major,
+			template: '$MAJOR.$MINOR.$PATCH',
+		},
+		$NEXT_MAJOR_VERSION_MAJOR: {
+			version: major,
+			template: '$MAJOR',
+		},
+		$NEXT_MAJOR_VERSION_MINOR: {
+			version: major,
+			template: '$MINOR',
+		},
+		$NEXT_MAJOR_VERSION_PATCH: {
+			version: major,
+			template: '$PATCH',
+		},
+		$NEXT_MINOR_VERSION: {
+			version: minor,
+			template: '$MAJOR.$MINOR.$PATCH',
+		},
+		$NEXT_MINOR_VERSION_MAJOR: {
+			version: minor,
+			template: '$MAJOR',
+		},
+		$NEXT_MINOR_VERSION_MINOR: {
+			version: minor,
+			template: '$MINOR',
+		},
+		$NEXT_MINOR_VERSION_PATCH: {
+			version: minor,
+			template: '$PATCH',
+		},
+		$NEXT_PATCH_VERSION: {
+			version: patch,
+			template: '$MAJOR.$MINOR.$PATCH',
+		},
+		$NEXT_PATCH_VERSION_MAJOR: {
+			version: patch,
+			template: '$MAJOR',
+		},
+		$NEXT_PATCH_VERSION_MINOR: {
+			version: patch,
+			template: '$MINOR',
+		},
+		$NEXT_PATCH_VERSION_PATCH: {
+			version: patch,
+			template: '$PATCH',
+		},
+	}
 }
 
 describe('versions', () => {
@@ -58,7 +72,7 @@ describe('versions', () => {
 			'$MAJOR.$MINOR.$PATCH',
 		)
 
-		expected(versionInfo)
+		expect(versionInfo).toMatchObject(expected())
 	})
 
 	it('extracts a version-like string from the last release name if the tag isnt a version', () => {
@@ -74,7 +88,7 @@ describe('versions', () => {
 			'$MAJOR.$MINOR.$PATCH',
 		)
 
-		expected(versionInfo)
+		expect(versionInfo).toMatchObject(expected())
 	})
 
 	it('preferences tags over release names', () => {
@@ -90,7 +104,7 @@ describe('versions', () => {
 			'$MAJOR.$MINOR.$PATCH',
 		)
 
-		expected(versionInfo)
+		expect(versionInfo).toMatchObject(expected())
 	})
 
 	it('handles alpha/beta releases', () => {
@@ -107,7 +121,7 @@ describe('versions', () => {
 			'v10.0.4-alpha',
 		)
 
-		expected(versionInfo, undefined, undefined, '10.0.3')
+		expect(versionInfo).toMatchObject(expected(undefined, undefined, '10.0.3'))
 	})
 
 	it('handles stripping of the tag_name', () => {

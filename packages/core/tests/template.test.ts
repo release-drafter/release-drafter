@@ -9,7 +9,7 @@ describe('template', () => {
 	it('replaces $A with B', () => {
 		const output = template('$A', { $A: 'B' })
 
-		expect(output).toEqual('B')
+		expect(output).toBe('B')
 	})
 
 	it('replaces $MAJOR.$MINOR.$PATCH with 1.0.0', () => {
@@ -19,7 +19,7 @@ describe('template', () => {
 			$PATCH: 0,
 		})
 
-		expect(output).toEqual('1.0.0')
+		expect(output).toBe('1.0.0')
 	})
 
 	it('replaces $CHANGES but leaves $NEXT_PATCH_VERSION', () => {
@@ -50,7 +50,7 @@ describe('template', () => {
 			} as never,
 		})
 
-		expect(output).toEqual('1.0.0.THIRD LEVEL')
+		expect(output).toBe('1.0.0.THIRD LEVEL')
 	})
 	it('single custom replacer', () => {
 		const customReplacer = [
@@ -66,7 +66,7 @@ describe('template', () => {
 			customReplacer,
 		)
 
-		expect(output).toEqual(
+		expect(output).toBe(
 			'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234)',
 		)
 	})
@@ -79,7 +79,7 @@ describe('template', () => {
 		]
 		const output = template('This is my body JENKINS-1234', {}, customReplacer)
 
-		expect(output).toEqual('This is my body heyyyyyyy-1234')
+		expect(output).toBe('This is my body heyyyyyyy-1234')
 	})
 	it('overlapping replacer', () => {
 		const customReplacer = [
@@ -94,7 +94,7 @@ describe('template', () => {
 		]
 		const output = template('This is my body JENKINS-1234', {}, customReplacer)
 
-		expect(output).toEqual('This is my body something else-1234')
+		expect(output).toBe('This is my body something else-1234')
 	})
 	it('multiple custom replacer', () => {
 		const customReplacer = [
@@ -117,7 +117,7 @@ describe('template', () => {
 			customReplacer,
 		)
 
-		expect(output).toEqual(
+		expect(output).toBe(
 			'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-456](JENKINS-456)',
 		)
 	})
