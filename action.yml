@@ -43,6 +43,16 @@ inputs:
       The object that the release should be created to point to.
     required: false
     default: ''
+  header:
+    description: |
+      A string that would be added before the template body.
+    required: false
+    default: ''
+  footer:
+    description: |
+      A string that would be added after the template body.
+    required: false
+    default: ''
   disable-releaser:
     description: |
       A boolean indicating whether the releaser mode is disabled.
