@@ -2,9 +2,9 @@
 	"name": "@release-drafter/core",
 	"version": "1.0.0",
 	"description": "",
-	"main": "lib/src/index.js",
-	"exports": "./lib/src/index.js",
-	"types": "./lib/src/index.d.ts",
+	"main": "lib/index.js",
+	"exports": "./lib/index.js",
+	"types": "./lib/index.d.ts",
 	"type": "module",
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json",
