@@ -1,4 +1,4 @@
-import { Context } from '@release-drafter/core/src/context.js'
+import { Context } from '@release-drafter/core'
 import { ApplicationFunction, Context as ProbotContext } from 'probot'
 import { ReleaseDrafterOctokit } from '@release-drafter/core'
 
