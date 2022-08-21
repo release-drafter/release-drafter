@@ -35350,7 +35350,7 @@ try {
 /***/ ((module, __unused_webpack___webpack_exports__, __nccwpck_require__) => {
 
 __nccwpck_require__.a(module, async (__webpack_handle_async_dependencies__) => {
-/* harmony import */ var _main_js__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(9239);
+/* harmony import */ var _main_js__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2401);
 
 await (0,_main_js__WEBPACK_IMPORTED_MODULE_0__/* .run */ .K)();
 
@@ -35359,7 +35359,7 @@ __webpack_handle_async_dependencies__();
 
 /***/ }),
 
-/***/ 9239:
+/***/ 2401:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 
@@ -35534,12 +35534,9 @@ function validateSchema(context, repoConfig) {
     return schema(context.defaultBranch).parse(repoConfig);
 }
 //# sourceMappingURL=schema.js.map
-;// CONCATENATED MODULE: external "node:path"
-const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
 // EXTERNAL MODULE: ../../node_modules/.pnpm/deepmerge@4.2.2/node_modules/deepmerge/dist/cjs.js
 var cjs = __nccwpck_require__(8948);
 ;// CONCATENATED MODULE: ../core/lib/context.js
-
 
 
 class Context {
@@ -35564,7 +35561,7 @@ class Context {
         const parameters = {
             owner: this.owner,
             repo: this.repo,
-            path: external_node_path_namespaceObject.join('.github', this.configName),
+            path: `.github/${this.configName}`,
             defaults(configs) {
                 const result = cjs.all([default_config_DEFAULT_CONFIG, ...configs]);
                 return result;
@@ -39006,6 +39003,15 @@ const getFilterIncludedPullRequests = (pullRequest, includeLabels) => {
 };
 const categorizePullRequests = (pullRequests, config) => {
     const { excludeLabels, includeLabels, categories } = config;
+    if (categories.length === 0) {
+        return [
+            {
+                pullRequests: pullRequests,
+                labels: [],
+                collapseAfter: 0,
+            },
+        ];
+    }
     const allCategoryLabels = new Set(categories.flatMap((category) => category.labels));
     let uncategorizedCategoryIndex = categories.findIndex((category) => category.labels.length === 0);
     const categorizedPullRequests = [];
@@ -39390,10 +39396,15 @@ const findCommitsWithAssociatedPullRequests = async ({ context, targetCommitish,
     const data = await paginate(context.octokit.graphql, findCommitsWithAssociatedPullRequestsQuery, variables, dataPath);
     const filterCommit = (commit) => {
         if (includePaths.length > 0) {
+            let included = false;
             for (const path of includePaths) {
-                if (!includedIds[path].has(commit.id)) {
-                    return false;
+                if (includedIds[path].has(commit.id)) {
+                    included = true;
+                    break;
                 }
+            }
+            if (!included) {
+                return false;
             }
         }
         if (lastRelease) {

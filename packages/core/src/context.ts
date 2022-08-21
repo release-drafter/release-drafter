@@ -1,4 +1,3 @@
-import path from 'node:path'
 import deepmerge from 'deepmerge'
 import { ReleaseDrafterOctokit } from './release-drafter-octokit.js'
 import { ReleaseDrafterConfig, ReleaseDrafterGetOptions } from './types.js'
@@ -45,7 +44,7 @@ export class Context {
 		const parameters: ReleaseDrafterGetOptions = {
 			owner: this.owner,
 			repo: this.repo,
-			path: path.join('.github', this.configName),
+			path: `.github/${this.configName}`,
 			defaults(configs: object[]) {
 				const result = deepmerge.all([DEFAULT_CONFIG, ...configs])
 				return result as ReleaseDrafterConfig
