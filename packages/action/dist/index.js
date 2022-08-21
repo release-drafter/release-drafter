@@ -35370,7 +35370,6 @@ __nccwpck_require__.d(__webpack_exports__, {
 
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@actions+core@1.9.0/node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(9168);
-var core_default = /*#__PURE__*/__nccwpck_require__.n(core);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@octokit+core@4.0.4/node_modules/@octokit/core/dist-node/index.js
 var dist_node = __nccwpck_require__(9875);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@octokit+plugin-rest-endpoint-methods@6.2.0_@octokit+core@4.0.4/node_modules/@octokit/plugin-rest-endpoint-methods/dist-node/index.js
@@ -39521,9 +39520,9 @@ async function getRepo() {
 }
 function getActionInputs(config) {
     // Merges the config file with the input which takes precedence
-    const preRelease = core_default().getInput('prerelease').toLowerCase();
-    const header = core_default().getInput('header');
-    const footer = core_default().getInput('footer');
+    const preRelease = core.getInput('prerelease').toLowerCase();
+    const header = core.getInput('header');
+    const footer = core.getInput('footer');
     if (header) {
         config.header = header;
     }
@@ -39532,55 +39531,74 @@ function getActionInputs(config) {
     }
     return {
         isPreRelease: preRelease === 'true' || (!preRelease && config.prerelease),
-        shouldDraft: !core_default().getBooleanInput('publish'),
-        version: core_default().getInput('version') || undefined,
-        tag: core_default().getInput('tag') || undefined,
-        name: core_default().getInput('name') || undefined,
-        commitish: core_default().getInput('commitish') || undefined,
+        shouldDraft: !core.getBooleanInput('publish'),
+        version: core.getInput('version') || undefined,
+        tag: core.getInput('tag') || undefined,
+        name: core.getInput('name') || undefined,
+        commitish: core.getInput('commitish') || undefined,
     };
 }
 async function setActionOutputs(releaseResponse, { body }, shouldDraft, isPreRelease) {
     const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl, tag_name: tagName, name: name, }, } = releaseResponse;
     if (releaseId && Number.isInteger(releaseId))
-        core_default().setOutput('id', releaseId.toString());
+        core.setOutput('id', releaseId.toString());
     const summaryTable = [];
     if (htmlUrl)
-        core_default().setOutput('html_url', htmlUrl);
+        core.setOutput('html_url', htmlUrl);
     if (uploadUrl)
-        core_default().setOutput('upload_url', uploadUrl);
+        core.setOutput('upload_url', uploadUrl);
     if (name) {
-        core_default().setOutput('name', name);
+        core.setOutput('name', name);
         summaryTable.push(['Release Name', name]);
     }
     if (tagName) {
-        core_default().setOutput('tag_name', tagName);
+        core.setOutput('tag_name', tagName);
         summaryTable.push(['Tag name', tagName]);
     }
-    core_default().setOutput('body', body);
+    core.setOutput('body', body);
     if (shouldDraft) {
-        core_default().setOutput('draft', 'true');
-        core_default().setOutput('published', 'false');
+        core.setOutput('draft', 'true');
+        core.setOutput('published', 'false');
         summaryTable.push(['Published', '❌'], ['Draft', '✔']);
     }
     else {
-        core_default().setOutput('draft', 'false');
-        core_default().setOutput('published', 'true');
+        core.setOutput('draft', 'false');
+        core.setOutput('published', 'true');
         summaryTable.push(['Published', '✔'], ['Draft', '❌']);
     }
     if (isPreRelease) {
-        core_default().setOutput('prerelease', 'true');
+        core.setOutput('prerelease', 'true');
         summaryTable.push(['Prerelease', '✔']);
     }
     else {
-        core_default().setOutput('prerelease', 'false');
+        core.setOutput('prerelease', 'false');
         summaryTable.push(['Prerelease', '❌']);
     }
-    await core_default().summary.addHeading(`Release Drafter Output`)
+    await core.summary.addHeading(`Release Drafter Output`)
         .addTable(summaryTable)
         .addLink(`View Release`, htmlUrl)
         .addSeparator()
         .addRaw(body)
         .write();
+}
+function getOctokit() {
+    return new github_ReleaseDrafterOctokit({
+        auth: core.getInput('token'),
+        throttle: {
+            onRateLimit: (retryAfter, options, octokit) => {
+                octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+                if (options.request?.retryCount === 0) {
+                    // only retries once
+                    console.log(`Retrying after ${retryAfter} seconds!`);
+                    return true;
+                }
+            },
+            onSecondaryRateLimit: (retryAfter, options, octokit) => {
+                // does not retry, only logs a warning
+                octokit.log.warn(`Abuse detected for request ${options.method} ${options.url}`);
+            },
+        },
+    });
 }
 
 ;// CONCATENATED MODULE: ./src/main.ts
@@ -39589,7 +39607,7 @@ async function setActionOutputs(releaseResponse, { body }, shouldDraft, isPreRel
 
 async function run() {
     core.info('🎉 Running Release Drafter Action');
-    const octokit = new github_ReleaseDrafterOctokit({ auth: core.getInput('token') });
+    const octokit = getOctokit();
     const GITHUB_REF = await getReference();
     const defaultBranch = await getDefaultBranch(octokit);
     const repo = await getRepo();
@@ -39889,18 +39907,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 			return fn.r ? promise : result;
 /******/ 		}).then(outerResolve, reject);
 /******/ 		isEvaluating = false;
-/******/ 	};
-/******/ })();
-/******/ 
-/******/ /* webpack/runtime/compat get default export */
-/******/ (() => {
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__nccwpck_require__.n = (module) => {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			() => (module['default']) :
-/******/ 			() => (module);
-/******/ 		__nccwpck_require__.d(getter, { a: getter });
-/******/ 		return getter;
 /******/ 	};
 /******/ })();
 /******/ 
