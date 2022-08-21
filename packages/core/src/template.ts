@@ -10,7 +10,9 @@ const templateReplacer = z.object({ template: z.string() }).passthrough()
 
 export function template(
 	input: string,
-	objectReplacer: { [x: string]: string | number | VersionTemplate },
+	objectReplacer: {
+		[x: string]: string | number | undefined | VersionTemplate
+	},
 	customReplacers?: Replacer[],
 ): string {
 	let output: string = input.replace(/(\$[A-Z_]+)/g, (_, k) => {

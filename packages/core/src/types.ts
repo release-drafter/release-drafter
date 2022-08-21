@@ -2,11 +2,50 @@ import {
 	Configuration,
 	GetOptions,
 } from '@probot/octokit-plugin-config/dist-types/types.d.js'
-import { PullRequest } from '@octokit/graphql-schema'
 import { ReleaseType, SemVer } from 'semver'
 
 import { MajorMinorPatch, SORT_BY, SORT_DIRECTIONS } from './enums.js'
 import { Context } from './context.js'
+
+export type Label = {
+	name: string
+}
+
+export type PullRequest = {
+	title: string
+	number: number
+	mergedAt: string
+	isCrossRepository: boolean
+	merged: boolean
+	url?: string
+	body?: string
+	baseRefName?: string
+	headRefName?: string
+	author: {
+		login: string
+	}
+	baseRepository: {
+		nameWithOwner: string
+	}
+	labels: {
+		nodes: Label[]
+	}
+}
+
+export type CommitWithAssociatedPullRequests = {
+	id: string
+	committedDate: string
+	message: string
+	author: {
+		name: string
+		user: {
+			login: string
+		}
+	}
+	associatedPullRequests: {
+		nodes: PullRequest[]
+	}
+}
 
 export type Labels = {
 	labels: string[]
