@@ -6,9 +6,10 @@ import { Octokit } from '@octokit/core'
 import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
 import { paginateRest } from '@octokit/plugin-paginate-rest'
 import { HttpClient } from '@actions/http-client'
-import core from '@actions/core'
+import * as core from '@actions/core'
 import { SummaryTableRow } from '@actions/core/lib/summary.js'
 import { ReleaseDrafterConfig } from '@release-drafter/core'
+import { RequestOptions } from '@octokit/types'
 
 function getProxyAgent(proxyUrl: string) {
 	const hc = new HttpClient()
@@ -173,4 +174,36 @@ export async function setActionOutputs(
 		.addSeparator()
 		.addRaw(body)
 		.write()
+}
+
+export function getOctokit() {
+	return new ReleaseDrafterOctokit({
+		auth: core.getInput('token'),
+		throttle: {
+			onRateLimit: (
+				retryAfter: number,
+				options: RequestOptions,
+				octokit: Octokit,
+			) => {
+				octokit.log.warn(
+					`Request quota exhausted for request ${options.method} ${options.url}`,
+				)
+				if (options.request?.retryCount === 0) {
+					// only retries once
+					console.log(`Retrying after ${retryAfter} seconds!`)
+					return true
+				}
+			},
+			onSecondaryRateLimit: (
+				retryAfter: number,
+				options: RequestOptions,
+				octokit: Octokit,
+			) => {
+				// does not retry, only logs a warning
+				octokit.log.warn(
+					`Abuse detected for request ${options.method} ${options.url}`,
+				)
+			},
+		},
+	})
 }
