@@ -172,7 +172,7 @@ export async function setActionOutputs(
 		.addTable(summaryTable)
 		.addLink(`View Release`, htmlUrl)
 		.addHeading(`Release Drafter body`, 3)
-		.addCodeBlock(body)
+		.addRaw(`\n${body}\n`)
 		.write()
 }
 
