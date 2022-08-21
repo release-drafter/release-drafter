@@ -244,7 +244,7 @@ export const findCommitsWithAssociatedPullRequests = async ({
 			: allCommits
 
 	const pullRequests = _.uniqBy(
-		commits.flatMap((commit) => commit.associatedPullRequests.nodes),
+		commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []),
 		'number',
 	).filter(
 		(pr) => pr.baseRepository.nameWithOwner === repoNameWithOwner && pr.merged,
