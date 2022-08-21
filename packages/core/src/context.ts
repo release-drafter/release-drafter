@@ -2,6 +2,7 @@ import deepmerge from 'deepmerge'
 import { ReleaseDrafterOctokit } from './release-drafter-octokit.js'
 import { ReleaseDrafterConfig, ReleaseDrafterGetOptions } from './types.js'
 import { DEFAULT_CONFIG } from './default-config.js'
+import { schema } from './schema.js'
 
 export class Context {
 	public octokit: InstanceType<typeof ReleaseDrafterOctokit>
@@ -54,6 +55,6 @@ export class Context {
 
 		const { config } = await this.octokit.config.get(parameters)
 
-		return config as ReleaseDrafterConfig
+		return schema(this.defaultBranch).parse(config)
 	}
 }

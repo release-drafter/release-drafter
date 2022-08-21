@@ -35385,432 +35385,6 @@ var octokit_plugin_config_dist_node = __nccwpck_require__(5236);
 
 const ReleaseDrafterOctokit = dist_node/* Octokit.plugin */.v.plugin(plugin_rest_endpoint_methods_dist_node/* restEndpointMethods */.TC, plugin_paginate_rest_dist_node/* paginateRest */.AA, octokit_plugin_config_dist_node/* config */.vc);
 //# sourceMappingURL=release-drafter-octokit.js.map
-// EXTERNAL MODULE: ../../node_modules/.pnpm/regex-parser@2.2.11/node_modules/regex-parser/lib/index.js
-var lib = __nccwpck_require__(5332);
-// EXTERNAL MODULE: ../../node_modules/.pnpm/escape-string-regexp@4.0.0/node_modules/escape-string-regexp/index.js
-var escape_string_regexp = __nccwpck_require__(8890);
-;// CONCATENATED MODULE: ../core/lib/default-config.js
-const default_config_DEFAULT_CONFIG = Object.freeze({
-    autolabeler: [],
-    categories: [],
-    categoryTemplate: `## $TITLE`,
-    changeTemplate: `* $TITLE (#$NUMBER) @$AUTHOR`,
-    changeTitleEscapes: '',
-    commitish: '',
-    excludeContributors: [],
-    excludeLabels: [],
-    filterByCommitish: false,
-    footer: '',
-    header: '',
-    includeLabels: [],
-    includePaths: [],
-    nameTemplate: '',
-    noChangesTemplate: `* No changes`,
-    noContributorsTemplate: 'No contributors',
-    prerelease: false,
-    references: ['main'],
-    replacers: [],
-    sortBy: "merged_at" /* SORT_BY.mergedAt */,
-    sortDirection: "descending" /* SORT_DIRECTIONS.descending */,
-    tagPrefix: 'v',
-    tagTemplate: 'v$RESOLVED_VERSION',
-    template: `## What’s Changed\n\n$CHANGES`,
-    versionTemplate: `$MAJOR.$MINOR.$PATCH`,
-    versionResolver: {
-        major: { labels: [] },
-        minor: { labels: [] },
-        patch: { labels: [] },
-        default: "patch" /* MajorMinorPatch.patch */,
-    },
-});
-//# sourceMappingURL=default-config.js.map
-;// CONCATENATED MODULE: ../core/lib/schema.js
-
-
-
-
-function toRegex(search) {
-    return /^\/.+\/[AJUXgimsux]*$/.test(search)
-        ? regexParser(search)
-        : new RegExp(regexEscape(search), 'g');
-}
-/**
- * This is used to check if multiple categories have no labels.
- * We only allow a single category to have no labels.
- *
- * if length is greater than 1 return false
- * falsy values are meant to signal failure in zod refine validation
- */
-function validateOnlyOneUncategorizedCategoryExist(categories) {
-    const length = categories.filter((category) => category.labels.length === 0).length;
-    return length <= 1;
-}
-function schema(defaultBranch = 'main') {
-    return z.object({
-        references: z.array(z.string()).default([defaultBranch]),
-        changeTemplate: z.string().default(DEFAULT_CONFIG.changeTemplate),
-        changeTitleEscapes: z.string().default(DEFAULT_CONFIG.changeTitleEscapes),
-        noChangesTemplate: z.string().default(DEFAULT_CONFIG.noChangesTemplate),
-        versionTemplate: z.string().default(DEFAULT_CONFIG.versionTemplate),
-        nameTemplate: z.string().default(DEFAULT_CONFIG.nameTemplate),
-        tagPrefix: z.string().default(DEFAULT_CONFIG.tagPrefix),
-        tagTemplate: z.string().default(DEFAULT_CONFIG.tagTemplate),
-        excludeLabels: z.array(z.string()).default(DEFAULT_CONFIG.excludeLabels),
-        includeLabels: z.array(z.string()).default(DEFAULT_CONFIG.includeLabels),
-        includePaths: z.array(z.string()).default(DEFAULT_CONFIG.includePaths),
-        excludeContributors: z
-            .array(z.string())
-            .default(DEFAULT_CONFIG.excludeContributors),
-        noContributorsTemplate: z
-            .string()
-            .default(DEFAULT_CONFIG.noContributorsTemplate),
-        sortBy: z
-            .enum(["merged_at" /* SORT_BY.mergedAt */, "title" /* SORT_BY.title */])
-            .default(DEFAULT_CONFIG.sortBy),
-        sortDirection: z
-            .enum(["ascending" /* SORT_DIRECTIONS.ascending */, "descending" /* SORT_DIRECTIONS.descending */])
-            .default(DEFAULT_CONFIG.sortDirection),
-        prerelease: z.boolean().default(DEFAULT_CONFIG.prerelease),
-        filterByCommitish: z.boolean().default(DEFAULT_CONFIG.filterByCommitish),
-        commitish: z.string().default(DEFAULT_CONFIG.commitish),
-        replacers: z
-            .array(z.object({
-            search: z.string().transform((value) => toRegex(value)),
-            replace: z.string().or(z.literal('')),
-        }))
-            .default([]),
-        autolabeler: z
-            .array(z.object({
-            label: z.string(),
-            files: z.array(z.string()).default([]),
-            branch: z
-                .array(z.string().transform((value) => toRegex(value)))
-                .default([]),
-            title: z
-                .array(z.string().transform((value) => toRegex(value)))
-                .default([]),
-            body: z
-                .array(z.string().transform((value) => toRegex(value)))
-                .default([]),
-        }))
-            .default([]),
-        categories: z
-            .array(z.object({
-            title: z.string(),
-            collapseAfter: z.number().nonnegative().default(0),
-            labels: z.array(z.string()).default([]),
-        }))
-            .default([])
-            .refine((categories) => validateOnlyOneUncategorizedCategoryExist(categories), {
-            message: 'Multiple categories detected with no labels.\nOnly one category with no labels is supported for uncategorized pull requests.',
-        }),
-        versionResolver: z
-            .object({
-            major: z.object({
-                labels: z.array(z.string()).default([]),
-            }),
-            minor: z.object({
-                labels: z.array(z.string()).default([]),
-            }),
-            patch: z.object({
-                labels: z.array(z.string()).default([]),
-            }),
-            default: z
-                .enum([
-                "major" /* MajorMinorPatch.major */,
-                "minor" /* MajorMinorPatch.minor */,
-                "patch" /* MajorMinorPatch.patch */,
-            ])
-                .default("patch" /* MajorMinorPatch.patch */),
-        })
-            .default(DEFAULT_CONFIG.versionResolver),
-        categoryTemplate: z.string().default(DEFAULT_CONFIG.categoryTemplate),
-        header: z.string().default(DEFAULT_CONFIG.header),
-        template: z.string().min(1).default(DEFAULT_CONFIG.template),
-        footer: z.string().default(DEFAULT_CONFIG.footer),
-    });
-}
-function validateSchema(context, repoConfig) {
-    return schema(context.defaultBranch).parse(repoConfig);
-}
-//# sourceMappingURL=schema.js.map
-// EXTERNAL MODULE: ../../node_modules/.pnpm/deepmerge@4.2.2/node_modules/deepmerge/dist/cjs.js
-var cjs = __nccwpck_require__(8948);
-;// CONCATENATED MODULE: ../core/lib/context.js
-
-
-class Context {
-    octokit;
-    owner;
-    repo;
-    pullRequest;
-    issueNumber;
-    configName;
-    defaultBranch;
-    constructor(octokit, defaultBranch, { owner, repo, issue, pullRequest, configName, }) {
-        this.octokit = octokit;
-        this.owner = owner;
-        this.repo = repo;
-        this.issueNumber = issue || 0;
-        this.pullRequest = pullRequest || 0;
-        this.defaultBranch = defaultBranch;
-        this.configName = configName || 'release-drafter.yml';
-    }
-    ownerRepo = () => `${this.owner}/${this.repo}`;
-    async config() {
-        const parameters = {
-            owner: this.owner,
-            repo: this.repo,
-            path: `.github/${this.configName}`,
-            defaults(configs) {
-                const result = cjs.all([default_config_DEFAULT_CONFIG, ...configs]);
-                return result;
-            },
-            branch: this.defaultBranch,
-        };
-        const { config } = await this.octokit.config.get(parameters);
-        return config;
-    }
-}
-//# sourceMappingURL=context.js.map
-// EXTERNAL MODULE: ../../node_modules/.pnpm/compare-versions@4.1.3/node_modules/compare-versions/index.js
-var compare_versions = __nccwpck_require__(249);
-// EXTERNAL MODULE: ../../node_modules/.pnpm/semver@7.3.7/node_modules/semver/index.js
-var semver = __nccwpck_require__(6400);
-;// CONCATENATED MODULE: ../core/lib/versions.js
-
-const splitSemVersion = (input) => {
-    if (!input.version) {
-        return;
-    }
-    const version = input.inc
-        ? semver.inc(input.version, input.inc, true)
-        : input.version.version;
-    return {
-        ...input,
-        version,
-        $MAJOR: semver.major(version),
-        $MINOR: semver.minor(version),
-        $PATCH: semver.patch(version),
-        $COMPLETE: version,
-    };
-};
-const defaultVersionInfo = {
-    $NEXT_MAJOR_VERSION: {
-        version: '1.0.0',
-        template: '$MAJOR.$MINOR.$PATCH',
-        versionInput: undefined,
-        inc: 'major',
-        $MAJOR: 1,
-        $MINOR: 0,
-        $PATCH: 0,
-    },
-    $NEXT_MAJOR_VERSION_MAJOR: {
-        version: '1.0.0',
-        template: '$MAJOR',
-        versionInput: undefined,
-        inc: 'major',
-        $MAJOR: 1,
-        $MINOR: 0,
-        $PATCH: 0,
-    },
-    $NEXT_MAJOR_VERSION_MINOR: {
-        version: '1.0.0',
-        template: '$MINOR',
-        versionInput: undefined,
-        inc: 'major',
-        $MAJOR: 1,
-        $MINOR: 0,
-        $PATCH: 0,
-    },
-    $NEXT_MAJOR_VERSION_PATCH: {
-        version: '1.0.0',
-        template: '$PATCH',
-        versionInput: undefined,
-        inc: 'major',
-        $MAJOR: 1,
-        $MINOR: 0,
-        $PATCH: 0,
-    },
-    $NEXT_MINOR_VERSION: {
-        version: '0.1.0',
-        template: '$MAJOR.$MINOR.$PATCH',
-        versionInput: undefined,
-        inc: 'minor',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_MINOR_VERSION_MAJOR: {
-        version: '0.1.0',
-        template: '$MAJOR',
-        versionInput: undefined,
-        inc: 'minor',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_MINOR_VERSION_MINOR: {
-        version: '0.1.0',
-        template: '$MINOR',
-        versionInput: undefined,
-        inc: 'minor',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_MINOR_VERSION_PATCH: {
-        version: '0.1.0',
-        template: '$PATCH',
-        versionInput: undefined,
-        inc: 'minor',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_PATCH_VERSION: {
-        version: '0.1.0',
-        template: '$MAJOR.$MINOR.$PATCH',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_PATCH_VERSION_MAJOR: {
-        version: '0.1.0',
-        template: '$MAJOR',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_PATCH_VERSION_MINOR: {
-        version: '0.1.0',
-        template: '$MINOR',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_PATCH_VERSION_PATCH: {
-        version: '0.1.0',
-        template: '$PATCH',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $INPUT_VERSION: undefined,
-    $RESOLVED_VERSION: {
-        version: '0.1.0',
-        template: '$MAJOR.$MINOR.$PATCH',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-};
-function getTemplatableVersion(input) {
-    const templatableVersion = {
-        $NEXT_MAJOR_VERSION: splitSemVersion({ ...input, inc: 'major' }),
-        $NEXT_MAJOR_VERSION_MAJOR: splitSemVersion({
-            ...input,
-            inc: 'major',
-            template: '$MAJOR',
-        }),
-        $NEXT_MAJOR_VERSION_MINOR: splitSemVersion({
-            ...input,
-            inc: 'major',
-            template: '$MINOR',
-        }),
-        $NEXT_MAJOR_VERSION_PATCH: splitSemVersion({
-            ...input,
-            inc: 'major',
-            template: '$PATCH',
-        }),
-        $NEXT_MINOR_VERSION: splitSemVersion({ ...input, inc: 'minor' }),
-        $NEXT_MINOR_VERSION_MAJOR: splitSemVersion({
-            ...input,
-            inc: 'minor',
-            template: '$MAJOR',
-        }),
-        $NEXT_MINOR_VERSION_MINOR: splitSemVersion({
-            ...input,
-            inc: 'minor',
-            template: '$MINOR',
-        }),
-        $NEXT_MINOR_VERSION_PATCH: splitSemVersion({
-            ...input,
-            inc: 'minor',
-            template: '$PATCH',
-        }),
-        $NEXT_PATCH_VERSION: splitSemVersion({ ...input, inc: 'patch' }),
-        $NEXT_PATCH_VERSION_MAJOR: splitSemVersion({
-            ...input,
-            inc: 'patch',
-            template: '$MAJOR',
-        }),
-        $NEXT_PATCH_VERSION_MINOR: splitSemVersion({
-            ...input,
-            inc: 'patch',
-            template: '$MINOR',
-        }),
-        $NEXT_PATCH_VERSION_PATCH: splitSemVersion({
-            ...input,
-            inc: 'patch',
-            template: '$PATCH',
-        }),
-        $INPUT_VERSION: splitSemVersion({ ...input, version: input.versionInput }),
-        $RESOLVED_VERSION: splitSemVersion({
-            ...input,
-            inc: input.versionKeyIncrement || 'patch',
-        }),
-    };
-    templatableVersion.$RESOLVED_VERSION =
-        templatableVersion.$INPUT_VERSION || templatableVersion.$RESOLVED_VERSION;
-    return templatableVersion;
-}
-function toSemver(version) {
-    const result = semver.parse(version);
-    if (result) {
-        return result;
-    }
-    // doesn't handle prerelease
-    return semver.coerce(version) ?? undefined;
-}
-function coerceVersion(input, tagPrefix) {
-    if (!input) {
-        return;
-    }
-    const stripTag = (input) => tagPrefix && input.startsWith(tagPrefix)
-        ? input.slice(tagPrefix.length)
-        : input;
-    return typeof input === 'object'
-        ? toSemver(stripTag(input.tag_name)) || toSemver(stripTag(input.name))
-        : toSemver(stripTag(input));
-}
-function getVersionInfo(release, template, inputVersion, versionKeyIncrement, tagPrefix) {
-    const releaseVersion = coerceVersion(release, tagPrefix);
-    const versionInput = coerceVersion(inputVersion, tagPrefix);
-    const version = !releaseVersion && versionInput ? versionInput : releaseVersion;
-    if (!version) {
-        return defaultVersionInfo;
-    }
-    return {
-        ...getTemplatableVersion({
-            version,
-            template,
-            versionInput,
-            versionKeyIncrement,
-        }),
-    };
-}
-//# sourceMappingURL=versions.js.map
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/zod@3.17.10/node_modules/zod/lib/index.mjs
 var util;
 (function (util) {
@@ -38875,6 +38449,421 @@ var mod = /*#__PURE__*/Object.freeze({
 
 
 
+// EXTERNAL MODULE: ../../node_modules/.pnpm/regex-parser@2.2.11/node_modules/regex-parser/lib/index.js
+var lib = __nccwpck_require__(5332);
+// EXTERNAL MODULE: ../../node_modules/.pnpm/escape-string-regexp@4.0.0/node_modules/escape-string-regexp/index.js
+var escape_string_regexp = __nccwpck_require__(8890);
+;// CONCATENATED MODULE: ../core/lib/default-config.js
+const DEFAULT_CONFIG = Object.freeze({
+    autolabeler: [],
+    categories: [],
+    categoryTemplate: `## $TITLE`,
+    changeTemplate: `* $TITLE (#$NUMBER) @$AUTHOR`,
+    changeTitleEscapes: '',
+    commitish: '',
+    excludeContributors: [],
+    excludeLabels: [],
+    filterByCommitish: false,
+    footer: '',
+    header: '',
+    includeLabels: [],
+    includePaths: [],
+    nameTemplate: '',
+    noChangesTemplate: `* No changes`,
+    noContributorsTemplate: 'No contributors',
+    prerelease: false,
+    references: ['main'],
+    replacers: [],
+    sortBy: "merged_at" /* SORT_BY.mergedAt */,
+    sortDirection: "descending" /* SORT_DIRECTIONS.descending */,
+    tagPrefix: 'v',
+    tagTemplate: 'v$RESOLVED_VERSION',
+    template: `## What’s Changed\n\n$CHANGES`,
+    versionTemplate: `$MAJOR.$MINOR.$PATCH`,
+    versionResolver: {
+        major: { labels: [] },
+        minor: { labels: [] },
+        patch: { labels: [] },
+        default: "patch" /* MajorMinorPatch.patch */,
+    },
+});
+//# sourceMappingURL=default-config.js.map
+;// CONCATENATED MODULE: ../core/lib/schema.js
+
+
+
+
+function toRegex(search) {
+    return /^\/.+\/[AJUXgimsux]*$/.test(search)
+        ? lib(search)
+        : new RegExp(escape_string_regexp(search), 'g');
+}
+/**
+ * This is used to check if multiple categories have no labels.
+ * We only allow a single category to have no labels.
+ *
+ * if length is greater than 1 return false
+ * falsy values are meant to signal failure in zod refine validation
+ */
+function validateOnlyOneUncategorizedCategoryExist(categories) {
+    const length = categories.filter((category) => category.labels.length === 0).length;
+    return length <= 1;
+}
+function schema(defaultBranch = 'main') {
+    return mod.object({
+        references: mod.array(mod.string()).default([defaultBranch]),
+        changeTemplate: mod.string().default(DEFAULT_CONFIG.changeTemplate),
+        changeTitleEscapes: mod.string().default(DEFAULT_CONFIG.changeTitleEscapes),
+        noChangesTemplate: mod.string().default(DEFAULT_CONFIG.noChangesTemplate),
+        versionTemplate: mod.string().default(DEFAULT_CONFIG.versionTemplate),
+        nameTemplate: mod.string().default(DEFAULT_CONFIG.nameTemplate),
+        tagPrefix: mod.string().default(DEFAULT_CONFIG.tagPrefix),
+        tagTemplate: mod.string().default(DEFAULT_CONFIG.tagTemplate),
+        excludeLabels: mod.array(mod.string()).default(DEFAULT_CONFIG.excludeLabels),
+        includeLabels: mod.array(mod.string()).default(DEFAULT_CONFIG.includeLabels),
+        includePaths: mod.array(mod.string()).default(DEFAULT_CONFIG.includePaths),
+        excludeContributors: mod.array(mod.string())
+            .default(DEFAULT_CONFIG.excludeContributors),
+        noContributorsTemplate: mod.string()
+            .default(DEFAULT_CONFIG.noContributorsTemplate),
+        sortBy: mod["enum"](["merged_at" /* SORT_BY.mergedAt */, "title" /* SORT_BY.title */])
+            .default(DEFAULT_CONFIG.sortBy),
+        sortDirection: mod["enum"](["ascending" /* SORT_DIRECTIONS.ascending */, "descending" /* SORT_DIRECTIONS.descending */])
+            .default(DEFAULT_CONFIG.sortDirection),
+        prerelease: mod.boolean().default(DEFAULT_CONFIG.prerelease),
+        filterByCommitish: mod.boolean().default(DEFAULT_CONFIG.filterByCommitish),
+        commitish: mod.string().default(DEFAULT_CONFIG.commitish),
+        replacers: mod.array(mod.object({
+            search: mod.string().transform((value) => toRegex(value)),
+            replace: mod.string().or(mod.literal('')),
+        }))
+            .default([]),
+        autolabeler: mod.array(mod.object({
+            label: mod.string(),
+            files: mod.array(mod.string()).default([]),
+            branch: mod.array(mod.string().transform((value) => toRegex(value)))
+                .default([]),
+            title: mod.array(mod.string().transform((value) => toRegex(value)))
+                .default([]),
+            body: mod.array(mod.string().transform((value) => toRegex(value)))
+                .default([]),
+        }))
+            .default([]),
+        categories: mod.array(mod.object({
+            title: mod.string(),
+            collapseAfter: mod.number().nonnegative().default(0),
+            labels: mod.array(mod.string()).default([]),
+        }))
+            .default([])
+            .refine((categories) => validateOnlyOneUncategorizedCategoryExist(categories), {
+            message: 'Multiple categories detected with no labels.\nOnly one category with no labels is supported for uncategorized pull requests.',
+        }),
+        versionResolver: mod.object({
+            major: mod.object({
+                labels: mod.array(mod.string()).default([]),
+            }),
+            minor: mod.object({
+                labels: mod.array(mod.string()).default([]),
+            }),
+            patch: mod.object({
+                labels: mod.array(mod.string()).default([]),
+            }),
+            default: mod["enum"]([
+                "major" /* MajorMinorPatch.major */,
+                "minor" /* MajorMinorPatch.minor */,
+                "patch" /* MajorMinorPatch.patch */,
+            ])
+                .default("patch" /* MajorMinorPatch.patch */),
+        })
+            .default(DEFAULT_CONFIG.versionResolver),
+        categoryTemplate: mod.string().default(DEFAULT_CONFIG.categoryTemplate),
+        header: mod.string().default(DEFAULT_CONFIG.header),
+        template: mod.string().min(1).default(DEFAULT_CONFIG.template),
+        footer: mod.string().default(DEFAULT_CONFIG.footer),
+    });
+}
+function validateSchema(context, repoConfig) {
+    return schema(context.defaultBranch).parse(repoConfig);
+}
+//# sourceMappingURL=schema.js.map
+// EXTERNAL MODULE: ../../node_modules/.pnpm/deepmerge@4.2.2/node_modules/deepmerge/dist/cjs.js
+var cjs = __nccwpck_require__(8948);
+;// CONCATENATED MODULE: ../core/lib/context.js
+
+
+
+class Context {
+    octokit;
+    owner;
+    repo;
+    pullRequest;
+    issueNumber;
+    configName;
+    defaultBranch;
+    constructor(octokit, defaultBranch, { owner, repo, issue, pullRequest, configName, }) {
+        this.octokit = octokit;
+        this.owner = owner;
+        this.repo = repo;
+        this.issueNumber = issue || 0;
+        this.pullRequest = pullRequest || 0;
+        this.defaultBranch = defaultBranch;
+        this.configName = configName || 'release-drafter.yml';
+    }
+    ownerRepo = () => `${this.owner}/${this.repo}`;
+    async config() {
+        const parameters = {
+            owner: this.owner,
+            repo: this.repo,
+            path: `.github/${this.configName}`,
+            defaults(configs) {
+                const result = cjs.all([DEFAULT_CONFIG, ...configs]);
+                return result;
+            },
+            branch: this.defaultBranch,
+        };
+        const { config } = await this.octokit.config.get(parameters);
+        return schema(this.defaultBranch).parse(config);
+    }
+}
+//# sourceMappingURL=context.js.map
+// EXTERNAL MODULE: ../../node_modules/.pnpm/compare-versions@4.1.3/node_modules/compare-versions/index.js
+var compare_versions = __nccwpck_require__(249);
+// EXTERNAL MODULE: ../../node_modules/.pnpm/semver@7.3.7/node_modules/semver/index.js
+var semver = __nccwpck_require__(6400);
+;// CONCATENATED MODULE: ../core/lib/versions.js
+
+const splitSemVersion = (input) => {
+    if (!input.version) {
+        return;
+    }
+    const version = input.inc
+        ? semver.inc(input.version, input.inc, true)
+        : input.version.version;
+    return {
+        ...input,
+        version,
+        $MAJOR: semver.major(version),
+        $MINOR: semver.minor(version),
+        $PATCH: semver.patch(version),
+        $COMPLETE: version,
+    };
+};
+const defaultVersionInfo = {
+    $NEXT_MAJOR_VERSION: {
+        version: '1.0.0',
+        template: '$MAJOR.$MINOR.$PATCH',
+        versionInput: undefined,
+        inc: 'major',
+        $MAJOR: 1,
+        $MINOR: 0,
+        $PATCH: 0,
+    },
+    $NEXT_MAJOR_VERSION_MAJOR: {
+        version: '1.0.0',
+        template: '$MAJOR',
+        versionInput: undefined,
+        inc: 'major',
+        $MAJOR: 1,
+        $MINOR: 0,
+        $PATCH: 0,
+    },
+    $NEXT_MAJOR_VERSION_MINOR: {
+        version: '1.0.0',
+        template: '$MINOR',
+        versionInput: undefined,
+        inc: 'major',
+        $MAJOR: 1,
+        $MINOR: 0,
+        $PATCH: 0,
+    },
+    $NEXT_MAJOR_VERSION_PATCH: {
+        version: '1.0.0',
+        template: '$PATCH',
+        versionInput: undefined,
+        inc: 'major',
+        $MAJOR: 1,
+        $MINOR: 0,
+        $PATCH: 0,
+    },
+    $NEXT_MINOR_VERSION: {
+        version: '0.1.0',
+        template: '$MAJOR.$MINOR.$PATCH',
+        versionInput: undefined,
+        inc: 'minor',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+    $NEXT_MINOR_VERSION_MAJOR: {
+        version: '0.1.0',
+        template: '$MAJOR',
+        versionInput: undefined,
+        inc: 'minor',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+    $NEXT_MINOR_VERSION_MINOR: {
+        version: '0.1.0',
+        template: '$MINOR',
+        versionInput: undefined,
+        inc: 'minor',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+    $NEXT_MINOR_VERSION_PATCH: {
+        version: '0.1.0',
+        template: '$PATCH',
+        versionInput: undefined,
+        inc: 'minor',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+    $NEXT_PATCH_VERSION: {
+        version: '0.1.0',
+        template: '$MAJOR.$MINOR.$PATCH',
+        versionInput: undefined,
+        inc: 'patch',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+    $NEXT_PATCH_VERSION_MAJOR: {
+        version: '0.1.0',
+        template: '$MAJOR',
+        versionInput: undefined,
+        inc: 'patch',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+    $NEXT_PATCH_VERSION_MINOR: {
+        version: '0.1.0',
+        template: '$MINOR',
+        versionInput: undefined,
+        inc: 'patch',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+    $NEXT_PATCH_VERSION_PATCH: {
+        version: '0.1.0',
+        template: '$PATCH',
+        versionInput: undefined,
+        inc: 'patch',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+    $INPUT_VERSION: undefined,
+    $RESOLVED_VERSION: {
+        version: '0.1.0',
+        template: '$MAJOR.$MINOR.$PATCH',
+        versionInput: undefined,
+        inc: 'patch',
+        $MAJOR: 0,
+        $MINOR: 1,
+        $PATCH: 0,
+    },
+};
+function getTemplatableVersion(input) {
+    const templatableVersion = {
+        $NEXT_MAJOR_VERSION: splitSemVersion({ ...input, inc: 'major' }),
+        $NEXT_MAJOR_VERSION_MAJOR: splitSemVersion({
+            ...input,
+            inc: 'major',
+            template: '$MAJOR',
+        }),
+        $NEXT_MAJOR_VERSION_MINOR: splitSemVersion({
+            ...input,
+            inc: 'major',
+            template: '$MINOR',
+        }),
+        $NEXT_MAJOR_VERSION_PATCH: splitSemVersion({
+            ...input,
+            inc: 'major',
+            template: '$PATCH',
+        }),
+        $NEXT_MINOR_VERSION: splitSemVersion({ ...input, inc: 'minor' }),
+        $NEXT_MINOR_VERSION_MAJOR: splitSemVersion({
+            ...input,
+            inc: 'minor',
+            template: '$MAJOR',
+        }),
+        $NEXT_MINOR_VERSION_MINOR: splitSemVersion({
+            ...input,
+            inc: 'minor',
+            template: '$MINOR',
+        }),
+        $NEXT_MINOR_VERSION_PATCH: splitSemVersion({
+            ...input,
+            inc: 'minor',
+            template: '$PATCH',
+        }),
+        $NEXT_PATCH_VERSION: splitSemVersion({ ...input, inc: 'patch' }),
+        $NEXT_PATCH_VERSION_MAJOR: splitSemVersion({
+            ...input,
+            inc: 'patch',
+            template: '$MAJOR',
+        }),
+        $NEXT_PATCH_VERSION_MINOR: splitSemVersion({
+            ...input,
+            inc: 'patch',
+            template: '$MINOR',
+        }),
+        $NEXT_PATCH_VERSION_PATCH: splitSemVersion({
+            ...input,
+            inc: 'patch',
+            template: '$PATCH',
+        }),
+        $INPUT_VERSION: splitSemVersion({ ...input, version: input.versionInput }),
+        $RESOLVED_VERSION: splitSemVersion({
+            ...input,
+            inc: input.versionKeyIncrement || 'patch',
+        }),
+    };
+    templatableVersion.$RESOLVED_VERSION =
+        templatableVersion.$INPUT_VERSION || templatableVersion.$RESOLVED_VERSION;
+    return templatableVersion;
+}
+function toSemver(version) {
+    const result = semver.parse(version);
+    if (result) {
+        return result;
+    }
+    // doesn't handle prerelease
+    return semver.coerce(version) ?? undefined;
+}
+function coerceVersion(input, tagPrefix) {
+    if (!input) {
+        return;
+    }
+    const stripTag = (input) => tagPrefix && input.startsWith(tagPrefix)
+        ? input.slice(tagPrefix.length)
+        : input;
+    return typeof input === 'object'
+        ? toSemver(stripTag(input.tag_name)) || toSemver(stripTag(input.name))
+        : toSemver(stripTag(input));
+}
+function getVersionInfo(release, template, inputVersion, versionKeyIncrement, tagPrefix) {
+    const releaseVersion = coerceVersion(release, tagPrefix);
+    const versionInput = coerceVersion(inputVersion, tagPrefix);
+    const version = !releaseVersion && versionInput ? versionInput : releaseVersion;
+    if (!version) {
+        return defaultVersionInfo;
+    }
+    return {
+        ...getTemplatableVersion({
+            version,
+            template,
+            versionInput,
+            versionKeyIncrement,
+        }),
+    };
+}
+//# sourceMappingURL=versions.js.map
 ;// CONCATENATED MODULE: ../core/lib/template.js
 
 /**
@@ -39001,6 +38990,10 @@ const getFilterIncludedPullRequests = (pullRequest, includeLabels) => {
     return (includeLabels.length === 0 ||
         labels?.some((label) => includeLabels.includes(label?.name ?? '')));
 };
+function getUncategorizedCategoryIndex(categories) {
+    const index = categories.findIndex((category) => category.labels.length === 0);
+    return index === -1 ? 0 : index;
+}
 const categorizePullRequests = (pullRequests, config) => {
     const { excludeLabels, includeLabels, categories } = config;
     if (categories.length === 0) {
@@ -39013,15 +39006,14 @@ const categorizePullRequests = (pullRequests, config) => {
         ];
     }
     const allCategoryLabels = new Set(categories.flatMap((category) => category.labels));
-    let uncategorizedCategoryIndex = categories.findIndex((category) => category.labels.length === 0);
+    const uncategorizedCategoryIndex = getUncategorizedCategoryIndex(categories);
     const categorizedPullRequests = [];
-    if (uncategorizedCategoryIndex !== -1) {
+    if (uncategorizedCategoryIndex === 0) {
         categorizedPullRequests.push({
             pullRequests: [],
             labels: [],
             collapseAfter: 0,
         });
-        uncategorizedCategoryIndex = 0;
     }
     categories.map((category) => {
         categorizedPullRequests.push({
@@ -39054,7 +39046,7 @@ const categorizePullRequests = (pullRequests, config) => {
             // note that having the same label in multiple categories
             // then it is intended to "duplicate" the pull request into each category
             const labels = pullRequest.labels?.nodes || [];
-            if (labels.some((label) => category.labels.includes(label?.name ?? ''))) {
+            if (labels.some((label) => category.labels.includes(label.name))) {
                 category.pullRequests.push(pullRequest);
             }
         }
