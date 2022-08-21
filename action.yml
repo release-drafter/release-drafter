@@ -36,12 +36,12 @@ inputs:
     description: |
       A boolean indicating whether the release being created or updated should be immediately published.
     required: false
-    default: ''
+    default: 'false'
   prerelease:
     description: |
       A boolean indicating whether the release being created or updated is a prerelease.
     required: false
-    default: ''
+    default: 'false'
   commitish:
     description: |
       The object that the release should be created to point to.
