@@ -37,7 +37,7 @@ export const findReleases = async ({
 }: {
 	context: ReleaseDrafterContext
 	targetCommitish: string
-	filterByCommitish: string
+	filterByCommitish: boolean
 	tagPrefix: string
 }) => {
 	let releaseCount = 0
@@ -241,17 +241,14 @@ const categorizePullRequests = (
 }
 
 export const generateChangeLog = (
-	mergedPullRequests: PullRequest[],
+	pullRequests: PullRequest[],
 	config: ReleaseDrafterConfig,
 ) => {
-	if (mergedPullRequests.length === 0) {
+	if (pullRequests.length === 0) {
 		return config['noChangesTemplate']
 	}
 
-	const categorizedPullRequests = categorizePullRequests(
-		mergedPullRequests,
-		config,
-	)
+	const categorizedPullRequests = categorizePullRequests(pullRequests, config)
 
 	const escapeTitle = (title: string) =>
 		// If config['changeTitleEscapes'] contains backticks, then they will be escaped along with content contained inside backticks
@@ -327,7 +324,7 @@ export const generateChangeLog = (
 type VersionResolverKeys = keyof Omit<VersionResolver, 'default'>
 
 const resolveVersionKeyIncrement = (
-	mergedPullRequests: PullRequest[],
+	pullRequests: PullRequest[],
 	config: ReleaseDrafterConfig,
 ) => {
 	const priorityMap: {
@@ -348,7 +345,7 @@ const resolveVersionKeyIncrement = (
 			})
 			.flat(),
 	)
-	const keys: string[] = mergedPullRequests
+	const keys: string[] = pullRequests
 		.filter(
 			(pullRequest) =>
 				getFilterExcludedPullRequests(pullRequest, config.excludeLabels) &&
@@ -380,8 +377,9 @@ type ReleaseInfo = {
 export async function generateReleaseInfo({
 	context,
 	commits,
+	config,
 	lastRelease,
-	mergedPullRequests,
+	pullRequests,
 	version,
 	tag,
 	name,
@@ -390,28 +388,27 @@ export async function generateReleaseInfo({
 	targetCommitish,
 }: {
 	context: ReleaseDrafterContext
+	config: ReleaseDrafterConfig
 	commits: Commit[]
 	lastRelease: GitHubRelease
-	mergedPullRequests: PullRequest[]
-	version: string
-	tag: string
-	name: string
+	pullRequests: PullRequest[]
+	version: string | undefined
+	tag: string | undefined
+	name: string | undefined
 	isPreRelease: boolean
 	shouldDraft: boolean
 	targetCommitish: string
 }): Promise<ReleaseInfo> {
-	const config = await context.config()
-
-	let body = config['header'] + config.template + config['footer']
+	let body = config.header + config.template + config.footer
 
 	body = template(
 		body,
 		{
 			$PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : '',
-			$CHANGES: generateChangeLog(mergedPullRequests, config),
+			$CHANGES: generateChangeLog(pullRequests, config),
 			$CONTRIBUTORS: contributorsSentence({
 				commits,
-				pullRequests: mergedPullRequests,
+				pullRequests,
 				config,
 			}),
 			$OWNER: context.owner,
@@ -426,7 +423,7 @@ export async function generateReleaseInfo({
 		// Use the first override parameter to identify
 		// a version, from the most accurate to the least
 		version || tag || name,
-		resolveVersionKeyIncrement(mergedPullRequests, config),
+		resolveVersionKeyIncrement(pullRequests, config),
 		config.tagPrefix,
 	)
 
@@ -446,15 +443,11 @@ export async function generateReleaseInfo({
 		name = template(name, versionInfo)
 	}
 
-	// Tags are not supported as `target_commitish` by Github API.
+	// Tags are not supported as `target_commitish` by GitHub API.
 	// GITHUB_REF or the ref from webhook start with `refs/tags/`, so we handle
 	// those here. If it doesn't but is still a tag - it must have been set
 	// explicitly by the user, so it's fair to just let the API respond with an error.
 	if (targetCommitish.startsWith('refs/tags/')) {
-		// log({
-		// 	context,
-		// 	message: `${targetCommitish} is not supported as release target, falling back to default branch`,
-		// })
 		targetCommitish = ''
 	}
 

@@ -1,6 +1,10 @@
 import _ from 'lodash'
 import { paginate } from './pagination.js'
-import { GitHubRelease, ReleaseDrafterContext } from './types.js'
+import {
+	GitHubRelease,
+	ReleaseDrafterConfig,
+	ReleaseDrafterContext,
+} from './types.js'
 
 export type CommitsWithPathChanges = {
 	repository: {
@@ -156,12 +160,13 @@ export const findCommitsWithAssociatedPullRequests = async ({
 	context,
 	targetCommitish,
 	lastRelease,
+	config,
 }: {
 	context: ReleaseDrafterContext
 	targetCommitish: string
 	lastRelease: GitHubRelease | null
+	config: ReleaseDrafterConfig
 }) => {
-	const config = await context.config()
 	const variables = {
 		name: context.repo,
 		owner: context.owner,

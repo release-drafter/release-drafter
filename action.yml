@@ -7,6 +7,10 @@ branding:
   icon: edit-2
   color: orange
 inputs:
+  token:
+    description: 'The GitHub token to use for authentication.'
+    default: ${{ github.token }}
+    required: true
   config-name:
     description: |
       If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
@@ -53,16 +57,6 @@ inputs:
       A string that would be added after the template body.
     required: false
     default: ''
-  disable-releaser:
-    description: |
-      A boolean indicating whether the releaser mode is disabled.
-    required: false
-    default: ''
-  disable-autolabeler:
-    description: |
-      A boolean indicating whether the autolabeler mode is disabled.
-    required: false
-    default: ''
 outputs:
   id:
     description: The ID of therelease that was created or updated.
@@ -76,3 +70,7 @@ outputs:
     description: The URL users can navigate to in order to view the release
   upload_url:
     description: The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.
+  draft:
+    description: A boolean indicating whether the release is a draft.
+  published:
+    description: A boolean indicating whether the release is published.

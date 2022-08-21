@@ -12,7 +12,6 @@ export class Context {
 	public readonly issueNumber: number
 	public readonly configName: string
 	public readonly defaultBranch: string
-	public readonly branch: string
 
 	constructor(
 		octokit: InstanceType<typeof ReleaseDrafterOctokit>,
@@ -22,17 +21,21 @@ export class Context {
 			repo,
 			issue,
 			pullRequest,
-		}: { owner: string; repo: string; issue?: number; pullRequest?: number },
-		branch?: string,
-		configName?: string,
+			configName,
+		}: {
+			owner: string
+			repo: string
+			issue?: number
+			pullRequest?: number
+			configName?: string
+		},
 	) {
 		this.octokit = octokit
 		this.owner = owner
 		this.repo = repo
 		this.issueNumber = issue || 0
 		this.pullRequest = pullRequest || 0
-		this.defaultBranch = defaultBranch || 'master'
-		this.branch = branch || this.defaultBranch
+		this.defaultBranch = defaultBranch
 		this.configName = configName || 'release-drafter.yml'
 	}
 
@@ -47,7 +50,7 @@ export class Context {
 				const result = deepmerge.all([DEFAULT_CONFIG, ...configs])
 				return result as ReleaseDrafterConfig
 			},
-			branch: this.branch,
+			branch: this.defaultBranch,
 		}
 
 		const { config } = await this.octokit.config.get(parameters)
