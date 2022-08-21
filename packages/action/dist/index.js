@@ -39368,7 +39368,6 @@ const findCommitsWithAssociatedPullRequests = async ({ context, targetCommitish,
     const includePaths = config.includePaths;
     const dataPath = ['repository', 'object', 'history'];
     const repoNameWithOwner = context.ownerRepo();
-    const allCommits = [];
     const includedIds = {};
     if (includePaths.length > 0) {
         let anyChanges = false;
@@ -39389,22 +39388,23 @@ const findCommitsWithAssociatedPullRequests = async ({ context, targetCommitish,
         }
     }
     const data = await paginate(context.octokit.graphql, findCommitsWithAssociatedPullRequestsQuery, variables, dataPath);
-    if (lastRelease) {
-        // log({
-        // 	context,
-        // 	message: `Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`,
-        // })
-        // GraphQL call is inclusive of commits from the specified dates.  This means the final
-        // commit from the last tag is included, so we remove this here.
-        allCommits.push(lodash.get(data, [...dataPath, 'nodes']).filter((commit) => commit.committedDate != lastRelease.created_at));
-    }
-    else {
-        // log({ context, message: `Fetching parent commits of ${targetCommitish}` })
-        allCommits.push(lodash.get(data, [...dataPath, 'nodes']));
-    }
-    const commits = includePaths.length > 0
-        ? allCommits.filter((commit) => includePaths.some((path) => includedIds[path].has(commit.id)))
-        : allCommits;
+    const filterCommit = (commit) => {
+        if (includePaths.length > 0) {
+            for (const path of includePaths) {
+                if (!includedIds[path].has(commit.id)) {
+                    return false;
+                }
+            }
+        }
+        if (lastRelease) {
+            return new Date(commit.committedDate) > new Date(lastRelease.created_at);
+        }
+        return true;
+    };
+    const commits = lodash.get(data, [
+        ...dataPath,
+        'nodes',
+    ]).filter((commit) => filterCommit(commit));
     const pullRequests = lodash.uniqBy(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []), 'number').filter((pr) => pr.baseRepository.nameWithOwner === repoNameWithOwner && pr.merged);
     return { commits, pullRequests };
 };
@@ -39531,7 +39531,7 @@ function getActionInputs(config) {
     }
     return {
         isPreRelease: preRelease === 'true' || (!preRelease && config.prerelease),
-        shouldDraft: !core.getBooleanInput('publish'),
+        shouldDraft: core.getInput('publish').toLowerCase() !== 'true',
         version: core.getInput('version') || undefined,
         tag: core.getInput('tag') || undefined,
         name: core.getInput('name') || undefined,

@@ -4,13 +4,15 @@ import regexEscape from 'escape-string-regexp'
 import { getVersionInfo } from './versions.js'
 import { template } from './template.js'
 import {
+	CommitWithAssociatedPullRequests,
 	GitHubRelease,
+	Label,
+	PullRequest,
 	ReleaseDrafterCategorizedPullRequest,
 	ReleaseDrafterConfig,
 	ReleaseDrafterContext,
 	VersionResolver,
 } from './types.js'
-import { Commit, PullRequest } from '@octokit/graphql-schema'
 import { ReleaseType } from 'semver'
 
 const sortReleases = (releases: GitHubRelease[]) => {
@@ -99,7 +101,7 @@ const contributorsSentence = ({
 	pullRequests,
 	config,
 }: {
-	commits: Commit[]
+	commits: CommitWithAssociatedPullRequests[]
 	pullRequests: PullRequest[]
 	config: ReleaseDrafterConfig
 }): string => {
@@ -191,7 +193,7 @@ const categorizePullRequests = (
 	})
 
 	const filterUncategorizedPullRequests = (pullRequest: PullRequest) => {
-		const labels = pullRequest.labels?.nodes || []
+		const labels: Label[] = pullRequest.labels?.nodes || []
 
 		if (
 			labels.length === 0 ||
@@ -389,7 +391,7 @@ export async function generateReleaseInfo({
 }: {
 	context: ReleaseDrafterContext
 	config: ReleaseDrafterConfig
-	commits: Commit[]
+	commits: CommitWithAssociatedPullRequests[]
 	lastRelease: GitHubRelease
 	pullRequests: PullRequest[]
 	version: string | undefined

@@ -1,7 +1,9 @@
 import _ from 'lodash'
 import { paginate } from './pagination.js'
 import {
+	CommitWithAssociatedPullRequests,
 	GitHubRelease,
+	PullRequest,
 	ReleaseDrafterConfig,
 	ReleaseDrafterContext,
 } from './types.js'
@@ -45,7 +47,7 @@ export const findCommitsWithPathChangesQuery = /* GraphQL */ `
 	}
 `
 
-export type CommitsWithAssociatedPullRequests = {
+export type RepositoryObjectWithHistory = {
 	repository: {
 		object: {
 			history: {
@@ -53,41 +55,7 @@ export type CommitsWithAssociatedPullRequests = {
 					hasNextPage: boolean
 					endCursor: string
 				}
-				nodes: {
-					id: string
-					committedDate: string
-					message: string
-					author: {
-						name: string
-						user: {
-							login: string
-						}
-					}
-					associatedPullRequests: {
-						nodes: {
-							title: string
-							number: number
-							mergedAt: string
-							isCrossRepository: boolean
-							merged: boolean
-							url?: string
-							body?: string
-							baseRefName?: string
-							headRefName?: string
-							author: {
-								login: string
-							}
-							baseRepository: {
-								nameWithOwner: string
-							}
-							labels: {
-								nodes: {
-									name: string
-								}
-							}
-						}
-					}
-				}
+				nodes: CommitWithAssociatedPullRequests[]
 			}
 		}
 	}
@@ -156,7 +124,20 @@ export const findCommitsWithAssociatedPullRequestsQuery = /* GraphQL */ `
 	}
 `
 
-export const findCommitsWithAssociatedPullRequests = async ({
+export const findCommitsWithAssociatedPullRequests: ({
+	context,
+	targetCommitish,
+	lastRelease,
+	config,
+}: {
+	context: ReleaseDrafterContext
+	targetCommitish: string
+	lastRelease: GitHubRelease | null
+	config: ReleaseDrafterConfig
+}) => Promise<{
+	commits: CommitWithAssociatedPullRequests[]
+	pullRequests: PullRequest[]
+}> = async ({
 	context,
 	targetCommitish,
 	lastRelease,
@@ -181,7 +162,6 @@ export const findCommitsWithAssociatedPullRequests = async ({
 	const dataPath = ['repository', 'object', 'history']
 	const repoNameWithOwner = context.ownerRepo()
 
-	const allCommits = []
 	const includedIds: Record<string, Set<string>> = {}
 
 	if (includePaths.length > 0) {
@@ -210,38 +190,36 @@ export const findCommitsWithAssociatedPullRequests = async ({
 		}
 	}
 
-	const data = await paginate<CommitsWithAssociatedPullRequests>(
+	const data = await paginate<RepositoryObjectWithHistory>(
 		context.octokit.graphql,
 		findCommitsWithAssociatedPullRequestsQuery,
 		variables,
 		dataPath,
 	)
 
-	if (lastRelease) {
-		// log({
-		// 	context,
-		// 	message: `Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`,
-		// })
-		// GraphQL call is inclusive of commits from the specified dates.  This means the final
-		// commit from the last tag is included, so we remove this here.
-		allCommits.push(
-			_.get(data, [...dataPath, 'nodes']).filter(
-				(commit: { committedDate: string }) =>
-					commit.committedDate != lastRelease.created_at,
-			),
-		)
-	} else {
-		// log({ context, message: `Fetching parent commits of ${targetCommitish}` })
-
-		allCommits.push(_.get(data, [...dataPath, 'nodes']))
+	const filterCommit = (commit: CommitWithAssociatedPullRequests) => {
+		if (includePaths.length > 0) {
+			let included = false
+			for (const path of includePaths) {
+				if (includedIds[path].has(commit.id)) {
+					included = true
+					break
+				}
+			}
+			if (!included) {
+				return false
+			}
+		}
+		if (lastRelease) {
+			return new Date(commit.committedDate) > new Date(lastRelease.created_at)
+		}
+		return true
 	}
 
-	const commits =
-		includePaths.length > 0
-			? allCommits.filter((commit) =>
-					includePaths.some((path) => includedIds[path].has(commit.id)),
-			  )
-			: allCommits
+	const commits: CommitWithAssociatedPullRequests[] = _.get(data, [
+		...dataPath,
+		'nodes',
+	]).filter((commit: CommitWithAssociatedPullRequests) => filterCommit(commit))
 
 	const pullRequests = _.uniqBy(
 		commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []),

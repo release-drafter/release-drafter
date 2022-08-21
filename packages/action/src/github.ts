@@ -102,7 +102,7 @@ export function getActionInputs(config: ReleaseDrafterConfig) {
 
 	return {
 		isPreRelease: preRelease === 'true' || (!preRelease && config.prerelease),
-		shouldDraft: !core.getBooleanInput('publish'),
+		shouldDraft: core.getInput('publish').toLowerCase() !== 'true',
 		version: core.getInput('version') || undefined,
 		tag: core.getInput('tag') || undefined,
 		name: core.getInput('name') || undefined,
