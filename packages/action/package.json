@@ -5,7 +5,7 @@
 	"main": "dist/index.js",
 	"type": "module",
 	"scripts": {
-		"build": "ncc build src/main.ts --target es2022 --source-map --license licenses.txt",
+		"build": "ncc build src/index.ts --target es2022 --source-map --license licenses.txt",
 		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
 	},
 	"keywords": [],

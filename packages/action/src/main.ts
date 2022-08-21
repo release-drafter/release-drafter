@@ -18,6 +18,8 @@ import {
 } from './github.js'
 
 export async function run(): Promise<void> {
+	core.info('🎉 Running Release Drafter Action')
+
 	const octokit = new ReleaseDrafterOctokit({ auth: core.getInput('token') })
 	const GITHUB_REF = await getReference()
 	const defaultBranch = await getDefaultBranch(octokit)
