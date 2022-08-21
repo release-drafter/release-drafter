@@ -40,7 +40,7 @@ export async function run(): Promise<void> {
 		)
 	}
 
-	core.info('🗃 Fetching releases')
+	core.info('⏬ Fetching releases')
 
 	const { draftRelease, lastRelease } = await findReleases({
 		context,
@@ -58,11 +58,11 @@ export async function run(): Promise<void> {
 	if (lastRelease) {
 		core.info(`🎯 Found previous release ${lastRelease.tag_name}`)
 		core.info(
-			`:card_file_box: Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`,
+			`⏬ Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`,
 		)
 	} else {
 		core.info('⛔ No previous release found')
-		core.info(`:card_file_box: Fetching parent commits of ${targetCommitish}`)
+		core.info(`⏬ Fetching parent commits of ${targetCommitish}`)
 	}
 
 	const { commits, pullRequests } = await findCommitsWithAssociatedPullRequests(
@@ -105,7 +105,7 @@ export async function run(): Promise<void> {
 			draftRelease,
 		})
 		core.info(
-			`:heavy_check_mark: Updated release ${createOrUpdateReleaseResponse.data.html_url}`,
+			`✔ Updated release ${createOrUpdateReleaseResponse.data.html_url}`,
 		)
 	} else {
 		core.info('🆕 Creating new release')
@@ -114,7 +114,7 @@ export async function run(): Promise<void> {
 			releaseInfo,
 		})
 		core.info(
-			`:heavy_check_mark: Created release ${createOrUpdateReleaseResponse.data.html_url}`,
+			`✔ Created release ${createOrUpdateReleaseResponse.data.html_url}`,
 		)
 	}
 

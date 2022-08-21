@@ -39620,7 +39620,7 @@ async function run() {
     if (targetCommitish.startsWith('refs/tags')) {
         core.info(`⚠ target commitish of '${targetCommitish}' is not supported as release target, falling back to default branch '${defaultBranch}'`);
     }
-    core.info('🗃 Fetching releases');
+    core.info('⏬ Fetching releases');
     const { draftRelease, lastRelease } = await findReleases({
         context,
         targetCommitish,
@@ -39635,11 +39635,11 @@ async function run() {
     }
     if (lastRelease) {
         core.info(`🎯 Found previous release ${lastRelease.tag_name}`);
-        core.info(`:card_file_box: Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`);
+        core.info(`⏬ Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`);
     }
     else {
         core.info('⛔ No previous release found');
-        core.info(`:card_file_box: Fetching parent commits of ${targetCommitish}`);
+        core.info(`⏬ Fetching parent commits of ${targetCommitish}`);
     }
     const { commits, pullRequests } = await findCommitsWithAssociatedPullRequests({
         context,
@@ -39671,7 +39671,7 @@ async function run() {
             releaseInfo,
             draftRelease,
         });
-        core.info(`:heavy_check_mark: Updated release ${createOrUpdateReleaseResponse.data.html_url}`);
+        core.info(`✔ Updated release ${createOrUpdateReleaseResponse.data.html_url}`);
     }
     else {
         core.info('🆕 Creating new release');
@@ -39679,7 +39679,7 @@ async function run() {
             context,
             releaseInfo,
         });
-        core.info(`:heavy_check_mark: Created release ${createOrUpdateReleaseResponse.data.html_url}`);
+        core.info(`✔ Created release ${createOrUpdateReleaseResponse.data.html_url}`);
     }
     await setActionOutputs(createOrUpdateReleaseResponse, releaseInfo, shouldDraft, isPreRelease);
 }
