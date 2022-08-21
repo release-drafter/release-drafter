@@ -166,6 +166,17 @@ const categorizePullRequests = (
 	config: ReleaseDrafterConfig,
 ): ReleaseDrafterCategorizedPullRequest[] => {
 	const { excludeLabels, includeLabels, categories } = config
+
+	if (categories.length === 0) {
+		return [
+			{
+				pullRequests: pullRequests,
+				labels: [],
+				collapseAfter: 0,
+			},
+		]
+	}
+
 	const allCategoryLabels = new Set(
 		categories.flatMap((category) => category.labels),
 	)
