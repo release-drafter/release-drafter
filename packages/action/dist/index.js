@@ -39405,7 +39405,7 @@ const findCommitsWithAssociatedPullRequests = async ({ context, targetCommitish,
     const commits = includePaths.length > 0
         ? allCommits.filter((commit) => includePaths.some((path) => includedIds[path].has(commit.id)))
         : allCommits;
-    const pullRequests = lodash.uniqBy(commits.flatMap((commit) => commit.associatedPullRequests.nodes), 'number').filter((pr) => pr.baseRepository.nameWithOwner === repoNameWithOwner && pr.merged);
+    const pullRequests = lodash.uniqBy(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []), 'number').filter((pr) => pr.baseRepository.nameWithOwner === repoNameWithOwner && pr.merged);
     return { commits, pullRequests };
 };
 //# sourceMappingURL=commits.js.map
