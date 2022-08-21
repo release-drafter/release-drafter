@@ -171,8 +171,7 @@ export async function setActionOutputs(
 		.addHeading(`Release Drafter Output`)
 		.addTable(summaryTable)
 		.addLink(`View Release`, htmlUrl)
-		.addSeparator()
-		.addRaw(body)
+		.addDetails('Release Body', body)
 		.write()
 }
 
