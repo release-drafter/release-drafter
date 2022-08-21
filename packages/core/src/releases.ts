@@ -9,6 +9,7 @@ import {
 	Label,
 	PullRequest,
 	ReleaseDrafterCategorizedPullRequest,
+	ReleaseDrafterCategory,
 	ReleaseDrafterConfig,
 	ReleaseDrafterContext,
 	VersionResolver,
@@ -161,6 +162,11 @@ const getFilterIncludedPullRequests = (
 	)
 }
 
+function getUncategorizedCategoryIndex(categories: ReleaseDrafterCategory[]) {
+	const index = categories.findIndex((category) => category.labels.length === 0)
+	return index === -1 ? 0 : index
+}
+
 const categorizePullRequests = (
 	pullRequests: PullRequest[],
 	config: ReleaseDrafterConfig,
@@ -181,19 +187,16 @@ const categorizePullRequests = (
 		categories.flatMap((category) => category.labels),
 	)
 
-	let uncategorizedCategoryIndex = categories.findIndex(
-		(category) => category.labels.length === 0,
-	)
+	const uncategorizedCategoryIndex = getUncategorizedCategoryIndex(categories)
 
 	const categorizedPullRequests: ReleaseDrafterCategorizedPullRequest[] = []
 
-	if (uncategorizedCategoryIndex !== -1) {
+	if (uncategorizedCategoryIndex === 0) {
 		categorizedPullRequests.push({
 			pullRequests: [],
 			labels: [],
 			collapseAfter: 0,
 		})
-		uncategorizedCategoryIndex = 0
 	}
 
 	categories.map((category) => {
@@ -244,7 +247,7 @@ const categorizePullRequests = (
 			// note that having the same label in multiple categories
 			// then it is intended to "duplicate" the pull request into each category
 			const labels = pullRequest.labels?.nodes || []
-			if (labels.some((label) => category.labels.includes(label?.name ?? ''))) {
+			if (labels.some((label) => category.labels.includes(label.name))) {
 				category.pullRequests.push(pullRequest)
 			}
 		}
