@@ -24,7 +24,7 @@
 				},
 				"nameTemplate": { "type": "string", "default": "" },
 				"tagPrefix": { "type": "string", "default": "" },
-				"tagTemplate": { "type": "string", "default": "" },
+				"tagTemplate": { "type": "string", "default": "v$RESOLVED_VERSION" },
 				"excludeLabels": {
 					"type": "array",
 					"items": { "type": "string" },

@@ -24,7 +24,7 @@ export const DEFAULT_CONFIG: ReleaseDrafterConfig = Object.freeze({
 	sortBy: SORT_BY.mergedAt,
 	sortDirection: SORT_DIRECTIONS.descending,
 	tagPrefix: '',
-	tagTemplate: '',
+	tagTemplate: 'v$RESOLVED_VERSION',
 	template: `## What’s Changed\n\n$CHANGES`,
 	versionTemplate: `$MAJOR.$MINOR.$PATCH`,
 	versionResolver: {
