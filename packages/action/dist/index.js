@@ -35412,7 +35412,7 @@ const default_config_DEFAULT_CONFIG = Object.freeze({
     replacers: [],
     sortBy: "merged_at" /* SORT_BY.mergedAt */,
     sortDirection: "descending" /* SORT_DIRECTIONS.descending */,
-    tagPrefix: '',
+    tagPrefix: 'v',
     tagTemplate: 'v$RESOLVED_VERSION',
     template: `## What’s Changed\n\n$CHANGES`,
     versionTemplate: `$MAJOR.$MINOR.$PATCH`,

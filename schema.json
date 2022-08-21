@@ -23,7 +23,7 @@
 					"default": "$MAJOR.$MINOR.$PATCH"
 				},
 				"nameTemplate": { "type": "string", "default": "" },
-				"tagPrefix": { "type": "string", "default": "" },
+				"tagPrefix": { "type": "string", "default": "v" },
 				"tagTemplate": { "type": "string", "default": "v$RESOLVED_VERSION" },
 				"excludeLabels": {
 					"type": "array",
