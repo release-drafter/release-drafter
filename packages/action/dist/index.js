@@ -39577,7 +39577,8 @@ async function setActionOutputs(releaseResponse, { body }, shouldDraft, isPreRel
     await core.summary.addHeading(`Release Drafter Output`)
         .addTable(summaryTable)
         .addLink(`View Release`, htmlUrl)
-        .addDetails('Release Body', body)
+        .addHeading(`Release Drafter body`, 3)
+        .addCodeBlock(body)
         .write();
 }
 function getOctokit() {
