@@ -39588,21 +39588,21 @@ async function setActionOutputs(releaseResponse, { body }, shouldDraft, isPreRel
 
 
 async function run() {
-    core_default().info('🎉 Running Release Drafter Action');
-    const octokit = new github_ReleaseDrafterOctokit({ auth: core_default().getInput('token') });
+    core.info('🎉 Running Release Drafter Action');
+    const octokit = new github_ReleaseDrafterOctokit({ auth: core.getInput('token') });
     const GITHUB_REF = await getReference();
     const defaultBranch = await getDefaultBranch(octokit);
     const repo = await getRepo();
-    const configName = core_default().getInput('config-name');
+    const configName = core.getInput('config-name');
     const context = new Context(octokit, defaultBranch, { ...repo, configName });
     const config = await context.config();
     const { isPreRelease, shouldDraft, version, tag, name, commitish } = getActionInputs(config);
     const { filterByCommitish, tagPrefix, sortBy, sortDirection } = config;
     const targetCommitish = commitish || config.commitish || GITHUB_REF;
     if (targetCommitish.startsWith('refs/tags')) {
-        core_default().info(`⚠ target commitish of '${targetCommitish}' is not supported as release target, falling back to default branch '${defaultBranch}'`);
+        core.info(`⚠ target commitish of '${targetCommitish}' is not supported as release target, falling back to default branch '${defaultBranch}'`);
     }
-    core_default().info('🗃 Fetching releases');
+    core.info('🗃 Fetching releases');
     const { draftRelease, lastRelease } = await findReleases({
         context,
         targetCommitish,
@@ -39610,18 +39610,18 @@ async function run() {
         tagPrefix,
     });
     if (draftRelease) {
-        core_default().info(`🎯 Found existing draft release ${draftRelease.tag_name}`);
+        core.info(`🎯 Found existing draft release ${draftRelease.tag_name}`);
     }
     else {
-        core_default().info('⛔ No existing draft release found');
+        core.info('⛔ No existing draft release found');
     }
     if (lastRelease) {
-        core_default().info(`🎯 Found previous release ${lastRelease.tag_name}`);
-        core_default().info(`🗃 Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`);
+        core.info(`🎯 Found previous release ${lastRelease.tag_name}`);
+        core.info(`🗃 Fetching parent commits of ${targetCommitish} since ${lastRelease.created_at}`);
     }
     else {
-        core_default().info('⛔ No previous release found');
-        core_default().info(`🗃 Fetching parent commits of ${targetCommitish}`);
+        core.info('⛔ No previous release found');
+        core.info(`🗃 Fetching parent commits of ${targetCommitish}`);
     }
     const { commits, pullRequests } = await findCommitsWithAssociatedPullRequests({
         context,
@@ -39629,8 +39629,8 @@ async function run() {
         lastRelease,
         config,
     });
-    core_default().info(`👏 Found ${pullRequests.length} pull requests`);
-    core_default().info(`📚 Sorting pull requests`);
+    core.info(`👏 Found ${pullRequests.length} pull requests`);
+    core.info(`📚 Sorting pull requests`);
     const sortedPullRequests = sortPullRequests(pullRequests, sortBy, sortDirection);
     const releaseInfo = await generateReleaseInfo({
         context,
@@ -39647,21 +39647,21 @@ async function run() {
     });
     let createOrUpdateReleaseResponse;
     if (draftRelease) {
-        core_default().info(`🔃 Updating existing release ${draftRelease.id}`);
+        core.info(`🔃 Updating existing release ${draftRelease.id}`);
         createOrUpdateReleaseResponse = await updateRelease({
             context,
             releaseInfo,
             draftRelease,
         });
-        core_default().info(`✔ Updated release ${createOrUpdateReleaseResponse.data.html_url}`);
+        core.info(`✔ Updated release ${createOrUpdateReleaseResponse.data.html_url}`);
     }
     else {
-        core_default().info('🆕 Creating new release');
+        core.info('🆕 Creating new release');
         createOrUpdateReleaseResponse = await createRelease({
             context,
             releaseInfo,
         });
-        core_default().info(`✔ Created release ${createOrUpdateReleaseResponse.data.html_url}`);
+        core.info(`✔ Created release ${createOrUpdateReleaseResponse.data.html_url}`);
     }
     await setActionOutputs(createOrUpdateReleaseResponse, releaseInfo, shouldDraft, isPreRelease);
 }
