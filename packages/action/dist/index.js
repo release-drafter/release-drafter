@@ -38468,7 +38468,7 @@ const DEFAULT_CONFIG = Object.freeze({
     header: '',
     includeLabels: [],
     includePaths: [],
-    nameTemplate: '',
+    nameTemplate: 'v$RESOLVED_VERSION',
     noChangesTemplate: `* No changes`,
     noContributorsTemplate: 'No contributors',
     prerelease: false,

@@ -15,7 +15,7 @@ export const DEFAULT_CONFIG: ReleaseDrafterConfig = Object.freeze({
 	header: '',
 	includeLabels: [],
 	includePaths: [],
-	nameTemplate: '',
+	nameTemplate: 'v$RESOLVED_VERSION',
 	noChangesTemplate: `* No changes`,
 	noContributorsTemplate: 'No contributors',
 	prerelease: false,
