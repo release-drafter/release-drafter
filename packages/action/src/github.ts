@@ -1,14 +1,13 @@
-import { config } from '@probot/octokit-plugin-config'
 import { WebhookEvent } from '@octokit/webhooks-types'
 import { promises as fs } from 'node:fs'
-import { throttling } from '@octokit/plugin-throttling'
-import { Octokit } from '@octokit/core'
-import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
-import { paginateRest } from '@octokit/plugin-paginate-rest'
 import { HttpClient } from '@actions/http-client'
 import * as core from '@actions/core'
 import { SummaryTableRow } from '@actions/core/lib/summary.js'
-import { ReleaseDrafterConfig } from '@release-drafter/core'
+import {
+	githubApiUrl,
+	ReleaseDrafterConfig,
+	ReleaseDrafterOctokit,
+} from '@release-drafter/core'
 import { RequestOptions } from '@octokit/types'
 
 function getProxyAgent(proxyUrl: string) {
@@ -16,20 +15,39 @@ function getProxyAgent(proxyUrl: string) {
 	return hc.getAgent(proxyUrl)
 }
 
-const baseUrl = process.env['GITHUB_API_URL'] || 'https://api.github.com'
 const defaults = {
-	baseUrl,
+	githubApiUrl,
 	request: {
-		agent: getProxyAgent(baseUrl),
+		agent: getProxyAgent(githubApiUrl),
 	},
 }
 
-export const ReleaseDrafterOctokit = Octokit.plugin(
-	restEndpointMethods,
-	paginateRest,
-	throttling,
-	config,
-).defaults(defaults)
+export const ReleaseDrafterOctokitWithDefaults =
+	ReleaseDrafterOctokit.defaults(defaults)
+
+export function getOctokit(auth: string) {
+	return new ReleaseDrafterOctokitWithDefaults({
+		auth,
+		throttle: {
+			onRateLimit: (retryAfter: number, options: RequestOptions) => {
+				core.warning(
+					`Request quota exhausted for request ${options.method} ${options.url}`,
+				)
+				if (options.request?.retryCount === 0) {
+					// only retries once
+					core.info(`Retrying after ${retryAfter} seconds!`)
+					return true
+				}
+			},
+			onSecondaryRateLimit: (retryAfter: number, options: RequestOptions) => {
+				// does not retry, only logs a warning
+				core.warning(
+					`Abuse detected for request ${options.method} ${options.url}`,
+				)
+			},
+		},
+	})
+}
 
 export async function getPayload(): Promise<WebhookEvent> {
 	if (process.env['GITHUB_EVENT_PATH']) {
@@ -174,36 +192,4 @@ export async function setActionOutputs(
 		.addHeading(`Release Drafter body`, 3)
 		.addRaw(`\n${body}\n`)
 		.write()
-}
-
-export function getOctokit() {
-	return new ReleaseDrafterOctokit({
-		auth: core.getInput('token'),
-		throttle: {
-			onRateLimit: (
-				retryAfter: number,
-				options: RequestOptions,
-				octokit: Octokit,
-			) => {
-				octokit.log.warn(
-					`Request quota exhausted for request ${options.method} ${options.url}`,
-				)
-				if (options.request?.retryCount === 0) {
-					// only retries once
-					octokit.log.info(`Retrying after ${retryAfter} seconds!`)
-					return true
-				}
-			},
-			onSecondaryRateLimit: (
-				retryAfter: number,
-				options: RequestOptions,
-				octokit: Octokit,
-			) => {
-				// does not retry, only logs a warning
-				octokit.log.warn(
-					`Abuse detected for request ${options.method} ${options.url}`,
-				)
-			},
-		},
-	})
 }
