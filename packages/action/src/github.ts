@@ -190,7 +190,7 @@ export function getOctokit() {
 				)
 				if (options.request?.retryCount === 0) {
 					// only retries once
-					console.log(`Retrying after ${retryAfter} seconds!`)
+					octokit.log.info(`Retrying after ${retryAfter} seconds!`)
 					return true
 				}
 			},
