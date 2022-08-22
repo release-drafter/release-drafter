@@ -20,7 +20,7 @@ import {
 export async function run(): Promise<void> {
 	core.info('🎉 Running Release Drafter Action')
 
-	const octokit = getOctokit()
+	const octokit = getOctokit(core.getInput('token'))
 	const GITHUB_REF = await getReference()
 	const defaultBranch = await getDefaultBranch(octokit)
 	const repo = await getRepo()

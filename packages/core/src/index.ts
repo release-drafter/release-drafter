@@ -1,4 +1,8 @@
-export { ReleaseDrafterOctokit } from './release-drafter-octokit.js'
+export {
+	ReleaseDrafterOctokit,
+	githubApiUrl,
+	getOctokit,
+} from './release-drafter-octokit.js'
 export { schema } from './schema.js'
 export { ReleaseDrafterConfig } from './types.js'
 export { Context } from './context.js'

@@ -35378,12 +35378,35 @@ var plugin_rest_endpoint_methods_dist_node = __nccwpck_require__(6538);
 var plugin_paginate_rest_dist_node = __nccwpck_require__(1540);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@probot+octokit-plugin-config@1.1.6_@octokit+core@4.0.4/node_modules/@probot/octokit-plugin-config/dist-node/index.js
 var octokit_plugin_config_dist_node = __nccwpck_require__(5236);
+// EXTERNAL MODULE: ../../node_modules/.pnpm/@octokit+plugin-throttling@4.2.0_@octokit+core@4.0.4/node_modules/@octokit/plugin-throttling/dist-node/index.js
+var plugin_throttling_dist_node = __nccwpck_require__(1660);
 ;// CONCATENATED MODULE: ../core/lib/release-drafter-octokit.js
 
 
 
 
-const ReleaseDrafterOctokit = dist_node/* Octokit.plugin */.v.plugin(plugin_rest_endpoint_methods_dist_node/* restEndpointMethods */.TC, plugin_paginate_rest_dist_node/* paginateRest */.AA, octokit_plugin_config_dist_node/* config */.vc);
+
+const githubApiUrl = process.env['GITHUB_API_URL'] || 'https://api.github.com';
+const ReleaseDrafterOctokit = dist_node/* Octokit.plugin */.v.plugin(plugin_rest_endpoint_methods_dist_node/* restEndpointMethods */.TC, plugin_paginate_rest_dist_node/* paginateRest */.AA, plugin_throttling_dist_node/* throttling */.O, octokit_plugin_config_dist_node/* config */.vc);
+function getOctokit(auth) {
+    return new ReleaseDrafterOctokit({
+        auth,
+        throttle: {
+            onRateLimit: (retryAfter, options, octokit) => {
+                octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+                if (options.request?.retryCount === 0) {
+                    // only retries once
+                    octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+                    return true;
+                }
+            },
+            onSecondaryRateLimit: (retryAfter, options, octokit) => {
+                // does not retry, only logs a warning
+                octokit.log.warn(`Abuse detected for request ${options.method} ${options.url}`);
+            },
+        },
+    });
+}
 //# sourceMappingURL=release-drafter-octokit.js.map
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/zod@3.17.10/node_modules/zod/lib/index.mjs
 var util;
@@ -39451,15 +39474,9 @@ function dateSortDescending(date1, date2) {
 //# sourceMappingURL=index.js.map
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs");
-// EXTERNAL MODULE: ../../node_modules/.pnpm/@octokit+plugin-throttling@4.2.0_@octokit+core@4.0.4/node_modules/@octokit/plugin-throttling/dist-node/index.js
-var plugin_throttling_dist_node = __nccwpck_require__(1660);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@actions+http-client@2.0.1/node_modules/@actions/http-client/lib/index.js
 var http_client_lib = __nccwpck_require__(4609);
 ;// CONCATENATED MODULE: ./src/github.ts
-
-
-
-
 
 
 
@@ -39468,14 +39485,32 @@ function getProxyAgent(proxyUrl) {
     const hc = new http_client_lib.HttpClient();
     return hc.getAgent(proxyUrl);
 }
-const baseUrl = process.env['GITHUB_API_URL'] || 'https://api.github.com';
 const defaults = {
-    baseUrl,
+    githubApiUrl: githubApiUrl,
     request: {
-        agent: getProxyAgent(baseUrl),
+        agent: getProxyAgent(githubApiUrl),
     },
 };
-const github_ReleaseDrafterOctokit = dist_node/* Octokit.plugin */.v.plugin(plugin_rest_endpoint_methods_dist_node/* restEndpointMethods */.TC, plugin_paginate_rest_dist_node/* paginateRest */.AA, plugin_throttling_dist_node/* throttling */.O, octokit_plugin_config_dist_node/* config */.vc).defaults(defaults);
+const ReleaseDrafterOctokitWithDefaults = ReleaseDrafterOctokit.defaults(defaults);
+function github_getOctokit(auth) {
+    return new ReleaseDrafterOctokitWithDefaults({
+        auth,
+        throttle: {
+            onRateLimit: (retryAfter, options) => {
+                core.warning(`Request quota exhausted for request ${options.method} ${options.url}`);
+                if (options.request?.retryCount === 0) {
+                    // only retries once
+                    core.info(`Retrying after ${retryAfter} seconds!`);
+                    return true;
+                }
+            },
+            onSecondaryRateLimit: (retryAfter, options) => {
+                // does not retry, only logs a warning
+                core.warning(`Abuse detected for request ${options.method} ${options.url}`);
+            },
+        },
+    });
+}
 async function getPayload() {
     if (process.env['GITHUB_EVENT_PATH']) {
         return JSON.parse(await external_node_fs_namespaceObject.promises.readFile(process.env['GITHUB_EVENT_PATH'], 'utf8'));
@@ -39584,25 +39619,6 @@ async function setActionOutputs(releaseResponse, { body }, shouldDraft, isPreRel
         .addRaw(`\n${body}\n`)
         .write();
 }
-function getOctokit() {
-    return new github_ReleaseDrafterOctokit({
-        auth: core.getInput('token'),
-        throttle: {
-            onRateLimit: (retryAfter, options, octokit) => {
-                octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
-                if (options.request?.retryCount === 0) {
-                    // only retries once
-                    console.log(`Retrying after ${retryAfter} seconds!`);
-                    return true;
-                }
-            },
-            onSecondaryRateLimit: (retryAfter, options, octokit) => {
-                // does not retry, only logs a warning
-                octokit.log.warn(`Abuse detected for request ${options.method} ${options.url}`);
-            },
-        },
-    });
-}
 
 ;// CONCATENATED MODULE: ./src/main.ts
 
@@ -39610,7 +39626,7 @@ function getOctokit() {
 
 async function run() {
     core.info('🎉 Running Release Drafter Action');
-    const octokit = getOctokit();
+    const octokit = github_getOctokit(core.getInput('token'));
     const GITHUB_REF = await getReference();
     const defaultBranch = await getDefaultBranch(octokit);
     const repo = await getRepo();
