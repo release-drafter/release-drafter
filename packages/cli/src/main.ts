@@ -51,7 +51,9 @@ export async function run(): Promise<void> {
 		mergeOptionsAndConfig(options, config)
 
 	const { filterByCommitish, tagPrefix, sortBy, sortDirection } = config
-	const targetCommitish = commitish || config.commitish || options.reference
+	const targetCommitish =
+		commitish || config.commitish || options.reference || defaultBranch
+
 	if (targetCommitish.startsWith('refs/tags')) {
 		info(
 			`⚠ target commitish of '${targetCommitish}' is not supported as release target, falling back to default branch '${defaultBranch}'`,
