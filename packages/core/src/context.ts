@@ -27,7 +27,7 @@ export class Context {
 			repo: string
 			issue?: number
 			pullRequest?: number
-			configName?: string
+			configName: string
 		},
 	) {
 		this.octokit = octokit
@@ -36,7 +36,7 @@ export class Context {
 		this.issueNumber = issue || 0
 		this.pullRequest = pullRequest || 0
 		this.defaultBranch = defaultBranch
-		this.configName = configName || 'release-drafter.yml'
+		this.configName = configName
 	}
 
 	public ownerRepo = () => `${this.owner}/${this.repo}`
