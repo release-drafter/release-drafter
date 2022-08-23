@@ -35387,7 +35387,9 @@ var plugin_throttling_dist_node = __nccwpck_require__(1660);
 
 
 const githubApiUrl = process.env['GITHUB_API_URL'] || 'https://api.github.com';
-const ReleaseDrafterOctokit = dist_node/* Octokit.plugin */.v.plugin(plugin_rest_endpoint_methods_dist_node/* restEndpointMethods */.TC, plugin_paginate_rest_dist_node/* paginateRest */.AA, plugin_throttling_dist_node/* throttling */.O, octokit_plugin_config_dist_node/* config */.vc);
+const ReleaseDrafterOctokit = dist_node/* Octokit.plugin */.v.plugin(plugin_rest_endpoint_methods_dist_node/* restEndpointMethods */.TC, plugin_paginate_rest_dist_node/* paginateRest */.AA, plugin_throttling_dist_node/* throttling */.O, octokit_plugin_config_dist_node/* config */.vc).defaults({
+    baseUrl: githubApiUrl,
+});
 function getOctokit(auth) {
     return new ReleaseDrafterOctokit({
         auth,
@@ -38630,7 +38632,7 @@ class Context {
         this.issueNumber = issue || 0;
         this.pullRequest = pullRequest || 0;
         this.defaultBranch = defaultBranch;
-        this.configName = configName || 'release-drafter.yml';
+        this.configName = configName;
     }
     ownerRepo = () => `${this.owner}/${this.repo}`;
     async config() {
@@ -39625,13 +39627,23 @@ async function setActionOutputs(releaseResponse, { body }, shouldDraft, isPreRel
 
 
 async function run() {
-    core.info('🎉 Running Release Drafter Action');
-    const octokit = github_getOctokit(core.getInput('token'));
+    const token = core.getInput('token') || process.env.GITHUB_TOKEN;
+    if (!token) {
+        core.setFailed('⛔ No GitHub token found');
+        return;
+    }
+    const octokit = github_getOctokit(token);
     const GITHUB_REF = await getReference();
     const defaultBranch = await getDefaultBranch(octokit);
-    const repo = await getRepo();
-    const configName = core.getInput('config-name');
-    const context = new Context(octokit, defaultBranch, { ...repo, configName });
+    const { owner, repo } = await getRepo();
+    core.info(`🎉 Running Release Drafter Action for ${owner}/${repo}`);
+    const configName = core.getInput('config-name') || 'release-drafter.yml';
+    const context = new Context(octokit, defaultBranch, {
+        owner,
+        repo,
+        configName,
+    });
+    core.info('⏬ Fetching config');
     const config = await context.config();
     const { isPreRelease, shouldDraft, version, tag, name, commitish } = getActionInputs(config);
     const { filterByCommitish, tagPrefix, sortBy, sortDirection } = config;

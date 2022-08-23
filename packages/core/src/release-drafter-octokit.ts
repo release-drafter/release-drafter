@@ -13,7 +13,9 @@ export const ReleaseDrafterOctokit = Octokit.plugin(
 	paginateRest,
 	throttling,
 	config,
-)
+).defaults({
+	baseUrl: githubApiUrl,
+})
 
 export function getOctokit(auth: string) {
 	return new ReleaseDrafterOctokit({

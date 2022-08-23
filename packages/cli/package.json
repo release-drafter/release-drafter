@@ -15,7 +15,8 @@
 		"node": ">=16.0.0"
 	},
 	"dependencies": {
-		"@release-drafter/core": "workspace:../core"
+		"@release-drafter/core": "workspace:../core",
+		"commander": "^9.4.0"
 	},
 	"devDependencies": {
 		"@jest/globals": "^28.1.3",

@@ -18,17 +18,27 @@ import {
 } from './github.js'
 
 export async function run(): Promise<void> {
-	core.info('🎉 Running Release Drafter Action')
-
-	const octokit = getOctokit(core.getInput('token'))
+	const token = core.getInput('token') || process.env.GITHUB_TOKEN
+	if (!token) {
+		core.setFailed('⛔ No GitHub token found')
+		return
+	}
+	const octokit = getOctokit(token)
 	const GITHUB_REF = await getReference()
 	const defaultBranch = await getDefaultBranch(octokit)
-	const repo = await getRepo()
+	const { owner, repo } = await getRepo()
+	core.info(`🎉 Running Release Drafter Action for ${owner}/${repo}`)
 
-	const configName = core.getInput('config-name')
-	const context = new Context(octokit, defaultBranch, { ...repo, configName })
+	const configName = core.getInput('config-name') || 'release-drafter.yml'
+	const context = new Context(octokit, defaultBranch, {
+		owner,
+		repo,
+		configName,
+	})
 
+	core.info('⏬ Fetching config')
 	const config = await context.config()
+
 	const { isPreRelease, shouldDraft, version, tag, name, commitish } =
 		getActionInputs(config)
 
