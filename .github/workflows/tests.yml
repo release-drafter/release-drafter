@@ -23,8 +23,8 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      - run: pnpm lint --fix
-      - run: pnpm prettier --write
+      - run: pnpm lint:fix
+      - run: pnpm prettier:fix
       - run: pnpm build
       - name: correct vercel/ncc crlf output
         run: sed -i 's/\x0D$//' ./dist/index.js
