@@ -19,7 +19,7 @@ import {
 	program,
 } from './program.js'
 
-export async function run(): Promise<void> {
+export async function cli(): Promise<void> {
 	const options = program.opts<Options>()
 	const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 	if (!GITHUB_TOKEN) {

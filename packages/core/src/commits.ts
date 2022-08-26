@@ -12,6 +12,10 @@ export type CommitsWithPathChanges = {
 	repository: {
 		object: {
 			history: {
+				pageInfo: {
+					hasNextPage: boolean
+					endCursor: string
+				}
 				nodes: {
 					id: string
 				}

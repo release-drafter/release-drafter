@@ -1,7 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals'
 
 import { paginate } from '../src/pagination.js'
-import { CommitsWithAssociatedPullRequests } from '../src/commits.js'
+import { CommitsWithPathChanges } from '../src/commits.js'
 
 describe('pagination', () => {
 	it('concats pagination results', async () => {
@@ -41,7 +41,7 @@ describe('pagination', () => {
 				}),
 			)
 
-		const data = await paginate<CommitsWithAssociatedPullRequests>(
+		const data = await paginate<CommitsWithPathChanges>(
 			queryFunction as never,
 			query,
 			{},

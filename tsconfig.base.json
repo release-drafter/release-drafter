@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"incremental": false,
+		"target": "ESNext",
+		"module": "ESNext",
+		"declaration": true,
+		"sourceMap": true,
+		"composite": false,
+		"strict": true,
+		"moduleResolution": "NodeNext",
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true
+	}
+}

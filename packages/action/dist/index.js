@@ -35989,7 +35989,7 @@ try {
 /***/ ((module, __unused_webpack___webpack_exports__, __nccwpck_require__) => {
 
 __nccwpck_require__.a(module, async (__webpack_handle_async_dependencies__) => {
-/* harmony import */ var _main_js__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2401);
+/* harmony import */ var _main_js__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(4255);
 
 await (0,_main_js__WEBPACK_IMPORTED_MODULE_0__/* .run */ .K)();
 
@@ -35998,7 +35998,7 @@ __webpack_handle_async_dependencies__();
 
 /***/ }),
 
-/***/ 2401:
+/***/ 4255:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 
@@ -36019,36 +36019,6 @@ var plugin_paginate_rest_dist_node = __nccwpck_require__(1540);
 var octokit_plugin_config_dist_node = __nccwpck_require__(5236);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@octokit+plugin-throttling@4.2.0_@octokit+core@4.0.4/node_modules/@octokit/plugin-throttling/dist-node/index.js
 var plugin_throttling_dist_node = __nccwpck_require__(1660);
-;// CONCATENATED MODULE: ../core/lib/release-drafter-octokit.js
-
-
-
-
-
-const githubApiUrl = process.env['GITHUB_API_URL'] || 'https://api.github.com';
-const ReleaseDrafterOctokit = dist_node/* Octokit.plugin */.v.plugin(plugin_rest_endpoint_methods_dist_node/* restEndpointMethods */.TC, plugin_paginate_rest_dist_node/* paginateRest */.AA, plugin_throttling_dist_node/* throttling */.O, octokit_plugin_config_dist_node/* config */.vc).defaults({
-    baseUrl: githubApiUrl,
-});
-function getOctokit(auth) {
-    return new ReleaseDrafterOctokit({
-        auth,
-        throttle: {
-            onRateLimit: (retryAfter, options, octokit) => {
-                octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
-                if (options.request?.retryCount === 0) {
-                    // only retries once
-                    octokit.log.info(`Retrying after ${retryAfter} seconds!`);
-                    return true;
-                }
-            },
-            onSecondaryRateLimit: (retryAfter, options, octokit) => {
-                // does not retry, only logs a warning
-                octokit.log.warn(`Abuse detected for request ${options.method} ${options.url}`);
-            },
-        },
-    });
-}
-//# sourceMappingURL=release-drafter-octokit.js.map
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/zod@3.17.10/node_modules/zod/lib/index.mjs
 var util;
 (function (util) {
@@ -39117,818 +39087,852 @@ var mod = /*#__PURE__*/Object.freeze({
 var lib = __nccwpck_require__(5332);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/escape-string-regexp@4.0.0/node_modules/escape-string-regexp/index.js
 var escape_string_regexp = __nccwpck_require__(8890);
-;// CONCATENATED MODULE: ../core/lib/default-config.js
-const DEFAULT_CONFIG = Object.freeze({
-    autolabeler: [],
-    categories: [],
-    categoryTemplate: `## $TITLE`,
-    changeTemplate: `* $TITLE (#$NUMBER) @$AUTHOR`,
-    changeTitleEscapes: '',
-    commitish: '',
-    excludeContributors: [],
-    excludeLabels: [],
-    filterByCommitish: false,
-    footer: '',
-    header: '',
-    includeLabels: [],
-    includePaths: [],
-    nameTemplate: 'v$RESOLVED_VERSION',
-    noChangesTemplate: `* No changes`,
-    noContributorsTemplate: 'No contributors',
-    prerelease: false,
-    references: ['main'],
-    replacers: [],
-    sortBy: "merged_at" /* SORT_BY.mergedAt */,
-    sortDirection: "descending" /* SORT_DIRECTIONS.descending */,
-    tagPrefix: 'v',
-    tagTemplate: 'v$RESOLVED_VERSION',
-    template: `## What’s Changed\n\n$CHANGES`,
-    versionTemplate: `$MAJOR.$MINOR.$PATCH`,
-    versionResolver: {
-        major: { labels: [] },
-        minor: { labels: [] },
-        patch: { labels: [] },
-        default: "patch" /* MajorMinorPatch.patch */,
-    },
-});
-//# sourceMappingURL=default-config.js.map
-;// CONCATENATED MODULE: ../core/lib/schema.js
-
-
-
-
-function toRegex(search) {
-    return /^\/.+\/[AJUXgimsux]*$/.test(search)
-        ? lib(search)
-        : new RegExp(escape_string_regexp(search), 'g');
-}
-/**
- * This is used to check if multiple categories have no labels.
- * We only allow a single category to have no labels.
- *
- * if length is greater than 1 return false
- * falsy values are meant to signal failure in zod refine validation
- */
-function validateOnlyOneUncategorizedCategoryExist(categories) {
-    const length = categories.filter((category) => category.labels.length === 0).length;
-    return length <= 1;
-}
-function schema(defaultBranch = 'main') {
-    return mod.object({
-        references: mod.array(mod.string()).default([defaultBranch]),
-        changeTemplate: mod.string().default(DEFAULT_CONFIG.changeTemplate),
-        changeTitleEscapes: mod.string().default(DEFAULT_CONFIG.changeTitleEscapes),
-        noChangesTemplate: mod.string().default(DEFAULT_CONFIG.noChangesTemplate),
-        versionTemplate: mod.string().default(DEFAULT_CONFIG.versionTemplate),
-        nameTemplate: mod.string().default(DEFAULT_CONFIG.nameTemplate),
-        tagPrefix: mod.string().default(DEFAULT_CONFIG.tagPrefix),
-        tagTemplate: mod.string().default(DEFAULT_CONFIG.tagTemplate),
-        excludeLabels: mod.array(mod.string()).default(DEFAULT_CONFIG.excludeLabels),
-        includeLabels: mod.array(mod.string()).default(DEFAULT_CONFIG.includeLabels),
-        includePaths: mod.array(mod.string()).default(DEFAULT_CONFIG.includePaths),
-        excludeContributors: mod.array(mod.string())
-            .default(DEFAULT_CONFIG.excludeContributors),
-        noContributorsTemplate: mod.string()
-            .default(DEFAULT_CONFIG.noContributorsTemplate),
-        sortBy: mod["enum"](["merged_at" /* SORT_BY.mergedAt */, "title" /* SORT_BY.title */])
-            .default(DEFAULT_CONFIG.sortBy),
-        sortDirection: mod["enum"](["ascending" /* SORT_DIRECTIONS.ascending */, "descending" /* SORT_DIRECTIONS.descending */])
-            .default(DEFAULT_CONFIG.sortDirection),
-        prerelease: mod.boolean().default(DEFAULT_CONFIG.prerelease),
-        filterByCommitish: mod.boolean().default(DEFAULT_CONFIG.filterByCommitish),
-        commitish: mod.string().default(DEFAULT_CONFIG.commitish),
-        replacers: mod.array(mod.object({
-            search: mod.string().transform((value) => toRegex(value)),
-            replace: mod.string().or(mod.literal('')),
-        }))
-            .default([]),
-        autolabeler: mod.array(mod.object({
-            label: mod.string(),
-            files: mod.array(mod.string()).default([]),
-            branch: mod.array(mod.string().transform((value) => toRegex(value)))
-                .default([]),
-            title: mod.array(mod.string().transform((value) => toRegex(value)))
-                .default([]),
-            body: mod.array(mod.string().transform((value) => toRegex(value)))
-                .default([]),
-        }))
-            .default([]),
-        categories: mod.array(mod.object({
-            title: mod.string(),
-            collapseAfter: mod.number().nonnegative().default(0),
-            labels: mod.array(mod.string()).default([]),
-        }))
-            .default([])
-            .refine((categories) => validateOnlyOneUncategorizedCategoryExist(categories), {
-            message: 'Multiple categories detected with no labels.\nOnly one category with no labels is supported for uncategorized pull requests.',
-        }),
-        versionResolver: mod.object({
-            major: mod.object({
-                labels: mod.array(mod.string()).default([]),
-            }),
-            minor: mod.object({
-                labels: mod.array(mod.string()).default([]),
-            }),
-            patch: mod.object({
-                labels: mod.array(mod.string()).default([]),
-            }),
-            default: mod["enum"]([
-                "major" /* MajorMinorPatch.major */,
-                "minor" /* MajorMinorPatch.minor */,
-                "patch" /* MajorMinorPatch.patch */,
-            ])
-                .default("patch" /* MajorMinorPatch.patch */),
-        })
-            .default(DEFAULT_CONFIG.versionResolver),
-        categoryTemplate: mod.string().default(DEFAULT_CONFIG.categoryTemplate),
-        header: mod.string().default(DEFAULT_CONFIG.header),
-        template: mod.string().min(1).default(DEFAULT_CONFIG.template),
-        footer: mod.string().default(DEFAULT_CONFIG.footer),
-    });
-}
-function validateSchema(context, repoConfig) {
-    return schema(context.defaultBranch).parse(repoConfig);
-}
-//# sourceMappingURL=schema.js.map
 // EXTERNAL MODULE: ../../node_modules/.pnpm/deepmerge@4.2.2/node_modules/deepmerge/dist/cjs.js
 var cjs = __nccwpck_require__(8948);
-;// CONCATENATED MODULE: ../core/lib/context.js
-
-
-
-class Context {
-    octokit;
-    owner;
-    repo;
-    pullRequest;
-    issueNumber;
-    configName;
-    defaultBranch;
-    constructor(octokit, defaultBranch, { owner, repo, issue, pullRequest, configName, }) {
-        this.octokit = octokit;
-        this.owner = owner;
-        this.repo = repo;
-        this.issueNumber = issue || 0;
-        this.pullRequest = pullRequest || 0;
-        this.defaultBranch = defaultBranch;
-        this.configName = configName;
-    }
-    ownerRepo = () => `${this.owner}/${this.repo}`;
-    async config() {
-        const parameters = {
-            owner: this.owner,
-            repo: this.repo,
-            path: `.github/${this.configName}`,
-            defaults(configs) {
-                const result = cjs.all([DEFAULT_CONFIG, ...configs]);
-                return result;
-            },
-            branch: this.defaultBranch,
-        };
-        const { config } = await this.octokit.config.get(parameters);
-        return schema(this.defaultBranch).parse(config);
-    }
-}
-//# sourceMappingURL=context.js.map
 // EXTERNAL MODULE: ../../node_modules/.pnpm/compare-versions@4.1.3/node_modules/compare-versions/index.js
 var compare_versions = __nccwpck_require__(249);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/semver@7.3.7/node_modules/semver/index.js
 var semver = __nccwpck_require__(6400);
-;// CONCATENATED MODULE: ../core/lib/versions.js
-
-const splitSemVersion = (input) => {
-    if (!input.version) {
-        return;
-    }
-    const version = input.inc
-        ? semver.inc(input.version, input.inc, true)
-        : input.version.version;
-    return {
-        ...input,
-        version,
-        $MAJOR: semver.major(version),
-        $MINOR: semver.minor(version),
-        $PATCH: semver.patch(version),
-        $COMPLETE: version,
-    };
-};
-const defaultVersionInfo = {
-    $NEXT_MAJOR_VERSION: {
-        version: '1.0.0',
-        template: '$MAJOR.$MINOR.$PATCH',
-        versionInput: undefined,
-        inc: 'major',
-        $MAJOR: 1,
-        $MINOR: 0,
-        $PATCH: 0,
-    },
-    $NEXT_MAJOR_VERSION_MAJOR: {
-        version: '1.0.0',
-        template: '$MAJOR',
-        versionInput: undefined,
-        inc: 'major',
-        $MAJOR: 1,
-        $MINOR: 0,
-        $PATCH: 0,
-    },
-    $NEXT_MAJOR_VERSION_MINOR: {
-        version: '1.0.0',
-        template: '$MINOR',
-        versionInput: undefined,
-        inc: 'major',
-        $MAJOR: 1,
-        $MINOR: 0,
-        $PATCH: 0,
-    },
-    $NEXT_MAJOR_VERSION_PATCH: {
-        version: '1.0.0',
-        template: '$PATCH',
-        versionInput: undefined,
-        inc: 'major',
-        $MAJOR: 1,
-        $MINOR: 0,
-        $PATCH: 0,
-    },
-    $NEXT_MINOR_VERSION: {
-        version: '0.1.0',
-        template: '$MAJOR.$MINOR.$PATCH',
-        versionInput: undefined,
-        inc: 'minor',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_MINOR_VERSION_MAJOR: {
-        version: '0.1.0',
-        template: '$MAJOR',
-        versionInput: undefined,
-        inc: 'minor',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_MINOR_VERSION_MINOR: {
-        version: '0.1.0',
-        template: '$MINOR',
-        versionInput: undefined,
-        inc: 'minor',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_MINOR_VERSION_PATCH: {
-        version: '0.1.0',
-        template: '$PATCH',
-        versionInput: undefined,
-        inc: 'minor',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_PATCH_VERSION: {
-        version: '0.1.0',
-        template: '$MAJOR.$MINOR.$PATCH',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_PATCH_VERSION_MAJOR: {
-        version: '0.1.0',
-        template: '$MAJOR',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_PATCH_VERSION_MINOR: {
-        version: '0.1.0',
-        template: '$MINOR',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $NEXT_PATCH_VERSION_PATCH: {
-        version: '0.1.0',
-        template: '$PATCH',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-    $INPUT_VERSION: undefined,
-    $RESOLVED_VERSION: {
-        version: '0.1.0',
-        template: '$MAJOR.$MINOR.$PATCH',
-        versionInput: undefined,
-        inc: 'patch',
-        $MAJOR: 0,
-        $MINOR: 1,
-        $PATCH: 0,
-    },
-};
-function getTemplatableVersion(input) {
-    const templatableVersion = {
-        $NEXT_MAJOR_VERSION: splitSemVersion({ ...input, inc: 'major' }),
-        $NEXT_MAJOR_VERSION_MAJOR: splitSemVersion({
-            ...input,
-            inc: 'major',
-            template: '$MAJOR',
-        }),
-        $NEXT_MAJOR_VERSION_MINOR: splitSemVersion({
-            ...input,
-            inc: 'major',
-            template: '$MINOR',
-        }),
-        $NEXT_MAJOR_VERSION_PATCH: splitSemVersion({
-            ...input,
-            inc: 'major',
-            template: '$PATCH',
-        }),
-        $NEXT_MINOR_VERSION: splitSemVersion({ ...input, inc: 'minor' }),
-        $NEXT_MINOR_VERSION_MAJOR: splitSemVersion({
-            ...input,
-            inc: 'minor',
-            template: '$MAJOR',
-        }),
-        $NEXT_MINOR_VERSION_MINOR: splitSemVersion({
-            ...input,
-            inc: 'minor',
-            template: '$MINOR',
-        }),
-        $NEXT_MINOR_VERSION_PATCH: splitSemVersion({
-            ...input,
-            inc: 'minor',
-            template: '$PATCH',
-        }),
-        $NEXT_PATCH_VERSION: splitSemVersion({ ...input, inc: 'patch' }),
-        $NEXT_PATCH_VERSION_MAJOR: splitSemVersion({
-            ...input,
-            inc: 'patch',
-            template: '$MAJOR',
-        }),
-        $NEXT_PATCH_VERSION_MINOR: splitSemVersion({
-            ...input,
-            inc: 'patch',
-            template: '$MINOR',
-        }),
-        $NEXT_PATCH_VERSION_PATCH: splitSemVersion({
-            ...input,
-            inc: 'patch',
-            template: '$PATCH',
-        }),
-        $INPUT_VERSION: splitSemVersion({ ...input, version: input.versionInput }),
-        $RESOLVED_VERSION: splitSemVersion({
-            ...input,
-            inc: input.versionKeyIncrement || 'patch',
-        }),
-    };
-    templatableVersion.$RESOLVED_VERSION =
-        templatableVersion.$INPUT_VERSION || templatableVersion.$RESOLVED_VERSION;
-    return templatableVersion;
-}
-function toSemver(version) {
-    const result = semver.parse(version);
-    if (result) {
-        return result;
-    }
-    // doesn't handle prerelease
-    return semver.coerce(version) ?? undefined;
-}
-function coerceVersion(input, tagPrefix) {
-    if (!input) {
-        return;
-    }
-    const stripTag = (input) => tagPrefix && input.startsWith(tagPrefix)
-        ? input.slice(tagPrefix.length)
-        : input;
-    return typeof input === 'object'
-        ? toSemver(stripTag(input.tag_name)) || toSemver(stripTag(input.name))
-        : toSemver(stripTag(input));
-}
-function getVersionInfo(release, template, inputVersion, versionKeyIncrement, tagPrefix) {
-    const releaseVersion = coerceVersion(release, tagPrefix);
-    const versionInput = coerceVersion(inputVersion, tagPrefix);
-    const version = !releaseVersion && versionInput ? versionInput : releaseVersion;
-    if (!version) {
-        return defaultVersionInfo;
-    }
-    return {
-        ...getTemplatableVersion({
-            version,
-            template,
-            versionInput,
-            versionKeyIncrement,
-        }),
-    };
-}
-//# sourceMappingURL=versions.js.map
-;// CONCATENATED MODULE: ../core/lib/template.js
-
-/**
- * replaces all uppercase dollar templates with their string representation from objectReplacer
- * if replacement is undefined in objectReplacer the dollar template string is left untouched
- */
-const templateReplacer = mod.object({ template: mod.string() }).passthrough();
-function template(input, objectReplacer, customReplacers) {
-    let output = input.replace(/(\$[A-Z_]+)/g, (_, k) => {
-        if (!(k in objectReplacer)) {
-            return k;
-        }
-        const replacer = templateReplacer.safeParse(objectReplacer[k]);
-        if (replacer.success) {
-            return template(replacer.data.template, replacer.data);
-        }
-        return objectReplacer[k];
-    });
-    if (customReplacers) {
-        for (const { search, replace } of customReplacers) {
-            output = output.replace(search, replace);
-        }
-    }
-    return output;
-}
-//# sourceMappingURL=template.js.map
-;// CONCATENATED MODULE: ../core/lib/releases.js
-
-
-
-
-const sortReleases = (releases) => {
-    // For semver, we find the greatest release number
-    // For non-semver, we use the most recently merged
-    try {
-        return releases.sort((r1, r2) => compare_versions(r1.tag_name, r2.tag_name));
-    }
-    catch {
-        return releases.sort((r1, r2) => new Date(r1.created_at).getDate() - new Date(r2.created_at).getDate());
-    }
-};
-// GitHub API currently returns a 500 HTTP response if you attempt to fetch over 1000 releases.
-const RELEASE_COUNT_LIMIT = 1000;
-const findReleases = async ({ context, targetCommitish, filterByCommitish, tagPrefix, }) => {
-    let releaseCount = 0;
-    const releases = (await context.octokit.paginate(context.octokit.rest.repos.listReleases.endpoint.merge({
-        owner: context.owner,
-        repo: context.repo,
-        per_page: 100,
-    }), (response, done) => {
-        releaseCount += response.data.length;
-        if (releaseCount >= RELEASE_COUNT_LIMIT) {
-            done();
-        }
-        return response.data;
-    }));
-    // log({ context, message: `Found ${releases.length} releases` })
-    // `refs/heads/branch` and `branch` are the same thing in this context
-    const headReferenceRegex = /^refs\/heads\//;
-    const targetCommitishName = targetCommitish.replace(headReferenceRegex, '');
-    const commitishFilteredReleases = filterByCommitish
-        ? releases.filter((r) => targetCommitishName ===
-            r.target_commitish.replace(headReferenceRegex, ''))
-        : releases;
-    const filteredReleases = tagPrefix
-        ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix))
-        : commitishFilteredReleases;
-    const sortedPublishedReleases = sortReleases(filteredReleases.filter((r) => !r.draft));
-    const draftRelease = filteredReleases.find((r) => r.draft);
-    const lastRelease = sortedPublishedReleases[sortedPublishedReleases.length - 1];
-    // TODO(jetersen): Move to outer methods
-    if (draftRelease) {
-        // log({ context, message: `Draft release: ${draftRelease.tag_name}` })
-    }
-    else {
-        // log({ context, message: `No draft release found` })
-    }
-    if (lastRelease) {
-        // log({ context, message: `Last release: ${lastRelease.tag_name}` })
-    }
-    else {
-        // log({ context, message: `No last release found` })
-    }
-    return { draftRelease, lastRelease };
-};
-const contributorsSentence = ({ commits, pullRequests, config, }) => {
-    const { excludeContributors, noContributorsTemplate } = config;
-    const contributors = new Set();
-    for (const commit of commits) {
-        if (commit.author?.user) {
-            if (!excludeContributors.includes(commit.author.user.login)) {
-                contributors.add(`@${commit.author.user.login}`);
-            }
-        }
-        else if (commit.author?.name) {
-            contributors.add(commit.author.name);
-        }
-    }
-    for (const pullRequest of pullRequests) {
-        if (pullRequest.author &&
-            !excludeContributors.includes(pullRequest.author.login)) {
-            contributors.add(`@${pullRequest.author.login}`);
-        }
-    }
-    const sortedContributors = [...contributors].sort();
-    if (sortedContributors.length > 1) {
-        return (sortedContributors.slice(0, -1).join(', ') +
-            ' and ' +
-            sortedContributors.slice(-1));
-    }
-    else if (sortedContributors.length === 1) {
-        return sortedContributors[0];
-    }
-    else {
-        return noContributorsTemplate;
-    }
-};
-const getFilterExcludedPullRequests = (pullRequest, excludeLabels) => {
-    const labels = pullRequest.labels?.nodes;
-    return !labels?.some((label) => excludeLabels.includes(label?.name ?? ''));
-};
-const getFilterIncludedPullRequests = (pullRequest, includeLabels) => {
-    const labels = pullRequest.labels?.nodes;
-    return (includeLabels.length === 0 ||
-        labels?.some((label) => includeLabels.includes(label?.name ?? '')));
-};
-function getUncategorizedCategoryIndex(categories) {
-    const index = categories.findIndex((category) => category.labels.length === 0);
-    return index === -1 ? 0 : index;
-}
-const categorizePullRequests = (pullRequests, config) => {
-    const { excludeLabels, includeLabels, categories } = config;
-    if (categories.length === 0) {
-        return [
-            {
-                pullRequests: pullRequests,
-                labels: [],
-                collapseAfter: 0,
-            },
-        ];
-    }
-    const allCategoryLabels = new Set(categories.flatMap((category) => category.labels));
-    const uncategorizedCategoryIndex = getUncategorizedCategoryIndex(categories);
-    const categorizedPullRequests = [];
-    if (uncategorizedCategoryIndex === 0) {
-        categorizedPullRequests.push({
-            pullRequests: [],
-            labels: [],
-            collapseAfter: 0,
-        });
-    }
-    categories.map((category) => {
-        categorizedPullRequests.push({
-            ...category,
-            pullRequests: [],
-        });
-    });
-    const filterUncategorizedPullRequests = (pullRequest) => {
-        const labels = pullRequest.labels?.nodes || [];
-        if (labels.length === 0 ||
-            !labels.some((label) => allCategoryLabels.has(label?.name ?? ''))) {
-            categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(pullRequest);
-            return false;
-        }
-        return true;
-    };
-    const filterAllPullRequests = (pullRequest, excludeLabels, includeLabels) => {
-        return (getFilterExcludedPullRequests(pullRequest, excludeLabels) &&
-            getFilterIncludedPullRequests(pullRequest, includeLabels) &&
-            filterUncategorizedPullRequests(pullRequest));
-    };
-    // we only want pull requests that have yet to be categorized
-    const filteredPullRequests = pullRequests.filter((pullRequest) => filterAllPullRequests(pullRequest, excludeLabels, includeLabels));
-    for (const category of categorizedPullRequests) {
-        if (category.pullRequests == undefined) {
-            category.pullRequests = [];
-        }
-        for (const pullRequest of filteredPullRequests) {
-            // lets categorize some pull request based on labels
-            // note that having the same label in multiple categories
-            // then it is intended to "duplicate" the pull request into each category
-            const labels = pullRequest.labels?.nodes || [];
-            if (labels.some((label) => category.labels.includes(label.name))) {
-                category.pullRequests.push(pullRequest);
-            }
-        }
-    }
-    return categorizedPullRequests;
-};
-const generateChangeLog = (pullRequests, config) => {
-    if (pullRequests.length === 0) {
-        return config['noChangesTemplate'];
-    }
-    const categorizedPullRequests = categorizePullRequests(pullRequests, config);
-    const escapeTitle = (title) => 
-    // If config['changeTitleEscapes'] contains backticks, then they will be escaped along with content contained inside backticks
-    // If not, the entire backtick block is matched so that it will become a markdown code block without escaping any of its content
-    title.replace(new RegExp(`[${escape_string_regexp(config.changeTitleEscapes)}]|\`.*?\``, 'g'), (match) => {
-        if (match.length > 1)
-            return match;
-        if (match == '@' || match == '#')
-            return `${match}<!---->`;
-        return `\\${match}`;
-    });
-    const pullRequestsToString = (pullRequests) => pullRequests
-        .map((pullRequest) => template(config.changeTemplate, {
-        $TITLE: escapeTitle(pullRequest.title),
-        $NUMBER: pullRequest.number,
-        $AUTHOR: pullRequest.author ? pullRequest.author.login : 'ghost',
-        $BODY: pullRequest.body,
-        $URL: pullRequest.url,
-        $BASE_REF_NAME: pullRequest.baseRefName,
-        $HEAD_REF_NAME: pullRequest.headRefName,
-    }))
-        .join('\n');
-    const changeLog = [];
-    for (const [index, category] of categorizedPullRequests.entries()) {
-        if (category.pullRequests.length === 0) {
-            continue;
-        }
-        // Add the category title to the changelog.
-        if (category.title) {
-            changeLog.push(template(config.categoryTemplate, { $TITLE: category.title }), '\n\n');
-        }
-        // Define the pull requests into a single string.
-        const pullRequestString = pullRequestsToString(category.pullRequests);
-        // Determine the collapse status.
-        const shouldCollapse = category.collapseAfter !== 0 &&
-            category.pullRequests.length > category.collapseAfter;
-        // Add the pull requests to the changelog.
-        if (shouldCollapse) {
-            changeLog.push('<details>', '\n', `<summary>${category.pullRequests.length} changes</summary>`, '\n\n', pullRequestString, '\n', '</details>');
-        }
-        else {
-            changeLog.push(pullRequestString);
-        }
-        if (index + 1 !== categorizedPullRequests.length)
-            changeLog.push('\n\n');
-    }
-    return changeLog.join('').trim();
-};
-const resolveVersionKeyIncrement = (pullRequests, config) => {
-    const priorityMap = {
-        patch: 1,
-        minor: 2,
-        major: 3,
-    };
-    const labelToKeyMap = Object.fromEntries(Object.keys(priorityMap)
-        .flatMap((key) => {
-        return [
-            config.versionResolver[key].labels.map((label) => [label, key]),
-        ];
-    })
-        .flat());
-    const keys = pullRequests
-        .filter((pullRequest) => getFilterExcludedPullRequests(pullRequest, config.excludeLabels) &&
-        getFilterIncludedPullRequests(pullRequest, config.includeLabels))
-        .flatMap((pr) => pr.labels?.nodes?.map((node) => labelToKeyMap[node?.name ?? '']))
-        .filter(Boolean);
-    const keyPriorities = keys.map((key) => priorityMap[key]);
-    const priority = Math.max(...keyPriorities);
-    const versionKey = Object.keys(priorityMap).find((key) => priorityMap[key] === priority);
-    return (versionKey || config.versionResolver.default);
-};
-async function generateReleaseInfo({ context, commits, config, lastRelease, pullRequests, version, tag, name, isPreRelease, shouldDraft, targetCommitish, }) {
-    let body = config.header + config.template + config.footer;
-    body = template(body, {
-        $PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : '',
-        $CHANGES: generateChangeLog(pullRequests, config),
-        $CONTRIBUTORS: contributorsSentence({
-            commits,
-            pullRequests,
-            config,
-        }),
-        $OWNER: context.owner,
-        $REPOSITORY: context.repo,
-    }, config.replacers);
-    const versionInfo = getVersionInfo(lastRelease, config.versionTemplate, 
-    // Use the first override parameter to identify
-    // a version, from the most accurate to the least
-    version || tag || name, resolveVersionKeyIncrement(pullRequests, config), config.tagPrefix);
-    if (versionInfo) {
-        body = template(body, versionInfo);
-    }
-    if (tag === undefined) {
-        tag = versionInfo ? template(config.tagTemplate || '', versionInfo) : '';
-    }
-    else if (versionInfo) {
-        tag = template(tag, versionInfo);
-    }
-    if (name === undefined) {
-        name = versionInfo ? template(config.nameTemplate || '', versionInfo) : '';
-    }
-    else if (versionInfo) {
-        name = template(name, versionInfo);
-    }
-    // Tags are not supported as `target_commitish` by GitHub API.
-    // GITHUB_REF or the ref from webhook start with `refs/tags/`, so we handle
-    // those here. If it doesn't but is still a tag - it must have been set
-    // explicitly by the user, so it's fair to just let the API respond with an error.
-    if (targetCommitish.startsWith('refs/tags/')) {
-        targetCommitish = '';
-    }
-    return {
-        name,
-        tag,
-        body,
-        targetCommitish,
-        prerelease: isPreRelease,
-        draft: shouldDraft,
-    };
-}
-const createRelease = ({ context, releaseInfo, }) => {
-    return context.octokit.rest.repos.createRelease({
-        owner: context.owner,
-        repo: context.repo,
-        target_commitish: releaseInfo.targetCommitish,
-        name: releaseInfo.name,
-        tag_name: releaseInfo.tag,
-        body: releaseInfo.body,
-        draft: releaseInfo.draft,
-        prerelease: releaseInfo.prerelease,
-    });
-};
-const updateRelease = ({ context, draftRelease, releaseInfo, }) => {
-    const updateReleaseParameters = updateDraftReleaseParameters({
-        name: releaseInfo.name || draftRelease.name,
-        tag_name: releaseInfo.tag || draftRelease.tag_name,
-        target_commitish: releaseInfo.targetCommitish,
-    });
-    return context.octokit.rest.repos.updateRelease({
-        owner: context.owner,
-        repo: context.repo,
-        release_id: draftRelease.id,
-        body: releaseInfo.body,
-        draft: releaseInfo.draft,
-        prerelease: releaseInfo.prerelease,
-        ...updateReleaseParameters,
-    });
-};
-function updateDraftReleaseParameters(parameters) {
-    const updateReleaseParameters = { ...parameters };
-    // Let GitHub figure out `name` and `tag_name` if undefined
-    if (!updateReleaseParameters.name) {
-        delete updateReleaseParameters.name;
-    }
-    if (!updateReleaseParameters.tag_name) {
-        delete updateReleaseParameters.tag_name;
-    }
-    // Keep existing `target_commitish` if not overriden
-    // (sending `null` resets it to the default branch)
-    if (!updateReleaseParameters.target_commitish) {
-        delete updateReleaseParameters.target_commitish;
-    }
-    return updateReleaseParameters;
-}
-//# sourceMappingURL=releases.js.map
 // EXTERNAL MODULE: ../../node_modules/.pnpm/lodash@4.17.21/node_modules/lodash/lodash.js
 var lodash = __nccwpck_require__(1788);
-;// CONCATENATED MODULE: ../core/lib/pagination.js
+;// CONCATENATED MODULE: ../core/dist/index.js
+// src/release-drafter-octokit.ts
 
-/**
- * Utility function to paginate a GraphQL function using Relay-style cursor pagination.
- *
- * @param {graphql} queryFunction - function used to query the GraphQL API
- * @param {string} query - GraphQL query, must include `nodes` and `pageInfo` fields for the field that will be paginated
- * @param {RequestParameters} variables
- * @param {string[]} paginatePath - path to field to paginate
- */
-async function paginate(queryFunction, query, variables, paginatePath) {
-    const nodesPath = [...paginatePath, 'nodes'];
-    const pageInfoPath = [...paginatePath, 'pageInfo'];
-    const endCursorPath = [...pageInfoPath, 'endCursor'];
-    const hasNextPagePath = [...pageInfoPath, 'hasNextPage'];
-    const hasNextPage = (data) => lodash.get(data, hasNextPagePath);
-    const data = await queryFunction(query, variables);
-    if (!lodash.has(data, nodesPath)) {
-        throw new Error("Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field.");
+
+
+
+
+var githubApiUrl = process.env["GITHUB_API_URL"] || "https://api.github.com";
+var ReleaseDrafterOctokit = dist_node/* Octokit.plugin */.v.plugin(
+  plugin_rest_endpoint_methods_dist_node/* restEndpointMethods */.TC,
+  plugin_paginate_rest_dist_node/* paginateRest */.AA,
+  plugin_throttling_dist_node/* throttling */.O,
+  octokit_plugin_config_dist_node/* config */.vc
+).defaults({
+  baseUrl: githubApiUrl
+});
+function getOctokit(auth) {
+  return new ReleaseDrafterOctokit({
+    auth,
+    throttle: {
+      onRateLimit: (retryAfter, options, octokit) => {
+        octokit.log.warn(
+          `Request quota exhausted for request ${options.method} ${options.url}`
+        );
+        if (options.request?.retryCount === 0) {
+          octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+          return true;
+        }
+      },
+      onSecondaryRateLimit: (retryAfter, options, octokit) => {
+        octokit.log.warn(
+          `Abuse detected for request ${options.method} ${options.url}`
+        );
+      }
     }
-    if (!lodash.has(data, pageInfoPath) ||
-        !lodash.has(data, endCursorPath) ||
-        !lodash.has(data, hasNextPagePath)) {
-        throw new Error("Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field.");
-    }
-    while (hasNextPage(data)) {
-        const newData = await queryFunction(query, {
-            ...variables,
-            after: lodash.get(data, [...pageInfoPath, 'endCursor']),
-        });
-        const newNodes = lodash.get(newData, nodesPath);
-        const newPageInfo = lodash.get(newData, pageInfoPath);
-        lodash.set(data, pageInfoPath, newPageInfo);
-        lodash.update(data, nodesPath, (d) => [...d, ...newNodes]);
-    }
-    return data;
+  });
 }
-//# sourceMappingURL=pagination.js.map
-;// CONCATENATED MODULE: ../core/lib/commits.js
+
+// src/schema.ts
 
 
-const findCommitsWithPathChangesQuery = /* GraphQL */ `
+
+
+// src/default-config.ts
+var DEFAULT_CONFIG = Object.freeze({
+  autolabeler: [],
+  categories: [],
+  categoryTemplate: `## $TITLE`,
+  changeTemplate: `* $TITLE (#$NUMBER) @$AUTHOR`,
+  changeTitleEscapes: "",
+  commitish: "",
+  excludeContributors: [],
+  excludeLabels: [],
+  filterByCommitish: false,
+  footer: "",
+  header: "",
+  includeLabels: [],
+  includePaths: [],
+  nameTemplate: "v$RESOLVED_VERSION",
+  noChangesTemplate: `* No changes`,
+  noContributorsTemplate: "No contributors",
+  prerelease: false,
+  references: ["main"],
+  replacers: [],
+  sortBy: "merged_at" /* mergedAt */,
+  sortDirection: "descending" /* descending */,
+  tagPrefix: "v",
+  tagTemplate: "v$RESOLVED_VERSION",
+  template: `## What\u2019s Changed
+
+$CHANGES`,
+  versionTemplate: `$MAJOR.$MINOR.$PATCH`,
+  versionResolver: {
+    major: { labels: [] },
+    minor: { labels: [] },
+    patch: { labels: [] },
+    default: "patch" /* patch */
+  }
+});
+
+// src/schema.ts
+function toRegex(search) {
+  return /^\/.+\/[AJUXgimsux]*$/.test(search) ? lib(search) : new RegExp(escape_string_regexp(search), "g");
+}
+function validateOnlyOneUncategorizedCategoryExist(categories) {
+  const length = categories.filter(
+    (category) => category.labels.length === 0
+  ).length;
+  return length <= 1;
+}
+function schema(defaultBranch = "main") {
+  return mod.object({
+    references: mod.array(mod.string()).default([defaultBranch]),
+    changeTemplate: mod.string().default(DEFAULT_CONFIG.changeTemplate),
+    changeTitleEscapes: mod.string().default(DEFAULT_CONFIG.changeTitleEscapes),
+    noChangesTemplate: mod.string().default(DEFAULT_CONFIG.noChangesTemplate),
+    versionTemplate: mod.string().default(DEFAULT_CONFIG.versionTemplate),
+    nameTemplate: mod.string().default(DEFAULT_CONFIG.nameTemplate),
+    tagPrefix: mod.string().default(DEFAULT_CONFIG.tagPrefix),
+    tagTemplate: mod.string().default(DEFAULT_CONFIG.tagTemplate),
+    excludeLabels: mod.array(mod.string()).default(DEFAULT_CONFIG.excludeLabels),
+    includeLabels: mod.array(mod.string()).default(DEFAULT_CONFIG.includeLabels),
+    includePaths: mod.array(mod.string()).default(DEFAULT_CONFIG.includePaths),
+    excludeContributors: mod.array(mod.string()).default(DEFAULT_CONFIG.excludeContributors),
+    noContributorsTemplate: mod.string().default(DEFAULT_CONFIG.noContributorsTemplate),
+    sortBy: mod["enum"](["merged_at" /* mergedAt */, "title" /* title */]).default(DEFAULT_CONFIG.sortBy),
+    sortDirection: mod["enum"](["ascending" /* ascending */, "descending" /* descending */]).default(DEFAULT_CONFIG.sortDirection),
+    prerelease: mod.boolean().default(DEFAULT_CONFIG.prerelease),
+    filterByCommitish: mod.boolean().default(DEFAULT_CONFIG.filterByCommitish),
+    commitish: mod.string().default(DEFAULT_CONFIG.commitish),
+    replacers: mod.array(
+      mod.object({
+        search: mod.string().transform((value) => toRegex(value)),
+        replace: mod.string().or(mod.literal(""))
+      })
+    ).default([]),
+    autolabeler: mod.array(
+      mod.object({
+        label: mod.string(),
+        files: mod.array(mod.string()).default([]),
+        branch: mod.array(mod.string().transform((value) => toRegex(value))).default([]),
+        title: mod.array(mod.string().transform((value) => toRegex(value))).default([]),
+        body: mod.array(mod.string().transform((value) => toRegex(value))).default([])
+      })
+    ).default([]),
+    categories: mod.array(
+      mod.object({
+        title: mod.string(),
+        collapseAfter: mod.number().nonnegative().default(0),
+        labels: mod.array(mod.string()).default([])
+      })
+    ).default([]).refine(
+      (categories) => validateOnlyOneUncategorizedCategoryExist(categories),
+      {
+        message: "Multiple categories detected with no labels.\nOnly one category with no labels is supported for uncategorized pull requests."
+      }
+    ),
+    versionResolver: mod.object({
+      major: mod.object({
+        labels: mod.array(mod.string()).default([])
+      }),
+      minor: mod.object({
+        labels: mod.array(mod.string()).default([])
+      }),
+      patch: mod.object({
+        labels: mod.array(mod.string()).default([])
+      }),
+      default: mod["enum"]([
+        "major" /* major */,
+        "minor" /* minor */,
+        "patch" /* patch */
+      ]).default("patch" /* patch */)
+    }).default(DEFAULT_CONFIG.versionResolver),
+    categoryTemplate: mod.string().default(DEFAULT_CONFIG.categoryTemplate),
+    header: mod.string().default(DEFAULT_CONFIG.header),
+    template: mod.string().min(1).default(DEFAULT_CONFIG.template),
+    footer: mod.string().default(DEFAULT_CONFIG.footer)
+  });
+}
+
+// src/context.ts
+
+var Context = class {
+  octokit;
+  owner;
+  repo;
+  pullRequest;
+  issueNumber;
+  configName;
+  defaultBranch;
+  constructor(octokit, defaultBranch, {
+    owner,
+    repo,
+    issue,
+    pullRequest,
+    configName
+  }) {
+    this.octokit = octokit;
+    this.owner = owner;
+    this.repo = repo;
+    this.issueNumber = issue || 0;
+    this.pullRequest = pullRequest || 0;
+    this.defaultBranch = defaultBranch;
+    this.configName = configName;
+  }
+  ownerRepo = () => `${this.owner}/${this.repo}`;
+  async config() {
+    const parameters = {
+      owner: this.owner,
+      repo: this.repo,
+      path: `.github/${this.configName}`,
+      defaults(configs) {
+        const result = cjs.all([DEFAULT_CONFIG, ...configs]);
+        return result;
+      },
+      branch: this.defaultBranch
+    };
+    const { config: config2 } = await this.octokit.config.get(parameters);
+    return schema(this.defaultBranch).parse(config2);
+  }
+};
+
+// src/releases.ts
+
+
+
+// src/versions.ts
+
+var splitSemVersion = (input) => {
+  if (!input.version) {
+    return;
+  }
+  const version = input.inc ? semver.inc(input.version, input.inc, true) : input.version.version;
+  return {
+    ...input,
+    version,
+    $MAJOR: semver.major(version),
+    $MINOR: semver.minor(version),
+    $PATCH: semver.patch(version),
+    $COMPLETE: version
+  };
+};
+var defaultVersionInfo = {
+  $NEXT_MAJOR_VERSION: {
+    version: "1.0.0",
+    template: "$MAJOR.$MINOR.$PATCH",
+    versionInput: void 0,
+    inc: "major",
+    $MAJOR: 1,
+    $MINOR: 0,
+    $PATCH: 0
+  },
+  $NEXT_MAJOR_VERSION_MAJOR: {
+    version: "1.0.0",
+    template: "$MAJOR",
+    versionInput: void 0,
+    inc: "major",
+    $MAJOR: 1,
+    $MINOR: 0,
+    $PATCH: 0
+  },
+  $NEXT_MAJOR_VERSION_MINOR: {
+    version: "1.0.0",
+    template: "$MINOR",
+    versionInput: void 0,
+    inc: "major",
+    $MAJOR: 1,
+    $MINOR: 0,
+    $PATCH: 0
+  },
+  $NEXT_MAJOR_VERSION_PATCH: {
+    version: "1.0.0",
+    template: "$PATCH",
+    versionInput: void 0,
+    inc: "major",
+    $MAJOR: 1,
+    $MINOR: 0,
+    $PATCH: 0
+  },
+  $NEXT_MINOR_VERSION: {
+    version: "0.1.0",
+    template: "$MAJOR.$MINOR.$PATCH",
+    versionInput: void 0,
+    inc: "minor",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  },
+  $NEXT_MINOR_VERSION_MAJOR: {
+    version: "0.1.0",
+    template: "$MAJOR",
+    versionInput: void 0,
+    inc: "minor",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  },
+  $NEXT_MINOR_VERSION_MINOR: {
+    version: "0.1.0",
+    template: "$MINOR",
+    versionInput: void 0,
+    inc: "minor",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  },
+  $NEXT_MINOR_VERSION_PATCH: {
+    version: "0.1.0",
+    template: "$PATCH",
+    versionInput: void 0,
+    inc: "minor",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  },
+  $NEXT_PATCH_VERSION: {
+    version: "0.1.0",
+    template: "$MAJOR.$MINOR.$PATCH",
+    versionInput: void 0,
+    inc: "patch",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  },
+  $NEXT_PATCH_VERSION_MAJOR: {
+    version: "0.1.0",
+    template: "$MAJOR",
+    versionInput: void 0,
+    inc: "patch",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  },
+  $NEXT_PATCH_VERSION_MINOR: {
+    version: "0.1.0",
+    template: "$MINOR",
+    versionInput: void 0,
+    inc: "patch",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  },
+  $NEXT_PATCH_VERSION_PATCH: {
+    version: "0.1.0",
+    template: "$PATCH",
+    versionInput: void 0,
+    inc: "patch",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  },
+  $INPUT_VERSION: void 0,
+  $RESOLVED_VERSION: {
+    version: "0.1.0",
+    template: "$MAJOR.$MINOR.$PATCH",
+    versionInput: void 0,
+    inc: "patch",
+    $MAJOR: 0,
+    $MINOR: 1,
+    $PATCH: 0
+  }
+};
+function getTemplatableVersion(input) {
+  const templatableVersion = {
+    $NEXT_MAJOR_VERSION: splitSemVersion({ ...input, inc: "major" }),
+    $NEXT_MAJOR_VERSION_MAJOR: splitSemVersion({
+      ...input,
+      inc: "major",
+      template: "$MAJOR"
+    }),
+    $NEXT_MAJOR_VERSION_MINOR: splitSemVersion({
+      ...input,
+      inc: "major",
+      template: "$MINOR"
+    }),
+    $NEXT_MAJOR_VERSION_PATCH: splitSemVersion({
+      ...input,
+      inc: "major",
+      template: "$PATCH"
+    }),
+    $NEXT_MINOR_VERSION: splitSemVersion({ ...input, inc: "minor" }),
+    $NEXT_MINOR_VERSION_MAJOR: splitSemVersion({
+      ...input,
+      inc: "minor",
+      template: "$MAJOR"
+    }),
+    $NEXT_MINOR_VERSION_MINOR: splitSemVersion({
+      ...input,
+      inc: "minor",
+      template: "$MINOR"
+    }),
+    $NEXT_MINOR_VERSION_PATCH: splitSemVersion({
+      ...input,
+      inc: "minor",
+      template: "$PATCH"
+    }),
+    $NEXT_PATCH_VERSION: splitSemVersion({ ...input, inc: "patch" }),
+    $NEXT_PATCH_VERSION_MAJOR: splitSemVersion({
+      ...input,
+      inc: "patch",
+      template: "$MAJOR"
+    }),
+    $NEXT_PATCH_VERSION_MINOR: splitSemVersion({
+      ...input,
+      inc: "patch",
+      template: "$MINOR"
+    }),
+    $NEXT_PATCH_VERSION_PATCH: splitSemVersion({
+      ...input,
+      inc: "patch",
+      template: "$PATCH"
+    }),
+    $INPUT_VERSION: splitSemVersion({ ...input, version: input.versionInput }),
+    $RESOLVED_VERSION: splitSemVersion({
+      ...input,
+      inc: input.versionKeyIncrement || "patch"
+    })
+  };
+  templatableVersion.$RESOLVED_VERSION = templatableVersion.$INPUT_VERSION || templatableVersion.$RESOLVED_VERSION;
+  return templatableVersion;
+}
+function toSemver(version) {
+  const result = semver.parse(version);
+  if (result) {
+    return result;
+  }
+  return semver.coerce(version) ?? void 0;
+}
+function coerceVersion(input, tagPrefix) {
+  if (!input) {
+    return;
+  }
+  const stripTag = (input2) => tagPrefix && input2.startsWith(tagPrefix) ? input2.slice(tagPrefix.length) : input2;
+  return typeof input === "object" ? toSemver(stripTag(input.tag_name)) || toSemver(stripTag(input.name)) : toSemver(stripTag(input));
+}
+function getVersionInfo(release, template2, inputVersion, versionKeyIncrement, tagPrefix) {
+  const releaseVersion = coerceVersion(release, tagPrefix);
+  const versionInput = coerceVersion(inputVersion, tagPrefix);
+  const version = !releaseVersion && versionInput ? versionInput : releaseVersion;
+  if (!version) {
+    return defaultVersionInfo;
+  }
+  return {
+    ...getTemplatableVersion({
+      version,
+      template: template2,
+      versionInput,
+      versionKeyIncrement
+    })
+  };
+}
+
+// src/template.ts
+
+var templateReplacer = mod.object({ template: mod.string() }).passthrough();
+function template(input, objectReplacer, customReplacers) {
+  let output = input.replace(/(\$[A-Z_]+)/g, (_3, k) => {
+    if (!(k in objectReplacer)) {
+      return k;
+    }
+    const replacer = templateReplacer.safeParse(objectReplacer[k]);
+    if (replacer.success) {
+      return template(replacer.data.template, replacer.data);
+    }
+    return objectReplacer[k];
+  });
+  if (customReplacers) {
+    for (const { search, replace } of customReplacers) {
+      output = output.replace(search, replace);
+    }
+  }
+  return output;
+}
+
+// src/releases.ts
+var sortReleases = (releases) => {
+  try {
+    return releases.sort((r1, r2) => compare_versions(r1.tag_name, r2.tag_name));
+  } catch {
+    return releases.sort(
+      (r1, r2) => new Date(r1.created_at).getDate() - new Date(r2.created_at).getDate()
+    );
+  }
+};
+var RELEASE_COUNT_LIMIT = 1e3;
+var findReleases = async ({
+  context,
+  targetCommitish,
+  filterByCommitish,
+  tagPrefix
+}) => {
+  let releaseCount = 0;
+  const releases = await context.octokit.paginate(
+    context.octokit.rest.repos.listReleases.endpoint.merge({
+      owner: context.owner,
+      repo: context.repo,
+      per_page: 100
+    }),
+    (response, done) => {
+      releaseCount += response.data.length;
+      if (releaseCount >= RELEASE_COUNT_LIMIT) {
+        done();
+      }
+      return response.data;
+    }
+  );
+  const headReferenceRegex = /^refs\/heads\//;
+  const targetCommitishName = targetCommitish.replace(headReferenceRegex, "");
+  const commitishFilteredReleases = filterByCommitish ? releases.filter(
+    (r) => targetCommitishName === r.target_commitish.replace(headReferenceRegex, "")
+  ) : releases;
+  const filteredReleases = tagPrefix ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix)) : commitishFilteredReleases;
+  const sortedPublishedReleases = sortReleases(
+    filteredReleases.filter((r) => !r.draft)
+  );
+  const draftRelease = filteredReleases.find((r) => r.draft);
+  const lastRelease = sortedPublishedReleases[sortedPublishedReleases.length - 1];
+  if (draftRelease) {
+  } else {
+  }
+  if (lastRelease) {
+  } else {
+  }
+  return { draftRelease, lastRelease };
+};
+var contributorsSentence = ({
+  commits,
+  pullRequests,
+  config: config2
+}) => {
+  const { excludeContributors, noContributorsTemplate } = config2;
+  const contributors = /* @__PURE__ */ new Set();
+  for (const commit of commits) {
+    if (commit.author?.user) {
+      if (!excludeContributors.includes(commit.author.user.login)) {
+        contributors.add(`@${commit.author.user.login}`);
+      }
+    } else if (commit.author?.name) {
+      contributors.add(commit.author.name);
+    }
+  }
+  for (const pullRequest of pullRequests) {
+    if (pullRequest.author && !excludeContributors.includes(pullRequest.author.login)) {
+      contributors.add(`@${pullRequest.author.login}`);
+    }
+  }
+  const sortedContributors = [...contributors].sort();
+  if (sortedContributors.length > 1) {
+    return sortedContributors.slice(0, -1).join(", ") + " and " + sortedContributors.slice(-1);
+  } else if (sortedContributors.length === 1) {
+    return sortedContributors[0];
+  } else {
+    return noContributorsTemplate;
+  }
+};
+var getFilterExcludedPullRequests = (pullRequest, excludeLabels) => {
+  const labels = pullRequest.labels?.nodes;
+  return !labels?.some((label) => excludeLabels.includes(label?.name ?? ""));
+};
+var getFilterIncludedPullRequests = (pullRequest, includeLabels) => {
+  const labels = pullRequest.labels?.nodes;
+  return includeLabels.length === 0 || labels?.some((label) => includeLabels.includes(label?.name ?? ""));
+};
+function getUncategorizedCategoryIndex(categories) {
+  const index = categories.findIndex((category) => category.labels.length === 0);
+  return index === -1 ? 0 : index;
+}
+var categorizePullRequests = (pullRequests, config2) => {
+  const { excludeLabels, includeLabels, categories } = config2;
+  if (categories.length === 0) {
+    return [
+      {
+        pullRequests,
+        labels: [],
+        collapseAfter: 0
+      }
+    ];
+  }
+  const allCategoryLabels = new Set(
+    categories.flatMap((category) => category.labels)
+  );
+  const uncategorizedCategoryIndex = getUncategorizedCategoryIndex(categories);
+  const categorizedPullRequests = [];
+  if (uncategorizedCategoryIndex === 0) {
+    categorizedPullRequests.push({
+      pullRequests: [],
+      labels: [],
+      collapseAfter: 0
+    });
+  }
+  categories.map((category) => {
+    categorizedPullRequests.push({
+      ...category,
+      pullRequests: []
+    });
+  });
+  const filterUncategorizedPullRequests = (pullRequest) => {
+    const labels = pullRequest.labels?.nodes || [];
+    if (labels.length === 0 || !labels.some((label) => allCategoryLabels.has(label?.name ?? ""))) {
+      categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(
+        pullRequest
+      );
+      return false;
+    }
+    return true;
+  };
+  const filterAllPullRequests = (pullRequest, excludeLabels2, includeLabels2) => {
+    return getFilterExcludedPullRequests(pullRequest, excludeLabels2) && getFilterIncludedPullRequests(pullRequest, includeLabels2) && filterUncategorizedPullRequests(pullRequest);
+  };
+  const filteredPullRequests = pullRequests.filter(
+    (pullRequest) => filterAllPullRequests(pullRequest, excludeLabels, includeLabels)
+  );
+  for (const category of categorizedPullRequests) {
+    if (category.pullRequests == void 0) {
+      category.pullRequests = [];
+    }
+    for (const pullRequest of filteredPullRequests) {
+      const labels = pullRequest.labels?.nodes || [];
+      if (labels.some((label) => category.labels.includes(label.name))) {
+        category.pullRequests.push(pullRequest);
+      }
+    }
+  }
+  return categorizedPullRequests;
+};
+var generateChangeLog = (pullRequests, config2) => {
+  if (pullRequests.length === 0) {
+    return config2["noChangesTemplate"];
+  }
+  const categorizedPullRequests = categorizePullRequests(pullRequests, config2);
+  const escapeTitle = (title) => title.replace(
+    new RegExp(`[${escape_string_regexp(config2.changeTitleEscapes)}]|\`.*?\``, "g"),
+    (match) => {
+      if (match.length > 1)
+        return match;
+      if (match == "@" || match == "#")
+        return `${match}<!---->`;
+      return `\\${match}`;
+    }
+  );
+  const pullRequestsToString = (pullRequests2) => pullRequests2.map(
+    (pullRequest) => template(config2.changeTemplate, {
+      $TITLE: escapeTitle(pullRequest.title),
+      $NUMBER: pullRequest.number,
+      $AUTHOR: pullRequest.author ? pullRequest.author.login : "ghost",
+      $BODY: pullRequest.body,
+      $URL: pullRequest.url,
+      $BASE_REF_NAME: pullRequest.baseRefName,
+      $HEAD_REF_NAME: pullRequest.headRefName
+    })
+  ).join("\n");
+  const changeLog = [];
+  for (const [index, category] of categorizedPullRequests.entries()) {
+    if (category.pullRequests.length === 0) {
+      continue;
+    }
+    if (category.title) {
+      changeLog.push(
+        template(config2.categoryTemplate, { $TITLE: category.title }),
+        "\n\n"
+      );
+    }
+    const pullRequestString = pullRequestsToString(category.pullRequests);
+    const shouldCollapse = category.collapseAfter !== 0 && category.pullRequests.length > category.collapseAfter;
+    if (shouldCollapse) {
+      changeLog.push(
+        "<details>",
+        "\n",
+        `<summary>${category.pullRequests.length} changes</summary>`,
+        "\n\n",
+        pullRequestString,
+        "\n",
+        "</details>"
+      );
+    } else {
+      changeLog.push(pullRequestString);
+    }
+    if (index + 1 !== categorizedPullRequests.length)
+      changeLog.push("\n\n");
+  }
+  return changeLog.join("").trim();
+};
+var resolveVersionKeyIncrement = (pullRequests, config2) => {
+  const priorityMap = {
+    patch: 1,
+    minor: 2,
+    major: 3
+  };
+  const labelToKeyMap = Object.fromEntries(
+    Object.keys(priorityMap).flatMap((key) => {
+      return [
+        config2.versionResolver[key].labels.map(
+          (label) => [label, key]
+        )
+      ];
+    }).flat()
+  );
+  const keys = pullRequests.filter(
+    (pullRequest) => getFilterExcludedPullRequests(pullRequest, config2.excludeLabels) && getFilterIncludedPullRequests(pullRequest, config2.includeLabels)
+  ).flatMap(
+    (pr) => pr.labels?.nodes?.map((node) => labelToKeyMap[node?.name ?? ""])
+  ).filter(Boolean);
+  const keyPriorities = keys.map(
+    (key) => priorityMap[key]
+  );
+  const priority = Math.max(...keyPriorities);
+  const versionKey = Object.keys(priorityMap).find(
+    (key) => priorityMap[key] === priority
+  );
+  return versionKey || config2.versionResolver.default;
+};
+async function generateReleaseInfo({
+  context,
+  commits,
+  config: config2,
+  lastRelease,
+  pullRequests,
+  version,
+  tag,
+  name,
+  isPreRelease,
+  shouldDraft,
+  targetCommitish
+}) {
+  let body = config2.header + config2.template + config2.footer;
+  body = template(
+    body,
+    {
+      $PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : "",
+      $CHANGES: generateChangeLog(pullRequests, config2),
+      $CONTRIBUTORS: contributorsSentence({
+        commits,
+        pullRequests,
+        config: config2
+      }),
+      $OWNER: context.owner,
+      $REPOSITORY: context.repo
+    },
+    config2.replacers
+  );
+  const versionInfo = getVersionInfo(
+    lastRelease,
+    config2.versionTemplate,
+    version || tag || name,
+    resolveVersionKeyIncrement(pullRequests, config2),
+    config2.tagPrefix
+  );
+  if (versionInfo) {
+    body = template(body, versionInfo);
+  }
+  if (tag === void 0) {
+    tag = versionInfo ? template(config2.tagTemplate || "", versionInfo) : "";
+  } else if (versionInfo) {
+    tag = template(tag, versionInfo);
+  }
+  if (name === void 0) {
+    name = versionInfo ? template(config2.nameTemplate || "", versionInfo) : "";
+  } else if (versionInfo) {
+    name = template(name, versionInfo);
+  }
+  if (targetCommitish.startsWith("refs/tags/")) {
+    targetCommitish = "";
+  }
+  return {
+    name,
+    tag,
+    body,
+    targetCommitish,
+    prerelease: isPreRelease,
+    draft: shouldDraft
+  };
+}
+var createRelease = ({
+  context,
+  releaseInfo
+}) => {
+  return context.octokit.rest.repos.createRelease({
+    owner: context.owner,
+    repo: context.repo,
+    target_commitish: releaseInfo.targetCommitish,
+    name: releaseInfo.name,
+    tag_name: releaseInfo.tag,
+    body: releaseInfo.body,
+    draft: releaseInfo.draft,
+    prerelease: releaseInfo.prerelease
+  });
+};
+var updateRelease = ({
+  context,
+  draftRelease,
+  releaseInfo
+}) => {
+  const updateReleaseParameters = updateDraftReleaseParameters({
+    name: releaseInfo.name || draftRelease.name,
+    tag_name: releaseInfo.tag || draftRelease.tag_name,
+    target_commitish: releaseInfo.targetCommitish
+  });
+  return context.octokit.rest.repos.updateRelease({
+    owner: context.owner,
+    repo: context.repo,
+    release_id: draftRelease.id,
+    body: releaseInfo.body,
+    draft: releaseInfo.draft,
+    prerelease: releaseInfo.prerelease,
+    ...updateReleaseParameters
+  });
+};
+function updateDraftReleaseParameters(parameters) {
+  const updateReleaseParameters = { ...parameters };
+  if (!updateReleaseParameters.name) {
+    delete updateReleaseParameters.name;
+  }
+  if (!updateReleaseParameters.tag_name) {
+    delete updateReleaseParameters.tag_name;
+  }
+  if (!updateReleaseParameters.target_commitish) {
+    delete updateReleaseParameters.target_commitish;
+  }
+  return updateReleaseParameters;
+}
+
+// src/commits.ts
+
+
+// src/pagination.ts
+
+async function paginate(queryFunction, query, variables, paginatePath) {
+  const nodesPath = [...paginatePath, "nodes"];
+  const pageInfoPath = [...paginatePath, "pageInfo"];
+  const endCursorPath = [...pageInfoPath, "endCursor"];
+  const hasNextPagePath = [...pageInfoPath, "hasNextPage"];
+  const hasNextPage = (data2) => lodash.get(data2, hasNextPagePath);
+  const data = await queryFunction(query, variables);
+  if (!lodash.has(data, nodesPath)) {
+    throw new Error(
+      "Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field."
+    );
+  }
+  if (!lodash.has(data, pageInfoPath) || !lodash.has(data, endCursorPath) || !lodash.has(data, hasNextPagePath)) {
+    throw new Error(
+      "Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field."
+    );
+  }
+  while (hasNextPage(data)) {
+    const newData = await queryFunction(query, {
+      ...variables,
+      after: lodash.get(data, [...pageInfoPath, "endCursor"])
+    });
+    const newNodes = lodash.get(newData, nodesPath);
+    const newPageInfo = lodash.get(newData, pageInfoPath);
+    lodash.set(data, pageInfoPath, newPageInfo);
+    lodash.update(data, nodesPath, (d) => [...d, ...newNodes]);
+  }
+  return data;
+}
+
+// src/commits.ts
+var findCommitsWithPathChangesQuery = `
 	query findCommitsWithPathChangesQuery(
 		$name: String!
 		$owner: String!
@@ -39954,7 +39958,7 @@ const findCommitsWithPathChangesQuery = /* GraphQL */ `
 		}
 	}
 `;
-const findCommitsWithAssociatedPullRequestsQuery = /* GraphQL */ `
+var findCommitsWithAssociatedPullRequestsQuery = `
 	query findCommitsWithAssociatedPullRequests(
 		$name: String!
 		$owner: String!
@@ -40016,103 +40020,113 @@ const findCommitsWithAssociatedPullRequestsQuery = /* GraphQL */ `
 		}
 	}
 `;
-const findCommitsWithAssociatedPullRequests = async ({ context, targetCommitish, lastRelease, config, }) => {
-    const variables = {
-        name: context.repo,
-        owner: context.owner,
-        targetCommitish,
-        withPullRequestBody: config.changeTemplate.includes('$BODY'),
-        withPullRequestURL: config.changeTemplate.includes('$URL'),
-        withBaseRefName: config.changeTemplate.includes('$BASE_REF_NAME'),
-        withHeadRefName: config.changeTemplate.includes('$HEAD_REF_NAME'),
-        since: lastRelease?.created_at ?? undefined,
-    };
-    const includePaths = config.includePaths;
-    const dataPath = ['repository', 'object', 'history'];
-    const repoNameWithOwner = context.ownerRepo();
-    const includedIds = {};
-    if (includePaths.length > 0) {
-        let anyChanges = false;
-        for (const path of includePaths) {
-            const pathData = await paginate(context.octokit.graphql, findCommitsWithPathChangesQuery, lastRelease
-                ? { ...variables, since: lastRelease.created_at, path }
-                : { ...variables, path }, dataPath);
-            const commitsWithPathChanges = lodash.get(pathData, [...dataPath, 'nodes']);
-            includedIds[path] = includedIds[path] || new Set([]);
-            for (const { id } of commitsWithPathChanges) {
-                anyChanges = true;
-                includedIds[path].add(id);
-            }
-        }
-        if (!anyChanges) {
-            // Short circuit to avoid blowing GraphQL budget
-            return { commits: [], pullRequests: [] };
-        }
+var findCommitsWithAssociatedPullRequests = async ({
+  context,
+  targetCommitish,
+  lastRelease,
+  config: config2
+}) => {
+  const variables = {
+    name: context.repo,
+    owner: context.owner,
+    targetCommitish,
+    withPullRequestBody: config2.changeTemplate.includes("$BODY"),
+    withPullRequestURL: config2.changeTemplate.includes("$URL"),
+    withBaseRefName: config2.changeTemplate.includes("$BASE_REF_NAME"),
+    withHeadRefName: config2.changeTemplate.includes("$HEAD_REF_NAME"),
+    since: lastRelease?.created_at ?? void 0
+  };
+  const includePaths = config2.includePaths;
+  const dataPath = ["repository", "object", "history"];
+  const repoNameWithOwner = context.ownerRepo();
+  const includedIds = {};
+  if (includePaths.length > 0) {
+    let anyChanges = false;
+    for (const path of includePaths) {
+      const pathData = await paginate(
+        context.octokit.graphql,
+        findCommitsWithPathChangesQuery,
+        lastRelease ? { ...variables, since: lastRelease.created_at, path } : { ...variables, path },
+        dataPath
+      );
+      const commitsWithPathChanges = lodash.get(pathData, [...dataPath, "nodes"]);
+      includedIds[path] = includedIds[path] || /* @__PURE__ */ new Set([]);
+      for (const { id } of commitsWithPathChanges) {
+        anyChanges = true;
+        includedIds[path].add(id);
+      }
     }
-    const data = await paginate(context.octokit.graphql, findCommitsWithAssociatedPullRequestsQuery, variables, dataPath);
-    const filterCommit = (commit) => {
-        if (includePaths.length > 0) {
-            let included = false;
-            for (const path of includePaths) {
-                if (includedIds[path].has(commit.id)) {
-                    included = true;
-                    break;
-                }
-            }
-            if (!included) {
-                return false;
-            }
+    if (!anyChanges) {
+      return { commits: [], pullRequests: [] };
+    }
+  }
+  const data = await paginate(
+    context.octokit.graphql,
+    findCommitsWithAssociatedPullRequestsQuery,
+    variables,
+    dataPath
+  );
+  const filterCommit = (commit) => {
+    if (includePaths.length > 0) {
+      let included = false;
+      for (const path of includePaths) {
+        if (includedIds[path].has(commit.id)) {
+          included = true;
+          break;
         }
-        if (lastRelease) {
-            return new Date(commit.committedDate) > new Date(lastRelease.created_at);
-        }
-        return true;
-    };
-    const commits = lodash.get(data, [
-        ...dataPath,
-        'nodes',
-    ]).filter((commit) => filterCommit(commit));
-    const pullRequests = lodash.uniqBy(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []), 'number').filter((pr) => pr.baseRepository.nameWithOwner === repoNameWithOwner && pr.merged);
-    return { commits, pullRequests };
+      }
+      if (!included) {
+        return false;
+      }
+    }
+    if (lastRelease) {
+      return new Date(commit.committedDate) > new Date(lastRelease.created_at);
+    }
+    return true;
+  };
+  const commits = lodash.get(data, [
+    ...dataPath,
+    "nodes"
+  ]).filter((commit) => filterCommit(commit));
+  const pullRequests = lodash.uniqBy(
+    commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []),
+    "number"
+  ).filter(
+    (pr) => pr.baseRepository.nameWithOwner === repoNameWithOwner && pr.merged
+  );
+  return { commits, pullRequests };
 };
-//# sourceMappingURL=commits.js.map
-;// CONCATENATED MODULE: ../core/lib/sort-pull-requests.js
+
+// src/sort-pull-requests.ts
 function sortPullRequests(pullRequests, sortBy, sortDirection) {
-    const getSortField = sortBy === "title" /* SORT_BY.title */ ? getTitle : getMergedAt;
-    const sort = sortDirection === "ascending" /* SORT_DIRECTIONS.ascending */
-        ? dateSortAscending
-        : dateSortDescending;
-    return [...pullRequests].sort((a, b) => sort(getSortField(a), getSortField(b)));
+  const getSortField = sortBy === "title" /* title */ ? getTitle : getMergedAt;
+  const sort = sortDirection === "ascending" /* ascending */ ? dateSortAscending : dateSortDescending;
+  return [...pullRequests].sort(
+    (a, b) => sort(getSortField(a), getSortField(b))
+  );
 }
 function getMergedAt(pullRequest) {
-    return new Date(pullRequest.mergedAt);
+  return new Date(pullRequest.mergedAt);
 }
 function getTitle(pullRequest) {
-    return pullRequest.title;
+  return pullRequest.title;
 }
 function dateSortAscending(date1, date2) {
-    if (date1 > date2)
-        return 1;
-    if (date1 < date2)
-        return -1;
-    return 0;
+  if (date1 > date2)
+    return 1;
+  if (date1 < date2)
+    return -1;
+  return 0;
 }
 function dateSortDescending(date1, date2) {
-    if (date1 > date2)
-        return -1;
-    if (date1 < date2)
-        return 1;
-    return 0;
+  if (date1 > date2)
+    return -1;
+  if (date1 < date2)
+    return 1;
+  return 0;
 }
-//# sourceMappingURL=sort-pull-requests.js.map
-;// CONCATENATED MODULE: ../core/lib/index.js
 
 
-
-
-
-
-//# sourceMappingURL=index.js.map
 ;// CONCATENATED MODULE: external "node:fs"
 const external_node_fs_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs");
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@actions+http-client@2.0.1/node_modules/@actions/http-client/lib/index.js
