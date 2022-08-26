@@ -2,12 +2,19 @@
 	"name": "@release-drafter/core",
 	"version": "1.0.0",
 	"description": "",
-	"main": "lib/index.js",
-	"exports": "./lib/index.js",
-	"types": "./lib/index.d.ts",
+	"exports": {
+		".": "./dist/index.js",
+		"./package.json": "./package.json"
+	},
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"type": "module",
+	"files": [
+		"dist"
+	],
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json",
+		"build": "tsup",
 		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
 	},
 	"keywords": [],
@@ -44,6 +51,21 @@
 		"cross-env": "^7.0.3",
 		"jest": "^28.1.3",
 		"ts-jest": "^28.0.7",
+		"tsup": "^6.2.2",
 		"typescript": "^4.7.4"
+	},
+	"tsup": {
+		"clean": true,
+		"dts": "./src/index.ts",
+		"entry": [
+			"./src/index.ts"
+		],
+		"format": [
+			"esm"
+		],
+		"outDir": "./dist",
+		"sourcemap": false,
+		"target": "es2022",
+		"tsconfig": "../tsconfig.dts.json"
 	}
 }

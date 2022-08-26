@@ -1,8 +1,6 @@
 {
 	"name": "@release-drafter/schema",
-	"version": "1.0.0",
 	"description": "",
-	"main": "lib/main.js",
 	"type": "module",
 	"private": true,
 	"scripts": {
