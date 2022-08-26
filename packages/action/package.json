@@ -1,6 +1,5 @@
 {
 	"name": "@release-drafter/action",
-	"version": "1.0.0",
 	"description": "",
 	"main": "dist/index.js",
 	"type": "module",
