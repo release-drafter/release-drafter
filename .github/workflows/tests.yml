@@ -26,8 +26,10 @@ jobs:
       - run: pnpm lint:fix
       - run: pnpm prettier:fix
       - run: pnpm build
-      - name: correct vercel/ncc crlf output
-        run: sed -i 's/\x0D$//' ./dist/index.js
       - name: check for unstaged files
         if: ${{ github.actor != 'dependabot[bot]' }}
-        run: .github/no-unstaged-files.sh
+        run: |
+          if [ "$(git diff --ignore-space-at-eol | wc -l)" -gt "0" ]; then
+            echo "::error::💥 Unstaged changes detected. Locally try running: pnpm prettier:fix && pnpm lint:fix && pnpm build"
+            exit 1
+          fi

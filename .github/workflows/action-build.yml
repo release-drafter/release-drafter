@@ -41,11 +41,11 @@ jobs:
 
       - name: Commit and push if needed
         run: |
-          git add .
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "💾 no changes to dist/index.js"
+          if [ "$(git diff --ignore-space-at-eol | wc -l)" -eq "0" ]; then
+            echo "❎ no changes"
             exit 0
           fi
+          git add .
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "Apply dist/index.js changes"
