@@ -12,6 +12,7 @@ export default {
 	},
 	moduleNameMapper: {
 		'^@release\\-drafter/(.*)$': '<rootDir>/../../packages/$1/src',
+		'@jest/globals': '<rootDir>/../../node_modules/@jest/globals',
 		'^(\\.{1,2}/.*)\\.js$': '$1',
 	},
 }
