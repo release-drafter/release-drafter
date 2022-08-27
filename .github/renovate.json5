@@ -1,0 +1,34 @@
+{
+	$schema: 'https://docs.renovatebot.com/renovate-schema.json',
+	labels: ['type: dependencies'],
+	extends: [
+		'config:base',
+		':maintainLockFilesWeekly',
+		':rebaseStalePrs',
+		':disableDependencyDashboard',
+		'docker:disableMajor',
+		'docker:pinDigests',
+		'group:linters',
+		'helpers:pinGitHubActionDigests',
+		'schedule:earlyMondays',
+	],
+	timezone: 'Europe/Copenhagen',
+	prConcurrentLimit: 10,
+	rebaseWhen: 'behind-base-branch',
+	configMigration: true,
+	assignees: ['jetersen'],
+	packageRules: [
+		{
+			description: 'v prefix workaround for action updates',
+			matchDepTypes: ['action'],
+			extractVersion: '^(?<version>v\\d+\\.\\d+\\.\\d+)$',
+			versioning: 'regex:^v(?<major>\\d+)(\\.(?<minor>\\d+)\\.(?<patch>\\d+))?$',
+		},
+		{
+			description: 'Group prettier packages',
+			matchPackageNames: ['prettier'],
+			matchPackagePatterns: ['^@prettier\\/', '^prettier-plugin-'],
+			groupName: 'prettier packages',
+		},
+	],
+}
