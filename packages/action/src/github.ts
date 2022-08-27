@@ -87,7 +87,7 @@ export async function getDefaultBranch(
 		defaultBranch =
 			payload.repository?.default_branch || fetchDefaultBranch(octokit)
 	}
-	return defaultBranch || reference || 'master'
+	return defaultBranch || reference
 }
 
 export async function getRepo(): Promise<{ owner: string; repo: string }> {

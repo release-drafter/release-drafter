@@ -21,5 +21,5 @@ export async function getDefaultBranch(
 	if (defaultBranchFromOption) {
 		return defaultBranchFromOption
 	}
-	return (await fetchDefaultBranch(octokit, { owner, repo })) || 'master'
+	return await fetchDefaultBranch(octokit, { owner, repo })
 }

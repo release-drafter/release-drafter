@@ -1,5 +1,5 @@
 name: 'Release Drafter'
-description: 'Drafts your next release notes as pull requests are merged into master.'
+description: 'Drafts your next release notes as pull requests are merged since last release.'
 runs:
   using: 'node16'
   main: 'packages/action/dist/index.js'

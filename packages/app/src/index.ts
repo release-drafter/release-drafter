@@ -43,7 +43,7 @@ const app: ApplicationFunction = async (app, { getRouter }) => {
 	// 	if (config === null) return
 	//
 	// 	// GitHub Actions merge payloads slightly differ, in that their ref points
-	// 	// to the PR branch instead of refs/heads/master
+	// 	// to the PR branch instead of refs/heads/main
 	// 	const reference = process.env['GITHUB_REF'] || context.payload.ref
 	//
 	// 	if (!isTriggerableReference({ ref: reference, context, config })) {

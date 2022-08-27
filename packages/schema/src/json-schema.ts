@@ -17,6 +17,6 @@ function convertSchema() {
 
 export const jsonSchema = {
 	title: 'JSON schema for Release Drafter yaml files',
-	$id: 'https://raw.githubusercontent.com/release-drafter/release-drafter/master/schema.json',
+	$id: 'https://raw.githubusercontent.com/release-drafter/release-drafter/main/schema.json',
 	...convertSchema(),
 }

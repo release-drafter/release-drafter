@@ -3,12 +3,12 @@ name: Release Drafter
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
-      - uses: release-drafter/release-drafter@master
+      - uses: release-drafter/release-drafter@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
