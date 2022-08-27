@@ -44,7 +44,7 @@ jobs:
       - name: pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
-        run: pnpm publish --access public
+        run: pnpm publish --access public --no-git-checks
 
       - name: version
         id: version
