@@ -40195,7 +40195,7 @@ async function getDefaultBranch(octokit) {
         defaultBranch =
             payload.repository?.default_branch || fetchDefaultBranch(octokit);
     }
-    return defaultBranch || reference || 'master';
+    return defaultBranch || reference;
 }
 async function getRepo() {
     if (process.env['GITHUB_REPOSITORY']) {
