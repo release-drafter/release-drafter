@@ -1,23 +1,9 @@
 {
-	"name": "@release-drafter/mono",
+	"name": "@release-drafter/monorepo",
 	"version": "6.0.0-beta.0",
 	"type": "module",
-	"description": "A GitHub app that draft releases based on pull-request labels",
 	"private": true,
-	"author": {
-		"name": "Tim Lucas",
-		"email": "t@toolmantim.com",
-		"url": "https://github.com/toolmantim"
-	},
-	"contributors": [
-		{
-			"name": "Joseph Petersen",
-			"email": "me@jetersen.dev",
-			"url": "https://jetersen.dev"
-		}
-	],
-	"license": "ISC",
-	"repository": "https://github.com/release-drafter/release-drafter",
+	"packageManager": "pnpm@7.9.5",
 	"workspaces": [
 		"packages/*"
 	],
@@ -25,20 +11,28 @@
 		"node": ">=16.0.0"
 	},
 	"scripts": {
-		"build": "pnpm -r --filter=./packages/* run build",
+		"build": "pnpm -r --filter=./packages/* --stream build",
+		"clean": "pnpm --parallel --stream clean",
 		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
 		"lint": "eslint .",
 		"lint:fix": "eslint --fix .",
 		"prettier": "prettier",
 		"prettier:check": "prettier --check .",
 		"prettier:fix": "prettier --write .",
-		"prepare": "husky install"
+		"prepare": "husky install",
+		"release": "pnpm release:check && pnpm release:version",
+		"release:check": "pnpm lint && pnpm clean && pnpm build && pnpm test",
+		"release:version": "bumpp package.json packages/*/package.json --commit \"build: publish v%s\""
 	},
 	"devDependencies": {
+		"@octokit/webhooks-types": "^6.3.6",
 		"@types/jest": "^28.1.6",
+		"@types/lodash": "^4.14.184",
 		"@types/node": "^16.0.0",
+		"@types/semver": "^7.3.12",
 		"@typescript-eslint/eslint-plugin": "^5.31.0",
 		"@typescript-eslint/parser": "^5.31.0",
+		"@vercel/ncc": "^0.34.0",
 		"bumpp": "^8.2.1",
 		"cross-env": "^7.0.3",
 		"eslint": "8.20.0",
@@ -51,8 +45,10 @@
 		"lint-staged": "12.5.0",
 		"micromatch": "^4.0.5",
 		"prettier": "2.7.1",
+		"rimraf": "^3.0.2",
 		"ts-jest": "^28.0.7",
 		"ts-node": "^10.9.1",
+		"tsup": "^6.2.3",
 		"typescript": "^4.7.4"
 	}
 }

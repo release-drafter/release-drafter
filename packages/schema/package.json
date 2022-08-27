@@ -18,17 +18,7 @@
 		"@antongolub/git-root": "^1.5.7",
 		"@release-drafter/core": "workspace:../core",
 		"prettier": "2.7.1",
-		"ts-node": "^10.9.1",
 		"zod": "^3.17.10",
 		"zod-to-json-schema": "^3.17.1"
-	},
-	"devDependencies": {
-		"@jest/globals": "^28.1.3",
-		"@types/jest": "^28.1.6",
-		"@types/node": "^16.0.0",
-		"cross-env": "^7.0.3",
-		"jest": "^28.1.3",
-		"ts-jest": "^28.0.7",
-		"typescript": "^4.7.4"
 	}
 }
