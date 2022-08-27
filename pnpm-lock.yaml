@@ -5,6 +5,7 @@ importers:
   .:
     specifiers:
       '@jest/globals': ^29.0.1
+      '@octokit/types': ^7.1.1
       '@octokit/webhooks-types': ^6.3.6
       '@types/jest': ^28.1.6
       '@types/lodash': ^4.14.184
@@ -32,6 +33,7 @@ importers:
       typescript: ^4.7.4
     devDependencies:
       '@jest/globals': 29.0.1
+      '@octokit/types': 7.1.1
       '@octokit/webhooks-types': 6.3.6
       '@types/jest': 28.1.6
       '@types/lodash': 4.14.184
@@ -1127,7 +1129,6 @@ packages:
 
   /@octokit/openapi-types/13.4.0:
     resolution: {integrity: sha512-2mVzW0X1+HDO3jF80/+QFZNzJiTefELKbhMu6yaBYbp/1gSMkVDm4rT472gJljTokWUlXaaE63m7WrWENhMDLw==}
-    dev: false
 
   /@octokit/plugin-enterprise-compatibility/1.3.0:
     resolution: {integrity: sha512-h34sMGdEOER/OKrZJ55v26ntdHb9OPfR1fwOx6Q4qYyyhWA104o11h9tFxnS/l41gED6WEI41Vu2G2zHDVC5lQ==}
@@ -1277,7 +1278,6 @@ packages:
     resolution: {integrity: sha512-Dx6cNTORyVaKY0Yeb9MbHksk79L8GXsihbG6PtWqTpkyA2TY1qBWE26EQXVG3dHwY9Femdd/WEeRUEiD0+H3TQ==}
     dependencies:
       '@octokit/openapi-types': 13.4.0
-    dev: false
 
   /@octokit/webhooks-methods/2.0.0:
     resolution: {integrity: sha512-35cfQ4YWlnZnmZKmIxlGPUPLtbkF8lr/A/1Sk1eC0ddLMwQN06dOuLc+dI3YLQS+T+MoNt3DIQ0NynwgKPilig==}
