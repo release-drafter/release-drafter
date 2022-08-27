@@ -2,6 +2,7 @@ node_modules
 *.log
 *.pem
 .env
+.envrc
 .run/
 coverage/
 now.json
