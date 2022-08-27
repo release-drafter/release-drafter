@@ -25,6 +25,7 @@
 		"release:version": "bumpp package.json packages/*/package.json --commit \"build: publish v%s\""
 	},
 	"devDependencies": {
+		"@jest/globals": "^29.0.1",
 		"@octokit/webhooks-types": "^6.3.6",
 		"@types/jest": "^28.1.6",
 		"@types/lodash": "^4.14.184",
