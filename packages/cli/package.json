@@ -28,7 +28,6 @@
 		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
 	},
 	"keywords": [],
-	"author": "",
 	"license": "ISC",
 	"engines": {
 		"node": ">=16.0.0"
