@@ -55,10 +55,16 @@ jobs:
           echo "::set-output name=tag::${tag}"
           echo "::set-output name=version::${version}"
           echo "::set-output name=major::${major}"
+          if [[ "${version}" == *"-"* ]]; then
+            echo "::set-output name=prerelease::true"
+          else
+            echo "::set-output name=prerelease::false"
+          fi
 
       - uses: release-drafter/release-drafter@master
         with:
           version: ${{ steps.version.outputs.version }}
+          prerelease: ${{ steps.version.outputs.prerelease }}
           publish: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
