@@ -28,6 +28,8 @@
 		"@jest/globals": "^29.0.1",
 		"@octokit/types": "^7.1.1",
 		"@octokit/webhooks-types": "^6.3.6",
+		"@swc/core": "^1.2.244",
+		"@swc/jest": "^0.2.22",
 		"@types/jest": "^28.1.6",
 		"@types/lodash": "^4.14.184",
 		"@types/node": "^16.0.0",
