@@ -13,7 +13,7 @@
 	"scripts": {
 		"build": "pnpm -r --filter=./packages/* --stream build",
 		"clean": "pnpm --parallel --stream clean",
-		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+		"test": "jest",
 		"lint": "eslint .",
 		"lint:fix": "eslint --fix .",
 		"prettier": "prettier",
@@ -38,7 +38,6 @@
 		"@typescript-eslint/parser": "^5.31.0",
 		"@vercel/ncc": "^0.34.0",
 		"bumpp": "^8.2.1",
-		"cross-env": "^7.0.3",
 		"eslint": "8.20.0",
 		"eslint-config-prettier": "8.5.0",
 		"eslint-plugin-jest": "^26.8.2",

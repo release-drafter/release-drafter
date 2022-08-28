@@ -8,7 +8,7 @@
 	"scripts": {
 		"build": "tsup",
 		"clean": "rimraf dist",
-		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+		"test": "jest"
 	},
 	"keywords": [],
 	"author": "",

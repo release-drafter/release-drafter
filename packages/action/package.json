@@ -7,7 +7,7 @@
 	"scripts": {
 		"build": "ncc build src/index.ts --target es2022 --source-map --license licenses.txt",
 		"clean": "rimraf dist",
-		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+		"test": "jest"
 	},
 	"keywords": [],
 	"author": "",

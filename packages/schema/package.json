@@ -6,7 +6,7 @@
 	"private": true,
 	"scripts": {
 		"build": "ts-node-esm -T ./src/index.ts",
-		"test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+		"test": "jest"
 	},
 	"keywords": [],
 	"author": "",
