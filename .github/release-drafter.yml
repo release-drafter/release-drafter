@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../schema.json
-nameTemplate: 'v$RESOLVED_VERSION'
-tagTemplate: 'v$RESOLVED_VERSION'
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
 template: |
   # What's Changed
 
@@ -28,11 +28,11 @@ categories:
   - title: 'Dependency Updates'
     labels:
       - 'type: dependencies'
-    collapseAfter: 5
+    collapse-after: 5
 
-noChangesTemplate: '* No changes'
+no-changes-template: '* No changes'
 
-versionResolver:
+version-resolver:
   major:
     labels:
       - 'type: breaking'
@@ -47,5 +47,5 @@ versionResolver:
       - 'type: dependencies'
       - 'type: security'
 
-excludeLabels:
+exclude-labels:
   - 'skip-changelog'
