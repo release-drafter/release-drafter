@@ -39142,32 +39142,32 @@ function getOctokit(auth) {
 var DEFAULT_CONFIG = Object.freeze({
   autolabeler: [],
   categories: [],
-  categoryTemplate: `## $TITLE`,
-  changeTemplate: `* $TITLE (#$NUMBER) @$AUTHOR`,
-  changeTitleEscapes: "",
+  "category-template": `## $TITLE`,
+  "change-template": `* $TITLE (#$NUMBER) @$AUTHOR`,
+  "change-title-escapes": "",
   commitish: "",
-  excludeContributors: [],
-  excludeLabels: [],
-  filterByCommitish: false,
+  "exclude-contributors": [],
+  "exclude-labels": [],
+  "filter-by-commitish": false,
   footer: "",
   header: "",
-  includeLabels: [],
-  includePaths: [],
-  nameTemplate: "v$RESOLVED_VERSION",
-  noChangesTemplate: `* No changes`,
-  noContributorsTemplate: "No contributors",
+  "include-labels": [],
+  "include-paths": [],
+  "name-template": "v$RESOLVED_VERSION",
+  "no-changes-template": `* No changes`,
+  "no-contributors-template": "No contributors",
   prerelease: false,
   references: ["main"],
   replacers: [],
-  sortBy: "merged_at" /* mergedAt */,
-  sortDirection: "descending" /* descending */,
-  tagPrefix: "v",
-  tagTemplate: "v$RESOLVED_VERSION",
+  "sort-by": "merged_at" /* mergedAt */,
+  "sort-direction": "descending" /* descending */,
+  "tag-prefix": "v",
+  "tag-template": "v$RESOLVED_VERSION",
   template: `## What\u2019s Changed
 
 $CHANGES`,
-  versionTemplate: `$MAJOR.$MINOR.$PATCH`,
-  versionResolver: {
+  "version-template": `$MAJOR.$MINOR.$PATCH`,
+  "version-resolver": {
     major: { labels: [] },
     minor: { labels: [] },
     patch: { labels: [] },
@@ -39188,22 +39188,22 @@ function validateOnlyOneUncategorizedCategoryExist(categories) {
 function schema(defaultBranch = "main") {
   return mod.object({
     references: mod.array(mod.string()).default([defaultBranch]),
-    changeTemplate: mod.string().default(DEFAULT_CONFIG.changeTemplate),
-    changeTitleEscapes: mod.string().default(DEFAULT_CONFIG.changeTitleEscapes),
-    noChangesTemplate: mod.string().default(DEFAULT_CONFIG.noChangesTemplate),
-    versionTemplate: mod.string().default(DEFAULT_CONFIG.versionTemplate),
-    nameTemplate: mod.string().default(DEFAULT_CONFIG.nameTemplate),
-    tagPrefix: mod.string().default(DEFAULT_CONFIG.tagPrefix),
-    tagTemplate: mod.string().default(DEFAULT_CONFIG.tagTemplate),
-    excludeLabels: mod.array(mod.string()).default(DEFAULT_CONFIG.excludeLabels),
-    includeLabels: mod.array(mod.string()).default(DEFAULT_CONFIG.includeLabels),
-    includePaths: mod.array(mod.string()).default(DEFAULT_CONFIG.includePaths),
-    excludeContributors: mod.array(mod.string()).default(DEFAULT_CONFIG.excludeContributors),
-    noContributorsTemplate: mod.string().default(DEFAULT_CONFIG.noContributorsTemplate),
-    sortBy: mod["enum"](["merged_at" /* mergedAt */, "title" /* title */]).default(DEFAULT_CONFIG.sortBy),
-    sortDirection: mod["enum"](["ascending" /* ascending */, "descending" /* descending */]).default(DEFAULT_CONFIG.sortDirection),
+    "change-template": mod.string().default(DEFAULT_CONFIG["change-template"]),
+    "change-title-escapes": mod.string().default(DEFAULT_CONFIG["change-title-escapes"]),
+    "no-changes-template": mod.string().default(DEFAULT_CONFIG["no-changes-template"]),
+    "version-template": mod.string().default(DEFAULT_CONFIG["version-template"]),
+    "name-template": mod.string().default(DEFAULT_CONFIG["name-template"]),
+    "tag-prefix": mod.string().default(DEFAULT_CONFIG["tag-prefix"]),
+    "tag-template": mod.string().default(DEFAULT_CONFIG["tag-template"]),
+    "exclude-labels": mod.array(mod.string()).default(DEFAULT_CONFIG["exclude-labels"]),
+    "include-labels": mod.array(mod.string()).default(DEFAULT_CONFIG["include-labels"]),
+    "include-paths": mod.array(mod.string()).default(DEFAULT_CONFIG["include-paths"]),
+    "exclude-contributors": mod.array(mod.string()).default(DEFAULT_CONFIG["exclude-contributors"]),
+    "no-contributors-template": mod.string().default(DEFAULT_CONFIG["no-contributors-template"]),
+    "sort-by": mod["enum"](["merged_at" /* mergedAt */, "title" /* title */]).default(DEFAULT_CONFIG["sort-by"]),
+    "sort-direction": mod["enum"](["ascending" /* ascending */, "descending" /* descending */]).default(DEFAULT_CONFIG["sort-direction"]),
     prerelease: mod.boolean().default(DEFAULT_CONFIG.prerelease),
-    filterByCommitish: mod.boolean().default(DEFAULT_CONFIG.filterByCommitish),
+    "filter-by-commitish": mod.boolean().default(DEFAULT_CONFIG["filter-by-commitish"]),
     commitish: mod.string().default(DEFAULT_CONFIG.commitish),
     replacers: mod.array(
       mod.object({
@@ -39223,7 +39223,7 @@ function schema(defaultBranch = "main") {
     categories: mod.array(
       mod.object({
         title: mod.string(),
-        collapseAfter: mod.number().nonnegative().default(0),
+        "collapse-after": mod.number().nonnegative().default(0),
         labels: mod.array(mod.string()).default([])
       })
     ).default([]).refine(
@@ -39232,7 +39232,7 @@ function schema(defaultBranch = "main") {
         message: "Multiple categories detected with no labels.\nOnly one category with no labels is supported for uncategorized pull requests."
       }
     ),
-    versionResolver: mod.object({
+    "version-resolver": mod.object({
       major: mod.object({
         labels: mod.array(mod.string()).default([])
       }),
@@ -39247,8 +39247,8 @@ function schema(defaultBranch = "main") {
         "minor" /* minor */,
         "patch" /* patch */
       ]).default("patch" /* patch */)
-    }).default(DEFAULT_CONFIG.versionResolver),
-    categoryTemplate: mod.string().default(DEFAULT_CONFIG.categoryTemplate),
+    }).default(DEFAULT_CONFIG["version-resolver"]),
+    "category-template": mod.string().default(DEFAULT_CONFIG["category-template"]),
     header: mod.string().default(DEFAULT_CONFIG.header),
     template: mod.string().min(1).default(DEFAULT_CONFIG.template),
     footer: mod.string().default(DEFAULT_CONFIG.footer)
@@ -39265,9 +39265,10 @@ var Context = class {
   issueNumber;
   configName;
   defaultBranch;
-  constructor(octokit, defaultBranch, {
+  constructor(octokit, {
     owner,
     repo,
+    defaultBranch,
     issue,
     pullRequest,
     configName
@@ -39278,7 +39279,7 @@ var Context = class {
     this.issueNumber = issue || 0;
     this.pullRequest = pullRequest || 0;
     this.defaultBranch = defaultBranch;
-    this.configName = configName;
+    this.configName = configName || "release-drafter.yml";
   }
   ownerRepo = () => `${this.owner}/${this.repo}`;
   async config() {
@@ -39510,7 +39511,7 @@ function coerceVersion(input, tagPrefix) {
   const stripTag = (input2) => tagPrefix && input2.startsWith(tagPrefix) ? input2.slice(tagPrefix.length) : input2;
   return typeof input === "object" ? toSemver(stripTag(input.tag_name)) || toSemver(stripTag(input.name)) : toSemver(stripTag(input));
 }
-function getVersionInfo(release, template2, inputVersion, versionKeyIncrement, tagPrefix) {
+function getVersionInfo(release, template, inputVersion, versionKeyIncrement, tagPrefix) {
   const releaseVersion = coerceVersion(release, tagPrefix);
   const versionInput = coerceVersion(inputVersion, tagPrefix);
   const version = !releaseVersion && versionInput ? versionInput : releaseVersion;
@@ -39520,24 +39521,24 @@ function getVersionInfo(release, template2, inputVersion, versionKeyIncrement, t
   return {
     ...getTemplatableVersion({
       version,
-      template: template2,
+      template,
       versionInput,
       versionKeyIncrement
     })
   };
 }
 
-// src/template.ts
+// src/transform-template.ts
 
 var templateReplacer = mod.object({ template: mod.string() }).passthrough();
-function template(input, objectReplacer, customReplacers) {
+function transformTemplate(input, objectReplacer, customReplacers) {
   let output = input.replace(/(\$[A-Z_]+)/g, (_3, k) => {
     if (!(k in objectReplacer)) {
       return k;
     }
     const replacer = templateReplacer.safeParse(objectReplacer[k]);
     if (replacer.success) {
-      return template(replacer.data.template, replacer.data);
+      return transformTemplate(replacer.data.template, replacer.data);
     }
     return objectReplacer[k];
   });
@@ -39605,7 +39606,10 @@ var contributorsSentence = ({
   pullRequests,
   config: config2
 }) => {
-  const { excludeContributors, noContributorsTemplate } = config2;
+  const {
+    "exclude-contributors": excludeContributors,
+    "no-contributors-template": noContributorsTemplate
+  } = config2;
   const contributors = /* @__PURE__ */ new Set();
   for (const commit of commits) {
     if (commit.author?.user) {
@@ -39643,13 +39647,17 @@ function getUncategorizedCategoryIndex(categories) {
   return index === -1 ? 0 : index;
 }
 var categorizePullRequests = (pullRequests, config2) => {
-  const { excludeLabels, includeLabels, categories } = config2;
+  const {
+    "exclude-labels": excludeLabels,
+    "include-labels": includeLabels,
+    categories
+  } = config2;
   if (categories.length === 0) {
     return [
       {
         pullRequests,
         labels: [],
-        collapseAfter: 0
+        "collapse-after": 0
       }
     ];
   }
@@ -39662,7 +39670,7 @@ var categorizePullRequests = (pullRequests, config2) => {
     categorizedPullRequests.push({
       pullRequests: [],
       labels: [],
-      collapseAfter: 0
+      "collapse-after": 0
     });
   }
   categories.map((category) => {
@@ -39702,11 +39710,16 @@ var categorizePullRequests = (pullRequests, config2) => {
 };
 var generateChangeLog = (pullRequests, config2) => {
   if (pullRequests.length === 0) {
-    return config2["noChangesTemplate"];
+    return config2["no-changes-template"];
   }
+  const {
+    "category-template": categoryTemplate,
+    "change-template": changeTemplate,
+    "change-title-escapes": changeTitleEscapes
+  } = config2;
   const categorizedPullRequests = categorizePullRequests(pullRequests, config2);
   const escapeTitle = (title) => title.replace(
-    new RegExp(`[${escape_string_regexp(config2.changeTitleEscapes)}]|\`.*?\``, "g"),
+    new RegExp(`[${escape_string_regexp(changeTitleEscapes)}]|\`.*?\``, "g"),
     (match) => {
       if (match.length > 1)
         return match;
@@ -39716,7 +39729,7 @@ var generateChangeLog = (pullRequests, config2) => {
     }
   );
   const pullRequestsToString = (pullRequests2) => pullRequests2.map(
-    (pullRequest) => template(config2.changeTemplate, {
+    (pullRequest) => transformTemplate(changeTemplate, {
       $TITLE: escapeTitle(pullRequest.title),
       $NUMBER: pullRequest.number,
       $AUTHOR: pullRequest.author ? pullRequest.author.login : "ghost",
@@ -39731,19 +39744,20 @@ var generateChangeLog = (pullRequests, config2) => {
     if (category.pullRequests.length === 0) {
       continue;
     }
-    if (category.title) {
+    const { title, pullRequests: pullRequests2, "collapse-after": collapseAfter } = category;
+    if (title) {
       changeLog.push(
-        template(config2.categoryTemplate, { $TITLE: category.title }),
+        transformTemplate(categoryTemplate, { $TITLE: title }),
         "\n\n"
       );
     }
-    const pullRequestString = pullRequestsToString(category.pullRequests);
-    const shouldCollapse = category.collapseAfter !== 0 && category.pullRequests.length > category.collapseAfter;
+    const pullRequestString = pullRequestsToString(pullRequests2);
+    const shouldCollapse = collapseAfter !== 0 && pullRequests2.length > collapseAfter;
     if (shouldCollapse) {
       changeLog.push(
         "<details>",
         "\n",
-        `<summary>${category.pullRequests.length} changes</summary>`,
+        `<summary>${pullRequests2.length} changes</summary>`,
         "\n\n",
         pullRequestString,
         "\n",
@@ -39758,6 +39772,11 @@ var generateChangeLog = (pullRequests, config2) => {
   return changeLog.join("").trim();
 };
 var resolveVersionKeyIncrement = (pullRequests, config2) => {
+  const {
+    "version-resolver": versionResolver,
+    "exclude-labels": excludeLabels,
+    "include-labels": includeLabels
+  } = config2;
   const priorityMap = {
     patch: 1,
     minor: 2,
@@ -39766,14 +39785,14 @@ var resolveVersionKeyIncrement = (pullRequests, config2) => {
   const labelToKeyMap = Object.fromEntries(
     Object.keys(priorityMap).flatMap((key) => {
       return [
-        config2.versionResolver[key].labels.map(
+        versionResolver[key].labels.map(
           (label) => [label, key]
         )
       ];
     }).flat()
   );
   const keys = pullRequests.filter(
-    (pullRequest) => getFilterExcludedPullRequests(pullRequest, config2.excludeLabels) && getFilterIncludedPullRequests(pullRequest, config2.includeLabels)
+    (pullRequest) => getFilterExcludedPullRequests(pullRequest, excludeLabels) && getFilterIncludedPullRequests(pullRequest, includeLabels)
   ).flatMap(
     (pr) => pr.labels?.nodes?.map((node) => labelToKeyMap[node?.name ?? ""])
   ).filter(Boolean);
@@ -39784,7 +39803,7 @@ var resolveVersionKeyIncrement = (pullRequests, config2) => {
   const versionKey = Object.keys(priorityMap).find(
     (key) => priorityMap[key] === priority
   );
-  return versionKey || config2.versionResolver.default;
+  return versionKey || versionResolver.default;
 };
 async function generateReleaseInfo({
   context,
@@ -39799,8 +39818,18 @@ async function generateReleaseInfo({
   shouldDraft,
   targetCommitish
 }) {
-  let body = config2.header + config2.template + config2.footer;
-  body = template(
+  const {
+    header,
+    template,
+    footer,
+    replacers,
+    "version-template": versionTemplate,
+    "tag-prefix": tagPrefix,
+    "name-template": nameTemplate,
+    "tag-template": tagTemplate
+  } = config2;
+  let body = header + template + footer;
+  body = transformTemplate(
     body,
     {
       $PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : "",
@@ -39813,27 +39842,27 @@ async function generateReleaseInfo({
       $OWNER: context.owner,
       $REPOSITORY: context.repo
     },
-    config2.replacers
+    replacers
   );
   const versionInfo = getVersionInfo(
     lastRelease,
-    config2.versionTemplate,
+    versionTemplate,
     version || tag || name,
     resolveVersionKeyIncrement(pullRequests, config2),
-    config2.tagPrefix
+    tagPrefix
   );
   if (versionInfo) {
-    body = template(body, versionInfo);
+    body = transformTemplate(body, versionInfo);
   }
   if (tag === void 0) {
-    tag = versionInfo ? template(config2.tagTemplate || "", versionInfo) : "";
+    tag = versionInfo ? transformTemplate(tagTemplate || "", versionInfo) : "";
   } else if (versionInfo) {
-    tag = template(tag, versionInfo);
+    tag = transformTemplate(tag, versionInfo);
   }
   if (name === void 0) {
-    name = versionInfo ? template(config2.nameTemplate || "", versionInfo) : "";
+    name = versionInfo ? transformTemplate(nameTemplate || "", versionInfo) : "";
   } else if (versionInfo) {
-    name = template(name, versionInfo);
+    name = transformTemplate(name, versionInfo);
   }
   if (targetCommitish.startsWith("refs/tags/")) {
     targetCommitish = "";
@@ -40026,17 +40055,17 @@ var findCommitsWithAssociatedPullRequests = async ({
   lastRelease,
   config: config2
 }) => {
+  const { "change-template": changeTemplate, "include-paths": includePaths } = config2;
   const variables = {
     name: context.repo,
     owner: context.owner,
     targetCommitish,
-    withPullRequestBody: config2.changeTemplate.includes("$BODY"),
-    withPullRequestURL: config2.changeTemplate.includes("$URL"),
-    withBaseRefName: config2.changeTemplate.includes("$BASE_REF_NAME"),
-    withHeadRefName: config2.changeTemplate.includes("$HEAD_REF_NAME"),
+    withPullRequestBody: changeTemplate.includes("$BODY"),
+    withPullRequestURL: changeTemplate.includes("$URL"),
+    withBaseRefName: changeTemplate.includes("$BASE_REF_NAME"),
+    withHeadRefName: changeTemplate.includes("$HEAD_REF_NAME"),
     since: lastRelease?.created_at ?? void 0
   };
-  const includePaths = config2.includePaths;
   const dataPath = ["repository", "object", "history"];
   const repoNameWithOwner = context.ownerRepo();
   const includedIds = {};
@@ -40291,15 +40320,16 @@ async function run() {
     const { owner, repo } = await getRepo();
     core.info(`🎉 Running Release Drafter Action for ${owner}/${repo}`);
     const configName = core.getInput('config-name') || 'release-drafter.yml';
-    const context = new Context(octokit, defaultBranch, {
+    const context = new Context(octokit, {
         owner,
         repo,
+        defaultBranch,
         configName,
     });
     core.info('⏬ Fetching config');
     const config = await context.config();
     const { isPreRelease, shouldDraft, version, tag, name, commitish } = getActionInputs(config);
-    const { filterByCommitish, tagPrefix, sortBy, sortDirection } = config;
+    const { 'filter-by-commitish': filterByCommitish, 'tag-prefix': tagPrefix, 'sort-by': sortBy, 'sort-direction': sortDirection, } = config;
     const targetCommitish = commitish || config.commitish || GITHUB_REF;
     if (targetCommitish.startsWith('refs/tags')) {
         core.info(`⚠ target commitish of '${targetCommitish}' is not supported as release target, falling back to default branch '${defaultBranch}'`);

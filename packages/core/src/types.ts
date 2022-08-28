@@ -67,13 +67,13 @@ export type Replacer = {
 
 export type ReleaseDrafterCategory = {
 	title?: string
-	collapseAfter: number
+	'collapse-after': number
 	labels: string[]
 }
 
 export type ReleaseDrafterCategorizedPullRequest = {
 	title?: string
-	collapseAfter: number
+	'collapse-after': number
 	labels: string[]
 	pullRequests: PullRequest[]
 }
@@ -98,30 +98,30 @@ export type GitHubRelease = {
 export type ReleaseDrafterConfig = {
 	autolabeler: Autolabeler[]
 	categories: ReleaseDrafterCategory[]
-	categoryTemplate: string
-	changeTemplate: string
-	changeTitleEscapes: string
+	'category-template': string
+	'change-template': string
+	'change-title-escapes': string
 	commitish: string
-	excludeContributors: string[]
-	excludeLabels: string[]
-	filterByCommitish: boolean
+	'exclude-contributors': string[]
+	'exclude-labels': string[]
+	'filter-by-commitish': boolean
 	footer: string
 	header: string
-	includeLabels: string[]
-	includePaths: string[]
-	nameTemplate: string
-	noChangesTemplate: string
-	noContributorsTemplate: string
+	'include-labels': string[]
+	'include-paths': string[]
+	'name-template': string
+	'no-changes-template': string
+	'no-contributors-template': string
 	prerelease: boolean
 	references: string[]
 	replacers: Replacer[]
-	sortBy: SORT_BY
-	sortDirection: SORT_DIRECTIONS
-	tagPrefix: string
-	tagTemplate: string
+	'sort-by': SORT_BY
+	'sort-direction': SORT_DIRECTIONS
+	'tag-prefix': string
+	'tag-template': string
 	template: string
-	versionResolver: VersionResolver
-	versionTemplate: string
+	'version-resolver': VersionResolver
+	'version-template': string
 }
 
 export type ReleaseDrafterGetOptions = GetOptions<

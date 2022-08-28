@@ -12,55 +12,55 @@
 					"items": { "type": "string" },
 					"default": ["main"]
 				},
-				"changeTemplate": {
+				"change-template": {
 					"type": "string",
 					"default": "* $TITLE (#$NUMBER) @$AUTHOR"
 				},
-				"changeTitleEscapes": { "type": "string", "default": "" },
-				"noChangesTemplate": { "type": "string", "default": "* No changes" },
-				"versionTemplate": {
+				"change-title-escapes": { "type": "string", "default": "" },
+				"no-changes-template": { "type": "string", "default": "* No changes" },
+				"version-template": {
 					"type": "string",
 					"default": "$MAJOR.$MINOR.$PATCH"
 				},
-				"nameTemplate": { "type": "string", "default": "v$RESOLVED_VERSION" },
-				"tagPrefix": { "type": "string", "default": "v" },
-				"tagTemplate": { "type": "string", "default": "v$RESOLVED_VERSION" },
-				"excludeLabels": {
+				"name-template": { "type": "string", "default": "v$RESOLVED_VERSION" },
+				"tag-prefix": { "type": "string", "default": "v" },
+				"tag-template": { "type": "string", "default": "v$RESOLVED_VERSION" },
+				"exclude-labels": {
 					"type": "array",
 					"items": { "type": "string" },
 					"default": []
 				},
-				"includeLabels": {
+				"include-labels": {
 					"type": "array",
 					"items": { "type": "string" },
 					"default": []
 				},
-				"includePaths": {
+				"include-paths": {
 					"type": "array",
 					"items": { "type": "string" },
 					"default": []
 				},
-				"excludeContributors": {
+				"exclude-contributors": {
 					"type": "array",
 					"items": { "type": "string" },
 					"default": []
 				},
-				"noContributorsTemplate": {
+				"no-contributors-template": {
 					"type": "string",
 					"default": "No contributors"
 				},
-				"sortBy": {
+				"sort-by": {
 					"type": "string",
 					"enum": ["merged_at", "title"],
 					"default": "merged_at"
 				},
-				"sortDirection": {
+				"sort-direction": {
 					"type": "string",
 					"enum": ["ascending", "descending"],
 					"default": "descending"
 				},
 				"prerelease": { "type": "boolean", "default": false },
-				"filterByCommitish": { "type": "boolean", "default": false },
+				"filter-by-commitish": { "type": "boolean", "default": false },
 				"commitish": { "type": "string", "default": "" },
 				"replacers": {
 					"type": "array",
@@ -118,7 +118,11 @@
 						"type": "object",
 						"properties": {
 							"title": { "type": "string" },
-							"collapseAfter": { "type": "number", "minimum": 0, "default": 0 },
+							"collapse-after": {
+								"type": "number",
+								"minimum": 0,
+								"default": 0
+							},
 							"labels": {
 								"type": "array",
 								"items": { "type": "string" },
@@ -130,7 +134,7 @@
 					},
 					"default": []
 				},
-				"versionResolver": {
+				"version-resolver": {
 					"type": "object",
 					"properties": {
 						"major": {
@@ -181,7 +185,7 @@
 						"default": "patch"
 					}
 				},
-				"categoryTemplate": { "type": "string", "default": "## $TITLE" },
+				"category-template": { "type": "string", "default": "## $TITLE" },
 				"header": { "type": "string", "default": "" },
 				"template": {
 					"type": "string",

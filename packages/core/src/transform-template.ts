@@ -8,7 +8,7 @@ import { z } from 'zod'
 
 const templateReplacer = z.object({ template: z.string() }).passthrough()
 
-export function template(
+export function transformTemplate(
 	input: string,
 	objectReplacer: {
 		[x: string]: string | number | undefined | VersionTemplate
@@ -22,7 +22,7 @@ export function template(
 
 		const replacer = templateReplacer.safeParse(objectReplacer[k])
 		if (replacer.success) {
-			return template(replacer.data.template, replacer.data)
+			return transformTemplate(replacer.data.template, replacer.data)
 		}
 
 		return objectReplacer[k]

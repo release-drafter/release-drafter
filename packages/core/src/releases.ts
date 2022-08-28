@@ -2,7 +2,7 @@ import compareVersions from 'compare-versions'
 import regexEscape from 'escape-string-regexp'
 
 import { getVersionInfo } from './versions.js'
-import { template } from './template.js'
+import { transformTemplate } from './transform-template.js'
 import {
 	CommitWithAssociatedPullRequests,
 	GitHubRelease,
@@ -106,7 +106,10 @@ const contributorsSentence = ({
 	pullRequests: PullRequest[]
 	config: ReleaseDrafterConfig
 }): string => {
-	const { excludeContributors, noContributorsTemplate } = config
+	const {
+		'exclude-contributors': excludeContributors,
+		'no-contributors-template': noContributorsTemplate,
+	} = config
 
 	const contributors = new Set<string>()
 
@@ -171,14 +174,18 @@ const categorizePullRequests = (
 	pullRequests: PullRequest[],
 	config: ReleaseDrafterConfig,
 ): ReleaseDrafterCategorizedPullRequest[] => {
-	const { excludeLabels, includeLabels, categories } = config
+	const {
+		'exclude-labels': excludeLabels,
+		'include-labels': includeLabels,
+		categories,
+	} = config
 
 	if (categories.length === 0) {
 		return [
 			{
 				pullRequests: pullRequests,
 				labels: [],
-				collapseAfter: 0,
+				'collapse-after': 0,
 			},
 		]
 	}
@@ -195,7 +202,7 @@ const categorizePullRequests = (
 		categorizedPullRequests.push({
 			pullRequests: [],
 			labels: [],
-			collapseAfter: 0,
+			'collapse-after': 0,
 		})
 	}
 
@@ -261,8 +268,13 @@ export const generateChangeLog = (
 	config: ReleaseDrafterConfig,
 ) => {
 	if (pullRequests.length === 0) {
-		return config['noChangesTemplate']
+		return config['no-changes-template']
 	}
+	const {
+		'category-template': categoryTemplate,
+		'change-template': changeTemplate,
+		'change-title-escapes': changeTitleEscapes,
+	} = config
 
 	const categorizedPullRequests = categorizePullRequests(pullRequests, config)
 
@@ -270,7 +282,7 @@ export const generateChangeLog = (
 		// If config['changeTitleEscapes'] contains backticks, then they will be escaped along with content contained inside backticks
 		// If not, the entire backtick block is matched so that it will become a markdown code block without escaping any of its content
 		title.replace(
-			new RegExp(`[${regexEscape(config.changeTitleEscapes)}]|\`.*?\``, 'g'),
+			new RegExp(`[${regexEscape(changeTitleEscapes)}]|\`.*?\``, 'g'),
 			(match: string) => {
 				if (match.length > 1) return match
 				if (match == '@' || match == '#') return `${match}<!---->`
@@ -281,7 +293,7 @@ export const generateChangeLog = (
 	const pullRequestsToString = (pullRequests: PullRequest[]) =>
 		pullRequests
 			.map((pullRequest) =>
-				template(config.changeTemplate, {
+				transformTemplate(changeTemplate, {
 					$TITLE: escapeTitle(pullRequest.title),
 					$NUMBER: pullRequest.number,
 					$AUTHOR: pullRequest.author ? pullRequest.author.login : 'ghost',
@@ -300,28 +312,29 @@ export const generateChangeLog = (
 			continue
 		}
 
+		const { title, pullRequests, 'collapse-after': collapseAfter } = category
+
 		// Add the category title to the changelog.
-		if (category.title) {
+		if (title) {
 			changeLog.push(
-				template(config.categoryTemplate, { $TITLE: category.title }),
+				transformTemplate(categoryTemplate, { $TITLE: title }),
 				'\n\n',
 			)
 		}
 
 		// Define the pull requests into a single string.
-		const pullRequestString = pullRequestsToString(category.pullRequests)
+		const pullRequestString = pullRequestsToString(pullRequests)
 
 		// Determine the collapse status.
 		const shouldCollapse =
-			category.collapseAfter !== 0 &&
-			category.pullRequests.length > category.collapseAfter
+			collapseAfter !== 0 && pullRequests.length > collapseAfter
 
 		// Add the pull requests to the changelog.
 		if (shouldCollapse) {
 			changeLog.push(
 				'<details>',
 				'\n',
-				`<summary>${category.pullRequests.length} changes</summary>`,
+				`<summary>${pullRequests.length} changes</summary>`,
 				'\n\n',
 				pullRequestString,
 				'\n',
@@ -343,6 +356,12 @@ const resolveVersionKeyIncrement = (
 	pullRequests: PullRequest[],
 	config: ReleaseDrafterConfig,
 ) => {
+	const {
+		'version-resolver': versionResolver,
+		'exclude-labels': excludeLabels,
+		'include-labels': includeLabels,
+	} = config
+
 	const priorityMap: {
 		[key in VersionResolverKeys]: number
 	} = {
@@ -354,7 +373,7 @@ const resolveVersionKeyIncrement = (
 		Object.keys(priorityMap)
 			.flatMap((key) => {
 				return [
-					config.versionResolver[key as VersionResolverKeys].labels.map(
+					versionResolver[key as VersionResolverKeys].labels.map(
 						(label: string) => [label, key],
 					),
 				]
@@ -364,8 +383,8 @@ const resolveVersionKeyIncrement = (
 	const keys: string[] = pullRequests
 		.filter(
 			(pullRequest) =>
-				getFilterExcludedPullRequests(pullRequest, config.excludeLabels) &&
-				getFilterIncludedPullRequests(pullRequest, config.includeLabels),
+				getFilterExcludedPullRequests(pullRequest, excludeLabels) &&
+				getFilterIncludedPullRequests(pullRequest, includeLabels),
 		)
 		.flatMap((pr: PullRequest) =>
 			pr.labels?.nodes?.map((node) => labelToKeyMap[node?.name ?? '']),
@@ -378,7 +397,7 @@ const resolveVersionKeyIncrement = (
 	const versionKey = Object.keys(priorityMap).find(
 		(key) => priorityMap[key as VersionResolverKeys] === priority,
 	)
-	return (versionKey || config.versionResolver.default) as ReleaseType
+	return (versionKey || versionResolver.default) as ReleaseType
 }
 
 type ReleaseInfo = {
@@ -415,9 +434,20 @@ export async function generateReleaseInfo({
 	shouldDraft: boolean
 	targetCommitish: string
 }): Promise<ReleaseInfo> {
-	let body = config.header + config.template + config.footer
+	const {
+		header,
+		template,
+		footer,
+		replacers,
+		'version-template': versionTemplate,
+		'tag-prefix': tagPrefix,
+		'name-template': nameTemplate,
+		'tag-template': tagTemplate,
+	} = config
 
-	body = template(
+	let body = header + template + footer
+
+	body = transformTemplate(
 		body,
 		{
 			$PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : '',
@@ -430,33 +460,33 @@ export async function generateReleaseInfo({
 			$OWNER: context.owner,
 			$REPOSITORY: context.repo,
 		},
-		config.replacers,
+		replacers,
 	)
 
 	const versionInfo = getVersionInfo(
 		lastRelease,
-		config.versionTemplate,
+		versionTemplate,
 		// Use the first override parameter to identify
 		// a version, from the most accurate to the least
 		version || tag || name,
 		resolveVersionKeyIncrement(pullRequests, config),
-		config.tagPrefix,
+		tagPrefix,
 	)
 
 	if (versionInfo) {
-		body = template(body, versionInfo)
+		body = transformTemplate(body, versionInfo)
 	}
 
 	if (tag === undefined) {
-		tag = versionInfo ? template(config.tagTemplate || '', versionInfo) : ''
+		tag = versionInfo ? transformTemplate(tagTemplate || '', versionInfo) : ''
 	} else if (versionInfo) {
-		tag = template(tag, versionInfo)
+		tag = transformTemplate(tag, versionInfo)
 	}
 
 	if (name === undefined) {
-		name = versionInfo ? template(config.nameTemplate || '', versionInfo) : ''
+		name = versionInfo ? transformTemplate(nameTemplate || '', versionInfo) : ''
 	} else if (versionInfo) {
-		name = template(name, versionInfo)
+		name = transformTemplate(name, versionInfo)
 	}
 
 	// Tags are not supported as `target_commitish` by GitHub API.

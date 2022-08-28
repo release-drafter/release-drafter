@@ -1,19 +1,19 @@
 import { describe, it, expect } from '@jest/globals'
 import { z } from 'zod'
 import { toRegex } from '../src/schema.js'
-import { template } from '../src/template.js'
+import { transformTemplate } from '../src/transform-template.js'
 
 const stringToRegex = z.string().transform((value) => toRegex(value))
 
 describe('template', () => {
 	it('replaces $A with B', () => {
-		const output = template('$A', { $A: 'B' })
+		const output = transformTemplate('$A', { $A: 'B' })
 
 		expect(output).toBe('B')
 	})
 
 	it('replaces $MAJOR.$MINOR.$PATCH with 1.0.0', () => {
-		const output = template('$MAJOR.$MINOR.$PATCH', {
+		const output = transformTemplate('$MAJOR.$MINOR.$PATCH', {
 			$MAJOR: 1,
 			$MINOR: 0,
 			$PATCH: 0,
@@ -28,7 +28,7 @@ describe('template', () => {
 
     $CHANGES
     `
-		const output = template(input, {
+		const output = transformTemplate(input, {
 			$CHANGES: 'NO CHANGES',
 		})
 
@@ -37,7 +37,7 @@ describe('template', () => {
 	})
 
 	it('nested template', () => {
-		const output = template('$NEXT_MAJOR_VERSION', {
+		const output = transformTemplate('$NEXT_MAJOR_VERSION', {
 			$NEXT_MAJOR_VERSION: {
 				$MAJOR: 1,
 				$MINOR: 0,
@@ -60,7 +60,7 @@ describe('template', () => {
 					'[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)',
 			},
 		]
-		const output = template(
+		const output = transformTemplate(
 			'This is my body JENKINS-1234 JENKINS-1234 JENKINS-1234',
 			{},
 			customReplacer,
@@ -77,7 +77,11 @@ describe('template', () => {
 				replace: 'heyyyyyyy',
 			},
 		]
-		const output = template('This is my body JENKINS-1234', {}, customReplacer)
+		const output = transformTemplate(
+			'This is my body JENKINS-1234',
+			{},
+			customReplacer,
+		)
 
 		expect(output).toBe('This is my body heyyyyyyy-1234')
 	})
@@ -92,7 +96,11 @@ describe('template', () => {
 				replace: 'something else',
 			},
 		]
-		const output = template('This is my body JENKINS-1234', {}, customReplacer)
+		const output = transformTemplate(
+			'This is my body JENKINS-1234',
+			{},
+			customReplacer,
+		)
 
 		expect(output).toBe('This is my body something else-1234')
 	})
@@ -111,7 +119,7 @@ describe('template', () => {
 					'[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)',
 			},
 		]
-		const output = template(
+		const output = transformTemplate(
 			'This is my body [JENKINS-1234] JENKINS-456',
 			{},
 			customReplacer,

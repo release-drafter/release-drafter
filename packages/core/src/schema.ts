@@ -32,45 +32,57 @@ export function schema(defaultBranch = 'main') {
 	return z.object({
 		references: z.array(z.string()).default([defaultBranch]),
 
-		changeTemplate: z.string().default(DEFAULT_CONFIG.changeTemplate),
+		'change-template': z.string().default(DEFAULT_CONFIG['change-template']),
 
-		changeTitleEscapes: z.string().default(DEFAULT_CONFIG.changeTitleEscapes),
-
-		noChangesTemplate: z.string().default(DEFAULT_CONFIG.noChangesTemplate),
-
-		versionTemplate: z.string().default(DEFAULT_CONFIG.versionTemplate),
-
-		nameTemplate: z.string().default(DEFAULT_CONFIG.nameTemplate),
-
-		tagPrefix: z.string().default(DEFAULT_CONFIG.tagPrefix),
-
-		tagTemplate: z.string().default(DEFAULT_CONFIG.tagTemplate),
-
-		excludeLabels: z.array(z.string()).default(DEFAULT_CONFIG.excludeLabels),
-
-		includeLabels: z.array(z.string()).default(DEFAULT_CONFIG.includeLabels),
-
-		includePaths: z.array(z.string()).default(DEFAULT_CONFIG.includePaths),
-
-		excludeContributors: z
-			.array(z.string())
-			.default(DEFAULT_CONFIG.excludeContributors),
-
-		noContributorsTemplate: z
+		'change-title-escapes': z
 			.string()
-			.default(DEFAULT_CONFIG.noContributorsTemplate),
+			.default(DEFAULT_CONFIG['change-title-escapes']),
 
-		sortBy: z
+		'no-changes-template': z
+			.string()
+			.default(DEFAULT_CONFIG['no-changes-template']),
+
+		'version-template': z.string().default(DEFAULT_CONFIG['version-template']),
+
+		'name-template': z.string().default(DEFAULT_CONFIG['name-template']),
+
+		'tag-prefix': z.string().default(DEFAULT_CONFIG['tag-prefix']),
+
+		'tag-template': z.string().default(DEFAULT_CONFIG['tag-template']),
+
+		'exclude-labels': z
+			.array(z.string())
+			.default(DEFAULT_CONFIG['exclude-labels']),
+
+		'include-labels': z
+			.array(z.string())
+			.default(DEFAULT_CONFIG['include-labels']),
+
+		'include-paths': z
+			.array(z.string())
+			.default(DEFAULT_CONFIG['include-paths']),
+
+		'exclude-contributors': z
+			.array(z.string())
+			.default(DEFAULT_CONFIG['exclude-contributors']),
+
+		'no-contributors-template': z
+			.string()
+			.default(DEFAULT_CONFIG['no-contributors-template']),
+
+		'sort-by': z
 			.enum([SORT_BY.mergedAt, SORT_BY.title])
-			.default(DEFAULT_CONFIG.sortBy),
+			.default(DEFAULT_CONFIG['sort-by']),
 
-		sortDirection: z
+		'sort-direction': z
 			.enum([SORT_DIRECTIONS.ascending, SORT_DIRECTIONS.descending])
-			.default(DEFAULT_CONFIG.sortDirection),
+			.default(DEFAULT_CONFIG['sort-direction']),
 
 		prerelease: z.boolean().default(DEFAULT_CONFIG.prerelease),
 
-		filterByCommitish: z.boolean().default(DEFAULT_CONFIG.filterByCommitish),
+		'filter-by-commitish': z
+			.boolean()
+			.default(DEFAULT_CONFIG['filter-by-commitish']),
 
 		commitish: z.string().default(DEFAULT_CONFIG.commitish),
 
@@ -105,7 +117,7 @@ export function schema(defaultBranch = 'main') {
 			.array(
 				z.object({
 					title: z.string(),
-					collapseAfter: z.number().nonnegative().default(0),
+					'collapse-after': z.number().nonnegative().default(0),
 					labels: z.array(z.string()).default([]),
 				}),
 			)
@@ -118,7 +130,7 @@ export function schema(defaultBranch = 'main') {
 				},
 			),
 
-		versionResolver: z
+		'version-resolver': z
 			.object({
 				major: z.object({
 					labels: z.array(z.string()).default([]),
@@ -137,9 +149,11 @@ export function schema(defaultBranch = 'main') {
 					])
 					.default(MajorMinorPatch.patch),
 			})
-			.default(DEFAULT_CONFIG.versionResolver),
+			.default(DEFAULT_CONFIG['version-resolver']),
 
-		categoryTemplate: z.string().default(DEFAULT_CONFIG.categoryTemplate),
+		'category-template': z
+			.string()
+			.default(DEFAULT_CONFIG['category-template']),
 
 		header: z.string().default(DEFAULT_CONFIG.header),
 

@@ -27,8 +27,9 @@ const app: ApplicationFunction = async (app, { getRouter }) => {
 				context.octokit as unknown as InstanceType<
 					typeof ReleaseDrafterOctokit
 				>,
-				context.payload.repository.default_branch,
-				{ ...pullRequest, configName: 'release-drafter.yml' },
+				{
+					...pullRequest,
+				},
 			)
 
 			const config = await myContext.config()

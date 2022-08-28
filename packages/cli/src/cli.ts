@@ -38,9 +38,10 @@ export async function cli(): Promise<void> {
 		repo,
 		defaultBranchFromOption: options.defaultBranch,
 	})
-	const context = new Context(octokit, defaultBranch, {
+	const context = new Context(octokit, {
 		owner,
 		repo,
+		defaultBranch,
 		configName,
 	})
 
@@ -50,7 +51,12 @@ export async function cli(): Promise<void> {
 	const { isPreRelease, shouldDraft, version, tag, name, commitish } =
 		mergeOptionsAndConfig(options, config)
 
-	const { filterByCommitish, tagPrefix, sortBy, sortDirection } = config
+	const {
+		'filter-by-commitish': filterByCommitish,
+		'tag-prefix': tagPrefix,
+		'sort-by': sortBy,
+		'sort-direction': sortDirection,
+	} = config
 	const targetCommitish =
 		commitish || config.commitish || options.reference || defaultBranch
 

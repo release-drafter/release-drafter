@@ -30,9 +30,10 @@ export async function run(): Promise<void> {
 	core.info(`🎉 Running Release Drafter Action for ${owner}/${repo}`)
 
 	const configName = core.getInput('config-name') || 'release-drafter.yml'
-	const context = new Context(octokit, defaultBranch, {
+	const context = new Context(octokit, {
 		owner,
 		repo,
+		defaultBranch,
 		configName,
 	})
 
@@ -42,7 +43,12 @@ export async function run(): Promise<void> {
 	const { isPreRelease, shouldDraft, version, tag, name, commitish } =
 		getActionInputs(config)
 
-	const { filterByCommitish, tagPrefix, sortBy, sortDirection } = config
+	const {
+		'filter-by-commitish': filterByCommitish,
+		'tag-prefix': tagPrefix,
+		'sort-by': sortBy,
+		'sort-direction': sortDirection,
+	} = config
 	const targetCommitish = commitish || config.commitish || GITHUB_REF
 	if (targetCommitish.startsWith('refs/tags')) {
 		core.info(

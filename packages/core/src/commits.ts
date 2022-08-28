@@ -152,17 +152,19 @@ export const findCommitsWithAssociatedPullRequests: ({
 	lastRelease: GitHubRelease | null
 	config: ReleaseDrafterConfig
 }) => {
+	const { 'change-template': changeTemplate, 'include-paths': includePaths } =
+		config
+
 	const variables = {
 		name: context.repo,
 		owner: context.owner,
 		targetCommitish,
-		withPullRequestBody: config.changeTemplate.includes('$BODY'),
-		withPullRequestURL: config.changeTemplate.includes('$URL'),
-		withBaseRefName: config.changeTemplate.includes('$BASE_REF_NAME'),
-		withHeadRefName: config.changeTemplate.includes('$HEAD_REF_NAME'),
+		withPullRequestBody: changeTemplate.includes('$BODY'),
+		withPullRequestURL: changeTemplate.includes('$URL'),
+		withBaseRefName: changeTemplate.includes('$BASE_REF_NAME'),
+		withHeadRefName: changeTemplate.includes('$HEAD_REF_NAME'),
 		since: lastRelease?.created_at ?? undefined,
 	}
-	const includePaths = config.includePaths
 	const dataPath = ['repository', 'object', 'history']
 	const repoNameWithOwner = context.ownerRepo()
 

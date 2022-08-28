@@ -11,23 +11,24 @@ export class Context {
 	public readonly pullRequest: number
 	public readonly issueNumber: number
 	public readonly configName: string
-	public readonly defaultBranch: string
+	public readonly defaultBranch?: string
 
 	constructor(
 		octokit: InstanceType<typeof ReleaseDrafterOctokit>,
-		defaultBranch: string,
 		{
 			owner,
 			repo,
+			defaultBranch,
 			issue,
 			pullRequest,
 			configName,
 		}: {
 			owner: string
 			repo: string
+			defaultBranch?: string
 			issue?: number
 			pullRequest?: number
-			configName: string
+			configName?: string
 		},
 	) {
 		this.octokit = octokit
@@ -36,7 +37,7 @@ export class Context {
 		this.issueNumber = issue || 0
 		this.pullRequest = pullRequest || 0
 		this.defaultBranch = defaultBranch
-		this.configName = configName
+		this.configName = configName || 'release-drafter.yml'
 	}
 
 	public ownerRepo = () => `${this.owner}/${this.repo}`
