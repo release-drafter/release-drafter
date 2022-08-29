@@ -59,8 +59,6 @@ export const findReleases = async ({
 		},
 	)) as GitHubRelease[]
 
-	// log({ context, message: `Found ${releases.length} releases` })
-
 	// `refs/heads/branch` and `branch` are the same thing in this context
 	const headReferenceRegex = /^refs\/heads\//
 	const targetCommitishName = targetCommitish.replace(headReferenceRegex, '')
@@ -80,19 +78,6 @@ export const findReleases = async ({
 	const draftRelease = filteredReleases.find((r) => r.draft)
 	const lastRelease =
 		sortedPublishedReleases[sortedPublishedReleases.length - 1]
-
-	// TODO(jetersen): Move to outer methods
-	if (draftRelease) {
-		// log({ context, message: `Draft release: ${draftRelease.tag_name}` })
-	} else {
-		// log({ context, message: `No draft release found` })
-	}
-
-	if (lastRelease) {
-		// log({ context, message: `Last release: ${lastRelease.tag_name}` })
-	} else {
-		// log({ context, message: `No last release found` })
-	}
 
 	return { draftRelease, lastRelease }
 }
