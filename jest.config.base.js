@@ -6,6 +6,7 @@ export default {
 				jsc: {
 					target: 'es2022',
 				},
+				sourceMaps: true,
 			},
 		],
 	},
