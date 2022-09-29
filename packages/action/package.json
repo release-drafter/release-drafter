@@ -1,0 +1,24 @@
+{
+	"name": "@release-drafter/action",
+	"version": "6.0.0-beta.1",
+	"description": "",
+	"main": "dist/index.js",
+	"type": "module",
+	"scripts": {
+		"build": "ncc build src/index.ts --target es2022 --source-map --license licenses.txt",
+		"clean": "rimraf dist",
+		"test": "jest"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"private": true,
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"dependencies": {
+		"@actions/core": "1.9.1",
+		"@actions/http-client": "^2.0.1",
+		"@release-drafter/core": "workspace:../core"
+	}
+}

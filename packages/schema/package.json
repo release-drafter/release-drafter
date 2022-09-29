@@ -1,0 +1,24 @@
+{
+	"name": "@release-drafter/schema",
+	"version": "6.0.0-beta.1",
+	"description": "",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "ts-node-esm -T ./src/index.ts",
+		"test": "jest"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"dependencies": {
+		"@antongolub/git-root": "^1.5.7",
+		"@release-drafter/core": "workspace:../core",
+		"prettier": "2.7.1",
+		"zod": "^3.17.10",
+		"zod-to-json-schema": "^3.17.1"
+	}
+}

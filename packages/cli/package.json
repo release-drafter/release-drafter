@@ -1,0 +1,55 @@
+{
+	"name": "@release-drafter/cli",
+	"version": "6.0.0-beta.1",
+	"description": "draft releases based on pull-request labels from anywhere with this CLI",
+	"author": {
+		"name": "Joseph Petersen",
+		"email": "me@jetersen.dev",
+		"url": "https://jetersen.dev"
+	},
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist",
+		"bin"
+	],
+	"bin": {
+		"release-drafter": "./bin/release-drafter.js"
+	},
+	"exports": {
+		".": "./dist/index.js",
+		"./bin": "./bin/release-drafter.js",
+		"./package.json": "./package.json"
+	},
+	"type": "module",
+	"scripts": {
+		"build": "tsup",
+		"clean": "rimraf dist",
+		"test": "jest"
+	},
+	"keywords": [],
+	"license": "ISC",
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"dependencies": {
+		"@release-drafter/core": "workspace:../core",
+		"commander": "^9.4.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"tsup": {
+		"clean": true,
+		"dts": "./src/index.ts",
+		"entry": [
+			"./src/index.ts"
+		],
+		"format": [
+			"esm"
+		],
+		"outDir": "./dist",
+		"sourcemap": true,
+		"target": "es2022"
+	}
+}

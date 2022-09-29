@@ -1,6 +1,0 @@
-references:
-  - v.+
-template: |
-  # What's Changed
-
-  $CHANGES

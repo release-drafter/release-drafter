@@ -1,3 +1,6 @@
 * text=auto eol=lf
 *.png binary
 *.sketch binary
+
+# GitHub linguist should ignore these file
+/packages/action/dist/** linguist-generated=true

@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../schema.json
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 template: |
@@ -9,19 +10,27 @@ template: |
 
 categories:
   - title: 'Breaking'
-    label: 'type: breaking'
+    labels:
+      - 'type: breaking'
   - title: 'New'
-    label: 'type: feature'
+    labels:
+      - 'type: feature'
   - title: 'Bug Fixes'
-    label: 'type: bug'
+    labels:
+      - 'type: bug'
   - title: 'Maintenance'
-    label: 'type: maintenance'
+    labels:
+      - 'type: maintenance'
   - title: 'Documentation'
-    label: 'type: docs'
+    labels:
+      - 'type: docs'
   - title: 'Other changes'
   - title: 'Dependency Updates'
-    label: 'type: dependencies'
+    labels:
+      - 'type: dependencies'
     collapse-after: 5
+
+no-changes-template: '* No changes'
 
 version-resolver:
   major:

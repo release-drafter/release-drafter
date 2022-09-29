@@ -3,7 +3,7 @@ name: Tests
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 env:
@@ -14,17 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
-      - run: yarn test
-      - run: yarn lint --fix
-      - run: yarn prettier
-      - run: yarn build
-      - name: correct vercel/ncc crlf output
-        run: sed -i 's/\x0D$//' ./dist/index.js
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm lint:fix
+      - run: pnpm prettier:fix
+      - run: pnpm build
       - name: check for unstaged files
         if: ${{ github.actor != 'dependabot[bot]' }}
-        run: .github/no-unstaged-files.sh
+        run: |
+          if [ "$(git diff --ignore-space-at-eol | wc -l)" -gt "0" ]; then
+            echo "::error::💥 Unstaged changes detected. Locally try running: pnpm prettier:fix && pnpm lint:fix && pnpm build"
+            exit 1
+          fi

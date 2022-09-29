@@ -1,0 +1,36 @@
+{
+	"name": "@release-drafter/app",
+	"version": "6.0.0-beta.1",
+	"description": "",
+	"main": "dist/index.js",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "tsup",
+		"clean": "rimraf dist",
+		"test": "jest"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"dependencies": {
+		"@release-drafter/core": "workspace:../core",
+		"probot": "12.2.5"
+	},
+	"tsup": {
+		"clean": true,
+		"dts": "./src/index.ts",
+		"entry": [
+			"./src/index.ts"
+		],
+		"format": [
+			"esm"
+		],
+		"outDir": "./dist",
+		"sourcemap": true,
+		"target": "es2022"
+	}
+}

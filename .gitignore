@@ -1,13 +1,25 @@
 node_modules
-npm-debug.log
+*.log
 *.pem
 .env
-coverage
+.envrc
+.run/
+coverage/
 now.json
 docker-compose-logs
 package-lock.json
-dist/static/
-dist/views/
+yarn.lock
+.pnpm-store/
+
+# TypeScript dist/lib
+lib/
+dist/
+
+# We use the dist folder for running the GitHub action
+!packages/action/dist
+
+# TypeScript
+*.tsbuildinfo
 
 # OS
 .DS_Store

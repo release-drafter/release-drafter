@@ -1,0 +1,36 @@
+import { MajorMinorPatch, SORT_BY, SORT_DIRECTIONS } from './enums.js'
+import { ReleaseDrafterConfig } from './types.js'
+
+export const DEFAULT_CONFIG: ReleaseDrafterConfig = Object.freeze({
+	autolabeler: [],
+	categories: [],
+	'category-template': `## $TITLE`,
+	'change-template': `* $TITLE (#$NUMBER) @$AUTHOR`,
+	'change-title-escapes': '',
+	commitish: '',
+	'exclude-contributors': [],
+	'exclude-labels': [],
+	'filter-by-commitish': false,
+	footer: '',
+	header: '',
+	'include-labels': [],
+	'include-paths': [],
+	'name-template': 'v$RESOLVED_VERSION',
+	'no-changes-template': `* No changes`,
+	'no-contributors-template': 'No contributors',
+	prerelease: false,
+	references: ['main'],
+	replacers: [],
+	'sort-by': SORT_BY.mergedAt,
+	'sort-direction': SORT_DIRECTIONS.descending,
+	'tag-prefix': 'v',
+	'tag-template': 'v$RESOLVED_VERSION',
+	template: `## What’s Changed\n\n$CHANGES`,
+	'version-template': `$MAJOR.$MINOR.$PATCH`,
+	'version-resolver': {
+		major: { labels: [] },
+		minor: { labels: [] },
+		patch: { labels: [] },
+		default: MajorMinorPatch.patch,
+	},
+})

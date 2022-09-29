@@ -1,0 +1,11 @@
+{
+	"extends": "./tsconfig.base.json",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@release-drafter/*": ["./packages/*/src"]
+		}
+	},
+	"include": ["packages/**/*"],
+	"exclude": ["node_modules", "lib", "dist"]
+}

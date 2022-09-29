@@ -1,12 +1,16 @@
 name: 'Release Drafter'
-description: 'Drafts your next release notes as pull requests are merged into master.'
+description: 'Drafts your next release notes as pull requests are merged since last release.'
 runs:
   using: 'node16'
-  main: 'dist/index.js'
+  main: 'packages/action/dist/index.js'
 branding:
   icon: edit-2
   color: orange
 inputs:
+  token:
+    description: 'The GitHub token to use for authentication.'
+    default: ${{ github.token }}
+    required: true
   config-name:
     description: |
       If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
@@ -32,12 +36,12 @@ inputs:
     description: |
       A boolean indicating whether the release being created or updated should be immediately published.
     required: false
-    default: ''
+    default: 'false'
   prerelease:
     description: |
       A boolean indicating whether the release being created or updated is a prerelease.
     required: false
-    default: ''
+    default: 'false'
   commitish:
     description: |
       The object that the release should be created to point to.
@@ -53,16 +57,6 @@ inputs:
       A string that would be added after the template body.
     required: false
     default: ''
-  disable-releaser:
-    description: |
-      A boolean indicating whether the releaser mode is disabled.
-    required: false
-    default: ''
-  disable-autolabeler:
-    description: |
-      A boolean indicating whether the autolabeler mode is disabled.
-    required: false
-    default: ''
 outputs:
   id:
     description: The ID of therelease that was created or updated.
@@ -76,3 +70,7 @@ outputs:
     description: The URL users can navigate to in order to view the release
   upload_url:
     description: The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.
+  draft:
+    description: A boolean indicating whether the release is a draft.
+  published:
+    description: A boolean indicating whether the release is published.
