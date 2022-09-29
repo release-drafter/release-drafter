@@ -17,6 +17,15 @@ describe('Context', () => {
 	beforeAll(() => {
 		nock.disableNetConnect()
 	})
+	it('Context prints owner and repo', () => {
+		const context = new Context(octokit, {
+			owner: 'release-drafter-owner',
+			repo: 'release-drafter-repo',
+		})
+		expect(context.ownerRepo()).toBe(
+			'release-drafter-owner/release-drafter-repo',
+		)
+	})
 	it('Context with default branch and no config should default', async () => {
 		const context = new Context(octokit, {
 			owner: 'release-drafter',
