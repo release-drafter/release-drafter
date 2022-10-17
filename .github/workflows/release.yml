@@ -48,9 +48,9 @@ jobs:
           tag=${GITHUB_REF/refs\/tags\//}
           version=${tag#v}
           major=${version%%.*}
-          echo "::set-output name=tag::${tag}"
-          echo "::set-output name=version::${version}"
-          echo "::set-output name=major::${major}"
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "major=${major}" >> $GITHUB_OUTPUT
 
       - uses: release-drafter/release-drafter@master
         with:
