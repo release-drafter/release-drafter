@@ -1,3 +1,4 @@
+const yaml = require('js-yaml')
 const { getConfig } = require('./lib/config')
 const { isTriggerableReference } = require('./lib/triggerable-reference')
 const {
@@ -165,14 +166,19 @@ module.exports = (app, { getRouter }) => {
       'tag-prefix': tagPrefix,
     } = config
 
-    // override header and footer when passed as input
+    // overrides passed as input
     const header = core.getInput('header')
     const footer = core.getInput('footer')
+    const includePaths = parseInput(core.getInput('include-paths'))
+
     if (header) {
       config['header'] = header
     }
     if (footer) {
       config['footer'] = footer
+    }
+    if (includePaths) {
+      config['include-paths'] = includePaths
     }
 
     const { draftRelease, lastRelease } = await findReleases({
@@ -239,6 +245,20 @@ module.exports = (app, { getRouter }) => {
     app.onAny(drafter)
   } else {
     app.on('push', drafter)
+  }
+}
+
+function parseInput(input) {
+  try {
+    // First, attempt to parse as JSON
+    return JSON.parse(input)
+  } catch {
+    // If that throws an error, attempt to parse as YAML
+    try {
+      return yaml.load(input)
+    } catch {
+      throw new Error('Input could not be parsed as JSON or YAML')
+    }
   }
 }
 

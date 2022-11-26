@@ -361,6 +361,7 @@ The Release Drafter GitHub Action accepts a number of optional inputs directly i
 | `commitish`   | A string specifying the target branch for the release being created.                                                                                                                                                                                                                                                                                               |
 | `header`      | A string that would be added before the template body.                                                                                                                                                                                                                                                                                                             |
 | `footer`      | A string that would be added after the template body.                                                                                                                                                                                                                                                                                                              |
+| `include-paths`| An array of paths used to restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories. This will override any `include-paths` specified in your `release-drafter.yml` if defined.          |
 
 ## Action Outputs
 

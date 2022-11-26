@@ -68,6 +68,10 @@ inputs:
       A boolean indicating whether the autolabeler mode is disabled.
     required: false
     default: ''
+  include-paths:
+    description: |
+      An array of paths used to restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories.
+    required: false
 outputs:
   id:
     description: The ID of therelease that was created or updated.
