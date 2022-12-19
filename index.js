@@ -209,6 +209,8 @@ module.exports = (app, { getRouter }) => {
       targetCommitish,
     })
 
+    log({ context, message: releaseInfo })
+
     let createOrUpdateReleaseResponse
     if (!draftRelease) {
       log({ context, message: 'Creating new release' })
