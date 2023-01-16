@@ -265,7 +265,10 @@ function getInput({ config } = {}) {
   }
 }
 
-function setActionOutput(releaseResponse, { body }) {
+function setActionOutput(
+  releaseResponse,
+  { body, resolvedVersion, majorVersion, minorVersion, patchVersion }
+) {
   const {
     data: {
       id: releaseId,
@@ -281,5 +284,9 @@ function setActionOutput(releaseResponse, { body }) {
   if (uploadUrl) core.setOutput('upload_url', uploadUrl)
   if (tagName) core.setOutput('tag_name', tagName)
   if (name) core.setOutput('name', name)
+  if (resolvedVersion) core.setOutput('resolvedVersion', resolvedVersion)
+  if (majorVersion) core.setOutput('majorVersion', majorVersion)
+  if (minorVersion) core.setOutput('minorVersion', minorVersion)
+  if (patchVersion) core.setOutput('patchVersion', patchVersion)
   core.setOutput('body', body)
 }
