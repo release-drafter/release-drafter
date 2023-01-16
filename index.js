@@ -284,9 +284,9 @@ function setActionOutput(
   if (uploadUrl) core.setOutput('upload_url', uploadUrl)
   if (tagName) core.setOutput('tag_name', tagName)
   if (name) core.setOutput('name', name)
-  if (resolvedVersion) core.setOutput('resolvedVersion', resolvedVersion)
-  if (majorVersion) core.setOutput('majorVersion', majorVersion)
-  if (minorVersion) core.setOutput('minorVersion', minorVersion)
-  if (patchVersion) core.setOutput('patchVersion', patchVersion)
+  if (resolvedVersion) core.setOutput('resolved_version', resolvedVersion)
+  if (majorVersion) core.setOutput('major_version', majorVersion)
+  if (minorVersion) core.setOutput('minor_version', minorVersion)
+  if (patchVersion) core.setOutput('patch_version', patchVersion)
   core.setOutput('body', body)
 }
