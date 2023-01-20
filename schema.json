@@ -99,6 +99,10 @@
         "type": "string"
       }
     },
+    "exclude-pre-release": {
+      "default": true,
+      "type": "boolean"
+    },
     "no-contributors-template": {
       "default": "No contributors",
       "type": "string"

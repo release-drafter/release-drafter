@@ -161,6 +161,7 @@ module.exports = (app, { getRouter }) => {
     const targetCommitish = commitish || config['commitish'] || ref
     const {
       'filter-by-commitish': filterByCommitish,
+      'exclude-pre-releases': excludePreReleases,
       'tag-prefix': tagPrefix,
     } = config
 
@@ -178,6 +179,7 @@ module.exports = (app, { getRouter }) => {
       context,
       targetCommitish,
       filterByCommitish,
+      excludePreReleases,
       tagPrefix,
     })
 
