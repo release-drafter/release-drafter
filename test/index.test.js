@@ -2706,6 +2706,20 @@ describe('release-drafter', () => {
           }
         )
       })
+
+      it('resolves tag with incremented pre-release identifier', async () => {
+        return overridesTest(
+          {
+            prerelease: 'true',
+            configName: 'config-with-pre-release-identifier.yml',
+          },
+          {
+            prerelease: true,
+            name: 'v2.0.1-alpha.0',
+            tag_name: 'v2.0.1-alpha.0',
+          }
+        )
+      })
     })
 
     describe('with input prerelease: false', () => {

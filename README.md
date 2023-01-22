@@ -339,6 +339,16 @@ autolabeler:
       - '/JIRA-[0-9]{1,4}/'
 ```
 
+## Pre-release increment
+
+When creating Pre-release (`prerelease: true`), you can add a pre-release identifier to increment the pre-release version number, with the `pre-release-identifier` option. It accept any string, but it's recommended to use [Semantic Versioning](https://semver.org/) pre-release identifiers (alpha, beta, rc, etc).
+
+Using `pre-release-identifier` automatically enable `include-pre-releases`.
+
+```yml
+pre-release-identifier: 'alpha' # will create a pre-release with version number x.x.x-alpha.x
+```
+
 ## Projects that don't use Semantic Versioning
 
 If your project doesn't follow [Semantic Versioning](https://semver.org) you can still use Release Drafter, but you may want to set the `version-template` option to customize how the `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` environment variables are generated.

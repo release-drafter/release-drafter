@@ -162,8 +162,13 @@ module.exports = (app, { getRouter }) => {
     const {
       'filter-by-commitish': filterByCommitish,
       'include-pre-releases': includePreReleases,
+      'pre-release-identifier': preReleaseIdentifier,
       'tag-prefix': tagPrefix,
     } = config
+
+    const shouldIncludePreReleases = Boolean(
+      includePreReleases || preReleaseIdentifier
+    )
 
     // override header and footer when passed as input
     const header = core.getInput('header')
@@ -179,7 +184,7 @@ module.exports = (app, { getRouter }) => {
       context,
       targetCommitish,
       filterByCommitish,
-      includePreReleases,
+      includePreReleases: shouldIncludePreReleases,
       tagPrefix,
     })
 
