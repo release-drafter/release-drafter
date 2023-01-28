@@ -1275,7 +1275,6 @@ describe('release-drafter', () => {
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
-              console.dir(body)
               expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "# What's Changed
@@ -1296,7 +1295,7 @@ describe('release-drafter', () => {
               return true
             }
           )
-          .reply(200, releasePayload)
+          .reply(200, preReleasePayload)
 
         await probot.receive({
           name: 'push',
@@ -1400,7 +1399,7 @@ describe('release-drafter', () => {
               return true
             }
           )
-          .reply(200, preReleasePayload)
+          .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
