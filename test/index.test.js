@@ -1256,7 +1256,7 @@ describe('release-drafter', () => {
       })
     })
 
-    describe('with exclude-pre-release false config', () => {
+    describe('with exclude-pre-releases false config', () => {
       it('includes pre releases', async () => {
         getConfigMock('config-with-exclude-pre-releases-false.yml')
 
