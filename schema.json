@@ -5,9 +5,7 @@
   "type": "object",
   "properties": {
     "references": {
-      "default": [
-        "master"
-      ],
+      "default": ["master"],
       "type": "array",
       "items": {
         "type": "string"
@@ -21,9 +19,7 @@
       "anyOf": [
         {
           "type": "string",
-          "enum": [
-            ""
-          ]
+          "enum": [""]
         },
         {
           "default": "",
@@ -43,9 +39,7 @@
       "anyOf": [
         {
           "type": "string",
-          "enum": [
-            ""
-          ]
+          "enum": [""]
         },
         {
           "default": "",
@@ -57,9 +51,7 @@
       "anyOf": [
         {
           "type": "string",
-          "enum": [
-            ""
-          ]
+          "enum": [""]
         },
         {
           "default": "",
@@ -71,9 +63,7 @@
       "anyOf": [
         {
           "type": "string",
-          "enum": [
-            ""
-          ]
+          "enum": [""]
         },
         {
           "default": "",
@@ -109,28 +99,18 @@
         "type": "string"
       }
     },
-    "exclude-pre-releases": {
-      "default": true,
-      "type": "boolean"
-    },
     "no-contributors-template": {
       "default": "No contributors",
       "type": "string"
     },
     "sort-by": {
       "default": "merged_at",
-      "enum": [
-        "merged_at",
-        "title"
-      ],
+      "enum": ["merged_at", "title"],
       "type": "string"
     },
     "sort-direction": {
       "default": "descending",
-      "enum": [
-        "ascending",
-        "descending"
-      ],
+      "enum": ["ascending", "descending"],
       "type": "string"
     },
     "prerelease": {
@@ -141,13 +121,15 @@
       "default": false,
       "type": "boolean"
     },
+    "exclude-pre-releases": {
+      "default": true,
+      "type": "boolean"
+    },
     "commitish": {
       "anyOf": [
         {
           "type": "string",
-          "enum": [
-            ""
-          ]
+          "enum": [""]
         },
         {
           "default": "",
@@ -168,9 +150,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  ""
-                ]
+                "enum": [""]
               },
               {
                 "type": "string"
@@ -180,10 +160,7 @@
         },
         "additionalProperties": false,
         "patterns": [],
-        "required": [
-          "search",
-          "replace"
-        ]
+        "required": ["search", "replace"]
       }
     },
     "autolabeler": {
@@ -226,9 +203,7 @@
         },
         "additionalProperties": false,
         "patterns": [],
-        "required": [
-          "label"
-        ]
+        "required": ["label"]
       }
     },
     "categories": {
@@ -258,9 +233,7 @@
         },
         "additionalProperties": false,
         "patterns": [],
-        "required": [
-          "title"
-        ]
+        "required": ["title"]
       }
     },
     "version-resolver": {
@@ -322,11 +295,7 @@
         },
         "default": {
           "default": "patch",
-          "enum": [
-            "major",
-            "minor",
-            "patch"
-          ],
+          "enum": ["major", "minor", "patch"],
           "type": "string"
         }
       },
@@ -337,9 +306,7 @@
       "anyOf": [
         {
           "type": "string",
-          "enum": [
-            ""
-          ]
+          "enum": [""]
         },
         {
           "default": "## $TITLE",
@@ -351,9 +318,7 @@
       "anyOf": [
         {
           "type": "string",
-          "enum": [
-            ""
-          ]
+          "enum": [""]
         },
         {
           "default": "",
@@ -368,9 +333,7 @@
       "anyOf": [
         {
           "type": "string",
-          "enum": [
-            ""
-          ]
+          "enum": [""]
         },
         {
           "default": "",
