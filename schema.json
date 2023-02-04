@@ -121,7 +121,7 @@
       "default": false,
       "type": "boolean"
     },
-    "exclude-pre-releases": {
+    "include-pre-releases": {
       "default": true,
       "type": "boolean"
     },

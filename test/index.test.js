@@ -4,7 +4,7 @@ const { getConfigMock } = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
 const mockedEnv = require('mocked-env')
 const pino = require('pino')
-const Stream = require('stream')
+const Stream = require('node:stream')
 const pushPayload = require('./fixtures/push.json')
 const pushTagPayload = require('./fixtures/push-tag.json')
 const releasePayload = require('./fixtures/release.json')
@@ -1256,9 +1256,9 @@ describe('release-drafter', () => {
       })
     })
 
-    describe('with exclude-pre-releases false config', () => {
+    describe('with include-pre-releases true config', () => {
       it('includes pre releases', async () => {
-        getConfigMock('config-with-exclude-pre-releases-false.yml')
+        getConfigMock('config-with-include-pre-releases-true.yml')
 
         nock('https://api.github.com')
           .get('/repos/toolmantim/release-drafter-test-project/releases')

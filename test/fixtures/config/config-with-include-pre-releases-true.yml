@@ -4,4 +4,4 @@ template: |
   # What's Changed
 
   $CHANGES
-exclude-pre-releases: false
+include-pre-releases: true
