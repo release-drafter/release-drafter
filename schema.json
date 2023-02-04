@@ -122,7 +122,7 @@
       "type": "boolean"
     },
     "include-pre-releases": {
-      "default": true,
+      "default": false,
       "type": "boolean"
     },
     "commitish": {
