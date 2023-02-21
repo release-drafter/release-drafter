@@ -121,6 +121,10 @@
       "default": false,
       "type": "boolean"
     },
+    "include-pre-releases": {
+      "default": false,
+      "type": "boolean"
+    },
     "commitish": {
       "anyOf": [
         {
