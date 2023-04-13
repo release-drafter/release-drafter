@@ -1,4 +1,4 @@
-const { generateChangeLog } = require('../lib/releases')
+const { generateChangeLog, findReleases } = require('../lib/releases')
 const { DEFAULT_CONFIG } = require('../lib/default-config')
 
 const pullRequests = [
@@ -232,6 +232,48 @@ describe('releases', () => {
         * B2 (#2) @ghost
         * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375"
       `)
+    })
+  })
+
+  describe('findReleases', () => {
+    it('should retrieve last release respecting semver, stripped prefix', async () => {
+      const paginate = jest.fn().mockResolvedValue([
+        {
+          tag_name: 'test-1.0.1',
+          target_commitish: 'master',
+          created_at: '2021-06-29T05:45:15Z',
+        },
+        {
+          tag_name: 'test-1.0.0',
+          target_commitish: 'master',
+          created_at: '2022-06-29T05:45:15Z',
+        },
+      ])
+
+      const context = {
+        log: {
+          info: jest.fn(),
+        },
+        repo: jest.fn(),
+        payload: {
+          repository: 'test',
+        },
+        octokit: {
+          paginate,
+          repos: { listReleases: { endpoint: { merge: jest.fn() } } },
+        },
+      }
+      const targetCommitish = 'refs/heads/master'
+      const filterByCommitish = ''
+      const tagPrefix = 'test-'
+
+      const { lastRelease } = await findReleases({
+        context,
+        targetCommitish,
+        filterByCommitish,
+        tagPrefix,
+      })
+      expect(lastRelease.tag_name).toEqual('test-1.0.1')
     })
   })
 })
