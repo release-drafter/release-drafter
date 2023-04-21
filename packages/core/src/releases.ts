@@ -168,7 +168,7 @@ const categorizePullRequests = (
 	if (categories.length === 0) {
 		return [
 			{
-				pullRequests: pullRequests,
+				pullRequests,
 				labels: [],
 				'collapse-after': 0,
 			},
