@@ -4,12 +4,13 @@ const { getConfigMock } = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
 const mockedEnv = require('mocked-env')
 const pino = require('pino')
-const Stream = require('stream')
+const Stream = require('node:stream')
 const pushPayload = require('./fixtures/push.json')
 const pushTagPayload = require('./fixtures/push-tag.json')
 const releasePayload = require('./fixtures/release.json')
 const release2Payload = require('./fixtures/release-2.json')
 const release3Payload = require('./fixtures/release-3.json')
+const preReleasePayload = require('./fixtures/pre-release.json')
 const pushNonMasterPayload = require('./fixtures/push-non-master-branch.json')
 const graphqlCommitsNoPRsPayload = require('./fixtures/graphql-commits-no-prs.json')
 const graphqlCommitsMergeCommit = require('./fixtures/__generated__/graphql-commits-merge-commit.json')
@@ -1245,6 +1246,56 @@ describe('release-drafter', () => {
             }
           )
           .reply(200, releasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+      })
+    })
+
+    describe('with include-pre-releases true config', () => {
+      it('includes pre releases', async () => {
+        getConfigMock('config-with-include-pre-releases-true.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [release2Payload, preReleasePayload])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, graphqlCommitsMergeCommit)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
+                * Bug fixes (#3) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+                ",
+                  "draft": true,
+                  "name": "v1.5.0",
+                  "prerelease": false,
+                  "tag_name": "v1.5.0",
+                  "target_commitish": "refs/heads/master",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, preReleasePayload)
 
         await probot.receive({
           name: 'push',
