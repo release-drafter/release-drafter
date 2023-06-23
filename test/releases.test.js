@@ -318,6 +318,7 @@ describe('releases', () => {
       const { draftRelease } = await findReleases({
         context,
         targetCommitish: 'refs/heads/master',
+        includePreReleases: false,
         tagPrefix: '',
       })
 
@@ -332,20 +333,26 @@ describe('releases', () => {
       paginateMock.mockResolvedValueOnce([
         { tag_name: 'v1.0.0', draft: true, prerelease: false },
         { tag_name: 'v1.0.1', draft: false, prerelease: false },
-        { tag_name: 'v1.0.2-rc.1', draft: false, prerelease: true },
+        { tag_name: 'v1.0.2-rc.1', draft: true, prerelease: true },
       ])
 
-      const { lastRelease } = await findReleases({
+      const { draftRelease, lastRelease } = await findReleases({
         context,
         targetCommitish: 'refs/heads/master',
         tagPrefix: '',
         includePreReleases: true,
       })
 
-      expect(lastRelease).toEqual({
+      expect(draftRelease).toEqual({
         tag_name: 'v1.0.2-rc.1',
-        draft: false,
+        draft: true,
         prerelease: true,
+      })
+
+      expect(lastRelease).toEqual({
+        tag_name: 'v1.0.1',
+        draft: false,
+        prerelease: false,
       })
     })
   })
