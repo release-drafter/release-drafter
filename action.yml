@@ -76,3 +76,11 @@ outputs:
     description: The URL users can navigate to in order to view the release
   upload_url:
     description: The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.
+  major_version:
+    description: The next major version number. For example, if the last tag or release was v1.2.3, the value would be v2.0.0.
+  minor_version:
+    description: The next minor version number. For example, if the last tag or release was v1.2.3, the value would be v1.3.0.
+  patch_version:
+    description: The next patch version number. For example, if the last tag or release was v1.2.3, the value would be v1.2.4.
+  resolved_version:
+    description: The next resolved version number, based on GitHub labels.
