@@ -35,7 +35,7 @@ inputs:
     default: ''
   latest:
     description: |
-      A boolean indicating whether the release being created or updated is marked as latest.
+      A string indicating whether the release being created or updated should be marked as latest.
     required: false
     default: ''
   prerelease:

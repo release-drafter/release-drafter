@@ -146,7 +146,7 @@ module.exports = (app, { getRouter }) => {
       configName,
     })
 
-    const { isPreRelease, isLatest } = getInput({ config })
+    const { isPreRelease, latest } = getInput({ config })
 
     if (config === null || disableReleaser) return
 
@@ -207,7 +207,7 @@ module.exports = (app, { getRouter }) => {
       tag,
       name,
       isPreRelease,
-      isLatest,
+      latest,
       shouldDraft,
       targetCommitish,
     })
@@ -266,14 +266,15 @@ function getInput({ config } = {}) {
   const isPreRelease =
     preRelease === 'true' || (!preRelease && config.prerelease)
 
-  const latest = core.getInput('latest').toLowerCase()
+  const latestInput = core.getInput('latest').toLowerCase()
 
-  const isLatest =
-    !isPreRelease && (latest === 'true' || (!latest && config.latest))
+  const latest = isPreRelease
+    ? 'false'
+    : (!latestInput && config.latest) || latestInput || undefined
 
   return {
     isPreRelease,
-    isLatest,
+    latest,
   }
 }
 
