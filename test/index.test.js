@@ -160,6 +160,7 @@ describe('release-drafter', () => {
                   * No changes
                   ",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -227,6 +228,7 @@ describe('release-drafter', () => {
                   * 👽 Add alien technology (#1) @TimonVS
                   ",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -278,6 +280,7 @@ describe('release-drafter', () => {
                 Previous tag: ''
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -331,6 +334,7 @@ describe('release-drafter', () => {
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -384,6 +388,7 @@ describe('release-drafter', () => {
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -428,6 +433,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
                   "draft": true,
+                  "latest": false,
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
@@ -475,6 +481,7 @@ describe('release-drafter', () => {
                   * Change: #2 'Add big feature' @TimonVS
                   * Change: #1 '👽 Add alien technology' @TimonVS",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -523,6 +530,7 @@ describe('release-drafter', () => {
                   * Change: #2 'Add big feature' ![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)
                   * Change: #1 '👽 Add alien technology' Space invasion 👾",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -571,6 +579,7 @@ describe('release-drafter', () => {
                   * Change: https://github.com/toolmantim/release-drafter-test-project/pull/2 'Add big feature' @TimonVS
                   * Change: https://github.com/toolmantim/release-drafter-test-project/pull/1 '👽 Add alien technology' @TimonVS",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -615,6 +624,7 @@ describe('release-drafter', () => {
                   Object {
                     "body": "A big thanks to: @TimonVS and Ada Lovelace",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -657,6 +667,7 @@ describe('release-drafter', () => {
                   Object {
                     "body": "A big thanks to: Nobody",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -701,6 +712,7 @@ describe('release-drafter', () => {
                   Object {
                     "body": "A big thanks to: Ada Lovelace",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -752,6 +764,7 @@ describe('release-drafter', () => {
                 * No changes
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -794,6 +807,7 @@ describe('release-drafter', () => {
                   Object {
                     "body": "* No changes mmkay",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -845,6 +859,7 @@ describe('release-drafter', () => {
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "v3.0.0-beta",
                   "prerelease": false,
                   "tag_name": "v3.0.0-beta",
@@ -903,6 +918,7 @@ describe('release-drafter', () => {
                 **Full Changelog**: https://github.com/toolmantim/release-drafter-test-project/compare/v2.0.0...v2.0.1
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -959,6 +975,7 @@ describe('release-drafter', () => {
                 * Bug fixes (#3) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1015,6 +1032,7 @@ describe('release-drafter', () => {
                 * Update dependencies (#4) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1069,6 +1087,7 @@ describe('release-drafter', () => {
                 * Bug fixes (#3) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1123,6 +1142,7 @@ describe('release-drafter', () => {
                 * Bug fixes (#20) @jetersen
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1181,6 +1201,7 @@ describe('release-drafter', () => {
                 * Bug fixes (#20) @jetersen
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1236,6 +1257,7 @@ describe('release-drafter', () => {
                 </details>
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1286,6 +1308,7 @@ describe('release-drafter', () => {
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "v1.5.0",
                   "prerelease": false,
                   "tag_name": "v1.5.0",
@@ -1341,6 +1364,7 @@ describe('release-drafter', () => {
                 * Bug fixes (#3) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1390,6 +1414,7 @@ describe('release-drafter', () => {
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1433,6 +1458,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
                   "draft": true,
+                  "latest": false,
                   "name": "v2.0.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
@@ -1474,6 +1500,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "Placeholder with example. Automatically calculated values are next major=3.0 (major=3, minor=0, patch=0), minor=2.1 (major=2, minor=1, patch=0), patch=2.0 (major=2, minor=0, patch=1)",
                   "draft": true,
+                  "latest": false,
                   "name": "v2.1 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v2.1",
@@ -1515,6 +1542,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "Placeholder with example. Automatically calculated values are next major=3 (major=3, minor=0, patch=0), minor=2 (major=2, minor=1, patch=0), patch=2 (major=2, minor=0, patch=1)",
                   "draft": true,
+                  "latest": false,
                   "name": "v3 (Code name: Placeholder)",
                   "prerelease": false,
                   "tag_name": "v3",
@@ -1560,6 +1588,7 @@ describe('release-drafter', () => {
                 This is the template in the middle
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1602,6 +1631,7 @@ describe('release-drafter', () => {
                 This is at bottom
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1645,6 +1675,7 @@ describe('release-drafter', () => {
                 This is at bottom
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1687,6 +1718,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "This is at topThis is the template in the middleThis is at bottom",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1733,6 +1765,7 @@ describe('release-drafter', () => {
                   "body": "I AM AWESOME_mockenv_strips_newline_and_trailing_spaces_This is the template in the middle
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -1787,6 +1820,7 @@ describe('release-drafter', () => {
                   * 👽 Add alien technology (#1) @TimonVS
                   ",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -1840,6 +1874,7 @@ describe('release-drafter', () => {
                   * 👽 Add alien technology (#6) @TimonVS
                   ",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -1893,6 +1928,7 @@ describe('release-drafter', () => {
                   * 👽 Add alien technology (#11) @TimonVS
                   ",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -1943,6 +1979,7 @@ describe('release-drafter', () => {
                   * Add big feature (#12) @TimonVS
                   ",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -1995,6 +2032,7 @@ describe('release-drafter', () => {
                   * Update dependencies (#4) @TimonVS
                   ",
                     "draft": true,
+                    "latest": false,
                     "name": "",
                     "prerelease": false,
                     "tag_name": "",
@@ -2062,6 +2100,7 @@ describe('release-drafter', () => {
                 * Create new-feature.md (#1) @toolmantim
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -2115,6 +2154,7 @@ describe('release-drafter', () => {
                 * 👽 Add alien technology (#1) @TimonVS
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
@@ -2184,6 +2224,7 @@ describe('release-drafter', () => {
               * 1️⃣ Switch to a monorepo (#9) @toolmantim
               ",
                 "draft": true,
+                "latest": false,
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
@@ -2252,6 +2293,7 @@ describe('release-drafter', () => {
               * Added great distance (#16) @toolmantim
               ",
                 "draft": true,
+                "latest": false,
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
@@ -2308,6 +2350,7 @@ describe('release-drafter', () => {
               * 👽 Add alien technology (#1) @TimonVS
               ",
                 "draft": true,
+                "latest": false,
                 "name": "v$INPUT_VERSION (Code name: Placeholder)",
                 "prerelease": false,
                 "tag_name": "v$INPUT_VERSION",
@@ -2358,6 +2401,7 @@ describe('release-drafter', () => {
               * Add documentation (#5) @TimonVS
               ",
                 "draft": true,
+                "latest": false,
                 "name": "v$INPUT_VERSION (Code name: Placeholder)",
                 "prerelease": false,
                 "tag_name": "v$INPUT_VERSION",
@@ -2456,6 +2500,7 @@ describe('release-drafter', () => {
                 "body": "# There's new stuff!
               ",
                 "draft": true,
+                "latest": false,
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
@@ -2509,6 +2554,10 @@ describe('release-drafter', () => {
         mockEnvironment['INPUT_PUBLISH'] = overrides.publish
       }
 
+      if (overrides.latest) {
+        mockEnvironment['INPUT_LATEST'] = overrides.latest
+      }
+
       if (overrides.prerelease) {
         mockEnvironment['INPUT_PRERELEASE'] = overrides.prerelease
       }
@@ -2553,7 +2602,7 @@ describe('release-drafter', () => {
     restoreEnvironment_()
   }
 
-  describe('input publish, prerelease, version, tag and name overrides', () => {
+  describe('input publish, latest, prerelease, version, tag and name overrides', () => {
     // Method with all the test's logic, to prevent duplication
 
     describe('with just the version', () => {
@@ -2644,6 +2693,125 @@ describe('release-drafter', () => {
             draft: false,
             name: 'v2.1.1 (Code name: Placeholder)',
             tag_name: 'v2.1.1',
+          }
+        )
+      })
+    })
+
+    describe('with input latest: true', () => {
+      it('marks the created draft as latest', async () => {
+        return overridesTest(
+          {
+            latest: 'true',
+          },
+          {
+            draft: true,
+            latest: true,
+          }
+        )
+      })
+    })
+
+    describe('with input latest: false', () => {
+      it('marks the created draft as latest', async () => {
+        return overridesTest(
+          {
+            latest: 'false',
+          },
+          {
+            draft: true,
+            latest: false,
+          }
+        )
+      })
+    })
+
+    describe('with input latest and publish: true', () => {
+      it('marks the created release as latest', async () => {
+        return overridesTest(
+          {
+            latest: 'true',
+            publish: 'true',
+          },
+          {
+            draft: false,
+            latest: true,
+          }
+        )
+      })
+    })
+
+    describe('with input latest and prerelease: true', () => {
+      it('marks the created release as latest', async () => {
+        return overridesTest(
+          {
+            latest: 'true',
+            prerelease: 'true',
+          },
+          {
+            draft: true,
+            latest: false,
+            prerelease: true,
+          }
+        )
+      })
+    })
+
+    describe('with input latest: true and config file latest: false', () => {
+      it('marks the created draft as latest', async () => {
+        return overridesTest(
+          {
+            latest: 'true',
+            configName: 'config-without-latest.yml',
+          },
+          {
+            draft: true,
+            latest: true,
+          }
+        )
+      })
+    })
+
+    describe('with input latest: false and config file latest: true', () => {
+      it('doesnt marks the created draft as latest', async () => {
+        return overridesTest(
+          {
+            latest: 'false',
+            configName: 'config-with-latest.yml',
+          },
+          {
+            draft: true,
+            latest: false,
+          }
+        )
+      })
+    })
+
+    describe('with input latest: true and config file latest: true', () => {
+      it('marks the created draft as latest', async () => {
+        return overridesTest(
+          {
+            latest: 'true',
+            configName: 'config-without-latest.yml',
+          },
+          {
+            draft: true,
+            latest: true,
+          }
+        )
+      })
+    })
+
+    describe('with input latest: true and config file latest: true', () => {
+      it('marks the created draft as latest', async () => {
+        return overridesTest(
+          {
+            latest: 'true',
+            configName: 'config-without-latest.yml',
+          },
+          {
+            draft: true,
+            latest: true,
           }
         )
       })
@@ -2803,6 +2971,7 @@ describe('release-drafter', () => {
 
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "v1.0.2 🌈",
                   "prerelease": false,
                   "tag_name": "v1.0.2",
@@ -2859,6 +3028,7 @@ describe('release-drafter', () => {
                 v2.0.0
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "v1.0.2 🌈",
                   "prerelease": false,
                   "tag_name": "v1.0.2",
@@ -2913,6 +3083,7 @@ describe('release-drafter', () => {
 
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "v0.1.0 🌈",
                   "prerelease": false,
                   "tag_name": "v0.1.0",
@@ -2965,6 +3136,7 @@ describe('release-drafter', () => {
                 v2.0.0
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "v2.0.1 🌈",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
@@ -3017,6 +3189,7 @@ describe('release-drafter', () => {
                 static-tag-prefix-v2.1.4-RC3
                 ",
                   "draft": true,
+                  "latest": false,
                   "name": "static-tag-prefix-v2.1.4 🌈",
                   "prerelease": false,
                   "tag_name": "static-tag-prefix-v2.1.4",
@@ -3061,6 +3234,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "dummy",
                   "draft": true,
+                  "latest": false,
                   "name": "v2.1.0",
                   "prerelease": false,
                   "tag_name": "v2.1.0",
@@ -3102,6 +3276,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "dummy",
                   "draft": true,
+                  "latest": false,
                   "name": "v2.0.1",
                   "prerelease": false,
                   "tag_name": "v2.0.1",
@@ -3143,6 +3318,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "dummy",
                   "draft": true,
+                  "latest": false,
                   "name": "v2.1.0",
                   "prerelease": false,
                   "tag_name": "v2.1.0",
@@ -3184,6 +3360,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "dummy",
                   "draft": true,
+                  "latest": false,
                   "name": "v3.0.0",
                   "prerelease": false,
                   "tag_name": "v3.0.0",
@@ -3226,6 +3403,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "dummy",
                   "draft": true,
+                  "latest": false,
                   "name": "v3.0.0",
                   "prerelease": false,
                   "tag_name": "v3.0.0",
@@ -3270,6 +3448,7 @@ describe('release-drafter', () => {
                 Object {
                   "body": "dummy",
                   "draft": true,
+                  "latest": false,
                   "name": "",
                   "prerelease": false,
                   "tag_name": "",
