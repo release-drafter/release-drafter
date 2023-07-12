@@ -146,7 +146,7 @@ module.exports = (app, { getRouter }) => {
       configName,
     })
 
-    const { isPreRelease } = getInput({ config })
+    const { isPreRelease, latest } = getInput({ config })
 
     if (config === null || disableReleaser) return
 
@@ -207,6 +207,7 @@ module.exports = (app, { getRouter }) => {
       tag,
       name,
       isPreRelease,
+      latest,
       shouldDraft,
       targetCommitish,
     })
@@ -262,8 +263,18 @@ function getInput({ config } = {}) {
   // the input takes precedence, because it's more easy to change at runtime
   const preRelease = core.getInput('prerelease').toLowerCase()
 
+  const isPreRelease =
+    preRelease === 'true' || (!preRelease && config.prerelease)
+
+  const latestInput = core.getInput('latest').toLowerCase()
+
+  const latest = isPreRelease
+    ? 'false'
+    : (!latestInput && config.latest) || latestInput || undefined
+
   return {
-    isPreRelease: preRelease === 'true' || (!preRelease && config.prerelease),
+    isPreRelease,
+    latest,
   }
 }
 
