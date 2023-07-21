@@ -2557,6 +2557,11 @@ describe('release-drafter', () => {
       if (overrides.prerelease) {
         mockEnvironment['INPUT_PRERELEASE'] = overrides.prerelease
       }
+
+      if (overrides.prereleaseIdentifier) {
+        mockEnvironment['INPUT_PRERELEASE-IDENTIFIER'] =
+          overrides.prereleaseIdentifier
+      }
     }
 
     let restoreEnvironment_ = mockedEnv(mockEnvironment)
@@ -2707,7 +2712,7 @@ describe('release-drafter', () => {
         )
       })
 
-      it('resolves tag with incremented pre-release identifier', async () => {
+      it('resolves tag with incremented prerelease identifier', async () => {
         return overridesTest(
           {
             prerelease: 'true',
@@ -2717,6 +2722,23 @@ describe('release-drafter', () => {
             prerelease: true,
             name: 'v2.0.1-alpha.0',
             tag_name: 'v2.0.1-alpha.0',
+          }
+        )
+      })
+    })
+
+    describe('with input prerelease: true and input prerelease-identifier', () => {
+      it('resolves tag with incremented pre-release identifier', async () => {
+        return overridesTest(
+          {
+            prerelease: 'true',
+            prereleaseIdentifier: 'beta',
+            configName: 'config-with-pre-release-identifier.yml',
+          },
+          {
+            prerelease: true,
+            name: 'v2.0.1-beta.0',
+            tag_name: 'v2.0.1-beta.0',
           }
         )
       })

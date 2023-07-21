@@ -75,7 +75,7 @@ describe('versions', () => {
       },
     ],
     [
-      'handles incremental pre-releases',
+      'handles incremental prereleases',
       {
         release: {
           tag_name: 'v10.0.3',
@@ -93,7 +93,7 @@ describe('versions', () => {
       },
     ],
     [
-      'handles incremental pre-releases on existing pre-releases',
+      'handles incremental prereleases on existing prereleases',
       {
         release: {
           tag_name: 'v10.0.3-alpha.2',
@@ -172,7 +172,7 @@ describe('versions', () => {
       )
       expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.template).toEqual('$PATCH')
 
-      // Next pre-release version checks
+      // Next prerelease version checks
       expect(versionInfo.$NEXT_PRERELEASE_VERSION.version).toEqual(
         expected.$PRERELEASE
       )

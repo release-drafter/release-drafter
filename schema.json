@@ -137,7 +137,7 @@
       "default": false,
       "type": "boolean"
     },
-    "pre-release-identifier": {
+    "prerelease-identifier": {
       "anyOf": [
         {
           "type": "string",
