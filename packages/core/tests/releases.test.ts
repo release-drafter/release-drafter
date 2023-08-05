@@ -2,11 +2,7 @@ import nock from 'nock'
 import { Context } from '../src/context.js'
 import { getOctokit } from '../src/release-drafter-octokit.js'
 import { findReleases, generateChangeLog } from '../src/releases.js'
-import {
-	GitHubRelease,
-	PullRequest,
-	ReleaseDrafterConfig,
-} from '../src/types.js'
+import { PullRequest, ReleaseDrafterConfig } from '../src/types.js'
 
 const octokit = getOctokit('TEST')
 

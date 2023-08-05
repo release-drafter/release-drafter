@@ -39593,12 +39593,6 @@ var findReleases = async ({
   );
   const draftRelease = filteredReleases.find((r) => r.draft);
   const lastRelease = sortedPublishedReleases[sortedPublishedReleases.length - 1];
-  if (draftRelease) {
-  } else {
-  }
-  if (lastRelease) {
-  } else {
-  }
   return { draftRelease, lastRelease };
 };
 var contributorsSentence = ({

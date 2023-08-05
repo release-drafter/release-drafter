@@ -32,7 +32,7 @@ const app: ApplicationFunction = async (app, { getRouter }) => {
 				},
 			)
 
-			const config = await myContext.config()
+			await myContext.config()
 		},
 	)
 
