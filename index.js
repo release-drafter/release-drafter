@@ -154,6 +154,7 @@ module.exports = (app, { getRouter }) => {
 
     const {
       'filter-by-commitish': filterByCommitish,
+      'filter-by-regex': filterByRegex,
       'include-pre-releases': includePreReleases,
       'prerelease-identifier': preReleaseIdentifier,
       'tag-prefix': tagPrefix,
@@ -169,6 +170,7 @@ module.exports = (app, { getRouter }) => {
       context,
       targetCommitish,
       filterByCommitish,
+      filterByRegex,
       includePreReleases: shouldIncludePreReleases,
       tagPrefix,
     })

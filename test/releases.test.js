@@ -237,8 +237,19 @@ describe('releases', () => {
   })
 
   describe('findReleases', () => {
+    const paginateMock = jest.fn()
+    const context = {
+      payload: { repository: { full_name: 'test' } },
+      octokit: {
+        paginate: paginateMock,
+        repos: { listReleases: { endpoint: { merge: jest.fn() } } },
+      },
+      repo: jest.fn(),
+      log: { info: jest.fn(), warn: jest.fn() },
+    }
+
     it('should retrieve last release respecting semver, stripped prefix', async () => {
-      const paginate = jest.fn().mockResolvedValue([
+      paginateMock.mockResolvedValue([
         {
           tag_name: 'test-1.0.1',
           target_commitish: 'master',
@@ -251,19 +262,6 @@ describe('releases', () => {
         },
       ])
 
-      const context = {
-        log: {
-          info: jest.fn(),
-        },
-        repo: jest.fn(),
-        payload: {
-          repository: 'test',
-        },
-        octokit: {
-          paginate,
-          repos: { listReleases: { endpoint: { merge: jest.fn() } } },
-        },
-      }
       const targetCommitish = 'refs/heads/master'
       const filterByCommitish = ''
       const tagPrefix = 'test-'
@@ -276,17 +274,6 @@ describe('releases', () => {
       })
       expect(lastRelease.tag_name).toEqual('test-1.0.1')
     })
-
-    const paginateMock = jest.fn()
-    const context = {
-      payload: { repository: { full_name: 'test' } },
-      octokit: {
-        paginate: paginateMock,
-        repos: { listReleases: { endpoint: { merge: jest.fn() } } },
-      },
-      repo: jest.fn(),
-      log: { info: jest.fn(), warn: jest.fn() },
-    }
 
     it('should return last release without draft and prerelease', async () => {
       paginateMock.mockResolvedValueOnce([
@@ -347,6 +334,40 @@ describe('releases', () => {
         draft: false,
         prerelease: true,
       })
+    })
+
+    it('should retrieve last release respecting filterByRegex', async () => {
+      paginateMock.mockResolvedValue([
+        {
+          tag_name: '1.1.1',
+          target_commitish: 'hotfix-1.1.1',
+          created_at: '2022-06-29T05:45:15Z',
+        },
+        {
+          tag_name: '1.1.0',
+          target_commitish: 'release-1.1.0',
+          created_at: '2021-06-29T05:45:15Z',
+        },
+        {
+          tag_name: '1.0.0',
+          target_commitish: 'release-1.0.0',
+          created_at: '2020-06-29T05:45:15Z',
+        },
+      ])
+
+      const targetCommitish = 'refs/heads/release-1.2.0'
+      const filterByCommitish = ''
+      const filterByRegex = '^release-[0-9]+\\.[0-9]+\\.[0-9]+$'
+      const tagPrefix = ''
+
+      const { lastRelease } = await findReleases({
+        context,
+        targetCommitish,
+        filterByCommitish,
+        filterByRegex,
+        tagPrefix,
+      })
+      expect(lastRelease.tag_name).toEqual('1.1.0')
     })
   })
 })
