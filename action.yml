@@ -43,6 +43,11 @@ inputs:
       A boolean indicating whether the release being created or updated is a prerelease.
     required: false
     default: ''
+  prerelease-identifier:
+    description: |
+      A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version.
+    required: false
+    default: ''
   commitish:
     description: |
       The object that the release should be created to point to.

@@ -1,174 +1,190 @@
+const { test } = require('@jest/globals')
+
 const { getVersionInfo, defaultVersionInfo } = require('../lib/versions')
 
 describe('versions', () => {
-  it('extracts a version-like string from the last tag', () => {
-    const versionInfo = getVersionInfo(
+  test.each([
+    [
+      'extracts a version-like string from the last tag',
       {
-        tag_name: 'v10.0.3',
-        name: 'Some release',
+        release: {
+          tag_name: 'v10.0.3',
+          name: 'Some release',
+        },
+        template: '$MAJOR.$MINOR.$PATCH',
+        expected: {
+          $MAJOR: '11.0.0',
+          $MINOR: '10.1.0',
+          $PATCH: '10.0.4',
+          $PRERELEASE: '10.0.4-0',
+          $RESOLVED: '10.0.4',
+        },
       },
-      '$MAJOR.$MINOR.$PATCH'
-    )
-
-    expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.template).toEqual('$PATCH')
-  })
-
-  it('extracts a version-like string from the last release name if the tag isnt a version', () => {
-    const versionInfo = getVersionInfo(
+    ],
+    [
+      'extracts a version-like string from the last release name if the tag isnt a version',
       {
-        tag_name: 'notaproperversion',
-        name: '10.0.3',
+        release: {
+          tag_name: 'notaproperversion',
+          name: '10.0.3',
+        },
+        template: '$MAJOR.$MINOR.$PATCH',
+        expected: {
+          $MAJOR: '11.0.0',
+          $MINOR: '10.1.0',
+          $PATCH: '10.0.4',
+          $RESOLVED: '10.0.4',
+          $PRERELEASE: '10.0.4-0',
+        },
       },
-      '$MAJOR.$MINOR.$PATCH'
-    )
-
-    expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.template).toEqual('$PATCH')
-  })
-
-  it('preferences tags over release names', () => {
-    const versionInfo = getVersionInfo(
+    ],
+    [
+      'preferences tags over release names',
       {
-        tag_name: '10.0.3',
-        name: '8.1.0',
+        release: {
+          tag_name: '10.0.3',
+          name: '8.1.0',
+        },
+        template: '$MAJOR.$MINOR.$PATCH',
+        expected: {
+          $MAJOR: '11.0.0',
+          $MINOR: '10.1.0',
+          $PATCH: '10.0.4',
+          $PRERELEASE: '10.0.4-0',
+          $RESOLVED: '10.0.4',
+        },
       },
-      '$MAJOR.$MINOR.$PATCH'
-    )
-
-    expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.version).toEqual('10.0.4')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.template).toEqual('$PATCH')
-  })
-
-  it('handles alpha/beta releases', () => {
-    const versionInfo = getVersionInfo(
+    ],
+    [
+      'handles alpha/beta releases',
       {
-        tag_name: 'v10.0.3-alpha',
-        name: 'Some release',
+        release: {
+          tag_name: 'v10.0.3-alpha',
+          name: 'Some release',
+        },
+        template: '$MAJOR.$MINOR.$PATCH',
+        inputVersion: 'v10.0.3-alpha',
+        expected: {
+          $MAJOR: '11.0.0',
+          $MINOR: '10.1.0',
+          $PATCH: '10.0.3',
+          $PRERELEASE: '10.0.3-alpha.0',
+          $RESOLVED: '10.0.3-alpha',
+          $INPUT: '10.0.3-alpha',
+        },
       },
-      '$MAJOR.$MINOR.$PATCH',
-      'v10.0.3-alpha'
-    )
+    ],
+    [
+      'handles incremental prereleases',
+      {
+        release: {
+          tag_name: 'v10.0.3',
+          name: 'Some release',
+        },
+        template: '$MAJOR.$MINOR.$PATCH',
+        preReleaseIdentifier: 'alpha',
+        expected: {
+          $MAJOR: '11.0.0',
+          $MINOR: '10.1.0',
+          $PATCH: '10.0.4',
+          $PRERELEASE: '10.0.4-alpha.0',
+          $RESOLVED: '10.0.4',
+        },
+      },
+    ],
+    [
+      'handles incremental prereleases on existing prereleases',
+      {
+        release: {
+          tag_name: 'v10.0.3-alpha.2',
+          name: 'Some release',
+        },
+        template: '$MAJOR.$MINOR.$PATCH',
+        expected: {
+          $MAJOR: '11.0.0',
+          $MINOR: '10.1.0',
+          $PATCH: '10.0.3',
+          $PRERELEASE: '10.0.3-alpha.3',
+          $RESOLVED: '10.0.3',
+        },
+      },
+    ],
+  ])(
+    `%s`,
+    (
+      name,
+      { release, template, inputVersion, preReleaseIdentifier, expected }
+    ) => {
+      const versionInfo = getVersionInfo(
+        release,
+        template,
+        inputVersion,
+        undefined,
+        undefined,
+        preReleaseIdentifier
+      )
 
-    expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.version).toEqual('11.0.0')
-    expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.3')
-    expect(versionInfo.$INPUT_VERSION.version).toEqual('10.0.3-alpha')
-    expect(versionInfo.$RESOLVED_VERSION.version).toEqual('10.0.3-alpha')
+      // Next major version checks
+      expect(versionInfo.$NEXT_MAJOR_VERSION.version).toEqual(expected.$MAJOR)
+      expect(versionInfo.$NEXT_MAJOR_VERSION.template).toEqual(template)
+      expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.version).toEqual(
+        expected.$MAJOR
+      )
+      expect(versionInfo.$NEXT_MAJOR_VERSION_MAJOR.template).toEqual('$MAJOR')
+      expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.version).toEqual(
+        expected.$MAJOR
+      )
+      expect(versionInfo.$NEXT_MAJOR_VERSION_MINOR.template).toEqual('$MINOR')
+      expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.version).toEqual(
+        expected.$MAJOR
+      )
+      expect(versionInfo.$NEXT_MAJOR_VERSION_PATCH.template).toEqual('$PATCH')
 
-    expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.version).toEqual('10.1.0')
-    expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.template).toEqual('$PATCH')
-    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('10.0.3')
-    expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual(
-      '$MAJOR.$MINOR.$PATCH'
-    )
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.version).toEqual('10.0.3')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.template).toEqual('$MAJOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.version).toEqual('10.0.3')
-    expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.template).toEqual('$MINOR')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.version).toEqual('10.0.3')
-    expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.template).toEqual('$PATCH')
-  })
+      // Next minor version checks
+      expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual(expected.$MINOR)
+      expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual(template)
+      expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.version).toEqual(
+        expected.$MINOR
+      )
+      expect(versionInfo.$NEXT_MINOR_VERSION_MAJOR.template).toEqual('$MAJOR')
+      expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.version).toEqual(
+        expected.$MINOR
+      )
+      expect(versionInfo.$NEXT_MINOR_VERSION_MINOR.template).toEqual('$MINOR')
+      expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.version).toEqual(
+        expected.$MINOR
+      )
+      expect(versionInfo.$NEXT_MINOR_VERSION_PATCH.template).toEqual('$PATCH')
+
+      // Next patch version checks
+      expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual(expected.$PATCH)
+      expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual(template)
+      expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.version).toEqual(
+        expected.$PATCH
+      )
+      expect(versionInfo.$NEXT_PATCH_VERSION_MAJOR.template).toEqual('$MAJOR')
+      expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.version).toEqual(
+        expected.$PATCH
+      )
+      expect(versionInfo.$NEXT_PATCH_VERSION_MINOR.template).toEqual('$MINOR')
+      expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.version).toEqual(
+        expected.$PATCH
+      )
+      expect(versionInfo.$NEXT_PATCH_VERSION_PATCH.template).toEqual('$PATCH')
+
+      // Next prerelease version checks
+      expect(versionInfo.$NEXT_PRERELEASE_VERSION.version).toEqual(
+        expected.$PRERELEASE
+      )
+      expect(versionInfo.$NEXT_PRERELEASE_VERSION.template).toEqual(
+        '$PRERELEASE'
+      )
+
+      // Input & Resolved version checks
+      expect(versionInfo.$INPUT_VERSION?.version).toEqual(expected.$INPUT)
+      expect(versionInfo.$RESOLVED_VERSION.version).toEqual(expected.$RESOLVED)
+    }
+  )
 
   it('returns default version info if no version was found in tag or name', () => {
     const versionInfo = getVersionInfo({})

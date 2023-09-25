@@ -32,11 +32,11 @@ module.exports = (app, { getRouter }) => {
       'pull_request_target.edited',
     ],
     async (context) => {
-      const { disableAutolabeler } = getInput()
+      const { configName, disableAutolabeler } = getInput()
 
       const config = await getConfig({
         context,
-        configName: core.getInput('config-name'),
+        configName,
       })
 
       if (config === null || disableAutolabeler) return
@@ -131,24 +131,16 @@ module.exports = (app, { getRouter }) => {
   )
 
   const drafter = async (context) => {
-    const {
-      shouldDraft,
-      configName,
-      version,
-      tag,
-      name,
-      disableReleaser,
-      commitish,
-    } = getInput()
+    const input = getInput()
 
     const config = await getConfig({
       context,
-      configName,
+      configName: input.configName,
     })
 
-    const { isPreRelease, latest } = getInput({ config })
+    if (!config || input.disableReleaser) return
 
-    if (config === null || disableReleaser) return
+    updateConfigFromInput(config, input)
 
     // GitHub Actions merge payloads slightly differ, in that their ref points
     // to the PR branch instead of refs/heads/master
@@ -158,28 +150,26 @@ module.exports = (app, { getRouter }) => {
       return
     }
 
-    const targetCommitish = commitish || config['commitish'] || ref
+    const targetCommitish = config.commitish || ref
+
     const {
       'filter-by-commitish': filterByCommitish,
       'include-pre-releases': includePreReleases,
+      'prerelease-identifier': preReleaseIdentifier,
       'tag-prefix': tagPrefix,
+      latest,
+      prerelease,
     } = config
 
-    // override header and footer when passed as input
-    const header = core.getInput('header')
-    const footer = core.getInput('footer')
-    if (header) {
-      config['header'] = header
-    }
-    if (footer) {
-      config['footer'] = footer
-    }
+    const shouldIncludePreReleases = Boolean(
+      includePreReleases || preReleaseIdentifier
+    )
 
     const { draftRelease, lastRelease } = await findReleases({
       context,
       targetCommitish,
       filterByCommitish,
-      includePreReleases,
+      includePreReleases: shouldIncludePreReleases,
       tagPrefix,
     })
 
@@ -197,6 +187,8 @@ module.exports = (app, { getRouter }) => {
       config['sort-direction']
     )
 
+    const { shouldDraft, version, tag, name } = input
+
     const releaseInfo = generateReleaseInfo({
       context,
       commits,
@@ -206,7 +198,7 @@ module.exports = (app, { getRouter }) => {
       version,
       tag,
       name,
-      isPreRelease,
+      isPreRelease: prerelease,
       latest,
       shouldDraft,
       targetCommitish,
@@ -242,40 +234,56 @@ module.exports = (app, { getRouter }) => {
   }
 }
 
-function getInput({ config } = {}) {
-  // Returns all the inputs that doesn't need a merge with the config file
-  if (!config) {
-    return {
-      shouldDraft: core.getInput('publish').toLowerCase() !== 'true',
-      configName: core.getInput('config-name'),
-      version: core.getInput('version') || undefined,
-      tag: core.getInput('tag') || undefined,
-      name: core.getInput('name') || undefined,
-      disableReleaser:
-        core.getInput('disable-releaser').toLowerCase() === 'true',
-      disableAutolabeler:
-        core.getInput('disable-autolabeler').toLowerCase() === 'true',
-      commitish: core.getInput('commitish') || undefined,
-    }
-  }
-
-  // Merges the config file with the input
-  // the input takes precedence, because it's more easy to change at runtime
-  const preRelease = core.getInput('prerelease').toLowerCase()
-
-  const isPreRelease =
-    preRelease === 'true' || (!preRelease && config.prerelease)
-
-  const latestInput = core.getInput('latest').toLowerCase()
-
-  const latest = isPreRelease
-    ? 'false'
-    : (!latestInput && config.latest) || latestInput || undefined
-
+function getInput() {
   return {
-    isPreRelease,
-    latest,
+    configName: core.getInput('config-name'),
+    shouldDraft: core.getInput('publish').toLowerCase() !== 'true',
+    version: core.getInput('version') || undefined,
+    tag: core.getInput('tag') || undefined,
+    name: core.getInput('name') || undefined,
+    disableReleaser: core.getInput('disable-releaser').toLowerCase() === 'true',
+    disableAutolabeler:
+      core.getInput('disable-autolabeler').toLowerCase() === 'true',
+    commitish: core.getInput('commitish') || undefined,
+    header: core.getInput('header') || undefined,
+    footer: core.getInput('footer') || undefined,
+    prerelease:
+      core.getInput('prerelease') !== ''
+        ? core.getInput('prerelease').toLowerCase() === 'true'
+        : undefined,
+    preReleaseIdentifier: core.getInput('prerelease-identifier') || undefined,
+    latest: core.getInput('latest')?.toLowerCase() || undefined,
   }
+}
+
+/**
+ * Merges the config file with the input
+ * the input takes precedence, because it's more easy to change at runtime
+ */
+function updateConfigFromInput(config, input) {
+  if (input.commitish) {
+    config.commitish = input.commitish
+  }
+
+  if (input.header) {
+    config.header = input.header
+  }
+
+  if (input.footer) {
+    config.footer = input.footer
+  }
+
+  if (input.prerelease !== undefined) {
+    config.prerelease = input.prerelease
+  }
+
+  if (input.preReleaseIdentifier) {
+    config['prerelease-identifier'] = input.preReleaseIdentifier
+  }
+
+  config.latest = config.prerelease
+    ? 'false'
+    : input.latest || config.latest || undefined
 }
 
 function setActionOutput(

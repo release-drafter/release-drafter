@@ -211,6 +211,7 @@ describe('releases', () => {
         </details>"
       `)
     })
+
     it('does not add proper details/summary markdown when collapse-after is set and less than 3 PRs', () => {
       const config = {
         ...baseConfig,
@@ -274,6 +275,78 @@ describe('releases', () => {
         tagPrefix,
       })
       expect(lastRelease.tag_name).toEqual('test-1.0.1')
+    })
+
+    const paginateMock = jest.fn()
+    const context = {
+      payload: { repository: { full_name: 'test' } },
+      octokit: {
+        paginate: paginateMock,
+        repos: { listReleases: { endpoint: { merge: jest.fn() } } },
+      },
+      repo: jest.fn(),
+      log: { info: jest.fn(), warn: jest.fn() },
+    }
+
+    it('should return last release without draft and prerelease', async () => {
+      paginateMock.mockResolvedValueOnce([
+        { tag_name: 'v1.0.0', draft: true, prerelease: false },
+        { tag_name: 'v1.0.1', draft: false, prerelease: false },
+        { tag_name: 'v1.0.2-rc.1', draft: false, prerelease: true },
+      ])
+
+      const { lastRelease } = await findReleases({
+        context,
+        targetCommitish: 'refs/heads/master',
+        tagPrefix: '',
+      })
+
+      expect(lastRelease).toEqual({
+        tag_name: 'v1.0.1',
+        draft: false,
+        prerelease: false,
+      })
+    })
+
+    it('should return last draft release', async () => {
+      paginateMock.mockResolvedValueOnce([
+        { tag_name: 'v1.0.0', draft: true, prerelease: false },
+        { tag_name: 'v1.0.1', draft: false, prerelease: false },
+        { tag_name: 'v1.0.2-rc.1', draft: false, prerelease: true },
+      ])
+
+      const { draftRelease } = await findReleases({
+        context,
+        targetCommitish: 'refs/heads/master',
+        tagPrefix: '',
+      })
+
+      expect(draftRelease).toEqual({
+        tag_name: 'v1.0.0',
+        draft: true,
+        prerelease: false,
+      })
+    })
+
+    it('should return last prerelease as last release when includePreReleases is true', async () => {
+      paginateMock.mockResolvedValueOnce([
+        { tag_name: 'v1.0.0', draft: true, prerelease: false },
+        { tag_name: 'v1.0.1', draft: false, prerelease: false },
+        { tag_name: 'v1.0.2-rc.1', draft: false, prerelease: true },
+      ])
+
+      const { lastRelease } = await findReleases({
+        context,
+        targetCommitish: 'refs/heads/master',
+        tagPrefix: '',
+        includePreReleases: true,
+      })
+
+      expect(lastRelease).toEqual({
+        tag_name: 'v1.0.2-rc.1',
+        draft: false,
+        prerelease: true,
+      })
     })
   })
 })
