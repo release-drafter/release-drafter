@@ -245,6 +245,7 @@ function getInput() {
     disableAutolabeler:
       core.getInput('disable-autolabeler').toLowerCase() === 'true',
     commitish: core.getInput('commitish') || undefined,
+    template: core.getInput('template') || undefined,
     header: core.getInput('header') || undefined,
     footer: core.getInput('footer') || undefined,
     prerelease:
@@ -263,6 +264,10 @@ function getInput() {
 function updateConfigFromInput(config, input) {
   if (input.commitish) {
     config.commitish = input.commitish
+  }
+
+  if (input.template) {
+    config.template = input.template
   }
 
   if (input.header) {

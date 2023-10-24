@@ -53,6 +53,10 @@ inputs:
       The object that the release should be created to point to.
     required: false
     default: ''
+  template:
+    description: |
+      The template for the body of the release.
+    required: false
   header:
     description: |
       A string that would be added before the template body.
