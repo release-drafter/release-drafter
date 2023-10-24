@@ -58,6 +58,10 @@ inputs:
       A string that would be added before the template body.
     required: false
     default: ''
+  template:
+    description: |
+      The template for the body of the release.
+    required: false
   footer:
     description: |
       A string that would be added after the template body.
