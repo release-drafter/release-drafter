@@ -13,6 +13,7 @@ const release3Payload = require('./fixtures/release-3.json')
 const preReleasePayload = require('./fixtures/pre-release.json')
 const pushNonMasterPayload = require('./fixtures/push-non-master-branch.json')
 const graphqlCommitsNoPRsPayload = require('./fixtures/graphql-commits-no-prs.json')
+const graphqlCommitsDependabot = require('./fixtures/__generated__/graphql-commits-dependabot.json')
 const graphqlCommitsMergeCommit = require('./fixtures/__generated__/graphql-commits-merge-commit.json')
 const graphqlNullIncludePathMergeCommit = require('./fixtures/__generated__/graphql-include-null-path-merge-commit.json')
 const graphqlIncludePathMergeCommit = require('./fixtures/__generated__/graphql-include-path-src-5.md-merge-commit.json')
@@ -2852,24 +2853,24 @@ describe('release-drafter', () => {
   describe('resolved version', () => {
     describe('without previous releases, overriding the tag', () => {
       it('resolves to the version extracted from the tag', async () => {
-        let restoreEnvironment = mockedEnv({ INPUT_TAG: 'v1.0.2' })
+        let restoreEnvironment = mockedEnv({INPUT_TAG: 'v1.0.2'})
 
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsEmpty)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsEmpty)
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/releases')
-          .query(true)
-          .reply(200, [])
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [])
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "## What's changed
 
@@ -2891,10 +2892,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -2909,24 +2910,24 @@ describe('release-drafter', () => {
 
     describe('with previous releases, overriding the tag', () => {
       it('resolves to the version extracted from the tag', async () => {
-        let restoreEnvironment = mockedEnv({ INPUT_TAG: 'v1.0.2' })
+        let restoreEnvironment = mockedEnv({INPUT_TAG: 'v1.0.2'})
 
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsNoPRsPayload)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsNoPRsPayload)
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/releases')
-          .query(true)
-          .reply(200, [releasePayload])
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [releasePayload])
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "## What's changed
 
@@ -2948,10 +2949,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -2969,19 +2970,19 @@ describe('release-drafter', () => {
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsEmpty)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsEmpty)
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/releases')
-          .query(true)
-          .reply(200, [])
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [])
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "## What's changed
 
@@ -3003,10 +3004,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -3022,19 +3023,19 @@ describe('release-drafter', () => {
         getConfigMock('config-with-resolved-version-template.yml')
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsNoPRsPayload)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsNoPRsPayload)
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/releases')
-          .query(true)
-          .reply(200, [releasePayload])
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [releasePayload])
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "## What's changed
 
@@ -3056,10 +3057,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -3083,19 +3084,19 @@ describe('release-drafter', () => {
         }
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsNoPRsPayload)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsNoPRsPayload)
 
         nock('https://api.github.com')
-          .get('/repos/toolmantim/release-drafter-test-project/releases')
-          .query(true)
-          .reply(200, [alteredReleasePayload])
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [alteredReleasePayload])
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "## Previous release
 
@@ -3109,10 +3110,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, alteredReleasePayload)
+                  return true
+                }
+            )
+            .reply(200, alteredReleasePayload)
 
         await probot.receive({
           name: 'push',
@@ -3128,22 +3129,22 @@ describe('release-drafter', () => {
         getConfigMock('config-with-custom-version-resolver-none.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
-          .reply(200, [releasePayload])
+            .get(
+                '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [releasePayload])
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsForking)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsForking)
 
         nock('https://api.github.com')
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
                   "draft": true,
@@ -3154,10 +3155,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -3170,22 +3171,22 @@ describe('release-drafter', () => {
         getConfigMock('config-with-custom-version-resolver-patch.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
-          .reply(200, [releasePayload])
+            .get(
+                '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [releasePayload])
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsForking)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsForking)
 
         nock('https://api.github.com')
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
                   "draft": true,
@@ -3196,10 +3197,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -3212,22 +3213,22 @@ describe('release-drafter', () => {
         getConfigMock('config-with-custom-version-resolver-minor.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
-          .reply(200, [releasePayload])
+            .get(
+                '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [releasePayload])
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsForking)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsForking)
 
         nock('https://api.github.com')
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
                   "draft": true,
@@ -3238,10 +3239,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -3254,22 +3255,22 @@ describe('release-drafter', () => {
         getConfigMock('config-with-custom-version-resolver-major.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
-          .reply(200, [releasePayload])
+            .get(
+                '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [releasePayload])
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsForking)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsForking)
 
         nock('https://api.github.com')
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
                   "draft": true,
@@ -3280,10 +3281,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -3297,22 +3298,22 @@ describe('release-drafter', () => {
         getConfigMock('config-with-custom-version-resolver-partial.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
-          .reply(200, [releasePayload])
+            .get(
+                '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [releasePayload])
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsForking)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsForking)
 
         nock('https://api.github.com')
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
                   "draft": true,
@@ -3323,10 +3324,10 @@ describe('release-drafter', () => {
                   "target_commitish": "refs/heads/master",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
@@ -3342,22 +3343,22 @@ describe('release-drafter', () => {
         getConfigMock('config-with-commitish.yml')
 
         nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-          )
-          .reply(200, [releasePayload])
+            .get(
+                '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+            )
+            .reply(200, [releasePayload])
 
         nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query findCommitsWithAssociatedPullRequests')
-          )
-          .reply(200, graphqlCommitsForking)
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsForking)
 
         nock('https://api.github.com')
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
                 Object {
                   "body": "dummy",
                   "draft": true,
@@ -3368,10 +3369,61 @@ describe('release-drafter', () => {
                   "target_commitish": "staging",
                 }
               `)
-              return true
-            }
-          )
-          .reply(200, releasePayload)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+      })
+    })
+
+    describe('with dependabot prs', () => {
+      it('categorizes pull requests with single label', async () => {
+        getConfigMock('config.yml')
+
+        nock('https://api.github.com')
+            .get('/repos/toolmantim/release-drafter-test-project/releases')
+            .query(true)
+            .reply(200, [releasePayload])
+
+        nock('https://api.github.com')
+            .post('/graphql', (body) =>
+                body.query.includes('query findCommitsWithAssociatedPullRequests')
+            )
+            .reply(200, graphqlCommitsDependabot)
+
+        nock('https://api.github.com')
+            .post(
+                '/repos/toolmantim/release-drafter-test-project/releases',
+                (body) => {
+                  expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * Bump the quarkus group with 1 update (#271) @dependabot
+                * Bump org.cyclonedx:cyclonedx-maven-plugin from 2.7.9 to 2.7.10 (#258) @dependabot
+                * Bump org.owasp:dependency-check-maven from 8.4.0 to 8.4.3 (#272,#259) @dependabot
+                * Bump surefire-plugin.version from 3.1.2 to 3.2.1 (#260) @dependabot
+                * Bump com.fasterxml.jackson.core:jackson-databind from 2.13.1 to 2.16.0 (#273,#261,#256) @dependabot
+                ",
+                  "draft": true,
+                  "make_latest": "true",
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                  "target_commitish": "refs/heads/master",
+                }
+              `)
+                  return true
+                }
+            )
+            .reply(200, releasePayload)
 
         await probot.receive({
           name: 'push',
