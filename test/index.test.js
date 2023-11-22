@@ -3406,11 +3406,11 @@ describe('release-drafter', () => {
                 Object {
                   "body": "# What's Changed
 
+                * Bump org.owasp:dependency-check-maven from 8.4.0 to 8.4.3 (#272,#259) @dependabot
+                * Bump com.fasterxml.jackson.core:jackson-databind from 2.13.1 to 2.16.0 (#273,#261,#256) @dependabot
                 * Bump the quarkus group with 1 update (#271) @dependabot
                 * Bump org.cyclonedx:cyclonedx-maven-plugin from 2.7.9 to 2.7.10 (#258) @dependabot
-                * Bump org.owasp:dependency-check-maven from 8.4.0 to 8.4.3 (#272,#259) @dependabot
                 * Bump surefire-plugin.version from 3.1.2 to 3.2.1 (#260) @dependabot
-                * Bump com.fasterxml.jackson.core:jackson-databind from 2.13.1 to 2.16.0 (#273,#261,#256) @dependabot
                 ",
                   "draft": true,
                   "make_latest": "true",
