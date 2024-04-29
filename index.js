@@ -8,6 +8,7 @@ const {
 } = require('./lib/releases')
 const { findCommitsWithAssociatedPullRequests } = require('./lib/commits')
 const { sortPullRequests } = require('./lib/sort-pull-requests')
+const { groupPullRequests } = require('./lib/group-pull-requests')
 const { log } = require('./lib/log')
 const core = require('@actions/core')
 const { runnerIsActions } = require('./lib/utils')
@@ -181,8 +182,10 @@ module.exports = (app, { getRouter }) => {
         config,
       })
 
+    const groupedMergedPullRequests = groupPullRequests(mergedPullRequests)
+
     const sortedMergedPullRequests = sortPullRequests(
-      mergedPullRequests,
+      groupedMergedPullRequests,
       config['sort-by'],
       config['sort-direction']
     )
