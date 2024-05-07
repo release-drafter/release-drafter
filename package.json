@@ -30,7 +30,7 @@
     "ignore": "5.2.0",
     "joi": "17.6.0",
     "lodash": "4.17.21",
-    "probot": "12.2.5",
+    "probot": "12.2.7",
     "regex-parser": "2.2.11",
     "semver": "7.3.7"
   },
