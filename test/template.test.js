@@ -123,4 +123,38 @@ describe('template', () => {
       'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-456](JENKINS-456)'
     )
   })
+  it('release tag replacer', () => {
+    const output = template('$RELEASE_TAG', {
+      $RELEASE_TAG: 'v1.0.0',
+    })
+    expect(output).toEqual('v1.0.0')
+  })
+  it('release name replacer', () => {
+    const output = template('$RELEASE_NAME', {
+      $RELEASE_NAME: 'hello world',
+    })
+    expect(output).toEqual('hello world')
+  })
+  it('release version replacer', () => {
+    const output = template('$RELEASE_VERSION', {
+      $RELEASE_VERSION: 'v2',
+    })
+    expect(output).toEqual('v2')
+  })
+  it('all version info replaced', () => {
+    const tag = 2
+    const version = `v${tag}`
+    const name = `Beta release (${version})`
+
+    const output = template(
+      `tag: $RELEASE_TAG\nversion: $RELEASE_VERSION\nname: $RELEASE_NAME`,
+      {
+        $RELEASE_TAG: tag,
+        $RELEASE_VERSION: version,
+        $RELEASE_NAME: name,
+      }
+    )
+
+    expect(output).toEqual(`tag: ${tag}\nversion: ${version}\nname: ${name}`)
+  })
 })
