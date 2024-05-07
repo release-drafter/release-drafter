@@ -124,20 +124,20 @@ describe('template', () => {
     )
   })
   it('release tag replacer', () => {
-    const output = template('$RELEASE_TAG', {
-      $RELEASE_TAG: 'v1.0.0',
+    const output = template('$INPUT_TAG', {
+      $INPUT_TAG: 'v1.0.0',
     })
     expect(output).toEqual('v1.0.0')
   })
   it('release name replacer', () => {
-    const output = template('$RELEASE_NAME', {
-      $RELEASE_NAME: 'hello world',
+    const output = template('$INPUT_NAME', {
+      $INPUT_NAME: 'hello world',
     })
     expect(output).toEqual('hello world')
   })
   it('release version replacer', () => {
-    const output = template('$RELEASE_VERSION', {
-      $RELEASE_VERSION: 'v2',
+    const output = template('$INPUT_VERSION', {
+      $INPUT_VERSION: 'v2',
     })
     expect(output).toEqual('v2')
   })
@@ -147,11 +147,11 @@ describe('template', () => {
     const name = `Beta release (${version})`
 
     const output = template(
-      `tag: $RELEASE_TAG\nversion: $RELEASE_VERSION\nname: $RELEASE_NAME`,
+      `tag: $INPUT_TAG\nversion: $INPUT_VERSION\nname: $INPUT_NAME`,
       {
-        $RELEASE_TAG: tag,
-        $RELEASE_VERSION: version,
-        $RELEASE_NAME: name,
+        $INPUT_TAG: tag,
+        $INPUT_VERSION: version,
+        $INPUT_NAME: name,
       }
     )
 
