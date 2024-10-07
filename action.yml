@@ -73,6 +73,17 @@ inputs:
       A boolean indicating whether the autolabeler mode is disabled.
     required: false
     default: ''
+  use-ref-comparison:
+    description: |
+      Use ref comparison to find commits for drafting release notes.
+      By default commits are listed by date since last release.
+    required: false
+    default: ''
+  include-commmits-without-pulls:
+    description: |
+      Include commits without a pull request attached when drafting release notes.
+    required: false
+    default: ''
 outputs:
   id:
     description: The ID of therelease that was created or updated.

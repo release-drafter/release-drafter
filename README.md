@@ -145,6 +145,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `filter-by-commitish`      | Optional | Filter previous releases to consider only those with the target matching `commitish`. Default: `false`.                                                                            |
 | `include-paths`            | Optional | Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories. Default: `[]`         |
 | `use-ref-comparison`                 | Optional | Use ref comparison to find commits for drafting release notes. By default commits are listed by date since last release. Default: `false`         |
+| `include-commmits-without-pulls`                 | Optional | Include commits without a pull request attached when drafting release notes. Default: `false`         |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
