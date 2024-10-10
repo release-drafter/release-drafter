@@ -435,6 +435,5 @@ The command does the following:
 - Runs the `postversion` npm script in [package.json](package.json), which:
   - Runs test
   - Pushes the tag to GitHub, which triggers GitHub Action that does the following:
-    - Push GitHub app to Heroku
     - Releases NPM
     - Publish the Release Draft!
