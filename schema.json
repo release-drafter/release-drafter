@@ -5,7 +5,7 @@
   "type": "object",
   "properties": {
     "references": {
-      "default": ["master"],
+      "default": ["main", "master"],
       "type": "array",
       "items": {
         "type": "string"
