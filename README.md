@@ -285,7 +285,7 @@ Pull requests with the label "skip-changelog" will now be excluded from the rele
 
 ## Include Pull Requests
 
-With the `include-labels` option you can specify pull requests from the release notes using labels. Only pull requests that have the configured labels will be included in the pull request. For example, append the following to your `.github/release-drafter.yml` file:
+With the `include-labels` option you can specify pull requests from the release notes using labels. Only pull requests that have the configured labels will be included in the release draft. For example, append the following to your `.github/release-drafter.yml` file:
 
 ```yml
 include-labels:
