@@ -80,6 +80,21 @@ const pullRequests = [
     baseRefName: 'master',
     headRefName: 'implement-feature',
   },
+  {
+    title: 'Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples',
+    number: 0,
+    body: 'Updates the dependency ....',
+    url: 'https://github.com',
+    labels: { nodes: [{ name: 'dependencies' }] },
+    author: {
+      login: 'dependabot',
+      // although the RESTful API returns a `type: "Bot"`, GraphQL only allows us to look up based on the `__typename`
+      __typename: 'Bot',
+      url: 'https://github.com/apps/dependabot',
+    },
+    baseRefName: 'master',
+    headRefName: 'dependabot/go_modules/examples/golang.org/x/crypto-0.17.0',
+  },
 ]
 const baseConfig = {
   ...DEFAULT_CONFIG,
@@ -99,7 +114,8 @@ describe('releases', () => {
         * Fixes #4 (#5) @Happypig375
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
-        * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375"
+        * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
       `)
     })
     it('escapes titles with \\s correctly', () => {
@@ -116,7 +132,8 @@ describe('releases', () => {
         * Fixes #4 (#5) @Happypig375
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\\\\\confg.yml to __configs\\\\\\\\config.yml (#7) @ghost
-        * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375"
+        * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
       `)
     })
     it('escapes titles with \\<*_& correctly', () => {
@@ -133,7 +150,8 @@ describe('releases', () => {
         * Fixes #4 (#5) @Happypig375
         * 2\\\\*2 should equal to 4\\\\*1 (#6) @jetersen
         * Rename \\\\_\\\\_confgs\\\\\\\\confg.yml to \\\\_\\\\_configs\\\\\\\\config.yml (#7) @ghost
-        * Adds @nullable annotations to the 1\\\\*1+2\\\\*4 test in \`tests.java\` (#0) @Happypig375"
+        * Adds @nullable annotations to the 1\\\\*1+2\\\\*4 test in \`tests.java\` (#0) @Happypig375
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
       `)
     })
     it('escapes titles with @s correctly', () => {
@@ -150,7 +168,8 @@ describe('releases', () => {
         * Fixes #4 (#5) @Happypig375
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
-        * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375"
+        * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
       `)
     })
     it('escapes titles with @s and #s correctly', () => {
@@ -167,7 +186,8 @@ describe('releases', () => {
         * Fixes #<!---->4 (#5) @Happypig375
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
-        * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375"
+        * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
       `)
     })
     it('escapes titles with \\<@*_&`# correctly', () => {
@@ -184,7 +204,8 @@ describe('releases', () => {
         * Fixes #<!---->4 (#5) @Happypig375
         * 2\\\\*2 should equal to 4\\\\*1 (#6) @jetersen
         * Rename \\\\_\\\\_confgs\\\\\\\\confg.yml to \\\\_\\\\_configs\\\\\\\\config.yml (#7) @ghost
-        * Adds @<!---->nullable annotations to the 1\\\\*1+2\\\\*4 test in \\\\\`tests.java\\\\\` (#0) @Happypig375"
+        * Adds @<!---->nullable annotations to the 1\\\\*1+2\\\\*4 test in \\\\\`tests.java\\\\\` (#0) @Happypig375
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
       `)
     })
     it('adds proper details/summary markdown when collapse-after is set and more than 3 PRs', () => {
@@ -197,6 +218,7 @@ describe('releases', () => {
         "* B2 (#2) @ghost
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
         * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)
 
         ## Bugs
 
@@ -227,6 +249,7 @@ describe('releases', () => {
         * Fixes #4 (#5) @Happypig375
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)
 
         ## Feature
 
@@ -318,6 +341,7 @@ describe('releases', () => {
       const { draftRelease } = await findReleases({
         context,
         targetCommitish: 'refs/heads/master',
+        includePreReleases: false,
         tagPrefix: '',
       })
 
@@ -332,20 +356,26 @@ describe('releases', () => {
       paginateMock.mockResolvedValueOnce([
         { tag_name: 'v1.0.0', draft: true, prerelease: false },
         { tag_name: 'v1.0.1', draft: false, prerelease: false },
-        { tag_name: 'v1.0.2-rc.1', draft: false, prerelease: true },
+        { tag_name: 'v1.0.2-rc.1', draft: true, prerelease: true },
       ])
 
-      const { lastRelease } = await findReleases({
+      const { draftRelease, lastRelease } = await findReleases({
         context,
         targetCommitish: 'refs/heads/master',
         tagPrefix: '',
         includePreReleases: true,
       })
 
-      expect(lastRelease).toEqual({
+      expect(draftRelease).toEqual({
         tag_name: 'v1.0.2-rc.1',
-        draft: false,
+        draft: true,
         prerelease: true,
+      })
+
+      expect(lastRelease).toEqual({
+        tag_name: 'v1.0.1',
+        draft: false,
+        prerelease: false,
       })
     })
   })

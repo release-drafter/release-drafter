@@ -1,7 +1,7 @@
 name: 'Release Drafter'
 description: 'Drafts your next release notes as pull requests are merged into master.'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
 branding:
   icon: edit-2
@@ -75,7 +75,7 @@ inputs:
     default: ''
 outputs:
   id:
-    description: The ID of therelease that was created or updated.
+    description: The ID of the release that was created or updated.
   name:
     description: The name of the release
   tag_name:

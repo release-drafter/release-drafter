@@ -8,7 +8,7 @@
 
 ## Usage
 
-You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a [GitHub Actions Workflow](https://help.github.com/en/articles/about-github-actions) by configuring a YAML-based workflow file, e.g. `.github/workflows/release-drafter.yml`, with the following:
+You can use the [Release Drafter GitHub Action](https://github.com/marketplace/actions/release-drafter) in a [GitHub Actions Workflow](https://help.github.com/en/actions/about-github-actions) by configuring a YAML-based workflow file, e.g. `.github/workflows/release-drafter.yml`, with the following:
 
 ```yaml
 name: Release Drafter
@@ -17,7 +17,9 @@ on:
   push:
     # branches to consider in the event; optional, defaults to all
     branches:
+      - main
       - master
+
   # pull_request event is required only for autolabeler
   pull_request:
     # Only following types are handled by the action, but one can default to all as well
@@ -45,7 +47,7 @@ jobs:
       #    echo "GHE_HOST=${GITHUB_SERVER_URL##https:\/\/}" >> $GITHUB_ENV
 
       # Drafts your next Release notes as Pull Requests are merged into "master"
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
         # with:
         #   config-name: my-config.yml
@@ -285,7 +287,7 @@ Pull requests with the label "skip-changelog" will now be excluded from the rele
 
 ## Include Pull Requests
 
-With the `include-labels` option you can specify pull requests from the release notes using labels. Only pull requests that have the configured labels will be included in the pull request. For example, append the following to your `.github/release-drafter.yml` file:
+With the `include-labels` option you can specify pull requests from the release notes using labels. Only pull requests that have the configured labels will be included in the release draft. For example, append the following to your `.github/release-drafter.yml` file:
 
 ```yml
 include-labels:
@@ -377,14 +379,18 @@ The Release Drafter GitHub Action accepts a number of optional inputs directly i
 
 The Release Drafter GitHub Action sets a couple of outputs which can be used as inputs to other Actions in the workflow ([example](https://github.com/actions/upload-release-asset#example-workflow---upload-a-release-asset)).
 
-| Output       | Description                                                                                                                                                                                                                   |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | The ID of the release that was created or updated.                                                                                                                                                                            |
-| `name`       | The name of this release.                                                                                                                                                                                                     |
-| `tag_name`   | The name of the tag associated with this release.                                                                                                                                                                             |
-| `body`       | The body of the drafted release, useful if it needs to be included in files.                                                                                                                                                  |
-| `html_url`   | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                                                    |
-| `upload_url` | The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the [`@actions/upload-release-asset GitHub Action`](https://www.github.com/actions/upload-release-asset). |
+| Output             | Description                                                                                                                                                                                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | The ID of the release that was created or updated.                                                                                                                                                                            |
+| `name`             | The name of this release.                                                                                                                                                                                                     |
+| `tag_name`         | The name of the tag associated with this release.                                                                                                                                                                             |
+| `body`             | The body of the drafted release, useful if it needs to be included in files.                                                                                                                                                  |
+| `html_url`         | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                                                    |
+| `upload_url`       | The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the [`@actions/upload-release-asset GitHub Action`](https://www.github.com/actions/upload-release-asset). |
+| `resolved_version` | Version resolved by [Version Resolver](#version-resolver). i.e. `6.3.1`                                                                                                                                                       |
+| `major_version`    | Major part of resolved version by [Version Resolver](#version-resolver). i.e. `6` for version `6.3.1`                                                                                                                         |
+| `minor_version`    | Minor part of resolved version by [Version Resolver](#version-resolver). i.e. `3` for version `6.3.1`                                                                                                                         |
+| `patch_version`    | Patch part of resolved version by [Version Resolver](#version-resolver). i.e. `1` for version `6.3.1`                                                                                                                         |
 
 ## Developing
 
@@ -435,6 +441,5 @@ The command does the following:
 - Runs the `postversion` npm script in [package.json](package.json), which:
   - Runs test
   - Pushes the tag to GitHub, which triggers GitHub Action that does the following:
-    - Push GitHub app to Heroku
     - Releases NPM
     - Publish the Release Draft!
