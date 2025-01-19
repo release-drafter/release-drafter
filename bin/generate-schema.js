@@ -1,14 +1,19 @@
-// joi-to-json-schema currently does not support v16 of Joi (https://github.com/lightsofapollo/joi-to-json-schema/issues/57)
-const { convert } = require('@koa-lite/joi-schema')
+const parse = require('joi-to-json')
 const fs = require('node:fs')
 const { schema } = require('../lib/schema')
 const inputArguments = process.argv.slice(2) || []
 
+const originalSchema = parse(
+  schema(),
+  'json',
+  {},
+  { includeSchemaDialect: true }
+)
+
 const jsonSchema = {
   title: 'JSON schema for Release Drafter yaml files',
   id: 'https://github.com/release-drafter/release-drafter/blob/master/schema.json',
-  $schema: 'http://json-schema.org/draft-04/schema#',
-  ...convert(schema()),
+  ...originalSchema,
 }
 
 exports.jsonSchema = jsonSchema
