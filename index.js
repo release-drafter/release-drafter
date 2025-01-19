@@ -237,7 +237,7 @@ module.exports = (app, { getRouter }) => {
 function getInput() {
   return {
     configName: core.getInput('config-name'),
-    config: core.getInput('config'),
+    config: core.getInput('config') || undefined,
     shouldDraft: core.getInput('publish').toLowerCase() !== 'true',
     version: core.getInput('version') || undefined,
     tag: core.getInput('tag') || undefined,
