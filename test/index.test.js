@@ -1,6 +1,6 @@
 const nock = require('nock')
 const { Probot, ProbotOctokit } = require('probot')
-const { getConfigMock } = require('./helpers/config-mock')
+const { getConfigMock, configFixture } = require('./helpers/config-mock')
 const releaseDrafter = require('../index')
 const mockedEnv = require('mocked-env')
 const pino = require('pino')
@@ -2593,6 +2593,61 @@ describe('release-drafter', () => {
       expect(getConfigScope.isDone()).toBe(true)
 
       expect.assertions(2)
+
+      restoreEnvironment()
+    })
+  })
+
+  describe('with config input', () => {
+    it('uses the config input', async () => {
+      /*
+        Mock
+        with:
+          config: |
+            template: |
+                # There's new stuff!
+      */
+      const restoreEnvironment = mockedEnv({
+        INPUT_CONFIG: configFixture('config-name-input.yml').toString('utf8'),
+      })
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(200, graphqlCommitsNoPRsPayload)
+
+      nock('https://api.github.com')
+        .get('/repos/toolmantim/release-drafter-test-project/releases')
+        .query(true)
+        .reply(200, [releasePayload])
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          (body) => {
+            // Assert that the correct body was used
+            expect(body).toMatchInlineSnapshot(`
+              Object {
+                "body": "# There's new stuff!
+              ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+                "target_commitish": "refs/heads/master",
+              }
+            `)
+            return true
+          }
+        )
+        .reply(200, releasePayload)
+
+      await probot.receive({
+        name: 'push',
+        payload: pushPayload,
+      })
+
+      expect.assertions(1)
 
       restoreEnvironment()
     })

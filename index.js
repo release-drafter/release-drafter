@@ -32,14 +32,15 @@ module.exports = (app, { getRouter }) => {
       'pull_request_target.edited',
     ],
     async (context) => {
-      const { config, configName, disableAutolabeler } = getInput()
+      const { configContent, configName, disableAutolabeler } = getInput()
 
-      const configContent = config || await getConfig({
+      const config = await getConfig({
         context,
         configName,
+        configContent,
       })
 
-      if (configContent === null || disableAutolabeler) return
+      if (config === null || disableAutolabeler) return
 
       let issue = {
         ...context.issue({ pull_number: context.payload.pull_request.number }),
@@ -50,7 +51,7 @@ module.exports = (app, { getRouter }) => {
       )
       const labels = new Set()
 
-      for (const autolabel of configContent['autolabeler']) {
+      for (const autolabel of config['autolabeler']) {
         let found = false
         // check modified files
         if (!found && autolabel.files.length > 0) {
@@ -133,9 +134,10 @@ module.exports = (app, { getRouter }) => {
   const drafter = async (context) => {
     const input = getInput()
 
-    const config = input.config || await getConfig({
+    const config = await getConfig({
       context,
       configName: input.configName,
+      configContent: input.configContent,
     })
 
     if (!config || input.disableReleaser) return
@@ -237,7 +239,7 @@ module.exports = (app, { getRouter }) => {
 function getInput() {
   return {
     configName: core.getInput('config-name'),
-    config: core.getInput('config') || undefined,
+    configContent: core.getInput('config') || undefined,
     shouldDraft: core.getInput('publish').toLowerCase() !== 'true',
     version: core.getInput('version') || undefined,
     tag: core.getInput('tag') || undefined,

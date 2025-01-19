@@ -14,3 +14,4 @@ function getConfigMock(fileName, repoFileName = 'release-drafter.yml') {
 }
 
 exports.getConfigMock = getConfigMock
+exports.configFixture = configFixture
