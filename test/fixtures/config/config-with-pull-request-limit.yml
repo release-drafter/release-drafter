@@ -1,0 +1,2 @@
+template: '$CHANGES'
+pull-request-limit: 34
