@@ -32,14 +32,14 @@ module.exports = (app, { getRouter }) => {
       'pull_request_target.edited',
     ],
     async (context) => {
-      const { configName, disableAutolabeler } = getInput()
+      const { config, configName, disableAutolabeler } = getInput()
 
-      const config = await getConfig({
+      const configContent = config || await getConfig({
         context,
         configName,
       })
 
-      if (config === null || disableAutolabeler) return
+      if (configContent === null || disableAutolabeler) return
 
       let issue = {
         ...context.issue({ pull_number: context.payload.pull_request.number }),
@@ -50,7 +50,7 @@ module.exports = (app, { getRouter }) => {
       )
       const labels = new Set()
 
-      for (const autolabel of config['autolabeler']) {
+      for (const autolabel of configContent['autolabeler']) {
         let found = false
         // check modified files
         if (!found && autolabel.files.length > 0) {
@@ -133,7 +133,7 @@ module.exports = (app, { getRouter }) => {
   const drafter = async (context) => {
     const input = getInput()
 
-    const config = await getConfig({
+    const config = input.config || await getConfig({
       context,
       configName: input.configName,
     })
@@ -237,6 +237,7 @@ module.exports = (app, { getRouter }) => {
 function getInput() {
   return {
     configName: core.getInput('config-name'),
+    config: core.getInput('config'),
     shouldDraft: core.getInput('publish').toLowerCase() !== 'true',
     version: core.getInput('version') || undefined,
     tag: core.getInput('tag') || undefined,
