@@ -13,10 +13,10 @@ inputs:
       The config should still be located inside `.github` as that's where we are looking for config files.
     required: false
     default: 'release-drafter.yml'
-  name:
+  config:
     description: |
-      The name that will be used in the GitHub release that's created or updated.
-      This will override any `name-template` specified in your `release-drafter.yml` if defined.
+      Directly inject a configuration as a string. Useful for dynamic configurations generated during the workflow.
+      Overrides `config-name` if both are specified.
     required: false
   tag:
     description: |
