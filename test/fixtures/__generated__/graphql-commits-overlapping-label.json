@@ -27,7 +27,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/22",
                     "body": "✍️ writing docs all day",
                     "author": {
-                      "login": "jetersen"
+                      "login": "jetersen",
+                      "__typename": "User",
+                      "url": "https://github.com/jetersen"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -66,7 +68,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/21",
                     "body": "📦 Package time! 📦",
                     "author": {
-                      "login": "jetersen"
+                      "login": "jetersen",
+                      "__typename": "User",
+                      "url": "https://github.com/jetersen"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -101,7 +105,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/20",
                     "body": "🐛 squashing",
                     "author": {
-                      "login": "jetersen"
+                      "login": "jetersen",
+                      "__typename": "User",
+                      "url": "https://github.com/jetersen"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -146,7 +152,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/19",
                     "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                     "author": {
-                      "login": "jetersen"
+                      "login": "jetersen",
+                      "__typename": "User",
+                      "url": "https://github.com/jetersen"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -188,7 +196,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/18",
                     "body": "",
                     "author": {
-                      "login": "jetersen"
+                      "login": "jetersen",
+                      "__typename": "User",
+                      "url": "https://github.com/jetersen"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
