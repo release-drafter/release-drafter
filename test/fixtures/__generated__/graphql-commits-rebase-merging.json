@@ -27,7 +27,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/10",
                     "body": "✍️ writing docs all day",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -66,7 +68,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/10",
                     "body": "✍️ writing docs all day",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -105,7 +109,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/9",
                     "body": "📦 Package time! 📦",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -140,7 +146,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/9",
                     "body": "📦 Package time! 📦",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -175,7 +183,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/8",
                     "body": "🐛 squashing",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -217,7 +227,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/8",
                     "body": "🐛 squashing",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -259,7 +271,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/7",
                     "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -301,7 +315,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/7",
                     "body": "![I'm kind of a big deal](https://media.giphy.com/media/9LFBOD8a1Ip2M/giphy.gif)",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
@@ -343,7 +359,9 @@
                     "url": "https://github.com/toolmantim/release-drafter-test-project/pull/6",
                     "body": "Space invasion 👾",
                     "author": {
-                      "login": "TimonVS"
+                      "login": "TimonVS",
+                      "__typename": "User",
+                      "url": "https://github.com/TimonVS"
                     },
                     "baseRepository": {
                       "nameWithOwner": "toolmantim/release-drafter-test-project"
