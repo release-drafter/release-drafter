@@ -269,6 +269,10 @@ function updateConfigFromInput(config, input) {
     config.header = input.header
   }
 
+  if (input.template) {
+    config.template = input.template
+  }
+
   if (input.footer) {
     config.footer = input.footer
   }
