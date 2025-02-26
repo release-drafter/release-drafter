@@ -48,7 +48,8 @@ module.exports = (app, { getRouter }) => {
         context.octokit.pulls.listFiles.endpoint.merge(issue),
         (response) => response.data.map((file) => file.filename)
       )
-      const labels = new Set()
+      const existingLabels = issue.labels.map(l => l.name)
+      const labels = new Set(existingLabels)
 
       for (const autolabel of config['autolabeler']) {
         let found = false
@@ -110,20 +111,24 @@ module.exports = (app, { getRouter }) => {
             }
           }
         }
+        // purge label
+        if (!found && autolabel.purge) {
+          labels.delete(autolabel.label)
+        }
       }
 
-      const labelsToAdd = [...labels]
-      if (labelsToAdd.length > 0) {
+      const labelsToSet = [...labels]
+      if (labelsToSet.length > 0) {
         let labelIssue = {
           ...context.issue({
             issue_number: context.payload.pull_request.number,
-            labels: labelsToAdd,
+            labels: labelsToSet,
           }),
         }
-        await context.octokit.issues.addLabels(labelIssue)
+        await context.octokit.issues.setLabels(labelIssue)
         if (runnerIsActions()) {
           core.setOutput('number', context.payload.pull_request.number)
-          core.setOutput('labels', labelsToAdd.join(','))
+          core.setOutput('labels', labelsToSet.join(','))
         }
         return
       }

@@ -322,9 +322,12 @@ replacers:
 You can add automatically a label into a pull request, with the `autolabeler` option. Available matchers are `files` (glob), `branch` (regex), `title` (regex) and `body` (regex).
 Matchers are evaluated independently; the label will be set if at least one of the matchers meets the criteria.
 
+To purge a label if it is present on the pull request but none of the criteria match anymore, set the `purge` property to `true`.
+
 ```yml
 autolabeler:
   - label: 'chore'
+    purge: true
     files:
       - '*.md'
     branch:
@@ -335,6 +338,7 @@ autolabeler:
     title:
       - '/fix/i'
   - label: 'enhancement'
+    purge: true
     branch:
       - '/feature\/.+/'
     body:
