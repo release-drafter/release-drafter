@@ -48,7 +48,7 @@ module.exports = (app, { getRouter }) => {
         context.octokit.pulls.listFiles.endpoint.merge(issue),
         (response) => response.data.map((file) => file.filename)
       )
-      const existingLabels = issue.labels.map(l => l.name)
+      const existingLabels = issue.labels.map((l) => l.name)
       const labels = new Set(existingLabels)
 
       for (const autolabel of config['autolabeler']) {
