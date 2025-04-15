@@ -53,6 +53,11 @@ inputs:
       A boolean indicating whether the releaser mode is disabled.
     required: false
     default: ''
+  dry-release:
+    description: |
+      A boolean indicating whether the action should run in dry mode. If true, the action will not create or update a release.
+    required: false
+    default: ''
   disable-autolabeler:
     description: |
       A boolean indicating whether the autolabeler mode is disabled.
