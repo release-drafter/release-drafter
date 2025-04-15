@@ -187,7 +187,7 @@ module.exports = (app, { getRouter }) => {
       config['sort-direction']
     )
 
-    const { shouldDraft, version, tag, name } = input
+    const { shouldDraft, version, tag, name, dryRelease } = input
 
     const releaseInfo = generateReleaseInfo({
       context,
@@ -205,21 +205,25 @@ module.exports = (app, { getRouter }) => {
     })
 
     let createOrUpdateReleaseResponse
-    if (!draftRelease) {
-      log({ context, message: 'Creating new release' })
-      createOrUpdateReleaseResponse = await createRelease({
-        context,
-        releaseInfo,
-        config,
-      })
+    if (!dryRelease) {
+      if (!draftRelease) {
+        log({ context, message: 'Creating new release' })
+        createOrUpdateReleaseResponse = await createRelease({
+          context,
+          releaseInfo,
+          config,
+        })
+      } else {
+        log({ context, message: 'Updating existing release' })
+        createOrUpdateReleaseResponse = await updateRelease({
+          context,
+          draftRelease,
+          releaseInfo,
+          config,
+        })
+      }
     } else {
-      log({ context, message: 'Updating existing release' })
-      createOrUpdateReleaseResponse = await updateRelease({
-        context,
-        draftRelease,
-        releaseInfo,
-        config,
-      })
+      log({ context, message: 'Dry run, release creation skipped' })
     }
 
     if (runnerIsActions()) {
@@ -242,6 +246,7 @@ function getInput() {
     tag: core.getInput('tag') || undefined,
     name: core.getInput('name') || undefined,
     disableReleaser: core.getInput('disable-releaser').toLowerCase() === 'true',
+    dryRelease: core.getInput('dry-release').toLowerCase() === 'true',
     disableAutolabeler:
       core.getInput('disable-autolabeler').toLowerCase() === 'true',
     commitish: core.getInput('commitish') || undefined,
@@ -297,8 +302,8 @@ function setActionOutput(
       upload_url: uploadUrl,
       tag_name: tagName,
       name: name,
-    },
-  } = releaseResponse
+    } = {},
+  } = releaseResponse || {}
   if (releaseId && Number.isInteger(releaseId))
     core.setOutput('id', releaseId.toString())
   if (htmlUrl) core.setOutput('html_url', htmlUrl)
