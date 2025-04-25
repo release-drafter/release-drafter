@@ -7,7 +7,7 @@
   "license": "ISC",
   "repository": "https://github.com/release-drafter/release-drafter",
   "scripts": {
-    "build": "ncc build action.js --target es2021",
+    "build": "esbuild action.js --minify --bundle --platform=node --target=es2021 --outfile=dist/index.js",
     "start": "probot run ./index.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --notify --notifyMode=change --coverage",
@@ -34,7 +34,7 @@
     "semver": "7.3.7"
   },
   "devDependencies": {
-    "@vercel/ncc": "0.34.0",
+    "esbuild": "^0.25.3",
     "eslint": "8.20.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",
