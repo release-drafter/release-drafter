@@ -3453,5 +3453,59 @@ describe('release-drafter', () => {
         expect.assertions(1)
       })
     })
+
+    describe('with filter-by-range', () => {
+      it('allows specification of a filter-by-range', async () => {
+        getConfigMock('config-filter-range.yml')
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .reply(200, [
+            release2Payload,
+            releasePayload,
+            release3Payload,
+            releaseDrafterFixture,
+          ])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) => {
+            return body.query.includes(
+              'query findCommitsWithAssociatedPullRequests'
+            )
+          })
+          .reply(200, graphqlCommitsEmpty)
+
+        nock('https://api.github.com')
+          .patch(
+            '/repos/toolmantim/release-drafter-test-project/releases/11691725',
+            (body) => {
+              console.log('body', body)
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# There's new stuff!
+                ",
+                  "draft": true,
+                  "make_latest": "true",
+                  "name": "v3.0.0-beta",
+                  "prerelease": false,
+                  "tag_name": "v3.0.0-beta",
+                  "target_commitish": "refs/heads/master",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, releasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+      })
+    })
   })
 })

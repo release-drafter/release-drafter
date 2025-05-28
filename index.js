@@ -156,6 +156,7 @@ module.exports = (app, { getRouter }) => {
       'filter-by-commitish': filterByCommitish,
       'include-pre-releases': includePreReleases,
       'prerelease-identifier': preReleaseIdentifier,
+      'filter-by-range': filterByRange,
       'tag-prefix': tagPrefix,
       latest,
       prerelease,
@@ -171,6 +172,7 @@ module.exports = (app, { getRouter }) => {
       filterByCommitish,
       includePreReleases: shouldIncludePreReleases,
       tagPrefix,
+      filterByRange,
     })
 
     const { commits, pullRequests: mergedPullRequests } =
@@ -253,6 +255,7 @@ function getInput() {
         : undefined,
     preReleaseIdentifier: core.getInput('prerelease-identifier') || undefined,
     latest: core.getInput('latest')?.toLowerCase() || undefined,
+    filterByRange: core.getInput('filter-by-range') || undefined,
   }
 }
 
@@ -263,6 +266,10 @@ function getInput() {
 function updateConfigFromInput(config, input) {
   if (input.commitish) {
     config.commitish = input.commitish
+  }
+
+  if (input.filterByRange) {
+    config['filter-by-range'] = input.filterByRange
   }
 
   if (input.header) {
