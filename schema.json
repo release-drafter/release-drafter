@@ -104,6 +104,11 @@
       "type": "string",
       "default": ""
     },
+    "pull-request-limit": {
+      "type": "number",
+      "default": 5,
+      "exclusiveMinimum": 0
+    },
     "replacers": {
       "type": "array",
       "default": [],
@@ -174,8 +179,8 @@
           },
           "collapse-after": {
             "type": "integer",
-            "default": 0,
-            "minimum": 0
+            "default": -1,
+            "minimum": -1
           },
           "label": {
             "type": "string"
