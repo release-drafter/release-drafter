@@ -73,6 +73,10 @@ inputs:
       A boolean indicating whether the autolabeler mode is disabled.
     required: false
     default: ''
+  commits-since:
+    description: |
+      A date in ISO format (eg: '2025-06-18T10:29:51Z') marking the initial commit for the release draft. This is applied only when no prior release is available.
+    required: false
 outputs:
   id:
     description: The ID of the release that was created or updated.

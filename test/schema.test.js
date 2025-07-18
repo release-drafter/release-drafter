@@ -21,6 +21,8 @@ const validConfigs = [
   [{ template, footer: 'I am on bottm' }],
   [{ template, header: 'I am on top', footer: 'I am on bottm' }],
   [{ template, 'pull-request-limit': 49 }],
+  [{ template, 'commits-since': new Date('2025-06-18T10:29:51Z') }],
+  [{ template, 'commits-since': '' }],
 ]
 
 const invalidConfigs = [
@@ -55,6 +57,7 @@ const invalidConfigs = [
   [{ replacers: [{ search: '123', replace: 123 }] }, 'must be a string'],
   [{ commitish: false }, 'must be a string'],
   [{ 'pull-request-limit': 'forty nine' }, 'must be a number'],
+  [{ 'commits-since': 'a day' }, 'must be a valid date'],
 ]
 
 describe('schema', () => {

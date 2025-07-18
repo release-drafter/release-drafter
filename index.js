@@ -253,6 +253,7 @@ function getInput() {
         : undefined,
     preReleaseIdentifier: core.getInput('prerelease-identifier') || undefined,
     latest: core.getInput('latest')?.toLowerCase() || undefined,
+    commitsSince: core.getInput('commits-since') || undefined,
   }
 }
 
@@ -284,6 +285,10 @@ function updateConfigFromInput(config, input) {
   config.latest = config.prerelease
     ? 'false'
     : input.latest || config.latest || undefined
+
+  if (input.commitsSince) {
+    config['commits-since'] = input.commitsSince
+  }
 }
 
 function setActionOutput(
