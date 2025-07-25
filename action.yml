@@ -9,8 +9,12 @@ branding:
 inputs:
   config-name:
     description: |
-      If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
+      If your workflow requires multiple release-drafter configs it can be helpful to override the config-name.
       The config should still be located inside `.github` as that's where we are looking for config files.
+      You can also reference a config file from another GitHub repository using the format:
+        repo:owner/repo/path/to/file.yml@ref
+      For example:
+        repo:org/shared-configs/.github/release-drafter.yml@main
     required: false
     default: 'release-drafter.yml'
   name:
