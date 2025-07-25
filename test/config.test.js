@@ -7,6 +7,18 @@ function createGetConfigMock(config) {
     Promise.resolve({ ...defaults, ...config })
 }
 
+function createOctokitMock(yamlContent) {
+  return {
+    repos: {
+      getContent: jest.fn().mockResolvedValue({
+        data: {
+          content: Buffer.from(yamlContent).toString('base64'),
+        },
+      }),
+    },
+  }
+}
+
 describe('getConfig', () => {
   it('returns defaults', async () => {
     const context = {
@@ -137,5 +149,59 @@ describe('getConfig', () => {
 
       expect(config['sort-direction']).toBe(SORT_DIRECTIONS.ascending)
     })
+  })
+})
+
+describe('remote config', () => {
+  const { getConfig } = require('../lib/config')
+
+  it('loads config from a remote repo (success)', async () => {
+    const yamlContent = 'template: "# Remote config!"\n'
+    const context = {
+      octokit: createOctokitMock(yamlContent),
+      config: jest.fn(),
+      log: { info: jest.fn(), warn: jest.fn() },
+      payload: { repository: { full_name: 'org/repo' } },
+    }
+    const config = await getConfig({
+      context,
+      configName: 'repo:org/repo/.github/release-drafter.yml@main',
+    })
+    expect(config).not.toBeNull()
+    expect(config.template).toBe('# Remote config!')
+  })
+
+  it('throws on invalid remote config format', async () => {
+    const context = {
+      octokit: {},
+      config: jest.fn(),
+      log: { info: jest.fn(), warn: jest.fn() },
+      payload: { repository: { full_name: 'org/repo' } },
+    }
+    await expect(
+      getConfig({
+        context,
+        configName: 'repo:badformat',
+      })
+    ).resolves.toBeNull()
+  })
+
+  it('handles fetch error from remote repo', async () => {
+    const context = {
+      octokit: {
+        repos: {
+          getContent: jest.fn().mockRejectedValue(new Error('Not found')),
+        },
+      },
+      config: jest.fn(),
+      log: { info: jest.fn(), warn: jest.fn() },
+      payload: { repository: { full_name: 'org/repo' } },
+    }
+    await expect(
+      getConfig({
+        context,
+        configName: 'repo:org/repo/.github/release-drafter.yml@main',
+      })
+    ).resolves.toBeNull()
   })
 })
