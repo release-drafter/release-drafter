@@ -1,7 +1,7 @@
 name: 'Release Drafter'
 description: 'Drafts your next release notes as pull requests are merged into master.'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
 branding:
   icon: edit-2
@@ -43,6 +43,11 @@ inputs:
       A boolean indicating whether the release being created or updated is a prerelease.
     required: false
     default: ''
+  prerelease-identifier:
+    description: |
+      A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version.
+    required: false
+    default: ''
   commitish:
     description: |
       The object that the release should be created to point to.
@@ -68,10 +73,6 @@ inputs:
       A boolean indicating whether the autolabeler mode is disabled.
     required: false
     default: ''
-  include-paths:
-    description: |
-      An array of paths used to restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories.
-    required: false
 outputs:
   id:
     description: The ID of therelease that was created or updated.

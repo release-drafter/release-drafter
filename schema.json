@@ -32,7 +32,7 @@
       "type": "string"
     },
     "version-template": {
-      "default": "$MAJOR.$MINOR.$PATCH",
+      "default": "$MAJOR.$MINOR.$PATCH$PRERELEASE",
       "type": "string"
     },
     "name-template": {
@@ -136,6 +136,18 @@
     "include-pre-releases": {
       "default": false,
       "type": "boolean"
+    },
+    "prerelease-identifier": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
     },
     "commitish": {
       "anyOf": [
