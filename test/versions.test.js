@@ -192,6 +192,58 @@ describe('versions', () => {
     expect(versionInfo).toEqual(defaultVersionInfo)
   })
 
+  it('applies custom version template when no previous releases exist', () => {
+    const versionInfo = getVersionInfo(
+      null,
+      '$MAJOR.$MINOR', // Custom template - should use MAJOR.MINOR format
+      null,
+      'minor'
+    )
+
+    expect(versionInfo.$RESOLVED_VERSION.template).toEqual('$MAJOR.$MINOR')
+    expect(versionInfo.$RESOLVED_VERSION.version).toEqual('0.1')
+    expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual('$MAJOR.$MINOR')
+    // $NEXT_MINOR_VERSION should increment from 0.1.0 to 0.2.0, so formatted as "0.2"
+    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('0.2')
+  })
+
+  it('supports version template with only MINOR.PATCH format', () => {
+    const versionInfo = getVersionInfo(
+      null,
+      '$MINOR.$PATCH', // Custom template - should use MINOR.PATCH format (no major)
+      null,
+      'patch'
+    )
+
+    expect(versionInfo.$RESOLVED_VERSION.template).toEqual('$MINOR.$PATCH')
+    expect(versionInfo.$RESOLVED_VERSION.version).toEqual('1.0')
+    expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual('$MINOR.$PATCH')
+    // $NEXT_PATCH_VERSION should increment from 0.1.0 to 0.1.1, so formatted as "1.1"
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('1.1')
+    expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual('$MINOR.$PATCH')
+    // $NEXT_MINOR_VERSION should increment from 0.1.0 to 0.2.0, so formatted as "2.0"
+    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('2.0')
+  })
+
+  it('supports MINOR.PATCH format with existing releases', () => {
+    const versionInfo = getVersionInfo(
+      {
+        tag_name: 'v5.3', // This should be parsed as 5.3.0 internally
+        name: 'Some release',
+      },
+      '$MINOR.$PATCH', // Custom template - should use MINOR.PATCH format (no major)
+      null,
+      'patch'
+    )
+
+    expect(versionInfo.$RESOLVED_VERSION.template).toEqual('$MINOR.$PATCH')
+    expect(versionInfo.$RESOLVED_VERSION.version).toEqual('3.1') // From 5.3.0 -> 5.3.1 -> formatted as "3.1"
+    expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual('$MINOR.$PATCH')
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('3.1') // 5.3.0 -> 5.3.1 -> "3.1"
+    expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual('$MINOR.$PATCH')
+    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('4.0') // 5.3.0 -> 5.4.0 -> "4.0"
+  })
+
   it.each([
     ['patch', '10.0.4'],
     ['minor', '10.1.0'],
