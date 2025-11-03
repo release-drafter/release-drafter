@@ -225,6 +225,25 @@ describe('versions', () => {
     expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('2.0')
   })
 
+  it('supports hardcoded major with 1.MINOR.PATCH format with existing releases', () => {
+    const versionInfo = getVersionInfo(
+      {
+        tag_name: 'v1.3', // This should be parsed as 1.3.0 internally
+        name: 'Some release',
+      },
+      '1.$MINOR.$PATCH', // Custom template - should use MINOR.PATCH format (no major)
+      null,
+      'patch'
+    )
+
+    expect(versionInfo.$RESOLVED_VERSION.template).toEqual('1.$MINOR.$PATCH')
+    expect(versionInfo.$RESOLVED_VERSION.version).toEqual('1.3.1') // From 1.3.0 -> 1.3.1 -> formatted as "3.1"
+    expect(versionInfo.$NEXT_PATCH_VERSION.template).toEqual('1.$MINOR.$PATCH')
+    expect(versionInfo.$NEXT_PATCH_VERSION.version).toEqual('1.3.1') // 1.3.0 -> 1.3.1 -> "3.1"
+    expect(versionInfo.$NEXT_MINOR_VERSION.template).toEqual('1.$MINOR.$PATCH')
+    expect(versionInfo.$NEXT_MINOR_VERSION.version).toEqual('1.4.0') // 1.3.0 -> 1.4.0 -> "4.0"
+  })
+
   it('supports MINOR.PATCH format with existing releases', () => {
     const versionInfo = getVersionInfo(
       {
