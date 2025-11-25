@@ -253,6 +253,7 @@ function getInput() {
         : undefined,
     preReleaseIdentifier: core.getInput('prerelease-identifier') || undefined,
     latest: core.getInput('latest')?.toLowerCase() || undefined,
+    paginationLimit: core.getInput('pagination-limit') || undefined,
   }
 }
 
@@ -284,6 +285,10 @@ function updateConfigFromInput(config, input) {
   config.latest = config.prerelease
     ? 'false'
     : input.latest || config.latest || undefined
+
+  if (input.paginationLimit) {
+    config['pagination-limit'] = Number.parseInt(input.paginationLimit, 10)
+  }
 }
 
 function setActionOutput(

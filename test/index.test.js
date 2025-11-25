@@ -2496,6 +2496,112 @@ describe('release-drafter', () => {
     })
   })
 
+  describe('with pagination-limit config', () => {
+    it('uses the correct default when not specified', async () => {
+      getConfigMock()
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          ) {
+            expect(body.variables.paginationLimit).toBe(100)
+            return true
+          }
+          return false
+        })
+        .reply(200, graphqlCommitsNoPRsPayload)
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post('/repos/toolmantim/release-drafter-test-project/releases')
+        .reply(200, releasePayload)
+
+      await probot.receive({
+        name: 'push',
+        payload: pushPayload,
+      })
+
+      expect.assertions(1)
+    })
+
+    it('uses the specified pagination limit from config', async () => {
+      getConfigMock('config-with-pagination-limit.yml')
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          ) {
+            expect(body.variables.paginationLimit).toBe(50)
+            return true
+          }
+          return false
+        })
+        .reply(200, graphqlCommitsNoPRsPayload)
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post('/repos/toolmantim/release-drafter-test-project/releases')
+        .reply(200, releasePayload)
+
+      await probot.receive({
+        name: 'push',
+        payload: pushPayload,
+      })
+
+      expect.assertions(1)
+    })
+
+    it('uses the specified pagination limit from action input', async () => {
+      let restoreEnvironment = mockedEnv({
+        'INPUT_PAGINATION-LIMIT': '25',
+      })
+
+      getConfigMock()
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          ) {
+            expect(body.variables.paginationLimit).toBe(25)
+            return true
+          }
+          return false
+        })
+        .reply(200, graphqlCommitsNoPRsPayload)
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post('/repos/toolmantim/release-drafter-test-project/releases')
+        .reply(200, releasePayload)
+
+      await probot.receive({
+        name: 'push',
+        payload: pushPayload,
+      })
+
+      expect.assertions(1)
+      restoreEnvironment()
+    })
+  })
+
   describe('config error handling', () => {
     it('schema error', async () => {
       getConfigMock('config-with-schema-error.yml')

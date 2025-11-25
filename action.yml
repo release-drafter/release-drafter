@@ -73,6 +73,11 @@ inputs:
       A boolean indicating whether the autolabeler mode is disabled.
     required: false
     default: ''
+  pagination-limit:
+    description: |
+      The maximum number of items to fetch per request when listing pull requests or other paginated data.
+    required: false
+    default: '100'
 outputs:
   id:
     description: The ID of the release that was created or updated.
