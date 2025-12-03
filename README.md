@@ -58,6 +58,9 @@ jobs:
 
 If you're unable to use GitHub Actions, you can use the Release Drafter GitHub App. Please refer to the [Release Drafter GitHub App documentation](docs/github-app.md) for more information.
 
+> [!note]
+> Following Github's announcement on Node 20 EOL, Release-drafter dropped support for runners on macOS < v13.4 and ARM32 when bumping it's node version to 24.
+
 ## Configuration
 
 Once you’ve added Release Drafter to your repository, it must be enabled by adding a `.github/release-drafter.yml` configuration file to each repository. The configuration file **must** reside in your default branch, no other configurations will be accepted.
@@ -394,7 +397,7 @@ The Release Drafter GitHub Action sets a couple of outputs which can be used as 
 
 ## Developing
 
-If you have Node v10+ installed locally, you can run the tests, and a local app, using the following commands:
+If you have Node v24+ installed locally, you can run the tests, and a local app, using the following commands:
 
 ```sh
 # Install dependencies
