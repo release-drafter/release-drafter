@@ -479,9 +479,9 @@ describe('releases', () => {
 
       expect(changeLog).toContain('🚀 Features')
       expect(changeLog).toContain('B2 (#2)') // PR
-      expect(changeLog).toContain('add new feature (#[#abc123d]') // Commit
+      expect(changeLog).toContain('add new feature (#[abc123d]') // Commit
       expect(changeLog).toContain('🐛 Bug Fixes')
-      expect(changeLog).toContain('fix a bug (#[#def456g]') // Commit
+      expect(changeLog).toContain('fix a bug (#[def456g]') // Commit
     })
 
     it('does not include commits when include-commits is false', () => {
@@ -610,7 +610,7 @@ describe('releases', () => {
 
       expect(changeLog).toContain('🐛 Bug Fixes')
       expect(changeLog).toContain('A1 (#1)') // PR should come first
-      expect(changeLog).toContain('another bug fix (#[#abc123')
+      expect(changeLog).toContain('another bug fix (#[abc123')
     })
   })
 })

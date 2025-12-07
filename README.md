@@ -373,10 +373,10 @@ With this configuration:
 Commits are displayed with a shortened hash (7 characters) and a link to the full commit:
 
 ```
-* add new feature (#[#abc123d](https://github.com/owner/repo/commit/abc123d)) @username
+* add new feature (#[abc123d](https://github.com/owner/repo/commit/abc123d)) @username
 ```
 
-The `#` symbol is included in the link text, making the entire `#abc123d` clickable (similar to how GitHub renders PR references like `#1`).
+The format is `(#[hash](url))` where the `#` appears before the link, maintaining consistency with how pull requests are displayed as `(#123)`.
 
 ### Filtering
 
