@@ -394,7 +394,7 @@ The Release Drafter GitHub Action sets a couple of outputs which can be used as 
 
 ## Developing
 
-If you have Node v10+ installed locally, you can run the tests, and a local app, using the following commands:
+If you have Node v20+ installed locally, you can run the tests, and a local app, using the following commands:
 
 ```sh
 # Install dependencies
@@ -415,6 +415,21 @@ If you don’t have Node installed, you can use [Docker Compose](https://docs.do
 # Run the tests
 docker compose run --rm app
 ```
+
+### Using VS Code
+
+If you use VS Code, please take note of the recommended extensions.
+
+Also available are various debuggig configurations :
+
+- `Jest All`
+- `Jest Current File`
+- `Jest Run Selected Test`
+
+... and a simple [DevContainer](https://containers.dev/) you may want to use.
+
+> [!note]
+> When developing inside a DevContainer, make sure your local `git` setup uses a running ssh-agent or credentials helper for authentication. Read more [here](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials).
 
 ## Contributing
 
