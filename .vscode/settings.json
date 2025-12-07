@@ -1,8 +1,13 @@
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   },
   "files.exclude": {
-    "dist/": true
+    "**/.git": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "node_modules": true,
+    "**/dist": true
   }
 }

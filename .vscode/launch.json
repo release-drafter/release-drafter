@@ -14,8 +14,7 @@
         "--runInBand"
       ],
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "type": "node",
@@ -27,8 +26,7 @@
         "${fileBasenameNoExtension}"
       ],
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "type": "node",
@@ -36,7 +34,6 @@
       "name": "Jest Run Selected Test",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true,
       "args": [
         "--experimental-vm-modules",
         "${workspaceFolder}/node_modules/.bin/jest",
