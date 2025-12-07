@@ -431,19 +431,22 @@ describe('releases', () => {
   describe('generateChangeLog with commits', () => {
     const mergedCommits = [
       {
-        id: 'abc123def456',
+        id: 'node_abc123def456',
+        oid: 'abc123def456',
         message: 'feat: add new feature',
-        author: { login: 'user1' },
+        author: { user: { login: 'user1' }, name: 'user1' },
       },
       {
-        id: 'def456ghi789',
+        id: 'node_def456ghi789',
+        oid: 'def456ghi789',
         message: 'fix: fix a bug',
-        author: { login: 'user2' },
+        author: { user: { login: 'user2' }, name: 'user2' },
       },
       {
-        id: 'ghi789jkl012',
+        id: 'node_ghi789jkl012',
+        oid: 'ghi789jkl012',
         message: 'docs: update documentation',
-        author: { login: 'user3' },
+        author: { user: { login: 'user3' }, name: 'user3' },
       },
     ]
 
@@ -476,9 +479,9 @@ describe('releases', () => {
 
       expect(changeLog).toContain('🚀 Features')
       expect(changeLog).toContain('B2 (#2)') // PR
-      expect(changeLog).toContain('add new feature (#[abc123d]') // Commit
+      expect(changeLog).toContain('add new feature (#[#abc123d]') // Commit
       expect(changeLog).toContain('🐛 Bug Fixes')
-      expect(changeLog).toContain('fix a bug (#[def456g]') // Commit
+      expect(changeLog).toContain('fix a bug (#[#def456g]') // Commit
     })
 
     it('does not include commits when include-commits is false', () => {
@@ -510,9 +513,10 @@ describe('releases', () => {
     it('handles commits with breaking changes', () => {
       const mergedCommitsWithBreaking = [
         {
-          id: 'abc123',
+          id: 'node_abc123',
+          oid: 'abc123def456',
           message: 'feat!: breaking change',
-          author: { login: 'user1' },
+          author: { user: { login: 'user1' }, name: 'user1' },
         },
       ]
 
@@ -543,9 +547,10 @@ describe('releases', () => {
     it('handles uncategorized commits', () => {
       const uncategorizedMergedCommits = [
         {
-          id: 'abc123',
+          id: 'node_abc123',
+          oid: 'abc123def456',
           message: 'chore: update deps',
-          author: { login: 'user1' },
+          author: { user: { login: 'user1' }, name: 'user1' },
         },
       ]
 
@@ -592,9 +597,10 @@ describe('releases', () => {
         [pullRequests[0]], // Bug fix PR
         [
           {
-            id: 'abc123',
+            id: 'node_abc123',
+            oid: 'abc123def456',
             message: 'fix: another bug fix',
-            author: { login: 'user1' },
+            author: { user: { login: 'user1' }, name: 'user1' },
           },
         ],
         config,
@@ -604,7 +610,7 @@ describe('releases', () => {
 
       expect(changeLog).toContain('🐛 Bug Fixes')
       expect(changeLog).toContain('A1 (#1)') // PR should come first
-      expect(changeLog).toContain('another bug fix (#[abc123')
+      expect(changeLog).toContain('another bug fix (#[#abc123')
     })
   })
 })
