@@ -1,3 +1,5 @@
-config-with-yaml-exception.yml
+.DS_Store
+.licenses/
 dist/
+node_modules/
 coverage/

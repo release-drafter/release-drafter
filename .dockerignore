@@ -1,9 +1,0 @@
-design
-node_modules
-.env
-.env.example
-coverage
-.buildkite
-*.pem
-.git
-dist/
