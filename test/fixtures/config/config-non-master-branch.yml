@@ -1,6 +1,0 @@
-branches:
-  - some-branch
-template: |
-  # What's Changed
-
-  $CHANGES

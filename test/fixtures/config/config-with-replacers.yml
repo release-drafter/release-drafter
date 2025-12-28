@@ -1,8 +1,0 @@
-replacers:
-  - search: /Add documentation \(#(\d+)/g
-    replace: Add documentation (#1000
-
-template: |
-  # What's Changed
-
-  $CHANGES
