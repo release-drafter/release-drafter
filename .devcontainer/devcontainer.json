@@ -39,5 +39,11 @@
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers-community/npm-features/prettier:1": {}
-  }
+  },
+  "mounts": [
+    /**
+     * Mount local ssh keys such as container's git may use ssh commit signing
+     */
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/node/.ssh,type=bind,consistency=cached"
+  ]
 }
