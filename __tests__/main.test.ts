@@ -7,56 +7,62 @@
  */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { wait } from '../__fixtures__/wait.js'
+import nock from 'nock'
+import { getGithubMock } from '../__fixtures__/github.js'
 
 // Mocks should be declared before the module being tested is imported.
-jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/wait.js', () => ({ wait }))
 
-// The module being tested should be imported dynamically. This ensures that the
-// mocks are used in place of any actual dependencies.
-const { run } = await import('../src/main.js')
+describe('release-drafter', () => {
+  beforeAll(() => {
+    // Disable actual network requests.
+    nock.disableNetConnect()
 
-describe('main.ts', () => {
-  beforeEach(() => {
-    // Set the action's inputs as return values from core.getInput().
-    core.getInput.mockImplementation(() => '500')
-
-    // Mock the wait function so that it does not actually wait.
-    wait.mockImplementation(() => Promise.resolve('done!'))
+    jest.unstable_mockModule('@actions/core', () => core)
   })
+
+  beforeEach(() => {})
 
   afterEach(() => {
     jest.resetAllMocks()
+    jest.unstable_unmockModule('@actions/core')
+    jest.unstable_unmockModule('@actions/github')
   })
 
-  it('Sets the time output', async () => {
-    await run()
+  /**
+   * ###################################
+   * Release-drafter tests
+   * ###################################
+   */
 
-    // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      // Simple regex to match a time string in the format HH:MM:SS.
-      expect.stringMatching(/^\d{2}:\d{2}:\d{2}/)
-    )
-  })
+  describe('push', () => {
+    describe('without a config', () => {
+      it('does nothing', async () => {
+        // Mocks should be declared before the module being tested is imported.
+        jest.unstable_mockModule('@actions/github', () =>
+          getGithubMock({
+            eventName: 'push',
+            payload: 'push'
+          })
+        )
 
-  it('Sets a failed status', async () => {
-    // Clear the getInput mock and return an invalid value.
-    core.getInput.mockClear().mockReturnValueOnce('this is not a number')
+        // Mock config file missing
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/contents/.github%2Frelease-drafter.yml'
+          )
+          .reply(404)
+          .get(
+            '/repos/toolmantim/.github/contents/.github%2Frelease-drafter.yml'
+          )
+          .reply(404)
 
-    // Clear the wait mock and return a rejected promise.
-    wait
-      .mockClear()
-      .mockRejectedValueOnce(new Error('milliseconds is not a number'))
+        // The module being tested should be imported dynamically. This ensures that the
+        // mocks are used in place of any actual dependencies.
+        await (await import('../src/main.js')).run()
 
-    await run()
-
-    // Verify that the action was marked as failed.
-    expect(core.setFailed).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds is not a number'
-    )
+        expect(core.setOutput).not.toHaveBeenCalled()
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+    })
   })
 })
