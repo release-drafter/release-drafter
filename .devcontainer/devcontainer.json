@@ -1,5 +1,5 @@
 {
-  "name": "GitHub Actions (TypeScript)",
+  "name": "Release Drafter",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
   "postCreateCommand": "npm install",
   "customizations": {
