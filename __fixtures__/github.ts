@@ -8,15 +8,11 @@ import {
 } from '@actions/github'
 
 type Context = typeof context
+type AllowedPayload = 'push' | 'push-non-master-branch'
 
-const getEventPayloadPath = (type: 'push') => {
+const getEventPayloadPath = (type: AllowedPayload) => {
   const baseDir = path.join(path.dirname(import.meta.filename), 'events')
-  switch (type) {
-    case 'push':
-      return path.join(baseDir, `${type}.json`)
-    default:
-      throw new Error(`Unsupported event type: ${type}`)
-  }
+  return path.join(baseDir, `${type}.json`)
 }
 
 /**
@@ -30,7 +26,7 @@ const getEventPayloadPath = (type: 'push') => {
  */
 export const getGithubMock: (
   params: Partial<Pick<Context, 'sha' | 'ref' | 'repo'>> &
-    Pick<Context, 'eventName'> & { payload: 'push' | object }
+    Pick<Context, 'eventName'> & { payload: AllowedPayload | object }
 ) => typeof import('@actions/github') = (params) => {
   const repo = params.repo || {
     owner: 'release-drafter',
