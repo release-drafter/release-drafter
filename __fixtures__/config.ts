@@ -19,7 +19,7 @@ export const mockReleaseDrafterConfig = (opts?: {
         path.join(
           path.dirname(import.meta.filename),
           'config',
-          fileName || 'config.yaml'
+          fileName || 'config.yml'
         ),
         { encoding: 'utf8' }
       )
