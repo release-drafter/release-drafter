@@ -9,6 +9,12 @@ export const mockReleaseDrafterConfig = (opts?: {
 }) => {
   const { repoFileName, repo, fileName } = opts || {}
 
+  if (repoFileName === 'config-tag-reference') {
+    throw new Error(
+      'The references were deprecated in v7 in favor of workflow on conditions.'
+    )
+  }
+
   return nock('https://api.github.com')
     .get(
       `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/contents/.github%2F${repoFileName || 'release-drafter.yml'}`
