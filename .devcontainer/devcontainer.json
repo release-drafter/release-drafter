@@ -13,7 +13,7 @@
         "bierner.markdown-preview-github-styles",
         "davidanson.vscode-markdownlint",
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
+        "prettier.prettier-vscode",
         "github.copilot",
         "github.copilot-chat",
         "github.vscode-github-actions",
@@ -21,10 +21,11 @@
         "me-dutour-mathieu.vscode-github-actions",
         "redhat.vscode-yaml",
         "rvest.vs-code-prettier-eslint",
-        "yzhang.markdown-all-in-one"
+        "yzhang.markdown-all-in-one",
+        "vivaxy.vscode-conventional-commits"
       ],
       "settings": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "prettier.prettier-vscode",
         "editor.tabSize": 2,
         "editor.formatOnSave": true,
         "markdown.extension.list.indentationSize": "adaptive",
