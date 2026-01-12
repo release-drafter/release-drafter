@@ -105,7 +105,9 @@ describe('release-drafter', () => {
           })
           mockReleaseDrafterConfig({ fileName: 'config-non-master-branch.yml' })
 
-          mockGraphqlQuery({ payload: 'graphql-commits-no-prs.json' })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-no-prs.json'
+          })
 
           const scope = nockGetReleases({ releaseFiles: ['release.json'] })
             .post(
@@ -133,10 +135,59 @@ describe('release-drafter', () => {
           await run()
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
           expect(core.setFailed).not.toHaveBeenCalled()
 
           restoreLocalEnvironment()
         })
+      })
+    })
+
+    describe('to a tag', () => {
+      it('creates a release draft', async () => {
+        const restoreLocalEnvironment = getEnvMock({
+          payload: 'push-tag'
+        })
+
+        mockReleaseDrafterConfig({ fileName: 'config.yml' })
+
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit.json'
+        })
+
+        const scope = nockGetReleases({ releaseFiles: ['release.json'] })
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                  Object {
+                    "body": "# What's Changed
+
+                  * Add documentation (#5) @TimonVS
+                  * Update dependencies (#4) @TimonVS
+                  * Bug fixes (#3) @TimonVS
+                  * Add big feature (#2) @TimonVS
+                  * 👽 Add alien technology (#1) @TimonVS
+                  ",
+                    "draft": true,
+                    "make_latest": "true",
+                    "name": "",
+                    "prerelease": false,
+                    "tag_name": "",
+                    "target_commitish": "",
+                  }
+                `)
+              return true
+            }
+          )
+          .reply(200, getReleasePayload('release.json'))
+
+        await run()
+
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+
+        restoreLocalEnvironment()
       })
     })
   })
