@@ -6,7 +6,9 @@ type Query =
   | 'query findCommitsWithAssociatedPullRequests'
   | 'query findCommitsWithPathChangesQuery'
 
-type Payload = 'graphql-commits-no-prs.json'
+type Payload =
+  | 'graphql-commits-no-prs.json'
+  | 'graphql-commits-merge-commit.json'
 
 export const mockGraphqlQuery = (params: { query?: Query; payload: Payload }) =>
   nock('https://api.github.com')
