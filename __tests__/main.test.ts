@@ -186,6 +186,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
 
         restoreLocalEnvironment()
       })
