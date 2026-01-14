@@ -27,7 +27,7 @@ export async function run(): Promise<void> {
     if (!input['disable-autolabeler']) {
       await autolabeler({ input, config })
     } else {
-      core.info(`disable-autolabeler set to true. Ignoring the drafter.`)
+      core.info(`disable-autolabeler set to true. Ignoring the autolabeler.`)
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
