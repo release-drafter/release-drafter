@@ -65,7 +65,8 @@ export const getEnvMock = (params: { payload: AllowedPayload }) => {
     GITHUB_REPOSITORY_OWNER: payload.repository?.owner?.login,
     GITHUB_REPOSITORY_OWNER_ID: payload.repository?.owner?.id?.toString(),
     GITHUB_SHA: payload.after,
-    GITHUB_TRIGGERING_ACTOR: payload.pusher?.login
+    GITHUB_TRIGGERING_ACTOR: payload.pusher?.login,
+    GITHUB_WORKSPACE: path.resolve(path.dirname(import.meta.filename), '..')
   }
 
   return mockedEnv({
