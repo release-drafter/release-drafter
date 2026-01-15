@@ -1,6 +1,6 @@
 import z from 'zod'
 import { stringToRegex } from '../utils/string-to-regex.js'
-import core from '@actions/core'
+import * as core from '@actions/core'
 import { context } from '@actions/github'
 
 export const configSchema = z

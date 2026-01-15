@@ -1,4 +1,4 @@
-import core from '@actions/core'
+import * as core from '@actions/core'
 import { ActionInput, actionInputSchema } from '../types/action-input.schema.js'
 
 export const getActionInput = (): ActionInput => {
