@@ -1,7 +1,7 @@
 import { ActionInput } from '../types/action-input.schema.js'
 import { Config } from '../types/config.schema.js'
-import core from '@actions/core'
-import { isBoolean } from 'lodash'
+import * as core from '@actions/core'
+import isBoolean from 'lodash/isBoolean.js'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.
