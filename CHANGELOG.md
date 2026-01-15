@@ -70,5 +70,9 @@
     `@action/checkout`)
   - you'll be able to build a config in a branch that is not the default branch
 
-  > [!note]
-  > Probot used to fetch the config file using the handy `context.config`, which uses octokit's [`rest.repos.getContent`](https://octokit.github.io/rest.js/v18/#repos) under the hood. This is because probot is exepcted to run apps, which do not have the ability to have the repository in their filesystem as easily as actions do.
+  > [!note] Probot used to fetch the config file using the handy
+  > `context.config`, which uses octokit's
+  > [`rest.repos.getContent`](https://octokit.github.io/rest.js/v18/#repos)
+  > under the hood. This is because probot is exepcted to run apps, which do not
+  > have the ability to have the repository in their filesystem as easily as
+  > actions do.

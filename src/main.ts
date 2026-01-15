@@ -3,7 +3,8 @@ import { drafter } from './drafter/index.js'
 import { autolabeler } from './autolabeler/index.js'
 import { getActionInput } from './utils/get-action-inputs.js'
 import { mergeInputAndConfig } from './utils/merge-input-and-config.js'
-import { getConfig } from './utils/get-config.js'
+import { parseConfigFile } from './utils/parse-config-file.js'
+import { loadConfigFile } from './utils/load-config-file.js'
 
 /**
  * The main function for the action.
@@ -14,7 +15,7 @@ export async function run(): Promise<void> {
   try {
     const input = getActionInput()
     const config = mergeInputAndConfig({
-      config: await getConfig(input['config-name']),
+      config: await parseConfigFile(loadConfigFile(input['config-name'])),
       input
     })
 
