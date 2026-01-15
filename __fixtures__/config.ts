@@ -1,33 +1,34 @@
 import { readFileSync } from 'fs'
-import nock from 'nock'
 import path from 'path'
+import { jest } from '@jest/globals'
+import { loadConfigFile } from '../src/utils/load-config-file.js'
 
-export const mockReleaseDrafterConfig = (opts?: {
-  fileName?: string
-  repoFileName?: string
-  repo?: { owner: string; repo: string }
+const configs = ['config.yml', 'config-non-master-branch.yml'] as const
+/**
+ * Mock our own config loading function.
+ *
+ * @option file The config file to return as a mock. Default `config.yml`.
+ * @option requestedFile The original config file name to mock. Default `release-drafter.yml`.
+ */
+export const mockConfig = (opts?: {
+  file?: (typeof configs)[number]
+  requestedFile?: string
 }) => {
-  const { repoFileName, repo, fileName } = opts || {}
+  return jest.unstable_mockModule('../src/utils/load-config-file.js', () => ({
+    loadConfigFile: (configFileName: string) => {
+      if (configFileName === (opts?.requestedFile || 'release-drafter.yml')) {
+        const file = opts?.file || configs[0]
+        return readFileSync(
+          path.resolve(import.meta.dirname, 'config', file),
+          'utf8'
+        )
+      } else {
+        return loadConfigFile(configFileName)
+      }
+    }
+  }))
+}
 
-  if (repoFileName === 'config-tag-reference') {
-    throw new Error(
-      'The references were deprecated in v7 in favor of workflow on conditions.'
-    )
-  }
-
-  return nock('https://api.github.com')
-    .get(
-      `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/contents/.github%2F${repoFileName || 'release-drafter.yml'}`
-    )
-    .reply(
-      200,
-      readFileSync(
-        path.join(
-          path.dirname(import.meta.filename),
-          'config',
-          fileName || 'config.yml'
-        ),
-        { encoding: 'utf8' }
-      )
-    )
+export const unmockConfig = () => {
+  jest.unstable_unmockModule('../src/utils/load-config-file.js')
 }

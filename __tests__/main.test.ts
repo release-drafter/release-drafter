@@ -1,11 +1,12 @@
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
 import nock from 'nock'
-import { mockReleaseDrafterConfig } from '../__fixtures__/config.js'
+import { mockConfig, unmockConfig } from '../__fixtures__/config.js'
 import { mockGraphqlQuery } from '../__fixtures__/graphql.js'
 import { getReleasePayload, nockGetReleases } from '../__fixtures__/releases.js'
 import { getEnvMock } from '../__fixtures__/env.js'
 import { run as actionRun } from '../src/main.js'
+import path from 'path'
 
 /**
  * Helper to run the action in an isolated module context.
@@ -29,6 +30,7 @@ describe('release-drafter', () => {
     nock.restore()
     jest.resetAllMocks()
     jest.unstable_unmockModule('@actions/core')
+    unmockConfig()
   })
 
   beforeEach(() => {
@@ -39,6 +41,8 @@ describe('release-drafter', () => {
 
   afterEach(() => {
     nock.cleanAll()
+    jest.resetModules()
+    jest.resetAllMocks()
   })
 
   /**
@@ -53,24 +57,13 @@ describe('release-drafter', () => {
         const restoreLocalEnvironment = getEnvMock({
           payload: 'push'
         })
-        // Mock config file missing
-        const scope = nock('https://api.github.com')
-          .get(
-            '/repos/toolmantim/release-drafter-test-project/contents/.github%2Frelease-drafter.yml'
-          )
-          .reply(404)
-          .get(
-            '/repos/toolmantim/.github/contents/.github%2Frelease-drafter.yml'
-          )
-          .reply(404)
 
-        // The module being tested should be imported dynamically. This ensures that the
-        // mocks are used in place of any actual dependencies.
         await run()
 
-        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(core.setOutput).not.toHaveBeenCalled()
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(core.setFailed).toHaveBeenCalledWith(
+          `Config file not found: ${path.resolve(import.meta.dirname, '..')}/.github/release-drafter.yml. Did you clone your sources ? (ex: using @actions/checkout)`
+        )
 
         restoreLocalEnvironment()
       })
@@ -81,7 +74,7 @@ describe('release-drafter', () => {
         const restoreLocalEnvironment = getEnvMock({
           payload: 'push-non-master-branch'
         })
-        mockReleaseDrafterConfig()
+        mockConfig({ file: 'config.yml' })
 
         const scope = nock('https://api.github.com')
           .post('/repos/:owner/:repo/releases')
@@ -103,7 +96,7 @@ describe('release-drafter', () => {
           const restoreLocalEnvironment = getEnvMock({
             payload: 'push-non-master-branch'
           })
-          mockReleaseDrafterConfig({ fileName: 'config-non-master-branch.yml' })
+          mockConfig({ file: 'config-non-master-branch.yml' })
 
           const gqlScope = mockGraphqlQuery({
             payload: 'graphql-commits-no-prs.json'
@@ -149,7 +142,7 @@ describe('release-drafter', () => {
           payload: 'push-tag'
         })
 
-        mockReleaseDrafterConfig({ fileName: 'config.yml' })
+        mockConfig({ file: 'config.yml' })
 
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-merge-commit.json'

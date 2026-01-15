@@ -4,21 +4,26 @@
 
 ### Github Actions Context
 
-Tests in v7 work kind of differently because of the Probot removal. Probot allowed specifying a context easily using :
+Tests in v7 work kind of differently because of the Probot removal. Probot
+allowed specifying a context easily using :
 
 ```typescript
 await probot.receive({
   name: 'push',
-  payload: pushTagPayload,
+  payload: pushTagPayload
 })
 ```
 
-... which would spin up the execution of our action, aswell as the actual *Github Actions Context*.
+... which would spin up the execution of our action, aswell as the actual
+_Github Actions Context_.
 
-Defining the *Github Actions Context* (as imported by `@actions/github`) is now handled by defining the underlying `GITHUB_*` environment variables for each test suites. If done properly, `import { context } from @actions/github` will now contain the specified variables.
+Defining the _Github Actions Context_ (as imported by `@actions/github`) is now
+handled by defining the underlying `GITHUB_*` environment variables for each
+test suites. If done properly, `import { context } from @actions/github` will
+now contain the specified variables.
 
-> [!note]
-> Take a look at [`.env.example`](../.env.example) and [fixtures/env.ts](../__fixtures__/env.ts) for more details.
+> [!note] Take a look at [`.env.example`](../.env.example) and
+> [fixtures/env.ts](../__fixtures__/env.ts) for more details.
 
 To do this efficiently in test suites, we use a helper along with `mocked-env` :
 
@@ -27,7 +32,7 @@ it('does nothing', async () => {
   const restoreLocalEnvironment = getEnvMock({
     payload: 'push-non-master-branch'
   })
-  
+
   // process.env.GITHUB_REF now has a value coherent
   // with payload __fixtures__/events/push-non-master-branch.json
   // also avalable in context.ref & context.payload.ref
@@ -40,7 +45,8 @@ it('does nothing', async () => {
 })
 ```
 
-However - this would not work if nodejs would not instanciate `@actions/github` anew on each test-suite. To do this, we leverage `jest.isolateModulesAsync` :
+However - this would not work if nodejs would not instanciate `@actions/github`
+anew on each test-suite. To do this, we leverage `jest.isolateModulesAsync` :
 
 ```ts
 const run = (...args: Parameters<typeof actionRun>) =>
@@ -51,11 +57,13 @@ const run = (...args: Parameters<typeof actionRun>) =>
 
 ### Include nock scopes
 
-In the original tests, not much was used in regard to [`nock`'s expectations capabilities](https://github.com/nock/nock?tab=readme-ov-file#expectations).
+In the original tests, not much was used in regard to
+[`nock`'s expectations capabilities](https://github.com/nock/nock?tab=readme-ov-file#expectations).
 
-Whenever you write a suite that uses `nock`, please get the scope variable out of the `nock()` call, and write the corresponding jest expectation.
+Whenever you write a suite that uses `nock`, please get the scope variable out
+of the `nock()` call, and write the corresponding jest expectation.
 
-For example, where mocked endpoints are __not__ expected to be called :
+For example, where mocked endpoints are **not** expected to be called :
 
 ```typescript
 describe('to a non-master branch', () => {
@@ -98,23 +106,25 @@ const scope = nockGetReleases({ releaseFiles: ['release.json'] })
 ### Mocking : `release-drafter.yml` config file
 
 ```ts
-import { mockReleaseDrafterConfig } from '../__fixtures__/config.js'
+import { mockConfig, unmockConfig } from '../__fixtures__/config.js'
 
 describe('when pushing to non-master branch', () => {
   it('creates a release draft targeting that branch', async () => {
-
-    mockReleaseDrafterConfig({ fileName: 'config-non-master-branch.yml' })
+    mockConfig({ file: 'config-non-master-branch.yml' })
 
     await run()
 
     expect(something).toBe(done)
+    unmockConfig()
   })
 })
 ```
 
 ### Mocking : graphql calls
 
-There is exactly to instances of GrpahQL calls possibly made by release-drafter, and the syntax to mock their response is always the same. The following helper eases porting the tests :
+There is exactly to instances of GrpahQL calls possibly made by release-drafter,
+and the syntax to mock their response is always the same. The following helper
+eases porting the tests :
 
 ```ts
 it('creates a release draft', async () => {
@@ -125,7 +135,7 @@ it('creates a release draft', async () => {
   })
 
   await run()
-  
+
   expect(gqlScope).toBe(true)
 })
 ```
