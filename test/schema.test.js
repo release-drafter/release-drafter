@@ -21,7 +21,10 @@ const validConfigs = [
   [{ template, footer: 'I am on bottm' }],
   [{ template, header: 'I am on top', footer: 'I am on bottm' }],
   [{ template, 'pull-request-limit': 49 }],
-  [{ template, 'commits-since': new Date('2025-06-18T10:29:51Z') }],
+  [
+    { template, 'commits-since': '2025-06-18T10:29:51Z' },
+    { template, 'commits-since': new Date('2025-06-18T10:29:51Z') },
+  ],
   [{ template, 'commits-since': '' }],
 ]
 
