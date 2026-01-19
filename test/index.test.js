@@ -3455,7 +3455,7 @@ describe('release-drafter', () => {
     })
   })
 
-  describe('with commits-since', () => {
+  describe('with initial-commits-since', () => {
     it('use commits since from last release', async () => {
       getConfigMock('config-with-commits-since.yml')
 

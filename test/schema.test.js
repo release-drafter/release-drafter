@@ -22,10 +22,10 @@ const validConfigs = [
   [{ template, header: 'I am on top', footer: 'I am on bottm' }],
   [{ template, 'pull-request-limit': 49 }],
   [
-    { template, 'commits-since': '2025-06-18T10:29:51Z' },
-    { template, 'commits-since': new Date('2025-06-18T10:29:51Z') },
+    { template, 'initial-commits-since': '2025-06-18T10:29:51Z' },
+    { template, 'initial-commits-since': new Date('2025-06-18T10:29:51Z') },
   ],
-  [{ template, 'commits-since': '' }],
+  [{ template, 'initial-commits-since': '' }],
 ]
 
 const invalidConfigs = [
@@ -60,10 +60,10 @@ const invalidConfigs = [
   [{ replacers: [{ search: '123', replace: 123 }] }, 'must be a string'],
   [{ commitish: false }, 'must be a string'],
   [{ 'pull-request-limit': 'forty nine' }, 'must be a number'],
-  [{ 'commits-since': 'a day' }, 'must be in ISO 8601 date format'],
+  [{ 'initial-commits-since': 'a day' }, 'must be in ISO 8601 date format'],
   [
     {
-      'commits-since':
+      'initial-commits-since':
         'Wed Dec 10 2025 19:33:48 GMT+0100 (Central European Standard Time)',
     },
     'must be in ISO 8601 date format',
