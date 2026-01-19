@@ -57,7 +57,14 @@ const invalidConfigs = [
   [{ replacers: [{ search: '123', replace: 123 }] }, 'must be a string'],
   [{ commitish: false }, 'must be a string'],
   [{ 'pull-request-limit': 'forty nine' }, 'must be a number'],
-  [{ 'commits-since': 'a day' }, 'must be a valid date'],
+  [{ 'commits-since': 'a day' }, 'must be in ISO 8601 date format'],
+  [
+    {
+      'commits-since':
+        'Wed Dec 10 2025 19:33:48 GMT+0100 (Central European Standard Time)',
+    },
+    'must be in ISO 8601 date format',
+  ],
 ]
 
 describe('schema', () => {
