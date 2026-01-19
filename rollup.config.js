@@ -10,5 +10,11 @@ module.exports = {
     file: 'dist/index.js',
     format: 'commonjs',
   },
-  plugins: [json(), nodeResolve({ preferBuiltins: true }), commonjs()],
+  plugins: [
+    json(),
+    nodeResolve({ preferBuiltins: true }),
+    commonjs({
+      ignoreDynamicRequires: true,
+    }),
+  ],
 }
