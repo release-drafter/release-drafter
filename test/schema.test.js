@@ -21,6 +21,7 @@ const validConfigs = [
   [{ template, footer: 'I am on bottm' }],
   [{ template, header: 'I am on top', footer: 'I am on bottm' }],
   [{ template, 'pull-request-limit': 49 }],
+  [{ template, 'history-limit': 17 }],
 ]
 
 const invalidConfigs = [
@@ -55,6 +56,7 @@ const invalidConfigs = [
   [{ replacers: [{ search: '123', replace: 123 }] }, 'must be a string'],
   [{ commitish: false }, 'must be a string'],
   [{ 'pull-request-limit': 'forty nine' }, 'must be a number'],
+  [{ 'history-limit': 'seventeen' }, 'must be a number'],
 ]
 
 describe('schema', () => {

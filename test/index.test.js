@@ -2496,6 +2496,78 @@ describe('release-drafter', () => {
     })
   })
 
+  describe('with history-limit config', () => {
+    it('uses the correct default when not specified', async () => {
+      getConfigMock()
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          ) {
+            expect(body.variables.historyLimit).toBe(15)
+            return true
+          }
+          return false
+        })
+        .reply(200, graphqlCommitsNoPRsPayload)
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post('/repos/toolmantim/release-drafter-test-project/releases')
+        .reply(200, releasePayload)
+
+      const payload = pushPayload
+
+      await probot.receive({
+        name: 'push',
+        payload,
+      })
+
+      expect.assertions(1)
+    })
+
+    it('requests the specified number of associated PRs', async () => {
+      getConfigMock('config-with-history-limit.yml')
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          ) {
+            expect(body.variables.historyLimit).toBe(42)
+            return true
+          }
+          return false
+        })
+        .reply(200, graphqlCommitsNoPRsPayload)
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post('/repos/toolmantim/release-drafter-test-project/releases')
+        .reply(200, releasePayload)
+
+      const payload = pushPayload
+
+      await probot.receive({
+        name: 'push',
+        payload,
+      })
+
+      expect.assertions(1)
+    })
+  })
+
   describe('config error handling', () => {
     it('schema error', async () => {
       getConfigMock('config-with-schema-error.yml')

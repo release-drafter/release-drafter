@@ -146,6 +146,8 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `commitish`                | Optional | The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`. |
 | `filter-by-commitish`      | Optional | Filter previous releases to consider only those with the target matching `commitish`. Default: `false`.                                                                            |
 | `include-paths`            | Optional | Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories. Default: `[]`         |
+| `pull-request-limit`       | Optional | How many PRs the action searches when looking for a merged PR containing a given commit. Default: `5`                                                                              |
+| `history-limit`            | Optional | How many commits to fetch. Default: `15`                                                                                                                                           |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
