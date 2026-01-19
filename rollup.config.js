@@ -5,10 +5,11 @@ const nodeResolve = require('@rollup/plugin-node-resolve')
 const json = require('@rollup/plugin-json')
 
 module.exports = {
-  input: 'action.js',
+  input: 'lib/action.js',
   output: {
     file: 'dist/index.js',
     format: 'commonjs',
+    name: 'release-drafter',
   },
   plugins: [
     json(),

@@ -8,12 +8,12 @@
   "repository": "https://github.com/release-drafter/release-drafter",
   "scripts": {
     "build": "npx rollup --config rollup.config.js",
-    "start": "probot run ./index.js",
+    "start": "probot run ./src/index.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --notify --notifyMode=change --coverage",
     "generate-schema": "node ./bin/generate-schema.js print",
     "generate-fixtures": "node ./bin/generate-fixtures.js",
-    "lint": "eslint bin/*.js lib/*.js action.js index.js test/**/*.js",
+    "lint": "eslint bin/*.js lib/*.js test/**/*.js",
     "prettier": "prettier --write **/*.{js,md,json,yml}",
     "postversion": "npm run test && git push && git push --tags",
     "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
@@ -59,7 +59,6 @@
     "transform": {},
     "collectCoverage": true,
     "collectCoverageFrom": [
-      "index.js",
       "lib/**"
     ]
   },

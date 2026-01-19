@@ -12,4 +12,4 @@ WORKDIR /app
 COPY . .
 RUN yarn --frozen-lockfile
 ENTRYPOINT [ "/app/node_modules/.bin/probot" ]
-CMD [ "receive", "/app/index.js" ]
+CMD [ "receive", "/app/src/index.js" ]
