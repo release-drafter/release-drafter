@@ -5,7 +5,7 @@ const nodeResolve = require('@rollup/plugin-node-resolve')
 const json = require('@rollup/plugin-json')
 
 module.exports = {
-  input: 'index.js',
+  input: 'action.js',
   output: {
     file: 'dist/index.js',
     format: 'commonjs',
