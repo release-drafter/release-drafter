@@ -4,6 +4,10 @@ on:
     tags:
       - v*.*.*
 
+permissions:
+  id-token: write
+  contents: write
+
 env:
   HUSKY: '0'
 
@@ -30,11 +34,8 @@ jobs:
       - name: yarn test
         run: yarn test
 
-      - name: '[deprecated] yarn publish'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
-        run: |
-          echo "::notice file=.github/workflows/release.yml,line=35,col=40,endColumn=51::Classic token were revoked in December 2025."
+      - name: 'yarn publish'
+        run: yarn publish --access public
 
       - name: version
         id: version
