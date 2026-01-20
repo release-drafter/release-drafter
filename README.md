@@ -117,35 +117,36 @@ template: |
 
 You can configure Release Drafter using the following key in your `.github/release-drafter.yml` file:
 
-| Key                        | Required | Description                                                                                                                                                                        |
-| -------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `template`                 | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                                    |
-| `header`                   | Optional | Will be prepended to `template`. Use [template variables](#template-variables) to insert values.                                                                                   |
-| `footer`                   | Optional | Will be appended to `template`. Use [template variables](#template-variables) to insert values.                                                                                    |
-| `category-template`        | Optional | The template to use for each category. Use [category template variables](#category-template-variables) to insert values. Default: `"## $TITLE"`.                                   |
-| `name-template`            | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                             |
-| `tag-template`             | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                              |
-| `tag-prefix`               | Optional | A known prefix used to filter release tags. For matching tags, this prefix is stripped before attempting to parse the version. Default: `""`                                       |
-| `version-template`         | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH"`            |
-| `change-template`          | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`.         |
-| `change-title-escapes`     | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                               |
-| `no-changes-template`      | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                        |
-| `references`               | Optional | The references to listen for configuration updates to `.github/release-drafter.yml`. Refer to [References](#references) to learn more about this                                   |
-| `categories`               | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                             |
-| `exclude-labels`           | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                                      |
-| `include-labels`           | Optional | Include only the specified pull requests using labels. Refer to [Include Pull Requests](#include-pull-requests) to learn more about this option.                                   |
-| `exclude-contributors`     | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.                    |
-| `include-pre-releases`     | Optional | Include pre releases as "full" releases when drafting release notes. Default: `false`.                                                                                             |
-| `no-contributors-template` | Optional | The template to use for `$CONTRIBUTORS` when there's no contributors to list. Default: `"No contributors"`.                                                                        |
-| `replacers`                | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                                      |
-| `sort-by`                  | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                                   |
-| `sort-direction`           | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                  |
-| `prerelease`               | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                            |
-| `latest`                   | Optional | Mark the release as latest. Only works for published releases. Can be one of: `true`, `false`, `legacy`. Default `true`.                                                           |
-| `version-resolver`         | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                      |
-| `commitish`                | Optional | The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`. |
-| `filter-by-commitish`      | Optional | Filter previous releases to consider only those with the target matching `commitish`. Default: `false`.                                                                            |
-| `include-paths`            | Optional | Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories. Default: `[]`         |
+| Key                        | Required | Description                                                                                                                                                                                                      |
+| -------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `template`                 | Required | The template for the body of the draft release. Use [template variables](#template-variables) to insert values.                                                                                                  |
+| `header`                   | Optional | Will be prepended to `template`. Use [template variables](#template-variables) to insert values.                                                                                                                 |
+| `footer`                   | Optional | Will be appended to `template`. Use [template variables](#template-variables) to insert values.                                                                                                                  |
+| `category-template`        | Optional | The template to use for each category. Use [category template variables](#category-template-variables) to insert values. Default: `"## $TITLE"`.                                                                 |
+| `name-template`            | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                           |
+| `tag-template`             | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                            |
+| `tag-prefix`               | Optional | A known prefix used to filter release tags. For matching tags, this prefix is stripped before attempting to parse the version. Default: `""`                                                                     |
+| `version-template`         | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH"`                                          |
+| `change-template`          | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`.                                       |
+| `change-title-escapes`     | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                             |
+| `no-changes-template`      | Optional | The template to use for when there's no changes. Default: `"* No changes"`.                                                                                                                                      |
+| `references`               | Optional | The references to listen for configuration updates to `.github/release-drafter.yml`. Refer to [References](#references) to learn more about this                                                                 |
+| `categories`               | Optional | Categorize pull requests using labels. Refer to [Categorize Pull Requests](#categorize-pull-requests) to learn more about this option.                                                                           |
+| `exclude-labels`           | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                                                                    |
+| `include-labels`           | Optional | Include only the specified pull requests using labels. Refer to [Include Pull Requests](#include-pull-requests) to learn more about this option.                                                                 |
+| `exclude-contributors`     | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.                                                  |
+| `include-commits`          | Optional | Include commits without associated pull requests in release notes. Uses Conventional Commits for categorization. Refer to [Including Direct Commits](#including-direct-commits) to learn more. Default: `false`. |
+| `include-pre-releases`     | Optional | Include pre releases as "full" releases when drafting release notes. Default: `false`.                                                                                                                           |
+| `no-contributors-template` | Optional | The template to use for `$CONTRIBUTORS` when there's no contributors to list. Default: `"No contributors"`.                                                                                                      |
+| `replacers`                | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                                                                    |
+| `sort-by`                  | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                                                                 |
+| `sort-direction`           | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                                                |
+| `prerelease`               | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                                                          |
+| `latest`                   | Optional | Mark the release as latest. Only works for published releases. Can be one of: `true`, `false`, `legacy`. Default `true`.                                                                                         |
+| `version-resolver`         | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                                                    |
+| `commitish`                | Optional | The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.                               |
+| `filter-by-commitish`      | Optional | Filter previous releases to consider only those with the target matching `commitish`. Default: `false`.                                                                                                          |
+| `include-paths`            | Optional | Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories. Default: `[]`                                       |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
@@ -273,6 +274,113 @@ categories:
     labels:
       - 'dependencies'
 ```
+
+## Including Direct Commits
+
+By default, Release Drafter only includes pull requests in release notes. You can optionally include commits that were pushed directly (without an associated pull request) by enabling the `include-commits` option.
+
+This feature is particularly useful for projects that:
+
+- Use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages
+- Have automated commits (e.g., from bots or CI) that don't go through pull requests
+- Want to capture all changes, not just those from pull requests
+
+### Basic Usage
+
+Enable the feature by adding `include-commits: true` to your configuration:
+
+```yml
+include-commits: true
+```
+
+### Categorizing Commits
+
+Commits can be categorized alongside pull requests using the `commit-types` field in your categories. This works with [Conventional Commit](https://www.conventionalcommits.org/) message types:
+
+```yml
+include-commits: true
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+    commit-types:
+      - 'feat'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'bug'
+    commit-types:
+      - 'fix'
+  - title: '📄 Documentation'
+    labels:
+      - 'documentation'
+    commit-types:
+      - 'docs'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+    commit-types:
+      - 'chore'
+```
+
+With this configuration:
+
+- Pull requests with the `feature` label **and** commits with type `feat:` will be grouped under "Features"
+- Pull requests with the `bug` label **and** commits with type `fix:` will be grouped under "Bug Fixes"
+- Commits appear after pull requests within each category
+
+### Breaking Changes
+
+Commits with breaking changes (indicated by `!` in the type, e.g., `feat!:` or `fix!:`) are automatically detected and will match their base type. For example:
+
+- `feat!: breaking change` will match a category with `commit-types: ['feat']`
+- `fix!: breaking fix` will match a category with `commit-types: ['fix']`
+
+### Version Resolution
+
+You can use `commit-types` in the `version-resolver` configuration to automatically determine version bumps based on commit types:
+
+```yml
+include-commits: true
+version-resolver:
+  major:
+    labels:
+      - 'major'
+    commit-types:
+      - 'feat!'
+      - 'fix!'
+  minor:
+    labels:
+      - 'minor'
+    commit-types:
+      - 'feat'
+  patch:
+    labels:
+      - 'patch'
+    commit-types:
+      - 'fix'
+      - 'perf'
+  default: patch
+```
+
+With this configuration:
+
+- Commits with breaking changes (`feat!`, `fix!`) will trigger a **major** version bump
+- Commits with type `feat` will trigger a **minor** version bump
+- Commits with types `fix` or `perf` will trigger a **patch** version bump
+
+### Commit Display Format
+
+Commits are displayed with a shortened hash (7 characters) and a link to the full commit:
+
+```
+* add new feature (#[abc123d](https://github.com/owner/repo/commit/abc123d)) @username
+```
+
+The format is `(#[hash](url))` where the `#` appears before the link, maintaining consistency with how pull requests are displayed as `(#123)`.
+
+### Filtering
+
+Only commits **without** an associated pull request are included. If a commit is associated with a PR, only the PR will be shown in the release notes to avoid duplication.
 
 ## Exclude Pull Requests
 

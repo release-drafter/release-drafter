@@ -105,7 +105,13 @@ const baseConfig = {
 describe('releases', () => {
   describe('generateChangeLog', () => {
     it('does not escape titles without setting change-title-escapes', () => {
-      const changelog = generateChangeLog(pullRequests, baseConfig)
+      const changelog = generateChangeLog(
+        pullRequests,
+        [],
+        baseConfig,
+        'test-owner',
+        'test-repo'
+      )
       expect(changelog).toMatchInlineSnapshot(`
         "* A1 (#1) @ghost
         * B2 (#2) @ghost
@@ -123,7 +129,13 @@ describe('releases', () => {
         ...baseConfig,
         'change-title-escapes': '\\',
       }
-      const changelog = generateChangeLog(pullRequests, config)
+      const changelog = generateChangeLog(
+        pullRequests,
+        [],
+        config,
+        'test-owner',
+        'test-repo'
+      )
       expect(changelog).toMatchInlineSnapshot(`
         "* A1 (#1) @ghost
         * B2 (#2) @ghost
@@ -141,7 +153,13 @@ describe('releases', () => {
         ...baseConfig,
         'change-title-escapes': '\\<*_&',
       }
-      const changelog = generateChangeLog(pullRequests, config)
+      const changelog = generateChangeLog(
+        pullRequests,
+        [],
+        config,
+        'test-owner',
+        'test-repo'
+      )
       expect(changelog).toMatchInlineSnapshot(`
         "* A1 (#1) @ghost
         * B2 (#2) @ghost
@@ -159,7 +177,13 @@ describe('releases', () => {
         ...baseConfig,
         'change-title-escapes': '@',
       }
-      const changelog = generateChangeLog(pullRequests, config)
+      const changelog = generateChangeLog(
+        pullRequests,
+        [],
+        config,
+        'test-owner',
+        'test-repo'
+      )
       expect(changelog).toMatchInlineSnapshot(`
         "* A1 (#1) @ghost
         * B2 (#2) @ghost
@@ -177,7 +201,13 @@ describe('releases', () => {
         ...baseConfig,
         'change-title-escapes': '@#',
       }
-      const changelog = generateChangeLog(pullRequests, config)
+      const changelog = generateChangeLog(
+        pullRequests,
+        [],
+        config,
+        'test-owner',
+        'test-repo'
+      )
       expect(changelog).toMatchInlineSnapshot(`
         "* A1 (#1) @ghost
         * B2 (#2) @ghost
@@ -195,7 +225,13 @@ describe('releases', () => {
         ...baseConfig,
         'change-title-escapes': '\\<@*_&`#',
       }
-      const changelog = generateChangeLog(pullRequests, config)
+      const changelog = generateChangeLog(
+        pullRequests,
+        [],
+        config,
+        'test-owner',
+        'test-repo'
+      )
       expect(changelog).toMatchInlineSnapshot(`
         "* A1 (#1) @ghost
         * B2 (#2) @ghost
@@ -213,7 +249,13 @@ describe('releases', () => {
         ...baseConfig,
         categories: [{ title: 'Bugs', 'collapse-after': 3, labels: 'bug' }],
       }
-      const changelog = generateChangeLog(pullRequests, config)
+      const changelog = generateChangeLog(
+        pullRequests,
+        [],
+        config,
+        'test-owner',
+        'test-repo'
+      )
       expect(changelog).toMatchInlineSnapshot(`
         "* B2 (#2) @ghost
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
@@ -241,7 +283,13 @@ describe('releases', () => {
           { title: 'Feature', 'collapse-after': 3, labels: 'feature' },
         ],
       }
-      const changelog = generateChangeLog(pullRequests, config)
+      const changelog = generateChangeLog(
+        pullRequests,
+        [],
+        config,
+        'test-owner',
+        'test-repo'
+      )
       expect(changelog).toMatchInlineSnapshot(`
         "* A1 (#1) @ghost
         * Adds missing <example> (#3) @jetersen
@@ -377,6 +425,192 @@ describe('releases', () => {
         draft: false,
         prerelease: false,
       })
+    })
+  })
+
+  describe('generateChangeLog with commits', () => {
+    const mergedCommits = [
+      {
+        id: 'node_abc123def456',
+        oid: 'abc123def456',
+        message: 'feat: add new feature',
+        author: { user: { login: 'user1' }, name: 'user1' },
+      },
+      {
+        id: 'node_def456ghi789',
+        oid: 'def456ghi789',
+        message: 'fix: fix a bug',
+        author: { user: { login: 'user2' }, name: 'user2' },
+      },
+      {
+        id: 'node_ghi789jkl012',
+        oid: 'ghi789jkl012',
+        message: 'docs: update documentation',
+        author: { user: { login: 'user3' }, name: 'user3' },
+      },
+    ]
+
+    it('includes commits when include-commits is true', () => {
+      const config = {
+        ...DEFAULT_CONFIG,
+        'include-commits': true,
+        'change-template': '* $TITLE (#$NUMBER) @$AUTHOR',
+        categories: [
+          {
+            title: '🚀 Features',
+            labels: ['feature'],
+            'commit-types': ['feat'],
+          },
+          {
+            title: '🐛 Bug Fixes',
+            labels: ['bug'],
+            'commit-types': ['fix'],
+          },
+        ],
+      }
+
+      const changeLog = generateChangeLog(
+        [pullRequests[1]], // Feature PR
+        mergedCommits,
+        config,
+        'test-owner',
+        'test-repo'
+      )
+
+      expect(changeLog).toContain('🚀 Features')
+      expect(changeLog).toContain('B2 (#2)') // PR
+      expect(changeLog).toContain('add new feature (#[abc123d]') // Commit
+      expect(changeLog).toContain('🐛 Bug Fixes')
+      expect(changeLog).toContain('fix a bug (#[def456g]') // Commit
+    })
+
+    it('does not include commits when include-commits is false', () => {
+      const config = {
+        ...DEFAULT_CONFIG,
+        'include-commits': false,
+        'change-template': '* $TITLE (#$NUMBER) @$AUTHOR',
+        categories: [
+          {
+            title: '🚀 Features',
+            labels: ['feature'],
+            'commit-types': ['feat'],
+          },
+        ],
+      }
+
+      const changeLog = generateChangeLog(
+        [pullRequests[1]],
+        mergedCommits,
+        config,
+        'test-owner',
+        'test-repo'
+      )
+
+      expect(changeLog).toContain('B2 (#2)')
+      expect(changeLog).not.toContain('add new feature')
+    })
+
+    it('handles commits with breaking changes', () => {
+      const mergedCommitsWithBreaking = [
+        {
+          id: 'node_abc123',
+          oid: 'abc123def456',
+          message: 'feat!: breaking change',
+          author: { user: { login: 'user1' }, name: 'user1' },
+        },
+      ]
+
+      const config = {
+        ...DEFAULT_CONFIG,
+        'include-commits': true,
+        'change-template': '* $TITLE (#$NUMBER) @$AUTHOR',
+        categories: [
+          {
+            title: '🚀 Features',
+            labels: [],
+            'commit-types': ['feat'],
+          },
+        ],
+      }
+
+      const changeLog = generateChangeLog(
+        [],
+        mergedCommitsWithBreaking,
+        config,
+        'test-owner',
+        'test-repo'
+      )
+
+      expect(changeLog).toContain('breaking change')
+    })
+
+    it('handles uncategorized commits', () => {
+      const uncategorizedMergedCommits = [
+        {
+          id: 'node_abc123',
+          oid: 'abc123def456',
+          message: 'chore: update deps',
+          author: { user: { login: 'user1' }, name: 'user1' },
+        },
+      ]
+
+      const config = {
+        ...DEFAULT_CONFIG,
+        'include-commits': true,
+        'change-template': '* $TITLE (#$NUMBER) @$AUTHOR',
+        categories: [
+          {
+            title: '🚀 Features',
+            labels: [],
+            'commit-types': ['feat'],
+          },
+        ],
+      }
+
+      const changeLog = generateChangeLog(
+        [],
+        uncategorizedMergedCommits,
+        config,
+        'test-owner',
+        'test-repo'
+      )
+
+      // Uncategorized commits should still be included
+      expect(changeLog).toContain('update deps')
+    })
+
+    it('merges PRs and commits in same category', () => {
+      const config = {
+        ...DEFAULT_CONFIG,
+        'include-commits': true,
+        'change-template': '* $TITLE (#$NUMBER) @$AUTHOR',
+        categories: [
+          {
+            title: '🐛 Bug Fixes',
+            labels: ['bug'],
+            'commit-types': ['fix'],
+          },
+        ],
+      }
+
+      const changeLog = generateChangeLog(
+        [pullRequests[0]], // Bug fix PR
+        [
+          {
+            id: 'node_abc123',
+            oid: 'abc123def456',
+            message: 'fix: another bug fix',
+            author: { user: { login: 'user1' }, name: 'user1' },
+          },
+        ],
+        config,
+        'test-owner',
+        'test-repo'
+      )
+
+      expect(changeLog).toContain('🐛 Bug Fixes')
+      expect(changeLog).toContain('A1 (#1)') // PR should come first
+      expect(changeLog).toContain('another bug fix (#[abc123')
     })
   })
 })
