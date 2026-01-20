@@ -4,6 +4,10 @@ on:
     tags:
       - v*.*.*
 
+permissions:
+  id-token: write
+  contents: write
+
 env:
   HUSKY: '0'
 
@@ -30,9 +34,7 @@ jobs:
       - name: yarn test
         run: yarn test
 
-      - name: yarn publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
+      - name: 'yarn publish'
         run: yarn publish --access public
 
       - name: version
