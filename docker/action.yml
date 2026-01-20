@@ -58,6 +58,11 @@ inputs:
       A boolean indicating whether the autolabeler mode is disabled.
     required: false
     default: ''
+  filter-by-range:
+    description: |
+      Filter releases that satisfies this semver range. Evaluates the tag name againts node's semver.satisfies().
+    required: false
+    default: ''
 outputs:
   id:
     description: The ID of the release that was created or updated.

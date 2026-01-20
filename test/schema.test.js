@@ -21,6 +21,7 @@ const validConfigs = [
   [{ template, footer: 'I am on bottm' }],
   [{ template, header: 'I am on top', footer: 'I am on bottm' }],
   [{ template, 'pull-request-limit': 49 }],
+  [{ template, 'filter-by-range': '~1.0.0' }],
 ]
 
 const invalidConfigs = [
@@ -46,6 +47,10 @@ const invalidConfigs = [
   [{ 'change-template': null }, 'must be a string'],
   [{ 'change-title-escapes': ['<_*'] }, 'must be a string'],
   [{ 'change-title-escapes': null }, 'must be a string'],
+  [
+    { 'filter-by-range': 'not-a-range' },
+    `'filter-by-range' value "${'not-a-range'}" could not be parsed as a valid semver range.`,
+  ],
   [{ replacers: [{ search: 123 }] }, 'must be a regexp or a string'],
   [{ replacers: [{ search: '123' }] }, 'is required'],
   [
