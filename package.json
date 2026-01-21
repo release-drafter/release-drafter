@@ -5,7 +5,10 @@
   "description": "A GitHub app that draft releases based on pull-request labels",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
   "license": "ISC",
-  "repository": "https://github.com/release-drafter/release-drafter",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/release-drafter/release-drafter.git"
+  },
   "scripts": {
     "build": "ncc build action.js --target es2021",
     "start": "probot run ./index.js",
