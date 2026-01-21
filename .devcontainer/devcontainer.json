@@ -5,7 +5,7 @@
    * @see https://github.com/devcontainers/images/tree/main/src/javascript-node
    */
   "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
-  "postCreateCommand": "yarn install",
+  "postCreateCommand": "npm install",
   "customizations": {
     "vscode": {
       "extensions": ["prettier.prettier-vscode", "dbaeumer.vscode-eslint"]

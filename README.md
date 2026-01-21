@@ -374,6 +374,8 @@ The Release Drafter GitHub Action accepts a number of optional inputs directly i
 | `commitish`             | A string specifying the target branch for the release being created.                                                                                                                                                                                                                                                                                               |
 | `header`                | A string that would be added before the template body.                                                                                                                                                                                                                                                                                                             |
 | `footer`                | A string that would be added after the template body.                                                                                                                                                                                                                                                                                                              |
+| `disable-releaser`      | A boolean indicating whether the releaser mode is disabled.                                                                                                                                                                                                                                                                                                        |
+| `disable-autolabeler`   | A boolean indicating whether the autolabeler mode is disabled.                                                                                                                                                                                                                                                                                                     |
 
 ## Action Outputs
 
@@ -398,13 +400,13 @@ If you have Node v20+ installed locally, you can run the tests, and a local app,
 
 ```sh
 # Install dependencies
-yarn install
+npm install
 
 # Run the tests
-yarn test
+npm run test
 
 # Run the app locally
-yarn test:watch
+npm run test:watch
 ```
 
 Once you've started the app, visit `localhost:3000` and you'll get [step-by-step instructions](https://probot.github.io/docs/development/#configuring-a-github-app) for installing it in your GitHub account so you can start pushing commits and testing it locally.
