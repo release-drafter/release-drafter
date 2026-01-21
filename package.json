@@ -1,11 +1,14 @@
 {
   "name": "release-drafter-github-app",
   "type": "commonjs",
-  "version": "6.1.0",
+  "version": "6.1.1",
   "description": "A GitHub app that draft releases based on pull-request labels",
   "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
   "license": "ISC",
-  "repository": "https://github.com/release-drafter/release-drafter",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/release-drafter/release-drafter.git"
+  },
   "scripts": {
     "build": "ncc build action.js --target es2021",
     "start": "probot run ./index.js",
@@ -49,6 +52,7 @@
     "prettier": "2.7.1"
   },
   "engines": {
+    "npm": ">=11.5.2",
     "node": ">=20.0.0"
   },
   "jest": {
@@ -60,5 +64,5 @@
       "lib/**"
     ]
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "npm@11.5.2"
 }

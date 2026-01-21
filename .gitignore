@@ -5,7 +5,8 @@ npm-debug.log
 coverage
 now.json
 docker-compose-logs
-package-lock.json
+!package-lock.json
+yarn.lock
 dist/static/
 dist/views/
 

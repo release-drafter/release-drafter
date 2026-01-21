@@ -22,6 +22,11 @@ const validConfigs = [
   [{ template, header: 'I am on top', footer: 'I am on bottm' }],
   [{ template, 'pull-request-limit': 49 }],
   [{ template, 'history-limit': 17 }],
+  [
+    { template, 'initial-commits-since': '2025-06-18T10:29:51Z' },
+    { template, 'initial-commits-since': new Date('2025-06-18T10:29:51Z') },
+  ],
+  [{ template, 'initial-commits-since': '' }],
 ]
 
 const invalidConfigs = [
@@ -57,6 +62,14 @@ const invalidConfigs = [
   [{ commitish: false }, 'must be a string'],
   [{ 'pull-request-limit': 'forty nine' }, 'must be a number'],
   [{ 'history-limit': 'seventeen' }, 'must be a number'],
+  [{ 'initial-commits-since': 'a day' }, 'must be in ISO 8601 date format'],
+  [
+    {
+      'initial-commits-since':
+        'Wed Dec 10 2025 19:33:48 GMT+0100 (Central European Standard Time)',
+    },
+    'must be in ISO 8601 date format',
+  ],
 ]
 
 describe('schema', () => {
@@ -87,7 +100,7 @@ describe('schema', () => {
     }
   })
 
-  it('current schema matches the generated JSON Schema, update schema with `yarn generate-schema`', () => {
+  it('current schema matches the generated JSON Schema, update schema with `npm run generate-schema`', () => {
     expect(jsonSchema).toMatchObject(schemaJson)
   })
 

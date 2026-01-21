@@ -148,6 +148,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `include-paths`            | Optional | Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories. Default: `[]`         |
 | `pull-request-limit`       | Optional | How many PRs the action searches when looking for a merged PR containing a given commit. Default: `5`                                                                              |
 | `history-limit`            | Optional | How many commits to fetch. Default: `15`                                                                                                                                           |
+| `initial-commits-since`    | Optional | When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date, ex: `"2025-06-18T10:29:51Z"`. Default: `""` (unlimited)                           |
 
 Release Drafter also supports [Probot Config](https://github.com/probot/probot-config), if you want to store your configuration files in a central repository. This allows you to share configurations between projects, and create a organization-wide configuration file by creating a repository named `.github` with the file `.github/release-drafter.yml`.
 
@@ -231,7 +232,7 @@ You can use any of the following variables in `change-template`:
 
 ## References
 
-**Note**: This is only revelant for GitHub app users as `references` is ignored when running as GitHub action due to GitHub workflows more powerful [`on` conditions](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on)
+**Note**: This is only relevant for GitHub app users as `references` is ignored when running as GitHub action due to GitHub workflows more powerful [`on` conditions](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on)
 
 References takes an list and accepts strings and regex.
 If none are specified, we default to the repository’s default branch usually master.
@@ -376,6 +377,7 @@ The Release Drafter GitHub Action accepts a number of optional inputs directly i
 | `commitish`             | A string specifying the target branch for the release being created.                                                                                                                                                                                                                                                                                               |
 | `header`                | A string that would be added before the template body.                                                                                                                                                                                                                                                                                                             |
 | `footer`                | A string that would be added after the template body.                                                                                                                                                                                                                                                                                                              |
+| `initial-commits-since` | When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date, ex: `"2025-06-18T10:29:51Z"`. Default: `""` (unlimited)                                                                                                                                                                                                           |
 | `disable-releaser`      | A boolean indicating whether the releaser mode is disabled.                                                                                                                                                                                                                                                                                                        |
 | `disable-autolabeler`   | A boolean indicating whether the autolabeler mode is disabled.                                                                                                                                                                                                                                                                                                     |
 
@@ -402,13 +404,13 @@ If you have Node v10+ installed locally, you can run the tests, and a local app,
 
 ```sh
 # Install dependencies
-yarn install
+npm install
 
 # Run the tests
-yarn test
+npm run test
 
 # Run the app locally
-yarn test:watch
+npm run test:watch
 ```
 
 Once you've started the app, visit `localhost:3000` and you'll get [step-by-step instructions](https://probot.github.io/docs/development/#configuring-a-github-app) for installing it in your GitHub account so you can start pushing commits and testing it locally.
