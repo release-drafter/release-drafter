@@ -17,12 +17,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
-      - run: yarn test
-      - run: yarn lint --fix
-      - run: yarn prettier
-      - run: yarn build
+          cache: npm
+      - run: npm ci
+      - run: npm run test
+      - run: npm run lint --fix
+      - run: npm run prettier
+      - run: npm run build
       - name: correct vercel/ncc crlf output
         run: sed -i 's/\x0D$//' ./dist/index.js
       - name: check for unstaged files

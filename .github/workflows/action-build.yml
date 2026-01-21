@@ -29,11 +29,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
-          cache: 'yarn'
+          cache: 'npm'
 
-      - run: yarn install --frozen-lockfile
+      - run: npm ci
 
-      - run: yarn build
+      - run: npm run build
 
       - name: Commit and push if needed
         run: |

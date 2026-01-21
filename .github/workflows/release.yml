@@ -24,14 +24,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-          cache: yarn
+          cache: npm
           registry-url: https://registry.npmjs.org
 
-      - name: yarn install
-        run: yarn install --frozen-lockfile
+      - name: install
+        run: npm ci
 
-      - name: yarn test
-        run: yarn test
+      - name: test
+        run: npm run test
 
-      - name: 'yarn publish'
-        run: yarn publish --access public
+      - name: publish
+        run: npm publish --access public

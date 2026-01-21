@@ -85,7 +85,7 @@ describe('schema', () => {
     }
   })
 
-  it('current schema matches the generated JSON Schema, update schema with `yarn generate-schema`', () => {
+  it('current schema matches the generated JSON Schema, update schema with `npm run generate-schema`', () => {
     expect(jsonSchema).toMatchObject(schemaJson)
   })
 
