@@ -1,7 +1,8 @@
-name: '[manual] Publish'
-
+name: Release
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - v*.*.*
 
 permissions:
   id-token: write
@@ -36,3 +37,25 @@ jobs:
       # Publishes to npmjs, using package.json's version
       - name: publish
         run: npm publish
+
+      - name: version
+        id: version
+        run: |
+          tag=${GITHUB_REF/refs\/tags\//}
+          version=${tag#v}
+          major=${version%%.*}
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "major=${major}" >> $GITHUB_OUTPUT
+
+      - uses: release-drafter/release-drafter@master
+        with:
+          version: ${{ steps.version.outputs.version }}
+          publish: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: force update major tag
+        run: |
+          git tag v${{ steps.version.outputs.major }} ${{ steps.version.outputs.tag }} -f
+          git push origin refs/tags/v${{ steps.version.outputs.major }} -f
