@@ -17,8 +17,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Common setup
-        uses: ./.github/actions/common-setup
+      - uses: actions/checkout@v6
+      - name: ./.github/actions/common-setup
       - run: npm run test
       - run: npm run lint --fix
       - run: npm run prettier

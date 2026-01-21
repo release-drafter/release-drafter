@@ -18,8 +18,10 @@ jobs:
     if: github.repository == 'release-drafter/release-drafter'
     runs-on: ubuntu-latest
     steps:
-      - name: Common setup
-        uses: ./.github/actions/common-setup
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: ./.github/actions/common-setup
       - name: test
         run: npm run test
       - run: npm run lint --fix

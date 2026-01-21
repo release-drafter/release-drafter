@@ -5,9 +5,6 @@ description: 'Common job setup for npm managed repo'
 runs:
   using: 'composite'
   steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:

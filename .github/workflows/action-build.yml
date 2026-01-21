@@ -21,8 +21,10 @@ jobs:
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'release-drafter/release-drafter'
     runs-on: ubuntu-latest
     steps:
-      - name: Common setup
-        uses: ./.github/actions/common-setup
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: ./.github/actions/common-setup
 
       - run: npm run build
 
