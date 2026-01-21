@@ -1,4 +1,5 @@
 name: Release
+
 on:
   push:
     tags:
@@ -16,26 +17,16 @@ jobs:
     if: github.repository == 'release-drafter/release-drafter'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      - uses: ./.github/actions/common-setup
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          cache: yarn
-          registry-url: https://registry.npmjs.org
+      - name: test
+        run: npm run test
 
-      - name: yarn install
-        run: yarn install --frozen-lockfile
-
-      - name: yarn test
-        run: yarn test
-
-      - name: 'yarn publish'
-        run: yarn publish --access public
+      - name: publish
+        run: npm publish # Publishes to npmjs, using package.json's version
 
       - name: version
         id: version
