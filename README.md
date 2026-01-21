@@ -230,7 +230,7 @@ You can use any of the following variables in `change-template`:
 
 ## References
 
-**Note**: This is only revelant for GitHub app users as `references` is ignored when running as GitHub action due to GitHub workflows more powerful [`on` conditions](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on)
+**Note**: This is only relevant for GitHub app users as `references` is ignored when running as GitHub action due to GitHub workflows more powerful [`on` conditions](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on)
 
 References takes an list and accepts strings and regex.
 If none are specified, we default to the repository’s default branch usually master.
