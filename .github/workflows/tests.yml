@@ -6,6 +6,10 @@ on:
       - master
   pull_request:
 
+permissions:
+  id-token: write
+  contents: write
+
 env:
   HUSKY: '0'
 
@@ -13,16 +17,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '24'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
-      - run: yarn test
-      - run: yarn lint --fix
-      - run: yarn prettier
-      - run: yarn build
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/common-setup
+      - run: npm run test
+      - run: npm run lint --fix
+      - run: npm run prettier
+      - run: npm run build
       - name: correct vercel/ncc crlf output
         run: sed -i 's/\x0D$//' ./dist/index.js
       - name: check for unstaged files

@@ -1,0 +1,15 @@
+name: Node & npm setup
+author: Clément Chanchevrier @cchanche
+description: 'Common job setup for npm managed repo'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 24
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
