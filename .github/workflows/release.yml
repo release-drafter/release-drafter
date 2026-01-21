@@ -33,5 +33,6 @@ jobs:
       - name: test
         run: npm run test
 
+      # Publishes to npmjs, using package.json's version
       - name: publish
-        run: npm publish --access public
+        run: npm publish
