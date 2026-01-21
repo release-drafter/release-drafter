@@ -63,5 +63,6 @@
       "index.js",
       "lib/**"
     ]
-  }
+  },
+  "packageManager": "npm@11.5.2"
 }
