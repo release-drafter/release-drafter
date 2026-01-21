@@ -32,7 +32,3 @@ jobs:
       - name: check for unstaged files
         if: ${{ github.actor != 'dependabot[bot]' }}
         run: .github/no-unstaged-files.sh
-
-      # Publishes to npmjs, using package.json's version
-      - name: publish
-        run: npm publish
