@@ -8,11 +8,7 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: 20
-
-    - name: Install npm
-      shell: bash
-      run: npm install -g npm@11.5.2
+        node-version: 24
 
     - name: Install dependencies
       shell: bash
