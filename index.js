@@ -32,11 +32,12 @@ module.exports = (app, { getRouter }) => {
       'pull_request_target.edited',
     ],
     async (context) => {
-      const { configName, disableAutolabeler } = getInput()
+      const { configContent, configName, disableAutolabeler } = getInput()
 
       const config = await getConfig({
         context,
         configName,
+        configContent,
       })
 
       if (config === null || disableAutolabeler) return
@@ -136,6 +137,7 @@ module.exports = (app, { getRouter }) => {
     const config = await getConfig({
       context,
       configName: input.configName,
+      configContent: input.configContent,
     })
 
     if (!config || input.disableReleaser) return
@@ -237,6 +239,7 @@ module.exports = (app, { getRouter }) => {
 function getInput() {
   return {
     configName: core.getInput('config-name'),
+    configContent: core.getInput('config') || undefined,
     shouldDraft: core.getInput('publish').toLowerCase() !== 'true',
     version: core.getInput('version') || undefined,
     tag: core.getInput('tag') || undefined,

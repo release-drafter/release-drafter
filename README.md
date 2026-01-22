@@ -367,6 +367,7 @@ The Release Drafter GitHub Action accepts a number of optional inputs directly i
 | Input                   | Description                                                                                                                                                                                                                                                                                                                                                        |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `config-name`           | If your workflow requires multiple release-drafter configs it be helpful to override the config-name. The config should still be located inside `.github` as that's where we are looking for config files.                                                                                                                                                         |
+| `config`                | Directly inject a configuration as a string. Useful for dynamic configurations generated during the workflow. Overrides `config-name` if both are specified.                                                                                                                                                                                                       |
 | `name`                  | The name that will be used in the GitHub release that's created or updated. This will override any `name-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                             |
 | `tag`                   | The tag name to be associated with the GitHub release that's created or updated. This will override any `tag-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                         |
 | `version`               | The version to be associated with the GitHub release that's created or updated. This will override any version calculated by the release-drafter.                                                                                                                                                                                                                  |
@@ -380,6 +381,22 @@ The Release Drafter GitHub Action accepts a number of optional inputs directly i
 | `initial-commits-since` | When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date, ex: `"2025-06-18T10:29:51Z"`. Default: `""` (unlimited)                                                                                                                                                                                                           |
 | `disable-releaser`      | A boolean indicating whether the releaser mode is disabled.                                                                                                                                                                                                                                                                                                        |
 | `disable-autolabeler`   | A boolean indicating whether the autolabeler mode is disabled.                                                                                                                                                                                                                                                                                                     |
+
+### Example: Injecting Configuration Directly
+
+Instead of relying on a file from the repository, you can inject a dynamically generated configuration directly into the Release Drafter. This is useful if you generate configurations during the workflow or want to avoid committing files to the repository.
+
+```yaml
+- name: Use Release Drafter with Injected Config
+  uses: release-drafter/release-drafter@v6
+  with:
+    config: |
+      name-template: 'v$RESOLVED_VERSION 🌈'
+      template: |
+        ## Changes
+
+        $CHANGES
+```
 
 ## Action Outputs
 
