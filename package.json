@@ -1,24 +1,24 @@
 {
-  "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
+  "name": "release-drafter",
+  "description": "Drafts your next release notes as pull requests are merged into your branch(es).",
   "version": "0.0.0",
   "author": "",
   "type": "module",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/release-drafter/release-drafter",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/release-drafter/release-drafter.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/release-drafter/release-drafter/issues"
   },
   "keywords": [
-    "actions"
+    "actions",
+    "release",
+    "release-notes",
+    "release-automation"
   ],
-  "exports": {
-    ".": "./dist/index.js"
-  },
   "engines": {
     "node": ">=24.0.0"
   },
