@@ -27,9 +27,7 @@
       },
       "added": [],
       "removed": [],
-      "modified": [
-        ".github/release-drafter.yml"
-      ]
+      "modified": [".github/release-drafter.yml"]
     }
   ],
   "head_commit": {
@@ -51,9 +49,7 @@
     },
     "added": [],
     "removed": [],
-    "modified": [
-      ".github/release-drafter.yml"
-    ]
+    "modified": [".github/release-drafter.yml"]
   },
   "repository": {
     "id": 133810100,
