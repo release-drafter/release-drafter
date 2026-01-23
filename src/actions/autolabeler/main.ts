@@ -1,4 +1,5 @@
 import { ActionInput, Config } from 'src/types'
+import * as core from '@actions/core'
 
 export const main = async (params: { config: Config; input: ActionInput }) => {
   /**
@@ -10,5 +11,5 @@ export const main = async (params: { config: Config; input: ActionInput }) => {
    * 4. create Set() of labels to add based on config's autolabeler params
    * 5. add labels. @actions/github's octokit instance may be useful
    */
-  console.log('Autolabeler action main logic goes here')
+  core.info('Autolabeler action main logic goes here')
 }

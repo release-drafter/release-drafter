@@ -1,4 +1,5 @@
 import { ActionInput, Config } from 'src/types'
+import * as core from '@actions/core'
 
 export const main = async (params: { config: Config; input: ActionInput }) => {
   /**
@@ -11,5 +12,5 @@ export const main = async (params: { config: Config; input: ActionInput }) => {
    * 5. create a release (may be a draft) or update previous draft
    * 6. set action outputs
    */
-  console.log('Drafter action main logic goes here')
+  core.info('Drafter action main logic goes here')
 }

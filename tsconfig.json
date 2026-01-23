@@ -6,14 +6,8 @@
     "declarationMap": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": [
-      "ES2022"
-    ],
-    "types": [
-      "node",
-      "vite/client",
-      "jest"
-    ],
+    "lib": ["ES2022"],
+    "types": ["node", "vite/client"],
     "newLine": "lf",
     "noImplicitAny": true,
     "noUnusedLocals": true,
@@ -32,16 +26,8 @@
     "useDefineForClassFields": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": "./",
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
-  "exclude": [
-    "coverage",
-    "dist",
-    "node_modules"
-  ],
-  "include": [
-    "src",
-    "__fixtures__",
-    "__tests__",
-  ],
+  "exclude": ["coverage", "dist", "node_modules"],
+  "include": ["src", "__fixtures__", "__tests__"]
 }

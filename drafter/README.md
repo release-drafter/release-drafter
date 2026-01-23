@@ -1,6 +1,7 @@
 # Drafter action
 
-This folder only serves as an alias when users reference the action, which requires the presence of the [`action.yml`](./action.yml) file
+This folder only serves as an alias when users reference the action, which
+requires the presence of the [`action.yml`](./action.yml) file
 
 ```yaml
 steps:
