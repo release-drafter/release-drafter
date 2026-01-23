@@ -1,11 +1,11 @@
 import { jest } from '@jest/globals'
-import * as core from '../__fixtures__/core.js'
+import * as core from '../__fixtures__/core'
 import nock from 'nock'
-import { mockConfig, unmockConfig } from '../__fixtures__/config.js'
-import { mockGraphqlQuery } from '../__fixtures__/graphql.js'
-import { getReleasePayload, nockGetReleases } from '../__fixtures__/releases.js'
-import { getEnvMock } from '../__fixtures__/env.js'
-import { run as actionRun } from '../src/main.js'
+import { mockConfig, unmockConfig } from '../__fixtures__/config'
+import { mockGraphqlQuery } from '../__fixtures__/graphql'
+import { getReleasePayload, nockGetReleases } from '../__fixtures__/releases'
+import { getEnvMock } from '../__fixtures__/env'
+import { run as actionRun } from 'src/actions/drafter/runner'
 import path from 'path'
 
 /**
@@ -15,7 +15,7 @@ import path from 'path'
  */
 const run = (...args: Parameters<typeof actionRun>) =>
   jest.isolateModulesAsync(async () => {
-    await (await import(`../src/main.js`)).run(...args)
+    await (await import(`src/actions/drafter/runner`)).run(...args)
   })
 
 describe('release-drafter', () => {

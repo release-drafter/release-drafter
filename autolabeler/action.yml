@@ -8,8 +8,7 @@ branding:
   color: orange
 runs:
   using: node24
-  main: dist/drafter/run.js
-
+  main: dist/autolabeler/run.js
 inputs:
   config-name:
     description: |

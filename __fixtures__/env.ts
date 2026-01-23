@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'fs'
 import path from 'path'
 import mockedEnv from 'mocked-env'
 import dotenv from 'dotenv'
-import type { GithubActionEnvironment } from '../src/types'
+import type { GithubActionEnvironment } from 'src/types'
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces'
 

@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs'
 import path from 'path'
 import { jest } from '@jest/globals'
-import { loadConfigFile } from '../src/utils/load-config-file.js'
+import { loadConfigFile } from 'src/common'
 
 const configs = ['config.yml', 'config-non-master-branch.yml'] as const
 /**
@@ -14,7 +14,7 @@ export const mockConfig = (opts?: {
   file?: (typeof configs)[number]
   requestedFile?: string
 }) => {
-  return jest.unstable_mockModule('../src/utils/load-config-file.js', () => ({
+  return jest.unstable_mockModule('src/common/load-config-file', () => ({
     loadConfigFile: (configFileName: string) => {
       if (configFileName === (opts?.requestedFile || 'release-drafter.yml')) {
         const file = opts?.file || configs[0]
@@ -30,5 +30,5 @@ export const mockConfig = (opts?: {
 }
 
 export const unmockConfig = () => {
-  jest.unstable_unmockModule('../src/utils/load-config-file.js')
+  jest.unstable_unmockModule('src/common/load-config-file')
 }

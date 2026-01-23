@@ -1,9 +1,6 @@
-import { Config, ActionInput } from '../types/index.js'
+import { ActionInput, Config } from 'src/types'
 
-export const autolabeler = async (params: {
-  config: Config
-  input: ActionInput
-}) => {
+export const main = async (params: { config: Config; input: ActionInput }) => {
   /**
    * TODO :
    *
@@ -13,4 +10,5 @@ export const autolabeler = async (params: {
    * 4. create Set() of labels to add based on config's autolabeler params
    * 5. add labels. @actions/github's octokit instance may be useful
    */
+  console.log('Autolabeler action main logic goes here')
 }

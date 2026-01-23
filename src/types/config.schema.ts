@@ -1,7 +1,7 @@
 import z from 'zod'
-import { stringToRegex } from '../utils/string-to-regex.js'
 import * as core from '@actions/core'
 import { context } from '@actions/github'
+import { stringToRegex } from 'src/common/string-to-regex'
 
 export const configSchema = z
   .object({
