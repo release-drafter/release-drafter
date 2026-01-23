@@ -1,3 +1,4 @@
+/* node:coverage ignore file -- @preserve */
 export { getActionInput } from './get-action-inputs'
 export { loadConfigFile } from './load-config-file'
 export { mergeInputAndConfig } from './merge-input-and-config'

@@ -18,6 +18,15 @@
     "source.fixAll.eslint": "explicit"
   },
   "[json]": {
-    "files.insertFinalNewline": true
-  }
+    "files.insertFinalNewline": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "files.insertFinalNewline": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "markdown.validate.enabled": true
 }

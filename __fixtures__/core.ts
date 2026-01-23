@@ -1,22 +1,22 @@
 import type * as core from '@actions/core'
-import { jest } from '@jest/globals'
+import { vi } from 'vitest'
 
 // When debugging tests, set tu true to get outputs
-const DEBUG_TESTS = true
+const DEBUG_TESTS = false
 
-export const debug = jest.fn<typeof core.debug>(
+export const debug = vi.fn<typeof core.debug>(
   DEBUG_TESTS ? console.debug : undefined
 )
-export const error = jest.fn<typeof core.error>(
+export const error = vi.fn<typeof core.error>(
   DEBUG_TESTS ? console.error : undefined
 )
-export const info = jest.fn<typeof core.info>(
+export const info = vi.fn<typeof core.info>(
   DEBUG_TESTS ? console.info : undefined
 )
 
-export const getInput = jest.fn<typeof core.getInput>()
-export const setOutput = jest.fn<typeof core.setOutput>()
-export const setFailed = jest.fn<typeof core.setFailed>(
+export const getInput = vi.fn<typeof core.getInput>()
+export const setOutput = vi.fn<typeof core.setOutput>()
+export const setFailed = vi.fn<typeof core.setFailed>(
   DEBUG_TESTS ? console.error : undefined
 )
-export const warning = jest.fn<typeof core.warning>()
+export const warning = vi.fn<typeof core.warning>()

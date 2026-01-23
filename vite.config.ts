@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { builtinModules } from 'node:module'
 import { defineConfig, UserConfig } from 'vite'
+import { configDefaults } from 'vitest/config'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import copy from 'rollup-plugin-copy'
 
@@ -57,6 +58,18 @@ const config = (): UserConfig => {
       emptyOutDir: true,
       sourcemap: true,
       minify: false
+    },
+    test: {
+      isolate: true,
+      include: ['**/__tests__/**/*.test.[tj]s'],
+      exclude: [...configDefaults.exclude],
+      testTimeout: 60000,
+      environment: 'node',
+      coverage: {
+        enabled: true, // will run along tests
+        reporter: ['json-summary'],
+        include: ['src/**/*.ts']
+      }
     }
   })
 }

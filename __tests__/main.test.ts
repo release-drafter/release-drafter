@@ -1,36 +1,64 @@
-import { jest } from '@jest/globals'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  beforeAll,
+  afterAll,
+  Mock
+} from 'vitest'
 import * as core from '../__fixtures__/core'
 import nock from 'nock'
-import { mockConfig, unmockConfig } from '../__fixtures__/config'
 import { mockGraphqlQuery } from '../__fixtures__/graphql'
 import { getReleasePayload, nockGetReleases } from '../__fixtures__/releases'
 import { getEnvMock } from '../__fixtures__/env'
 import { run as actionRun } from 'src/actions/drafter/runner'
 import path from 'path'
+import { readFileSync } from 'fs'
+
+const mockGetConfig = vi.hoisted<
+  Mock<() => 'config.yml' | 'config-non-master-branch.yml' | undefined>
+>(() => vi.fn(() => undefined))
+
+vi.mock(import('src/common/load-config-file'), async (iom) => {
+  const om = await iom()
+  return {
+    loadConfigFile: () => {
+      const mockedConfig = mockGetConfig()
+      if (mockedConfig) {
+        const p = path.resolve(
+          import.meta.dirname,
+          '../__fixtures__',
+          'config',
+          mockedConfig
+        )
+        return readFileSync(p, 'utf8')
+      } else {
+        return om.loadConfigFile('release-drafter.yml')
+      }
+    }
+  }
+})
 
 /**
  * Helper to run the action in an isolated module context.
  * Especially useful for `@actions/github` which reads from process.env
  * at import time.
  */
-const run = (...args: Parameters<typeof actionRun>) =>
-  jest.isolateModulesAsync(async () => {
-    await (await import(`src/actions/drafter/runner`)).run(...args)
-  })
+const run = async (...args: Parameters<typeof actionRun>) =>
+  await (await import(`src/actions/drafter/runner`)).run(...args)
 
 describe('release-drafter', () => {
   beforeAll(() => {
     // Disable actual network requests.
     nock.disableNetConnect()
-
-    jest.unstable_mockModule('@actions/core', () => core)
+    vi.mock('@actions/core', () => core)
   })
 
   afterAll(() => {
     nock.restore()
-    jest.resetAllMocks()
-    jest.unstable_unmockModule('@actions/core')
-    unmockConfig()
   })
 
   beforeEach(() => {
@@ -41,8 +69,7 @@ describe('release-drafter', () => {
 
   afterEach(() => {
     nock.cleanAll()
-    jest.resetModules()
-    jest.resetAllMocks()
+    vi.resetAllMocks()
   })
 
   /**
@@ -57,6 +84,8 @@ describe('release-drafter', () => {
         const restoreLocalEnvironment = getEnvMock({
           payload: 'push'
         })
+
+        mockGetConfig.mockClear()
 
         await run()
 
@@ -74,7 +103,7 @@ describe('release-drafter', () => {
         const restoreLocalEnvironment = getEnvMock({
           payload: 'push-non-master-branch'
         })
-        mockConfig({ file: 'config.yml' })
+        mockGetConfig.mockReturnValue('config.yml')
 
         const scope = nock('https://api.github.com')
           .post('/repos/:owner/:repo/releases')
@@ -96,7 +125,7 @@ describe('release-drafter', () => {
           const restoreLocalEnvironment = getEnvMock({
             payload: 'push-non-master-branch'
           })
-          mockConfig({ file: 'config-non-master-branch.yml' })
+          mockGetConfig.mockReturnValue('config-non-master-branch.yml')
 
           const gqlScope = mockGraphqlQuery({
             payload: 'graphql-commits-no-prs.json'
@@ -141,8 +170,7 @@ describe('release-drafter', () => {
         const restoreLocalEnvironment = getEnvMock({
           payload: 'push-tag'
         })
-
-        mockConfig({ file: 'config.yml' })
+        mockGetConfig.mockReturnValue('config.yml')
 
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-merge-commit.json'
