@@ -1,9 +1,6 @@
-import { Config, ActionInput } from '../types/index.js'
+import { ActionInput, Config } from 'src/types'
 
-export const drafter = async (params: {
-  config: Config
-  input: ActionInput
-}) => {
+export const main = async (params: { config: Config; input: ActionInput }) => {
   /**
    * TODO :
    *
@@ -14,4 +11,5 @@ export const drafter = async (params: {
    * 5. create a release (may be a draft) or update previous draft
    * 6. set action outputs
    */
+  console.log('Drafter action main logic goes here')
 }

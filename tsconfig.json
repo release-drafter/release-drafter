@@ -6,21 +6,42 @@
     "declarationMap": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "lib": ["ES2022"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "node",
+      "vite/client",
+      "jest"
+    ],
     "newLine": "lf",
     "noImplicitAny": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": false,
+    "noUnusedParameters": true,
     "outDir": "./dist",
     "pretty": true,
-    "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
-    "target": "ES2022"
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "useDefineForClassFields": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": "./",
+    "skipLibCheck": true,
   },
-  "exclude": ["__fixtures__", "__tests__", "coverage", "dist", "node_modules"],
-  "include": ["src"]
+  "exclude": [
+    "coverage",
+    "dist",
+    "node_modules"
+  ],
+  "include": [
+    "src",
+    "__fixtures__",
+    "__tests__",
+  ],
 }

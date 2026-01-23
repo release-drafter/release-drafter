@@ -23,7 +23,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "bundle": "npm run format:write && npm run package",
+    "build": "vite build",
     "ci-test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
     "coverage": "npx make-coverage-badge --output-path ./badges/coverage.svg",
     "format:write": "npx prettier --write .",
@@ -33,7 +33,8 @@
     "package": "npx rimraf ./dist && npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "package:watch": "npm run package -- --watch",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
-    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
+    "tsc:check": "tsc --noEmit",
+    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run build"
   },
   "license": "MIT",
   "dependencies": {
@@ -49,9 +50,6 @@
     "@github/local-action": "^6.0.2",
     "@jest/globals": "^30.2.0",
     "@octokit/webhooks-types": "^7.6.1",
-    "@rollup/plugin-commonjs": "^29.0.0",
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-typescript": "^12.3.0",
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.23",
     "@types/node": "^24.10.1",
@@ -70,12 +68,11 @@
     "nock": "^14.0.10",
     "prettier": "^3.7.4",
     "prettier-eslint": "^16.4.2",
-    "rollup": "^4.53.3",
+    "rollup-plugin-copy": "^3.5.0",
     "ts-jest": "^29.4.6",
     "ts-jest-resolver": "^2.0.1",
-    "typescript": "^5.9.3"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "*"
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-tsconfig-paths": "^6.0.4"
   }
 }

@@ -1,4 +1,4 @@
-export type { GithubActionEnvironment } from './env.js'
-export { actionInputSchema } from './action-input.schema.js'
-export type { ActionInput } from './action-input.schema.js'
-export { configSchema, type Config } from './config.schema.js'
+export { actionInputSchema, type ActionInput } from './action-input.schema'
+export { type ActionOutptuts } from './action-outputs'
+export { configSchema, type Config } from './config.schema'
+export type { GithubActionEnvironment } from './env'

@@ -1,6 +1,6 @@
-import { ActionInput } from '../types/action-input.schema.js'
 import path from 'path'
 import { existsSync, readFileSync } from 'fs'
+import { ActionInput } from 'src/types'
 
 export const loadConfigFile = (
   configFilename: ActionInput['config-name']

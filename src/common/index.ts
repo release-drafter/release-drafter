@@ -1,0 +1,5 @@
+export { getActionInput } from './get-action-inputs'
+export { loadConfigFile } from './load-config-file'
+export { mergeInputAndConfig } from './merge-input-and-config'
+export { parseConfigFile } from './parse-config-file'
+export { stringToRegex } from './string-to-regex'

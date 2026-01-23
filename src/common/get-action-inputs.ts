@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { ActionInput, actionInputSchema } from '../types/action-input.schema.js'
+import { ActionInput, actionInputSchema } from 'src/types'
 
 export const getActionInput = (): ActionInput => {
   // getInput returns an empty string if the value is not defined.
