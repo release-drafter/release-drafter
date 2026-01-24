@@ -1,10 +1,12 @@
 import { existsSync, readFileSync } from 'fs'
 import path from 'path'
-import mockedEnv from 'mocked-env'
 import dotenv from 'dotenv'
 import type { GithubActionEnvironment } from 'src/types'
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces'
+import { vi } from 'vitest'
+
+import github from '@actions/github'
 
 type AllowedPayload = 'push' | 'push-non-master-branch' | 'push-tag'
 
@@ -22,11 +24,8 @@ const getExampleEnvPath = () =>
  * The defined environments variabesl will determine the behavior of `@actions/github`
  * when it is imported, so this function should be called before importing
  * modules that depend on it.
- *
- * Use `DEBUG=mocked-env npm run test` to debug the mocked environment variables.
- * @see https://www.npmjs.com/package/mocked-env#debugging
  */
-export const getEnvMock = (params: { payload: AllowedPayload }) => {
+export const mockContext = async (params: { payload: AllowedPayload }) => {
   let payload: WebhookPayload
   let defaultEnv: GithubActionEnvironment
 
@@ -69,8 +68,15 @@ export const getEnvMock = (params: { payload: AllowedPayload }) => {
     GITHUB_WORKSPACE: path.resolve(path.dirname(import.meta.filename), '..')
   }
 
-  return mockedEnv({
+  Object.entries({
     ...defaultEnv,
     ...envFromPayload
   })
+    .filter(([key, value]) => value !== undefined && value !== null && !!key)
+    .forEach(([key, value]) => {
+      vi.stubEnv(key, value)
+    })
+
+  // @ts-expect-error - @actions/github has side effects on import that need to be re-initialized
+  github.context = new (await import('@actions/github/lib/context')).Context() // reads from env
 }
