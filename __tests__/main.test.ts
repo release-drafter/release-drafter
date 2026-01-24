@@ -13,8 +13,8 @@ import * as core from '../__fixtures__/core'
 import nock from 'nock'
 import { mockGraphqlQuery } from '../__fixtures__/graphql'
 import { getReleasePayload, nockGetReleases } from '../__fixtures__/releases'
-import { getEnvMock } from '../__fixtures__/env'
-import { run as actionRun } from 'src/actions/drafter/runner'
+import { mockContext } from '../__fixtures__/context'
+import { runDrafter } from './utils'
 import path from 'path'
 import { readFileSync } from 'fs'
 
@@ -42,14 +42,6 @@ vi.mock(import('src/common/load-config-file'), async (iom) => {
   }
 })
 
-/**
- * Helper to run the action in an isolated module context.
- * Especially useful for `@actions/github` which reads from process.env
- * at import time.
- */
-const run = async (...args: Parameters<typeof actionRun>) =>
-  await (await import(`src/actions/drafter/runner`)).run(...args)
-
 describe('release-drafter', () => {
   beforeAll(() => {
     // Disable actual network requests.
@@ -70,6 +62,7 @@ describe('release-drafter', () => {
   afterEach(() => {
     nock.cleanAll()
     vi.resetAllMocks()
+    vi.unstubAllEnvs()
   })
 
   /**
@@ -81,26 +74,24 @@ describe('release-drafter', () => {
   describe('push', () => {
     describe('without a config', () => {
       it('does nothing', async () => {
-        const restoreLocalEnvironment = getEnvMock({
+        await mockContext({
           payload: 'push'
         })
 
         mockGetConfig.mockClear()
 
-        await run()
+        await runDrafter()
 
         expect(core.setOutput).not.toHaveBeenCalled()
         expect(core.setFailed).toHaveBeenCalledWith(
           `Config file not found: ${path.resolve(import.meta.dirname, '..')}/.github/release-drafter.yml. Did you clone your sources ? (ex: using @actions/checkout)`
         )
-
-        restoreLocalEnvironment()
       })
     })
 
     describe('to a non-master branch', () => {
       it('does nothing', async () => {
-        const restoreLocalEnvironment = getEnvMock({
+        await mockContext({
           payload: 'push-non-master-branch'
         })
         mockGetConfig.mockReturnValue('config.yml')
@@ -111,18 +102,16 @@ describe('release-drafter', () => {
           .patch('/repos/:owner/:repo/releases/:release_id')
           .reply(200)
 
-        await run()
+        await runDrafter()
 
         expect(scope.isDone()).toBe(false) // should NOT call the mocked endpoints
         expect(core.setOutput).not.toHaveBeenCalled()
         expect(core.setFailed).not.toHaveBeenCalled()
-
-        restoreLocalEnvironment()
       })
 
       describe('when configured for that branch', () => {
         it('creates a release draft targeting that branch', async () => {
-          const restoreLocalEnvironment = getEnvMock({
+          await mockContext({
             payload: 'push-non-master-branch'
           })
           mockGetConfig.mockReturnValue('config-non-master-branch.yml')
@@ -154,20 +143,18 @@ describe('release-drafter', () => {
             )
             .reply(200, getReleasePayload('release.json'))
 
-          await run()
+          await runDrafter()
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
           expect(core.setFailed).not.toHaveBeenCalled()
-
-          restoreLocalEnvironment()
         })
       })
     })
 
     describe('to a tag', () => {
       it('creates a release draft', async () => {
-        const restoreLocalEnvironment = getEnvMock({
+        await mockContext({
           payload: 'push-tag'
         })
         mockGetConfig.mockReturnValue('config.yml')
@@ -203,13 +190,11 @@ describe('release-drafter', () => {
           )
           .reply(200, getReleasePayload('release.json'))
 
-        await run()
+        await runDrafter()
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
         expect(core.setFailed).not.toHaveBeenCalled()
-
-        restoreLocalEnvironment()
       })
     })
   })
