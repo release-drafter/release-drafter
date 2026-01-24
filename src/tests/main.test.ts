@@ -9,12 +9,15 @@ import {
   afterAll,
   Mock
 } from 'vitest'
-import * as core from '../__fixtures__/core'
 import nock from 'nock'
-import { mockGraphqlQuery } from '../__fixtures__/graphql'
-import { getReleasePayload, nockGetReleases } from '../__fixtures__/releases'
-import { mockContext } from '../__fixtures__/context'
-import { runDrafter } from './utils'
+import {
+  getReleasePayload,
+  nockGetReleases,
+  mockContext,
+  mockGraphqlQuery,
+  core
+} from './mocks'
+import { runDrafter } from './helpers'
 import path from 'path'
 import { readFileSync } from 'fs'
 
@@ -30,7 +33,7 @@ vi.mock(import('src/common/load-config-file'), async (iom) => {
       if (mockedConfig) {
         const p = path.resolve(
           import.meta.dirname,
-          '../__fixtures__',
+          'fixtures',
           'config',
           mockedConfig
         )
@@ -57,6 +60,8 @@ describe('release-drafter', () => {
     nock('https://api.github.com')
       .post('/app/installations/179208/access_tokens')
       .reply(200, { token: 'test' })
+    vi.resetAllMocks()
+    vi.unstubAllEnvs()
   })
 
   afterEach(() => {
@@ -74,9 +79,7 @@ describe('release-drafter', () => {
   describe('push', () => {
     describe('without a config', () => {
       it('does nothing', async () => {
-        await mockContext({
-          payload: 'push'
-        })
+        await mockContext('push')
 
         mockGetConfig.mockClear()
 
@@ -84,16 +87,14 @@ describe('release-drafter', () => {
 
         expect(core.setOutput).not.toHaveBeenCalled()
         expect(core.setFailed).toHaveBeenCalledWith(
-          `Config file not found: ${path.resolve(import.meta.dirname, '..')}/.github/release-drafter.yml. Did you clone your sources ? (ex: using @actions/checkout)`
+          `Config file not found: ${path.resolve(import.meta.dirname, '../..')}/.github/release-drafter.yml. Did you clone your sources ? (ex: using @actions/checkout)`
         )
       })
     })
 
     describe('to a non-master branch', () => {
       it('does nothing', async () => {
-        await mockContext({
-          payload: 'push-non-master-branch'
-        })
+        await mockContext('push-non-master-branch')
         mockGetConfig.mockReturnValue('config.yml')
 
         const scope = nock('https://api.github.com')
@@ -111,16 +112,14 @@ describe('release-drafter', () => {
 
       describe('when configured for that branch', () => {
         it('creates a release draft targeting that branch', async () => {
-          await mockContext({
-            payload: 'push-non-master-branch'
-          })
+          await mockContext('push-non-master-branch')
           mockGetConfig.mockReturnValue('config-non-master-branch.yml')
 
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-no-prs.json'
+            payload: 'graphql-commits-no-prs'
           })
 
-          const scope = nockGetReleases({ releaseFiles: ['release.json'] })
+          const scope = nockGetReleases({ releaseFiles: ['release'] })
             .post(
               '/repos/toolmantim/release-drafter-test-project/releases',
               (body) => {
@@ -141,7 +140,7 @@ describe('release-drafter', () => {
                 return true
               }
             )
-            .reply(200, getReleasePayload('release.json'))
+            .reply(200, getReleasePayload('release'))
 
           await runDrafter()
 
@@ -154,16 +153,14 @@ describe('release-drafter', () => {
 
     describe('to a tag', () => {
       it('creates a release draft', async () => {
-        await mockContext({
-          payload: 'push-tag'
-        })
+        await mockContext('push-tag')
         mockGetConfig.mockReturnValue('config.yml')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit.json'
+          payload: 'graphql-commits-merge-commit'
         })
 
-        const scope = nockGetReleases({ releaseFiles: ['release.json'] })
+        const scope = nockGetReleases({ releaseFiles: ['release'] })
           .post(
             '/repos/toolmantim/release-drafter-test-project/releases',
             (body) => {
@@ -188,7 +185,7 @@ describe('release-drafter', () => {
               return true
             }
           )
-          .reply(200, getReleasePayload('release.json'))
+          .reply(200, getReleasePayload('release'))
 
         await runDrafter()
 

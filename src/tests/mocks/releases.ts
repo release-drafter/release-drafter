@@ -2,12 +2,22 @@ import { readFileSync } from 'fs'
 import nock from 'nock'
 import path from 'path'
 
-type Release = 'release.json'
+/**
+ * Available files in fixtures/releases
+ */
+type Release = 'release'
 
 export const getReleasePayload = (f: Release) =>
-  readFileSync(path.join(path.dirname(import.meta.filename), 'releases', f), {
-    encoding: 'utf8'
-  })
+  readFileSync(
+    path.join(
+      path.dirname(import.meta.filename),
+      '../fixtures/releases',
+      f + '.json'
+    ),
+    {
+      encoding: 'utf8'
+    }
+  )
 
 export const nockGetReleases = (params: {
   releaseFiles: Release[]

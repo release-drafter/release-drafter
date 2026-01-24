@@ -6,9 +6,10 @@ type Query =
   | 'query findCommitsWithAssociatedPullRequests'
   | 'query findCommitsWithPathChangesQuery'
 
-type Payload =
-  | 'graphql-commits-no-prs.json'
-  | 'graphql-commits-merge-commit.json'
+/**
+ * Available files in fixtures/graphql
+ */
+type Payload = 'graphql-commits-no-prs' | 'graphql-commits-merge-commit'
 
 export const mockGraphqlQuery = (params: { query?: Query; payload: Payload }) =>
   nock('https://api.github.com')
@@ -22,8 +23,8 @@ export const mockGraphqlQuery = (params: { query?: Query; payload: Payload }) =>
       readFileSync(
         path.join(
           path.dirname(import.meta.filename),
-          'graphql',
-          params.payload
+          '../fixtures/graphql',
+          params.payload + '.json'
         ),
         { encoding: 'utf8' }
       )

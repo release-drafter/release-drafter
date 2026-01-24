@@ -29,5 +29,5 @@
     "skipLibCheck": true
   },
   "exclude": ["coverage", "dist", "node_modules"],
-  "include": ["src", "__fixtures__", "__tests__"]
+  "include": ["src"]
 }

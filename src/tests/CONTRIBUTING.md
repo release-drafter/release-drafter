@@ -22,37 +22,22 @@ handled by defining the underlying `GITHUB_*` environment variables for each
 test suites. If done properly, `import { context } from @actions/github` will
 now contain the specified variables.
 
-> [!note] Take a look at [`.env.example`](../.env.example) and
-> [fixtures/env.ts](../__fixtures__/env.ts) for more details.
+> [!note] Take a look at [`.env.example`](../../.env.example) and
+> [mocks/context.ts](./mocks/context.ts) for more details.
 
-To do this efficiently in test suites, we use a helper along with `mocked-env` :
+To do this efficiently in test suites, we use a helper :
 
 ```ts
 it('does nothing', async () => {
-  const restoreLocalEnvironment = getEnvMock({
+  await mockContext({
     payload: 'push-non-master-branch'
   })
 
   // process.env.GITHUB_REF now has a value coherent
   // with payload __fixtures__/events/push-non-master-branch.json
   // also avalable in context.ref & context.payload.ref
-
   await run()
-
-  restoreLocalEnvironment()
-
-  // process.env.GITHUB_REF is back to undefined
 })
-```
-
-However - this would not work if nodejs would not instanciate `@actions/github`
-anew on each test-suite. To do this, we leverage `jest.isolateModulesAsync` :
-
-```ts
-const run = (...args: Parameters<typeof actionRun>) =>
-  jest.isolateModulesAsync(async () => {
-    await (await import(`../src/main.js`)).run(...args)
-  })
 ```
 
 ### Include nock scopes
