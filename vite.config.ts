@@ -61,14 +61,15 @@ const config = (): UserConfig => {
     },
     test: {
       isolate: true,
-      include: ['**/__tests__/**/*.test.[tj]s'],
+      include: ['src/tests/**/*.test.ts'],
       exclude: [...configDefaults.exclude],
       testTimeout: 60000,
       environment: 'node',
       coverage: {
         enabled: true, // will run along tests
         reporter: ['json-summary'],
-        include: ['src/**/*.ts']
+        include: ['src/**/*.ts'],
+        exclude: ['src/tests/**/*.ts']
       }
     }
   })

@@ -4,19 +4,23 @@ import dotenv from 'dotenv'
 import type { GithubActionEnvironment } from 'src/types'
 
 import type { WebhookPayload } from '@actions/github/lib/interfaces'
-import { vi } from 'vitest'
+import { expect, vi } from 'vitest'
 
 import github from '@actions/github'
 
 type AllowedPayload = 'push' | 'push-non-master-branch' | 'push-tag'
 
 const getEventPayloadPath = (type: AllowedPayload) => {
-  const baseDir = path.join(path.dirname(import.meta.filename), 'events')
+  const baseDir = path.join(
+    path.dirname(import.meta.filename),
+    '../fixtures',
+    'events'
+  )
   return path.join(baseDir, `${type}.json`)
 }
 
 const getExampleEnvPath = () =>
-  path.join(path.dirname(import.meta.filename), '..', '.env.example')
+  path.join(path.dirname(import.meta.filename), '../../../', '.env.example')
 
 /**
  * Mocking GitHub Action environment variables for testing.
@@ -25,11 +29,11 @@ const getExampleEnvPath = () =>
  * when it is imported, so this function should be called before importing
  * modules that depend on it.
  */
-export const mockContext = async (params: { payload: AllowedPayload }) => {
+export const mockContext = async (desiredPayload: AllowedPayload) => {
   let payload: WebhookPayload
   let defaultEnv: GithubActionEnvironment
 
-  const pathToPayload = getEventPayloadPath(params.payload)
+  const pathToPayload = getEventPayloadPath(desiredPayload)
   const pathToDefaultEnv = getExampleEnvPath()
 
   if (existsSync(pathToPayload)) {
@@ -58,14 +62,17 @@ export const mockContext = async (params: { payload: AllowedPayload }) => {
     GITHUB_EVENT_PATH: pathToPayload,
     GITHUB_REF: payload.ref,
     GITHUB_REF_NAME: payload.ref.replace(/^refs\/heads\//, ''),
-    GITHUB_REF_TYPE: params.payload === 'push-tag' ? 'tag' : 'branch',
+    GITHUB_REF_TYPE: desiredPayload === 'push-tag' ? 'tag' : 'branch',
     GITHUB_REPOSITORY: payload.repository?.full_name,
     GITHUB_REPOSITORY_ID: payload.repository?.id?.toString(),
     GITHUB_REPOSITORY_OWNER: payload.repository?.owner?.login,
     GITHUB_REPOSITORY_OWNER_ID: payload.repository?.owner?.id?.toString(),
     GITHUB_SHA: payload.after,
     GITHUB_TRIGGERING_ACTOR: payload.pusher?.login,
-    GITHUB_WORKSPACE: path.resolve(path.dirname(import.meta.filename), '..')
+    GITHUB_WORKSPACE: path.resolve(
+      path.dirname(import.meta.filename),
+      '../../..'
+    )
   }
 
   Object.entries({
@@ -79,4 +86,10 @@ export const mockContext = async (params: { payload: AllowedPayload }) => {
 
   // @ts-expect-error - @actions/github has side effects on import that need to be re-initialized
   github.context = new (await import('@actions/github/lib/context')).Context() // reads from env
+
+  // Verify the context has been set up correctly
+  const dynamicContext = (await import('@actions/github')).context
+  expect(dynamicContext.ref).toEqual(process.env.GITHUB_REF)
+  expect(dynamicContext.ref).toEqual(payload.ref)
+  expect(dynamicContext.payload).toEqual(payload)
 }
