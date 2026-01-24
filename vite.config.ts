@@ -65,6 +65,7 @@ const config = (): UserConfig => {
       exclude: [...configDefaults.exclude],
       testTimeout: 60000,
       environment: 'node',
+      setupFiles: ['src/tests/setup.ts'],
       coverage: {
         enabled: true, // will run along tests
         reporter: ['json-summary'],

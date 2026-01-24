@@ -1,87 +1,23 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-  beforeAll,
-  afterAll,
-  Mock
-} from 'vitest'
+import { describe, expect, it } from 'vitest'
 import nock from 'nock'
 import {
   getReleasePayload,
   nockGetReleases,
   mockContext,
   mockGraphqlQuery,
-  core
+  core,
+  mocks
 } from './mocks'
 import { runDrafter } from './helpers'
 import path from 'path'
-import { readFileSync } from 'fs'
-
-const mockGetConfig = vi.hoisted<
-  Mock<() => 'config.yml' | 'config-non-master-branch.yml' | undefined>
->(() => vi.fn(() => undefined))
-
-vi.mock(import('src/common/load-config-file'), async (iom) => {
-  const om = await iom()
-  return {
-    loadConfigFile: () => {
-      const mockedConfig = mockGetConfig()
-      if (mockedConfig) {
-        const p = path.resolve(
-          import.meta.dirname,
-          'fixtures',
-          'config',
-          mockedConfig
-        )
-        return readFileSync(p, 'utf8')
-      } else {
-        return om.loadConfigFile('release-drafter.yml')
-      }
-    }
-  }
-})
 
 describe('release-drafter', () => {
-  beforeAll(() => {
-    // Disable actual network requests.
-    nock.disableNetConnect()
-    vi.mock('@actions/core', () => core)
-  })
-
-  afterAll(() => {
-    nock.restore()
-  })
-
-  beforeEach(() => {
-    nock('https://api.github.com')
-      .post('/app/installations/179208/access_tokens')
-      .reply(200, { token: 'test' })
-    vi.resetAllMocks()
-    vi.unstubAllEnvs()
-  })
-
-  afterEach(() => {
-    nock.cleanAll()
-    vi.resetAllMocks()
-    vi.unstubAllEnvs()
-  })
-
-  /**
-   * ###################################
-   * Release-drafter tests
-   * ###################################
-   */
-
   describe('push', () => {
     describe('without a config', () => {
       it('does nothing', async () => {
         await mockContext('push')
 
-        mockGetConfig.mockClear()
+        mocks.config.mockClear()
 
         await runDrafter()
 
@@ -95,7 +31,7 @@ describe('release-drafter', () => {
     describe('to a non-master branch', () => {
       it('does nothing', async () => {
         await mockContext('push-non-master-branch')
-        mockGetConfig.mockReturnValue('config.yml')
+        mocks.config.mockReturnValue('config')
 
         const scope = nock('https://api.github.com')
           .post('/repos/:owner/:repo/releases')
@@ -113,7 +49,7 @@ describe('release-drafter', () => {
       describe('when configured for that branch', () => {
         it('creates a release draft targeting that branch', async () => {
           await mockContext('push-non-master-branch')
-          mockGetConfig.mockReturnValue('config-non-master-branch.yml')
+          mocks.config.mockReturnValue('config-non-master-branch')
 
           const gqlScope = mockGraphqlQuery({
             payload: 'graphql-commits-no-prs'
@@ -154,7 +90,7 @@ describe('release-drafter', () => {
     describe('to a tag', () => {
       it('creates a release draft', async () => {
         await mockContext('push-tag')
-        mockGetConfig.mockReturnValue('config.yml')
+        mocks.config.mockReturnValue('config')
 
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-merge-commit'
