@@ -63,6 +63,11 @@ export const configOverridesInputSchema = z.object({
    */
   prerelease: z.stringbool().optional().default(false),
   /**
+   * When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date. Default: undefined (scan all commits).
+   * @see https://zod.dev/api?id=iso-dates#iso-datetimes
+   */
+  'initial-commits-since': z.iso.datetime().optional(),
+  /**
    * A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version.
    */
   'prerelease-identifier': z.string().optional(),

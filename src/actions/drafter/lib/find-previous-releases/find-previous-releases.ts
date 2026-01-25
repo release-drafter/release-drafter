@@ -72,7 +72,7 @@ export const findPreviousReleases = async (
   const draftRelease = filteredReleases.find(
     (r) => r.draft && r.prerelease === includePreReleases
   )
-  const lastRelease = sortedSelectedReleases[sortedSelectedReleases.length - 1]
+  const lastRelease = sortedSelectedReleases.at(-1)
 
   if (draftRelease) {
     core.info(`Draft release: ${draftRelease.tag_name}`)
