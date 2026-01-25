@@ -17,6 +17,11 @@ inputs:
       The config should still be located inside `.github` as that's where we are looking for config files.
     required: false
     default: 'release-drafter.yml'
+  token:
+    description: >
+      Access token used to make requests againts the GitHub API. Defaults to
+      github.token
+    default: ${{ github.token }}
   name:
     description: |
       The name that will be used in the GitHub release that's created or updated.

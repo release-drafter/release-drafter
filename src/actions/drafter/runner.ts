@@ -14,6 +14,7 @@ import {
  */
 export async function run(): Promise<void> {
   try {
+    core.info('Parsing inputs and configuration...')
     /**
      * TODO loading config should not come from utils but from drafter directly
      */

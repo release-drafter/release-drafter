@@ -10,6 +10,7 @@ export const getActionInput = (): ActionInput => {
 
   return actionInputSchema.parse({
     'config-name': getInput('config-name'),
+    token: getInput('token'),
     name: getInput('name'),
     tag: getInput('tag'),
     version: getInput('version'),

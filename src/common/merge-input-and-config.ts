@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import isBoolean from 'lodash/isBoolean.js'
-import { ActionInput, Config } from 'src/types'
+import { Config } from 'src/types'
+import { ConfigOverridesInput } from 'src/types/action-input.schema'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.
@@ -11,7 +12,7 @@ import { ActionInput, Config } from 'src/types'
  */
 export const mergeInputAndConfig = (params: {
   config: Config
-  input: ActionInput
+  input: ConfigOverridesInput
 }): Config => {
   const { config: originalConfig, input } = params
   const config = structuredClone(originalConfig)

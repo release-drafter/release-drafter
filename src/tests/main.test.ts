@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import nock from 'nock'
 import {
   getReleasePayload,
   nockGetReleases,
@@ -28,62 +27,83 @@ describe('release-drafter', () => {
       })
     })
 
-    describe('to a non-master branch', () => {
-      it('does nothing', async () => {
-        await mockContext('push-non-master-branch')
+    describe('to a master branch', () => {
+      it('creates a release draft targeting that branch', async () => {
+        await mockContext('push')
         mocks.config.mockReturnValue('config')
 
-        const scope = nock('https://api.github.com')
-          .post('/repos/:owner/:repo/releases')
-          .reply(200)
-          .patch('/repos/:owner/:repo/releases/:release_id')
-          .reply(200)
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-no-prs'
+        })
+
+        const scope = nockGetReleases({ releaseFiles: ['release'] })
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * No changes
+                ",
+                  "draft": true,
+                  "make_latest": "true",
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                  "target_commitish": "refs/heads/some-branch",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, getReleasePayload('release'))
 
         await runDrafter()
 
-        expect(scope.isDone()).toBe(false) // should NOT call the mocked endpoints
-        expect(core.setOutput).not.toHaveBeenCalled()
+        expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
+        expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(core.setFailed).not.toHaveBeenCalled()
       })
+    })
 
-      describe('when configured for that branch', () => {
-        it('creates a release draft targeting that branch', async () => {
-          await mockContext('push-non-master-branch')
-          mocks.config.mockReturnValue('config-non-master-branch')
+    describe('to a non-master branch', () => {
+      it('creates a release draft targeting that branch', async () => {
+        await mockContext('push-non-master-branch')
+        mocks.config.mockReturnValue('config')
 
-          const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-no-prs'
-          })
-
-          const scope = nockGetReleases({ releaseFiles: ['release'] })
-            .post(
-              '/repos/toolmantim/release-drafter-test-project/releases',
-              (body) => {
-                expect(body).toMatchInlineSnapshot(`
-                  Object {
-                    "body": "# What's Changed
-
-                  * No changes
-                  ",
-                    "draft": true,
-                    "make_latest": "true",
-                    "name": "",
-                    "prerelease": false,
-                    "tag_name": "",
-                    "target_commitish": "refs/heads/some-branch",
-                  }
-                `)
-                return true
-              }
-            )
-            .reply(200, getReleasePayload('release'))
-
-          await runDrafter()
-
-          expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(core.setFailed).not.toHaveBeenCalled()
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-no-prs'
         })
+
+        const scope = nockGetReleases({ releaseFiles: ['release'] })
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * No changes
+                ",
+                  "draft": true,
+                  "make_latest": "true",
+                  "name": "",
+                  "prerelease": false,
+                  "tag_name": "",
+                  "target_commitish": "refs/heads/some-branch",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, getReleasePayload('release'))
+
+        await runDrafter()
+
+        expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
+        expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -125,8 +145,8 @@ describe('release-drafter', () => {
 
         await runDrafter()
 
-        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
+        expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(core.setFailed).not.toHaveBeenCalled()
       })
     })
