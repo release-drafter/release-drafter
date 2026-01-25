@@ -7,9 +7,7 @@ export { getReleasePayload, nockGetReleases } from './releases'
 export { mockedLoadConfigFile } from './config'
 
 const mocks = vi.hoisted(() => ({
-  config: vi.fn<() => 'config' | 'config-non-master-branch' | undefined>(
-    () => undefined
-  )
+  config: vi.fn<() => 'config' | undefined>(() => undefined)
 }))
 
 export { mocks }
