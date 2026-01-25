@@ -208,6 +208,22 @@ describe('releases', () => {
         * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
       `)
     })
+    it('adds proper details/summary markdown when collapse-after is set to 0 and has a PR', () => {
+      const config = {
+        ...baseConfig,
+        categories: [{ title: 'Bugs', 'collapse-after': 0, labels: 'bug' }],
+      }
+      const changelog = generateChangeLog(pullRequests.slice(0, 1), config)
+      expect(changelog).toMatchInlineSnapshot(`
+        "## Bugs
+
+        <details>
+        <summary>1 change</summary>
+
+        * A1 (#1) @ghost
+        </details>"
+      `)
+    })
     it('adds proper details/summary markdown when collapse-after is set and more than 3 PRs', () => {
       const config = {
         ...baseConfig,
