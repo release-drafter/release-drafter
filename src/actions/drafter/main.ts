@@ -1,6 +1,5 @@
 import { Config, StandaloneInput } from 'src/types'
-import * as core from '@actions/core'
-import { findPreviousReleases } from './lib'
+import { findPreviousReleases, findPullRequests } from './lib'
 
 export const main = async (params: {
   config: Config
@@ -16,6 +15,10 @@ export const main = async (params: {
    */
   const { config, input } = params
 
-  core.info('Find previous releases...')
   const { draftRelease, lastRelease } = await findPreviousReleases(config)
+
+  const { commits, pullRequests } = await findPullRequests({
+    lastRelease,
+    config
+  })
 }

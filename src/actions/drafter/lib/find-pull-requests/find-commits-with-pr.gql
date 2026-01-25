@@ -1,0 +1,64 @@
+query findCommitsWithAssociatedPullRequests(
+  $name: String!
+  $owner: String!
+  $targetCommitish: String!
+  $withPullRequestBody: Boolean!
+  $withPullRequestURL: Boolean!
+  $since: GitTimestamp
+  $after: String
+  $withBaseRefName: Boolean!
+  $withHeadRefName: Boolean!
+  $pullRequestLimit: Int!
+  $historyLimit: Int!
+) {
+  repository(name: $name, owner: $owner) {
+    object(expression: $targetCommitish) {
+      ... on Commit {
+        history(first: $historyLimit, since: $since, after: $after) {
+          totalCount
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            id
+            committedDate
+            message
+            author {
+              name
+              user {
+                login
+              }
+            }
+            associatedPullRequests(first: $pullRequestLimit) {
+              nodes {
+                title
+                number
+                url @include(if: $withPullRequestURL)
+                body @include(if: $withPullRequestBody)
+                author {
+                  login
+                  __typename
+                  url
+                }
+                baseRepository {
+                  nameWithOwner
+                }
+                mergedAt
+                isCrossRepository
+                labels(first: 100) {
+                  nodes {
+                    name
+                  }
+                }
+                merged
+                baseRefName @include(if: $withBaseRefName)
+                headRefName @include(if: $withHeadRefName)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+query findCommitsWithPathChangesQuery(
+  $name: String!
+  $owner: String!
+  $targetCommitish: String!
+  $since: GitTimestamp
+  $after: String
+  $path: String
+) {
+  repository(name: $name, owner: $owner) {
+    object(expression: $targetCommitish) {
+      ... on Commit {
+        history(path: $path, since: $since, after: $after) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            id
+          }
+        }
+      }
+    }
+  }
+}

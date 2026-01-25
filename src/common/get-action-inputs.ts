@@ -21,6 +21,7 @@ export const getActionInput = (): ActionInput => {
     commitish: getInput('commitish'),
     header: getInput('header'),
     footer: getInput('footer'),
+    'initial-commits-since': getInput('initial-commits-since'),
     'disable-releaser': getInput('disable-releaser'),
     'disable-autolabeler': getInput('disable-autolabeler')
   })

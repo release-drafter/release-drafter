@@ -87,6 +87,11 @@ export const configSchema = z
      */
     'filter-by-commitish': z.boolean().optional().default(false),
     /**
+     * When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date. Default: undefined (scan all commits).
+     * @see https://zod.dev/api?id=iso-dates#iso-datetimes
+     */
+    'initial-commits-since': z.iso.datetime().optional(),
+    /**
      * Include pre releases as "full" releases when drafting release notes.
      */
     'include-pre-releases': z.boolean().optional().default(false),
@@ -98,6 +103,10 @@ export const configSchema = z
       .optional()
       .default(context.ref || context.payload.ref),
     'pull-request-limit': z.number().int().positive().optional().default(5),
+    /**
+     * Size of the pagination window when walking the repo. Can avoid erratic 502s from Github. Default: `15`
+     */
+    'history-limit': z.number().int().positive().optional().default(15),
     /**
      * Search and replace content in the generated changelog body.
      */
