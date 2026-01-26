@@ -37,7 +37,7 @@
     "semver": "7.3.7"
   },
   "devDependencies": {
-    "@vercel/ncc": "0.34.0",
+    "@vercel/ncc": "0.38.4",
     "eslint": "8.20.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",
