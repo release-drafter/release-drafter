@@ -33,6 +33,7 @@
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
     "lint": "npx eslint .",
+    "codegen": "graphql-codegen -c src/types/utils/codegen.gql.ts -v",
     "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run build"
   },
   "license": "MIT",
@@ -48,6 +49,8 @@
   "devDependencies": {
     "@eslint/compat": "^1.4.0",
     "@github/local-action": "^6.0.2",
+    "@graphql-codegen/cli": "^6.1.1",
+    "@graphql-codegen/near-operation-file-preset": "^4.0.0",
     "@octokit/webhooks-types": "^7.6.1",
     "@types/lodash": "^4.17.23",
     "@types/node": "^24.10.1",

@@ -28,6 +28,6 @@
     "baseUrl": "./",
     "skipLibCheck": true
   },
-  "exclude": ["coverage", "dist", "node_modules"],
+  "exclude": ["coverage", "dist", "node_modules", "**/*.generated.ts"],
   "include": ["src"]
 }

@@ -1,38 +1,38 @@
 import { getOctokit, paginateGraphql } from 'src/common'
 import { getGqlQuery } from './get-query'
 import { Config } from 'src/types'
-import _ from 'lodash'
+import {
+  FindCommitsWithPathChangesQueryQuery,
+  FindCommitsWithPathChangesQueryQueryVariables
+} from './graphql/find-commits-with-path-changes.graphql.generated'
 
-export const findCommitsWithPathChange = async (params: {
-  since: string | undefined
-  paths: Config['include-paths']
-  paginationdataPath: string[]
-  graphQlVariables: {
-    name: string
-    owner: string
-    targetCommitish: string
-  }
-}) => {
-  const { paginationdataPath, graphQlVariables, since, paths } = params
+export const findCommitsWithPathChange = async (
+  paths: Config['include-paths'],
+  params: Omit<FindCommitsWithPathChangesQueryQueryVariables, 'path'>
+) => {
   const octokit = getOctokit()
   const commitIdsMatchingPaths: Record<string, Set<string>> = {}
   let hasFoundCommits = false
 
   for (const path of paths) {
-    const pathData = await paginateGraphql(
+    const data = await paginateGraphql<FindCommitsWithPathChangesQueryQuery>(
       octokit.graphql,
       getGqlQuery('find-commits-with-path-changes'),
-      { ...graphQlVariables, since: since, path },
-      paginationdataPath
+      { ...params, path },
+      ['repository', 'object', 'history']
     )
-    const commitsWithPathChanges = _.get(pathData, [
-      ...paginationdataPath,
-      'nodes'
-    ])
+
+    if (data.repository?.object?.__typename !== 'Commit') {
+      throw new Error('Query returned an unexpected result')
+    }
+
+    const commits = (data.repository?.object?.history.nodes || []).filter(
+      (c) => !!c
+    )
 
     commitIdsMatchingPaths[path] = commitIdsMatchingPaths[path] || new Set([])
 
-    for (const { id } of commitsWithPathChanges) {
+    for (const { id } of commits) {
       hasFoundCommits = true
       commitIdsMatchingPaths[path].add(id)
     }
