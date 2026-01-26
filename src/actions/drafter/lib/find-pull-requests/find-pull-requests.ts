@@ -13,8 +13,6 @@ export const findPullRequests = async (params: {
   const since =
     params.lastRelease?.created_at || params.config['initial-commits-since']
 
-  const paginationdataPath = ['repository', 'object', 'history'] // paginate data.repository.object.history[]
-
   const shouldfilterByChangedPaths = params.config['include-paths'].length > 0
 
   /**
@@ -29,15 +27,11 @@ export const findPullRequests = async (params: {
     const {
       commitIdsMatchingPaths: commitIdsMatchingPathsRes,
       hasFoundCommits
-    } = await findCommitsWithPathChange({
+    } = await findCommitsWithPathChange(params.config['include-paths'], {
       since,
-      paths: params.config['include-paths'],
-      paginationdataPath,
-      graphQlVariables: {
-        name: context.repo.repo,
-        owner: context.repo.owner,
-        targetCommitish: params.config.commitish
-      }
+      name: context.repo.repo,
+      owner: context.repo.owner,
+      targetCommitish: params.config.commitish
     })
 
     // Short circuit to avoid blowing GraphQL budget
@@ -57,20 +51,17 @@ export const findPullRequests = async (params: {
 
   let commits = await findCommitsWithPr({
     since,
-    paginationdataPath,
-    graphQlVariables: {
-      name: context.repo.repo,
-      owner: context.repo.owner,
-      targetCommitish: params.config.commitish,
-      withPullRequestBody: params.config['change-template'].includes('$BODY'),
-      withPullRequestURL: params.config['change-template'].includes('$URL'),
-      withBaseRefName:
-        params.config['change-template'].includes('$BASE_REF_NAME'),
-      withHeadRefName:
-        params.config['change-template'].includes('$HEAD_REF_NAME'),
-      pullRequestLimit: params.config['pull-request-limit'],
-      historyLimit: params.config['history-limit']
-    }
+    name: context.repo.repo,
+    owner: context.repo.owner,
+    targetCommitish: params.config.commitish,
+    withPullRequestBody: params.config['change-template'].includes('$BODY'),
+    withPullRequestURL: params.config['change-template'].includes('$URL'),
+    withBaseRefName:
+      params.config['change-template'].includes('$BASE_REF_NAME'),
+    withHeadRefName:
+      params.config['change-template'].includes('$HEAD_REF_NAME'),
+    pullRequestLimit: params.config['pull-request-limit'],
+    historyLimit: params.config['history-limit']
   })
 
   core.info(`Found ${commits.length} commits.`)
@@ -92,9 +83,9 @@ export const findPullRequests = async (params: {
 
   // Extract PRs from commits
   let pullRequests = _.uniqBy(
-    commits.flatMap((commit) => commit.associatedPullRequests.nodes),
+    commits.flatMap((commit) => commit.associatedPullRequests?.nodes),
     'number'
-  )
+  ).filter((pr) => !!pr)
 
   core.info(
     `Found ${pullRequests.length} pull requests associated with those commits.`
@@ -103,7 +94,7 @@ export const findPullRequests = async (params: {
   pullRequests = pullRequests.filter(
     (pr) =>
       // Ensure PR is from the same repository
-      pr.baseRepository.nameWithOwner ===
+      pr.baseRepository?.nameWithOwner ===
         `${context.repo.owner}/${context.repo.repo}` &&
       // Ensure PR is merged
       pr.merged
