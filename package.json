@@ -34,7 +34,7 @@
     "lodash": "4.17.23",
     "probot": "12.2.5",
     "regex-parser": "2.2.11",
-    "semver": "7.3.7"
+    "semver": "7.5.2"
   },
   "devDependencies": {
     "@vercel/ncc": "0.38.4",
