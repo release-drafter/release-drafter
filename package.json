@@ -43,6 +43,7 @@
     "escape-string-regexp": "^5.0.0",
     "lodash": "^4.17.21",
     "regex-parser": "^2.3.1",
+    "semver": "^7.7.3",
     "yaml": "^2.8.2",
     "zod": "^4.3.5"
   },
@@ -54,6 +55,7 @@
     "@octokit/webhooks-types": "^7.6.1",
     "@types/lodash": "^4.17.23",
     "@types/node": "^24.10.1",
+    "@types/semver": "^7.7.1",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.32.1",
     "@vitest/coverage-v8": "^4.0.18",
