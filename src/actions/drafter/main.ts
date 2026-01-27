@@ -1,5 +1,6 @@
 import { Config, StandaloneInput } from 'src/types'
 import { findPreviousReleases, findPullRequests } from './lib'
+import { buildReleasePayload } from './lib/build-release-payload/build-release-payload'
 
 export const main = async (params: {
   config: Config
@@ -20,5 +21,13 @@ export const main = async (params: {
   const { commits, pullRequests } = await findPullRequests({
     lastRelease,
     config
+  })
+
+  const releaseInfo = buildReleasePayload({
+    commits,
+    config,
+    input,
+    lastRelease,
+    pullRequests
   })
 }
