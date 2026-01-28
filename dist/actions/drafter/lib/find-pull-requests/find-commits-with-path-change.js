@@ -4,7 +4,7 @@ import "../../../../index.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
 import { paginateGraphql } from "../../../../common/paginate-graphql.js";
 import "../../../../common/common-input.schema.js";
-import { getGqlQuery } from "./get-query.js";
+const findCommitsWithPathChangeQuery = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        history(path: $path, since: $since, after: $after) {\n          pageInfo {\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";
 const findCommitsWithPathChange = async (paths, params) => {
   const octokit = getOctokit();
   const commitIdsMatchingPaths = {};
@@ -12,7 +12,7 @@ const findCommitsWithPathChange = async (paths, params) => {
   for (const path of paths) {
     const data = await paginateGraphql(
       octokit.graphql,
-      getGqlQuery("find-commits-with-path-changes"),
+      findCommitsWithPathChangeQuery,
       { ...params, path },
       ["repository", "object", "history"]
     );

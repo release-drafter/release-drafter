@@ -1,9 +1,9 @@
 import { getOctokit, paginateGraphql } from 'src/common'
-import { getGqlQuery } from './get-query'
 import {
   FindCommitsWithAssociatedPullRequestsQuery,
   FindCommitsWithAssociatedPullRequestsQueryVariables
 } from './graphql/find-commits-with-pr.graphql.generated'
+import findCommitsWithPrQuery from './graphql/find-commits-with-pr.gql?raw'
 
 export const findCommitsWithPr = async (
   params: FindCommitsWithAssociatedPullRequestsQueryVariables
@@ -13,7 +13,7 @@ export const findCommitsWithPr = async (
   const data =
     await paginateGraphql<FindCommitsWithAssociatedPullRequestsQuery>(
       octokit.graphql,
-      getGqlQuery('find-commits-with-pr'),
+      findCommitsWithPrQuery,
       params,
       ['repository', 'object', 'history']
     )
