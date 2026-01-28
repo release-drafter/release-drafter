@@ -1,5 +1,5 @@
 import { getOctokit, paginateGraphql } from 'src/common'
-import { getGqlQuery } from './get-query'
+import findCommitsWithPathChangeQuery from './graphql/find-commits-with-path-changes.gql?raw'
 import {
   FindCommitsWithPathChangesQueryQuery,
   FindCommitsWithPathChangesQueryQueryVariables
@@ -17,7 +17,7 @@ export const findCommitsWithPathChange = async (
   for (const path of paths) {
     const data = await paginateGraphql<FindCommitsWithPathChangesQueryQuery>(
       octokit.graphql,
-      getGqlQuery('find-commits-with-path-changes'),
+      findCommitsWithPathChangeQuery,
       { ...params, path },
       ['repository', 'object', 'history']
     )
