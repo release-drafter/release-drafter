@@ -33,7 +33,8 @@
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
     "lint": "npx eslint .",
-    "codegen": "graphql-codegen -c src/types/utils/codegen.gql.ts -v",
+    "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
+    "schemas": "GITHUB_REF='${{ github.ref }}' node dist/scripts/json-schema.js && npx prettier --write ./**/schema.json",
     "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run build"
   },
   "license": "MIT",

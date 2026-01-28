@@ -1,5 +1,5 @@
 export { setActionOutput } from './set-action-output'
-export { configSchema, type Config } from './config.schema'
+export { configSchema, replacersSchema, type Config } from './config.schema'
 export {
   actionInputSchema,
   type ActionInput,

@@ -3,6 +3,17 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 import { stringToRegex } from 'src/common/string-to-regex'
 
+// export without the transform() for JSON schemas
+export const replacersSchema = z
+  .array(
+    z.object({
+      search: z.string().min(1),
+      replace: z.string().min(0)
+    })
+  )
+  .optional()
+  .default([])
+
 export const configSchema = z
   .object({
     /**
@@ -110,28 +121,19 @@ export const configSchema = z
     /**
      * Search and replace content in the generated changelog body.
      */
-    replacers: z
-      .array(
-        z.object({
-          search: z.string().min(1),
-          replace: z.string().min(0)
+    replacers: replacersSchema.transform((replacers) =>
+      // convert 'search' to regex and remove invalid entries
+      replacers
+        .map((r) => {
+          try {
+            return { ...r, search: stringToRegex(r.search) }
+          } catch {
+            core.warning(`Bad replacer regex: '${r.search}'`)
+            return false
+          }
         })
-      )
-      .optional()
-      .default([])
-      .transform((replacers) =>
-        // convert 'search' to regex and remove invalid entries
-        replacers
-          .map((r) => {
-            try {
-              return { ...r, search: stringToRegex(r.search) }
-            } catch {
-              core.warning(`Bad replacer regex: '${r.search}'`)
-              return false
-            }
-          })
-          .filter((r) => !!r)
-      ),
+        .filter((r) => !!r)
+    ),
     /**
      * Categorize pull requests using labels.
      */
@@ -205,6 +207,10 @@ export const configSchema = z
         message: "'prerelease' and 'latest' cannot both be truthy."
       })
     }
+  })
+  .meta({
+    title: 'JSON schema for Release Drafter yaml files',
+    id: 'https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json'
   })
 
 export type Config = z.output<typeof configSchema>
