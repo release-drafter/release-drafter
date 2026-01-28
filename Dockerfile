@@ -1,4 +1,4 @@
-FROM node:20.11.0-alpine@sha256:9b61ed13fef9ca689326f40c0c0b4da70e37a18712f200b4c66d3b44fd59d98e
+FROM node:25.5.0-alpine@sha256:260b19691dc84090cf0c7773a38d2bce92e1aa86a184868eaed85675053e8c8e
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 LABEL "repository"="https://github.com/release-drafter/release-drafter"
