@@ -1,49 +1,15 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug Action",
       "type": "node",
       "request": "launch",
-      "name": "Jest All",
-      "args": [
-        "--experimental-vm-modules",
-        "${workspaceFolder}/node_modules/.bin/jest",
-        "--runInBand"
-      ],
+      "runtimeExecutable": "npx",
+      "cwd": "${workspaceRoot}",
+      "args": ["@github/local-action", ".", "src/main.ts", ".env"],
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Jest Current File",
-      "args": [
-        "--experimental-vm-modules",
-        "${workspaceFolder}/node_modules/.bin/jest",
-        "${fileBasenameNoExtension}"
-      ],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Jest Run Selected Test",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true,
-      "args": [
-        "--experimental-vm-modules",
-        "${workspaceFolder}/node_modules/.bin/jest",
-        "${fileBasenameNoExtension}",
-        "-t",
-        "${selectedText}"
-      ]
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
     }
   ]
 }

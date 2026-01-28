@@ -1,68 +1,81 @@
 {
-  "name": "release-drafter-github-app",
-  "type": "commonjs",
-  "version": "6.2.0",
-  "description": "A GitHub app that draft releases based on pull-request labels",
-  "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
-  "license": "ISC",
+  "name": "release-drafter",
+  "description": "Drafts your next release notes as pull requests are merged into your branch(es).",
+  "version": "0.0.0",
+  "author": "",
+  "type": "module",
+  "private": true,
+  "homepage": "https://github.com/release-drafter/release-drafter",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/release-drafter/release-drafter.git"
   },
-  "scripts": {
-    "build": "ncc build action.js --target es2021",
-    "start": "probot run ./index.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --notify --notifyMode=change --coverage",
-    "generate-schema": "node ./bin/generate-schema.js print",
-    "generate-fixtures": "node ./bin/generate-fixtures.js",
-    "lint": "eslint bin/*.js lib/*.js action.js index.js test/**/*.js",
-    "prettier": "prettier --write **/*.{js,md,json,yml}",
-    "postversion": "npm run test && git push && git push --tags",
-    "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
-    "prepare": "husky install"
+  "bugs": {
+    "url": "https://github.com/release-drafter/release-drafter/issues"
   },
+  "keywords": [
+    "actions",
+    "release",
+    "release-notes",
+    "release-automation"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "ci-test": "vitest",
+    "coverage": "npx make-coverage-badge --output-path ./badges/coverage.svg",
+    "local-action": "npx @github/local-action . src/main.ts .env",
+    "tsc:check": "tsc --noEmit",
+    "format:write": "npx prettier --write .",
+    "format:check": "npx prettier --check .",
+    "lint": "npx eslint .",
+    "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
+    "schemas": "GITHUB_REF='${{ github.ref }}' node dist/scripts/json-schema.js && npx prettier --write ./**/schema.json",
+    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run build"
+  },
+  "license": "MIT",
   "dependencies": {
-    "@actions/core": "1.10.0",
-    "@probot/adapter-github-actions": "3.1.1",
-    "cli-table3": "0.6.2",
-    "compare-versions": "4.1.3",
-    "deepmerge": "4.3.1",
-    "escape-string-regexp": "4.0.0",
-    "ignore": "5.2.0",
-    "joi": "17.6.0",
-    "lodash": "4.17.23",
-    "probot": "12.2.5",
-    "regex-parser": "2.2.11",
-    "semver": "7.3.7"
+    "@actions/core": "^1.11.1",
+    "compare-versions": "^4.1.3",
+    "escape-string-regexp": "^5.0.0",
+    "ignore": "^7.0.5",
+    "lodash": "^4.17.21",
+    "regex-parser": "^2.3.1",
+    "semver": "^7.7.3",
+    "yaml": "^2.8.2",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@vercel/ncc": "0.38.4",
-    "eslint": "8.20.0",
-    "eslint-config-prettier": "8.5.0",
-    "eslint-plugin-prettier": "4.2.1",
-    "eslint-plugin-unicorn": "^43.0.2",
-    "husky": "8.0.1",
-    "jest": "28.1.3",
-    "joi-to-json": "^4.3.1",
-    "lint-staged": "13.0.3",
-    "mocked-env": "^1.3.5",
-    "nock": "13.2.9",
-    "node-fetch": "2.7.0",
-    "prettier": "2.7.1"
-  },
-  "engines": {
-    "npm": ">=11.5.2",
-    "node": ">=20.0.0"
-  },
-  "jest": {
-    "testEnvironment": "jest-environment-node",
-    "transform": {},
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "index.js",
-      "lib/**"
-    ]
-  },
-  "packageManager": "npm@11.5.2"
+    "@eslint/compat": "^1.4.0",
+    "@github/local-action": "^6.0.2",
+    "@graphql-codegen/cli": "^6.1.1",
+    "@graphql-codegen/near-operation-file-preset": "^4.0.0",
+    "@octokit/webhooks-types": "^7.6.1",
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^24.10.1",
+    "@types/semver": "^7.7.1",
+    "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "@typescript-eslint/parser": "^8.32.1",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/eslint-plugin": "^1.6.6",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "make-coverage-badge": "^1.2.0",
+    "nock": "^14.0.10",
+    "prettier": "^3.7.4",
+    "prettier-eslint": "^16.4.2",
+    "rollup-plugin-copy": "^3.5.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-tsconfig-paths": "^6.0.4",
+    "vitest": "^4.0.18"
+  }
 }

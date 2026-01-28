@@ -1,0 +1,119 @@
+name: 'Release Drafter'
+description:
+  'Drafts your next release notes as pull requests are merged into your
+  branch(es).'
+author: release-drafter
+branding:
+  icon: edit-2
+  color: orange
+runs:
+  using: node24
+  main: ../dist/actions/drafter/run.js
+
+inputs:
+  config-name:
+    description: |
+      If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
+      The config should still be located inside `.github` as that's where we are looking for config files.
+    required: false
+    default: 'release-drafter.yml'
+  token:
+    description: >
+      Access token used to make requests againts the GitHub API. Defaults to
+      github.token
+    default: ${{ github.token }}
+  name:
+    description: |
+      The name that will be used in the GitHub release that's created or updated.
+      This will override any `name-template` specified in your `release-drafter.yml` if defined.
+    required: false
+  tag:
+    description: |
+      The tag name to be associated with the GitHub release that's created or updated.
+      This will override any `tag-template` specified in your `release-drafter.yml` if defined.
+    required: false
+  version:
+    description: |
+      The version to be associated with the GitHub release that's created or updated.
+      This will override any version calculated by the release-drafter.
+    required: false
+  publish:
+    description: |
+      A boolean indicating whether the release being created or updated should be immediately published.
+    required: false
+    default: ''
+  latest:
+    description: |
+      A string indicating whether the release being created or updated should be marked as latest.
+    required: false
+    default: ''
+  prerelease:
+    description: |
+      A boolean indicating whether the release being created or updated is a prerelease.
+    required: false
+    default: ''
+  prerelease-identifier:
+    description: |
+      A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version.
+    required: false
+    default: ''
+  commitish:
+    description: |
+      The object that the release should be created to point to.
+    required: false
+    default: ''
+  header:
+    description: |
+      A string that would be added before the template body.
+    required: false
+    default: ''
+  footer:
+    description: |
+      A string that would be added after the template body.
+    required: false
+    default: ''
+  disable-releaser:
+    description: |
+      A boolean indicating whether the releaser mode is disabled.
+    required: false
+    default: ''
+  disable-autolabeler:
+    description: |
+      A boolean indicating whether the autolabeler mode is disabled.
+    required: false
+    default: ''
+  initial-commits-since:
+    description: |
+      A date in ISO format (eg: '2025-06-18T10:29:51Z') marking the initial commit for the release draft. This is applied only when no prior release is available.
+    required: false
+
+outputs:
+  id:
+    description: The ID of the release that was created or updated.
+  name:
+    description: The name of the release
+  tag_name:
+    description: The name of the tag associated with the release.
+  body:
+    description: The body of the drafted release.
+  html_url:
+    description: The URL users can navigate to in order to view the release
+  upload_url:
+    description:
+      The URL for uploading assets to the release, which could be used by GitHub
+      Actions for additional uses, for example the @actions/upload-release-asset
+      GitHub Action.
+  major_version:
+    description:
+      The next major version number. For example, if the last tag or release was
+      v1.2.3, the value would be v2.0.0.
+  minor_version:
+    description:
+      The next minor version number. For example, if the last tag or release was
+      v1.2.3, the value would be v1.3.0.
+  patch_version:
+    description:
+      The next patch version number. For example, if the last tag or release was
+      v1.2.3, the value would be v1.2.4.
+  resolved_version:
+    description: The next resolved version number, based on GitHub labels.

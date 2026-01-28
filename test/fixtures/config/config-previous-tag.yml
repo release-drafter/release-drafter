@@ -1,5 +1,0 @@
-template: |
-  Changes:
-  $CHANGES
-
-  Previous tag: '$PREVIOUS_TAG'

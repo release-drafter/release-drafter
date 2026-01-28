@@ -1,11 +1,15 @@
 name: 'Release Drafter'
-description: 'Drafts your next release notes as pull requests are merged into master.'
-runs:
-  using: 'node20'
-  main: 'dist/index.js'
+description:
+  'Drafts your next release notes as pull requests are merged into your
+  branch(es).'
+author: release-drafter
 branding:
   icon: edit-2
   color: orange
+runs:
+  using: node24
+  main: dist/actions/drafter/run.js
+
 inputs:
   config-name:
     description: |
@@ -13,6 +17,11 @@ inputs:
       The config should still be located inside `.github` as that's where we are looking for config files.
     required: false
     default: 'release-drafter.yml'
+  token:
+    description: >
+      Access token used to make requests againts the GitHub API. Defaults to
+      github.token
+    default: ${{ github.token }}
   name:
     description: |
       The name that will be used in the GitHub release that's created or updated.
@@ -77,6 +86,7 @@ inputs:
     description: |
       A date in ISO format (eg: '2025-06-18T10:29:51Z') marking the initial commit for the release draft. This is applied only when no prior release is available.
     required: false
+
 outputs:
   id:
     description: The ID of the release that was created or updated.
@@ -89,12 +99,21 @@ outputs:
   html_url:
     description: The URL users can navigate to in order to view the release
   upload_url:
-    description: The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.
+    description:
+      The URL for uploading assets to the release, which could be used by GitHub
+      Actions for additional uses, for example the @actions/upload-release-asset
+      GitHub Action.
   major_version:
-    description: The next major version number. For example, if the last tag or release was v1.2.3, the value would be v2.0.0.
+    description:
+      The next major version number. For example, if the last tag or release was
+      v1.2.3, the value would be v2.0.0.
   minor_version:
-    description: The next minor version number. For example, if the last tag or release was v1.2.3, the value would be v1.3.0.
+    description:
+      The next minor version number. For example, if the last tag or release was
+      v1.2.3, the value would be v1.3.0.
   patch_version:
-    description: The next patch version number. For example, if the last tag or release was v1.2.3, the value would be v1.2.4.
+    description:
+      The next patch version number. For example, if the last tag or release was
+      v1.2.3, the value would be v1.2.4.
   resolved_version:
     description: The next resolved version number, based on GitHub labels.

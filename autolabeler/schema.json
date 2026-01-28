@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "autolabeler": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "files": {
+            "default": [],
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "branch": {
+            "default": [],
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "title": {
+            "default": [],
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "body": {
+            "default": [],
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "required": ["label", "files", "branch", "title", "body"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["autolabeler"],
+  "additionalProperties": false,
+  "title": "JSON schema for Release Drafter's autolabeler action config.",
+  "id": "https://github.com/release-drafter/release-drafter/blob/master/autolabeler/schema.json"
+}
