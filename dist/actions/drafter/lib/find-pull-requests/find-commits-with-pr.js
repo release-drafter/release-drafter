@@ -34,4 +34,3 @@ const findCommitsWithPr = async (params) => {
 export {
   findCommitsWithPr
 };
-//# sourceMappingURL=find-commits-with-pr.js.map

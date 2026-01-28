@@ -66,4 +66,3 @@ export {
   getFilterExcludedPullRequests,
   getFilterIncludedPullRequests
 };
-//# sourceMappingURL=categorize-pull-requests.js.map

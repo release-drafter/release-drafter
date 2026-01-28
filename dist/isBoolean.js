@@ -118,4 +118,3 @@ const isBoolean = /* @__PURE__ */ getDefaultExportFromCjs(isBooleanExports);
 export {
   isBoolean as i
 };
-//# sourceMappingURL=isBoolean.js.map

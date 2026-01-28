@@ -74,7 +74,7 @@ const config = (): UserConfig => {
         }
       },
       emptyOutDir: true,
-      sourcemap: true,
+      sourcemap: false, // unsure this has any use
       minify: false
     },
     test: {

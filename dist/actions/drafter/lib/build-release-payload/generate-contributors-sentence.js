@@ -33,4 +33,3 @@ const generateContributorsSentence = (params) => {
 export {
   generateContributorsSentence
 };
-//# sourceMappingURL=generate-contributors-sentence.js.map

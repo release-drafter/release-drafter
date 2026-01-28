@@ -14,4 +14,3 @@ const getOctokit = () => {
 export {
   getOctokit
 };
-//# sourceMappingURL=get-octokit.js.map

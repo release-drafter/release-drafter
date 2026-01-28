@@ -4,4 +4,3 @@ export {
   findPreviousReleases,
   findPullRequests
 };
-//# sourceMappingURL=index.js.map

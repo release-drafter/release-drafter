@@ -74,4 +74,3 @@ const findPullRequests = async (params) => {
 export {
   findPullRequests
 };
-//# sourceMappingURL=find-pull-requests.js.map

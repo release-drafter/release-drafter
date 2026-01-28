@@ -36,4 +36,3 @@ const escapeTitle = (params) => (
 export {
   pullRequestToString
 };
-//# sourceMappingURL=pull-request-to-string.js.map

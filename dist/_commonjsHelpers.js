@@ -36,4 +36,3 @@ export {
   commonjsGlobal as c,
   getDefaultExportFromCjs as g
 };
-//# sourceMappingURL=_commonjsHelpers.js.map

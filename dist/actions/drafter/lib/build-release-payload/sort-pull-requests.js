@@ -41,4 +41,3 @@ const dateSortDescending = (date1, date2) => {
 export {
   sortPullRequests
 };
-//# sourceMappingURL=sort-pull-requests.js.map

@@ -31,4 +31,3 @@ const githubConfig = {
 export {
   githubConfig as default
 };
-//# sourceMappingURL=codegen.gql.js.map

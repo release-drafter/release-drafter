@@ -14,4 +14,3 @@ export {
   parseConfigFile,
   stringToRegex
 };
-//# sourceMappingURL=index.js.map

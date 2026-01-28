@@ -102,4 +102,3 @@ const sortReleases = (params) => {
 export {
   sortReleases
 };
-//# sourceMappingURL=sort-releases.js.map

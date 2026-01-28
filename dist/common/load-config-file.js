@@ -21,4 +21,3 @@ const loadConfigFile = (configFilename) => {
 export {
   loadConfigFile
 };
-//# sourceMappingURL=load-config-file.js.map

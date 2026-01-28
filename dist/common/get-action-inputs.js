@@ -24,4 +24,3 @@ const getActionInput = () => {
 export {
   getActionInput
 };
-//# sourceMappingURL=get-action-inputs.js.map

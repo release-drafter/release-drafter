@@ -6,4 +6,3 @@ export {
   configSchema,
   standaloneInputSchema
 };
-//# sourceMappingURL=index.js.map

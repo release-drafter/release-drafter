@@ -2184,4 +2184,3 @@ const getTemplatableVersion = (input) => {
 export {
   getVersionInfo
 };
-//# sourceMappingURL=get-version-info.js.map
