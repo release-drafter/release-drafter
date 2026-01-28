@@ -1,8 +1,8 @@
 import { getOctokit } from 'src/common'
-import { Config } from 'src/types'
 import { context } from '@actions/github'
 import * as core from '@actions/core'
 import { sortReleases } from './sort-releases'
+import { Config } from '../../config'
 
 // GitHub API currently returns a 500 HTTP response if you attempt to fetch over 1000 releases.
 const RELEASE_COUNT_LIMIT = 1000

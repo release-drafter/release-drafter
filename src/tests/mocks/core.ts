@@ -1,6 +1,7 @@
 import type * as core from '@actions/core'
-import { ActionInput } from 'src/types'
+import { commonInputSchema } from 'src/common'
 import { vi } from 'vitest'
+import z from 'zod'
 
 // When debugging tests, set tu true to get outputs
 const DEBUG_TESTS = false
@@ -16,7 +17,7 @@ export const info = vi.fn<typeof core.info>(
 )
 
 export const getInput = vi.fn<typeof core.getInput>((name: string) => {
-  switch (name as keyof ActionInput) {
+  switch (name as keyof z.infer<typeof commonInputSchema>) {
     case 'token':
       return 'test'
     default:

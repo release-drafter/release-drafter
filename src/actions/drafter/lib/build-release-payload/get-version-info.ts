@@ -1,8 +1,8 @@
-import { Config, StandaloneInput } from 'src/types'
 import { findPreviousReleases } from '../find-previous-releases'
 import { resolveVersionKeyIncrement } from './resolve-version-increment'
 import * as semver from 'semver'
 import { renderTemplate } from './render-template'
+import { Config, ExclusiveInput } from '../../config'
 
 type Release = Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
 
@@ -15,7 +15,7 @@ export const getVersionInfo = (params: {
     Config,
     'version-template' | 'tag-prefix' | 'prerelease-identifier'
   >
-  input: Pick<StandaloneInput, 'version' | 'tag' | 'name'>
+  input: Pick<ExclusiveInput, 'version' | 'tag' | 'name'>
   versionKeyIncrement: ReturnType<typeof resolveVersionKeyIncrement>
 }) => {
   const {

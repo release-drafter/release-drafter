@@ -1,10 +1,10 @@
-import { Config } from 'src/types'
 import { findPreviousReleases } from '../find-previous-releases'
 import { context } from '@actions/github'
 import { findCommitsWithPathChange } from './find-commits-with-path-change'
 import core from '@actions/core'
 import { findCommitsWithPr } from './find-commits-with-pr'
 import _ from 'lodash'
+import { Config } from '../../config'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']

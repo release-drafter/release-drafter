@@ -1,6 +1,12 @@
-import { g as githubExports } from "../github.js";
-import { z } from "../external.js";
-const standaloneInputSchema = z.object({
+import { g as githubExports } from "../../../github.js";
+import "path";
+import "fs";
+import "../../../index.js";
+import "../../../core.js";
+import "../../../lodash.js";
+import { commonInputSchema } from "../../../common/common-input.schema.js";
+import { z } from "../../../external.js";
+const exclusiveInputSchema = z.object({
   /**
    * If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
    * The config should still be located inside `.github` as that's where we are looking for config files.
@@ -25,26 +31,8 @@ const standaloneInputSchema = z.object({
   /**
    * A boolean indicating whether the release being created or updated should be immediately published.
    */
-  publish: z.stringbool().optional().default(false),
-  /**
-   * A boolean indicating whether the release being created or updated should be immediately published.
-   *
-   * Defaults to ${{ github.token }} in action inputs, or the GITHUB_TOKEN environment variable.
-   */
-  token: z.string().min(1).default(process.env.GITHUB_TOKEN || ""),
-  /**
-   * A boolean indicating whether the releaser mode is disabled.
-   */
-  "disable-releaser": z.stringbool().default(false),
-  /**
-   * A boolean indicating whether the autolabeler mode is disabled.
-   */
-  "disable-autolabeler": z.stringbool().default(false)
-}).superRefine((data) => {
-  if (data.token && !process.env.GITHUB_TOKEN) {
-    process.env.GITHUB_TOKEN = data.token;
-  }
-});
+  publish: z.stringbool().optional().default(false)
+}).and(commonInputSchema);
 const configOverridesInputSchema = z.object({
   /**
    * A boolean indicating whether the release being created or updated should be marked as latest.
@@ -76,11 +64,11 @@ const configOverridesInputSchema = z.object({
    */
   footer: z.string().optional()
 });
-const actionInputSchema = standaloneInputSchema.and(
+const actionInputSchema = exclusiveInputSchema.and(
   configOverridesInputSchema
 );
 export {
   actionInputSchema,
   configOverridesInputSchema,
-  standaloneInputSchema
+  exclusiveInputSchema
 };

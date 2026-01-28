@@ -1,7 +1,8 @@
 import { context } from '@actions/github'
+import { commonInputSchema } from 'src/common'
 import z from 'zod'
 
-export const standaloneInputSchema = z
+export const exclusiveInputSchema = z
   .object({
     /**
      * If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
@@ -27,31 +28,9 @@ export const standaloneInputSchema = z
     /**
      * A boolean indicating whether the release being created or updated should be immediately published.
      */
-    publish: z.stringbool().optional().default(false),
-    /**
-     * A boolean indicating whether the release being created or updated should be immediately published.
-     *
-     * Defaults to ${{ github.token }} in action inputs, or the GITHUB_TOKEN environment variable.
-     */
-    token: z
-      .string()
-      .min(1)
-      .default(process.env.GITHUB_TOKEN || ''),
-    /**
-     * A boolean indicating whether the releaser mode is disabled.
-     */
-    'disable-releaser': z.stringbool().default(false),
-    /**
-     * A boolean indicating whether the autolabeler mode is disabled.
-     */
-    'disable-autolabeler': z.stringbool().default(false)
+    publish: z.stringbool().optional().default(false)
   })
-  .superRefine((data) => {
-    // Inject token into environment variable for use by octokit
-    if (data.token && !process.env.GITHUB_TOKEN) {
-      process.env.GITHUB_TOKEN = data.token
-    }
-  })
+  .and(commonInputSchema)
 
 export const configOverridesInputSchema = z.object({
   /**
@@ -88,10 +67,33 @@ export const configOverridesInputSchema = z.object({
   footer: z.string().optional()
 })
 
-export const actionInputSchema = standaloneInputSchema.and(
+export const actionInputSchema = exclusiveInputSchema.and(
   configOverridesInputSchema
 )
 
+/**
+ * Full action inputs
+ *
+ * For the action inputs exclusive to the action input, see `ExclusiveInput`
+ *
+ * For the action inputs that override configurations from the config-file, see `ConfigOverridesInput`
+ */
 export type ActionInput = z.infer<typeof actionInputSchema>
-export type StandaloneInput = z.infer<typeof standaloneInputSchema>
+
+/**
+ * Inputs exclusive to the action input
+ *
+ * For the full action inputs, see `ActionInput`
+ *
+ * For the action inputs that override configurations from the config-file, see `ConfigOverridesInput`
+ */
+export type ExclusiveInput = z.infer<typeof exclusiveInputSchema>
+
+/**
+ * Inputs that override configurations from the config-file
+ *
+ * For the full action inputs, see `ActionInput`
+ *
+ * For the action inputs exclusive to the action input, see `ExclusiveInput`
+ */
 export type ConfigOverridesInput = z.infer<typeof configOverridesInputSchema>

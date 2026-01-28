@@ -1,4 +1,4 @@
-import { Config } from 'src/types'
+import { Config } from '../../config'
 import { findPullRequests } from '../find-pull-requests'
 import { renderTemplate } from './render-template'
 import regexEscape from 'escape-string-regexp'

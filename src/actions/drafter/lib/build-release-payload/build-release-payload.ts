@@ -1,4 +1,3 @@
-import { Config, StandaloneInput } from 'src/types'
 import { findPullRequests } from '../find-pull-requests'
 import { findPreviousReleases } from '../find-previous-releases'
 import { sortPullRequests } from './sort-pull-requests'
@@ -10,6 +9,7 @@ import { resolveVersionKeyIncrement } from './resolve-version-increment'
 
 import * as core from '@actions/core'
 import { getVersionInfo } from './get-version-info'
+import { Config, ExclusiveInput } from '../../config'
 
 /**
  * Outputs the payload for creating or updating a release.
@@ -45,7 +45,7 @@ export const buildReleasePayload = (params: {
     | 'commitish'
     | 'latest'
   >
-  input: StandaloneInput
+  input: ExclusiveInput
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
 }) => {

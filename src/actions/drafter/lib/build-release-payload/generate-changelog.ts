@@ -1,4 +1,4 @@
-import { Config } from 'src/types'
+import { Config } from '../../config'
 import { findPullRequests } from '../find-pull-requests'
 import { categorizePullRequests } from './categorize-pull-requests'
 import { pullRequestToString } from './pull-request-to-string'

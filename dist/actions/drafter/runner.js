@@ -1,13 +1,16 @@
 import { c as coreExports } from "../../core.js";
 import { main } from "./main.js";
-import { getActionInput } from "../../common/get-action-inputs.js";
 import { loadConfigFile } from "../../common/load-config-file.js";
-import { mergeInputAndConfig } from "../../common/merge-input-and-config.js";
-import { parseConfigFile } from "../../common/parse-config-file.js";
-import "../../common/string-to-regex.js";
+import "../../index.js";
 import "../../github.js";
 import "../../lodash.js";
+import "../../common/common-input.schema.js";
 import { setActionOutput } from "./config/set-action-output.js";
+import "./config/config.schema.js";
+import "./config/action-input.schema.js";
+import { getActionInput } from "./config/get-action-inputs.js";
+import { mergeInputAndConfig } from "./config/merge-input-and-config.js";
+import { parseConfigFile } from "./config/parse-config-file.js";
 async function run() {
   try {
     coreExports.info("Parsing inputs and configuration...");

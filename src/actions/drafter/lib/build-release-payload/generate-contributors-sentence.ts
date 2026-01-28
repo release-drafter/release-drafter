@@ -1,4 +1,4 @@
-import { Config } from 'src/types'
+import { Config } from '../../config'
 import { findPullRequests } from '../find-pull-requests'
 
 export const generateContributorsSentence = (params: {

@@ -1,6 +1,6 @@
 import { g as githubExports } from "../../../../github.js";
 import { findCommitsWithPathChange } from "./find-commits-with-path-change.js";
-import { a as core } from "../../../../core.js";
+import { b as core } from "../../../../core.js";
 import { findCommitsWithPr } from "./find-commits-with-pr.js";
 import { _ } from "../../../../lodash.js";
 const findPullRequests = async (params) => {

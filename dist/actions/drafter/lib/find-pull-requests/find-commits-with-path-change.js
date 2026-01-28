@@ -1,13 +1,9 @@
-import "../../../../core.js";
-import "../../../../types/action-input.schema.js";
-import "../../../../types/config.schema.js";
 import "path";
 import "fs";
-import "../../../../isBoolean.js";
-import "../../../../lexer.js";
-import "../../../../common/string-to-regex.js";
+import "../../../../index.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
 import { paginateGraphql } from "../../../../common/paginate-graphql.js";
+import "../../../../common/common-input.schema.js";
 import { getGqlQuery } from "./get-query.js";
 const findCommitsWithPathChange = async (paths, params) => {
   const octokit = getOctokit();
