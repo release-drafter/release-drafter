@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import isBoolean from 'lodash/isBoolean.js'
-import { Config } from 'src/types'
-import { ConfigOverridesInput } from 'src/types/action-input.schema'
+import { ConfigOverridesInput } from 'src/actions/drafter/config/action-input.schema'
+import { Config } from './config.schema'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.

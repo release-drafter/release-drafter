@@ -1,11 +1,7 @@
 import * as core from '@actions/core'
 import { main } from './main'
-import {
-  getActionInput,
-  loadConfigFile,
-  mergeInputAndConfig,
-  parseConfigFile
-} from 'src/common'
+import { loadConfigFile } from 'src/common'
+import { getActionInput, parseConfigFile } from './config'
 
 /**
  * The main function for the action.
@@ -14,16 +10,13 @@ import {
  */
 export async function run(): Promise<void> {
   try {
-    /**
-     * TODO loading config should not come from utils but from drafter directly
-     */
     const input = getActionInput()
-    const config = mergeInputAndConfig({
-      config: await parseConfigFile(loadConfigFile(input['config-name'])),
-      input
-    })
+    const config = await parseConfigFile(loadConfigFile(input['config-name']))
 
-    await main({ input, config })
+    const { labels, pr_number } = await main({ config })
+
+    if (pr_number) core.setOutput('number', pr_number)
+    if (labels) core.setOutput('labels', labels)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

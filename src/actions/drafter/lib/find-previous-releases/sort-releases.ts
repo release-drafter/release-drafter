@@ -1,7 +1,7 @@
-import { Config } from 'src/types'
 import regexEscape from 'escape-string-regexp'
 import compareVersions from 'compare-versions'
 import { Octokit } from 'src/common/get-octokit'
+import { Config } from '../../config'
 
 export const sortReleases = (params: {
   releases: Awaited<

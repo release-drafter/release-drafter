@@ -1,4 +1,4 @@
-import { Config } from 'src/types'
+import { Config } from '../../config'
 
 export type Template = {
   [key: `$${Uppercase<string>}`]:

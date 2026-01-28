@@ -1,4 +1,4 @@
-import { Config, StandaloneInput } from 'src/types'
+import { Config, ExclusiveInput } from './config'
 import {
   findPreviousReleases,
   findPullRequests,
@@ -8,7 +8,7 @@ import {
 
 export const main = async (params: {
   config: Config
-  input: StandaloneInput
+  input: ExclusiveInput
 }) => {
   /**
    * 1. find previous releases - returns latest release

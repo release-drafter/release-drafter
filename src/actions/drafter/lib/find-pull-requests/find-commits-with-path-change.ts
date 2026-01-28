@@ -1,10 +1,10 @@
 import { getOctokit, paginateGraphql } from 'src/common'
 import { getGqlQuery } from './get-query'
-import { Config } from 'src/types'
 import {
   FindCommitsWithPathChangesQueryQuery,
   FindCommitsWithPathChangesQueryQueryVariables
 } from './graphql/find-commits-with-path-changes.graphql.generated'
+import { Config } from '../../config'
 
 export const findCommitsWithPathChange = async (
   paths: Config['include-paths'],

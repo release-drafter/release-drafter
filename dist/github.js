@@ -1,6 +1,6 @@
 import require$$1 from "fs";
 import require$$0 from "os";
-import { r as requireLib, a as requireUndici } from "./index2.js";
+import { r as requireLib, d as requireUndici } from "./core.js";
 import { g as getDefaultExportFromCjs, a as getAugmentedNamespace } from "./_commonjsHelpers.js";
 var github = {};
 var context = {};

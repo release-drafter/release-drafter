@@ -1,8 +1,6 @@
 /* node:coverage ignore file -- @preserve */
-export { getActionInput } from './get-action-inputs'
 export { loadConfigFile } from './load-config-file'
-export { mergeInputAndConfig } from './merge-input-and-config'
-export { parseConfigFile } from './parse-config-file'
 export { stringToRegex } from './string-to-regex'
 export { getOctokit } from './get-octokit'
 export { paginateGraphql } from './paginate-graphql'
+export { commonInputSchema } from './common-input.schema'

@@ -1,12 +1,12 @@
 import * as core from '@actions/core'
 import { main } from './main'
+import { loadConfigFile } from 'src/common'
 import {
   getActionInput,
-  loadConfigFile,
   mergeInputAndConfig,
+  setActionOutput,
   parseConfigFile
-} from 'src/common'
-import { setActionOutput } from './config'
+} from './config'
 
 /**
  * The main function for the action.
@@ -16,9 +16,6 @@ import { setActionOutput } from './config'
 export async function run(): Promise<void> {
   try {
     core.info('Parsing inputs and configuration...')
-    /**
-     * TODO loading config should not come from utils but from drafter directly
-     */
     const input = getActionInput()
     const config = mergeInputAndConfig({
       config: await parseConfigFile(loadConfigFile(input['config-name'])),

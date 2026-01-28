@@ -1,4 +1,4 @@
-import { e as escapeStringRegexp } from "../../../../index.js";
+import { e as escapeStringRegexp } from "../../../../index2.js";
 function compareVersions(v1, v2) {
   const n1 = validateAndParse(v1);
   const n2 = validateAndParse(v2);
