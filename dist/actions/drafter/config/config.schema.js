@@ -2,6 +2,12 @@ import { z } from "../../../external.js";
 import { c as coreExports } from "../../../core.js";
 import { g as githubExports } from "../../../github.js";
 import { stringToRegex } from "../../../common/string-to-regex.js";
+const replacersSchema = z.array(
+  z.object({
+    search: z.string().min(1),
+    replace: z.string().min(0)
+  })
+).optional().default([]);
 const configSchema = z.object({
   /**
    * The template to use for each merged pull request.
@@ -93,12 +99,7 @@ const configSchema = z.object({
   /**
    * Search and replace content in the generated changelog body.
    */
-  replacers: z.array(
-    z.object({
-      search: z.string().min(1),
-      replace: z.string().min(0)
-    })
-  ).optional().default([]).transform(
+  replacers: replacersSchema.transform(
     (replacers) => (
       // convert 'search' to regex and remove invalid entries
       replacers.map((r) => {
@@ -174,7 +175,11 @@ const configSchema = z.object({
       message: "'prerelease' and 'latest' cannot both be truthy."
     });
   }
+}).meta({
+  title: "JSON schema for Release Drafter yaml files",
+  id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
 });
 export {
-  configSchema
+  configSchema,
+  replacersSchema
 };

@@ -1,5 +1,5 @@
 import { setActionOutput } from "./set-action-output.js";
-import { configSchema } from "./config.schema.js";
+import { configSchema, replacersSchema } from "./config.schema.js";
 import { actionInputSchema, configOverridesInputSchema, exclusiveInputSchema } from "./action-input.schema.js";
 import { getActionInput } from "./get-action-inputs.js";
 import { mergeInputAndConfig } from "./merge-input-and-config.js";
@@ -12,5 +12,6 @@ export {
   getActionInput,
   mergeInputAndConfig,
   parseConfigFile,
+  replacersSchema,
   setActionOutput
 };
