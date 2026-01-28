@@ -19,4 +19,3 @@ const main = async (params) => {
 export {
   main
 };
-//# sourceMappingURL=main.js.map

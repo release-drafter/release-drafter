@@ -31,4 +31,3 @@ async function paginateGraphql(client, query, requestParameters, paginatePath) {
 export {
   paginateGraphql
 };
-//# sourceMappingURL=paginate-graphql.js.map

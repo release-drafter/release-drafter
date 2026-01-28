@@ -25,4 +25,3 @@ const renderTemplate = (params) => {
 export {
   renderTemplate
 };
-//# sourceMappingURL=render-template.js.map

@@ -7,4 +7,3 @@ function escapeStringRegexp(string) {
 export {
   escapeStringRegexp as e
 };
-//# sourceMappingURL=index.js.map

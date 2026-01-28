@@ -28,4 +28,3 @@ const stringToRegex = (search) => {
 export {
   stringToRegex
 };
-//# sourceMappingURL=string-to-regex.js.map

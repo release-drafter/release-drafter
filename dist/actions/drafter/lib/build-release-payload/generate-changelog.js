@@ -50,4 +50,3 @@ const generateChangeLog = (params) => {
 export {
   generateChangeLog
 };
-//# sourceMappingURL=generate-changelog.js.map

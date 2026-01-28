@@ -8,4 +8,3 @@ const getGqlQuery = (query) => {
 export {
   getGqlQuery
 };
-//# sourceMappingURL=get-query.js.map

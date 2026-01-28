@@ -37,4 +37,3 @@ const findCommitsWithPathChange = async (paths, params) => {
 export {
   findCommitsWithPathChange
 };
-//# sourceMappingURL=find-commits-with-path-change.js.map
