@@ -6,6 +6,7 @@ import {
   mergeInputAndConfig,
   parseConfigFile
 } from 'src/common'
+import { setActionOutput } from './config'
 
 /**
  * The main function for the action.
@@ -24,7 +25,12 @@ export async function run(): Promise<void> {
       input
     })
 
-    await main({ input, config })
+    const { upsertedRelease, releasePayload } = await main({ input, config })
+
+    setActionOutput({
+      upsertedRelease,
+      releasePayload
+    })
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

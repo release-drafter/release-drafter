@@ -7,6 +7,7 @@ import { parseConfigFile } from "../../common/parse-config-file.js";
 import "../../common/string-to-regex.js";
 import "../../github.js";
 import "../../lodash.js";
+import { setActionOutput } from "./config/set-action-output.js";
 async function run() {
   try {
     coreExports.info("Parsing inputs and configuration...");
@@ -15,7 +16,11 @@ async function run() {
       config: await parseConfigFile(loadConfigFile(input["config-name"])),
       input
     });
-    await main({ input, config });
+    const { upsertedRelease, releasePayload } = await main({ input, config });
+    setActionOutput({
+      upsertedRelease,
+      releasePayload
+    });
   } catch (error) {
     if (error instanceof Error) coreExports.setFailed(error.message);
   }
