@@ -1,16 +1,37 @@
-import { resolve } from 'node:path'
+import path from 'node:path'
 import { builtinModules } from 'node:module'
 import { defineConfig, UserConfig } from 'vite'
 import { configDefaults } from 'vitest/config'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import copy from 'rollup-plugin-copy'
+import glob from 'glob'
+import { fileURLToPath } from 'node:url'
 
 const config = (): UserConfig => {
-  const entry = ['drafter', 'autolabeler']
-    .map((action) => ({
-      [`${action}/run`]: resolve(__dirname, `src/actions/${action}/run.ts`)
-    }))
-    .reduce((acc, cur) => ({ ...acc, ...cur }), {})
+  /**
+   * Maintain the file structure and export signatures,
+   * by turning every file into an entry point.
+   *
+   * This is recommended over output.preserveModules that may tree-shake exports
+   * as well as emit virtual files created by plugins
+   * @see https://rollupjs.org/configuration-options/#input
+   *
+   * This is fed to rollupOptions.input
+   * @see https://vite.dev/config/build-options#build-lib
+   */
+  const entry = Object.fromEntries(
+    glob.sync('src/!(*tests)/**/*.ts').map((file) => [
+      // This removes `src/` as well as the file extension from each
+      // file, so e.g. src/nested/foo.js becomes nested/foo
+      path.relative(
+        'src',
+        file.slice(0, file.length - path.extname(file).length)
+      ),
+      // This expands the relative paths to absolute paths, so e.g.
+      // src/nested/foo becomes /project/src/nested/foo.js
+      fileURLToPath(new URL(file, import.meta.url))
+    ])
+  )
 
   return defineConfig({
     plugins: [
@@ -21,7 +42,6 @@ const config = (): UserConfig => {
        * @see https://www.npmjs.com/package/rollup-plugin-copy
        */
       copy({
-        verbose: true,
         targets: [
           {
             src: 'action.yml',
@@ -30,8 +50,8 @@ const config = (): UserConfig => {
               contents
                 .toString()
                 .replace(
-                  'main: dist/drafter/run.js',
-                  'main: ../dist/drafter/run.js'
+                  'main: dist/actions/drafter/run.js',
+                  'main: ../dist/actions/drafter/run.js'
                 )
           }
         ]
@@ -48,11 +68,9 @@ const config = (): UserConfig => {
           ...builtinModules,
           ...builtinModules.map((module) => `node:${module}`)
         ],
-        input: entry,
         output: {
           entryFileNames: '[name].js',
-          chunkFileNames: '[name].js',
-          preserveModules: true
+          chunkFileNames: '[name].js'
         }
       },
       emptyOutDir: true,

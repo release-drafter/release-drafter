@@ -8,7 +8,7 @@ branding:
   color: orange
 runs:
   using: node24
-  main: ../dist/drafter/run.js
+  main: ../dist/actions/drafter/run.js
 
 inputs:
   config-name:
