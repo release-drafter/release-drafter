@@ -51,10 +51,17 @@ describe('config-loading', () => {
   })
   describe('when the file has an _extend key', () => {
     describe('when _extend is "filepath"', () => {
-      it('does not attempt to find the file locally', () => {})
-      it('it tries to find the file in the current runtime context', () => {})
+      describe('if parent was fetched locally', () => {
+        it('it attempts to find the _extend target locally', () => {})
+        describe('and if _extend is a valid target locally', () => {
+          it('it merges the configs together', () => {})
+        })
+      })
+      describe('if parent was fetched remotely', () => {
+        it("it attempts to find the _extend target on the same remote as it's parent", () => {})
+      })
     })
-    describe('when _extend is a valid target', () => {
+    describe('when _extend is a valid remote target', () => {
       it('it merges the configs together', () => {})
     })
   })
