@@ -1,9 +1,10 @@
+import "../../../lodash.js";
+import "../../../lexer.js";
 import "path";
 import "fs";
-import "../../../index.js";
-import "../../../github.js";
 import "../../../core.js";
-import "../../../lodash.js";
+import "../../../github.js";
+import "../../../index.js";
 import { commonInputSchema } from "../../../common/common-input.schema.js";
 import { z } from "../../../external.js";
 const actionInputSchema = z.object({

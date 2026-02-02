@@ -1,11 +1,10 @@
 import * as core from '@actions/core'
 import { main } from './main'
-import { loadConfigFile } from 'src/common'
 import {
   getActionInput,
+  getConfig,
   mergeInputAndConfig,
-  setActionOutput,
-  parseConfigFile
+  setActionOutput
 } from './config'
 
 /**
@@ -18,7 +17,7 @@ export async function run(): Promise<void> {
     core.info('Parsing inputs and configuration...')
     const input = getActionInput()
     const config = mergeInputAndConfig({
-      config: await parseConfigFile(loadConfigFile(input['config-name'])),
+      config: await getConfig(input['config-name']),
       input
     })
 

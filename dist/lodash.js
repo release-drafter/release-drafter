@@ -5481,5 +5481,6 @@ function requireLodash() {
 var lodashExports = requireLodash();
 const _ = /* @__PURE__ */ getDefaultExportFromCjs(lodashExports);
 export {
-  _
+  _,
+  lodashExports as l
 };

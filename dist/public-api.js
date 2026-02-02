@@ -1,4 +1,4 @@
-import { Y as YAMLMap, i as isMap, a as YAMLSeq, b as isSeq, s as stringifyString, S as Scalar, m as merge, o as omap, p as pairs, c as set, M as MAP, d as SCALAR, e as SEQ, f as createStringifyContext, g as indentComment, h as isNode, j as stringify, l as lineComment, N as NODE_TYPE, D as DOC, k as Directives, n as anchorNames, q as findNewAnchor, A as Alias, r as createNode, t as createNodeAnchors, u as isCollection, P as Pair, v as isEmptyPath, w as isScalar, x as collectionFromPath, y as toJS, z as applyReviver, B as isPair, L as Lexer, C as tokenType, E as warn } from "./lexer.js";
+import { a as YAMLMap, h as isMap, d as YAMLSeq, m as isSeq, s as stringifyString, S as Scalar, o as merge, p as omap, q as pairs, r as set, M as MAP, t as SCALAR, u as SEQ, w as createStringifyContext, x as indentComment, j as isNode, y as stringify$1, z as lineComment, N as NODE_TYPE, D as DOC, B as Directives, C as anchorNames, E as findNewAnchor, A as Alias, F as createNode, G as createNodeAnchors, f as isCollection, P as Pair, H as isEmptyPath, l as isScalar, I as collectionFromPath, J as toJS, K as applyReviver, k as isPair, O as resolveEnd, Q as resolveBlockScalar, R as resolveFlowScalar, e as YAMLWarning, b as YAMLParseError, L as Lexer, T as tokenType, U as warn, V as prettifyError, g as isDocument } from "./lexer.js";
 const map = {
   collection: "map",
   default: true,
@@ -613,7 +613,7 @@ function stringifyDocument(doc, options) {
       contentComment = doc.contents.comment;
     }
     const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-    let body = stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+    let body = stringify$1(doc.contents, ctx, () => contentComment = null, onChompKeep);
     if (contentComment)
       body += lineComment(body, "", commentString(contentComment));
     if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -621,7 +621,7 @@ function stringifyDocument(doc, options) {
     } else
       lines.push(body);
   } else {
-    lines.push(stringify(doc.contents, ctx));
+    lines.push(stringify$1(doc.contents, ctx));
   }
   if (doc.directives?.docEnd) {
     if (doc.comment) {
@@ -937,60 +937,6 @@ function assertCollection(contents) {
     return true;
   throw new Error("Expected a YAML collection as document contents");
 }
-class YAMLError extends Error {
-  constructor(name, pos, code, message) {
-    super();
-    this.name = name;
-    this.code = code;
-    this.message = message;
-    this.pos = pos;
-  }
-}
-class YAMLParseError extends YAMLError {
-  constructor(pos, code, message) {
-    super("YAMLParseError", pos, code, message);
-  }
-}
-class YAMLWarning extends YAMLError {
-  constructor(pos, code, message) {
-    super("YAMLWarning", pos, code, message);
-  }
-}
-const prettifyError = (src, lc) => (error) => {
-  if (error.pos[0] === -1)
-    return;
-  error.linePos = error.pos.map((pos) => lc.linePos(pos));
-  const { line, col } = error.linePos[0];
-  error.message += ` at line ${line}, column ${col}`;
-  let ci = col - 1;
-  let lineStr = src.substring(lc.lineStarts[line - 1], lc.lineStarts[line]).replace(/[\n\r]+$/, "");
-  if (ci >= 60 && lineStr.length > 80) {
-    const trimStart = Math.min(ci - 39, lineStr.length - 79);
-    lineStr = "…" + lineStr.substring(trimStart);
-    ci -= trimStart - 1;
-  }
-  if (lineStr.length > 80)
-    lineStr = lineStr.substring(0, 79) + "…";
-  if (line > 1 && /^ *$/.test(lineStr.substring(0, ci))) {
-    let prev = src.substring(lc.lineStarts[line - 2], lc.lineStarts[line - 1]);
-    if (prev.length > 80)
-      prev = prev.substring(0, 79) + "…\n";
-    lineStr = prev + lineStr;
-  }
-  if (/[^ ]/.test(lineStr)) {
-    let count = 1;
-    const end = error.linePos[1];
-    if (end?.line === line && end.col > col) {
-      count = Math.max(1, Math.min(end.col - col, 80 - ci));
-    }
-    const pointer = " ".repeat(ci) + "^".repeat(count);
-    error.message += `:
-
-${lineStr}
-${pointer}
-`;
-  }
-};
 function resolveProps(tokens, { flow, indicator, next, offset, onError, parentIndent, startOnNewline }) {
   let spaceBefore = false;
   let atNewline = startOnNewline;
@@ -1301,41 +1247,6 @@ function resolveBlockSeq({ composeNode: composeNode2, composeEmptyNode: composeE
   seq2.range = [bs.offset, offset, commentEnd ?? offset];
   return seq2;
 }
-function resolveEnd(end, offset, reqSpace, onError) {
-  let comment = "";
-  if (end) {
-    let hasSpace = false;
-    let sep = "";
-    for (const token of end) {
-      const { source, type } = token;
-      switch (type) {
-        case "space":
-          hasSpace = true;
-          break;
-        case "comment": {
-          if (reqSpace && !hasSpace)
-            onError(token, "MISSING_CHAR", "Comments must be separated from other tokens by white space characters");
-          const cb = source.substring(1) || " ";
-          if (!comment)
-            comment = cb;
-          else
-            comment += sep + cb;
-          sep = "";
-          break;
-        }
-        case "newline":
-          if (comment)
-            sep += source;
-          hasSpace = true;
-          break;
-        default:
-          onError(token, "UNEXPECTED_TOKEN", `Unexpected ${type} at node end`);
-      }
-      offset += source.length;
-    }
-  }
-  return { comment, offset };
-}
 const blockMsg = "Block collections are not allowed within flow collections";
 const isBlock = (token) => token && (token.type === "block-map" || token.type === "block-seq");
 function resolveFlowCollection({ composeNode: composeNode2, composeEmptyNode: composeEmptyNode2 }, ctx, fc, onError, tag) {
@@ -1563,389 +1474,6 @@ function composeCollection(CN2, ctx, token, props, onError) {
   if (tag?.format)
     node.format = tag.format;
   return node;
-}
-function resolveBlockScalar(ctx, scalar, onError) {
-  const start = scalar.offset;
-  const header = parseBlockScalarHeader(scalar, ctx.options.strict, onError);
-  if (!header)
-    return { value: "", type: null, comment: "", range: [start, start, start] };
-  const type = header.mode === ">" ? Scalar.BLOCK_FOLDED : Scalar.BLOCK_LITERAL;
-  const lines = scalar.source ? splitLines(scalar.source) : [];
-  let chompStart = lines.length;
-  for (let i = lines.length - 1; i >= 0; --i) {
-    const content = lines[i][1];
-    if (content === "" || content === "\r")
-      chompStart = i;
-    else
-      break;
-  }
-  if (chompStart === 0) {
-    const value2 = header.chomp === "+" && lines.length > 0 ? "\n".repeat(Math.max(1, lines.length - 1)) : "";
-    let end2 = start + header.length;
-    if (scalar.source)
-      end2 += scalar.source.length;
-    return { value: value2, type, comment: header.comment, range: [start, end2, end2] };
-  }
-  let trimIndent = scalar.indent + header.indent;
-  let offset = scalar.offset + header.length;
-  let contentStart = 0;
-  for (let i = 0; i < chompStart; ++i) {
-    const [indent, content] = lines[i];
-    if (content === "" || content === "\r") {
-      if (header.indent === 0 && indent.length > trimIndent)
-        trimIndent = indent.length;
-    } else {
-      if (indent.length < trimIndent) {
-        const message = "Block scalars with more-indented leading empty lines must use an explicit indentation indicator";
-        onError(offset + indent.length, "MISSING_CHAR", message);
-      }
-      if (header.indent === 0)
-        trimIndent = indent.length;
-      contentStart = i;
-      if (trimIndent === 0 && !ctx.atRoot) {
-        const message = "Block scalar values in collections must be indented";
-        onError(offset, "BAD_INDENT", message);
-      }
-      break;
-    }
-    offset += indent.length + content.length + 1;
-  }
-  for (let i = lines.length - 1; i >= chompStart; --i) {
-    if (lines[i][0].length > trimIndent)
-      chompStart = i + 1;
-  }
-  let value = "";
-  let sep = "";
-  let prevMoreIndented = false;
-  for (let i = 0; i < contentStart; ++i)
-    value += lines[i][0].slice(trimIndent) + "\n";
-  for (let i = contentStart; i < chompStart; ++i) {
-    let [indent, content] = lines[i];
-    offset += indent.length + content.length + 1;
-    const crlf = content[content.length - 1] === "\r";
-    if (crlf)
-      content = content.slice(0, -1);
-    if (content && indent.length < trimIndent) {
-      const src = header.indent ? "explicit indentation indicator" : "first line";
-      const message = `Block scalar lines must not be less indented than their ${src}`;
-      onError(offset - content.length - (crlf ? 2 : 1), "BAD_INDENT", message);
-      indent = "";
-    }
-    if (type === Scalar.BLOCK_LITERAL) {
-      value += sep + indent.slice(trimIndent) + content;
-      sep = "\n";
-    } else if (indent.length > trimIndent || content[0] === "	") {
-      if (sep === " ")
-        sep = "\n";
-      else if (!prevMoreIndented && sep === "\n")
-        sep = "\n\n";
-      value += sep + indent.slice(trimIndent) + content;
-      sep = "\n";
-      prevMoreIndented = true;
-    } else if (content === "") {
-      if (sep === "\n")
-        value += "\n";
-      else
-        sep = "\n";
-    } else {
-      value += sep + content;
-      sep = " ";
-      prevMoreIndented = false;
-    }
-  }
-  switch (header.chomp) {
-    case "-":
-      break;
-    case "+":
-      for (let i = chompStart; i < lines.length; ++i)
-        value += "\n" + lines[i][0].slice(trimIndent);
-      if (value[value.length - 1] !== "\n")
-        value += "\n";
-      break;
-    default:
-      value += "\n";
-  }
-  const end = start + header.length + scalar.source.length;
-  return { value, type, comment: header.comment, range: [start, end, end] };
-}
-function parseBlockScalarHeader({ offset, props }, strict, onError) {
-  if (props[0].type !== "block-scalar-header") {
-    onError(props[0], "IMPOSSIBLE", "Block scalar header not found");
-    return null;
-  }
-  const { source } = props[0];
-  const mode = source[0];
-  let indent = 0;
-  let chomp = "";
-  let error = -1;
-  for (let i = 1; i < source.length; ++i) {
-    const ch = source[i];
-    if (!chomp && (ch === "-" || ch === "+"))
-      chomp = ch;
-    else {
-      const n = Number(ch);
-      if (!indent && n)
-        indent = n;
-      else if (error === -1)
-        error = offset + i;
-    }
-  }
-  if (error !== -1)
-    onError(error, "UNEXPECTED_TOKEN", `Block scalar header includes extra characters: ${source}`);
-  let hasSpace = false;
-  let comment = "";
-  let length = source.length;
-  for (let i = 1; i < props.length; ++i) {
-    const token = props[i];
-    switch (token.type) {
-      case "space":
-        hasSpace = true;
-      // fallthrough
-      case "newline":
-        length += token.source.length;
-        break;
-      case "comment":
-        if (strict && !hasSpace) {
-          const message = "Comments must be separated from other tokens by white space characters";
-          onError(token, "MISSING_CHAR", message);
-        }
-        length += token.source.length;
-        comment = token.source.substring(1);
-        break;
-      case "error":
-        onError(token, "UNEXPECTED_TOKEN", token.message);
-        length += token.source.length;
-        break;
-      /* istanbul ignore next should not happen */
-      default: {
-        const message = `Unexpected token in block scalar header: ${token.type}`;
-        onError(token, "UNEXPECTED_TOKEN", message);
-        const ts = token.source;
-        if (ts && typeof ts === "string")
-          length += ts.length;
-      }
-    }
-  }
-  return { mode, indent, chomp, comment, length };
-}
-function splitLines(source) {
-  const split = source.split(/\n( *)/);
-  const first = split[0];
-  const m = first.match(/^( *)/);
-  const line0 = m?.[1] ? [m[1], first.slice(m[1].length)] : ["", first];
-  const lines = [line0];
-  for (let i = 1; i < split.length; i += 2)
-    lines.push([split[i], split[i + 1]]);
-  return lines;
-}
-function resolveFlowScalar(scalar, strict, onError) {
-  const { offset, type, source, end } = scalar;
-  let _type;
-  let value;
-  const _onError = (rel, code, msg) => onError(offset + rel, code, msg);
-  switch (type) {
-    case "scalar":
-      _type = Scalar.PLAIN;
-      value = plainValue(source, _onError);
-      break;
-    case "single-quoted-scalar":
-      _type = Scalar.QUOTE_SINGLE;
-      value = singleQuotedValue(source, _onError);
-      break;
-    case "double-quoted-scalar":
-      _type = Scalar.QUOTE_DOUBLE;
-      value = doubleQuotedValue(source, _onError);
-      break;
-    /* istanbul ignore next should not happen */
-    default:
-      onError(scalar, "UNEXPECTED_TOKEN", `Expected a flow scalar value, but found: ${type}`);
-      return {
-        value: "",
-        type: null,
-        comment: "",
-        range: [offset, offset + source.length, offset + source.length]
-      };
-  }
-  const valueEnd = offset + source.length;
-  const re = resolveEnd(end, valueEnd, strict, onError);
-  return {
-    value,
-    type: _type,
-    comment: re.comment,
-    range: [offset, valueEnd, re.offset]
-  };
-}
-function plainValue(source, onError) {
-  let badChar = "";
-  switch (source[0]) {
-    /* istanbul ignore next should not happen */
-    case "	":
-      badChar = "a tab character";
-      break;
-    case ",":
-      badChar = "flow indicator character ,";
-      break;
-    case "%":
-      badChar = "directive indicator character %";
-      break;
-    case "|":
-    case ">": {
-      badChar = `block scalar indicator ${source[0]}`;
-      break;
-    }
-    case "@":
-    case "`": {
-      badChar = `reserved character ${source[0]}`;
-      break;
-    }
-  }
-  if (badChar)
-    onError(0, "BAD_SCALAR_START", `Plain value cannot start with ${badChar}`);
-  return foldLines(source);
-}
-function singleQuotedValue(source, onError) {
-  if (source[source.length - 1] !== "'" || source.length === 1)
-    onError(source.length, "MISSING_CHAR", "Missing closing 'quote");
-  return foldLines(source.slice(1, -1)).replace(/''/g, "'");
-}
-function foldLines(source) {
-  let first, line;
-  try {
-    first = new RegExp("(.*?)(?<![ 	])[ 	]*\r?\n", "sy");
-    line = new RegExp("[ 	]*(.*?)(?:(?<![ 	])[ 	]*)?\r?\n", "sy");
-  } catch {
-    first = /(.*?)[ \t]*\r?\n/sy;
-    line = /[ \t]*(.*?)[ \t]*\r?\n/sy;
-  }
-  let match = first.exec(source);
-  if (!match)
-    return source;
-  let res = match[1];
-  let sep = " ";
-  let pos = first.lastIndex;
-  line.lastIndex = pos;
-  while (match = line.exec(source)) {
-    if (match[1] === "") {
-      if (sep === "\n")
-        res += sep;
-      else
-        sep = "\n";
-    } else {
-      res += sep + match[1];
-      sep = " ";
-    }
-    pos = line.lastIndex;
-  }
-  const last = /[ \t]*(.*)/sy;
-  last.lastIndex = pos;
-  match = last.exec(source);
-  return res + sep + (match?.[1] ?? "");
-}
-function doubleQuotedValue(source, onError) {
-  let res = "";
-  for (let i = 1; i < source.length - 1; ++i) {
-    const ch = source[i];
-    if (ch === "\r" && source[i + 1] === "\n")
-      continue;
-    if (ch === "\n") {
-      const { fold, offset } = foldNewline(source, i);
-      res += fold;
-      i = offset;
-    } else if (ch === "\\") {
-      let next = source[++i];
-      const cc = escapeCodes[next];
-      if (cc)
-        res += cc;
-      else if (next === "\n") {
-        next = source[i + 1];
-        while (next === " " || next === "	")
-          next = source[++i + 1];
-      } else if (next === "\r" && source[i + 1] === "\n") {
-        next = source[++i + 1];
-        while (next === " " || next === "	")
-          next = source[++i + 1];
-      } else if (next === "x" || next === "u" || next === "U") {
-        const length = { x: 2, u: 4, U: 8 }[next];
-        res += parseCharCode(source, i + 1, length, onError);
-        i += length;
-      } else {
-        const raw = source.substr(i - 1, 2);
-        onError(i - 1, "BAD_DQ_ESCAPE", `Invalid escape sequence ${raw}`);
-        res += raw;
-      }
-    } else if (ch === " " || ch === "	") {
-      const wsStart = i;
-      let next = source[i + 1];
-      while (next === " " || next === "	")
-        next = source[++i + 1];
-      if (next !== "\n" && !(next === "\r" && source[i + 2] === "\n"))
-        res += i > wsStart ? source.slice(wsStart, i + 1) : ch;
-    } else {
-      res += ch;
-    }
-  }
-  if (source[source.length - 1] !== '"' || source.length === 1)
-    onError(source.length, "MISSING_CHAR", 'Missing closing "quote');
-  return res;
-}
-function foldNewline(source, offset) {
-  let fold = "";
-  let ch = source[offset + 1];
-  while (ch === " " || ch === "	" || ch === "\n" || ch === "\r") {
-    if (ch === "\r" && source[offset + 2] !== "\n")
-      break;
-    if (ch === "\n")
-      fold += "\n";
-    offset += 1;
-    ch = source[offset + 1];
-  }
-  if (!fold)
-    fold = " ";
-  return { fold, offset };
-}
-const escapeCodes = {
-  "0": "\0",
-  // null character
-  a: "\x07",
-  // bell character
-  b: "\b",
-  // backspace
-  e: "\x1B",
-  // escape character
-  f: "\f",
-  // form feed
-  n: "\n",
-  // line feed
-  r: "\r",
-  // carriage return
-  t: "	",
-  // horizontal tab
-  v: "\v",
-  // vertical tab
-  N: "",
-  // Unicode next line
-  _: " ",
-  // Unicode non-breaking space
-  L: "\u2028",
-  // Unicode line separator
-  P: "\u2029",
-  // Unicode paragraph separator
-  " ": " ",
-  '"': '"',
-  "/": "/",
-  "\\": "\\",
-  "	": "	"
-};
-function parseCharCode(source, offset, length, onError) {
-  const cc = source.substr(offset, length);
-  const ok = cc.length === length && /^[0-9a-fA-F]+$/.test(cc);
-  const code = ok ? parseInt(cc, 16) : NaN;
-  if (isNaN(code)) {
-    const raw = source.substr(offset - 2, length + 2);
-    onError(offset - 2, "BAD_DQ_ESCAPE", `Invalid escape sequence ${raw}`);
-    return raw;
-  }
-  return String.fromCodePoint(code);
 }
 function composeScalar(ctx, token, tagToken, onError) {
   const { value, type, comment, range } = token.type === "block-scalar" ? resolveBlockScalar(ctx, token, onError) : resolveFlowScalar(token, ctx.options.strict, onError);
@@ -3226,6 +2754,20 @@ function parseOptions(options) {
   const lineCounter = options.lineCounter || prettyErrors && new LineCounter() || null;
   return { lineCounter, prettyErrors };
 }
+function parseAllDocuments(source, options = {}) {
+  const { lineCounter, prettyErrors } = parseOptions(options);
+  const parser = new Parser(lineCounter?.addNewLine);
+  const composer = new Composer(options);
+  const docs = Array.from(composer.compose(parser.parse(source)));
+  if (prettyErrors && lineCounter)
+    for (const doc of docs) {
+      doc.errors.forEach(prettifyError(source, lineCounter));
+      doc.warnings.forEach(prettifyError(source, lineCounter));
+    }
+  if (docs.length > 0)
+    return docs;
+  return Object.assign([], { empty: true }, composer.streamInfo());
+}
 function parseDocument(source, options = {}) {
   const { lineCounter, prettyErrors } = parseOptions(options);
   const parser = new Parser(lineCounter?.addNewLine);
@@ -3247,6 +2789,11 @@ function parseDocument(source, options = {}) {
 }
 function parse(src, reviver, options) {
   let _reviver = void 0;
+  if (typeof reviver === "function") {
+    _reviver = reviver;
+  } else if (options === void 0 && reviver && typeof reviver === "object") {
+    options = reviver;
+  }
   const doc = parseDocument(src, options);
   if (!doc)
     return null;
@@ -3259,6 +2806,36 @@ function parse(src, reviver, options) {
   }
   return doc.toJS(Object.assign({ reviver: _reviver }, options));
 }
+function stringify(value, replacer, options) {
+  let _replacer = null;
+  if (typeof replacer === "function" || Array.isArray(replacer)) {
+    _replacer = replacer;
+  } else if (options === void 0 && replacer) {
+    options = replacer;
+  }
+  if (typeof options === "string")
+    options = options.length;
+  if (typeof options === "number") {
+    const indent = Math.round(options);
+    options = indent < 1 ? void 0 : indent > 8 ? { indent: 8 } : { indent };
+  }
+  if (value === void 0) {
+    const { keepUndefined } = options ?? replacer ?? {};
+    if (!keepUndefined)
+      return void 0;
+  }
+  if (isDocument(value) && !_replacer)
+    return value.toString(options);
+  return new Document(value, _replacer, options).toString(options);
+}
 export {
-  parse as p
+  Composer as C,
+  Document as D,
+  LineCounter as L,
+  Parser as P,
+  Schema as S,
+  parseAllDocuments as a,
+  parseDocument as b,
+  parse as p,
+  stringify as s
 };

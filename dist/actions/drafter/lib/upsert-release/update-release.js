@@ -1,8 +1,10 @@
+import "../../../../lodash.js";
+import "../../../../lexer.js";
 import "path";
 import "fs";
-import "../../../../index.js";
+import "../../../../core.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
-import "../../../../lodash.js";
+import "../../../../index.js";
 import "../../../../common/common-input.schema.js";
 import { g as githubExports } from "../../../../github.js";
 const updateRelease = async (params) => {

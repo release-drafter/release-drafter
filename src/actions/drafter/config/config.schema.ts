@@ -185,8 +185,7 @@ export const configSchema = z
     /**
      * Will be appended to `template`.
      */
-    footer: z.string().optional(),
-    _extends: z.string().optional()
+    footer: z.string().optional()
   })
   .superRefine((config, ctx) => {
     // Validate that only one uncategorized category exists
