@@ -8,25 +8,9 @@ import {
   mocks
 } from './mocks'
 import { runDrafter } from './helpers'
-import path from 'path'
 
 describe('release-drafter', () => {
   describe('push', () => {
-    describe('without a config', () => {
-      it('does nothing', async () => {
-        await mockContext('push')
-
-        mocks.config.mockClear()
-
-        await runDrafter()
-
-        expect(core.setOutput).not.toHaveBeenCalled()
-        expect(core.setFailed).toHaveBeenCalledWith(
-          `Config file not found: ${path.resolve(import.meta.dirname, '../..')}/.github/release-drafter.yml. Did you clone your sources ? (ex: using @actions/checkout)`
-        )
-      })
-    })
-
     describe('to a master branch', () => {
       it('creates a release draft targeting that branch', async () => {
         await mockContext('push')

@@ -1,5 +1,5 @@
 import { z } from "../../../../external.js";
-import { b as core } from "../../../../core.js";
+import { c as coreExports } from "../../../../core.js";
 const sortPullRequests = (params) => {
   const {
     pullRequests,
@@ -11,10 +11,10 @@ const sortPullRequests = (params) => {
     try {
       return sort(getSortField(a), getSortField(b));
     } catch (error) {
-      core.warning(
+      coreExports.warning(
         `Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`
       );
-      core.error(error);
+      coreExports.error(error);
       return 0;
     }
   });

@@ -1,6 +1,6 @@
 import { findPullRequests } from '../find-pull-requests'
 import z from 'zod'
-import core from '@actions/core'
+import * as core from '@actions/core'
 import { Config } from '../../config'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]

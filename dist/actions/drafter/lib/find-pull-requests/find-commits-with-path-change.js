@@ -1,7 +1,10 @@
+import "../../../../lodash.js";
+import "../../../../lexer.js";
 import "path";
 import "fs";
-import "../../../../index.js";
+import "../../../../core.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
+import "../../../../index.js";
 import { paginateGraphql } from "../../../../common/paginate-graphql.js";
 import "../../../../common/common-input.schema.js";
 const findCommitsWithPathChangeQuery = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        history(path: $path, since: $since, after: $after) {\n          pageInfo {\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";

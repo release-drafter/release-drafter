@@ -1,6 +1,6 @@
 import { g as githubExports } from "../../../../github.js";
 import { findCommitsWithPathChange } from "./find-commits-with-path-change.js";
-import { b as core } from "../../../../core.js";
+import { c as coreExports } from "../../../../core.js";
 import { findCommitsWithPr } from "./find-commits-with-pr.js";
 import { _ } from "../../../../lodash.js";
 const findPullRequests = async (params) => {
@@ -8,7 +8,7 @@ const findPullRequests = async (params) => {
   const shouldfilterByChangedPaths = params.config["include-paths"].length > 0;
   let commitIdsMatchingPaths = {};
   if (shouldfilterByChangedPaths) {
-    core.info("Finding commits with path changes...");
+    coreExports.info("Finding commits with path changes...");
     const {
       commitIdsMatchingPaths: commitIdsMatchingPathsRes,
       hasFoundCommits
@@ -23,10 +23,10 @@ const findPullRequests = async (params) => {
     }
     commitIdsMatchingPaths = commitIdsMatchingPathsRes;
     Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
-      core.info(`Found ${ids.size} commits with changes to path "${path}"`);
+      coreExports.info(`Found ${ids.size} commits with changes to path "${path}"`);
     });
   }
-  core.info(
+  coreExports.info(
     `Fetching parent commits of ${params.config["commitish"]}${since ? ` since ${since}` : ""}...`
   );
   let commits = await findCommitsWithPr({
@@ -41,14 +41,14 @@ const findPullRequests = async (params) => {
     pullRequestLimit: params.config["pull-request-limit"],
     historyLimit: params.config["history-limit"]
   });
-  core.info(`Found ${commits.length} commits.`);
+  coreExports.info(`Found ${commits.length} commits.`);
   commits = shouldfilterByChangedPaths ? commits.filter(
     (commit) => params.config["include-paths"].some(
       (path) => commitIdsMatchingPaths[path].has(commit.id)
     )
   ) : commits;
   if (shouldfilterByChangedPaths) {
-    core.info(
+    coreExports.info(
       `After filtering by path changes, ${commits.length} commits remain.`
     );
   }
@@ -56,7 +56,7 @@ const findPullRequests = async (params) => {
     commits.flatMap((commit) => commit.associatedPullRequests?.nodes),
     "number"
   ).filter((pr) => !!pr);
-  core.info(
+  coreExports.info(
     `Found ${pullRequests.length} pull requests associated with those commits.`
   );
   pullRequests = pullRequests.filter(
@@ -66,7 +66,7 @@ const findPullRequests = async (params) => {
       pr.merged
     )
   );
-  core.info(
+  coreExports.info(
     `After filtering, ${pullRequests.length} pull requests remain : ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}`
   );
   return { commits, pullRequests };

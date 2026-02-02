@@ -3,15 +3,15 @@ import { configSchema, replacersSchema } from "./config.schema.js";
 import { actionInputSchema, configOverridesInputSchema, exclusiveInputSchema } from "./action-input.schema.js";
 import { getActionInput } from "./get-action-inputs.js";
 import { mergeInputAndConfig } from "./merge-input-and-config.js";
-import { parseConfigFile } from "./parse-config-file.js";
+import { getConfig } from "./get-config.js";
 export {
   actionInputSchema,
   configOverridesInputSchema,
   configSchema,
   exclusiveInputSchema,
   getActionInput,
+  getConfig,
   mergeInputAndConfig,
-  parseConfigFile,
   replacersSchema,
   setActionOutput
 };

@@ -157,8 +157,7 @@ const configSchema = z.object({
   /**
    * Will be appended to `template`.
    */
-  footer: z.string().optional(),
-  _extends: z.string().optional()
+  footer: z.string().optional()
 }).superRefine((config, ctx) => {
   const uncategorizedCategories = config.categories.filter(
     (category) => category.labels.length === 0

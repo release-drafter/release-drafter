@@ -10,4 +10,4 @@ export {
 } from './action-input.schema'
 export { getActionInput } from './get-action-inputs'
 export { mergeInputAndConfig } from './merge-input-and-config'
-export { parseConfigFile } from './parse-config-file'
+export { getConfig } from './get-config'

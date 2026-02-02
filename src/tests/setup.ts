@@ -15,8 +15,8 @@ import { core } from './mocks'
  * @see https://vitest.dev/api/vi.html#vi-mock
  */
 vi.mock(
-  import('src/common/load-config-file'),
-  (await import('./mocks')).mockedLoadConfigFile
+  import('src/common/config'),
+  (await import('./mocks')).mockedConfigModule
 )
 vi.mock('@actions/core', () => core)
 

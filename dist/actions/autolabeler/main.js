@@ -1,10 +1,11 @@
 import { c as coreExports } from "../../core.js";
 import { g as githubExports } from "../../github.js";
+import "../../lodash.js";
+import "../../lexer.js";
 import "path";
 import "fs";
-import "../../index.js";
 import { getOctokit } from "../../common/get-octokit.js";
-import "../../lodash.js";
+import "../../index.js";
 import "../../common/common-input.schema.js";
 import { g as getDefaultExportFromCjs } from "../../_commonjsHelpers.js";
 var ignore$1 = { exports: {} };

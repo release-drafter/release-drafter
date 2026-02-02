@@ -1,11 +1,12 @@
+import "../../../../lodash.js";
+import "../../../../lexer.js";
 import "path";
 import "fs";
-import "../../../../index.js";
+import { c as coreExports } from "../../../../core.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
-import "../../../../lodash.js";
+import "../../../../index.js";
 import "../../../../common/common-input.schema.js";
 import { g as githubExports } from "../../../../github.js";
-import { c as coreExports } from "../../../../core.js";
 import { sortReleases } from "./sort-releases.js";
 const RELEASE_COUNT_LIMIT = 1e3;
 const findPreviousReleases = async (params) => {
