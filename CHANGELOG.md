@@ -2,6 +2,12 @@
 
 ## v6 -> v7
 
+### Features
+
+- Read your config from a local file using the `file:` scheme for the
+  `config-name:` input. This enables dynamically-generated configs. Read more in
+  the [Configuration Loading](./docs/configuration-loading.md) article
+
 ### BREAKING Changes
 
 - Disabled use of the `references` config. Use
@@ -58,21 +64,18 @@
 - Disabled config `categories[].label`. Use `categories[].labels` instead (as an
   array).
 
-- Action inputs are now validated against
-  [action-input.schema.ts](./src/types/action-input.schema.ts)
+- Action inputs are now validated against a zod schema. This may raise some
+  unexpected errors for some of your alredy-existing inputs.
 
 - removed option `"legacy"` for the `publish` input/config. Use `"false"`
   instead.
 
-- following the removal of probot, your config is no longer fetched from the
-  default branch. It is now directly read from the runner, meaning :
-  - you'll have to checkout your repository beforehand (ex: using
-    `@action/checkout`)
-  - you'll be able to build a config in a branch that is not the default branch
-
-  > [!note] Probot used to fetch the config file using the handy
-  > `context.config`, which uses octokit's
-  > [`rest.repos.getContent`](https://octokit.github.io/rest.js/v18/#repos)
-  > under the hood. This is because probot is exepcted to run apps, which do not
-  > have the ability to have the repository in their filesystem as easily as
-  > actions do.
+- following the removal of probot, we replaced the
+  [Probot Config](https://github.com/probot/probot-config) plugin with
+  custom-made syntax and capabilities.
+  - **fallback** to your orgs/user `.github` repo does not work anymore. You
+    will need to be explicit about-it. (ex:
+    `config-name: .github:/configs/release-drafter/main.yaml`)
+  - the `_extends` config-keyword now uses the same syntax as the `config-name:`
+    input. Read more in the
+    [Configuration Loading](./docs/configuration-loading.md) article
