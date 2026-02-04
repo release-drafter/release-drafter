@@ -20,12 +20,14 @@ export const mockGraphqlQuery = (params: { query?: Query; payload: Payload }) =>
     )
     .reply(
       200,
-      readFileSync(
-        path.join(
-          path.dirname(import.meta.filename),
-          '../fixtures/graphql',
-          params.payload + '.json'
-        ),
-        { encoding: 'utf8' }
+      JSON.parse(
+        readFileSync(
+          path.join(
+            path.dirname(import.meta.filename),
+            '../fixtures/graphql',
+            params.payload + '.json'
+          ),
+          { encoding: 'utf8' }
+        )
       )
     )
