@@ -4,13 +4,16 @@ import * as semver from 'semver'
 import { renderTemplate } from './render-template'
 import { Config, ExclusiveInput } from '../../config'
 
-type Release = Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
+type Release = Exclude<
+  Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease'],
+  undefined
+>
 
 // TODO is this not supposed to be $MAJOR.$MINOR.$PATCH$PRERELEASE ?
 const DEFAULT_VERSION_TEMPLATE = '$MAJOR.$MINOR.$PATCH'
 
 export const getVersionInfo = (params: {
-  lastRelease: Release
+  lastRelease: Pick<Release, 'tag_name' | 'name'> | undefined
   config: Pick<
     Config,
     'version-template' | 'tag-prefix' | 'prerelease-identifier'
@@ -158,7 +161,7 @@ const toSemver = (version?: string | semver.SemVer | null | undefined) => {
  * Get a semver version from various input types
  */
 const coerceVersion = (
-  input: Release | string | undefined,
+  input: Pick<Release, 'tag_name' | 'name'> | string | undefined,
   opt?: {
     tagPrefix?: Config['tag-prefix']
   }
@@ -194,7 +197,8 @@ type VersionDescriptorTemplates = {
   $COMPLETE?: string | null
 }
 
-const defaultVersionInfo: Record<
+// exported for tests
+export const defaultVersionInfo: Record<
   `$${Uppercase<string>}`,
   (VersionDescriptor & VersionDescriptorTemplates) | null
 > & {
