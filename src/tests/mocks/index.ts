@@ -3,10 +3,28 @@ import { vi } from 'vitest'
 export * from './context'
 export * as core from './core'
 export { mockGraphqlQuery } from './graphql'
-export { getReleasePayload, nockGetReleases } from './releases'
+export {
+  getReleasePayload,
+  nockGetReleases,
+  nockPostRelease,
+  nockGetAndPostReleases,
+  nockGetAndPatchReleases
+} from './releases'
 export { mockedConfigModule } from './config'
 
 const mocks = vi.hoisted(() => ({
+  /**
+   * Use this mock as a nock().post() body matcher, such as expectations
+   * can be defined as :
+   * @example expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
+   */
+  postReleaseBody: vi.fn(() => true),
+  /**
+   * Use this mock as a nock().patch() body matcher, such as expectations
+   * can be defined as :
+   * @example expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
+   */
+  patchReleaseBody: vi.fn(() => true),
   config: vi.fn<() => 'config' | undefined>(() => undefined),
   getContextsConfigWasFetchedFrom: vi.fn<
     () => Awaited<ReturnType<typeof composeConfigGet>>['contexts']
