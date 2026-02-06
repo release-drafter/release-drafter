@@ -4,6 +4,16 @@ import { composeConfigGet } from 'src/common/config'
 import { parse } from 'yaml'
 import { readFileSync } from 'fs'
 
+export type AvailableConfigs =
+  | 'config'
+  | 'config-previous-tag'
+  | 'config-with-next-versioning'
+  | 'config-with-changes-templates'
+  | 'config-with-changes-templates-and-body'
+  | 'config-with-changes-templates-and-url'
+  | 'config-with-contributors'
+  | 'config-with-exclude-contributors'
+
 export const mockedConfigModule = async (
   iom: () => Promise<{ composeConfigGet: typeof composeConfigGet }>
 ) => {

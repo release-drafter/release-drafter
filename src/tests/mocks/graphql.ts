@@ -9,7 +9,10 @@ type Query =
 /**
  * Available files in fixtures/graphql
  */
-type Payload = 'graphql-commits-no-prs' | 'graphql-commits-merge-commit'
+type Payload =
+  | 'graphql-commits-no-prs'
+  | 'graphql-commits-merge-commit'
+  | 'graphql-commits-empty'
 
 export const mockGraphqlQuery = (params: { query?: Query; payload: Payload }) =>
   nock('https://api.github.com')
