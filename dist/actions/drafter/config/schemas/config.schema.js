@@ -1,14 +1,14 @@
-import { z } from "../../../external.js";
-import { c as coreExports } from "../../../core.js";
-import { g as githubExports } from "../../../github.js";
-import { stringToRegex } from "../../../common/string-to-regex.js";
+import { z } from "../../../../external.js";
+import { c as coreExports } from "../../../../core.js";
+import { stringToRegex } from "../../../../common/string-to-regex.js";
+import { commonConfigSchema } from "./common-config.schema.js";
 const replacersSchema = z.array(
   z.object({
     search: z.string().min(1),
     replace: z.string().min(0)
   })
 ).optional().default([]);
-const configSchema = z.object({
+const exclusiveConfigSchema = z.object({
   /**
    * The template to use for each merged pull request.
    */
@@ -66,31 +66,13 @@ const configSchema = z.object({
    */
   "sort-direction": z.enum(["ascending", "descending"]).optional().default("descending"),
   /**
-   * Mark the draft release as pre-release.
-   */
-  prerelease: z.boolean().optional().default(false),
-  "prerelease-identifier": z.string().optional(),
-  /**
-   * Mark the release as latest. Only works for published releases.
-   */
-  latest: z.stringbool().optional().default(true),
-  /**
    * Filter previous releases to consider only those with the target matching `commitish`.
    */
   "filter-by-commitish": z.boolean().optional().default(false),
   /**
-   * When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date. Default: undefined (scan all commits).
-   * @see https://zod.dev/api?id=iso-dates#iso-datetimes
-   */
-  "initial-commits-since": z.iso.datetime().optional(),
-  /**
    * Include pre releases as "full" releases when drafting release notes.
    */
   "include-pre-releases": z.boolean().optional().default(false),
-  /**
-   * The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.
-   */
-  commitish: z.string().optional().default(githubExports.context.ref || githubExports.context.payload.ref),
   "pull-request-limit": z.number().int().positive().optional().default(5),
   /**
    * Size of the pagination window when walking the repo. Can avoid erratic 502s from Github. Default: `15`
@@ -147,17 +129,9 @@ const configSchema = z.object({
    */
   "category-template": z.string().optional().default("## $TITLE"),
   /**
-   * Will be prepended to `template`.
-   */
-  header: z.string().optional(),
-  /**
    * The template for the body of the draft release.
    */
-  template: z.string().min(1),
-  /**
-   * Will be appended to `template`.
-   */
-  footer: z.string().optional()
+  template: z.string().min(1)
 }).superRefine((config, ctx) => {
   const uncategorizedCategories = config.categories.filter(
     (category) => category.labels.length === 0
@@ -168,17 +142,13 @@ const configSchema = z.object({
       message: "Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests."
     });
   }
-  if (config.latest && config.prerelease) {
-    ctx.addIssue({
-      code: "custom",
-      message: "'prerelease' and 'latest' cannot both be truthy."
-    });
-  }
 }).meta({
   title: "JSON schema for Release Drafter yaml files",
   id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
 });
+const configSchema = exclusiveConfigSchema.and(commonConfigSchema);
 export {
   configSchema,
+  exclusiveConfigSchema,
   replacersSchema
 };

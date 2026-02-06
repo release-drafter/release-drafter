@@ -1,5 +1,5 @@
 import { c as coreExports } from "../../../core.js";
-import { actionInputSchema } from "./action-input.schema.js";
+import { actionInputSchema } from "./schemas/action-input.schema.js";
 const getActionInput = () => {
   const getInput = (name) => coreExports.getInput(name) || void 0;
   return actionInputSchema.parse({

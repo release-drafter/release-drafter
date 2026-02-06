@@ -5,7 +5,7 @@ import "fs";
 import "../../../../core.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
 import "../../../../index.js";
-import "../../../../common/common-input.schema.js";
+import "../../../../common/shared-input.schema.js";
 import { g as githubExports } from "../../../../github.js";
 const updateRelease = async (params) => {
   const octokit = getOctokit();

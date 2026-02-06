@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { configSchema } from './config.schema'
+import { configSchema } from './schemas/config.schema'
 import { composeConfigGet } from 'src/common'
 import { context } from '@actions/github'
 

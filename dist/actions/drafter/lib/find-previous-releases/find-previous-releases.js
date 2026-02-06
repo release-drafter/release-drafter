@@ -5,7 +5,7 @@ import "fs";
 import { c as coreExports } from "../../../../core.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
 import "../../../../index.js";
-import "../../../../common/common-input.schema.js";
+import "../../../../common/shared-input.schema.js";
 import { g as githubExports } from "../../../../github.js";
 import { sortReleases } from "./sort-releases.js";
 const RELEASE_COUNT_LIMIT = 1e3;

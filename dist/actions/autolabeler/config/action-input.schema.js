@@ -5,7 +5,7 @@ import "fs";
 import "../../../core.js";
 import "../../../github.js";
 import "../../../index.js";
-import { commonInputSchema } from "../../../common/common-input.schema.js";
+import { sharedInputSchema } from "../../../common/shared-input.schema.js";
 import { z } from "../../../external.js";
 const actionInputSchema = z.object({
   /**
@@ -14,7 +14,7 @@ const actionInputSchema = z.object({
    * @default 'autolabeler.yml'
    */
   "config-name": z.string().optional().default("autolabeler.yml")
-}).and(commonInputSchema);
+}).and(sharedInputSchema);
 export {
   actionInputSchema
 };

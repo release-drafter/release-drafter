@@ -2,6 +2,8 @@ import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import {
   configSchema as drafterConfigSchema,
+  exclusiveConfigSchema,
+  commonConfigSchema,
   replacersSchema
 } from 'src/actions/drafter/config'
 import {
@@ -15,7 +17,8 @@ process.env.GITHUB_REF = '${{ github.ref }}'
 const drafterSchema = z.toJSONSchema(
   z
     .object({
-      ...drafterConfigSchema.shape,
+      ...exclusiveConfigSchema.shape,
+      ...commonConfigSchema.shape,
       replacers: replacersSchema
     })
     .meta({ ...z.globalRegistry.get(drafterConfigSchema) })

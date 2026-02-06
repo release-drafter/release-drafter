@@ -2182,5 +2182,6 @@ const getTemplatableVersion = (input) => {
   return templatableVersion;
 };
 export {
+  defaultVersionInfo,
   getVersionInfo
 };

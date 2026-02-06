@@ -1,4 +1,4 @@
-import { commonInputSchema } from 'src/common'
+import { sharedInputSchema } from 'src/common'
 import z from 'zod'
 
 export const actionInputSchema = z
@@ -10,7 +10,7 @@ export const actionInputSchema = z
      */
     'config-name': z.string().optional().default('autolabeler.yml')
   })
-  .and(commonInputSchema)
+  .and(sharedInputSchema)
 
 /**
  * Full action inputs

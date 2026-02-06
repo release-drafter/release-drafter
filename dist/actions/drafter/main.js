@@ -1,6 +1,7 @@
 import { findPreviousReleases } from "./lib/find-previous-releases/find-previous-releases.js";
 import { findPullRequests } from "./lib/find-pull-requests/find-pull-requests.js";
 import { buildReleasePayload } from "./lib/build-release-payload/build-release-payload.js";
+import "./lib/build-release-payload/get-version-info.js";
 import { upsertRelease } from "./lib/upsert-release/upsert-release.js";
 const main = async (params) => {
   const { config, input } = params;

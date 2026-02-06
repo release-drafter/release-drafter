@@ -6,7 +6,7 @@ import "path";
 import "fs";
 import { getOctokit } from "../../common/get-octokit.js";
 import "../../index.js";
-import "../../common/common-input.schema.js";
+import "../../common/shared-input.schema.js";
 import { g as getDefaultExportFromCjs } from "../../_commonjsHelpers.js";
 var ignore$1 = { exports: {} };
 var hasRequiredIgnore;

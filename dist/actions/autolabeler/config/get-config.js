@@ -4,7 +4,7 @@ import { composeConfigGet } from "../../../common/config/index.js";
 import "../../../index.js";
 import { g as githubExports } from "../../../github.js";
 import "../../../lodash.js";
-import "../../../common/common-input.schema.js";
+import "../../../common/shared-input.schema.js";
 const getConfig = async (configName) => {
   const { config, contexts } = await composeConfigGet(configName, githubExports.context);
   if (contexts.length) {

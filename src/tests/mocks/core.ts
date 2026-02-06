@@ -1,5 +1,5 @@
 import type * as core from '@actions/core'
-import { commonInputSchema } from 'src/common'
+import { sharedInputSchema } from 'src/common'
 import { vi } from 'vitest'
 import z from 'zod'
 
@@ -17,7 +17,7 @@ export const info = vi.fn<typeof core.info>(
 )
 
 export const getInput = vi.fn<typeof core.getInput>((name: string) => {
-  switch (name as keyof z.infer<typeof commonInputSchema>) {
+  switch (name as keyof z.infer<typeof sharedInputSchema>) {
     case 'token':
       return 'test'
     default:

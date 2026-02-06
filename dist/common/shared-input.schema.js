@@ -1,5 +1,5 @@
 import { z } from "../external.js";
-const commonInputSchema = z.object({
+const sharedInputSchema = z.object({
   /**
    * A boolean indicating whether the release being created or updated should be immediately published.
    *
@@ -18,5 +18,5 @@ const commonInputSchema = z.object({
   }
 });
 export {
-  commonInputSchema
+  sharedInputSchema
 };
