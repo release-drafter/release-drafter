@@ -1,0 +1,3 @@
+template: '$CHANGES'
+no-changes-template: '* No changes mmkay'
+change-template: "* Change: #$NUMBER '$TITLE' @$AUTHOR"

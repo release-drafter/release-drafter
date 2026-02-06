@@ -1,0 +1,4 @@
+exclude-contributors:
+  - TimonVS
+  - Ada Lovelace
+template: 'A big thanks to: $CONTRIBUTORS'

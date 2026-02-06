@@ -1,5 +1,6 @@
 import { composeConfigGet } from 'src/common'
 import { vi } from 'vitest'
+import { AvailableConfigs } from './config'
 export * from './context'
 export * as core from './core'
 export { mockGraphqlQuery } from './graphql'
@@ -25,9 +26,7 @@ const mocks = vi.hoisted(() => ({
    * @example expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
    */
   patchReleaseBody: vi.fn(() => true),
-  config: vi.fn<() => 'config' | 'config-previous-tag' | undefined>(
-    () => undefined
-  ),
+  config: vi.fn<() => AvailableConfigs | undefined>(() => undefined),
   getContextsConfigWasFetchedFrom: vi.fn<
     () => Awaited<ReturnType<typeof composeConfigGet>>['contexts']
   >(() => [
