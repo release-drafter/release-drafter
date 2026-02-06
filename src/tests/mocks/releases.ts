@@ -6,7 +6,7 @@ import { mocks } from '.'
 /**
  * Available files in fixtures/releases
  */
-type Release = 'release'
+type Release = 'release' | 'release-2' | 'release-3'
 
 export const getReleasePayload = (f: Release) =>
   JSON.parse(
