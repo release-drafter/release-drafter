@@ -1,8 +1,9 @@
 import { c as coreExports } from "../../core.js";
 import { main } from "./main.js";
 import { setActionOutput } from "./config/set-action-output.js";
-import "./config/config.schema.js";
-import "./config/action-input.schema.js";
+import "./config/schemas/action-input.schema.js";
+import "./config/schemas/common-config.schema.js";
+import "./config/schemas/config.schema.js";
 import { getActionInput } from "./config/get-action-inputs.js";
 import { mergeInputAndConfig } from "./config/merge-input-and-config.js";
 import { getConfig } from "./config/get-config.js";

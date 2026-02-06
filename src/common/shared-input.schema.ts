@@ -1,6 +1,9 @@
 import z from 'zod'
 
-export const commonInputSchema = z
+/**
+ * Inputs shared by release-drafter and autolabeler
+ */
+export const sharedInputSchema = z
   .object({
     /**
      * A boolean indicating whether the release being created or updated should be immediately published.

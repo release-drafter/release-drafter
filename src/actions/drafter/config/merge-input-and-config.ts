@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import isBoolean from 'lodash/isBoolean.js'
-import { ConfigOverridesInput } from 'src/actions/drafter/config/action-input.schema'
-import { Config } from './config.schema'
+import { Config } from './schemas/config.schema'
+import { CommonConfig } from './schemas'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.
@@ -12,7 +12,7 @@ import { Config } from './config.schema'
  */
 export const mergeInputAndConfig = (params: {
   config: Config
-  input: ConfigOverridesInput
+  input: CommonConfig
 }): Config => {
   const { config: originalConfig, input } = params
   const config = structuredClone(originalConfig)

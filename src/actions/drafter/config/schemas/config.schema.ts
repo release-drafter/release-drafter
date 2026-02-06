@@ -1,7 +1,7 @@
 import z from 'zod'
 import * as core from '@actions/core'
-import { context } from '@actions/github'
 import { stringToRegex } from 'src/common/string-to-regex'
+import { commonConfigSchema } from './common-config.schema'
 
 // export without the transform() for JSON schemas
 export const replacersSchema = z
@@ -14,7 +14,7 @@ export const replacersSchema = z
   .optional()
   .default([])
 
-export const configSchema = z
+export const exclusiveConfigSchema = z
   .object({
     /**
      * The template to use for each merged pull request.
@@ -85,34 +85,13 @@ export const configSchema = z
       .optional()
       .default('descending'),
     /**
-     * Mark the draft release as pre-release.
-     */
-    prerelease: z.boolean().optional().default(false),
-    'prerelease-identifier': z.string().optional(),
-    /**
-     * Mark the release as latest. Only works for published releases.
-     */
-    latest: z.stringbool().optional().default(true),
-    /**
      * Filter previous releases to consider only those with the target matching `commitish`.
      */
     'filter-by-commitish': z.boolean().optional().default(false),
     /**
-     * When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date. Default: undefined (scan all commits).
-     * @see https://zod.dev/api?id=iso-dates#iso-datetimes
-     */
-    'initial-commits-since': z.iso.datetime().optional(),
-    /**
      * Include pre releases as "full" releases when drafting release notes.
      */
     'include-pre-releases': z.boolean().optional().default(false),
-    /**
-     * The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.
-     */
-    commitish: z
-      .string()
-      .optional()
-      .default(context.ref || context.payload.ref),
     'pull-request-limit': z.number().int().positive().optional().default(5),
     /**
      * Size of the pagination window when walking the repo. Can avoid erratic 502s from Github. Default: `15`
@@ -175,17 +154,9 @@ export const configSchema = z
      */
     'category-template': z.string().optional().default('## $TITLE'),
     /**
-     * Will be prepended to `template`.
-     */
-    header: z.string().optional(),
-    /**
      * The template for the body of the draft release.
      */
-    template: z.string().min(1),
-    /**
-     * Will be appended to `template`.
-     */
-    footer: z.string().optional()
+    template: z.string().min(1)
   })
   .superRefine((config, ctx) => {
     // Validate that only one uncategorized category exists
@@ -199,17 +170,28 @@ export const configSchema = z
           'Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.'
       })
     }
-
-    if (config.latest && config.prerelease) {
-      ctx.addIssue({
-        code: 'custom',
-        message: "'prerelease' and 'latest' cannot both be truthy."
-      })
-    }
   })
   .meta({
     title: 'JSON schema for Release Drafter yaml files',
     id: 'https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json'
   })
 
+export const configSchema = exclusiveConfigSchema.and(commonConfigSchema)
+
+/**
+ * Configs exclusive to the config-file
+ *
+ * For the full config params, see `Config`
+ *
+ * For the config params that can be overwritten by the action's input, see `CommonConfig`
+ */
+export type ExclusiveConfig = z.output<typeof exclusiveConfigSchema>
+
+/**
+ * Full config params (from the config-file)
+ *
+ * For the config params exclusive to the config-file, see `ExclusiveConfig`
+ *
+ * For the config params that can be overwritten by the action's input, see `CommonConfig`
+ */
 export type Config = z.output<typeof configSchema>

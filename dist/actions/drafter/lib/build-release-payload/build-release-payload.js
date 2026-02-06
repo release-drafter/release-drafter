@@ -12,7 +12,7 @@ const buildReleasePayload = (params) => {
     pullRequests,
     config
   });
-  let body = config["header"] + config.template + config["footer"];
+  let body = (config["header"] || "") + config.template + (config["footer"] || "");
   body = renderTemplate({
     template: body,
     object: {

@@ -6,8 +6,8 @@ import "../../../../core.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
 import "../../../../index.js";
 import { paginateGraphql } from "../../../../common/paginate-graphql.js";
-import "../../../../common/common-input.schema.js";
-const findCommitsWithPathChangeQuery = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        history(path: $path, since: $since, after: $after) {\n          pageInfo {\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";
+import "../../../../common/shared-input.schema.js";
+const findCommitsWithPathChangeQuery = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(path: $path, since: $since, after: $after) {\n          __typename\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";
 const findCommitsWithPathChange = async (paths, params) => {
   const octokit = getOctokit();
   const commitIdsMatchingPaths = {};
