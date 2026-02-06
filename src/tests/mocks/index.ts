@@ -25,7 +25,9 @@ const mocks = vi.hoisted(() => ({
    * @example expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
    */
   patchReleaseBody: vi.fn(() => true),
-  config: vi.fn<() => 'config' | undefined>(() => undefined),
+  config: vi.fn<() => 'config' | 'config-previous-tag' | undefined>(
+    () => undefined
+  ),
   getContextsConfigWasFetchedFrom: vi.fn<
     () => Awaited<ReturnType<typeof composeConfigGet>>['contexts']
   >(() => [
