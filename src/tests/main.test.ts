@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
-  getReleasePayload,
-  nockGetReleases,
   mockContext,
   mockGraphqlQuery,
   core,
-  mocks
+  mocks,
+  nockGetAndPostReleases
 } from './mocks'
 import { runDrafter } from './helpers'
 
@@ -20,32 +19,28 @@ describe('release-drafter', () => {
           payload: 'graphql-commits-no-prs'
         })
 
-        const scope = nockGetReleases({ releaseFiles: ['release'] })
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
-                Object {
-                  "body": "# What's Changed
-
-                * No changes
-                ",
-                  "draft": true,
-                  "make_latest": "true",
-                  "name": "",
-                  "prerelease": false,
-                  "tag_name": "",
-                  "target_commitish": "refs/heads/some-branch",
-                }
-              `)
-              return true
-            }
-          )
-          .reply(200, getReleasePayload('release'))
+        const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
 
         await runDrafter()
 
-        expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# What's Changed
+
+          * No changes
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(core.setFailed).not.toHaveBeenCalled()
       })
@@ -60,30 +55,26 @@ describe('release-drafter', () => {
           payload: 'graphql-commits-no-prs'
         })
 
-        const scope = nockGetReleases({ releaseFiles: ['release'] })
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
-                Object {
-                  "body": "# What's Changed
-
-                * No changes
-                ",
-                  "draft": true,
-                  "make_latest": "true",
-                  "name": "",
-                  "prerelease": false,
-                  "tag_name": "",
-                  "target_commitish": "refs/heads/some-branch",
-                }
-              `)
-              return true
-            }
-          )
-          .reply(200, getReleasePayload('release'))
+        const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
 
         await runDrafter()
+
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# What's Changed
+
+          * No changes
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/some-branch",
+            },
+          ]
+        `)
 
         expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
@@ -100,34 +91,30 @@ describe('release-drafter', () => {
           payload: 'graphql-commits-merge-commit'
         })
 
-        const scope = nockGetReleases({ releaseFiles: ['release'] })
-          .post(
-            '/repos/toolmantim/release-drafter-test-project/releases',
-            (body) => {
-              expect(body).toMatchInlineSnapshot(`
-                  Object {
-                    "body": "# What's Changed
-
-                  * Add documentation (#5) @TimonVS
-                  * Update dependencies (#4) @TimonVS
-                  * Bug fixes (#3) @TimonVS
-                  * Add big feature (#2) @TimonVS
-                  * 👽 Add alien technology (#1) @TimonVS
-                  ",
-                    "draft": true,
-                    "make_latest": "true",
-                    "name": "",
-                    "prerelease": false,
-                    "tag_name": "",
-                    "target_commitish": "",
-                  }
-                `)
-              return true
-            }
-          )
-          .reply(200, getReleasePayload('release'))
+        const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
 
         await runDrafter()
+
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# What's Changed
+
+          * Add documentation (#5) @TimonVS
+          * Update dependencies (#4) @TimonVS
+          * Bug fixes (#3) @TimonVS
+          * Add big feature (#2) @TimonVS
+          * 👽 Add alien technology (#1) @TimonVS
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "",
+            },
+          ]
+        `)
 
         expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
