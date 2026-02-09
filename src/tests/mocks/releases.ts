@@ -6,7 +6,7 @@ import { mocks } from '.'
 /**
  * Available files in fixtures/releases
  */
-type Release = 'release' | 'release-2' | 'release-3'
+type Release = 'release' | 'release-2' | 'release-3' | 'release-draft'
 
 export const getReleasePayload = (f: Release) =>
   JSON.parse(
@@ -95,7 +95,9 @@ export const nockGetAndPatchReleases = (params: {
       fetchedReleases.map((f) => getReleasePayload(f))
     )
     .patch(
-      `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
+      new RegExp(
+        `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases/\\d+`
+      ),
       mocks.patchReleaseBody
     )
     .reply(200, getReleasePayload(replyRelease || 'release'))
