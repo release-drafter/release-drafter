@@ -1,0 +1,2 @@
+template: '$CHANGES'
+history-limit: 42
