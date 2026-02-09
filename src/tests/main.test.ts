@@ -932,5 +932,332 @@ describe('release-drafter', () => {
         expect(core.setFailed).not.toHaveBeenCalled()
       })
     })
+
+    describe('with include-pre-releases true config', () => {
+      it('includes pre releases', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-include-pre-releases-true')
+
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release-2', 'pre-release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+
+        await runDrafter()
+
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# What's Changed
+
+          * Add documentation (#5) @TimonVS
+          * Update dependencies (#4) @TimonVS
+          * Bug fixes (#3) @TimonVS
+          * Add big feature (#2) @TimonVS
+          * 👽 Add alien technology (#1) @TimonVS
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v1.5.0",
+              "prerelease": false,
+              "tag_name": "v1.5.0",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('with exclude-labels config', () => {
+      it('excludes pull requests', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-exclude-labels')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "# What's Changed
+
+            * Update dependencies (#4) @TimonVS
+
+            ## 🚀 Features
+
+            * Add big feature (#2) @TimonVS
+            * 👽 Add alien technology (#1) @TimonVS
+
+            ## 🐛 Bug Fixes
+
+            * Bug fixes (#3) @TimonVS
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('with include-labels config', () => {
+      it('includes pull requests', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-include-labels')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# What's Changed
+
+          ## 🚀 Features
+
+          * Add big feature (#2) @TimonVS
+          * 👽 Add alien technology (#1) @TimonVS
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('with version-template config', () => {
+      it('generates next version variables as major.minor.patch', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue(
+          'config-with-major-minor-patch-version-template'
+        )
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "Placeholder with example. Automatically calculated values are next major=3.0.0 (major=3, minor=0, patch=0), minor=2.1.0 (major=2, minor=1, patch=0), patch=2.0.1 (major=2, minor=0, patch=1)",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v2.0.1 (Code name: Placeholder)",
+              "prerelease": false,
+              "tag_name": "v2.0.1",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+
+      it('generates next version variables as major.minor', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-major-minor-version-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "Placeholder with example. Automatically calculated values are next major=3.0 (major=3, minor=0, patch=0), minor=2.1 (major=2, minor=1, patch=0), patch=2.0 (major=2, minor=0, patch=1)",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v2.1 (Code name: Placeholder)",
+              "prerelease": false,
+              "tag_name": "v2.1",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+
+      it('generates next version variables as major', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-major-version-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "Placeholder with example. Automatically calculated values are next major=3 (major=3, minor=0, patch=0), minor=2 (major=2, minor=1, patch=0), patch=2 (major=2, minor=0, patch=1)",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v3 (Code name: Placeholder)",
+              "prerelease": false,
+              "tag_name": "v3",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('with header and footer config', () => {
+      it('only header', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-header-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "This is at top
+          This is the template in the middle
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+      it('only footer', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-footer-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "This is the template in the middle
+          This is at bottom
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+      it('header and footer', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-header-and-footer-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "This is at top
+          This is the template in the middle
+          This is at bottom
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+      it('header and footer without line break and without space', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue(
+          'config-with-header-and-footer-no-nl-no-space-template'
+        )
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "This is at topThis is the template in the middleThis is at bottom",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(core.setFailed).not.toHaveBeenCalled()
+      })
+    })
   })
 })
