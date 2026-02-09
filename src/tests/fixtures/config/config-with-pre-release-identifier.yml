@@ -1,0 +1,4 @@
+template: This is a Pre-release with identifier.
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+prerelease-identifier: alpha

@@ -1,0 +1,5 @@
+sort-direction: 'ascending'
+template: |
+  # What's Changed
+
+  $CHANGES
