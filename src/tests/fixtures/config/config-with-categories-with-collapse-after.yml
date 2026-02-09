@@ -1,0 +1,18 @@
+template: |
+  # What's Changed
+
+  $CHANGES
+
+categories:
+  - title: 🚀 All the things!
+    collapse-after: 3
+    labels:
+      - feature
+      - enhancement
+      - fix
+      - bugfix
+      - bug
+      - sentry
+      - skip-changelog
+  - title: 👻 Maintenance
+    label: chore

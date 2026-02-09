@@ -61,9 +61,6 @@
         - "src/bugs/*"
   ```
 
-- Disabled config `categories[].label`. Use `categories[].labels` instead (as an
-  array).
-
 - Action inputs are now validated against a zod schema. This may raise some
   unexpected errors for some of your alredy-existing inputs.
 

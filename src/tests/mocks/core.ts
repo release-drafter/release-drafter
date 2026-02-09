@@ -4,7 +4,7 @@ import { vi } from 'vitest'
 import z from 'zod'
 
 // When debugging tests, set tu true to get outputs
-const DEBUG_TESTS = false
+const DEBUG_TESTS = true
 
 export const debug = vi.fn<typeof core.debug>(
   DEBUG_TESTS ? console.debug : undefined

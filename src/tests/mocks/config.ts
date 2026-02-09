@@ -13,6 +13,13 @@ export type AvailableConfigs =
   | 'config-with-changes-templates-and-url'
   | 'config-with-contributors'
   | 'config-with-exclude-contributors'
+  | 'config-with-compare-link'
+  | 'config-with-categories'
+  | 'config-with-categories-2'
+  | 'config-with-categories-3'
+  | 'config-with-categories-4'
+  | 'config-with-categories-with-other-category'
+  | 'config-with-categories-with-collapse-after'
 
 export const mockedConfigModule = async (
   iom: () => Promise<{ composeConfigGet: typeof composeConfigGet }>
