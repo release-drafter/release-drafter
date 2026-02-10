@@ -1292,7 +1292,7 @@ describe('release-drafter', () => {
       })
     })
 
-    describe('merging strategies', async () => {
+    describe('merging strategies', () => {
       describe('merge commit', () => {
         it('sets $CHANGES based on all commits', async () => {
           await mockContext('push')
@@ -1329,6 +1329,174 @@ describe('release-drafter', () => {
           expect(mocks.core.setFailed).not.toHaveBeenCalled()
         })
       })
+
+      describe('rebase merging', () => {
+        it('sets $CHANGES based on all commits', async () => {})
+      })
+
+      describe('squash merging', () => {
+        it('sets $CHANGES based on all commits', async () => {})
+
+        it('Commit from previous release tag is not included', async () => {})
+      })
+
+      describe('with forked pull request', () => {
+        it('exclude forked pull requests', async () => {})
+      })
     })
+
+    describe('pagination', () => {
+      it('sets $CHANGES based on all commits', async () => {})
+    })
+
+    describe('custom replacers', () => {
+      it('replaces a string', async () => {})
+    })
+  })
+
+  describe('with sort-by config', () => {
+    it('sorts by title', async () => {})
+  })
+
+  describe('with sort-direction config', () => {
+    it('sorts ascending', async () => {})
+  })
+
+  describe('with include-paths config', () => {
+    it('returns all PRs when not path filtered', async () => {})
+
+    it('returns the modified paths', async () => {})
+  })
+
+  describe('with pull-request-limit config', () => {
+    it('uses the correct default when not specified', async () => {})
+
+    it('requests the specified number of associated PRs', async () => {})
+  })
+
+  describe('with history-limit config', () => {
+    it('uses the correct default when not specified', async () => {})
+
+    it('requests the specified number of associated PRs', async () => {})
+  })
+
+  describe('config error handling', () => {
+    it('schema error', async () => {})
+
+    it('yaml exception', async () => {})
+  })
+
+  describe('with config-name input', () => {
+    it('loads from another config path', async () => {})
+  })
+
+  describe('input publish, prerelease, version, tag and name overrides', () => {
+    describe('with just the version', () => {
+      it('forces the version on templates', async () => {})
+    })
+
+    describe('with just the tag', () => {
+      it('gets the version from the tag and forces using the tag', async () => {})
+    })
+
+    describe('with just the tag containing variables', () => {
+      it('gets the version from the tag and expands variables in it', async () => {})
+    })
+
+    describe('with just the name', () => {
+      it('gets the version from the name and forces using the name', async () => {})
+    })
+
+    describe('with just the name containing variables', () => {
+      it('gets the version from the name and expands variables in it', async () => {})
+    })
+
+    describe('with publish: true', () => {
+      it('immediately publishes the created draft', async () => {})
+    })
+
+    describe('with input prerelease: true', () => {
+      it('marks the created draft as prerelease', async () => {})
+
+      it('resolves tag with incremented prerelease identifier', async () => {})
+    })
+
+    describe('with input prerelease: true and input prerelease-identifier', () => {
+      it('resolves tag with incremented pre-release identifier', async () => {})
+    })
+
+    describe('with input prerelease: false', () => {
+      it('doesnt mark the created draft as prerelease', async () => {})
+    })
+
+    describe('with input prerelease and publish: true', () => {
+      it('marks the created release as a prerelease', async () => {})
+    })
+
+    describe('with input prerelease: true and config file prerelease: false', () => {
+      it('marks the created draft as prerelease', async () => {})
+    })
+
+    describe('with input prerelease: false and config file prerelease: true', () => {
+      it('doesnt mark the created draft as prerelease', async () => {})
+    })
+
+    describe('without input prerelease and config file prerelease: true', () => {
+      it('marks the created draft as a prerelease', async () => {})
+    })
+
+    describe('without input prerelease and config file prerelease: false', () => {
+      it('doesnt mark the created draft as a prerelease', async () => {})
+    })
+
+    describe('with tag and name', () => {
+      it('gets the version from the tag and forces using the tag and name', async () => {})
+    })
+  })
+
+  describe('resolved version', () => {
+    describe('without previous releases, overriding the tag', () => {
+      it('resolves to the version extracted from the tag', async () => {})
+    })
+
+    describe('with previous releases, overriding the tag', () => {
+      it('resolves to the version extracted from the tag', async () => {})
+    })
+
+    describe('without previous releases, no overrides', () => {
+      it('resolves to the calculated version, which will be default', async () => {})
+    })
+
+    describe('with previous releases, no overrides', () => {
+      it('resolves to the calculated version', async () => {})
+    })
+
+    describe('with tag-prefix', () => {
+      it('gets the version from the tag, stripping the prefix', async () => {})
+    })
+
+    describe('with custom version resolver', () => {
+      it('uses correct default when no labels exist', async () => {})
+
+      it('when only patch label exists, use patch', async () => {})
+
+      it('minor beats patch', async () => {})
+
+      it('major beats others', async () => {})
+
+      it('major beats others partial config', async () => {})
+    })
+
+    describe('with commitish', () => {
+      it('allows specification of a target commitish', async () => {})
+    })
+  })
+
+  describe('with initial-commits-since', () => {
+    it('use commits since from last release', async () => {})
+
+    it('use commits since from config', async () => {})
+
+    it('use empty commit since', async () => {})
   })
 })
