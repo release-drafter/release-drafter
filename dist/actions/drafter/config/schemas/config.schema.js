@@ -101,9 +101,16 @@ const exclusiveConfigSchema = z.object({
     z.object({
       title: z.string().min(1),
       "collapse-after": z.number().int().min(0).optional().default(0),
-      labels: z.array(z.string().min(1)).optional().default([])
+      labels: z.array(z.string().min(1)).optional().default([]),
+      label: z.string().min(1).optional()
     })
-  ).optional().default([]),
+  ).optional().default([]).transform(
+    (categories) => categories.map((cat) => {
+      const { label, ..._cat } = cat;
+      _cat.labels = [...cat.labels, label].filter(Boolean);
+      return _cat;
+    })
+  ),
   /**
    * Adjust the `$RESOLVED_VERSION` variable using labels.
    */
@@ -139,6 +146,7 @@ const exclusiveConfigSchema = z.object({
   if (uncategorizedCategories.length > 1) {
     ctx.addIssue({
       code: "custom",
+      path: ["categories[]", "labels or label"],
       message: "Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests."
     });
   }
