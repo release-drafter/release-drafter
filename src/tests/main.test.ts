@@ -1291,5 +1291,44 @@ describe('release-drafter', () => {
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
+
+    describe('merging strategies', async () => {
+      describe('merge commit', () => {
+        it('sets $CHANGES based on all commits', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: []
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-merge-commit'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "# What's Changed
+
+            * Add documentation (#5) @TimonVS
+            * Update dependencies (#4) @TimonVS
+            * Bug fixes (#3) @TimonVS
+            * Add big feature (#2) @TimonVS
+            * 👽 Add alien technology (#1) @TimonVS
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+      })
+    })
   })
 })
