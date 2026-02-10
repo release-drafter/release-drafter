@@ -3,7 +3,7 @@ import { vi } from 'vitest'
 import { AvailableConfigs } from './config'
 export * from './context'
 import type * as core from '@actions/core'
-export { mockGraphqlQuery } from './graphql'
+export { mockGraphqlQuery, getGqlPayload } from './graphql'
 export {
   getReleasePayload,
   nockGetReleases,

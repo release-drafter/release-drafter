@@ -5,9 +5,11 @@ import {
   mocks,
   nockGetAndPostReleases,
   nockGetAndPatchReleases,
-  mockInput
+  mockInput,
+  getGqlPayload
 } from './mocks'
 import { runDrafter } from './helpers'
+import nock from 'nock'
 
 describe('release-drafter', () => {
   describe('push', () => {
@@ -1331,53 +1333,533 @@ describe('release-drafter', () => {
       })
 
       describe('rebase merging', () => {
-        it('sets $CHANGES based on all commits', async () => {})
+        it('sets $CHANGES based on all commits', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: []
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-rebase-merging'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "# What's Changed
+
+            * Add documentation (#10) @TimonVS
+            * Update dependencies (#9) @TimonVS
+            * Bug fixes (#8) @TimonVS
+            * Add big feature (#7) @TimonVS
+            * 👽 Add alien technology (#6) @TimonVS
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
       })
 
       describe('squash merging', () => {
-        it('sets $CHANGES based on all commits', async () => {})
+        it('sets $CHANGES based on all commits', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: []
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-squash-merging'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "# What's Changed
 
-        it('Commit from previous release tag is not included', async () => {})
+            * Add documentation (#15) @TimonVS
+            * Update dependencies (#14) @TimonVS
+            * Bug fixes (#13) @TimonVS
+            * Add big feature (#12) @TimonVS
+            * 👽 Add alien technology (#11) @TimonVS
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+
+        it('Commit from previous release tag is not included', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release-shared-commit-date']
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-squash-merging'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "# What's Changed
+
+            * Add documentation (#15) @TimonVS
+            * Update dependencies (#14) @TimonVS
+            * Bug fixes (#13) @TimonVS
+            * Add big feature (#12) @TimonVS
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
       })
 
       describe('with forked pull request', () => {
-        it('exclude forked pull requests', async () => {})
+        it('exclude forked pull requests', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release']
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-forking'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "# What's Changed
+
+            * Add documentation (#28) @jetersen
+            * Update dependencies (#27) @jetersen
+            * Bug fixes (#25) @jetersen
+            * Add big feature (#24) @jetersen
+            * Add alien technology (#23) @jetersen
+            * Add documentation (#5) @TimonVS
+            * Update dependencies (#4) @TimonVS
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
       })
     })
 
     describe('pagination', () => {
-      it('sets $CHANGES based on all commits', async () => {})
+      it('sets $CHANGES based on all commits', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: []
+        })
+        const gqlScope1 = mockGraphqlQuery({
+          payload: 'graphql-commits-paginated-1'
+        })
+        const gqlScope2 = mockGraphqlQuery({
+          payload: 'graphql-commits-paginated-2'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# What's Changed
+
+          * Added great distance (#16) @toolmantim
+          * Oh hai (#15) @toolmantim
+          * ❤️ Add MOAR THINGS (#14) @toolmantim
+          * Add all the tests (#13) @toolmantim
+          * 🤖 Add robots (#12) @toolmantim
+          * 🎃 More pumpkins (#11) @toolmantim
+          * 🐄 Moar cowbell (#10) @toolmantim
+          * 1️⃣ Switch to a monorepo (#9) @toolmantim
+          * 👽 Integrate Alien technology (#8) @toolmantim
+          * Add ⛰ technology (#7) @toolmantim
+          * 👽 Added alien technology (#6) @toolmantim
+          * 🙅🏼‍♂️ 🐄 (#5) @toolmantim
+          * 🐄 More cowbell (#4) @toolmantim
+          * 🐒 Add monkeys technology (#3) @toolmantim
+          * Adds a new Widgets API (#2) @toolmantim
+          * Create new-feature.md (#1) @toolmantim
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope1.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope2.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('custom replacers', () => {
-      it('replaces a string', async () => {})
+      it('replaces a string', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-replacers')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: []
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# What's Changed
+
+          * Add documentation (#1000) @TimonVS
+          * Update dependencies (#4) @TimonVS
+          * Bug fixes (#3) @TimonVS
+          * Add big feature (#2) @TimonVS
+          * 👽 Add alien technology (#1) @TimonVS
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
   })
 
   describe('with sort-by config', () => {
-    it('sorts by title', async () => {})
+    it('sorts by title', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-sort-by-title')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope1 = mockGraphqlQuery({
+        payload: 'graphql-commits-paginated-1'
+      })
+      const gqlScope2 = mockGraphqlQuery({
+        payload: 'graphql-commits-paginated-2'
+      })
+      await runDrafter()
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+
+        * 🤖 Add robots (#12) @toolmantim
+        * 🙅🏼‍♂️ 🐄 (#5) @toolmantim
+        * 👽 Integrate Alien technology (#8) @toolmantim
+        * 👽 Added alien technology (#6) @toolmantim
+        * 🐒 Add monkeys technology (#3) @toolmantim
+        * 🐄 More cowbell (#4) @toolmantim
+        * 🐄 Moar cowbell (#10) @toolmantim
+        * 🎃 More pumpkins (#11) @toolmantim
+        * ❤️ Add MOAR THINGS (#14) @toolmantim
+        * Oh hai (#15) @toolmantim
+        * Create new-feature.md (#1) @toolmantim
+        * Adds a new Widgets API (#2) @toolmantim
+        * Added great distance (#16) @toolmantim
+        * Add ⛰ technology (#7) @toolmantim
+        * Add all the tests (#13) @toolmantim
+        * 1️⃣ Switch to a monorepo (#9) @toolmantim
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "",
+            "prerelease": false,
+            "tag_name": "",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope1.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope2.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
   })
 
   describe('with sort-direction config', () => {
-    it('sorts ascending', async () => {})
+    it('sorts ascending', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-sort-direction-ascending')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = mockGraphqlQuery({
+        payload: ['graphql-commits-paginated-1', 'graphql-commits-paginated-2']
+      })
+      await runDrafter()
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+
+        * Create new-feature.md (#1) @toolmantim
+        * Adds a new Widgets API (#2) @toolmantim
+        * 🐒 Add monkeys technology (#3) @toolmantim
+        * 🐄 More cowbell (#4) @toolmantim
+        * 🙅🏼‍♂️ 🐄 (#5) @toolmantim
+        * 👽 Added alien technology (#6) @toolmantim
+        * Add ⛰ technology (#7) @toolmantim
+        * 👽 Integrate Alien technology (#8) @toolmantim
+        * 1️⃣ Switch to a monorepo (#9) @toolmantim
+        * 🐄 Moar cowbell (#10) @toolmantim
+        * 🎃 More pumpkins (#11) @toolmantim
+        * 🤖 Add robots (#12) @toolmantim
+        * Add all the tests (#13) @toolmantim
+        * ❤️ Add MOAR THINGS (#14) @toolmantim
+        * Oh hai (#15) @toolmantim
+        * Added great distance (#16) @toolmantim
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "",
+            "prerelease": false,
+            "tag_name": "",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
   })
 
   describe('with include-paths config', () => {
-    it('returns all PRs when not path filtered', async () => {})
+    it('returns all PRs when not path filtered', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-include-paths')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = mockGraphqlQuery([
+        {
+          query: 'query findCommitsWithAssociatedPullRequests',
+          payload: 'graphql-commits-merge-commit'
+        },
+        {
+          query: 'query findCommitsWithPathChangesQuery',
+          payload: 'graphql-include-null-path-merge-commit'
+        }
+      ])
+      await runDrafter()
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+        * Add documentation (#5) @TimonVS
+        * Update dependencies (#4) @TimonVS
+        * Bug fixes (#3) @TimonVS
+        * Add big feature (#2) @TimonVS
+        * 👽 Add alien technology (#1) @TimonVS
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "v$INPUT_VERSION (Code name: Placeholder)",
+            "prerelease": false,
+            "tag_name": "v$INPUT_VERSION",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
 
-    it('returns the modified paths', async () => {})
+    it('returns the modified paths', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-include-paths')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = mockGraphqlQuery([
+        {
+          query: 'query findCommitsWithAssociatedPullRequests',
+          payload: 'graphql-commits-merge-commit'
+        },
+        {
+          query: 'query findCommitsWithPathChangesQuery',
+          payload: 'graphql-include-path-src-5.md-merge-commit'
+        }
+      ])
+      await runDrafter()
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+        * Add documentation (#5) @TimonVS
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "v$INPUT_VERSION (Code name: Placeholder)",
+            "prerelease": false,
+            "tag_name": "v$INPUT_VERSION",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
   })
 
   describe('with pull-request-limit config', () => {
-    it('uses the correct default when not specified', async () => {})
+    it('uses the correct default when not specified', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes(
+              'query findCommitsWithAssociatedPullRequests'
+            ) &&
+            body.variables.pullRequestLimit === 5
+          ) {
+            return true
+          }
+          return false
+        })
+        .reply(200, getGqlPayload('graphql-commits-no-prs'))
 
-    it('requests the specified number of associated PRs', async () => {})
+      await runDrafter()
+
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+
+    it('requests the specified number of associated PRs', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-pull-request-limit')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes(
+              'query findCommitsWithAssociatedPullRequests'
+            ) &&
+            body.variables.pullRequestLimit === 34
+          ) {
+            return true
+          }
+          return false
+        })
+        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+
+      await runDrafter()
+
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
   })
 
   describe('with history-limit config', () => {
-    it('uses the correct default when not specified', async () => {})
+    it('uses the correct default when not specified', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes(
+              'query findCommitsWithAssociatedPullRequests'
+            ) &&
+            body.variables.historyLimit === 15
+          ) {
+            return true
+          }
+          return false
+        })
+        .reply(200, getGqlPayload('graphql-commits-no-prs'))
 
-    it('requests the specified number of associated PRs', async () => {})
+      await runDrafter()
+
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+
+    it('requests the specified number of associated PRs', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-history-limit')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = nock('https://api.github.com')
+        .post('/graphql', (body) => {
+          if (
+            body.query.includes(
+              'query findCommitsWithAssociatedPullRequests'
+            ) &&
+            body.variables.historyLimit === 42
+          ) {
+            return true
+          }
+          return false
+        })
+        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+
+      await runDrafter()
+
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
   })
 
   describe('config error handling', () => {
