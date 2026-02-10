@@ -1,10 +1,8 @@
 import { findPullRequests } from '../find-pull-requests'
-import z from 'zod'
 import * as core from '@actions/core'
 import { Config } from '../../config'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
-type TPrMergedAt = Pr['mergedAt']
 
 export const sortPullRequests = (params: {
   pullRequests: Pr[]
@@ -17,8 +15,7 @@ export const sortPullRequests = (params: {
 
   const getSortField = sortBy === 'title' ? getTitle : getMergedAt
 
-  const sort =
-    sortDirection === 'ascending' ? dateSortAscending : dateSortDescending
+  const sort = sortDirection === 'ascending' ? sortAscending : sortDescending
 
   return structuredClone(pullRequests).sort((a, b) => {
     try {
@@ -34,27 +31,24 @@ export const sortPullRequests = (params: {
 }
 
 const getTitle = (pr: Pr) => pr.title
-const getMergedAt = (pr: Pr): TPrMergedAt => pr.mergedAt
+const getMergedAt = (pr: Pr) => pr.mergedAt
 
-const supportedDateSchema = z
-  .date()
-  .or(z.string())
-  .transform((date) => {
-    return typeof date === 'string' ? new Date(date) : date
-  })
+type TData = ReturnType<typeof getTitle> | ReturnType<typeof getMergedAt>
 
-const dateSortAscending = (date1: TPrMergedAt, date2: TPrMergedAt) => {
-  const _date1 = supportedDateSchema.parse(date1)
-  const _date2 = supportedDateSchema.parse(date2)
-  if (_date1 > _date2) return 1
-  if (_date1 < _date2) return -1
+const sortAscending = (a: TData, b: TData) => {
+  if (a == null && b == null) return 0
+  if (a == null) return 1
+  if (b == null) return -1
+  if (a > b) return 1
+  if (a < b) return -1
   return 0
 }
 
-const dateSortDescending = (date1: TPrMergedAt, date2: TPrMergedAt) => {
-  const _date1 = supportedDateSchema.parse(date1)
-  const _date2 = supportedDateSchema.parse(date2)
-  if (_date1 > _date2) return -1
-  if (_date1 < _date2) return 1
+const sortDescending = (a: TData, b: TData) => {
+  if (a == null && b == null) return 0
+  if (a == null) return -1
+  if (b == null) return 1
+  if (a > b) return -1
+  if (a < b) return 1
   return 0
 }

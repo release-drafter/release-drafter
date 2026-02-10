@@ -12,6 +12,7 @@ type Release =
   | 'release-3'
   | 'release-draft'
   | 'pre-release'
+  | 'release-shared-commit-date'
 
 export const getReleasePayload = (f: Release) =>
   JSON.parse(
