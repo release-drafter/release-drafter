@@ -30,23 +30,48 @@ type Payload =
   | 'graphql-commits-paginated-2'
   | 'graphql-include-path-src-5.md-squash-merging'
 
-export const mockGraphqlQuery = (params: { query?: Query; payload: Payload }) =>
-  nock('https://api.github.com')
-    .post('/graphql', (body) =>
-      body.query.includes(
-        params.query || 'query findCommitsWithAssociatedPullRequests'
-      )
+export const getGqlPayload = (payload: Payload) =>
+  JSON.parse(
+    readFileSync(
+      path.join(
+        path.dirname(import.meta.filename),
+        '../fixtures/graphql',
+        payload + '.json'
+      ),
+      { encoding: 'utf8' }
     )
-    .reply(
-      200,
-      JSON.parse(
-        readFileSync(
-          path.join(
-            path.dirname(import.meta.filename),
-            '../fixtures/graphql',
-            params.payload + '.json'
-          ),
-          { encoding: 'utf8' }
+  )
+
+export const mockGraphqlQuery = (
+  params:
+    | {
+        query?: Query
+        payload: Payload | Payload[]
+      }
+    | Array<{
+        query?: Query
+        payload: Payload | Payload[]
+      }>
+) => {
+  const paramsList = Array.isArray(params) ? params : [params]
+
+  let scope = nock('https://api.github.com')
+
+  for (const param of paramsList) {
+    const payloads = Array.isArray(param.payload)
+      ? param.payload
+      : [param.payload]
+
+    for (const payload of payloads) {
+      scope = scope
+        .post('/graphql', (body) =>
+          body.query.includes(
+            param.query || 'query findCommitsWithAssociatedPullRequests'
+          )
         )
-      )
-    )
+        .reply(200, getGqlPayload(payload))
+    }
+  }
+
+  return scope
+}
