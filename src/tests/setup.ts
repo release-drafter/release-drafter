@@ -8,7 +8,9 @@
 
 import { afterEach, beforeEach, vi, beforeAll, afterAll } from 'vitest'
 import nock from 'nock'
-import { core } from './mocks'
+import { mocks } from './mocks'
+import { sharedInputSchema } from 'src/common/shared-input.schema'
+import z from 'zod'
 
 /**
  * The call to vi.mock is hoisted, so it doesn't matter where you call it.
@@ -18,7 +20,21 @@ vi.mock(
   import('src/common/config'),
   (await import('./mocks')).mockedConfigModule
 )
-vi.mock('@actions/core', () => core)
+vi.mock(import('@actions/core'), async (iom) => {
+  const om = await iom()
+  return {
+    ...om,
+    ...mocks.core,
+    getInput: (name: string) => {
+      switch (name as keyof z.infer<typeof sharedInputSchema>) {
+        case 'token':
+          return 'test'
+        default:
+          return om.getInput(name) // will read from INPUT_* variables
+      }
+    }
+  }
+})
 
 beforeAll(() => {
   // Disable actual network requests.

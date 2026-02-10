@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   mockContext,
   mockGraphqlQuery,
-  core,
   mocks,
   nockGetAndPostReleases,
-  nockGetAndPatchReleases
+  nockGetAndPatchReleases,
+  mockInput
 } from './mocks'
 import { runDrafter } from './helpers'
 
@@ -43,7 +43,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -79,7 +79,7 @@ describe('release-drafter', () => {
 
         expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -119,7 +119,7 @@ describe('release-drafter', () => {
 
         expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -160,7 +160,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -201,7 +201,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('creates a new draft non-master-branch', async () => {
@@ -240,7 +240,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('makes next versions available as template placeholders', async () => {
@@ -272,7 +272,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       describe('with custom changes-template config', () => {
@@ -309,7 +309,7 @@ describe('release-drafter', () => {
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(core.setFailed).not.toHaveBeenCalled()
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
         })
       })
 
@@ -347,7 +347,7 @@ describe('release-drafter', () => {
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(core.setFailed).not.toHaveBeenCalled()
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
         })
       })
 
@@ -385,7 +385,7 @@ describe('release-drafter', () => {
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(core.setFailed).not.toHaveBeenCalled()
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
         })
       })
 
@@ -419,7 +419,7 @@ describe('release-drafter', () => {
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(core.setFailed).not.toHaveBeenCalled()
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
         })
 
         it('uses no-contributors-template when there are no contributors', async () => {
@@ -451,7 +451,7 @@ describe('release-drafter', () => {
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(core.setFailed).not.toHaveBeenCalled()
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
         })
       })
 
@@ -485,7 +485,7 @@ describe('release-drafter', () => {
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(core.setFailed).not.toHaveBeenCalled()
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
         })
       })
     })
@@ -522,7 +522,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       describe('with custom no-changes-template config', () => {
@@ -555,7 +555,7 @@ describe('release-drafter', () => {
 
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-          expect(core.setFailed).not.toHaveBeenCalled()
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
         })
       })
     })
@@ -597,7 +597,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -646,7 +646,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -693,7 +693,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('categorizes pull requests with other category at the bottom', async () => {
@@ -742,7 +742,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('categorizes pull requests with multiple labels', async () => {
@@ -787,7 +787,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('categorizes pull requests with overlapping labels', async () => {
@@ -832,7 +832,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('categorizes pull requests with overlapping labels into multiple categories', async () => {
@@ -881,7 +881,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('categorizes pull requests with a collapsed category', async () => {
@@ -929,7 +929,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -970,7 +970,7 @@ describe('release-drafter', () => {
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -1012,7 +1012,7 @@ describe('release-drafter', () => {
           `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -1048,7 +1048,7 @@ describe('release-drafter', () => {
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -1080,7 +1080,7 @@ describe('release-drafter', () => {
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('generates next version variables as major.minor', async () => {
@@ -1108,7 +1108,7 @@ describe('release-drafter', () => {
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
 
       it('generates next version variables as major', async () => {
@@ -1136,7 +1136,7 @@ describe('release-drafter', () => {
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
 
@@ -1168,7 +1168,7 @@ describe('release-drafter', () => {
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
       it('only footer', async () => {
         await mockContext('push')
@@ -1197,7 +1197,7 @@ describe('release-drafter', () => {
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
       it('header and footer', async () => {
         await mockContext('push')
@@ -1227,7 +1227,7 @@ describe('release-drafter', () => {
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
       it('header and footer without line break and without space', async () => {
         await mockContext('push')
@@ -1256,7 +1256,39 @@ describe('release-drafter', () => {
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(core.setFailed).not.toHaveBeenCalled()
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+      it('only header from input', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-header-template')
+        await mockInput(
+          'header',
+          'I AM AWESOME_mockenv_strips_newline_and_trailing_spaces_'
+        )
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "I AM AWESOME_mockenv_strips_newline_and_trailing_spaces_This is the template in the middle
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
   })
