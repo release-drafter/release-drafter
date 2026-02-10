@@ -1,4 +1,3 @@
-import { z } from "../../../../external.js";
 import { c as coreExports } from "../../../../core.js";
 const sortPullRequests = (params) => {
   const {
@@ -6,7 +5,7 @@ const sortPullRequests = (params) => {
     config: { "sort-by": sortBy, "sort-direction": sortDirection }
   } = params;
   const getSortField = sortBy === "title" ? getTitle : getMergedAt;
-  const sort = sortDirection === "ascending" ? dateSortAscending : dateSortDescending;
+  const sort = sortDirection === "ascending" ? sortAscending : sortDescending;
   return structuredClone(pullRequests).sort((a, b) => {
     try {
       return sort(getSortField(a), getSortField(b));
@@ -21,21 +20,20 @@ const sortPullRequests = (params) => {
 };
 const getTitle = (pr) => pr.title;
 const getMergedAt = (pr) => pr.mergedAt;
-const supportedDateSchema = z.date().or(z.string()).transform((date) => {
-  return typeof date === "string" ? new Date(date) : date;
-});
-const dateSortAscending = (date1, date2) => {
-  const _date1 = supportedDateSchema.parse(date1);
-  const _date2 = supportedDateSchema.parse(date2);
-  if (_date1 > _date2) return 1;
-  if (_date1 < _date2) return -1;
+const sortAscending = (a, b) => {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  if (a > b) return 1;
+  if (a < b) return -1;
   return 0;
 };
-const dateSortDescending = (date1, date2) => {
-  const _date1 = supportedDateSchema.parse(date1);
-  const _date2 = supportedDateSchema.parse(date2);
-  if (_date1 > _date2) return -1;
-  if (_date1 < _date2) return 1;
+const sortDescending = (a, b) => {
+  if (a == null && b == null) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+  if (a > b) return -1;
+  if (a < b) return 1;
   return 0;
 };
 export {
