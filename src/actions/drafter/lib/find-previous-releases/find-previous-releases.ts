@@ -2,7 +2,7 @@ import { getOctokit } from 'src/common'
 import { context } from '@actions/github'
 import * as core from '@actions/core'
 import { sortReleases } from './sort-releases'
-import { Config } from '../../config'
+import { ParsedConfig } from '../../config'
 
 // GitHub API currently returns a 500 HTTP response if you attempt to fetch over 1000 releases.
 const RELEASE_COUNT_LIMIT = 1000
@@ -19,7 +19,7 @@ const RELEASE_COUNT_LIMIT = 1000
  */
 export const findPreviousReleases = async (
   params: Pick<
-    Config,
+    ParsedConfig,
     'commitish' | 'filter-by-commitish' | 'include-pre-releases' | 'tag-prefix'
   >
 ) => {

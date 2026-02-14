@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import isBoolean from 'lodash/isBoolean.js'
 import { Config } from './schemas/config.schema'
 import { CommonConfig } from './schemas'
+import { context } from '@actions/github'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.
@@ -13,9 +14,11 @@ import { CommonConfig } from './schemas'
 export const mergeInputAndConfig = (params: {
   config: Config
   input: CommonConfig
-}): Config => {
+}) => {
   const { config: originalConfig, input } = params
   const config = structuredClone(originalConfig)
+
+  // Handle overrides
 
   if (input.commitish) {
     if (config.commitish && config.commitish !== input.commitish) {
@@ -91,5 +94,25 @@ export const mergeInputAndConfig = (params: {
     config['include-pre-releases'] = true
   }
 
-  return config
+  // Write defaults
+  if (!config.commitish) config.commitish = context.ref || context.payload.ref
+  if (!config.latest) config.latest = true
+  if (!config.prerelease) config.prerelease = false
+
+  // Throw some more validation errors
+  if (!config.commitish) {
+    throw new Error(
+      "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
+    )
+  }
+
+  return config as Config &
+    Required<Pick<Config, 'latest' | 'prerelease' | 'commitish'>>
 }
+
+/**
+ * Similar to Config, but with input values merged in and defaults applied.
+ *
+ * @see mergeInputAndConfig
+ */
+export type ParsedConfig = ReturnType<typeof mergeInputAndConfig>

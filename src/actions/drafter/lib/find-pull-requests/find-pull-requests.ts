@@ -4,11 +4,11 @@ import { findCommitsWithPathChange } from './find-commits-with-path-change'
 import * as core from '@actions/core'
 import { findCommitsWithPr } from './find-commits-with-pr'
 import _ from 'lodash'
-import { Config } from '../../config'
+import { ParsedConfig } from '../../config'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
-  config: Config
+  config: ParsedConfig
 }) => {
   const since =
     params.lastRelease?.created_at || params.config['initial-commits-since']

@@ -47,7 +47,9 @@ export const updateRelease = async (params: {
     body: releasePayload.body,
     draft: releasePayload.draft,
     prerelease: releasePayload.prerelease,
-    make_latest: releasePayload.make_latest.toString() as 'true' | 'false',
+    make_latest: releasePayload.prerelease
+      ? 'false'
+      : (releasePayload.make_latest.toString() as 'true' | 'false'),
     ...updateReleaseParameters
   })
 }

@@ -9,7 +9,7 @@ import { resolveVersionKeyIncrement } from './resolve-version-increment'
 
 import * as core from '@actions/core'
 import { getVersionInfo } from './get-version-info'
-import { Config, ExclusiveInput } from '../../config'
+import { ParsedConfig, ExclusiveInput } from '../../config'
 
 /**
  * Outputs the payload for creating or updating a release.
@@ -19,7 +19,7 @@ import { Config, ExclusiveInput } from '../../config'
 export const buildReleasePayload = (params: {
   commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
   config: Pick<
-    Config,
+    ParsedConfig,
     | 'sort-by'
     | 'sort-direction'
     | 'header'

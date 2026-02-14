@@ -1,4 +1,4 @@
-import { Config, ExclusiveInput } from './config'
+import { ExclusiveInput, ParsedConfig } from './config'
 import {
   findPreviousReleases,
   findPullRequests,
@@ -7,7 +7,7 @@ import {
 } from './lib'
 
 export const main = async (params: {
-  config: Config
+  config: ParsedConfig
   input: ExclusiveInput
 }) => {
   /**
