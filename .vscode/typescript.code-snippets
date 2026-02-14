@@ -3,11 +3,12 @@
     "prefix": ["release-drafter-e2e-test-suite", "rde2ets"],
     "body": [
       "await mockContext('${1:push}')",
-      "mocks.config.mockReturnValue('${2:config}')",
-      "const scope = nockGetAndPostReleases({\n\tfetchedReleases: ['${3:release}']\n})",
-      "const gqlScope = mockGraphqlQuery({\n\tpayload: '${4:graphql-commits-merge-commit}'\n})",
+      "await mockInput('${2:version}', '${3:2.1.1}')",
+      "mocks.config.mockReturnValue('${4:config-with-input-version-template}')",
+      "const scope = nockGetAndPostReleases({\n\tfetchedReleases: ['${5:release}']\n})",
+      "const gqlScope = mockGraphqlQuery({\n\tpayload: '${6:graphql-commits-merge-commit}'\n})",
       "await runDrafter()",
-      "expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`\n\t\t[\n$5\n\t\t]\n`)",
+      "expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`\n\t\t[\n$7\n\t\t]\n`)",
       "expect(scope.isDone()).toBe(true) // should call the mocked endpoints",
       "expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints",
       "expect(mocks.core.setFailed).not.toHaveBeenCalled()"
