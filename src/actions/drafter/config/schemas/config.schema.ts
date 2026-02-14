@@ -139,15 +139,24 @@ export const exclusiveConfigSchema = z
      */
     'version-resolver': z
       .object({
-        major: z.object({
-          labels: z.array(z.string().min(1)).optional().default([])
-        }),
-        minor: z.object({
-          labels: z.array(z.string().min(1)).optional().default([])
-        }),
-        patch: z.object({
-          labels: z.array(z.string().min(1)).optional().default([])
-        }),
+        major: z
+          .object({
+            labels: z.array(z.string().min(1))
+          })
+          .optional()
+          .default({ labels: [] }),
+        minor: z
+          .object({
+            labels: z.array(z.string().min(1))
+          })
+          .optional()
+          .default({ labels: [] }),
+        patch: z
+          .object({
+            labels: z.array(z.string().min(1))
+          })
+          .optional()
+          .default({ labels: [] }),
         default: z.enum(['major', 'minor', 'patch']).optional().default('patch')
       })
       .optional()
