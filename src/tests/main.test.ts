@@ -2404,47 +2404,456 @@ describe('release-drafter', () => {
 
   describe('resolved version', () => {
     describe('without previous releases, overriding the tag', () => {
-      it('resolves to the version extracted from the tag', async () => {})
+      it('resolves to the version extracted from the tag', async () => {
+        await mockContext('push')
+        await mockInput('tag', 'v1.0.2')
+        mocks.config.mockReturnValue('config-with-resolved-version-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: []
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-empty'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "## What's changed
+
+          * No changes
+
+          ## Contributors
+
+          No contributors
+
+          ## Previous release
+
+
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v1.0.2 🌈",
+              "prerelease": false,
+              "tag_name": "v1.0.2",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('with previous releases, overriding the tag', () => {
-      it('resolves to the version extracted from the tag', async () => {})
+      it('resolves to the version extracted from the tag', async () => {
+        await mockContext('push')
+        await mockInput('tag', 'v1.0.2')
+        mocks.config.mockReturnValue('config-with-resolved-version-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-no-prs'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "## What's changed
+
+          * No changes
+
+          ## Contributors
+
+          No contributors
+
+          ## Previous release
+
+          v2.0.0
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v1.0.2 🌈",
+              "prerelease": false,
+              "tag_name": "v1.0.2",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('without previous releases, no overrides', () => {
-      it('resolves to the calculated version, which will be default', async () => {})
+      it('resolves to the calculated version, which will be default', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-resolved-version-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: []
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-empty'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "## What's changed
+
+          * No changes
+
+          ## Contributors
+
+          No contributors
+
+          ## Previous release
+
+
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v0.1.0 🌈",
+              "prerelease": false,
+              "tag_name": "v0.1.0",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('with previous releases, no overrides', () => {
-      it('resolves to the calculated version', async () => {})
+      it('resolves to the calculated version', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-resolved-version-template')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-no-prs'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "## What's changed
+
+          * No changes
+
+          ## Contributors
+
+          No contributors
+
+          ## Previous release
+
+          v2.0.0
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v2.0.1 🌈",
+              "prerelease": false,
+              "tag_name": "v2.0.1",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('with tag-prefix', () => {
-      it('gets the version from the tag, stripping the prefix', async () => {})
+      it('gets the version from the tag, stripping the prefix', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-tag-prefix')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release'],
+          fetchedReleasesOverrides: [
+            { tag_name: 'static-tag-prefix-v2.1.4-RC3' }
+          ]
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-no-prs'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "## Previous release
+
+          static-tag-prefix-v2.1.4-RC3
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "static-tag-prefix-v2.1.4 🌈",
+              "prerelease": false,
+              "tag_name": "static-tag-prefix-v2.1.4",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('with custom version resolver', () => {
-      it('uses correct default when no labels exist', async () => {})
+      it('uses correct default when no labels exist', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-custom-version-resolver-none')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-forking'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "dummy",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v2.1.0",
+              "prerelease": false,
+              "tag_name": "v2.1.0",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
 
-      it('when only patch label exists, use patch', async () => {})
+      it('when only patch label exists, use patch', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue(
+          'config-with-custom-version-resolver-patch'
+        )
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-forking'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "dummy",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v2.0.1",
+              "prerelease": false,
+              "tag_name": "v2.0.1",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
 
-      it('minor beats patch', async () => {})
+      it('minor beats patch', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue(
+          'config-with-custom-version-resolver-minor'
+        )
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-forking'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "dummy",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v2.1.0",
+              "prerelease": false,
+              "tag_name": "v2.1.0",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
 
-      it('major beats others', async () => {})
+      it('major beats others', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue(
+          'config-with-custom-version-resolver-major'
+        )
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-forking'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "dummy",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v3.0.0",
+              "prerelease": false,
+              "tag_name": "v3.0.0",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
 
-      it('major beats others partial config', async () => {})
+      it('major beats others partial config', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue(
+          'config-with-custom-version-resolver-partial'
+        )
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-forking'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "dummy",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v3.0.0",
+              "prerelease": false,
+              "tag_name": "v3.0.0",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('with commitish', () => {
-      it('allows specification of a target commitish', async () => {})
+      it('allows specification of a target commitish', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-commitish')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-forking'
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "dummy",
+              "draft": true,
+              "make_latest": "true",
+              "name": "",
+              "prerelease": false,
+              "tag_name": "",
+              "target_commitish": "staging",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
   })
 
   describe('with initial-commits-since', () => {
-    it('use commits since from last release', async () => {})
+    it('use commits since from last release', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-commits-since')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: ['release']
+      })
+      const gqlScope = nock('https://api.github.com')
+        .post(
+          '/graphql',
+          (body) =>
+            body.query.includes(
+              'query findCommitsWithAssociatedPullRequests'
+            ) && body.variables.since === '2018-06-29T05:45:15Z'
+        )
+        .reply(200, getGqlPayload('graphql-commits-no-prs'))
 
-    it('use commits since from config', async () => {})
+      await runDrafter()
 
-    it('use empty commit since', async () => {})
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+
+    it('use commits since from config', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-commits-since')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = nock('https://api.github.com')
+        .post(
+          '/graphql',
+          (body) =>
+            body.query.includes(
+              'query findCommitsWithAssociatedPullRequests'
+            ) && body.variables.since === '2025-06-18T10:29:51Z'
+        )
+        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+
+      await runDrafter()
+
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+
+    it('use empty commit since', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = nock('https://api.github.com')
+        .post(
+          '/graphql',
+          (body) =>
+            body.query.includes(
+              'query findCommitsWithAssociatedPullRequests'
+            ) && body.variables.since === undefined
+        )
+        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+
+      await runDrafter()
+
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
   })
 })

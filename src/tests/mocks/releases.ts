@@ -65,6 +65,7 @@ export const nockGetAndPostReleases = (params: {
   fetchedReleases: Release[]
   replyRelease?: Release
   repo?: { owner: string; repo: string }
+  fetchedReleasesOverrides?: object[]
 }) => {
   const { repo, replyRelease, fetchedReleases } = params || {}
 
@@ -75,7 +76,10 @@ export const nockGetAndPostReleases = (params: {
     .query(true)
     .reply(
       200,
-      fetchedReleases.map((f) => getReleasePayload(f))
+      fetchedReleases.map((f, i) => ({
+        ...getReleasePayload(f),
+        ...params.fetchedReleasesOverrides?.[i]
+      }))
     )
     .post(
       `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
@@ -88,6 +92,7 @@ export const nockGetAndPatchReleases = (params: {
   fetchedReleases: Release[]
   replyRelease?: Release
   repo?: { owner: string; repo: string }
+  fetchedReleasesOverrides?: object[]
 }) => {
   const { repo, replyRelease, fetchedReleases } = params || {}
 
@@ -98,7 +103,10 @@ export const nockGetAndPatchReleases = (params: {
     .query(true)
     .reply(
       200,
-      fetchedReleases.map((f) => getReleasePayload(f))
+      fetchedReleases.map((f, i) => ({
+        ...getReleasePayload(f),
+        ...params.fetchedReleasesOverrides?.[i]
+      }))
     )
     .patch(
       new RegExp(
