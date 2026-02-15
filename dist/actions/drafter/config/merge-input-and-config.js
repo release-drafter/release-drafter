@@ -1,5 +1,6 @@
 import { c as coreExports } from "../../../core.js";
 import { i as isBoolean } from "../../../isBoolean.js";
+import { g as githubExports } from "../../../github.js";
 const mergeInputAndConfig = (params) => {
   const { config: originalConfig, input } = params;
   const config = structuredClone(originalConfig);
@@ -62,6 +63,14 @@ const mergeInputAndConfig = (params) => {
       `You have specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'include-pre-releases' is set to false. Switching to true.`
     );
     config["include-pre-releases"] = true;
+  }
+  if (!config.commitish) config.commitish = githubExports.context.ref || githubExports.context.payload.ref;
+  if (!config.latest) config.latest = true;
+  if (!config.prerelease) config.prerelease = false;
+  if (!config.commitish) {
+    throw new Error(
+      "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
+    );
   }
   return config;
 };

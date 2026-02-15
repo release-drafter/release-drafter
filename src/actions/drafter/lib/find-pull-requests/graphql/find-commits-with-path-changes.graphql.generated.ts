@@ -12,7 +12,7 @@ export type FindCommitsWithPathChangesQueryQueryVariables = Types.Exact<{
 
 export type FindCommitsWithPathChangesQueryQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', object?:
       | { __typename?: 'Blob' }
-      | { __typename?: 'Commit', history: { __typename?: 'CommitHistoryConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename?: 'Commit', id: string } | null> | null } }
+      | { __typename: 'Commit', history: { __typename: 'CommitHistoryConnection', pageInfo: { __typename: 'PageInfo', hasNextPage: boolean, endCursor?: string | null }, nodes?: Array<{ __typename: 'Commit', id: string } | null> | null } }
       | { __typename?: 'Tag' }
       | { __typename?: 'Tree' }
      | null } | null };

@@ -116,14 +116,14 @@ const exclusiveConfigSchema = z.object({
    */
   "version-resolver": z.object({
     major: z.object({
-      labels: z.array(z.string().min(1)).optional().default([])
-    }),
+      labels: z.array(z.string().min(1))
+    }).optional().default({ labels: [] }),
     minor: z.object({
-      labels: z.array(z.string().min(1)).optional().default([])
-    }),
+      labels: z.array(z.string().min(1))
+    }).optional().default({ labels: [] }),
     patch: z.object({
-      labels: z.array(z.string().min(1)).optional().default([])
-    }),
+      labels: z.array(z.string().min(1))
+    }).optional().default({ labels: [] }),
     default: z.enum(["major", "minor", "patch"]).optional().default("patch")
   }).optional().default({
     major: { labels: [] },
