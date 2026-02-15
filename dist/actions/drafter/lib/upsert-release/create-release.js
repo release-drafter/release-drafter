@@ -19,7 +19,7 @@ const createRelease = async (params) => {
     body: releasePayload.body,
     draft: releasePayload.draft,
     prerelease: releasePayload.prerelease,
-    make_latest: releasePayload.make_latest.toString()
+    make_latest: releasePayload.prerelease ? "false" : releasePayload.make_latest.toString()
   });
 };
 export {

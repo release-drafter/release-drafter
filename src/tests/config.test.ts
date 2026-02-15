@@ -76,6 +76,33 @@ describe('get config file', () => {
         }
       `)
     })
+    it('should error if config not exists using the github: scheme', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const inputConfigName = 'release-drafter.yml'
+      const endpointFilepath = '.github/release-drafter.yml'
+      const context = {
+        repo: { owner: 'octocat', repo: 'hello-world' },
+        ref: 'main'
+      }
+
+      const endpoint = getContentEndpoint({
+        ...context,
+        path: endpointFilepath
+      })
+      const scope = nock('https://api.github.com').get(endpoint).reply(404)
+
+      await expect(
+        composeConfigGet(inputConfigName, context)
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `[Error: Repo load failed. Config file not found with error 404. (target: octocat/hello-world:.github/release-drafter.yml@main)]`
+      )
+
+      expect(mocks.existsSync).not.toHaveBeenCalled()
+      expect(mocks.readFileSync).not.toHaveBeenCalled()
+
+      expect(scope.isDone()).toBe(true)
+    })
     it('should return config content using the file: scheme', async () => {
       const inputConfigName = 'file:../configs/release-drafter.yml'
       const workspace = '/home/runner/workspace'
@@ -104,6 +131,29 @@ describe('get config file', () => {
               "template": "fake-template-content",
             }
           `)
+    })
+    it('should error if config not exists using the file: scheme', async () => {
+      const inputConfigName = 'file:../configs/release-drafter.yml'
+      const workspace = '/home/runner/workspace'
+      const endpointFilepath = workspace + '/configs/release-drafter.yml'
+      const context = {
+        repo: { owner: 'octocat', repo: 'hello-world' },
+        ref: 'main'
+      }
+
+      vi.stubEnv('GITHUB_WORKSPACE', workspace)
+      mocks.existsSync.mockImplementation((path: string) => path === workspace) // workspace exists but file doesn't
+      mocks.readFileSync.mockReturnValue(`template: fake-template-content`)
+
+      await expect(
+        composeConfigGet(inputConfigName, context)
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `[Error: Local load failed. Config file not found: /home/runner/workspace/configs/release-drafter.yml. Did you clone your sources ? (ex: using @actions/checkout)]`
+      )
+
+      expect(mocks.existsSync).toHaveBeenCalledTimes(2)
+      expect(mocks.existsSync).toHaveBeenNthCalledWith(1, workspace)
+      expect(mocks.existsSync).toHaveBeenNthCalledWith(2, endpointFilepath)
     })
   })
   describe('with _extends', () => {
@@ -162,11 +212,11 @@ describe('get config file', () => {
 
         expect(res.contexts.length).toBe(2)
         expect(res.config).toMatchInlineSnapshot(`
-          {
-            "saul": "goodman",
-            "template": "fake-template-content",
-          }
-        `)
+            {
+              "saul": "goodman",
+              "template": "fake-template-content",
+            }
+          `)
       })
       it('should aggregate two configs when the second is in another repo and uses absolute paths', async () => {
         vi.stubEnv('GITHUB_TOKEN', 'test')
@@ -221,11 +271,11 @@ describe('get config file', () => {
 
         expect(res.contexts.length).toBe(2)
         expect(res.config).toMatchInlineSnapshot(`
-          {
-            "saul": "goodman",
-            "template": "fake-template-content",
-          }
-        `)
+            {
+              "saul": "goodman",
+              "template": "fake-template-content",
+            }
+          `)
       })
       it('should prevent recursions', async () => {
         vi.stubEnv('GITHUB_TOKEN', 'test')
@@ -283,11 +333,11 @@ describe('get config file', () => {
 
         expect(res.contexts.length).toBe(2)
         expect(res.config).toMatchInlineSnapshot(`
-          {
-            "saul": "goodman",
-            "template": "fake-template-content",
-          }
-        `)
+            {
+              "saul": "goodman",
+              "template": "fake-template-content",
+            }
+          `)
       })
       it('should prevent recursions triggering the max depth', async () => {
         vi.stubEnv('GITHUB_TOKEN', 'test')
@@ -377,12 +427,12 @@ describe('get config file', () => {
 
         expect(res.contexts.length).toBe(configChain.length)
         expect(res.config).toMatchInlineSnapshot(`
-          {
-            "better": "call",
-            "saul": "goodman",
-            "template": "fake-template-content",
-          }
-        `)
+            {
+              "better": "call",
+              "saul": "goodman",
+              "template": "fake-template-content",
+            }
+          `)
       })
       it('should aggregate two configs when the second uses absolute paths', async () => {
         const workspace = '/home/runner/workspace'
@@ -419,11 +469,11 @@ describe('get config file', () => {
 
         expect(res.contexts.length).toBe(configChain.length)
         expect(res.config).toMatchInlineSnapshot(`
-          {
-            "saul": "goodman",
-            "template": "fake-template-content",
-          }
-        `)
+            {
+              "saul": "goodman",
+              "template": "fake-template-content",
+            }
+          `)
       })
     })
     describe('using the file: and then the github: scheme', () => {
@@ -503,12 +553,12 @@ describe('get config file', () => {
 
         expect(res.contexts.length).toBe(configChain.length)
         expect(res.config).toMatchInlineSnapshot(`
-          {
-            "better": "call",
-            "saul": "goodman",
-            "template": "fake-template-content",
-          }
-        `)
+            {
+              "better": "call",
+              "saul": "goodman",
+              "template": "fake-template-content",
+            }
+          `)
       })
     })
     describe('using the github: and then the file: scheme', () => {

@@ -1,14 +1,13 @@
 import { z } from "../../../../external.js";
-import { g as githubExports } from "../../../../github.js";
 const commonConfigSchema = z.object({
   /**
    * A boolean indicating whether the release being created or updated should be marked as latest.
    */
-  latest: z.stringbool().optional().default(true),
+  latest: z.stringbool().or(z.boolean()).optional(),
   /**
    * A boolean indicating whether the release being created or updated is a prerelease.
    */
-  prerelease: z.stringbool().optional().default(false),
+  prerelease: z.stringbool().or(z.boolean()).optional(),
   /**
    * When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date. Default: undefined (scan all commits).
    * @see https://zod.dev/api?id=iso-dates#iso-datetimes
@@ -21,7 +20,7 @@ const commonConfigSchema = z.object({
   /**
    * The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.
    */
-  commitish: z.string().optional().default(() => githubExports.context.ref || githubExports.context.payload.ref),
+  commitish: z.string().optional(),
   /**
    * A string that would be added before the template body.
    */
@@ -30,13 +29,6 @@ const commonConfigSchema = z.object({
    * A string that would be added after the template body.
    */
   footer: z.string().optional()
-}).superRefine((config, ctx) => {
-  if (config.latest && config.prerelease) {
-    ctx.addIssue({
-      code: "custom",
-      message: "'prerelease' and 'latest' cannot both be truthy."
-    });
-  }
 });
 export {
   commonConfigSchema
