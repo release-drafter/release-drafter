@@ -3,10 +3,10 @@ name: Continuous Integration
 on:
   pull_request:
     branches:
-      - main
+      - master
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: read
@@ -21,16 +21,7 @@ jobs:
         id: checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .node-version
-          cache: npm
-
-      - name: Install Dependencies
-        id: npm-ci
-        run: npm ci
+      - uses: ./.github/actions/common-setup
 
       - name: Check Format
         id: npm-format-check
@@ -40,6 +31,10 @@ jobs:
         id: npm-lint
         run: npm run lint
 
-      - name: Test
+      - name: Type checks
+        id: npm-ts-checks
+        run: npm run tsc:check
+
+      - name: Tests
         id: npm-ci-test
-        run: npm run ci-test
+        run: npm run test:run

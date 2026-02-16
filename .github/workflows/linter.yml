@@ -8,10 +8,10 @@ name: Lint Codebase
 on:
   pull_request:
     branches:
-      - main
+      - master
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: read
@@ -30,16 +30,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .node-version
-          cache: npm
-
-      - name: Install Dependencies
-        id: install
-        run: npm ci
+      - uses: ./.github/actions/common-setup
 
       - name: Lint Codebase
         id: super-linter

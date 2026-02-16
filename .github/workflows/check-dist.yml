@@ -12,10 +12,10 @@ name: Check Transpiled JavaScript
 on:
   pull_request:
     branches:
-      - main
+      - master
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: read
@@ -30,24 +30,15 @@ jobs:
         id: checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node.js
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .node-version
-          cache: npm
+      - uses: ./.github/actions/common-setup
 
       - name: Remove dist/ Directory
         id: remove-dist
-        run: npx rimraf ./dist
-
-      - name: Install Dependencies
-        id: install
-        run: npm ci
+        run: rm -rf ./dist
 
       - name: Build dist/ Directory
         id: build
-        run: npm run bundle
+        run: npm run build
 
       # This will fail the workflow if the `dist/` directory is different than
       # expected.
