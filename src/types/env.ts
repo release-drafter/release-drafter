@@ -1,5 +1,4 @@
 /**
- * Type-safe shape for the environment variables defined in `.env.example`.
  * All values are strings exposed by the GitHub Actions runtime.
  *
  * @note AI Generated, prone to errors
