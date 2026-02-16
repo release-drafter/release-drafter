@@ -105,6 +105,11 @@ export const mergeInputAndConfig = (params: {
       }
     })
     .filter((r) => !!r)
+  const categories = config.categories.map((cat) => {
+    const { label, ..._cat } = cat
+    _cat.labels = [...cat.labels, label].filter(Boolean) as string[]
+    return _cat
+  })
 
   // Build parsed config object - alters original type
   const parsedConfig = {
@@ -112,7 +117,8 @@ export const mergeInputAndConfig = (params: {
     commitish,
     latest,
     prerelease,
-    replacers
+    replacers,
+    categories
   }
 
   // Throw some more validation errors

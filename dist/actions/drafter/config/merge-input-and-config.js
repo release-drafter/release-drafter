@@ -81,12 +81,18 @@ const mergeInputAndConfig = (params) => {
       return false;
     }
   }).filter((r) => !!r);
+  const categories = config.categories.map((cat) => {
+    const { label, ..._cat } = cat;
+    _cat.labels = [...cat.labels, label].filter(Boolean);
+    return _cat;
+  });
   const parsedConfig = {
     ...config,
     commitish,
     latest,
     prerelease,
-    replacers
+    replacers,
+    categories
   };
   if (!parsedConfig.commitish) {
     throw new Error(

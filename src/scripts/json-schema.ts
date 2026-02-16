@@ -5,13 +5,8 @@ import {
   exclusiveConfigSchema,
   commonConfigSchema
 } from 'src/actions/drafter/config'
-import {
-  configSchema as autolabelerConfigSchema,
-  autolabelerSchema as autolabelerSchemaFromConfig
-} from 'src/actions/autolabeler/config'
+import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
 import z from 'zod'
-
-process.env.GITHUB_REF = '${{ github.ref }}'
 
 const drafterSchema = z.toJSONSchema(
   z
@@ -24,8 +19,7 @@ const drafterSchema = z.toJSONSchema(
 const autolabelerSchema = z.toJSONSchema(
   z
     .object({
-      ...autolabelerConfigSchema.shape,
-      autolabeler: autolabelerSchemaFromConfig
+      ...autolabelerConfigSchema.shape
     })
     .meta({ ...z.globalRegistry.get(autolabelerConfigSchema) })
 )

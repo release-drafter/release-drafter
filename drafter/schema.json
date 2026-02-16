@@ -49,17 +49,8 @@
       "type": "string",
       "enum": ["ascending", "descending"]
     },
-    "prerelease": { "default": false, "type": "boolean" },
-    "prerelease-identifier": { "type": "string" },
-    "latest": { "default": true, "type": "boolean" },
     "filter-by-commitish": { "default": false, "type": "boolean" },
-    "initial-commits-since": {
-      "type": "string",
-      "format": "date-time",
-      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
-    },
     "include-pre-releases": { "default": false, "type": "boolean" },
-    "commitish": { "default": "${{ github.ref }}", "type": "string" },
     "pull-request-limit": {
       "default": 5,
       "type": "integer",
@@ -102,7 +93,8 @@
             "default": [],
             "type": "array",
             "items": { "type": "string", "minLength": 1 }
-          }
+          },
+          "label": { "type": "string", "minLength": 1 }
         },
         "required": ["title", "collapse-after", "labels"],
         "additionalProperties": false
@@ -118,10 +110,10 @@
       "type": "object",
       "properties": {
         "major": {
+          "default": { "labels": [] },
           "type": "object",
           "properties": {
             "labels": {
-              "default": [],
               "type": "array",
               "items": { "type": "string", "minLength": 1 }
             }
@@ -130,10 +122,10 @@
           "additionalProperties": false
         },
         "minor": {
+          "default": { "labels": [] },
           "type": "object",
           "properties": {
             "labels": {
-              "default": [],
               "type": "array",
               "items": { "type": "string", "minLength": 1 }
             }
@@ -142,10 +134,10 @@
           "additionalProperties": false
         },
         "patch": {
+          "default": { "labels": [] },
           "type": "object",
           "properties": {
             "labels": {
-              "default": [],
               "type": "array",
               "items": { "type": "string", "minLength": 1 }
             }
@@ -163,10 +155,18 @@
       "additionalProperties": false
     },
     "category-template": { "default": "## $TITLE", "type": "string" },
-    "header": { "type": "string" },
     "template": { "type": "string", "minLength": 1 },
-    "footer": { "type": "string" },
-    "_extends": { "type": "string" }
+    "latest": { "anyOf": [{ "type": "boolean" }, { "type": "boolean" }] },
+    "prerelease": { "anyOf": [{ "type": "boolean" }, { "type": "boolean" }] },
+    "initial-commits-since": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "prerelease-identifier": { "type": "string" },
+    "commitish": { "type": "string" },
+    "header": { "type": "string" },
+    "footer": { "type": "string" }
   },
   "required": [
     "change-template",
@@ -179,11 +179,8 @@
     "no-contributors-template",
     "sort-by",
     "sort-direction",
-    "prerelease",
-    "latest",
     "filter-by-commitish",
     "include-pre-releases",
-    "commitish",
     "pull-request-limit",
     "history-limit",
     "replacers",
@@ -192,7 +189,5 @@
     "category-template",
     "template"
   ],
-  "additionalProperties": false,
-  "title": "JSON schema for Release Drafter yaml files",
-  "id": "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
+  "additionalProperties": false
 }
