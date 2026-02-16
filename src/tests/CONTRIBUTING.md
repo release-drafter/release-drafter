@@ -14,7 +14,7 @@ await probot.receive({
 })
 ```
 
-... which would spin up the execution of our action, aswell as the actual
+... which would spin up the execution of our action, as well as the actual
 _Github Actions Context_.
 
 Defining the _Github Actions Context_ (as imported by `@actions/github`) is now
@@ -35,7 +35,7 @@ it('does nothing', async () => {
 
   // process.env.GITHUB_REF now has a value coherent
   // with payload __fixtures__/events/push-non-master-branch.json
-  // also avalable in context.ref & context.payload.ref
+  // also available in context.ref & context.payload.ref
   await run()
 })
 ```

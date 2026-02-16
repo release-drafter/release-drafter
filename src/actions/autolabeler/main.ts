@@ -12,7 +12,7 @@ export const main = async (params: { config: ParsedConfig }) => {
 
   if (context.eventName !== 'pull_request') {
     throw new Error(
-      `Event type is wrong. Expected 'pull_request', recieved '${context.eventName}'`
+      `Event type is wrong. Expected 'pull_request', received '${context.eventName}'`
     )
   }
   const octokit = getOctokit()

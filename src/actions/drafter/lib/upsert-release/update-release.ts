@@ -34,7 +34,7 @@ export const updateRelease = async (params: {
     delete updateReleaseParameters.tag_name
   }
 
-  // Keep existing `target_commitish` if not overriden
+  // Keep existing `target_commitish` if not overridden
   // (sending `null` resets it to the default branch)
   if (!updateReleaseParameters.target_commitish) {
     delete updateReleaseParameters.target_commitish

@@ -118,7 +118,7 @@ export const mockContext = async (desiredPayload: AllowedPayload) => {
       vi.stubEnv(key, value)
     })
 
-  // Context class is not explicitely exported by @actions/github
+  // Context class is not explicitly exported by @actions/github
   const newContext = new (
     await import('node_modules/@actions/github/lib/context')
   ).Context()

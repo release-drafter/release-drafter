@@ -5,7 +5,7 @@ a variety of syntax combinations to fetch your config file(s).
 
 - [Configuration Loading](#configuration-loading)
   - [The syntax](#the-syntax)
-  - [Recipies](#recipies)
+  - [Recipes](#recipes)
     - [Target a different folder](#target-a-different-folder)
     - [Load your config from another repo](#load-your-config-from-another-repo)
     - [Load a file on the runner's file-system (dynamic config)](#load-a-file-on-the-runners-file-system-dynamic-config)
@@ -38,7 +38,7 @@ you can easily navigate your repo's files :
 
 When using the `github:` scheme, you'll be able to specify a different repo
 and/or ref to fetch the config at. If you do not specify any/some of them,
-they'll be infered using the runner's context. See
+they'll be inferred using the runner's context. See
 [Variables reference](https://docs.github.com/en/actions/reference/workflows-and-actions/variables)
 and
 [`@actions/github`'s `context`](https://github.com/actions/toolkit/blob/main/packages/github/src/context.ts)
@@ -64,7 +64,7 @@ the file at hand. If the desired file is in your repo, make sure to use
 > ... release-drafter will automatically fetch your file from your
 > working/current branch using octokit.
 
-## Recipies
+## Recipes
 
 ### Target a different folder
 
@@ -151,8 +151,8 @@ template: |
 ```
 
 > [!note]  
-> The same syntax as `config_name: ` applies to `_extends`. Below all produce
-> the same output :
+> The same syntax as `config_name:` applies to `_extends`. Below all produce the
+> same output :
 >
 > - `_extends: ../configs/release-drafter-common.yml`
 > - `_extends: github:/configs/release-drafter-common.yml`
@@ -207,7 +207,7 @@ config-name: release-drafter.yaml@${{ github.event.repository.default_branch }}
 
 ### Fetching from a repo named `github`
 
-The `github:` prefix is used internally to recognize you want to explicitely
+The `github:` prefix is used internally to recognize you want to explicitly
 fetch from a remote (using octokit) instead of loading a file on the runtime's
 filesystem.
 
@@ -230,7 +230,7 @@ If you intent the later, you will need to be more explicit. Use either :
 When configs _extend_ each-other, release-drafter will need to walk the
 import-chain using the scheme that whas specified in every file.
 
-Using the `file:` scheme with `_extends` is suported, but you need to make sure
+Using the `file:` scheme with `_extends` is supported, but you need to make sure
 all files are on the system and on the correct path.
 
 If you start extending configs using the `github:` (default, recommended)
