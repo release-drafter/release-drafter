@@ -11,31 +11,28 @@ it is generated from.
 
 ## Repository Structure
 
-| Path                 | Description                         |
-| -------------------- | ----------------------------------- |
-| `__fixtures__/`      | Unit Test Fixtures                  |
-| `__tests__/`         | Unit Tests                          |
-| `.devcontainer/`     | Development Container Configuration |
-| `.github/`           | GitHub Configuration                |
-| `.licenses/`         | License Information                 |
-| `.vscode/`           | Visual Studio Code Configuration    |
-| `badges/`            | Badges for readme                   |
-| `dist/`              | Generated JavaScript Code           |
-| `src/`               | TypeScript Source Code              |
-| `.licensed.yml`      | Licensed Configuration              |
-| `.markdown-lint.yml` | Markdown Linter Configuration       |
-| `.node-version`      | Node.js Version Configuration       |
-| `.prettierrc.yml`    | Prettier Formatter Configuration    |
-| `.yaml-lint.yml`     | YAML Linter Configuration           |
-| `action.yml`         | GitHub Action Metadata              |
-| `CODEOWNERS`         | Code Owners File                    |
-| `eslint.config.mjs`  | ESLint Configuration                |
-| `jest.config.js`     | Jest Configuration                  |
-| `LICENSE`            | License File                        |
-| `package.json`       | NPM Package Configuration           |
-| `README.md`          | Project Documentation               |
-| `rollup.config.ts`   | Rollup Bundler Configuration        |
-| `tsconfig.json`      | TypeScript Configuration            |
+| Path                | Description                                                     |
+| ------------------- | --------------------------------------------------------------- |
+| `.devcontainer/`    | Development Container Configuration                             |
+| `.github/`          | GitHub Configuration                                            |
+| `.licenses/`        | License Information                                             |
+| `.vscode/`          | Visual Studio Code Configuration                                |
+| `autolabeler/`      | Entrypoint for the Autolabeler action                           |
+| `badges/`           | Badges for readme                                               |
+| `coverage/`         | Non-versionned files about coverage.                            |
+| `dist/`             | Generated JavaScript Code                                       |
+| `docs/`             | Complementary documentation to README.md                        |
+| `drafter/`          | Entrypoint for the Drafter action                               |
+| `src/`              | TypeScript Source Code                                          |
+| `.node-version`     | Node.js Version Configuration                                   |
+| `.prettierrc.yml`   | Prettier Formatter Configuration                                |
+| `action.yml`        | Entrypoint ot the Drafter action. Also available under drafter/ |
+| `eslint.config.mjs` | ESLint Configuration                                            |
+| `vite.config.ts`    | Vite configuration for bundling and testing                     |
+| `LICENSE`           | License File                                                    |
+| `package.json`      | NPM Package Configuration                                       |
+| `README.md`         | Project Documentation                                           |
+| `tsconfig.json`     | TypeScript Configuration                                        |
 
 ## Environment Setup
 
@@ -53,8 +50,7 @@ Ensure all unit tests pass by running:
 npm run test
 ```
 
-Unit tests should exist in the `__tests__` directory. They are powered by
-`jest`. Fixtures should be placed in the `__fixtures__` directory.
+Tests should exist in the `src/tests` directory. They are powered by `vitest`.
 
 ## Bundling
 
@@ -62,7 +58,7 @@ Any time files in the `src` directory are changed, you should run the following
 command to bundle the TypeScript code into JavaScript:
 
 ```bash
-npm run bundle
+npm run build
 ```
 
 ## General Coding Guidelines

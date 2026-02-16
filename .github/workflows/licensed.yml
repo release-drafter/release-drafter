@@ -55,7 +55,7 @@ jobs:
       - if: ${{ github.event_name == 'workflow_dispatch' }}
         name: Update Licenses
         id: update-licenses
-        run: licensed cache
+        run: licensed cache -c ./.github/.licensed.yml
 
       # Then, commit the updated licenses to the repository.
       - if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -71,4 +71,4 @@ jobs:
       # Last, check the status of the cached licenses.
       - name: Check Licenses
         id: check-licenses
-        run: licensed status
+        run: licensed status -c ./.github/.licensed.yml
