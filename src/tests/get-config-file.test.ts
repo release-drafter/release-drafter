@@ -77,6 +77,7 @@ describe('get config file', () => {
       `)
     })
     it('should return error without workspace config', async () => {
+      vi.stubEnv('GITHUB_WORKSPACE', undefined)
       await expect(
         getConfigFile({
           scheme: 'file',
