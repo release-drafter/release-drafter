@@ -1,5 +1,5 @@
 import { c as coreExports } from "../../core.js";
-import { g as githubExports } from "../../github.js";
+import { c as context } from "../../github.js";
 import "../../lodash.js";
 import "../../lexer.js";
 import "path";
@@ -472,19 +472,19 @@ var ignoreExports = requireIgnore();
 const ignore = /* @__PURE__ */ getDefaultExportFromCjs(ignoreExports);
 const main = async (params) => {
   coreExports.info(
-    `Running for event "${githubExports.context.eventName || "[undefined]"}.${githubExports.context.payload.action || "[undefined]"}"`
+    `Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`
   );
-  if (githubExports.context.eventName !== "pull_request") {
+  if (context.eventName !== "pull_request") {
     throw new Error(
-      `Event type is wrong. Expected 'pull_request', recieved '${githubExports.context.eventName}'`
+      `Event type is wrong. Expected 'pull_request', recieved '${context.eventName}'`
     );
   }
   const octokit = getOctokit();
-  const payload = githubExports.context.payload;
+  const payload = context.payload;
   const changedFiles = await octokit.paginate(
     octokit.rest.pulls.listFiles,
     {
-      ...githubExports.context.repo,
+      ...context.repo,
       issue_number: payload.number,
       pull_number: payload.number,
       per_page: 100
@@ -535,7 +535,7 @@ const main = async (params) => {
   }
   if (labels.size > 0) {
     await octokit.rest.issues.addLabels({
-      ...githubExports.context.repo,
+      ...context.repo,
       issue_number: payload.number,
       labels: Array.from(labels)
     });

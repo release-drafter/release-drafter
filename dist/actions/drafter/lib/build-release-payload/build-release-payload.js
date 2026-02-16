@@ -2,7 +2,7 @@ import { sortPullRequests } from "./sort-pull-requests.js";
 import { renderTemplate } from "./render-template.js";
 import { generateChangeLog } from "./generate-changelog.js";
 import { generateContributorsSentence } from "./generate-contributors-sentence.js";
-import { g as githubExports } from "../../../../github.js";
+import { c as context } from "../../../../github.js";
 import { resolveVersionKeyIncrement } from "./resolve-version-increment.js";
 import { c as coreExports } from "../../../../core.js";
 import { getVersionInfo } from "./get-version-info.js";
@@ -23,8 +23,8 @@ const buildReleasePayload = (params) => {
         pullRequests: sortedPullRequests,
         config
       }),
-      $OWNER: githubExports.context.repo.owner,
-      $REPOSITORY: githubExports.context.repo.repo
+      $OWNER: context.repo.owner,
+      $REPOSITORY: context.repo.repo
     },
     replacers: config.replacers
   });

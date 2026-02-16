@@ -2,11 +2,11 @@ import { c as commonjsGlobal, g as getDefaultExportFromCjs } from "./_commonjsHe
 import require$$0 from "os";
 import require$$0$1 from "crypto";
 import require$$1 from "fs";
-import require$$1$5 from "path";
+import require$$1$6 from "path";
 import require$$2 from "http";
-import require$$3 from "https";
+import require$$1$1 from "https";
 import require$$0$4 from "net";
-import require$$1$1 from "tls";
+import require$$1$2 from "tls";
 import require$$4 from "events";
 import require$$0$3 from "assert";
 import require$$0$2 from "util";
@@ -15,15 +15,15 @@ import require$$7 from "buffer";
 import require$$8 from "querystring";
 import require$$14 from "stream/web";
 import require$$0$7 from "node:stream";
-import require$$1$2 from "node:util";
+import require$$1$3 from "node:util";
 import require$$0$6 from "node:events";
 import require$$0$8 from "worker_threads";
 import require$$2$1 from "perf_hooks";
 import require$$5 from "util/types";
 import require$$4$1 from "async_hooks";
-import require$$1$3 from "console";
-import require$$1$4 from "url";
-import require$$3$1 from "zlib";
+import require$$1$4 from "console";
+import require$$1$5 from "url";
+import require$$3 from "zlib";
 import require$$6 from "string_decoder";
 import require$$0$9 from "diagnostics_channel";
 import require$$2$2 from "child_process";
@@ -320,9 +320,9 @@ var hasRequiredTunnel$1;
 function requireTunnel$1() {
   if (hasRequiredTunnel$1) return tunnel$1;
   hasRequiredTunnel$1 = 1;
-  var tls = require$$1$1;
+  var tls = require$$1$2;
   var http = require$$2;
-  var https = require$$3;
+  var https = require$$1$1;
   var events2 = require$$4;
   var util2 = require$$0$2;
   tunnel$1.httpOverHttp = httpOverHttp;
@@ -1425,7 +1425,7 @@ function requireSbmh() {
   if (hasRequiredSbmh) return sbmh;
   hasRequiredSbmh = 1;
   const EventEmitter = require$$0$6.EventEmitter;
-  const inherits = require$$1$2.inherits;
+  const inherits = require$$1$3.inherits;
   function SBMH(needle) {
     if (typeof needle === "string") {
       needle = Buffer.from(needle);
@@ -1561,7 +1561,7 @@ var hasRequiredPartStream;
 function requirePartStream() {
   if (hasRequiredPartStream) return PartStream_1;
   hasRequiredPartStream = 1;
-  const inherits = require$$1$2.inherits;
+  const inherits = require$$1$3.inherits;
   const ReadableStream = require$$0$7.Readable;
   function PartStream(opts) {
     ReadableStream.call(this, opts);
@@ -1594,7 +1594,7 @@ function requireHeaderParser() {
   if (hasRequiredHeaderParser) return HeaderParser_1;
   hasRequiredHeaderParser = 1;
   const EventEmitter = require$$0$6.EventEmitter;
-  const inherits = require$$1$2.inherits;
+  const inherits = require$$1$3.inherits;
   const getLimit2 = requireGetLimit();
   const StreamSearch = requireSbmh();
   const B_DCRLF = Buffer.from("\r\n\r\n");
@@ -1694,7 +1694,7 @@ function requireDicer() {
   if (hasRequiredDicer) return Dicer_1;
   hasRequiredDicer = 1;
   const WritableStream = require$$0$7.Writable;
-  const inherits = require$$1$2.inherits;
+  const inherits = require$$1$3.inherits;
   const StreamSearch = requireSbmh();
   const PartStream = requirePartStream();
   const HeaderParser = requireHeaderParser();
@@ -2663,7 +2663,7 @@ function requireMultipart() {
   if (hasRequiredMultipart) return multipart;
   hasRequiredMultipart = 1;
   const { Readable } = require$$0$7;
-  const { inherits } = require$$1$2;
+  const { inherits } = require$$1$3;
   const Dicer = requireDicer();
   const parseParams = requireParseParams();
   const decodeText = requireDecodeText();
@@ -3336,7 +3336,7 @@ function requireMain() {
   if (hasRequiredMain) return main.exports;
   hasRequiredMain = 1;
   const WritableStream = require$$0$7.Writable;
-  const { inherits } = require$$1$2;
+  const { inherits } = require$$1$3;
   const Dicer = requireDicer();
   const MultipartParser = requireMultipart();
   const UrlencodedParser = requireUrlencoded();
@@ -6272,7 +6272,7 @@ function requireConnect() {
       let socket;
       if (protocol === "https:") {
         if (!tls) {
-          tls = require$$1$1;
+          tls = require$$1$2;
         }
         servername = servername || options.servername || util2.getServerName(host) || null;
         const sessionKey = servername || hostname;
@@ -10913,7 +10913,7 @@ function requirePendingInterceptorsFormatter() {
   if (hasRequiredPendingInterceptorsFormatter) return pendingInterceptorsFormatter;
   hasRequiredPendingInterceptorsFormatter = 1;
   const { Transform } = require$$0$5;
-  const { Console } = require$$1$3;
+  const { Console } = require$$1$4;
   pendingInterceptorsFormatter = class PendingInterceptorsFormatter {
     constructor({ disableColors } = {}) {
       this.transform = new Transform({
@@ -11091,7 +11091,7 @@ function requireProxyAgent() {
   if (hasRequiredProxyAgent) return proxyAgent;
   hasRequiredProxyAgent = 1;
   const { kProxy, kClose, kDestroy, kInterceptors } = requireSymbols$4();
-  const { URL: URL2 } = require$$1$4;
+  const { URL: URL2 } = require$$1$5;
   const Agent = requireAgent();
   const Pool = requirePool();
   const DispatcherBase = requireDispatcherBase();
@@ -12988,7 +12988,7 @@ function requireFetch() {
   } = requireResponse();
   const { Headers } = requireHeaders();
   const { Request, makeRequest } = requireRequest();
-  const zlib = require$$3$1;
+  const zlib = require$$3;
   const {
     bytesMatch,
     makePolicyContainer,
@@ -17351,7 +17351,7 @@ function requireLib() {
   Object.defineProperty(lib, "__esModule", { value: true });
   lib.HttpClient = lib.isHttps = lib.HttpClientResponse = lib.HttpClientError = lib.getProxyUrl = lib.MediaTypes = lib.Headers = lib.HttpCodes = void 0;
   const http = __importStar(require$$2);
-  const https = __importStar(require$$3);
+  const https = __importStar(require$$1$1);
   const pm = __importStar(requireProxy());
   const tunnel2 = __importStar(requireTunnel());
   const undici_1 = requireUndici();
@@ -18439,7 +18439,7 @@ function requirePathUtils() {
   };
   Object.defineProperty(pathUtils, "__esModule", { value: true });
   pathUtils.toPlatformPath = pathUtils.toWin32Path = pathUtils.toPosixPath = void 0;
-  const path = __importStar(require$$1$5);
+  const path = __importStar(require$$1$6);
   function toPosixPath(pth) {
     return pth.replace(/[\\]/g, "/");
   }
@@ -18518,7 +18518,7 @@ function requireIoUtil() {
     Object.defineProperty(exports$1, "__esModule", { value: true });
     exports$1.getCmdPath = exports$1.tryGetExecutablePath = exports$1.isRooted = exports$1.isDirectory = exports$1.exists = exports$1.READONLY = exports$1.UV_FS_O_EXLOCK = exports$1.IS_WINDOWS = exports$1.unlink = exports$1.symlink = exports$1.stat = exports$1.rmdir = exports$1.rm = exports$1.rename = exports$1.readlink = exports$1.readdir = exports$1.open = exports$1.mkdir = exports$1.lstat = exports$1.copyFile = exports$1.chmod = void 0;
     const fs = __importStar(require$$1);
-    const path = __importStar(require$$1$5);
+    const path = __importStar(require$$1$6);
     _a = fs.promises, exports$1.chmod = _a.chmod, exports$1.copyFile = _a.copyFile, exports$1.lstat = _a.lstat, exports$1.mkdir = _a.mkdir, exports$1.open = _a.open, exports$1.readdir = _a.readdir, exports$1.readlink = _a.readlink, exports$1.rename = _a.rename, exports$1.rm = _a.rm, exports$1.rmdir = _a.rmdir, exports$1.stat = _a.stat, exports$1.symlink = _a.symlink, exports$1.unlink = _a.unlink;
     exports$1.IS_WINDOWS = process.platform === "win32";
     exports$1.UV_FS_O_EXLOCK = 268435456;
@@ -18690,7 +18690,7 @@ function requireIo() {
   Object.defineProperty(io, "__esModule", { value: true });
   io.findInPath = io.which = io.mkdirP = io.rmRF = io.mv = io.cp = void 0;
   const assert_1 = require$$0$3;
-  const path = __importStar(require$$1$5);
+  const path = __importStar(require$$1$6);
   const ioUtil2 = __importStar(requireIoUtil());
   function cp(source, dest, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -18939,7 +18939,7 @@ function requireToolrunner() {
   const os = __importStar(require$$0);
   const events2 = __importStar(require$$4);
   const child = __importStar(require$$2$2);
-  const path = __importStar(require$$1$5);
+  const path = __importStar(require$$1$6);
   const io2 = __importStar(requireIo());
   const ioUtil2 = __importStar(requireIoUtil());
   const timers_1 = require$$6$1;
@@ -19654,7 +19654,7 @@ function requireCore() {
     const file_command_1 = requireFileCommand();
     const utils_1 = requireUtils$1();
     const os = __importStar(require$$0);
-    const path = __importStar(require$$1$5);
+    const path = __importStar(require$$1$6);
     const oidc_utils_1 = requireOidcUtils();
     var ExitCode;
     (function(ExitCode2) {
@@ -19827,7 +19827,6 @@ const core$1 = /* @__PURE__ */ _mergeNamespaces({
 }, [coreExports]);
 export {
   core$1 as a,
-  requireUndici as b,
   coreExports as c,
-  requireLib as r
+  requireTunnel as r
 };

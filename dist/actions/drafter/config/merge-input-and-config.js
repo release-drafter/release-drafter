@@ -1,6 +1,6 @@
 import { c as coreExports } from "../../../core.js";
 import { i as isBoolean } from "../../../isBoolean.js";
-import { g as githubExports } from "../../../github.js";
+import { c as context } from "../../../github.js";
 import "../../../lodash.js";
 import "../../../lexer.js";
 import "path";
@@ -70,7 +70,7 @@ const mergeInputAndConfig = (params) => {
     );
     config["include-pre-releases"] = true;
   }
-  const commitish = config.commitish || githubExports.context.ref || githubExports.context.payload.ref;
+  const commitish = config.commitish || context.ref || context.payload.ref;
   const latest = !isBoolean(config.latest) ? true : config.latest;
   const prerelease = !isBoolean(config.prerelease) ? false : config.prerelease;
   const replacers = config.replacers.map((r) => {
@@ -97,6 +97,11 @@ const mergeInputAndConfig = (params) => {
   if (!parsedConfig.commitish) {
     throw new Error(
       "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
+    );
+  }
+  if (parsedConfig.categories.filter((category) => category.labels.length === 0).length > 1) {
+    throw new Error(
+      "Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests."
     );
   }
   return parsedConfig;

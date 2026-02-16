@@ -6,7 +6,7 @@ import { c as coreExports } from "../../../../core.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
 import "../../../../index.js";
 import "../../../../common/shared-input.schema.js";
-import { g as githubExports } from "../../../../github.js";
+import { c as context } from "../../../../github.js";
 import { sortReleases } from "./sort-releases.js";
 const RELEASE_COUNT_LIMIT = 1e3;
 const findPreviousReleases = async (params) => {
@@ -22,7 +22,7 @@ const findPreviousReleases = async (params) => {
   const releases = await octokit.paginate(
     octokit.rest.repos.listReleases,
     {
-      ...githubExports.context.repo,
+      ...context.repo,
       per_page: 100
     },
     (response, done) => {

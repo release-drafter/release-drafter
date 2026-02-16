@@ -1,4 +1,4 @@
-import { g as githubExports } from "../../../../github.js";
+import { c as context } from "../../../../github.js";
 import { findCommitsWithPathChange } from "./find-commits-with-path-change.js";
 import { c as coreExports } from "../../../../core.js";
 import { findCommitsWithPr } from "./find-commits-with-pr.js";
@@ -14,8 +14,8 @@ const findPullRequests = async (params) => {
       hasFoundCommits
     } = await findCommitsWithPathChange(params.config["include-paths"], {
       since,
-      name: githubExports.context.repo.repo,
-      owner: githubExports.context.repo.owner,
+      name: context.repo.repo,
+      owner: context.repo.owner,
       targetCommitish: params.config.commitish
     });
     if (!hasFoundCommits) {
@@ -31,8 +31,8 @@ const findPullRequests = async (params) => {
   );
   let commits = await findCommitsWithPr({
     since,
-    name: githubExports.context.repo.repo,
-    owner: githubExports.context.repo.owner,
+    name: context.repo.repo,
+    owner: context.repo.owner,
     targetCommitish: params.config.commitish,
     withPullRequestBody: params.config["change-template"].includes("$BODY"),
     withPullRequestURL: params.config["change-template"].includes("$URL"),
@@ -62,7 +62,7 @@ const findPullRequests = async (params) => {
   pullRequests = pullRequests.filter(
     (pr) => (
       // Ensure PR is from the same repository
-      pr.baseRepository?.nameWithOwner === `${githubExports.context.repo.owner}/${githubExports.context.repo.repo}` && // Ensure PR is merged
+      pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && // Ensure PR is merged
       pr.merged
     )
   );

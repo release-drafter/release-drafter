@@ -6,7 +6,7 @@ import "../../../../core.js";
 import { getOctokit } from "../../../../common/get-octokit.js";
 import "../../../../index.js";
 import "../../../../common/shared-input.schema.js";
-import { g as githubExports } from "../../../../github.js";
+import { c as context } from "../../../../github.js";
 const updateRelease = async (params) => {
   const octokit = getOctokit();
   const { draftRelease, releasePayload } = params;
@@ -25,8 +25,8 @@ const updateRelease = async (params) => {
     delete updateReleaseParameters.target_commitish;
   }
   return octokit.rest.repos.updateRelease({
-    owner: githubExports.context.repo.owner,
-    repo: githubExports.context.repo.repo,
+    owner: context.repo.owner,
+    repo: context.repo.repo,
     release_id: draftRelease.id,
     body: releasePayload.body,
     draft: releasePayload.draft,
