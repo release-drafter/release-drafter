@@ -39,7 +39,7 @@ jobs:
           CHECKOV_FILE_NAME: .github/.checkov.yml
           YAML_CONFIG_FILE: .github/.yaml-lint.yml
           GITHUB_ACTIONS_CONFIG_FILE: .github/.actionlint.yml
-          DEFAULT_BRANCH: main
+          DEFAULT_BRANCH: master
           FILTER_REGEX_EXCLUDE: dist/**/*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .
