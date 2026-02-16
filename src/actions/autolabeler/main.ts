@@ -1,20 +1,11 @@
 import * as core from '@actions/core'
-import { Config } from './config'
+import { ParsedConfig } from './config'
 import { context } from '@actions/github'
 import { PullRequestEvent } from '@octokit/webhooks-types'
 import { getOctokit } from 'src/common'
 import ignore from 'ignore'
 
-export const main = async (params: { config: Config }) => {
-  /**
-   * TODO :
-   *
-   * 1. [new] check event is 'pull_request' - was handled by probot using app.on()
-   * 2. get PR's details. I think @actions/github's context is fine
-   * 3. find changed files. @actions/github's octokit instance may be useful
-   * 4. create Set() of labels to add based on config's autolabeler params
-   * 5. add labels. @actions/github's octokit instance may be useful
-   */
+export const main = async (params: { config: ParsedConfig }) => {
   core.info(
     `Running for event "${context.eventName || '[undefined]'}.${context.payload.action || '[undefined]'}"`
   )

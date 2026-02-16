@@ -5,6 +5,12 @@ import "./config/action-input.schema.js";
 import { getActionInput } from "./config/get-action-inputs.js";
 import "../../lexer.js";
 import { getConfig } from "./config/get-config.js";
+import "../../lodash.js";
+import "path";
+import "fs";
+import "../../github.js";
+import "../../index.js";
+import "../../common/shared-input.schema.js";
 async function run() {
   try {
     const input = getActionInput();

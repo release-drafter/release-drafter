@@ -109,14 +109,7 @@ export const exclusiveConfigSchema = z
         })
       )
       .optional()
-      .default([])
-      .transform((categories) =>
-        categories.map((cat) => {
-          const { label, ..._cat } = cat
-          _cat.labels = [...cat.labels, label].filter(Boolean) as string[]
-          return _cat
-        })
-      ),
+      .default([]),
     /**
      * Adjust the `$RESOLVED_VERSION` variable using labels.
      */

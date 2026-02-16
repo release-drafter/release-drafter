@@ -89,13 +89,7 @@ const exclusiveConfigSchema = z.object({
       labels: z.array(z.string().min(1)).optional().default([]),
       label: z.string().min(1).optional()
     })
-  ).optional().default([]).transform(
-    (categories) => categories.map((cat) => {
-      const { label, ..._cat } = cat;
-      _cat.labels = [...cat.labels, label].filter(Boolean);
-      return _cat;
-    })
-  ),
+  ).optional().default([]),
   /**
    * Adjust the `$RESOLVED_VERSION` variable using labels.
    */

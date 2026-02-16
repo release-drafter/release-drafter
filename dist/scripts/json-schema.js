@@ -10,10 +10,9 @@ import "../lodash.js";
 import "../lexer.js";
 import "../index.js";
 import "../common/shared-input.schema.js";
-import { autolabelerSchema as autolabelerSchema$1, configSchema as configSchema$1 } from "../actions/autolabeler/config/config.schema.js";
+import { configSchema as configSchema$1 } from "../actions/autolabeler/config/config.schema.js";
 import "../actions/autolabeler/config/action-input.schema.js";
 import { z } from "../external.js";
-process.env.GITHUB_REF = "${{ github.ref }}";
 const drafterSchema = z.toJSONSchema(
   z.object({
     ...exclusiveConfigSchema.shape,
@@ -22,8 +21,7 @@ const drafterSchema = z.toJSONSchema(
 );
 const autolabelerSchema = z.toJSONSchema(
   z.object({
-    ...configSchema$1.shape,
-    autolabeler: autolabelerSchema$1
+    ...configSchema$1.shape
   }).meta({ ...z.globalRegistry.get(configSchema$1) })
 );
 const drafterFilePath = resolve(
