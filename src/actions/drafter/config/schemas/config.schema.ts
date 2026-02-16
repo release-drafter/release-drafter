@@ -151,20 +151,6 @@ export const exclusiveConfigSchema = z
      */
     template: z.string().min(1)
   })
-  .superRefine((config, ctx) => {
-    // Validate that only one uncategorized category exists
-    const uncategorizedCategories = config.categories.filter(
-      (category) => category.labels.length === 0
-    )
-    if (uncategorizedCategories.length > 1) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['categories[]', 'labels or label'],
-        message:
-          'Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.'
-      })
-    }
-  })
   .meta({
     title: 'JSON schema for Release Drafter yaml files',
     id: 'https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json'

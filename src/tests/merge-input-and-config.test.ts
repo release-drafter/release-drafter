@@ -384,6 +384,26 @@ describe('mergeInputAndConfig', () => {
         "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
       )
     })
+    it('should throw error when multiple empty categories', async () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        categories: [
+          {
+            title: '📝 Other Changes'
+          },
+          {
+            title: '📝 Yet Other Changes'
+          }
+        ]
+      })
+      const input = commonConfigSchema.parse({})
+
+      expect(() =>
+        mergeInputAndConfig({ config, input })
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[Error: Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.]`
+      )
+    })
   })
 
   describe('complex scenarios', () => {

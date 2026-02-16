@@ -127,6 +127,14 @@ export const mergeInputAndConfig = (params: {
       "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
     )
   }
+  if (
+    parsedConfig.categories.filter((category) => category.labels.length === 0)
+      .length > 1
+  ) {
+    throw new Error(
+      'Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.'
+    )
+  }
 
   return parsedConfig
 }
