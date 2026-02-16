@@ -1,6 +1,0 @@
-# See: https://github.com/rhysd/actionlint/blob/v1.7.7/docs/config.md
-
-paths:
-  .github/workflows/**/*.{yml,yaml}:
-    ignore:
-      - invalid runner name "node24"

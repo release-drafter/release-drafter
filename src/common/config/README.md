@@ -54,7 +54,7 @@ config-name: release-drafter.yaml@${{ github.event.repository.default_branch }}
 
 ### Fetching form a repo named `github`
 
-The `github:` prefix is used internally to recognize you want to explicitely
+The `github:` prefix is used internally to recognize you want to explicitly
 fetch from a remote (using octokit) instead of loading a file on the runtime's
 filesystem.
 

@@ -49,7 +49,7 @@ const suites: SuiteParams[] = [
     }
   ],
   [
-    'extracts a version-like string from the last release name if the tag isnt a version',
+    "extracts a version-like string from the last release name if the tag isn't a version",
     {
       lastRelease: {
         tag_name: 'notaproperversion',

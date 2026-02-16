@@ -26,7 +26,7 @@ it is generated from.
 | `src/`              | TypeScript Source Code                                          |
 | `.node-version`     | Node.js Version Configuration                                   |
 | `.prettierrc.yml`   | Prettier Formatter Configuration                                |
-| `action.yml`        | Entrypoint ot the Drafter action. Also available under drafter/ |
+| `action.yml`        | Entrypoint to the Drafter action. Also available under drafter/ |
 | `eslint.config.mjs` | ESLint Configuration                                            |
 | `vite.config.ts`    | Vite configuration for bundling and testing                     |
 | `LICENSE`           | License File                                                    |

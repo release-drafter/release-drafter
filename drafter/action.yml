@@ -19,7 +19,7 @@ inputs:
     default: 'release-drafter.yml'
   token:
     description: >
-      Access token used to make requests againts the GitHub API. Defaults to
+      Access token used to make requests against the GitHub API. Defaults to
       github.token
     default: ${{ github.token }}
   name:
