@@ -3,6 +3,7 @@ import isBoolean from 'lodash/isBoolean.js'
 import { Config } from './schemas/config.schema'
 import { CommonConfig } from './schemas'
 import { context } from '@actions/github'
+import { stringToRegex } from 'src/common'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.
@@ -19,7 +20,6 @@ export const mergeInputAndConfig = (params: {
   const config = structuredClone(originalConfig)
 
   // Handle overrides
-
   if (input.commitish) {
     if (config.commitish && config.commitish !== input.commitish) {
       core.info(
@@ -28,7 +28,6 @@ export const mergeInputAndConfig = (params: {
     }
     config.commitish = input.commitish
   }
-
   if (input.header) {
     if (config.header && config.header !== input.header) {
       core.info(
@@ -37,7 +36,6 @@ export const mergeInputAndConfig = (params: {
     }
     config.header = input.header
   }
-
   if (input.footer) {
     if (config.footer && config.footer !== input.footer) {
       core.info(
@@ -46,7 +44,6 @@ export const mergeInputAndConfig = (params: {
     }
     config.footer = input.footer
   }
-
   if (input['prerelease-identifier']) {
     if (
       config['prerelease-identifier'] &&
@@ -58,7 +55,6 @@ export const mergeInputAndConfig = (params: {
     }
     config['prerelease-identifier'] = input['prerelease-identifier']
   }
-
   if (isBoolean(input.prerelease)) {
     if (
       isBoolean(config.prerelease) &&
@@ -70,7 +66,6 @@ export const mergeInputAndConfig = (params: {
     }
     config.prerelease = input.prerelease
   }
-
   if (isBoolean(input.latest)) {
     if (isBoolean(config.latest) && config.latest !== input.latest) {
       core.info(
@@ -79,14 +74,12 @@ export const mergeInputAndConfig = (params: {
     }
     config.latest = input.latest
   }
-
   if (config.latest && config.prerelease) {
     core.warning(
       "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release."
     )
     config.latest = false
   }
-
   if (config['prerelease-identifier'] && !config['include-pre-releases']) {
     core.warning(
       `You have specified a 'prerelease-identifier' (${config['prerelease-identifier']}), but 'include-pre-releases' is set to false. Switching to true.`
@@ -95,19 +88,41 @@ export const mergeInputAndConfig = (params: {
   }
 
   // Write defaults
-  if (!config.commitish) config.commitish = context.ref || context.payload.ref
-  if (!config.latest) config.latest = true
-  if (!config.prerelease) config.prerelease = false
+  const commitish =
+    config.commitish || context.ref || (context.payload.ref as string)
+  const latest = !isBoolean(config.latest) ? true : config.latest
+  const prerelease = !isBoolean(config.prerelease) ? false : config.prerelease
+
+  // Apply some transformations
+  const replacers = config.replacers
+    .map((r) => {
+      // convert 'search' to regex and remove invalid entries
+      try {
+        return { ...r, search: stringToRegex(r.search) }
+      } catch {
+        core.warning(`Bad replacer regex: '${r.search}'`)
+        return false
+      }
+    })
+    .filter((r) => !!r)
+
+  // Build parsed config object - alters original type
+  const parsedConfig = {
+    ...config,
+    commitish,
+    latest,
+    prerelease,
+    replacers
+  }
 
   // Throw some more validation errors
-  if (!config.commitish) {
+  if (!parsedConfig.commitish) {
     throw new Error(
       "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
     )
   }
 
-  return config as Config &
-    Required<Pick<Config, 'latest' | 'prerelease' | 'commitish'>>
+  return parsedConfig
 }
 
 /**

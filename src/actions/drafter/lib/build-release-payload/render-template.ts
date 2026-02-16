@@ -1,4 +1,4 @@
-import { Config } from '../../config'
+import { ParsedConfig } from '../../config'
 
 export type Template = {
   [key: `$${Uppercase<string>}`]:
@@ -25,7 +25,7 @@ export type NestedTemplate = {
 export const renderTemplate = (params: {
   template: string
   object: Template
-  replacers?: Config['replacers']
+  replacers?: ParsedConfig['replacers']
 }) => {
   const { template, object, replacers } = params
 

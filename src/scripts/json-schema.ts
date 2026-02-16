@@ -3,8 +3,7 @@ import { resolve } from 'path'
 import {
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
-  commonConfigSchema,
-  replacersSchema
+  commonConfigSchema
 } from 'src/actions/drafter/config'
 import {
   configSchema as autolabelerConfigSchema,
@@ -18,8 +17,7 @@ const drafterSchema = z.toJSONSchema(
   z
     .object({
       ...exclusiveConfigSchema.shape,
-      ...commonConfigSchema.shape,
-      replacers: replacersSchema
+      ...commonConfigSchema.shape
     })
     .meta({ ...z.globalRegistry.get(drafterConfigSchema) })
 )
