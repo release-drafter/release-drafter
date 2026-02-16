@@ -1,18 +1,5 @@
 import z from 'zod'
-import * as core from '@actions/core'
-import { stringToRegex } from 'src/common/string-to-regex'
 import { commonConfigSchema } from './common-config.schema'
-
-// export without the transform() for JSON schemas
-export const replacersSchema = z
-  .array(
-    z.object({
-      search: z.string().min(1),
-      replace: z.string().min(0)
-    })
-  )
-  .optional()
-  .default([])
 
 export const exclusiveConfigSchema = z
   .object({
@@ -100,19 +87,15 @@ export const exclusiveConfigSchema = z
     /**
      * Search and replace content in the generated changelog body.
      */
-    replacers: replacersSchema.transform((replacers) =>
-      // convert 'search' to regex and remove invalid entries
-      replacers
-        .map((r) => {
-          try {
-            return { ...r, search: stringToRegex(r.search) }
-          } catch {
-            core.warning(`Bad replacer regex: '${r.search}'`)
-            return false
-          }
+    replacers: z
+      .array(
+        z.object({
+          search: z.string().min(1),
+          replace: z.string().min(0)
         })
-        .filter((r) => !!r)
-    ),
+      )
+      .optional()
+      .default([]),
     /**
      * Categorize pull requests using labels.
      */

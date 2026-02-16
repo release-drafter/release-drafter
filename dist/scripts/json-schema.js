@@ -3,7 +3,7 @@ import { resolve } from "path";
 import "../core.js";
 import "../actions/drafter/config/schemas/action-input.schema.js";
 import { commonConfigSchema } from "../actions/drafter/config/schemas/common-config.schema.js";
-import { replacersSchema, exclusiveConfigSchema, configSchema } from "../actions/drafter/config/schemas/config.schema.js";
+import { exclusiveConfigSchema, configSchema } from "../actions/drafter/config/schemas/config.schema.js";
 import "../isBoolean.js";
 import "../github.js";
 import "../lodash.js";
@@ -17,8 +17,7 @@ process.env.GITHUB_REF = "${{ github.ref }}";
 const drafterSchema = z.toJSONSchema(
   z.object({
     ...exclusiveConfigSchema.shape,
-    ...commonConfigSchema.shape,
-    replacers: replacersSchema
+    ...commonConfigSchema.shape
   }).meta({ ...z.globalRegistry.get(configSchema) })
 );
 const autolabelerSchema = z.toJSONSchema(

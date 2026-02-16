@@ -1,13 +1,5 @@
 import { z } from "../../../../external.js";
-import { c as coreExports } from "../../../../core.js";
-import { stringToRegex } from "../../../../common/string-to-regex.js";
 import { commonConfigSchema } from "./common-config.schema.js";
-const replacersSchema = z.array(
-  z.object({
-    search: z.string().min(1),
-    replace: z.string().min(0)
-  })
-).optional().default([]);
 const exclusiveConfigSchema = z.object({
   /**
    * The template to use for each merged pull request.
@@ -81,19 +73,12 @@ const exclusiveConfigSchema = z.object({
   /**
    * Search and replace content in the generated changelog body.
    */
-  replacers: replacersSchema.transform(
-    (replacers) => (
-      // convert 'search' to regex and remove invalid entries
-      replacers.map((r) => {
-        try {
-          return { ...r, search: stringToRegex(r.search) };
-        } catch {
-          coreExports.warning(`Bad replacer regex: '${r.search}'`);
-          return false;
-        }
-      }).filter((r) => !!r)
-    )
-  ),
+  replacers: z.array(
+    z.object({
+      search: z.string().min(1),
+      replace: z.string().min(0)
+    })
+  ).optional().default([]),
   /**
    * Categorize pull requests using labels.
    */
@@ -157,6 +142,5 @@ const exclusiveConfigSchema = z.object({
 const configSchema = exclusiveConfigSchema.and(commonConfigSchema);
 export {
   configSchema,
-  exclusiveConfigSchema,
-  replacersSchema
+  exclusiveConfigSchema
 };

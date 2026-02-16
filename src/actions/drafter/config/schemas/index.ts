@@ -9,6 +9,5 @@ export {
   type Config,
   type ExclusiveConfig,
   configSchema,
-  exclusiveConfigSchema,
-  replacersSchema
+  exclusiveConfigSchema
 } from './config.schema'

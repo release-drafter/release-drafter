@@ -1,6 +1,12 @@
 import { c as coreExports } from "../../../core.js";
 import { i as isBoolean } from "../../../isBoolean.js";
 import { g as githubExports } from "../../../github.js";
+import "../../../lodash.js";
+import "../../../lexer.js";
+import "path";
+import "fs";
+import { stringToRegex } from "../../../common/string-to-regex.js";
+import "../../../common/shared-input.schema.js";
 const mergeInputAndConfig = (params) => {
   const { config: originalConfig, input } = params;
   const config = structuredClone(originalConfig);
@@ -64,15 +70,30 @@ const mergeInputAndConfig = (params) => {
     );
     config["include-pre-releases"] = true;
   }
-  if (!config.commitish) config.commitish = githubExports.context.ref || githubExports.context.payload.ref;
-  if (!config.latest) config.latest = true;
-  if (!config.prerelease) config.prerelease = false;
-  if (!config.commitish) {
+  const commitish = config.commitish || githubExports.context.ref || githubExports.context.payload.ref;
+  const latest = !isBoolean(config.latest) ? true : config.latest;
+  const prerelease = !isBoolean(config.prerelease) ? false : config.prerelease;
+  const replacers = config.replacers.map((r) => {
+    try {
+      return { ...r, search: stringToRegex(r.search) };
+    } catch {
+      coreExports.warning(`Bad replacer regex: '${r.search}'`);
+      return false;
+    }
+  }).filter((r) => !!r);
+  const parsedConfig = {
+    ...config,
+    commitish,
+    latest,
+    prerelease,
+    replacers
+  };
+  if (!parsedConfig.commitish) {
     throw new Error(
       "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
     );
   }
-  return config;
+  return parsedConfig;
 };
 export {
   mergeInputAndConfig
