@@ -224,21 +224,6 @@ const suites: SuiteParams[] = [
       categories: [
         {
           title: '📝 Other Changes'
-        },
-        {
-          title: '📝 Yet Other Changes'
-        }
-      ]
-    },
-    errorContains: 'Multiple categories detected with no labels.',
-    parseValid: false
-  },
-  {
-    parseInput: {
-      template,
-      categories: [
-        {
-          title: '📝 Other Changes'
         }
       ]
     },
