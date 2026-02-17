@@ -20,7 +20,7 @@ inputs:
   token:
     description: >
       Access token used to make requests against the GitHub API. Defaults to
-      github.token
+      github.token.
     default: ${{ github.token }}
   name:
     description: |
@@ -44,7 +44,7 @@ inputs:
     default: ''
   latest:
     description: |
-      A string indicating whether the release being created or updated should be marked as latest.
+      A boolean indicating whether the release being created or updated should be marked as latest.
     required: false
     default: ''
   prerelease:
@@ -59,7 +59,8 @@ inputs:
     default: ''
   commitish:
     description: |
-      The object that the release should be created to point to.
+      The release target, i.e. branch or commit it should point to.
+      Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.
     required: false
     default: ''
   header:

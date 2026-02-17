@@ -6,7 +6,7 @@ import z from 'zod'
 export const sharedInputSchema = z
   .object({
     /**
-     * A boolean indicating whether the release being created or updated should be immediately published.
+     * Access token used to make requests against the GitHub API.
      *
      * Defaults to ${{ github.token }}, or the GITHUB_TOKEN environment variable.
      */
@@ -24,7 +24,7 @@ export const sharedInputSchema = z
     if (!process.env.GITHUB_TOKEN) {
       ctx.addIssue({
         code: 'custom',
-        message: "Unable to find a token. Please see inupt 'token'."
+        message: "Unable to find a token. Please see input 'token'."
       })
     }
   })
