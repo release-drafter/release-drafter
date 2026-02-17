@@ -7,7 +7,11 @@ import { expect, vi } from 'vitest'
 import * as github from '@actions/github'
 import { WebhookPayload } from 'node_modules/@actions/github/lib/interfaces'
 
-type AllowedPayload = 'push' | 'push-non-master-branch' | 'push-tag'
+type AllowedPayload =
+  | 'push'
+  | 'push-non-master-branch'
+  | 'push-tag'
+  | 'pull_request-synchronize'
 
 const getEventPayloadPath = (type: AllowedPayload) => {
   const baseDir = path.join(
@@ -91,11 +95,17 @@ export const mockContext = async (desiredPayload: AllowedPayload) => {
     GITHUB_ACTION_REPOSITORY: payload.repository?.full_name,
     GITHUB_ACTOR: payload.pusher?.login,
     GITHUB_ACTOR_ID: payload.sender?.id?.toString(),
-    GITHUB_BASE_REF: payload.ref.replace(/^refs\/heads\//, ''),
-    GITHUB_EVENT_NAME: 'push', // since only 'push' payloads are supported for now
+    GITHUB_BASE_REF: desiredPayload.startsWith('pull_request')
+      ? payload.pull_request?.base?.ref
+      : undefined,
+    GITHUB_EVENT_NAME: desiredPayload.startsWith('pull_request')
+      ? 'pull_request'
+      : 'push',
     GITHUB_EVENT_PATH: pathToPayload,
     GITHUB_REF: payload.ref,
-    GITHUB_REF_NAME: payload.ref.replace(/^refs\/heads\//, ''),
+    GITHUB_REF_NAME: desiredPayload.startsWith('pull_request')
+      ? `refs/pull/${payload.number}/merge`
+      : payload.ref.replace(/^refs\/heads\//, ''),
     GITHUB_REF_TYPE: desiredPayload === 'push-tag' ? 'tag' : 'branch',
     GITHUB_REPOSITORY: payload.repository?.full_name,
     GITHUB_REPOSITORY_ID: payload.repository?.id?.toString(),
