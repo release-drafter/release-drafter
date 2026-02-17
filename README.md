@@ -268,9 +268,7 @@ Pull requests with the label "feature" or "fix" will now be grouped together:
 <img src="docs/design/screenshot-2.png" alt="Screenshot of generated draft release with categories" width="586" />
 
 Adding such labels to your PRs can be automated by using the embedded
-Autolabeler functionality (see below),
-[PR Labeler](https://github.com/TimonVS/pr-labeler-action) or
-[Probot Auto Labeler](https://github.com/probot/autolabeler).
+[Autolabeler action](#autolabeler).
 
 Optionally you can add a `collapse-after` entry to your category item, if the
 category has more than the defined `collapse-after` pull requests then it will
@@ -343,11 +341,20 @@ replacers:
 ## Autolabeler
 
 You can add automatically a label into a pull request, with the `autolabeler`
-option. Available matchers are `files` (glob), `branch` (regex), `title` (regex)
-and `body` (regex). Matchers are evaluated independently; the label will be set
-if at least one of the matchers meets the criteria.
+action.
+
+```yaml
+steps:
+  # runs autolabeler
+  - uses: release-drafter/release-drafter/autolabeler@latest
+```
+
+Available matchers are `files` (glob), `branch` (regex), `title` (regex) and
+`body` (regex). Matchers are evaluated independently; the label will be set if
+at least one of the matchers meets the criteria.
 
 ```yml
+# .github/release-drafter.yml
 autolabeler:
   - label: 'chore'
     files:
@@ -364,6 +371,8 @@ autolabeler:
       - '/feature\/.+/'
     body:
       - '/JIRA-[0-9]{1,4}/'
+
+# ... rest of release-drafter config
 ```
 
 ## Prerelease increment
@@ -411,8 +420,6 @@ specified in your `release-drafter.yml` config.
 | `header`                | A string that would be added before the template body.                                                                                                                                                                                                                                                                                                             |
 | `footer`                | A string that would be added after the template body.                                                                                                                                                                                                                                                                                                              |
 | `initial-commits-since` | When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date, ex: `"2025-06-18T10:29:51Z"`. Default: `""` (unlimited)                                                                                                                                                                                                           |
-| `disable-releaser`      | A boolean indicating whether the releaser mode is disabled.                                                                                                                                                                                                                                                                                                        |
-| `disable-autolabeler`   | A boolean indicating whether the autolabeler mode is disabled.                                                                                                                                                                                                                                                                                                     |
 
 ## Action Outputs
 
