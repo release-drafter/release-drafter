@@ -7,11 +7,11 @@ import {
   nockGetAndPatchReleases,
   mockInput,
   getGqlPayload
-} from './mocks'
-import { runDrafter } from './helpers'
+} from '../mocks'
+import { runDrafter } from '../helpers'
 import nock from 'nock'
 
-describe('release-drafter', () => {
+describe('drafter e2e', () => {
   describe('push', () => {
     describe('to a master branch', () => {
       it('creates a release draft targeting that branch', async () => {

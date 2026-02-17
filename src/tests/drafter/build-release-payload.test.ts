@@ -1,6 +1,6 @@
 import { buildReleasePayload } from 'src/actions/drafter/lib'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { mockContext } from './mocks'
+import { mockContext } from '../mocks'
 import {
   actionInputSchema,
   configSchema,
