@@ -1,7 +1,7 @@
 import { findPreviousReleases } from 'src/actions/drafter/lib'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Octokit } from 'src/common/get-octokit'
-import { mockContext } from './mocks'
+import { mockContext } from '../mocks'
 
 const mocks = vi.hoisted(() => {
   return {
