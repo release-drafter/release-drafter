@@ -1,3 +1,4 @@
+/* node:coverage ignore file -- @preserve */
 export { configSchema, type Config } from './config.schema'
 export { actionInputSchema, type ActionInput } from './action-input.schema'
 export { getActionInput } from './get-action-inputs'
