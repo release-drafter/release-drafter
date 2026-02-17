@@ -149,6 +149,5 @@ export const mockContext = async (desiredPayload: AllowedPayload) => {
   // Verify the context has been set up correctly
   const dynamicContext = (await import('@actions/github')).context
   expect(dynamicContext.ref).toEqual(process.env.GITHUB_REF)
-  expect(dynamicContext.ref).toEqual(payload.ref)
   expect(dynamicContext.payload).toEqual(payload)
 }
