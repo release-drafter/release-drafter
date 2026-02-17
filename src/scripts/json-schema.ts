@@ -31,6 +31,14 @@ const drafterFilePath = resolve(
   'schema.json'
 )
 
+// Also place in root folder for json schema store to keep working
+// see https://github.com/SchemaStore/schemastore/pull/895
+const alternateDrafterFilePath = resolve(
+  import.meta.dirname,
+  '../..',
+  'schema.json'
+)
+
 const autolabelerFilePath = resolve(
   import.meta.dirname,
   '../..',
@@ -39,6 +47,10 @@ const autolabelerFilePath = resolve(
 )
 
 writeFileSync(drafterFilePath, JSON.stringify(drafterSchema), {
+  encoding: 'utf-8',
+  flag: 'w'
+})
+writeFileSync(alternateDrafterFilePath, JSON.stringify(drafterSchema), {
   encoding: 'utf-8',
   flag: 'w'
 })
