@@ -13,6 +13,7 @@ export {
 } from './releases'
 export { mockedConfigModule } from './config'
 export { mockInput } from './input'
+export { nockGetPrFiles } from './pull_requests'
 
 const mocks = vi.hoisted(() => {
   const DEBUG_TESTS = false
@@ -30,6 +31,12 @@ const mocks = vi.hoisted(() => {
      * @example expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
      */
     patchReleaseBody: vi.fn(() => true),
+    /**
+     * Use this mock as a nock().patch() body matcher, such as expectations
+     * can be defined as :
+     * @example expect(mocks.postPrLabelsBody.mock.lastCall).toMatchInlineSnapshot('...')
+     */
+    postPrLabelsBody: vi.fn(() => true),
     config: vi.fn<() => AvailableConfigs | undefined>(() => undefined),
     getContextsConfigWasFetchedFrom: vi.fn<
       () => Awaited<ReturnType<typeof composeConfigGet>>['contexts']

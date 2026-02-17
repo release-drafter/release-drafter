@@ -5,6 +5,7 @@ import { parse } from 'yaml'
 import { readFileSync } from 'fs'
 
 export type AvailableConfigs =
+  | 'config-autolabeler'
   | 'config-name-input'
   | 'config-non-master-branch'
   | 'config-previous-tag'
