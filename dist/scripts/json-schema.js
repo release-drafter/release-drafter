@@ -30,6 +30,11 @@ const drafterFilePath = resolve(
   "drafter",
   "schema.json"
 );
+const alternateDrafterFilePath = resolve(
+  import.meta.dirname,
+  "../..",
+  "schema.json"
+);
 const autolabelerFilePath = resolve(
   import.meta.dirname,
   "../..",
@@ -37,6 +42,10 @@ const autolabelerFilePath = resolve(
   "schema.json"
 );
 writeFileSync(drafterFilePath, JSON.stringify(drafterSchema), {
+  encoding: "utf-8",
+  flag: "w"
+});
+writeFileSync(alternateDrafterFilePath, JSON.stringify(drafterSchema), {
   encoding: "utf-8",
   flag: "w"
 });

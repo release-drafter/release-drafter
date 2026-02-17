@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "change-template": {
+      "default": "* $TITLE (#$NUMBER) @$AUTHOR",
+      "type": "string"
+    },
+    "change-title-escapes": { "type": "string" },
+    "no-changes-template": { "default": "* No changes", "type": "string" },
+    "version-template": {
+      "default": "$MAJOR.$MINOR.$PATCH$PRERELEASE",
+      "type": "string"
+    },
+    "name-template": { "type": "string" },
+    "tag-prefix": { "type": "string" },
+    "tag-template": { "type": "string" },
+    "exclude-labels": {
+      "default": [],
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "include-labels": {
+      "default": [],
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "include-paths": {
+      "default": [],
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "exclude-contributors": {
+      "default": [],
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "no-contributors-template": {
+      "default": "No contributors",
+      "type": "string"
+    },
+    "sort-by": {
+      "default": "merged_at",
+      "type": "string",
+      "enum": ["merged_at", "title"]
+    },
+    "sort-direction": {
+      "default": "descending",
+      "type": "string",
+      "enum": ["ascending", "descending"]
+    },
+    "filter-by-commitish": { "default": false, "type": "boolean" },
+    "include-pre-releases": { "default": false, "type": "boolean" },
+    "pull-request-limit": {
+      "default": 5,
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "history-limit": {
+      "default": 15,
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "replacers": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "search": { "type": "string", "minLength": 1 },
+          "replace": { "type": "string", "minLength": 0 }
+        },
+        "required": ["search", "replace"],
+        "additionalProperties": false
+      }
+    },
+    "categories": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "collapse-after": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "labels": {
+            "default": [],
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "label": { "type": "string", "minLength": 1 }
+        },
+        "required": ["title", "collapse-after", "labels"],
+        "additionalProperties": false
+      }
+    },
+    "version-resolver": {
+      "default": {
+        "major": { "labels": [] },
+        "minor": { "labels": [] },
+        "patch": { "labels": [] },
+        "default": "patch"
+      },
+      "type": "object",
+      "properties": {
+        "major": {
+          "default": { "labels": [] },
+          "type": "object",
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          },
+          "required": ["labels"],
+          "additionalProperties": false
+        },
+        "minor": {
+          "default": { "labels": [] },
+          "type": "object",
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          },
+          "required": ["labels"],
+          "additionalProperties": false
+        },
+        "patch": {
+          "default": { "labels": [] },
+          "type": "object",
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          },
+          "required": ["labels"],
+          "additionalProperties": false
+        },
+        "default": {
+          "default": "patch",
+          "type": "string",
+          "enum": ["major", "minor", "patch"]
+        }
+      },
+      "required": ["major", "minor", "patch", "default"],
+      "additionalProperties": false
+    },
+    "category-template": { "default": "## $TITLE", "type": "string" },
+    "template": { "type": "string", "minLength": 1 },
+    "latest": { "anyOf": [{ "type": "boolean" }, { "type": "boolean" }] },
+    "prerelease": { "anyOf": [{ "type": "boolean" }, { "type": "boolean" }] },
+    "initial-commits-since": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "prerelease-identifier": { "type": "string" },
+    "commitish": { "type": "string" },
+    "header": { "type": "string" },
+    "footer": { "type": "string" }
+  },
+  "required": [
+    "change-template",
+    "no-changes-template",
+    "version-template",
+    "exclude-labels",
+    "include-labels",
+    "include-paths",
+    "exclude-contributors",
+    "no-contributors-template",
+    "sort-by",
+    "sort-direction",
+    "filter-by-commitish",
+    "include-pre-releases",
+    "pull-request-limit",
+    "history-limit",
+    "replacers",
+    "categories",
+    "version-resolver",
+    "category-template",
+    "template"
+  ],
+  "additionalProperties": false
+}
