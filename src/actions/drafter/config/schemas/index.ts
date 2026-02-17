@@ -1,3 +1,4 @@
+/* node:coverage ignore file -- @preserve */
 export {
   actionInputSchema,
   exclusiveInputSchema,

@@ -88,7 +88,11 @@ const config = (): UserConfig => {
         enabled: true, // will run along tests
         reporter: ['json-summary'],
         include: ['src/**/*.ts'],
-        exclude: ['src/tests/**/*.ts']
+        exclude: [
+          'src/tests/**/*.ts',
+          'src/scripts/**/*',
+          'src/**/*.generated.ts'
+        ]
       }
     }
   })
