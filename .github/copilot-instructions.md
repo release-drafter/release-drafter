@@ -47,8 +47,11 @@ npm install
 Ensure all unit tests pass by running:
 
 ```bash
-npm run test
+npm run test:run
 ```
+
+Do not use `npm run test` as it spins up the Vite development server is intended
+for interactive sessions.
 
 Tests should exist in the `src/tests` directory. They are powered by `vitest`.
 
