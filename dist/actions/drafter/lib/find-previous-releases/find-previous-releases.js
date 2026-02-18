@@ -51,14 +51,18 @@ const findPreviousReleases = async (params) => {
   );
   const lastRelease = sortedSelectedReleases.at(-1);
   if (draftRelease) {
-    coreExports.info(`Draft release: ${draftRelease.tag_name}`);
+    coreExports.info(`Draft release:`);
+    coreExports.info(`  tag_name:  ${draftRelease.tag_name}`);
+    coreExports.info(`  name:      ${draftRelease.name}`);
   } else {
     coreExports.info(`No draft release found`);
   }
   if (lastRelease) {
     coreExports.info(
-      `Last release${includePreReleases ? " (including prerelease)" : ""}: ${lastRelease.tag_name}`
+      `Last release${includePreReleases ? " (including prerelease)" : ""}:`
     );
+    coreExports.info(`  tag_name:  ${lastRelease.tag_name}`);
+    coreExports.info(`  name:      ${lastRelease.name}`);
   } else {
     coreExports.info(`No last release found`);
   }

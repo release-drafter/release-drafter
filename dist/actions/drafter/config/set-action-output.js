@@ -1,6 +1,7 @@
 import { c as coreExports } from "../../../core.js";
 const setActionOutput = (params) => {
   const { releasePayload, upsertedRelease } = params;
+  coreExports.info("Set action outputs...");
   const {
     data: {
       id: releaseId,
@@ -22,6 +23,7 @@ const setActionOutput = (params) => {
   if (minorVersion) coreExports.setOutput("minor_version", minorVersion);
   if (patchVersion) coreExports.setOutput("patch_version", patchVersion);
   coreExports.setOutput("body", body);
+  coreExports.info("Outputs set!");
 };
 export {
   setActionOutput

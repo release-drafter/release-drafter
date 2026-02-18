@@ -10,6 +10,8 @@ export const setActionOutput = (params: {
 }) => {
   const { releasePayload, upsertedRelease } = params
 
+  core.info('Set action outputs...')
+
   const {
     data: {
       id: releaseId,
@@ -34,4 +36,6 @@ export const setActionOutput = (params: {
   if (minorVersion) core.setOutput('minor_version', minorVersion)
   if (patchVersion) core.setOutput('patch_version', patchVersion)
   core.setOutput('body', body)
+
+  core.info('Outputs set!')
 }

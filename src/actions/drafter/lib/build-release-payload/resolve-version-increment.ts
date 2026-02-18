@@ -59,14 +59,19 @@ export const resolveVersionKeyIncrement = (params: {
 
   core.debug('versionKey: ' + versionKey)
 
-  const versionKeyIncrement = versionKey || config['version-resolver'].default
+  let versionKeyIncrement: semver.ReleaseType =
+    versionKey || config['version-resolver'].default
 
   const shouldIncrementAsPrerelease =
     config['prerelease'] && config['prerelease-identifier']
 
-  if (!shouldIncrementAsPrerelease) {
-    return versionKeyIncrement
+  if (shouldIncrementAsPrerelease) {
+    versionKeyIncrement = `pre${versionKeyIncrement}`
   }
 
-  return `pre${versionKeyIncrement}`
+  core.info(
+    `Version increment: ${versionKeyIncrement}${!versionKey ? ' (default)' : ''}`
+  )
+
+  return versionKeyIncrement
 }

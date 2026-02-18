@@ -75,17 +75,19 @@ export const findPreviousReleases = async (
   const lastRelease = sortedSelectedReleases.at(-1)
 
   if (draftRelease) {
-    core.info(`Draft release: ${draftRelease.tag_name}`)
+    core.info(`Draft release:`)
+    core.info(`  tag_name:  ${draftRelease.tag_name}`)
+    core.info(`  name:      ${draftRelease.name}`)
   } else {
     core.info(`No draft release found`)
   }
 
   if (lastRelease) {
     core.info(
-      `Last release${
-        includePreReleases ? ' (including prerelease)' : ''
-      }: ${lastRelease.tag_name}`
+      `Last release${includePreReleases ? ' (including prerelease)' : ''}:`
     )
+    core.info(`  tag_name:  ${lastRelease.tag_name}`)
+    core.info(`  name:      ${lastRelease.name}`)
   } else {
     core.info(`No last release found`)
   }
