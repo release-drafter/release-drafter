@@ -8,6 +8,7 @@ import { c as coreExports } from "../../../../core.js";
 import { getVersionInfo } from "./get-version-info.js";
 const buildReleasePayload = (params) => {
   const { commits, config, input, lastRelease, pullRequests } = params;
+  coreExports.info(`Building release payload and body...`);
   const sortedPullRequests = sortPullRequests({
     pullRequests,
     config
@@ -32,7 +33,6 @@ const buildReleasePayload = (params) => {
     pullRequests,
     config
   });
-  coreExports.debug("versionKeyIncrement: " + versionKeyIncrement);
   const versionInfo = getVersionInfo({
     lastRelease,
     config,
@@ -80,7 +80,7 @@ const buildReleasePayload = (params) => {
   const majorVersion = versionInfo.$RESOLVED_VERSION?.$MAJOR;
   const minorVersion = versionInfo.$RESOLVED_VERSION?.$MINOR;
   const patchVersion = versionInfo.$RESOLVED_VERSION?.$PATCH;
-  return {
+  const res = {
     name: mutableInputName,
     tag: mutableInputTag,
     body,
@@ -93,6 +93,21 @@ const buildReleasePayload = (params) => {
     minorVersion,
     patchVersion
   };
+  coreExports.info(`Release payload built successfully`);
+  coreExports.info(`  name:              ${res.name}`);
+  coreExports.info(`  tag:               ${res.tag}`);
+  coreExports.info(`  body:              ${res.body.length} characters long`);
+  coreExports.info(`  targetCommitish:   ${res.targetCommitish}`);
+  coreExports.info(`  prerelease:        ${res.prerelease}`);
+  coreExports.info(`  make_latest:       ${res.make_latest}`);
+  coreExports.info(
+    `  draft:             ${res.draft}${!res.draft ? " (will be published !)" : ""}`
+  );
+  coreExports.info(`  resolvedVersion:   ${res.resolvedVersion}`);
+  coreExports.info(`  majorVersion:      ${res.majorVersion}`);
+  coreExports.info(`  minorVersion:      ${res.minorVersion}`);
+  coreExports.info(`  patchVersion:      ${res.patchVersion}`);
+  return res;
 };
 export {
   buildReleasePayload

@@ -11,15 +11,19 @@ export const upsertRelease = async (params: {
   const { draftRelease, releasePayload } = params
 
   if (!draftRelease) {
-    core.info('Creating new release')
-    return await createRelease({
+    core.info('Creating new release...')
+    const res = await createRelease({
       releasePayload
     })
+    core.info('Release created!')
+    return res
   } else {
-    core.info('Updating existing release')
-    return await updateRelease({
+    core.info('Updating existing release...')
+    const res = await updateRelease({
       draftRelease,
       releasePayload
     })
+    core.info('Release updated!')
+    return res
   }
 }

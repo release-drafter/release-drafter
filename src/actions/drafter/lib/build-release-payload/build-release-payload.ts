@@ -51,6 +51,8 @@ export const buildReleasePayload = (params: {
 }) => {
   const { commits, config, input, lastRelease, pullRequests } = params
 
+  core.info(`Building release payload and body...`)
+
   const sortedPullRequests = sortPullRequests({
     pullRequests,
     config
@@ -79,8 +81,6 @@ export const buildReleasePayload = (params: {
     pullRequests,
     config
   })
-
-  core.debug('versionKeyIncrement: ' + versionKeyIncrement)
 
   const versionInfo = getVersionInfo({
     lastRelease,
@@ -150,7 +150,7 @@ export const buildReleasePayload = (params: {
   const minorVersion = versionInfo.$RESOLVED_VERSION?.$MINOR
   const patchVersion = versionInfo.$RESOLVED_VERSION?.$PATCH
 
-  return {
+  const res = {
     name: mutableInputName,
     tag: mutableInputTag,
     body,
@@ -163,4 +163,21 @@ export const buildReleasePayload = (params: {
     minorVersion,
     patchVersion
   }
+
+  core.info(`Release payload built successfully`)
+  core.info(`  name:              ${res.name}`)
+  core.info(`  tag:               ${res.tag}`)
+  core.info(`  body:              ${res.body.length} characters long`)
+  core.info(`  targetCommitish:   ${res.targetCommitish}`)
+  core.info(`  prerelease:        ${res.prerelease}`)
+  core.info(`  make_latest:       ${res.make_latest}`)
+  core.info(
+    `  draft:             ${res.draft}${!res.draft ? ' (will be published !)' : ''}`
+  )
+  core.info(`  resolvedVersion:   ${res.resolvedVersion}`)
+  core.info(`  majorVersion:      ${res.majorVersion}`)
+  core.info(`  minorVersion:      ${res.minorVersion}`)
+  core.info(`  patchVersion:      ${res.patchVersion}`)
+
+  return res
 }

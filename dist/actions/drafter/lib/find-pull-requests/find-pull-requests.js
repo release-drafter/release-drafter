@@ -52,14 +52,11 @@ const findPullRequests = async (params) => {
       `After filtering by path changes, ${commits.length} commits remain.`
     );
   }
-  let pullRequests = _.uniqBy(
+  const pullRequestsRaw = _.uniqBy(
     commits.flatMap((commit) => commit.associatedPullRequests?.nodes),
     "number"
   ).filter((pr) => !!pr);
-  coreExports.info(
-    `Found ${pullRequests.length} pull requests associated with those commits.`
-  );
-  pullRequests = pullRequests.filter(
+  const pullRequests = pullRequestsRaw.filter(
     (pr) => (
       // Ensure PR is from the same repository
       pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && // Ensure PR is merged
@@ -67,7 +64,7 @@ const findPullRequests = async (params) => {
     )
   );
   coreExports.info(
-    `After filtering, ${pullRequests.length} pull requests remain : ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}`
+    `Found ${pullRequestsRaw.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and come from ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? ` : ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`
   );
   return { commits, pullRequests };
 };
