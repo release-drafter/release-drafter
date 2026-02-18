@@ -1,5 +1,4 @@
 function parseConfigTarget(target, context) {
-  const _context = structuredClone(context);
   let _target = structuredClone(target).trim();
   const getErr = (m) => new Error(
     `invalid format: "${_target}". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. ${m}`
@@ -35,13 +34,13 @@ function parseConfigTarget(target, context) {
       targetRepoName = repoParts[1];
     } else {
       targetRepoName = repoParts[0];
-      targetRepoOwner = _context.repo.owner;
+      targetRepoOwner = context.repo.owner;
     }
     targetRepo = { owner: targetRepoOwner, repo: targetRepoName };
   } else {
-    targetRepo = _context.repo;
+    targetRepo = context.repo;
   }
-  const isCurrentRepo = _context.repo.owner === targetRepo.owner && _context.repo.repo === targetRepo.repo;
+  const isCurrentRepo = context.repo.owner === targetRepo.owner && context.repo.repo === targetRepo.repo;
   if (hasRefSpecifier) {
     if (parts.length < 2) throw getErr("Too short to contain ref specifier.");
     const refSpecifier = parts.at(-1);
@@ -49,7 +48,7 @@ function parseConfigTarget(target, context) {
     if (!refSpecifier.length) throw getErr("Ref specifier is empty.");
     targetRef = refSpecifier;
   } else {
-    targetRef = isCurrentRepo ? _context.ref : void 0;
+    targetRef = isCurrentRepo ? context.ref : void 0;
   }
   const filepathIndex = hasRepoSpecifier ? 1 : 0;
   const targetFilepath = parts.at(filepathIndex);

@@ -15,7 +15,6 @@ export function parseConfigTarget(
   target: string,
   context: Pick<ConfigTarget, 'ref' | 'repo'>
 ): ConfigTarget {
-  const _context = structuredClone(context)
   let _target = structuredClone(target).trim()
 
   const getErr = (m: string) =>
@@ -71,17 +70,17 @@ export function parseConfigTarget(
     } else {
       // ex: release-drafter:.github/release-drafter.yml@main
       targetRepoName = repoParts[0]
-      targetRepoOwner = _context.repo.owner
+      targetRepoOwner = context.repo.owner
     }
     targetRepo = { owner: targetRepoOwner, repo: targetRepoName }
   } else {
     // ex: .github/release-drafter.yml@main
-    targetRepo = _context.repo
+    targetRepo = context.repo
   }
 
   const isCurrentRepo =
-    _context.repo.owner === targetRepo.owner &&
-    _context.repo.repo === targetRepo.repo
+    context.repo.owner === targetRepo.owner &&
+    context.repo.repo === targetRepo.repo
 
   if (hasRefSpecifier) {
     if (parts.length < 2) throw getErr('Too short to contain ref specifier.')
@@ -92,7 +91,7 @@ export function parseConfigTarget(
     if (!refSpecifier.length) throw getErr('Ref specifier is empty.')
     targetRef = refSpecifier
   } else {
-    targetRef = isCurrentRepo ? _context.ref : undefined // default branch
+    targetRef = isCurrentRepo ? context.ref : undefined // default branch
   }
 
   const filepathIndex = hasRepoSpecifier ? 1 : 0
