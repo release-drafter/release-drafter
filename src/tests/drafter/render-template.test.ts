@@ -5,7 +5,7 @@ describe('render template', () => {
   it('replaces $A with B', () => {
     const output = renderTemplate({ template: '$A', object: { $A: 'B' } })
 
-    expect(output).toEqual('B')
+    expect(output).toMatchInlineSnapshot(`"B"`)
   })
 
   it('replaces $MAJOR.$MINOR.$PATCH with 1.0.0', () => {
@@ -18,7 +18,7 @@ describe('render template', () => {
       },
     })
 
-    expect(output).toEqual('1.0.0')
+    expect(output).toMatchInlineSnapshot(`"1.0.0"`)
   })
 
   it('replaces $CHANGES but leaves $NEXT_PATCH_VERSION', () => {
@@ -55,7 +55,7 @@ describe('render template', () => {
       },
     })
 
-    expect(output).toEqual('1.0.0.THIRD LEVEL')
+    expect(output).toMatchInlineSnapshot(`"1.0.0.THIRD LEVEL"`)
   })
   it('single custom replacer', () => {
     const output = renderTemplate({
@@ -70,8 +70,8 @@ describe('render template', () => {
       ],
     })
 
-    expect(output).toEqual(
-      'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234)',
+    expect(output).toMatchInlineSnapshot(
+      `"This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234)"`,
     )
   })
   it('word custom replacer', () => {
@@ -86,7 +86,7 @@ describe('render template', () => {
       ],
     })
 
-    expect(output).toEqual('This is my body heyyyyyyy-1234')
+    expect(output).toMatchInlineSnapshot(`"This is my body heyyyyyyy-1234"`)
   })
   it('overlapping replacer', () => {
     const output = renderTemplate({
@@ -104,7 +104,9 @@ describe('render template', () => {
       ],
     })
 
-    expect(output).toEqual('This is my body something else-1234')
+    expect(output).toMatchInlineSnapshot(
+      `"This is my body something else-1234"`,
+    )
   })
   it('multiple custom replacer', () => {
     const output = renderTemplate({
@@ -125,8 +127,95 @@ describe('render template', () => {
       ],
     })
 
-    expect(output).toEqual(
-      'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-456](JENKINS-456)',
+    expect(output).toMatchInlineSnapshot(
+      `"This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-456](JENKINS-456)"`,
     )
+  })
+  describe('with advanced substitutions', () => {
+    it('supports newline, tab, and backslash escapes', () => {
+      const output = renderTemplate({
+        template: 'X',
+        object: {},
+        replacers: [
+          {
+            search: /(X)/g,
+            replace: '\\n\\t\\\\$1',
+          },
+        ],
+      })
+
+      expect(output).toMatchInlineSnapshot(`
+        "
+        	\\X"
+      `)
+    })
+
+    it('supports $$, $&, and $0 substitutions', () => {
+      const output = renderTemplate({
+        template: 'abc',
+        object: {},
+        replacers: [
+          {
+            search: /(b)/g,
+            replace: '[$$][$&][$0][$1]',
+          },
+        ],
+      })
+
+      expect(output).toMatchInlineSnapshot('"a[$][b][b][b]c"')
+    })
+
+    it('supports $n and $nn capture substitutions', () => {
+      const output = renderTemplate({
+        template: 'abcdefghij',
+        object: {},
+        replacers: [
+          {
+            search: /(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)/g,
+            replace: '$10$1',
+          },
+        ],
+      })
+
+      expect(output).toMatchInlineSnapshot('"ja"')
+    })
+
+    it('supports case operations on matches', () => {
+      const output = renderTemplate({
+        template: 'clem Nico',
+        object: {},
+        replacers: [
+          {
+            search: /(clem)/g,
+            replace: '\\u$1',
+          },
+          {
+            search: /(Nico)/g,
+            replace: '\\l$1',
+          },
+        ],
+      })
+
+      expect(output).toMatchInlineSnapshot('"Clem nico"')
+    })
+
+    it('supports case operations across all characters', () => {
+      const output = renderTemplate({
+        template: 'AbC abC',
+        object: {},
+        replacers: [
+          {
+            search: /(AbC)/g,
+            replace: '\\L$1',
+          },
+          {
+            search: /(abC)/g,
+            replace: '\\U$1',
+          },
+        ],
+      })
+
+      expect(output).toMatchInlineSnapshot('"abc ABC"')
+    })
   })
 })

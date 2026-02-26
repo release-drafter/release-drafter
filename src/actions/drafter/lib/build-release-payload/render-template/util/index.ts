@@ -1,0 +1,1 @@
+export { parseReplaceString } from './replacePattern'
