@@ -170,6 +170,7 @@ module.exports = (app, { getRouter }) => {
       targetCommitish,
       filterByCommitish,
       includePreReleases: shouldIncludePreReleases,
+      isPreRelease: prerelease,
       tagPrefix,
     })
 
