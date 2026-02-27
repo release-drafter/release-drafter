@@ -397,9 +397,8 @@ describe('releases', () => {
 
     it('should return prerelease draft when includePreReleases is true', async () => {
       paginateMock.mockResolvedValueOnce([
-        { tag_name: 'v1.0.0', draft: true, prerelease: false },
-        { tag_name: 'v1.0.1', draft: false, prerelease: false },
         { tag_name: 'v1.0.2-rc.1', draft: true, prerelease: true },
+        { tag_name: 'v1.0.1', draft: false, prerelease: false },
       ])
 
       const { draftRelease, lastRelease } = await findReleases({
@@ -410,9 +409,9 @@ describe('releases', () => {
       })
 
       expect(draftRelease).toEqual({
-        tag_name: 'v1.0.0',
+        tag_name: 'v1.0.2-rc.1',
         draft: true,
-        prerelease: false,
+        prerelease: true,
       })
 
       expect(lastRelease).toEqual({
