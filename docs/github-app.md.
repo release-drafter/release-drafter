@@ -2,7 +2,7 @@
 
 If you're unable to use GitHub Actions, you can use the now deprecated [Release Drafter GitHub App](https://github.com/apps/release-drafter). Keep in mind that the Release Drafter GitHub App won't be receiving any new features (see: [#335](https://github.com/release-drafter/release-drafter/issues/335)).
 
-## Usage
+## Usage 
 
 Install the [Release Drafter GitHub App](https://github.com/apps/release-drafter) and choose the repositories for which you want releases automatically created.
 
