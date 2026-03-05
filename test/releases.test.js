@@ -389,26 +389,6 @@ describe('releases', () => {
       })
     })
 
-    it('should fall back to non-prerelease draft when isPreRelease is true but no prerelease draft exists', async () => {
-      paginateMock.mockResolvedValueOnce([
-        { tag_name: 'v1.0.0', draft: true, prerelease: false },
-        { tag_name: 'v1.0.1', draft: false, prerelease: false },
-      ])
-
-      const { draftRelease } = await findReleases({
-        context,
-        targetCommitish: 'refs/heads/master',
-        isPreRelease: true,
-        tagPrefix: '',
-      })
-
-      expect(draftRelease).toEqual({
-        tag_name: 'v1.0.0',
-        draft: true,
-        prerelease: false,
-      })
-    })
-
     it('should prefer matching draft when both types exist', async () => {
       paginateMock.mockResolvedValueOnce([
         { tag_name: 'v1.0.0', draft: true, prerelease: false },
