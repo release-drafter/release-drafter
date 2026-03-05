@@ -3635,21 +3635,17 @@ module.exports = (app, { getRouter }) => {
     const {
       'filter-by-commitish': filterByCommitish,
       'include-pre-releases': includePreReleases,
-      'prerelease-identifier': preReleaseIdentifier,
       'tag-prefix': tagPrefix,
       latest,
       prerelease,
     } = config
 
-    const shouldIncludePreReleases = Boolean(
-      includePreReleases || preReleaseIdentifier
-    )
-
     const { draftRelease, lastRelease } = await findReleases({
       context,
       targetCommitish,
       filterByCommitish,
-      includePreReleases: shouldIncludePreReleases,
+      includePreReleases,
+      isPreRelease: prerelease,
       tagPrefix,
     })
 
@@ -3760,6 +3756,10 @@ function updateConfigFromInput(config, input) {
 
   if (input.preReleaseIdentifier) {
     config['prerelease-identifier'] = input.preReleaseIdentifier
+  }
+
+  if (!config.prerelease && config['prerelease-identifier']) {
+    config.prerelease = true
   }
 
   config.latest = config.prerelease
@@ -4274,9 +4274,13 @@ const findReleases = async ({
   targetCommitish,
   filterByCommitish,
   includePreReleases,
+  isPreRelease,
   tagPrefix,
 }) => {
   let releaseCount = 0
+  /**
+   * @type {object[]}
+   */
   let releases = await context.octokit.paginate(
     context.octokit.repos.listReleases.endpoint.merge(
       context.repo({
@@ -4294,8 +4298,8 @@ const findReleases = async ({
 
   log({ context, message: `Found ${releases.length} releases` })
 
-  // `refs/heads/branch` and `branch` are the same thing in this context
-  const headRefRegex = /^refs\/heads\//
+  // Filter releases
+  const headRefRegex = /^refs\/heads\// // `refs/heads/branch` and `branch` are the same thing in this context
   const targetCommitishName = targetCommitish.replace(headRefRegex, '')
   const commitishFilteredReleases = filterByCommitish
     ? releases.filter(
@@ -4306,18 +4310,42 @@ const findReleases = async ({
   const filteredReleases = tagPrefix
     ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix))
     : commitishFilteredReleases
-  const sortedSelectedReleases = sortReleases(
-    filteredReleases.filter(
-      (r) => !r.draft && (!r.prerelease || includePreReleases)
-    ),
-    tagPrefix
+
+  // Split drafts and published releases
+  let publishedReleases = filteredReleases.filter((r) => !r.draft)
+  let draftReleases = filteredReleases.filter((r) => r.draft)
+
+  // Handle prereleases
+  publishedReleases = publishedReleases.filter(
+    (publishedRelease) =>
+      isPreRelease || includePreReleases // `includePreReleases` will be removed in future versions
+        ? publishedRelease.prerelease || !publishedRelease.prerelease // Both prerelease and regular published-releases
+        : !publishedRelease.prerelease // Only regular published-releases
   )
-  const draftRelease = filteredReleases.find(
-    (r) => r.draft && r.prerelease === includePreReleases
+  draftReleases = draftReleases.filter(
+    (draftRelease) =>
+      isPreRelease
+        ? draftRelease.prerelease // Only pre-releases drafts
+        : !draftRelease.prerelease // Only regular drafts
   )
-  const lastRelease = sortedSelectedReleases[sortedSelectedReleases.length - 1]
+
+  // Sort results
+  const draftRelease = draftReleases[0] // Should this be sorted ?
+  const lastRelease = sortReleases(publishedReleases, tagPrefix)?.at(-1)
 
   if (draftRelease) {
+    if (draftReleases.length > 1) {
+      log({
+        context,
+        message: `Multiple draft releases found : ${draftReleases
+          .map((r) => r.tag_name)
+          .join(', ')}`,
+      })
+      log({
+        context,
+        message: `Returning the first one (octokit response order)`,
+      })
+    }
     log({ context, message: `Draft release: ${draftRelease.tag_name}` })
   } else {
     log({ context, message: `No draft release found` })
@@ -4326,9 +4354,9 @@ const findReleases = async ({
   if (lastRelease) {
     log({
       context,
-      message: `Last release${
-        includePreReleases ? ' (including prerelease)' : ''
-      }: ${lastRelease.tag_name}`,
+      message: `Last release${isPreRelease ? ' (including prerelease)' : ''}: ${
+        lastRelease.tag_name
+      }`,
     })
   } else {
     log({ context, message: `No last release found` })
@@ -5030,6 +5058,12 @@ const validateSchema = (context, repoConfig) => {
     })
   } catch {
     config.autolabeler = []
+  }
+
+  if (config['include-pre-releases']) {
+    context.log.info(
+      "'include-pre-releases' will be deprecated in next version. Use 'prerelease: true' instead. See PR #1515 for more"
+    )
   }
 
   return config
