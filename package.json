@@ -18,8 +18,9 @@
     "generate-fixtures": "node ./bin/generate-fixtures.js",
     "lint": "eslint bin/*.js lib/*.js action.js index.js test/**/*.js",
     "prettier": "prettier --write **/*.{js,md,json,yml}",
-    "postversion": "npm run test && git push && git push --tags",
-    "open-releases": "open \"$(node -e 'console.log(`${require(\"./package.json\").repository}/releases`)')\"",
+    "preversion": "npm run test",
+    "version": "git add package.json package-lock.json",
+    "postversion": "git push && git push --tags",
     "prepare": "husky install"
   },
   "dependencies": {
