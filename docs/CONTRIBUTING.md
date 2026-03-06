@@ -41,6 +41,22 @@ request being accepted:
 Work in Progress pull requests are also welcome to get feedback early on, or if
 there is something blocked you.
 
+## Issue Management Policy
+
+To maintain project health and keep issues actionable, we automatically manage stale issues using the following policy:
+
+**Stale Issue Closure**: Issues labeled with `info-needed` that remain inactive for 30 days will be automatically marked as stale. After an additional 7-day grace period, the issue will be closed if no response is provided.
+
+When an issue is marked as stale, we'll post a comment asking you to provide the requested information. If you respond with the information or show continued interest, the stale label will be removed and the issue will remain open.
+
+This policy helps us:
+
+- Keep the issue tracker focused on active issues
+- Encourage timely responses to information requests
+- Ensure discussions don't get lost in an ever-growing issue backlog
+
+If your issue was closed due to inactivity but you still have relevant information or context, please feel free to reopen it by commenting on the issue or opening a new one.
+
 ## Resources
 
 - [How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)
