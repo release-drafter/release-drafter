@@ -23,19 +23,19 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "build": "vite build",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "coverage": "npx make-coverage-badge --output-path ./badges/coverage.svg",
-    "tsc:check": "tsc --noEmit",
-    "format:write": "npx prettier --write .",
-    "format:check": "npx prettier --check .",
-    "lint": "npx eslint .",
-    "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
-    "schemas": "node dist/scripts/json-schema.js && npx prettier --write **/schema.json schema.json",
-    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run build"
+    "build": "ncc build action.js --target es2021",
+    "start": "probot run ./index.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --notify --notifyMode=change --coverage",
+    "generate-schema": "node ./bin/generate-schema.js print",
+    "generate-fixtures": "node ./bin/generate-fixtures.js",
+    "lint": "eslint bin/*.js lib/*.js action.js index.js test/**/*.js",
+    "prettier": "prettier --write **/*.{js,md,json,yml}",
+    "preversion": "npm run test",
+    "version": "git add package.json package-lock.json",
+    "postversion": "git push && git push --tags",
+    "prepare": "husky install"
   },
-  "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^9.0.0",

@@ -487,17 +487,26 @@ If you want to deploy your own copy of Release Drafter, follow the
 Run the following command:
 
 ```bash
-git checkout master && git pull && npm version [major | minor | patch]
+git checkout master
+git pull
+npm version [major | minor | patch] -m "chore: release %s"
 ```
+
+> [!IMPORTANT] You may want the version increment to correspond to the last
+> drafted release. You can use a verison number instead of
+> `major | minor | patch` if needed.
 
 The command does the following:
 
-- Ensures you’re on master and don’t have local, un-commited changes
-- Bumps the version number in [package.json](package.json) based on major, minor
-  or patch
-- Runs the `postversion` npm script in [package.json](package.json), which:
-  - Runs test
-  - Pushes the tag to GitHub, which triggers GitHub Action that does the
-    following:
-    - Releases NPM
-    - Publish the Release Draft!
+- Run tests (`preversion` script)
+- Bumps the version number in [package.json](package.json) and create
+  corresponding tag
+- Stage changes for git (`version` script)
+- Commit and tag
+- Push & push tag (`postversion` script)
+
+After pushing, the `release.yml` workflow will trigger (`on: push: tag`), and :
+
+- publish to npmjs
+- publish the release draft
+- update major tag (ex: pushing `v6.2.1` bumps `v6` to the same commit)
