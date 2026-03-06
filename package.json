@@ -1,11 +1,10 @@
 {
-  "name": "release-drafter",
-  "description": "Drafts your next release notes as pull requests are merged into your branch(es).",
-  "version": "0.0.0",
-  "author": "",
-  "type": "module",
-  "private": true,
-  "homepage": "https://github.com/release-drafter/release-drafter",
+  "name": "release-drafter-github-app",
+  "type": "commonjs",
+  "version": "6.3.0",
+  "description": "A GitHub app that draft releases based on pull-request labels",
+  "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
+  "license": "ISC",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/release-drafter/release-drafter.git"
