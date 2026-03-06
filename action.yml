@@ -49,12 +49,12 @@ inputs:
     default: ''
   prerelease:
     description: |
-      A boolean indicating whether the release being created or updated is a prerelease.
+      Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
     required: false
     default: ''
   prerelease-identifier:
     description: |
-      A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version.
+      A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`.
     required: false
     default: ''
   commitish:

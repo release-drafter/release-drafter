@@ -126,12 +126,12 @@ You can configure Release Drafter using the following key in your
 | `exclude-labels`           | Optional | Exclude pull requests using labels. Refer to [Exclude Pull Requests](#exclude-pull-requests) to learn more about this option.                                                      |
 | `include-labels`           | Optional | Include only the specified pull requests using labels. Refer to [Include Pull Requests](#include-pull-requests) to learn more about this option.                                   |
 | `exclude-contributors`     | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.                    |
-| `include-pre-releases`     | Optional | Include pre releases as "full" releases when drafting release notes. Default: `false`.                                                                                             |
 | `no-contributors-template` | Optional | The template to use for `$CONTRIBUTORS` when there's no contributors to list. Default: `"No contributors"`.                                                                        |
 | `replacers`                | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                                      |
 | `sort-by`                  | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                                   |
 | `sort-direction`           | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                  |
-| `prerelease`               | Optional | Mark the draft release as pre-release. Default `false`.                                                                                                                            |
+| `prerelease`               | Optional | Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.                                                                             |
+| `prerelease-identifier`    | Optional | A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`. |
 | `latest`                   | Optional | Mark the release as latest. Only works for published releases. Can be one of: `true`, `false`, `legacy`. Default `true`.                                                           |
 | `version-resolver`         | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                      |
 | `commitish`                | Optional | The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`. |
@@ -375,19 +375,66 @@ autolabeler:
 # ... rest of release-drafter config
 ```
 
-## Prerelease increment
+## Prerelease workflow
 
-When creating prerelease (`prerelease: true`), you can add a prerelease
-identifier to increment the prerelease version number, with the
-`prerelease-identifier` option. It accept any string, but it's recommended to
-use [Semantic Versioning](https://semver.org/) prerelease identifiers (alpha,
-beta, rc, etc).
+Release draft supports working with prereleases. It expects your workflow to be
+:
 
-Using `prerelease-identifier` automatically enable `include-prereleases`.
+- A stable release is published, ex: `v3.5.0`
+- You merge or add meaningful changes your users may want to see, but you are
+  not quite ready for production
+- You publish a prerelease, ex: `v3.5.0-rc.1`
+- You merge more changes
+- You publish another prerelease, ex: `v3.5.0-rc.2`
+- You decide code is ready for production, you publish `v3.5.1` (or another
+  increment based on your changes)
 
-```yml
-prerelease-identifier: 'alpha' # will create a prerelease with version number x.x.x-alpha.x
+With release-drafter, you can draft each of these releases and prereleases with
+the appropriate content using parameter '`prerelease`' and
+'`prerelease-identifier`' - available as either an input of from the
+config-file.
+
+```yaml
+jobs:
+  update_full_release_draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          prerelease: false # the default
+          # ... rest of your config
+  update_prerelease_draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          prerelease: true
+          prerelease-identifier: 'rc' # Use semver identifiers : alpha, beta, rc, etc
 ```
+
+Here, both jobs run in parallel every time you add changes to the configured
+branch.
+
+- `update_full_release_draft` will pile-up changes since `v3.5.0` inside a draft
+  for `v3.5.1` (or `v3.6.0` or `v4.0.0`, depending on your config)
+- `update_prerelease_draft` will pile-up changes since the last prerelease in a
+  prerelease-draft. Changes are :
+  - if no previous (published) prereleases are found - changes since `v3.5.0` in
+    a draft for `v3.5.0-rc.1` (prerelease-draft)
+  - or if `v3.5.0-rc.1` exists (published) already - changes since `v3.5.0-rc.1`
+    in a draft for `v3.5.0-rc.2` (prerelease-draft)
+
+Some users like to run `update_prerelease_draft` with `publish: true`, such as
+prereleases are published immediately without the need for human intervention
+(or an external automation). Since prereleases are not meant to be stable in the
+first place, automation may be an acceptable risk for you too.
+
+> [!IMPORTANT]
+>
+> - `prerelease-identifier` is not required when `prerelease` is enabled, but
+>   your prerelease may not be named after / be associated with a tag that is
+>   semver-compliant to an actual prerelease.
+> - when specified `prerelease-identifier` enables `prerelease: true`
 
 ## Projects that don't use Semantic Versioning
 
@@ -414,8 +461,8 @@ specified in your `release-drafter.yml` config.
 | `tag`                   | The tag name to be associated with the GitHub release that's created or updated. This will override any `tag-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                         |
 | `version`               | The version to be associated with the GitHub release that's created or updated. This will override any version calculated by the release-drafter.                                                                                                                                                                                                                  |
 | `publish`               | A boolean indicating whether the release being created or updated should be immediately published. This may be useful if the output of a previous workflow step determines that a new version of your project has been (or will be) released, as with [`salsify/action-detect-and-tag-new-version`](https://github.com/salsify/action-detect-and-tag-new-version). |
-| `prerelease`            | A boolean indicating whether the release being created or updated is a prerelease.                                                                                                                                                                                                                                                                                 |
-| `prerelease-identifier` | A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. number                                                                                                                                                                                                                                                              |
+| `prerelease`            | Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.                                                                                                                                                                                                                                                             |
+| `prerelease-identifier` | A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`.                                                                                                                                                                                 |
 | `latest`                | A string indicating whether the release being created or updated should be marked as latest.                                                                                                                                                                                                                                                                       |
 | `commitish`             | A string specifying the target branch for the release being created.                                                                                                                                                                                                                                                                                               |
 | `header`                | A string that would be added before the template body.                                                                                                                                                                                                                                                                                                             |
@@ -472,8 +519,8 @@ docker compose run --rm app
 
 ## Contributing
 
-Third-party contributions are welcome! 🙏🏼 See [CONTRIBUTING.md](CONTRIBUTING.md)
-for step-by-step instructions.
+Third-party contributions are welcome! 🙏🏼 See
+[CONTRIBUTING.md](docs/CONTRIBUTING.md) for step-by-step instructions.
 
 If you need help or have a question, let me know via a GitHub issue.
 
@@ -487,17 +534,26 @@ If you want to deploy your own copy of Release Drafter, follow the
 Run the following command:
 
 ```bash
-git checkout master && git pull && npm version [major | minor | patch]
+git checkout master
+git pull
+npm version [major | minor | patch] -m "chore: release %s"
 ```
+
+> [!IMPORTANT] You may want the version increment to correspond to the last
+> drafted release. You can use a verison number instead of
+> `major | minor | patch` if needed.
 
 The command does the following:
 
-- Ensures you’re on master and don’t have local, un-commited changes
-- Bumps the version number in [package.json](package.json) based on major, minor
-  or patch
-- Runs the `postversion` npm script in [package.json](package.json), which:
-  - Runs test
-  - Pushes the tag to GitHub, which triggers GitHub Action that does the
-    following:
-    - Releases NPM
-    - Publish the Release Draft!
+- Run tests (`preversion` script)
+- Bumps the version number in [package.json](package.json) and create
+  corresponding tag
+- Stage changes for git (`version` script)
+- Commit and tag
+- Push & push tag (`postversion` script)
+
+After pushing, the `release.yml` workflow will trigger (`on: push: tag`), and :
+
+- publish to npmjs
+- publish the release draft
+- update major tag (ex: pushing `v6.2.1` bumps `v6` to the same commit)

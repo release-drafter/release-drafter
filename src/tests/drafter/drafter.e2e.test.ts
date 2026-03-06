@@ -935,47 +935,6 @@ describe('drafter e2e', () => {
       })
     })
 
-    describe('with include-pre-releases true config', () => {
-      it('includes pre releases', async () => {
-        await mockContext('push')
-        mocks.config.mockReturnValue('config-with-include-pre-releases-true')
-
-        const scope = nockGetAndPostReleases({
-          fetchedReleases: ['release-2', 'pre-release']
-        })
-        const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit'
-        })
-
-        await runDrafter()
-
-        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
-          [
-            {
-              "body": "# What's Changed
-
-          * Add documentation (#5) @TimonVS
-          * Update dependencies (#4) @TimonVS
-          * Bug fixes (#3) @TimonVS
-          * Add big feature (#2) @TimonVS
-          * 👽 Add alien technology (#1) @TimonVS
-          ",
-              "draft": true,
-              "make_latest": "true",
-              "name": "v1.5.0",
-              "prerelease": false,
-              "tag_name": "v1.5.0",
-              "target_commitish": "refs/heads/master",
-            },
-          ]
-        `)
-
-        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(mocks.core.setFailed).not.toHaveBeenCalled()
-      })
-    })
-
     describe('with exclude-labels config', () => {
       it('excludes pull requests', async () => {
         await mockContext('push')

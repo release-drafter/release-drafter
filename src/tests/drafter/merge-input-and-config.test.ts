@@ -174,29 +174,28 @@ describe('mergeInputAndConfig', () => {
       )
     })
 
-    it('should set include-pre-releases to true when prerelease-identifier is set but include-pre-releases is false', () => {
+    it('should set prerelease to true when prerelease-identifier is set but prerelease is false', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        'prerelease-identifier': 'alpha',
-        'include-pre-releases': false
+        'prerelease-identifier': 'alpha'
       })
       const input = commonConfigSchema.parse({})
 
       const result = mergeInputAndConfig({ config, input })
 
-      expect(result['include-pre-releases']).toBe(true)
+      expect(result.prerelease).toBe(true)
       expect(mocks.core.warning).toHaveBeenCalledWith(
-        "You have specified a 'prerelease-identifier' (alpha), but 'include-pre-releases' is set to false. Switching to true."
+        "You specified a 'prerelease-identifier' (alpha), but 'prerelease' is set to false. Switching to true."
       )
     })
 
-    it('should not warn when both prerelease-identifier and include-pre-releases are set correctly', () => {
+    it('should not warn when both prerelease-identifier and prerelease are set correctly', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
         'prerelease-identifier': 'alpha',
-        'include-pre-releases': true
+        prerelease: true
       })
       const input = commonConfigSchema.parse({})
 
@@ -415,8 +414,7 @@ describe('mergeInputAndConfig', () => {
         footer: 'config-footer',
         'prerelease-identifier': 'config-identifier',
         prerelease: true,
-        latest: true,
-        'include-pre-releases': false
+        latest: true
       })
       const input = commonConfigSchema.parse({
         commitish: 'input-commitish',
@@ -434,11 +432,8 @@ describe('mergeInputAndConfig', () => {
       expect(result.header).toBe('input-header')
       expect(result.footer).toBe('input-footer')
       expect(result['prerelease-identifier']).toBe('input-identifier')
-      expect(result.prerelease).toBe(false)
+      expect(result.prerelease).toBe(true)
       expect(result.latest).toBe(false)
-
-      // Validation: include-pre-releases should be true since prerelease-identifier is set
-      expect(result['include-pre-releases']).toBe(true)
 
       // Check that info messages were logged
       expect(mocks.core.info).toHaveBeenCalledTimes(6)
@@ -462,11 +457,11 @@ describe('mergeInputAndConfig', () => {
       expect(config.commitish).toBe('original-commitish')
     })
 
-    it('should handle prerelease-identifier from input with include-pre-releases validation', () => {
+    it('should handle prerelease-identifier from input with prereleases validation', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        'include-pre-releases': false
+        prerelease: false
       })
       const input = commonConfigSchema.parse({
         'prerelease-identifier': 'beta'
@@ -475,9 +470,9 @@ describe('mergeInputAndConfig', () => {
       const result = mergeInputAndConfig({ config, input })
 
       expect(result['prerelease-identifier']).toBe('beta')
-      expect(result['include-pre-releases']).toBe(true)
+      expect(result.prerelease).toBe(true)
       expect(mocks.core.warning).toHaveBeenCalledWith(
-        "You have specified a 'prerelease-identifier' (beta), but 'include-pre-releases' is set to false. Switching to true."
+        "You specified a 'prerelease-identifier' (beta), but 'prerelease' is set to false. Switching to true."
       )
     })
 

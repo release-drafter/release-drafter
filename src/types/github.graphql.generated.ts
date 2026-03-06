@@ -1890,8 +1890,13 @@ export type CheckAnnotation = {
   annotationLevel?: Maybe<CheckAnnotationLevel>;
   /** The path to the file that this annotation was made on. */
   blobUrl: Scalars['URI']['output'];
-  /** Identifies the primary key from the database. */
+  /**
+   * Identifies the primary key from the database.
+   * @deprecated `databaseId` will be removed because it does not support 64-bit signed integer identifiers. Use `fullDatabaseId` instead. Removal on 2027-01-01 UTC.
+   */
   databaseId?: Maybe<Scalars['Int']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The position of this annotation. */
   location: CheckAnnotationSpan;
   /** The annotation's message. */
@@ -4573,6 +4578,8 @@ export type CreateRepositoryCustomPropertyInput = {
   propertyName: Scalars['String']['input'];
   /** The regex pattern that the value of the custom property must match, if the `value_type` is `string`. */
   regex?: InputMaybe<Scalars['String']['input']>;
+  /** Whether this repository custom property requires explicit values. */
+  requireExplicitValues?: InputMaybe<Scalars['Boolean']['input']>;
   /** Whether the custom property is required. */
   required?: InputMaybe<Scalars['Boolean']['input']>;
   /** The global relay id of the source in which a new custom property should be created in. */
@@ -10449,6 +10456,10 @@ export type IssueTimelineItemsItemType =
   | 'DISCONNECTED_EVENT'
   /** Represents a comment on an Issue. */
   | 'ISSUE_COMMENT'
+  /** Represents a 'issue_comment_pinned' event on a given issue. */
+  | 'ISSUE_COMMENT_PINNED_EVENT'
+  /** Represents a 'issue_comment_unpinned' event on a given issue. */
+  | 'ISSUE_COMMENT_UNPINNED_EVENT'
   /** Represents a 'issue_field_added' event on a given issue. */
   | 'ISSUE_FIELD_ADDED_EVENT'
   /** Represents a 'issue_field_changed' event on a given issue. */
@@ -22331,6 +22342,13 @@ export type PullRequestContributionsByRepositoryContributionsArgs = {
   orderBy?: InputMaybe<ContributionOrder>;
 };
 
+/** The policy controlling who can create pull requests in a repository. */
+export type PullRequestCreationPolicy =
+  /** Anyone can create pull requests. */
+  | 'ALL'
+  /** Only collaborators can create pull requests. */
+  | 'COLLABORATORS_ONLY';
+
 /** An edge in a connection. */
 export type PullRequestEdge = {
   __typename?: 'PullRequestEdge';
@@ -23060,6 +23078,10 @@ export type PullRequestTimelineItemsItemType =
   | 'HEAD_REF_RESTORED_EVENT'
   /** Represents a comment on an Issue. */
   | 'ISSUE_COMMENT'
+  /** Represents a 'issue_comment_pinned' event on a given issue. */
+  | 'ISSUE_COMMENT_PINNED_EVENT'
+  /** Represents a 'issue_comment_unpinned' event on a given issue. */
+  | 'ISSUE_COMMENT_UNPINNED_EVENT'
   /** Represents a 'issue_field_added' event on a given issue. */
   | 'ISSUE_FIELD_ADDED_EVENT'
   /** Represents a 'issue_field_changed' event on a given issue. */
@@ -26685,6 +26707,8 @@ export type Repository = Node & PackageOwner & ProjectOwner & ProjectV2Recent & 
   hasIssuesEnabled: Scalars['Boolean']['output'];
   /** Indicates if the repository has the Projects feature enabled. */
   hasProjectsEnabled: Scalars['Boolean']['output'];
+  /** Indicates if the repository has the pull requests feature enabled. */
+  hasPullRequestsEnabled: Scalars['Boolean']['output'];
   /** Indicates if the repository displays a Sponsor button for financial contributions. */
   hasSponsorshipsEnabled: Scalars['Boolean']['output'];
   /** Whether vulnerability alerts are enabled for the repository. */
@@ -26805,6 +26829,8 @@ export type Repository = Node & PackageOwner & ProjectOwner & ProjectV2Recent & 
   projectsV2: ProjectV2Connection;
   /** Returns a single pull request from the current repository by number. */
   pullRequest?: Maybe<PullRequest>;
+  /** The policy controlling who can create pull requests in this repository. */
+  pullRequestCreationPolicy?: Maybe<PullRequestCreationPolicy>;
   /** Returns a list of pull request templates associated to the repository */
   pullRequestTemplates?: Maybe<Array<PullRequestTemplate>>;
   /** A list of pull requests that have been opened in the repository. */
@@ -27544,6 +27570,8 @@ export type RepositoryCustomProperty = Node & {
   propertyName: Scalars['String']['output'];
   /** The regex pattern that the value of the custom property must match, if the `value_type` is `string`. */
   regex?: Maybe<Scalars['String']['output']>;
+  /** Whether this repository custom property requires explicit values. */
+  requireExplicitValues?: Maybe<Scalars['Boolean']['output']>;
   /** Whether the custom property is required. */
   required?: Maybe<Scalars['Boolean']['output']>;
   /** The source type of the custom property. */
@@ -27690,6 +27718,8 @@ export type RepositoryInfo = {
   hasIssuesEnabled: Scalars['Boolean']['output'];
   /** Indicates if the repository has the Projects feature enabled. */
   hasProjectsEnabled: Scalars['Boolean']['output'];
+  /** Indicates if the repository has the pull requests feature enabled. */
+  hasPullRequestsEnabled: Scalars['Boolean']['output'];
   /** Indicates if the repository displays a Sponsor button for financial contributions. */
   hasSponsorshipsEnabled: Scalars['Boolean']['output'];
   /** Indicates if the repository has wiki feature enabled. */
@@ -27724,6 +27754,8 @@ export type RepositoryInfo = {
   openGraphImageUrl: Scalars['URI']['output'];
   /** The User owner of the repository. */
   owner: RepositoryOwner;
+  /** The policy controlling who can create pull requests in this repository. */
+  pullRequestCreationPolicy?: Maybe<PullRequestCreationPolicy>;
   /** Identifies the date and time when the repository was last pushed to. */
   pushedAt?: Maybe<Scalars['DateTime']['output']>;
   /** The HTTP path for this repository */
@@ -34756,6 +34788,8 @@ export type UpdateRepositoryCustomPropertyInput = {
   regex?: InputMaybe<Scalars['String']['input']>;
   /** The global relay id of the source of the custom property. */
   repositoryCustomPropertyId: Scalars['ID']['input'];
+  /** Whether this repository custom property requires explicit values. */
+  requireExplicitValues?: InputMaybe<Scalars['Boolean']['input']>;
   /** Whether the updated custom property is required. */
   required?: InputMaybe<Scalars['Boolean']['input']>;
   /** The updated actors who can edit the values of the custom property. */
@@ -34783,6 +34817,8 @@ export type UpdateRepositoryInput = {
   hasIssuesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Indicates if the repository should have the project boards feature enabled. */
   hasProjectsEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Indicates if the repository should have the pull requests feature enabled. */
+  hasPullRequestsEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Indicates if the repository displays a Sponsor button for financial contributions. */
   hasSponsorshipsEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Indicates if the repository should have the wiki feature enabled. */
@@ -34791,6 +34827,8 @@ export type UpdateRepositoryInput = {
   homepageUrl?: InputMaybe<Scalars['URI']['input']>;
   /** The new name of the repository. */
   name?: InputMaybe<Scalars['String']['input']>;
+  /** The policy controlling who can create pull requests in this repository. */
+  pullRequestCreationPolicy?: InputMaybe<PullRequestCreationPolicy>;
   /** The ID of the repository to update. */
   repositoryId: Scalars['ID']['input'];
   /**

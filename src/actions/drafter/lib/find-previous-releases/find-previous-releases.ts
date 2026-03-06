@@ -20,14 +20,14 @@ const RELEASE_COUNT_LIMIT = 1000
 export const findPreviousReleases = async (
   params: Pick<
     ParsedConfig,
-    'commitish' | 'filter-by-commitish' | 'include-pre-releases' | 'tag-prefix'
+    'commitish' | 'filter-by-commitish' | 'tag-prefix' | 'prerelease'
   >
 ) => {
   const {
     commitish,
     'filter-by-commitish': filterByCommitish,
-    'include-pre-releases': includePreReleases,
-    'tag-prefix': tagPrefix
+    'tag-prefix': tagPrefix,
+    prerelease: isPreRelease
   } = params
   const octokit = getOctokit()
 
@@ -51,8 +51,8 @@ export const findPreviousReleases = async (
 
   core.info(`Found ${releases.length} releases`)
 
-  // `refs/heads/branch` and `branch` are the same thing in this context
-  const headRefRegex = /^refs\/heads\//
+  // Filter releases
+  const headRefRegex = /^refs\/heads\// // `refs/heads/branch` and `branch` are the same thing in this context
   const targetCommitishName = commitish.replace(headRefRegex, '')
   const commitishFilteredReleases = filterByCommitish
     ? releases.filter(
@@ -63,33 +63,61 @@ export const findPreviousReleases = async (
   const filteredReleases = tagPrefix
     ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix))
     : commitishFilteredReleases
-  const sortedSelectedReleases = sortReleases({
-    releases: filteredReleases.filter(
-      (r) => !r.draft && (!r.prerelease || includePreReleases)
-    ),
-    tagPrefix
-  })
-  const draftRelease = filteredReleases.find(
-    (r) => r.draft && r.prerelease === includePreReleases
+
+  // Split drafts and published releases
+  let publishedReleases = filteredReleases.filter((r) => !r.draft)
+  let draftReleases = filteredReleases.filter((r) => r.draft)
+
+  // Handle prereleases
+  publishedReleases = publishedReleases.filter(
+    (publishedRelease) =>
+      isPreRelease
+        ? publishedRelease.prerelease || !publishedRelease.prerelease // Both prerelease and regular published-releases
+        : !publishedRelease.prerelease // Only regular published-releases
   )
-  const lastRelease = sortedSelectedReleases.at(-1)
+  draftReleases = draftReleases.filter(
+    (draftRelease) =>
+      isPreRelease
+        ? draftRelease.prerelease // Only pre-releases drafts
+        : !draftRelease.prerelease // Only regular drafts
+  )
+
+  // Sort results
+  const draftRelease = draftReleases[0] // Should this be sorted ?
+  const lastRelease = sortReleases({
+    releases: publishedReleases,
+    tagPrefix
+  })?.at(-1)
 
   if (draftRelease) {
-    core.info(`Draft release:`)
+    if (draftReleases.length > 1) {
+      core.warning(
+        `Multiple draft releases found : ${draftReleases
+          .map((r) => r.tag_name)
+          .join(', ')}`
+      )
+      core.warning(
+        `Using the first one returned by GitHub API: ${draftRelease.tag_name}`
+      )
+    }
+
+    core.info(`Draft release${isPreRelease ? ' (which is a prerelease)' : ''}:`)
     core.info(`  tag_name:  ${draftRelease.tag_name}`)
     core.info(`  name:      ${draftRelease.name}`)
   } else {
-    core.info(`No draft release found`)
+    core.info(
+      `No draft release found${isPreRelease ? ' (among prerelease drafts)' : ''}`
+    )
   }
 
   if (lastRelease) {
-    core.info(
-      `Last release${includePreReleases ? ' (including prerelease)' : ''}:`
-    )
+    core.info(`Last release${isPreRelease ? ' (including prerelease)' : ''}:`)
     core.info(`  tag_name:  ${lastRelease.tag_name}`)
     core.info(`  name:      ${lastRelease.name}`)
   } else {
-    core.info(`No last release found`)
+    core.info(
+      `No last release found${isPreRelease ? ' (including prerelease)' : ''}`
+    )
   }
 
   return { draftRelease, lastRelease }

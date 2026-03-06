@@ -64,11 +64,11 @@ const mergeInputAndConfig = (params) => {
     );
     config.latest = false;
   }
-  if (config["prerelease-identifier"] && !config["include-pre-releases"]) {
+  if (config["prerelease-identifier"] && !config.prerelease) {
     coreExports.warning(
-      `You have specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'include-pre-releases' is set to false. Switching to true.`
+      `You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`
     );
-    config["include-pre-releases"] = true;
+    config.prerelease = true;
   }
   const commitish = config.commitish || context.ref || context.payload.ref;
   const latest = !isBoolean(config.latest) ? true : config.latest;

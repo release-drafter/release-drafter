@@ -44,7 +44,7 @@ describe('find previous releases', () => {
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': 'test-',
-      'include-pre-releases': false
+      prerelease: false
     })
 
     expect(lastRelease?.tag_name).toEqual('test-1.0.1')
@@ -61,7 +61,7 @@ describe('find previous releases', () => {
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',
-      'include-pre-releases': false
+      prerelease: false
     })
 
     expect(lastRelease).toEqual({
@@ -71,7 +71,7 @@ describe('find previous releases', () => {
     })
   })
 
-  it('should return last draft release', async () => {
+  it('should return non-prerelease draft when isPreRelease is false', async () => {
     mocks.releases.mockResolvedValueOnce([
       { tag_name: 'v1.0.0', draft: true, prerelease: false },
       { tag_name: 'v1.0.1', draft: false, prerelease: false },
@@ -82,7 +82,7 @@ describe('find previous releases', () => {
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',
-      'include-pre-releases': false
+      prerelease: false
     })
 
     expect(draftRelease).toEqual({
@@ -92,18 +92,34 @@ describe('find previous releases', () => {
     })
   })
 
-  it('should return last prerelease as last release when includePreReleases is true', async () => {
+  it('should skip prerelease draft when isPreRelease is false', async () => {
     mocks.releases.mockResolvedValueOnce([
-      { tag_name: 'v1.0.0', draft: true, prerelease: false },
-      { tag_name: 'v1.0.1', draft: false, prerelease: false },
-      { tag_name: 'v1.0.2-rc.1', draft: true, prerelease: true }
+      { tag_name: 'v1.0.2-rc.1', draft: true, prerelease: true },
+      { tag_name: 'v1.0.1', draft: false, prerelease: false }
     ])
 
-    const { draftRelease, lastRelease } = await findPreviousReleases({
+    const { draftRelease } = await findPreviousReleases({
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',
-      'include-pre-releases': true
+      prerelease: false
+    })
+
+    expect(draftRelease).toBeUndefined()
+  })
+
+  it('should return prerelease draft when isPreRelease is true', async () => {
+    mocks.releases.mockResolvedValueOnce([
+      { tag_name: 'v1.0.0', draft: true, prerelease: false },
+      { tag_name: 'v1.0.2-rc.1', draft: true, prerelease: true },
+      { tag_name: 'v1.0.1', draft: false, prerelease: false }
+    ])
+
+    const { draftRelease } = await findPreviousReleases({
+      commitish: 'refs/heads/master',
+      'filter-by-commitish': false,
+      'tag-prefix': '',
+      prerelease: true
     })
 
     expect(draftRelease).toEqual({
@@ -111,10 +127,64 @@ describe('find previous releases', () => {
       draft: true,
       prerelease: true
     })
+  })
 
-    expect(lastRelease).toEqual({
-      tag_name: 'v1.0.1',
-      draft: false,
+  it('should prefer matching draft when both types exist', async () => {
+    mocks.releases.mockResolvedValueOnce([
+      { tag_name: 'v1.0.0', draft: true, prerelease: false },
+      { tag_name: 'v1.0.2-rc.1', draft: true, prerelease: true },
+      { tag_name: 'v1.0.1', draft: false, prerelease: false }
+    ])
+
+    const { draftRelease: preDraft } = await findPreviousReleases({
+      commitish: 'refs/heads/master',
+      prerelease: true,
+      'tag-prefix': '',
+      'filter-by-commitish': false
+    })
+
+    expect(preDraft).toEqual({
+      tag_name: 'v1.0.2-rc.1',
+      draft: true,
+      prerelease: true
+    })
+
+    mocks.releases.mockResolvedValueOnce([
+      { tag_name: 'v1.0.0', draft: true, prerelease: false },
+      { tag_name: 'v1.0.2-rc.1', draft: true, prerelease: true },
+      { tag_name: 'v1.0.1', draft: false, prerelease: false }
+    ])
+
+    const { draftRelease: stableDraft } = await findPreviousReleases({
+      commitish: 'refs/heads/master',
+      prerelease: false,
+      'tag-prefix': '',
+      'filter-by-commitish': false
+    })
+
+    expect(stableDraft).toEqual({
+      tag_name: 'v1.0.0',
+      draft: true,
+      prerelease: false
+    })
+  })
+
+  it('should find non-prerelease draft when isPreRelease is false', async () => {
+    mocks.releases.mockResolvedValueOnce([
+      { tag_name: 'v1.0.0', draft: true, prerelease: false },
+      { tag_name: 'v1.0.1', draft: false, prerelease: false }
+    ])
+
+    const { draftRelease } = await findPreviousReleases({
+      commitish: 'refs/heads/master',
+      'tag-prefix': '',
+      'filter-by-commitish': false,
+      prerelease: false
+    })
+
+    expect(draftRelease).toEqual({
+      tag_name: 'v1.0.0',
+      draft: true,
       prerelease: false
     })
   })

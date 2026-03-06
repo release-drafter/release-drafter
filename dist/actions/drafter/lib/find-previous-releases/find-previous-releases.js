@@ -13,8 +13,8 @@ const findPreviousReleases = async (params) => {
   const {
     commitish,
     "filter-by-commitish": filterByCommitish,
-    "include-pre-releases": includePreReleases,
-    "tag-prefix": tagPrefix
+    "tag-prefix": tagPrefix,
+    prerelease: isPreRelease
   } = params;
   const octokit = getOctokit();
   coreExports.info("Fetching releases from GitHub...");
@@ -40,31 +40,46 @@ const findPreviousReleases = async (params) => {
     (r) => targetCommitishName === r.target_commitish.replace(headRefRegex, "")
   ) : releases;
   const filteredReleases = tagPrefix ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix)) : commitishFilteredReleases;
-  const sortedSelectedReleases = sortReleases({
-    releases: filteredReleases.filter(
-      (r) => !r.draft && (!r.prerelease || includePreReleases)
-    ),
-    tagPrefix
-  });
-  const draftRelease = filteredReleases.find(
-    (r) => r.draft && r.prerelease === includePreReleases
+  let publishedReleases = filteredReleases.filter((r) => !r.draft);
+  let draftReleases = filteredReleases.filter((r) => r.draft);
+  publishedReleases = publishedReleases.filter(
+    (publishedRelease) => isPreRelease ? publishedRelease.prerelease || !publishedRelease.prerelease : !publishedRelease.prerelease
+    // Only regular published-releases
   );
-  const lastRelease = sortedSelectedReleases.at(-1);
+  draftReleases = draftReleases.filter(
+    (draftRelease2) => isPreRelease ? draftRelease2.prerelease : !draftRelease2.prerelease
+    // Only regular drafts
+  );
+  const draftRelease = draftReleases[0];
+  const lastRelease = sortReleases({
+    releases: publishedReleases,
+    tagPrefix
+  })?.at(-1);
   if (draftRelease) {
-    coreExports.info(`Draft release:`);
+    if (draftReleases.length > 1) {
+      coreExports.warning(
+        `Multiple draft releases found : ${draftReleases.map((r) => r.tag_name).join(", ")}`
+      );
+      coreExports.warning(
+        `Using the first one returned by GitHub API: ${draftRelease.tag_name}`
+      );
+    }
+    coreExports.info(`Draft release${isPreRelease ? " (which is a prerelease)" : ""}:`);
     coreExports.info(`  tag_name:  ${draftRelease.tag_name}`);
     coreExports.info(`  name:      ${draftRelease.name}`);
   } else {
-    coreExports.info(`No draft release found`);
+    coreExports.info(
+      `No draft release found${isPreRelease ? " (among prerelease drafts)" : ""}`
+    );
   }
   if (lastRelease) {
-    coreExports.info(
-      `Last release${includePreReleases ? " (including prerelease)" : ""}:`
-    );
+    coreExports.info(`Last release${isPreRelease ? " (including prerelease)" : ""}:`);
     coreExports.info(`  tag_name:  ${lastRelease.tag_name}`);
     coreExports.info(`  name:      ${lastRelease.name}`);
   } else {
-    coreExports.info(`No last release found`);
+    coreExports.info(
+      `No last release found${isPreRelease ? " (including prerelease)" : ""}`
+    );
   }
   return { draftRelease, lastRelease };
 };

@@ -5,7 +5,7 @@ const commonConfigSchema = z.object({
    */
   latest: z.stringbool().or(z.boolean()).optional(),
   /**
-   * A boolean indicating whether the release being created or updated is a prerelease.
+   * Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
    */
   prerelease: z.stringbool().or(z.boolean()).optional(),
   /**
@@ -14,7 +14,7 @@ const commonConfigSchema = z.object({
    */
   "initial-commits-since": z.iso.datetime().optional(),
   /**
-   * A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version.
+   * A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`.
    */
   "prerelease-identifier": z.string().optional(),
   /**
