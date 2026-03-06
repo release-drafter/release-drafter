@@ -2478,6 +2478,61 @@ describe('release-drafter', () => {
 
       expect.assertions(1)
     })
+
+    it('exclude takes precedence over include when the same path is in both', async () => {
+      getConfigMock('config-with-include-exclude-paths.yml')
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) =>
+          body.query.includes('query findCommitsWithPathChangesQuery')
+        )
+        .reply(200, graphqlIncludePathMergeCommit)
+        .post('/graphql', (body) =>
+          body.query.includes('query findCommitsWithPathChangesQuery')
+        )
+        .reply(200, graphqlIncludePathMergeCommit)
+        .post('/graphql', (body) =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(200, graphqlCommitsMergeCommit)
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          (body) => {
+            expect(body).toMatchInlineSnapshot(`
+              Object {
+                "body": "# What's Changed
+              * No changes
+              ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "v$INPUT_VERSION (Code name: Placeholder)",
+                "prerelease": false,
+                "tag_name": "v$INPUT_VERSION",
+                "target_commitish": "refs/heads/master",
+              }
+            `)
+            return true
+          }
+        )
+        .reply(200, releasePayload)
+
+      const payload = pushPayload
+
+      await probot.receive({
+        name: 'push',
+        payload,
+      })
+
+      expect.assertions(1)
+    })
   })
 
   describe('with pull-request-limit config', () => {
