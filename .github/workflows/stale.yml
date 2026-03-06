@@ -1,0 +1,35 @@
+name: Close Stale Issues
+
+on:
+  schedule:
+    # Run every day at 2:00 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          # Only process issues with the info-needed label (can have other labels too)
+          any-of-issue-labels: 'info-needed'
+          # Days before an issue with the info-needed label is considered stale
+          days-before-issue-stale: 30
+          # Days before closing a stale issue (7 day delay after marking as stale)
+          days-before-issue-close: 7
+          # Don't process pull requests
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          stale-issue-label: 'stale'
+          close-issue-label: 'closed-by-stale'
+          # Remove stale label when issue receives comments/updates
+          remove-issue-stale-when-updated: true
+          # Customized messages
+          stale-issue-message: |
+            This issue has been inactive for 30 days with the `info-needed` label.
+            Please provide the requested information to keep this issue open.
+            This issue will be closed in 7 days if no response is provided.
+          close-issue-message: |
+            This issue has been closed because it has been inactive for 30 days with the `info-needed` label and no information was provided.
+            If you have additional context or want to reopen this issue, please comment and we'll be happy to help!
