@@ -132,6 +132,7 @@ You can configure Release Drafter using the following key in your
 | `sort-direction`           | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                  |
 | `prerelease`               | Optional | Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.                                                                             |
 | `prerelease-identifier`    | Optional | A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`. |
+| `include-pre-releases`     | Optional | When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.             |
 | `latest`                   | Optional | Mark the release as latest. Only works for published releases. Can be one of: `true`, `false`, `legacy`. Default `true`.                                                           |
 | `version-resolver`         | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                      |
 | `commitish`                | Optional | The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`. |
@@ -388,6 +389,35 @@ Using `prerelease-identifier` automatically enable `include-prereleases`.
 ```yml
 prerelease-identifier: 'alpha' # will create a prerelease with version number x.x.x-alpha.x
 ```
+
+Here, both jobs run in parallel every time you add changes to the configured
+branch.
+
+- `update_full_release_draft` will pile-up changes since `v3.5.0` inside a draft
+  for `v3.5.1` (or `v3.6.0` or `v4.0.0`, depending on your config)
+- `update_prerelease_draft` will pile-up changes since the last prerelease in a
+  prerelease-draft. Changes are :
+  - if no previous (published) prereleases are found - changes since `v3.5.0` in
+    a draft for `v3.5.0-rc.1` (prerelease-draft)
+  - or if `v3.5.0-rc.1` exists (published) already - changes since `v3.5.0-rc.1`
+    in a draft for `v3.5.0-rc.2` (prerelease-draft)
+
+Some users like to run `update_prerelease_draft` with `publish: true`, such as
+prereleases are published immediately without the need for human intervention
+(or an external automation). Since prereleases are not meant to be stable in the
+first place, automation may be an acceptable risk for you too.
+
+> [!IMPORTANT]
+>
+> - `prerelease-identifier` is not required when `prerelease` is enabled, but
+>   your prerelease will be named after / be associated with a tag that is not
+>   semver-compliant to actual prereleases.
+> - when specified `prerelease-identifier` enables `prerelease: true`
+
+If you want your stable releases to include changes since the last prerelease
+instead of the last stable release use `include-pre-releases: true`. This can
+reduce the number of changes included in the stable release body, but diverges
+from the standard workflow depicted above.
 
 ## Projects that don't use Semantic Versioning
 
