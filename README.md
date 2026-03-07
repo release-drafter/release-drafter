@@ -141,6 +141,7 @@ You can configure Release Drafter using the following key in your `.github/relea
 | `sort-direction`           | Optional | Sort changelog in ascending or descending order. Can be one of: `ascending`, `descending`. Default: `descending`.                                                                                         |
 | `prerelease`               | Optional | Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.                                                                                                    |
 | `prerelease-identifier`    | Optional | A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`.                        |
+| `include-pre-releases`     | Optional | When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.                                    |
 | `latest`                   | Optional | Mark the release as latest. Only works for published releases. Can be one of: `true`, `false`, `legacy`. Default `true`.                                                                                  |
 | `version-resolver`         | Optional | Adjust the `$RESOLVED_VERSION` variable using labels. Refer to [Version Resolver](#version-resolver) to learn more about this                                                                             |
 | `commitish`                | Optional | The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.                        |
@@ -387,9 +388,10 @@ Some users like to run `update_prerelease_draft` with `publish: true`, such as p
 
 > [!IMPORTANT]
 >
-> - The `include-pre-releases` config was deprecated in `v6.3.0`. See [#1515](https://github.com/release-drafter/release-drafter/pull/1515)
 > - `prerelease-identifier` is not required when `prerelease` is enabled, but your prerelease will be named after / be associated with a tag that is not semver-compliant to actual prereleases.
 > - when specified `prerelease-identifier` enables `prerelease: true`
+
+If you want your stable releases to include changes since the last prerelease instead of the last stable release use `include-pre-releases: true`. This can reduce the number of changes included in the stable release body, but diverges from the standard workflow depicted above.
 
 ## Projects that don't use Semantic Versioning
 
@@ -410,6 +412,7 @@ The Release Drafter GitHub Action accepts a number of optional inputs directly i
 | `publish`               | A boolean indicating whether the release being created or updated should be immediately published. This may be useful if the output of a previous workflow step determines that a new version of your project has been (or will be) released, as with [`salsify/action-detect-and-tag-new-version`](https://github.com/salsify/action-detect-and-tag-new-version). |
 | `prerelease`            | Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.                                                                                                                                                                                                                                                             |
 | `prerelease-identifier` | A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`.                                                                                                                                                                                 |
+| `include-pre-releases`  | When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.                                                                                                                                                                                             |
 | `latest`                | A string indicating whether the release being created or updated should be marked as latest.                                                                                                                                                                                                                                                                       |
 | `commitish`             | A string specifying the target branch for the release being created.                                                                                                                                                                                                                                                                                               |
 | `header`                | A string that would be added before the template body.                                                                                                                                                                                                                                                                                                             |

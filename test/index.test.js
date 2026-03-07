@@ -1330,6 +1330,102 @@ describe('release-drafter', () => {
       })
     })
 
+    describe('with include-pre-releases input override', () => {
+      it('includes pre releases when the input is true', async () => {
+        const restoreEnvironment = mockedEnv({
+          'INPUT_INCLUDE-PRE-RELEASES': 'true',
+        })
+
+        getConfigMock('config-with-include-pre-releases-false.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [release2Payload, preReleasePayload])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, graphqlCommitsMergeCommit)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body).toMatchInlineSnapshot(`
+                Object {
+                  "body": "# What's Changed
+
+                * Add documentation (#5) @TimonVS
+                * Update dependencies (#4) @TimonVS
+                * Bug fixes (#3) @TimonVS
+                * Add big feature (#2) @TimonVS
+                * 👽 Add alien technology (#1) @TimonVS
+                ",
+                  "draft": true,
+                  "make_latest": "true",
+                  "name": "v1.5.0",
+                  "prerelease": false,
+                  "tag_name": "v1.5.0",
+                  "target_commitish": "refs/heads/master",
+                }
+              `)
+              return true
+            }
+          )
+          .reply(200, preReleasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(1)
+
+        restoreEnvironment()
+      })
+
+      it('does not include pre releases when the input is false', async () => {
+        const restoreEnvironment = mockedEnv({
+          'INPUT_INCLUDE-PRE-RELEASES': 'false',
+        })
+
+        getConfigMock('config-with-include-pre-releases-true.yml')
+
+        nock('https://api.github.com')
+          .get('/repos/toolmantim/release-drafter-test-project/releases')
+          .query(true)
+          .reply(200, [release2Payload, preReleasePayload])
+
+        nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query findCommitsWithAssociatedPullRequests')
+          )
+          .reply(200, graphqlCommitsMergeCommit)
+
+        nock('https://api.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases',
+            (body) => {
+              expect(body.name).not.toBe('v1.5.0')
+              expect(body.tag_name).not.toBe('v1.5.0')
+              return true
+            }
+          )
+          .reply(200, preReleasePayload)
+
+        await probot.receive({
+          name: 'push',
+          payload: pushPayload,
+        })
+
+        expect.assertions(2)
+
+        restoreEnvironment()
+      })
+    })
+
     describe('with exclude-labels config', () => {
       it('excludes pull requests', async () => {
         getConfigMock('config-with-exclude-labels.yml')
