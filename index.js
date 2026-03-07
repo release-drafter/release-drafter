@@ -248,6 +248,10 @@ function getInput() {
         ? core.getInput('prerelease').toLowerCase() === 'true'
         : undefined,
     preReleaseIdentifier: core.getInput('prerelease-identifier') || undefined,
+    includePreReleases:
+      core.getInput('include-pre-releases') !== ''
+        ? core.getInput('include-pre-releases').toLowerCase() === 'true'
+        : undefined,
     latest: core.getInput('latest')?.toLowerCase() || undefined,
     commitsSince: core.getInput('initial-commits-since') || undefined,
   }
@@ -288,6 +292,10 @@ function updateConfigFromInput(config, input) {
 
   if (input.commitsSince) {
     config['initial-commits-since'] = input.commitsSince
+  }
+
+  if (input.includePreReleases !== undefined) {
+    config['include-pre-releases'] = input.includePreReleases
   }
 }
 
