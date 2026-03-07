@@ -25,6 +25,7 @@ const releaseSharedCommitDate = require('./fixtures/release-shared-commit-date.j
 const graphqlCommitsForking = require('./fixtures/__generated__/graphql-commits-forking.json')
 const graphqlCommitsPaginated1 = require('./fixtures/graphql-commits-paginated-1.json')
 const graphqlCommitsPaginated2 = require('./fixtures/graphql-commits-paginated-2.json')
+const core = require('@actions/core')
 
 nock.disableNetConnect()
 
@@ -408,6 +409,39 @@ describe('release-drafter', () => {
         })
 
         expect.assertions(1)
+      })
+
+      it('calls core.setFailed when running as a GitHub Action and release drafting throws', async () => {
+        getConfigMock()
+
+        process.env['GITHUB_REF'] = 'refs/heads/master'
+        process.env['GITHUB_ACTIONS'] = 'true'
+
+        const setFailedSpy = jest
+          .spyOn(core, 'setFailed')
+          .mockImplementation(() => {})
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .replyWithError('simulated release fetch failure')
+
+        await expect(
+          probot.receive({
+            name: 'push',
+            payload: pushNonMasterPayload,
+          })
+        ).rejects.toThrow('simulated release fetch failure')
+
+        expect(setFailedSpy).toHaveBeenCalledWith(
+          expect.stringContaining(
+            '💥 Release drafter failed with error: request to https://api.github.com/repos/toolmantim/release-drafter-test-project/releases?per_page=100 failed, reason: simulated release fetch failure'
+          )
+        )
+
+        setFailedSpy.mockRestore()
+        expect.assertions(2)
       })
 
       it('makes next versions available as template placeholders', async () => {
