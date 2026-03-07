@@ -131,95 +131,102 @@ module.exports = (app, { getRouter }) => {
   )
 
   const drafter = async (context) => {
-    const input = getInput()
+    try {
+      const input = getInput()
 
-    const config = await getConfig({
-      context,
-      configName: input.configName,
-    })
+      const config = await getConfig({
+        context,
+        configName: input.configName,
+      })
 
-    if (!config || input.disableReleaser) return
+      if (!config || input.disableReleaser) return
 
-    updateConfigFromInput(config, input)
+      updateConfigFromInput(config, input)
 
-    // GitHub Actions merge payloads slightly differ, in that their ref points
-    // to the PR branch instead of refs/heads/master
-    const ref = process.env['GITHUB_REF'] || context.payload.ref
+      // GitHub Actions merge payloads slightly differ, in that their ref points
+      // to the PR branch instead of refs/heads/master
+      const ref = process.env['GITHUB_REF'] || context.payload.ref
 
-    if (!isTriggerableReference({ ref, context, config })) {
-      return
-    }
+      if (!isTriggerableReference({ ref, context, config })) {
+        return
+      }
 
-    const targetCommitish = config.commitish || ref
+      const targetCommitish = config.commitish || ref
 
-    const {
-      'filter-by-commitish': filterByCommitish,
-      'include-pre-releases': includePreReleases,
-      'tag-prefix': tagPrefix,
-      latest,
-      prerelease,
-    } = config
+      const {
+        'filter-by-commitish': filterByCommitish,
+        'include-pre-releases': includePreReleases,
+        'tag-prefix': tagPrefix,
+        latest,
+        prerelease,
+      } = config
 
-    const { draftRelease, lastRelease } = await findReleases({
-      context,
-      targetCommitish,
-      filterByCommitish,
-      includePreReleases,
-      isPreRelease: prerelease,
-      tagPrefix,
-    })
-
-    const { commits, pullRequests: mergedPullRequests } =
-      await findCommitsWithAssociatedPullRequests({
+      const { draftRelease, lastRelease } = await findReleases({
         context,
         targetCommitish,
+        filterByCommitish,
+        includePreReleases,
+        isPreRelease: prerelease,
+        tagPrefix,
+      })
+
+      const { commits, pullRequests: mergedPullRequests } =
+        await findCommitsWithAssociatedPullRequests({
+          context,
+          targetCommitish,
+          lastRelease,
+          config,
+        })
+
+      const sortedMergedPullRequests = sortPullRequests(
+        mergedPullRequests,
+        config['sort-by'],
+        config['sort-direction']
+      )
+
+      const { shouldDraft, version, tag, name } = input
+
+      const releaseInfo = generateReleaseInfo({
+        context,
+        commits,
+        config,
         lastRelease,
-        config,
+        mergedPullRequests: sortedMergedPullRequests,
+        version,
+        tag,
+        name,
+        isPreRelease: prerelease,
+        latest,
+        shouldDraft,
+        targetCommitish,
       })
 
-    const sortedMergedPullRequests = sortPullRequests(
-      mergedPullRequests,
-      config['sort-by'],
-      config['sort-direction']
-    )
+      let createOrUpdateReleaseResponse
+      if (!draftRelease) {
+        log({ context, message: 'Creating new release' })
+        createOrUpdateReleaseResponse = await createRelease({
+          context,
+          releaseInfo,
+          config,
+        })
+      } else {
+        log({ context, message: 'Updating existing release' })
+        createOrUpdateReleaseResponse = await updateRelease({
+          context,
+          draftRelease,
+          releaseInfo,
+          config,
+        })
+      }
 
-    const { shouldDraft, version, tag, name } = input
-
-    const releaseInfo = generateReleaseInfo({
-      context,
-      commits,
-      config,
-      lastRelease,
-      mergedPullRequests: sortedMergedPullRequests,
-      version,
-      tag,
-      name,
-      isPreRelease: prerelease,
-      latest,
-      shouldDraft,
-      targetCommitish,
-    })
-
-    let createOrUpdateReleaseResponse
-    if (!draftRelease) {
-      log({ context, message: 'Creating new release' })
-      createOrUpdateReleaseResponse = await createRelease({
-        context,
-        releaseInfo,
-        config,
-      })
-    } else {
-      log({ context, message: 'Updating existing release' })
-      createOrUpdateReleaseResponse = await updateRelease({
-        context,
-        draftRelease,
-        releaseInfo,
-        config,
-      })
-    }
-
-    if (runnerIsActions()) {
-      setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+      if (runnerIsActions()) {
+        setActionOutput(createOrUpdateReleaseResponse, releaseInfo)
+      }
+    } catch (error) {
+      if (runnerIsActions()) {
+        core.setFailed(`💥 Release drafter failed with error: ${error.message}`)
+      }
+      throw error
     }
   }
 
