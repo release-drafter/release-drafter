@@ -806,6 +806,98 @@ describe('get config file', () => {
           }
         `)
       })
+
+      it('should detect cross-scheme loop: file:A → github:B → github:A (same file as A, loaded remotely)', async () => {
+        // Exact scenario from PR review comment:
+        // file:A (local) extends github:B (remote)
+        // github:B extends github:A (same file as A but fetched via github: — different scheme, same filepath+ref+repo)
+        // Without scheme-agnostic check, github:A would be loaded unnecessarily before the loop is caught
+        // With the fix (file: takes priority), github:A matches file:A and the chain stops at [file:A, github:B]
+        const workspace = '/home/runner/workspace'
+        vi.stubEnv('GITHUB_TOKEN', 'test')
+        vi.stubEnv('GITHUB_WORKSPACE', workspace)
+        const context = {
+          repo: { owner: 'octocat', repo: 'hello-world' },
+          ref: 'main'
+        }
+        const inputConfigName = 'file:release-drafter.yml'
+        const configChain = [
+          {
+            pathToFile: workspace + '/.github/release-drafter.yml',
+            // file:A — extends github:B
+            file: `_extends: .github:/remote-base.yml\ntemplate: local-content`
+          },
+          {
+            // github:B (octocat/.github:remote-base.yml) — extends the remote version of file:A
+            file: `_extends: hello-world:release-drafter.yml@main\nremote: base`,
+            endpointFilepath: 'remote-base.yml',
+            endpoint: '',
+            context: { repo: { owner: 'octocat', repo: '.github' } }
+          },
+          {
+            // github:A (octocat/hello-world:.github/release-drafter.yml@main) — same filepath+ref+repo as file:A, different scheme
+            file: `_extends: .github:/remote-base.yml\ntemplate: local-content`,
+            endpointFilepath: '.github/release-drafter.yml',
+            endpoint: '',
+            context: {
+              repo: { owner: 'octocat', repo: 'hello-world' },
+              ref: 'main'
+            }
+          }
+        ].map((c) => ({
+          ...c,
+          endpoint: c.endpointFilepath
+            ? getContentEndpoint({
+                ...c.context,
+                path: c.endpointFilepath
+              })
+            : undefined
+        }))
+
+        mocks.existsSync.mockReturnValue(true)
+        mocks.readFileSync.mockImplementation(
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file
+        )
+
+        // github:B + github:A are both fetched (check is post-fetch), but github:A is not added to the chain
+        const scope = nock('https://api.github.com')
+          .get((uri) =>
+            configChain
+              .filter((c) => !!c.endpoint)
+              .map((c) => c.endpoint)
+              .includes(uri)
+          )
+          .times(configChain.filter((c) => !!c.endpoint).length)
+          .reply(
+            200,
+            (uri) =>
+              configChain
+                .filter((c) => !!c.endpoint)
+                .find((c) => c.endpoint === uri)?.file,
+            {
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
+            }
+          )
+
+        const res = await composeConfigGet(inputConfigName, context)
+
+        expect(scope.isDone()).toBe(true)
+
+        // github:A's _extends matches what file:A extends — the warning names it
+        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/remote-base.yml".'
+        )
+
+        // file:A and github:B only — github:A is not added to the chain
+        expect(res.contexts.length).toBe(2)
+        expect(res.config).toMatchInlineSnapshot(`
+          {
+            "remote": "base",
+            "template": "local-content",
+          }
+        `)
+      })
     })
     describe('using the github: and then the file: scheme', () => {
       it('should throw an error', async () => {
