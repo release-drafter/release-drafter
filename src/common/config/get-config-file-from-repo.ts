@@ -1,7 +1,6 @@
 import { getOctokit } from '../get-octokit'
 import { RequestError } from '@octokit/request-error'
 import { ConfigTarget } from './parse-config-target'
-import { isArray } from 'lodash'
 
 export const getConfigFileFromRepo = async (
   configTarget: ConfigTarget
@@ -29,7 +28,7 @@ export const getConfigFileFromRepo = async (
     )
   }
 
-  if (isArray(res.data)) {
+  if (Array.isArray(res.data)) {
     throw new Error(
       `Fetched content is a directory (array), expected a file. (target: ${configTarget.repo.owner ? `${configTarget.repo.owner}/` : ''}${configTarget.repo.repo}:${configTarget.filepath}${configTarget.ref ? `@${configTarget.ref}` : ''})`
     )

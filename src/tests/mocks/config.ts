@@ -1,8 +1,8 @@
-import path from 'path'
+import path from 'node:path'
 import { mocks } from '.'
 import { composeConfigGet } from 'src/common/config'
 import { parse } from 'yaml'
-import { readFileSync } from 'fs'
+import { readFileSync } from 'node:fs'
 
 export type AvailableConfigs =
   | 'config-autolabeler'

@@ -1,17 +1,15 @@
-import z from 'zod'
+import { object, string } from 'zod'
 
 /**
  * Inputs shared by release-drafter and autolabeler
  */
-export const sharedInputSchema = z
-  .object({
+export const sharedInputSchema = object({
     /**
      * Access token used to make requests against the GitHub API.
      *
      * Defaults to ${{ github.token }}, or the GITHUB_TOKEN environment variable.
      */
-    token: z
-      .string()
+    token: string()
       .min(1)
       .default(process.env.GITHUB_TOKEN || '')
   })

@@ -1,20 +1,19 @@
-import z from 'zod'
+import type * as z from 'zod'
+import { object, array, string } from 'zod'
 
-export const configSchema = z
-  .object({
+export const configSchema = object({
     /**
      * You can add automatically a label into a pull request.
      * Available matchers are `files` (glob), `branch` (regex), `title` (regex) and `body` (regex).
      * Matchers are evaluated independently; the label will be set if at least one of the matchers meets the criteria.
      */
-    autolabeler: z
-      .array(
-        z.object({
-          label: z.string().min(1),
-          files: z.array(z.string().min(1)).optional().default([]),
-          branch: z.array(z.string().min(1)).optional().default([]),
-          title: z.array(z.string().min(1)).optional().default([]),
-          body: z.array(z.string().min(1)).optional().default([])
+    autolabeler: array(
+        object({
+          label: string().min(1),
+          files: array(string().min(1)).optional().default([]),
+          branch: array(string().min(1)).optional().default([]),
+          title: array(string().min(1)).optional().default([]),
+          body: array(string().min(1)).optional().default([])
         })
       )
       .min(1)

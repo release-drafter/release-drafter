@@ -1,5 +1,15 @@
 import { RequestParameters } from '@octokit/graphql/types'
-import _ from 'lodash'
+
+const getPath = (obj: unknown, path: string[]) =>
+  path.reduce((acc: any, key) => acc?.[key], obj)
+
+const hasPath = (obj: unknown, path: string[]) =>
+  getPath(obj, path) !== undefined
+
+const setPath = (obj: unknown, path: string[], value: unknown) => {
+  const parent = getPath(obj, path.slice(0, -1)) as Record<string, unknown>
+  parent[path.at(-1)!] = value
+}
 
 /**
  * Utility function to paginate a GraphQL function using Relay-style cursor pagination.
@@ -19,20 +29,20 @@ export async function paginateGraphql<T extends object>(
   const pageInfoPath = [...paginatePath, 'pageInfo']
   const endCursorPath = [...pageInfoPath, 'endCursor']
   const hasNextPagePath = [...pageInfoPath, 'hasNextPage']
-  const hasNextPage = (data: T) => _.get(data, hasNextPagePath)
+  const hasNextPage = (data: T) => getPath(data, hasNextPagePath)
 
   const data = await client<T>(query, requestParameters)
 
-  if (!_.has(data, nodesPath)) {
+  if (!hasPath(data, nodesPath)) {
     throw new Error(
       "Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field."
     )
   }
 
   if (
-    !_.has(data, pageInfoPath) ||
-    !_.has(data, endCursorPath) ||
-    !_.has(data, hasNextPagePath)
+    !hasPath(data, pageInfoPath) ||
+    !hasPath(data, endCursorPath) ||
+    !hasPath(data, hasNextPagePath)
   ) {
     throw new Error(
       "Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field."
@@ -42,13 +52,13 @@ export async function paginateGraphql<T extends object>(
   while (hasNextPage(data)) {
     const newData = await client<T>(query, {
       ...requestParameters,
-      after: _.get(data, [...pageInfoPath, 'endCursor'])
+      after: getPath(data, [...pageInfoPath, 'endCursor'])
     })
-    const newNodes = _.get(newData, nodesPath)
-    const newPageInfo = _.get(newData, pageInfoPath)
+    const newNodes = getPath(newData, nodesPath)
+    const newPageInfo = getPath(newData, pageInfoPath)
 
-    _.set(data, pageInfoPath, newPageInfo)
-    _.update(data, nodesPath, (d) => [...d, ...newNodes])
+    setPath(data, pageInfoPath, newPageInfo)
+    setPath(data, nodesPath, [...getPath(data, nodesPath), ...newNodes])
   }
 
   return data

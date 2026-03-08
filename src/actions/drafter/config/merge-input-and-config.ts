@@ -1,5 +1,4 @@
 import * as core from '@actions/core'
-import isBoolean from 'lodash/isBoolean.js'
 import { Config } from './schemas/config.schema'
 import { CommonConfig } from './schemas'
 import { context } from '@actions/github'
@@ -55,9 +54,9 @@ export const mergeInputAndConfig = (params: {
     }
     config['prerelease-identifier'] = input['prerelease-identifier']
   }
-  if (isBoolean(input.prerelease)) {
+  if (typeof input.prerelease === 'boolean') {
     if (
-      isBoolean(config.prerelease) &&
+      typeof config.prerelease === 'boolean' &&
       config.prerelease !== input.prerelease
     ) {
       core.info(
@@ -66,8 +65,8 @@ export const mergeInputAndConfig = (params: {
     }
     config.prerelease = input.prerelease
   }
-  if (isBoolean(input.latest)) {
-    if (isBoolean(config.latest) && config.latest !== input.latest) {
+  if (typeof input.latest === 'boolean') {
+    if (typeof config.latest === 'boolean' && config.latest !== input.latest) {
       core.info(
         `Input's latest "${input.latest}" overrides config's latest "${config.latest}"`
       )
@@ -90,8 +89,9 @@ export const mergeInputAndConfig = (params: {
   // Write defaults
   const commitish =
     config.commitish || context.ref || (context.payload.ref as string)
-  const latest = !isBoolean(config.latest) ? true : config.latest
-  const prerelease = !isBoolean(config.prerelease) ? false : config.prerelease
+  const latest = typeof config.latest !== 'boolean' ? true : config.latest
+  const prerelease =
+    typeof config.prerelease !== 'boolean' ? false : config.prerelease
 
   // Apply some transformations
   const replacers = config.replacers

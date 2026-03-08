@@ -1,6 +1,5 @@
-import { dirname, isAbsolute, join, normalize } from 'path'
+import { dirname, isAbsolute, join, normalize } from 'node:path'
 import { ConfigTarget } from './parse-config-target'
-import { isEqual } from 'lodash'
 
 /**
  * current path is assumed to be the ".github" folder in your repo
@@ -39,7 +38,8 @@ export const normalizeFilepath = (
     if (
       parentConfig &&
       // repo & refs are identical
-      isEqual(parentConfig.repo, config.repo) &&
+      parentConfig.repo.owner === config.repo.owner &&
+      parentConfig.repo.repo === config.repo.repo &&
       config.ref === parentConfig.ref
     ) {
       // Resolve relative to the parent config file's directory

@@ -1,14 +1,14 @@
 import { sharedInputSchema } from 'src/common'
-import z from 'zod'
+import type * as z from 'zod'
+import { object, string } from 'zod'
 
-export const actionInputSchema = z
-  .object({
+export const actionInputSchema = object({
     /**
      * If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
      * The config should still be located inside `.github` as that's where we are looking for config files.
      * @default 'release-drafter.yml'
      */
-    'config-name': z.string().optional().default('release-drafter.yml')
+    'config-name': string().optional().default('release-drafter.yml')
   })
   .and(sharedInputSchema)
 

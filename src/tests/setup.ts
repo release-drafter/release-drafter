@@ -10,7 +10,7 @@ import { afterEach, beforeEach, vi, beforeAll, afterAll } from 'vitest'
 import nock from 'nock'
 import { mocks } from './mocks'
 import { sharedInputSchema } from 'src/common/shared-input.schema'
-import z from 'zod'
+import type * as z from 'zod'
 
 /**
  * The call to vi.mock is hoisted, so it doesn't matter where you call it.
