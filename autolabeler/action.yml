@@ -6,7 +6,7 @@ branding:
   color: orange
 runs:
   using: node24
-  main: dist/autolabeler/run.js
+  main: ../dist/actions/autolabeler/run.js
 inputs:
   token:
     description: >
