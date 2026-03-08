@@ -1,4 +1,5 @@
-import { C as __commonJSMin, S as warning, _ as error, a as number, b as setFailed, c as stringbool, d as stringToRegex, f as escapeStringRegexp, g as debug$3, h as context, i as boolean, l as datetime, m as getOctokit, n as _enum, o as object, p as composeConfigGet, r as array, s as string, t as sharedInputSchema, u as paginateGraphql, v as getInput, w as __toESM, x as setOutput, y as info } from "../../chunks/common.js";
+import { C as __commonJSMin, S as warning, _ as error, a as number, b as setFailed, c as stringbool, d as stringToRegex, f as escapeStringRegexp, g as debug, h as context, i as boolean, l as datetime, m as getOctokit, n as _enum, o as object, p as composeConfigGet, r as array, s as string, t as sharedInputSchema, u as paginateGraphql, v as getInput, w as __toESM, x as setOutput, y as info } from "../../chunks/common.js";
+//#region node_modules/compare-versions/index.mjs
 function compareVersions(v1, v2) {
 	const n1 = validateAndParse(v1);
 	const n2 = validateAndParse(v2);
@@ -10,13 +11,13 @@ function compareVersions(v1, v2) {
 	else if (p1 || p2) return p1 ? -1 : 1;
 	return 0;
 }
-const validate = (v) => typeof v === "string" && /^[v\d]/.test(v) && semver.test(v);
-const compare = (v1, v2, operator) => {
+var validate = (v) => typeof v === "string" && /^[v\d]/.test(v) && semver.test(v);
+var compare = (v1, v2, operator) => {
 	assertValidOperator(operator);
 	const res = compareVersions(v1, v2);
 	return operatorResMap[operator].includes(res);
 };
-const satisfies = (v, r) => {
+var satisfies = (v, r) => {
 	const m = r.match(/^([<>=~^]+)/);
 	const op = m ? m[1] : "=";
 	if (op !== "^" && op !== "~") return compare(v, r, op);
@@ -70,8 +71,10 @@ var assertValidOperator = (op) => {
 	if (typeof op !== "string") throw new TypeError(`Invalid operator type, expected string but got ${typeof op}`);
 	if (allowedOperators.indexOf(op) === -1) throw new Error(`Invalid operator, expected one of ${allowedOperators.join("|")}`);
 };
-const sortReleases = (params) => {
-	const tagPrefixRexExp = params.tagPrefix ? /* @__PURE__ */ new RegExp(`^${escapeStringRegexp(params.tagPrefix)}`) : void 0;
+//#endregion
+//#region src/actions/drafter/lib/find-previous-releases/sort-releases.ts
+var sortReleases = (params) => {
+	const tagPrefixRexExp = params.tagPrefix ? new RegExp(`^${escapeStringRegexp(params.tagPrefix)}`) : void 0;
 	return params.releases.sort((r1, r2) => {
 		const tag_name_1 = tagPrefixRexExp ? r1.tag_name.replace(tagPrefixRexExp, "") : r1.tag_name;
 		const tag_name_2 = tagPrefixRexExp ? r2.tag_name.replace(tagPrefixRexExp, "") : r2.tag_name;
@@ -82,8 +85,20 @@ const sortReleases = (params) => {
 		}
 	});
 };
+//#endregion
+//#region src/actions/drafter/lib/find-previous-releases/find-previous-releases.ts
 var RELEASE_COUNT_LIMIT = 1e3;
-const findPreviousReleases = async (params) => {
+/**
+* Lists every release and :
+* - filters by commitish if specified
+* - filters by tag-prefix if specified
+* - filters out pre-releases unless specified
+* - extracts the first draft releases (according to return-order of GitHub API)
+* - get latest published release according to ./sort-releases.ts implementation
+*
+* Returns one of (or both) draft release and latest published release
+*/
+var findPreviousReleases = async (params) => {
 	const { commitish, "filter-by-commitish": filterByCommitish, "tag-prefix": tagPrefix, prerelease: isPreRelease } = params;
 	const octokit = getOctokit();
 	info("Fetching releases from GitHub...");
@@ -104,7 +119,7 @@ const findPreviousReleases = async (params) => {
 	let publishedReleases = filteredReleases.filter((r) => !r.draft);
 	let draftReleases = filteredReleases.filter((r) => r.draft);
 	publishedReleases = publishedReleases.filter((publishedRelease) => isPreRelease ? publishedRelease.prerelease || !publishedRelease.prerelease : !publishedRelease.prerelease);
-	draftReleases = draftReleases.filter((draftRelease$1) => isPreRelease ? draftRelease$1.prerelease : !draftRelease$1.prerelease);
+	draftReleases = draftReleases.filter((draftRelease) => isPreRelease ? draftRelease.prerelease : !draftRelease.prerelease);
 	const draftRelease = draftReleases[0];
 	const lastRelease = sortReleases({
 		releases: publishedReleases,
@@ -129,8 +144,12 @@ const findPreviousReleases = async (params) => {
 		lastRelease
 	};
 };
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-path-changes.gql?raw
 var find_commits_with_path_changes_default = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(path: $path, since: $since, after: $after) {\n          __typename\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";
-const findCommitsWithPathChange = async (paths, params) => {
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts
+var findCommitsWithPathChange = async (paths, params) => {
 	const octokit = getOctokit();
 	const commitIdsMatchingPaths = {};
 	let hasFoundCommits = false;
@@ -156,21 +175,36 @@ const findCommitsWithPathChange = async (paths, params) => {
 		hasFoundCommits
 	};
 };
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-pr.gql?raw
 var find_commits_with_pr_default = "query findCommitsWithAssociatedPullRequests(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $withPullRequestBody: Boolean!\n  $withPullRequestURL: Boolean!\n  $since: GitTimestamp\n  $after: String\n  $withBaseRefName: Boolean!\n  $withHeadRefName: Boolean!\n  $pullRequestLimit: Int!\n  $historyLimit: Int!\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(first: $historyLimit, since: $since, after: $after) {\n          __typename\n          totalCount\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n            committedDate\n            message\n            author {\n              __typename\n              name\n              user {\n                __typename\n                login\n              }\n            }\n            associatedPullRequests(first: $pullRequestLimit) {\n              __typename\n              nodes {\n                __typename\n                title\n                number\n                url @include(if: $withPullRequestURL)\n                body @include(if: $withPullRequestBody)\n                author {\n                  __typename\n                  login\n                  url\n                }\n                baseRepository {\n                  __typename\n                  nameWithOwner\n                }\n                mergedAt\n                isCrossRepository\n                labels(first: 100) {\n                  __typename\n                  nodes {\n                    __typename\n                    name\n                  }\n                }\n                merged\n                baseRefName @include(if: $withBaseRefName)\n                headRefName @include(if: $withHeadRefName)\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n";
-const findCommitsWithPr = async (params) => {
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-commits-with-pr.ts
+var findCommitsWithPr = async (params) => {
 	const data = await paginateGraphql(getOctokit().graphql, find_commits_with_pr_default, params, [
 		"repository",
 		"object",
 		"history"
 	]);
 	if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
+	/**
+	* Extract commit nodes from the paginated response
+	*/
 	const commits = (data.repository.object.history.nodes || []).filter((commit) => commit != null);
 	if (params.since) return commits.filter((commit) => !!commit?.committedDate && commit.committedDate != params.since);
 	else return commits;
 };
-const findPullRequests = async (params) => {
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
+var findPullRequests = async (params) => {
 	const since = params.lastRelease?.created_at || params.config["initial-commits-since"];
 	const shouldfilterByChangedPaths = params.config["include-paths"].length > 0;
+	/**
+	* If include-paths are specified,
+	* find all commits that changed those paths to filter PRs later
+	*
+	* The underlying query does not bother fetching PRs along commits.
+	*/
 	let commitIdsMatchingPaths = {};
 	if (shouldfilterByChangedPaths) {
 		info("Finding commits with path changes...");
@@ -213,7 +247,9 @@ const findPullRequests = async (params) => {
 		pullRequests
 	};
 };
-const sortPullRequests = (params) => {
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/sort-pull-requests.ts
+var sortPullRequests = (params) => {
 	const { pullRequests, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
 	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
 	const sort = sortDirection === "ascending" ? sortAscending : sortDescending;
@@ -245,23 +281,31 @@ var sortDescending = (a, b) => {
 	if (a < b) return 1;
 	return 0;
 };
-const renderTemplate = (params) => {
-	const { template, object: object$1, replacers } = params;
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/render-template.ts
+/**
+* replaces all uppercase dollar templates with their string representation from object
+* if replacement is undefined in object the dollar template string is left untouched
+*/
+var renderTemplate = (params) => {
+	const { template, object, replacers } = params;
 	let input = template.replace(/(\$[A-Z_]+)/g, (_, k) => {
 		let result;
-		const isValidKey = (key) => key in object$1 && object$1[key] !== void 0 && object$1[key] !== null;
+		const isValidKey = (key) => key in object && object[key] !== void 0 && object[key] !== null;
 		if (!isValidKey(k)) result = k;
-		else if (typeof object$1[k] === "object") result = renderTemplate({
-			template: object$1[k].template,
-			object: object$1[k]
+		else if (typeof object[k] === "object") result = renderTemplate({
+			template: object[k].template,
+			object: object[k]
 		});
-		else result = `${object$1[k]}`;
+		else result = `${object[k]}`;
 		return result;
 	});
 	if (replacers) for (const { search, replace } of replacers) input = input.replace(search, replace);
 	return input;
 };
-const categorizePullRequests = (params) => {
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts
+var categorizePullRequests = (params) => {
 	const { pullRequests, config } = params;
 	const allCategoryLabels = new Set(config.categories.flatMap((category) => category.labels));
 	const uncategorizedPullRequests = [];
@@ -285,20 +329,22 @@ const categorizePullRequests = (params) => {
 	for (const category of categorizedPullRequests) for (const pullRequest of filteredPullRequests) if ((pullRequest.labels?.nodes || []).some((label) => !!label?.name && category.labels.includes(label.name))) category.pullRequests.push(pullRequest);
 	return [uncategorizedPullRequests, categorizedPullRequests];
 };
-const getFilterExcludedPullRequests = (excludeLabels) => {
+var getFilterExcludedPullRequests = (excludeLabels) => {
 	return (pullRequest) => {
 		if ((pullRequest.labels?.nodes || []).some((label) => !!label?.name && excludeLabels.includes(label.name))) return false;
 		return true;
 	};
 };
-const getFilterIncludedPullRequests = (includeLabels) => {
+var getFilterIncludedPullRequests = (includeLabels) => {
 	return (pullRequest) => {
 		const labels = pullRequest.labels?.nodes || [];
 		if (includeLabels.length === 0 || labels.some((label) => !!label?.name && includeLabels.includes(label.name))) return true;
 		return false;
 	};
 };
-const pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/pull-request-to-string.ts
+var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 	let pullAuthor = "ghost";
 	if (pullRequest.author) pullAuthor = pullRequest.author.__typename && pullRequest.author.__typename === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
 	return renderTemplate({
@@ -322,7 +368,9 @@ var escapeTitle = (params) => params.title.replace(new RegExp(`[${escapeStringRe
 	if (match == "@" || match == "#") return `${match}<!---->`;
 	return `\\${match}`;
 });
-const generateChangeLog = (params) => {
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/generate-changelog.ts
+var generateChangeLog = (params) => {
 	const { pullRequests, config } = params;
 	if (pullRequests.length === 0) return config["no-changes-template"];
 	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
@@ -350,7 +398,9 @@ const generateChangeLog = (params) => {
 	}
 	return changeLog.join("").trim();
 };
-const generateContributorsSentence = (params) => {
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts
+var generateContributorsSentence = (params) => {
 	const { commits, pullRequests, config } = params;
 	const contributors = /* @__PURE__ */ new Set();
 	for (const commit of commits) if (commit.author?.user) {
@@ -363,7 +413,9 @@ const generateContributorsSentence = (params) => {
 	else if (sortedContributors.length === 1) return sortedContributors[0];
 	else return config["no-contributors-template"];
 };
-const resolveVersionKeyIncrement = (params) => {
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts
+var resolveVersionKeyIncrement = (params) => {
 	const { pullRequests, config } = params;
 	const priorityMap = {
 		patch: 1,
@@ -371,30 +423,34 @@ const resolveVersionKeyIncrement = (params) => {
 		major: 3
 	};
 	const labelToKeyMap = Object.fromEntries(Object.keys(priorityMap).flatMap((key) => [config["version-resolver"][key].labels.map((label) => [label, key])]).flat());
-	debug$3("labelToKeyMap: " + JSON.stringify(labelToKeyMap));
+	debug("labelToKeyMap: " + JSON.stringify(labelToKeyMap));
 	const keys = pullRequests.filter(getFilterExcludedPullRequests(config["exclude-labels"])).filter(getFilterIncludedPullRequests(config["include-labels"])).flatMap((pr) => pr.labels?.nodes?.filter((n) => !!n?.name).map((node) => labelToKeyMap[node.name])).filter(Boolean);
-	debug$3("keys: " + JSON.stringify(keys));
+	debug("keys: " + JSON.stringify(keys));
 	const keyPriorities = keys.map((key) => priorityMap[key]);
 	const priority = Math.max(...keyPriorities);
 	const versionKey = Object.keys(priorityMap).find((key) => priorityMap[key] === priority);
-	debug$3("versionKey: " + versionKey);
+	debug("versionKey: " + versionKey);
 	let versionKeyIncrement = versionKey || config["version-resolver"].default;
 	if (config["prerelease"] && config["prerelease-identifier"]) versionKeyIncrement = `pre${versionKeyIncrement}`;
 	info(`Version increment: ${versionKeyIncrement}${!versionKey ? " (default)" : ""}`);
 	return versionKeyIncrement;
 };
+//#endregion
+//#region node_modules/semver/internal/debug.js
 var require_debug = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = typeof process === "object" && {}.NODE_DEBUG && /\bsemver\b/i.test({}.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {};
 }));
+//#endregion
+//#region node_modules/semver/internal/constants.js
 var require_constants = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var SEMVER_SPEC_VERSION = "2.0.0";
-	var MAX_LENGTH$2 = 256;
-	var MAX_SAFE_INTEGER$1 = Number.MAX_SAFE_INTEGER || 9007199254740991;
+	var MAX_LENGTH = 256;
+	var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
 	module.exports = {
-		MAX_LENGTH: MAX_LENGTH$2,
+		MAX_LENGTH,
 		MAX_SAFE_COMPONENT_LENGTH: 16,
-		MAX_SAFE_BUILD_LENGTH: MAX_LENGTH$2 - 6,
-		MAX_SAFE_INTEGER: MAX_SAFE_INTEGER$1,
+		MAX_SAFE_BUILD_LENGTH: MAX_LENGTH - 6,
+		MAX_SAFE_INTEGER,
 		RELEASE_TYPES: [
 			"major",
 			"premajor",
@@ -409,20 +465,22 @@ var require_constants = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		FLAG_LOOSE: 2
 	};
 }));
+//#endregion
+//#region node_modules/semver/internal/re.js
 var require_re = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var { MAX_SAFE_COMPONENT_LENGTH, MAX_SAFE_BUILD_LENGTH, MAX_LENGTH: MAX_LENGTH$1 } = require_constants();
-	var debug$1 = require_debug();
+	var { MAX_SAFE_COMPONENT_LENGTH, MAX_SAFE_BUILD_LENGTH, MAX_LENGTH } = require_constants();
+	var debug = require_debug();
 	exports = module.exports = {};
-	var re$2 = exports.re = [];
+	var re = exports.re = [];
 	var safeRe = exports.safeRe = [];
 	var src = exports.src = [];
 	var safeSrc = exports.safeSrc = [];
-	var t$2 = exports.t = {};
+	var t = exports.t = {};
 	var R = 0;
 	var LETTERDASHNUMBER = "[a-zA-Z0-9-]";
 	var safeRegexReplacements = [
 		["\\s", 1],
-		["\\d", MAX_LENGTH$1],
+		["\\d", MAX_LENGTH],
 		[LETTERDASHNUMBER, MAX_SAFE_BUILD_LENGTH]
 	];
 	var makeSafeRegex = (value) => {
@@ -432,73 +490,77 @@ var require_re = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var createToken = (name, value, isGlobal) => {
 		const safe = makeSafeRegex(value);
 		const index = R++;
-		debug$1(name, index, value);
-		t$2[name] = index;
+		debug(name, index, value);
+		t[name] = index;
 		src[index] = value;
 		safeSrc[index] = safe;
-		re$2[index] = new RegExp(value, isGlobal ? "g" : void 0);
+		re[index] = new RegExp(value, isGlobal ? "g" : void 0);
 		safeRe[index] = new RegExp(safe, isGlobal ? "g" : void 0);
 	};
 	createToken("NUMERICIDENTIFIER", "0|[1-9]\\d*");
 	createToken("NUMERICIDENTIFIERLOOSE", "\\d+");
 	createToken("NONNUMERICIDENTIFIER", `\\d*[a-zA-Z-]${LETTERDASHNUMBER}*`);
-	createToken("MAINVERSION", `(${src[t$2.NUMERICIDENTIFIER]})\\.(${src[t$2.NUMERICIDENTIFIER]})\\.(${src[t$2.NUMERICIDENTIFIER]})`);
-	createToken("MAINVERSIONLOOSE", `(${src[t$2.NUMERICIDENTIFIERLOOSE]})\\.(${src[t$2.NUMERICIDENTIFIERLOOSE]})\\.(${src[t$2.NUMERICIDENTIFIERLOOSE]})`);
-	createToken("PRERELEASEIDENTIFIER", `(?:${src[t$2.NONNUMERICIDENTIFIER]}|${src[t$2.NUMERICIDENTIFIER]})`);
-	createToken("PRERELEASEIDENTIFIERLOOSE", `(?:${src[t$2.NONNUMERICIDENTIFIER]}|${src[t$2.NUMERICIDENTIFIERLOOSE]})`);
-	createToken("PRERELEASE", `(?:-(${src[t$2.PRERELEASEIDENTIFIER]}(?:\\.${src[t$2.PRERELEASEIDENTIFIER]})*))`);
-	createToken("PRERELEASELOOSE", `(?:-?(${src[t$2.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t$2.PRERELEASEIDENTIFIERLOOSE]})*))`);
+	createToken("MAINVERSION", `(${src[t.NUMERICIDENTIFIER]})\\.(${src[t.NUMERICIDENTIFIER]})\\.(${src[t.NUMERICIDENTIFIER]})`);
+	createToken("MAINVERSIONLOOSE", `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.(${src[t.NUMERICIDENTIFIERLOOSE]})\\.(${src[t.NUMERICIDENTIFIERLOOSE]})`);
+	createToken("PRERELEASEIDENTIFIER", `(?:${src[t.NONNUMERICIDENTIFIER]}|${src[t.NUMERICIDENTIFIER]})`);
+	createToken("PRERELEASEIDENTIFIERLOOSE", `(?:${src[t.NONNUMERICIDENTIFIER]}|${src[t.NUMERICIDENTIFIERLOOSE]})`);
+	createToken("PRERELEASE", `(?:-(${src[t.PRERELEASEIDENTIFIER]}(?:\\.${src[t.PRERELEASEIDENTIFIER]})*))`);
+	createToken("PRERELEASELOOSE", `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t.PRERELEASEIDENTIFIERLOOSE]})*))`);
 	createToken("BUILDIDENTIFIER", `${LETTERDASHNUMBER}+`);
-	createToken("BUILD", `(?:\\+(${src[t$2.BUILDIDENTIFIER]}(?:\\.${src[t$2.BUILDIDENTIFIER]})*))`);
-	createToken("FULLPLAIN", `v?${src[t$2.MAINVERSION]}${src[t$2.PRERELEASE]}?${src[t$2.BUILD]}?`);
-	createToken("FULL", `^${src[t$2.FULLPLAIN]}$`);
-	createToken("LOOSEPLAIN", `[v=\\s]*${src[t$2.MAINVERSIONLOOSE]}${src[t$2.PRERELEASELOOSE]}?${src[t$2.BUILD]}?`);
-	createToken("LOOSE", `^${src[t$2.LOOSEPLAIN]}$`);
+	createToken("BUILD", `(?:\\+(${src[t.BUILDIDENTIFIER]}(?:\\.${src[t.BUILDIDENTIFIER]})*))`);
+	createToken("FULLPLAIN", `v?${src[t.MAINVERSION]}${src[t.PRERELEASE]}?${src[t.BUILD]}?`);
+	createToken("FULL", `^${src[t.FULLPLAIN]}$`);
+	createToken("LOOSEPLAIN", `[v=\\s]*${src[t.MAINVERSIONLOOSE]}${src[t.PRERELEASELOOSE]}?${src[t.BUILD]}?`);
+	createToken("LOOSE", `^${src[t.LOOSEPLAIN]}$`);
 	createToken("GTLT", "((?:<|>)?=?)");
-	createToken("XRANGEIDENTIFIERLOOSE", `${src[t$2.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
-	createToken("XRANGEIDENTIFIER", `${src[t$2.NUMERICIDENTIFIER]}|x|X|\\*`);
-	createToken("XRANGEPLAIN", `[v=\\s]*(${src[t$2.XRANGEIDENTIFIER]})(?:\\.(${src[t$2.XRANGEIDENTIFIER]})(?:\\.(${src[t$2.XRANGEIDENTIFIER]})(?:${src[t$2.PRERELEASE]})?${src[t$2.BUILD]}?)?)?`);
-	createToken("XRANGEPLAINLOOSE", `[v=\\s]*(${src[t$2.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t$2.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t$2.XRANGEIDENTIFIERLOOSE]})(?:${src[t$2.PRERELEASELOOSE]})?${src[t$2.BUILD]}?)?)?`);
-	createToken("XRANGE", `^${src[t$2.GTLT]}\\s*${src[t$2.XRANGEPLAIN]}$`);
-	createToken("XRANGELOOSE", `^${src[t$2.GTLT]}\\s*${src[t$2.XRANGEPLAINLOOSE]}$`);
+	createToken("XRANGEIDENTIFIERLOOSE", `${src[t.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
+	createToken("XRANGEIDENTIFIER", `${src[t.NUMERICIDENTIFIER]}|x|X|\\*`);
+	createToken("XRANGEPLAIN", `[v=\\s]*(${src[t.XRANGEIDENTIFIER]})(?:\\.(${src[t.XRANGEIDENTIFIER]})(?:\\.(${src[t.XRANGEIDENTIFIER]})(?:${src[t.PRERELEASE]})?${src[t.BUILD]}?)?)?`);
+	createToken("XRANGEPLAINLOOSE", `[v=\\s]*(${src[t.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})(?:${src[t.PRERELEASELOOSE]})?${src[t.BUILD]}?)?)?`);
+	createToken("XRANGE", `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAIN]}$`);
+	createToken("XRANGELOOSE", `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`);
 	createToken("COERCEPLAIN", `(^|[^\\d])(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}})(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?`);
-	createToken("COERCE", `${src[t$2.COERCEPLAIN]}(?:$|[^\\d])`);
-	createToken("COERCEFULL", src[t$2.COERCEPLAIN] + `(?:${src[t$2.PRERELEASE]})?(?:${src[t$2.BUILD]})?(?:$|[^\\d])`);
-	createToken("COERCERTL", src[t$2.COERCE], true);
-	createToken("COERCERTLFULL", src[t$2.COERCEFULL], true);
+	createToken("COERCE", `${src[t.COERCEPLAIN]}(?:$|[^\\d])`);
+	createToken("COERCEFULL", src[t.COERCEPLAIN] + `(?:${src[t.PRERELEASE]})?(?:${src[t.BUILD]})?(?:$|[^\\d])`);
+	createToken("COERCERTL", src[t.COERCE], true);
+	createToken("COERCERTLFULL", src[t.COERCEFULL], true);
 	createToken("LONETILDE", "(?:~>?)");
-	createToken("TILDETRIM", `(\\s*)${src[t$2.LONETILDE]}\\s+`, true);
+	createToken("TILDETRIM", `(\\s*)${src[t.LONETILDE]}\\s+`, true);
 	exports.tildeTrimReplace = "$1~";
-	createToken("TILDE", `^${src[t$2.LONETILDE]}${src[t$2.XRANGEPLAIN]}$`);
-	createToken("TILDELOOSE", `^${src[t$2.LONETILDE]}${src[t$2.XRANGEPLAINLOOSE]}$`);
+	createToken("TILDE", `^${src[t.LONETILDE]}${src[t.XRANGEPLAIN]}$`);
+	createToken("TILDELOOSE", `^${src[t.LONETILDE]}${src[t.XRANGEPLAINLOOSE]}$`);
 	createToken("LONECARET", "(?:\\^)");
-	createToken("CARETTRIM", `(\\s*)${src[t$2.LONECARET]}\\s+`, true);
+	createToken("CARETTRIM", `(\\s*)${src[t.LONECARET]}\\s+`, true);
 	exports.caretTrimReplace = "$1^";
-	createToken("CARET", `^${src[t$2.LONECARET]}${src[t$2.XRANGEPLAIN]}$`);
-	createToken("CARETLOOSE", `^${src[t$2.LONECARET]}${src[t$2.XRANGEPLAINLOOSE]}$`);
-	createToken("COMPARATORLOOSE", `^${src[t$2.GTLT]}\\s*(${src[t$2.LOOSEPLAIN]})$|^$`);
-	createToken("COMPARATOR", `^${src[t$2.GTLT]}\\s*(${src[t$2.FULLPLAIN]})$|^$`);
-	createToken("COMPARATORTRIM", `(\\s*)${src[t$2.GTLT]}\\s*(${src[t$2.LOOSEPLAIN]}|${src[t$2.XRANGEPLAIN]})`, true);
+	createToken("CARET", `^${src[t.LONECARET]}${src[t.XRANGEPLAIN]}$`);
+	createToken("CARETLOOSE", `^${src[t.LONECARET]}${src[t.XRANGEPLAINLOOSE]}$`);
+	createToken("COMPARATORLOOSE", `^${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]})$|^$`);
+	createToken("COMPARATOR", `^${src[t.GTLT]}\\s*(${src[t.FULLPLAIN]})$|^$`);
+	createToken("COMPARATORTRIM", `(\\s*)${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]}|${src[t.XRANGEPLAIN]})`, true);
 	exports.comparatorTrimReplace = "$1$2$3";
-	createToken("HYPHENRANGE", `^\\s*(${src[t$2.XRANGEPLAIN]})\\s+-\\s+(${src[t$2.XRANGEPLAIN]})\\s*$`);
-	createToken("HYPHENRANGELOOSE", `^\\s*(${src[t$2.XRANGEPLAINLOOSE]})\\s+-\\s+(${src[t$2.XRANGEPLAINLOOSE]})\\s*$`);
+	createToken("HYPHENRANGE", `^\\s*(${src[t.XRANGEPLAIN]})\\s+-\\s+(${src[t.XRANGEPLAIN]})\\s*$`);
+	createToken("HYPHENRANGELOOSE", `^\\s*(${src[t.XRANGEPLAINLOOSE]})\\s+-\\s+(${src[t.XRANGEPLAINLOOSE]})\\s*$`);
 	createToken("STAR", "(<|>)?=?\\s*\\*");
 	createToken("GTE0", "^\\s*>=\\s*0\\.0\\.0\\s*$");
 	createToken("GTE0PRE", "^\\s*>=\\s*0\\.0\\.0-0\\s*$");
 }));
+//#endregion
+//#region node_modules/semver/internal/parse-options.js
 var require_parse_options = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var looseOption = Object.freeze({ loose: true });
 	var emptyOpts = Object.freeze({});
-	var parseOptions$1 = (options) => {
+	var parseOptions = (options) => {
 		if (!options) return emptyOpts;
 		if (typeof options !== "object") return looseOption;
 		return options;
 	};
-	module.exports = parseOptions$1;
+	module.exports = parseOptions;
 }));
+//#endregion
+//#region node_modules/semver/internal/identifiers.js
 var require_identifiers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var numeric = /^[0-9]+$/;
-	var compareIdentifiers$1 = (a, b) => {
+	var compareIdentifiers = (a, b) => {
 		if (typeof a === "number" && typeof b === "number") return a === b ? 0 : a < b ? -1 : 1;
 		const anum = numeric.test(a);
 		const bnum = numeric.test(b);
@@ -508,22 +570,24 @@ var require_identifiers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		}
 		return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
 	};
-	var rcompareIdentifiers = (a, b) => compareIdentifiers$1(b, a);
+	var rcompareIdentifiers = (a, b) => compareIdentifiers(b, a);
 	module.exports = {
-		compareIdentifiers: compareIdentifiers$1,
+		compareIdentifiers,
 		rcompareIdentifiers
 	};
 }));
+//#endregion
+//#region node_modules/semver/classes/semver.js
 var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var debug = require_debug();
 	var { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants();
-	var { safeRe: re$1, t: t$1 } = require_re();
+	var { safeRe: re, t } = require_re();
 	var parseOptions = require_parse_options();
 	var { compareIdentifiers } = require_identifiers();
-	module.exports = class SemVer$6 {
+	module.exports = class SemVer {
 		constructor(version, options) {
 			options = parseOptions(options);
-			if (version instanceof SemVer$6) if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) return version;
+			if (version instanceof SemVer) if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) return version;
 			else version = version.version;
 			else if (typeof version !== "string") throw new TypeError(`Invalid version. Must be a string. Got type "${typeof version}".`);
 			if (version.length > MAX_LENGTH) throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
@@ -531,7 +595,7 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			this.options = options;
 			this.loose = !!options.loose;
 			this.includePrerelease = !!options.includePrerelease;
-			const m = version.trim().match(options.loose ? re$1[t$1.LOOSE] : re$1[t$1.FULL]);
+			const m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
 			if (!m) throw new TypeError(`Invalid Version: ${version}`);
 			this.raw = version;
 			this.major = +m[1];
@@ -561,15 +625,15 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		}
 		compare(other) {
 			debug("SemVer.compare", this.version, this.options, other);
-			if (!(other instanceof SemVer$6)) {
+			if (!(other instanceof SemVer)) {
 				if (typeof other === "string" && other === this.version) return 0;
-				other = new SemVer$6(other, this.options);
+				other = new SemVer(other, this.options);
 			}
 			if (other.version === this.version) return 0;
 			return this.compareMain(other) || this.comparePre(other);
 		}
 		compareMain(other) {
-			if (!(other instanceof SemVer$6)) other = new SemVer$6(other, this.options);
+			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
 			if (this.major < other.major) return -1;
 			if (this.major > other.major) return 1;
 			if (this.minor < other.minor) return -1;
@@ -579,7 +643,7 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			return 0;
 		}
 		comparePre(other) {
-			if (!(other instanceof SemVer$6)) other = new SemVer$6(other, this.options);
+			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
 			if (this.prerelease.length && !other.prerelease.length) return -1;
 			else if (!this.prerelease.length && other.prerelease.length) return 1;
 			else if (!this.prerelease.length && !other.prerelease.length) return 0;
@@ -596,7 +660,7 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			} while (++i);
 		}
 		compareBuild(other) {
-			if (!(other instanceof SemVer$6)) other = new SemVer$6(other, this.options);
+			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
 			let i = 0;
 			do {
 				const a = this.build[i];
@@ -613,7 +677,7 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			if (release.startsWith("pre")) {
 				if (!identifier && identifierBase === false) throw new Error("invalid increment argument: identifier is empty");
 				if (identifier) {
-					const match = `-${identifier}`.match(this.options.loose ? re$1[t$1.PRERELEASELOOSE] : re$1[t$1.PRERELEASE]);
+					const match = `-${identifier}`.match(this.options.loose ? re[t.PRERELEASELOOSE] : re[t.PRERELEASE]);
 					if (!match || match[1] !== identifier) throw new Error(`invalid identifier: ${identifier}`);
 				}
 			}
@@ -674,11 +738,11 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 						}
 					}
 					if (identifier) {
-						let prerelease$2 = [identifier, base];
-						if (identifierBase === false) prerelease$2 = [identifier];
+						let prerelease = [identifier, base];
+						if (identifierBase === false) prerelease = [identifier];
 						if (compareIdentifiers(this.prerelease[0], identifier) === 0) {
-							if (isNaN(this.prerelease[1])) this.prerelease = prerelease$2;
-						} else this.prerelease = prerelease$2;
+							if (isNaN(this.prerelease[1])) this.prerelease = prerelease;
+						} else this.prerelease = prerelease;
 					}
 					break;
 				}
@@ -690,25 +754,29 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		}
 	};
 }));
+//#endregion
+//#region node_modules/semver/functions/parse.js
 var require_parse = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var SemVer$5 = require_semver();
-	var parse$3 = (version, options, throwErrors = false) => {
-		if (version instanceof SemVer$5) return version;
+	var SemVer = require_semver();
+	var parse = (version, options, throwErrors = false) => {
+		if (version instanceof SemVer) return version;
 		try {
-			return new SemVer$5(version, options);
+			return new SemVer(version, options);
 		} catch (er) {
 			if (!throwErrors) return null;
 			throw er;
 		}
 	};
-	module.exports = parse$3;
+	module.exports = parse;
 }));
+//#endregion
+//#region node_modules/semver/functions/coerce.js
 var require_coerce = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var SemVer$4 = require_semver();
-	var parse$2 = require_parse();
+	var SemVer = require_semver();
+	var parse = require_parse();
 	var { safeRe: re, t } = require_re();
-	var coerce$1 = (version, options) => {
-		if (version instanceof SemVer$4) return version;
+	var coerce = (version, options) => {
+		if (version instanceof SemVer) return version;
 		if (typeof version === "number") version = String(version);
 		if (typeof version !== "string") return null;
 		options = options || {};
@@ -724,50 +792,62 @@ var require_coerce = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			coerceRtlRegex.lastIndex = -1;
 		}
 		if (match === null) return null;
-		const major$2 = match[2];
-		return parse$2(`${major$2}.${match[3] || "0"}.${match[4] || "0"}${options.includePrerelease && match[5] ? `-${match[5]}` : ""}${options.includePrerelease && match[6] ? `+${match[6]}` : ""}`, options);
+		const major = match[2];
+		return parse(`${major}.${match[3] || "0"}.${match[4] || "0"}${options.includePrerelease && match[5] ? `-${match[5]}` : ""}${options.includePrerelease && match[6] ? `+${match[6]}` : ""}`, options);
 	};
-	module.exports = coerce$1;
+	module.exports = coerce;
 }));
+//#endregion
+//#region node_modules/semver/functions/inc.js
 var require_inc = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var SemVer$3 = require_semver();
-	var inc$1 = (version, release, options, identifier, identifierBase) => {
+	var SemVer = require_semver();
+	var inc = (version, release, options, identifier, identifierBase) => {
 		if (typeof options === "string") {
 			identifierBase = identifier;
 			identifier = options;
 			options = void 0;
 		}
 		try {
-			return new SemVer$3(version instanceof SemVer$3 ? version.version : version, options).inc(release, identifier, identifierBase).version;
+			return new SemVer(version instanceof SemVer ? version.version : version, options).inc(release, identifier, identifierBase).version;
 		} catch (er) {
 			return null;
 		}
 	};
-	module.exports = inc$1;
+	module.exports = inc;
 }));
+//#endregion
+//#region node_modules/semver/functions/major.js
 var require_major = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var SemVer$2 = require_semver();
-	var major$1 = (a, loose) => new SemVer$2(a, loose).major;
-	module.exports = major$1;
+	var SemVer = require_semver();
+	var major = (a, loose) => new SemVer(a, loose).major;
+	module.exports = major;
 }));
+//#endregion
+//#region node_modules/semver/functions/minor.js
 var require_minor = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var SemVer$1 = require_semver();
-	var minor$1 = (a, loose) => new SemVer$1(a, loose).minor;
-	module.exports = minor$1;
+	var SemVer = require_semver();
+	var minor = (a, loose) => new SemVer(a, loose).minor;
+	module.exports = minor;
 }));
+//#endregion
+//#region node_modules/semver/functions/patch.js
 var require_patch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var SemVer = require_semver();
-	var patch$1 = (a, loose) => new SemVer(a, loose).patch;
-	module.exports = patch$1;
+	var patch = (a, loose) => new SemVer(a, loose).patch;
+	module.exports = patch;
 }));
+//#endregion
+//#region node_modules/semver/functions/prerelease.js
 var require_prerelease = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var parse$1 = require_parse();
-	var prerelease$1 = (version, options) => {
-		const parsed = parse$1(version, options);
+	var parse = require_parse();
+	var prerelease = (version, options) => {
+		const parsed = parse(version, options);
 		return parsed && parsed.prerelease.length ? parsed.prerelease : null;
 	};
-	module.exports = prerelease$1;
+	module.exports = prerelease;
 }));
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/get-version-info.ts
 var import_coerce = /* @__PURE__ */ __toESM(require_coerce(), 1);
 var import_inc = /* @__PURE__ */ __toESM(require_inc(), 1);
 var import_major = /* @__PURE__ */ __toESM(require_major(), 1);
@@ -776,28 +856,35 @@ var import_parse = /* @__PURE__ */ __toESM(require_parse(), 1);
 var import_patch = /* @__PURE__ */ __toESM(require_patch(), 1);
 var import_prerelease = /* @__PURE__ */ __toESM(require_prerelease(), 1);
 var DEFAULT_VERSION_TEMPLATE = "$MAJOR.$MINOR.$PATCH";
-const getVersionInfo = (params) => {
+var getVersionInfo = (params) => {
 	const { lastRelease, config, input, versionKeyIncrement: _versionKeyIncrement } = params;
 	let versionKeyIncrement = _versionKeyIncrement;
 	const lastReleaseVersion = coerceVersion(lastRelease, { tagPrefix: config["tag-prefix"] });
-	const inputVersion = coerceVersion(input.version || input.tag || input.name, { tagPrefix: config["tag-prefix"] });
+	const inputVersion = coerceVersion(
+		/**
+		* Use the first override parameter to identify
+		* a version, from the most accurate to the least
+		*/
+		input.version || input.tag || input.name,
+		{ tagPrefix: config["tag-prefix"] }
+	);
 	const isPreVersionKeyIncrement = versionKeyIncrement?.startsWith("pre");
 	if (!lastReleaseVersion && !inputVersion) {
 		if (isPreVersionKeyIncrement) defaultVersionInfo["$RESOLVED_VERSION"] = structuredClone(defaultVersionInfo["$NEXT_PRERELEASE_VERSION"]);
 		if (config["version-template"] && config["version-template"] !== DEFAULT_VERSION_TEMPLATE) {
 			const defaultVersion = toSemver("0.1.0");
-			const templateableVersion$1 = getTemplatableVersion({
+			const templateableVersion = getTemplatableVersion({
 				version: defaultVersion,
 				template: config["version-template"],
 				inputVersion,
 				versionKeyIncrement: versionKeyIncrement || "patch",
 				preReleaseIdentifier: config["prerelease-identifier"]
 			});
-			for (const key of Object.keys(templateableVersion$1)) {
+			for (const key of Object.keys(templateableVersion)) {
 				const keyTyped = key;
-				if (templateableVersion$1[keyTyped] && typeof templateableVersion$1[keyTyped] === "object" && templateableVersion$1[keyTyped].template) templateableVersion$1[keyTyped].version = renderTemplate({
-					template: templateableVersion$1[keyTyped].template,
-					object: templateableVersion$1[keyTyped]
+				if (templateableVersion[keyTyped] && typeof templateableVersion[keyTyped] === "object" && templateableVersion[keyTyped].template) templateableVersion[keyTyped].version = renderTemplate({
+					template: templateableVersion[keyTyped].template,
+					object: templateableVersion[keyTyped]
 				});
 			}
 			let resolvedVersionObj = splitSemVersion({
@@ -815,8 +902,8 @@ const getVersionInfo = (params) => {
 					object: resolvedVersionObj
 				})
 			};
-			templateableVersion$1.$RESOLVED_VERSION = resolvedVersionObj;
-			return templateableVersion$1;
+			templateableVersion.$RESOLVED_VERSION = resolvedVersionObj;
+			return templateableVersion;
 		}
 		return defaultVersionInfo;
 	}
@@ -842,12 +929,15 @@ var toSemver = (version) => {
 	if (result) return result;
 	return (0, import_coerce.default)(version);
 };
+/**
+* Get a semver version from various input types
+*/
 var coerceVersion = (input, opt) => {
 	if (!input) return null;
-	const stripTag = (input$1) => !!opt?.tagPrefix && input$1?.startsWith(opt.tagPrefix) ? input$1.slice(opt.tagPrefix.length) : input$1;
+	const stripTag = (input) => !!opt?.tagPrefix && input?.startsWith(opt.tagPrefix) ? input.slice(opt.tagPrefix.length) : input;
 	return typeof input === "object" ? toSemver(stripTag(input.tag_name)) || toSemver(stripTag(input.name)) : toSemver(stripTag(input));
 };
-const defaultVersionInfo = {
+var defaultVersionInfo = {
 	$NEXT_MAJOR_VERSION: {
 		version: "1.0.0",
 		template: "$MAJOR.$MINOR.$PATCH",
@@ -993,7 +1083,14 @@ var getTemplatableVersion = (input) => {
 	templatableVersion.$RESOLVED_VERSION = templatableVersion.$INPUT_VERSION || templatableVersion.$RESOLVED_VERSION;
 	return templatableVersion;
 };
-const buildReleasePayload = (params) => {
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/build-release-payload.ts
+/**
+* Outputs the payload for creating or updating a release.
+*
+* Previously known as `generateReleaseInfo`.
+*/
+var buildReleasePayload = (params) => {
 	const { commits, config, input, lastRelease, pullRequests } = params;
 	info(`Building release payload and body...`);
 	const sortedPullRequests = sortPullRequests({
@@ -1028,7 +1125,7 @@ const buildReleasePayload = (params) => {
 			config
 		})
 	});
-	debug$3("versionInfo: " + JSON.stringify(versionInfo, null, 2));
+	debug("versionInfo: " + JSON.stringify(versionInfo, null, 2));
 	if (versionInfo) body = renderTemplate({
 		template: body,
 		object: versionInfo
@@ -1044,7 +1141,7 @@ const buildReleasePayload = (params) => {
 		template: mutableInputTag,
 		object: versionInfo
 	});
-	debug$3("tag: " + mutableInputTag);
+	debug("tag: " + mutableInputTag);
 	if (mutableInputName === void 0) mutableInputName = versionInfo ? renderTemplate({
 		template: config["name-template"] || "",
 		object: versionInfo
@@ -1053,7 +1150,13 @@ const buildReleasePayload = (params) => {
 		template: mutableInputName,
 		object: versionInfo
 	});
-	debug$3("name: " + mutableInputName);
+	debug("name: " + mutableInputName);
+	/**
+	* Tags are not supported as `target_commitish` by Github API.
+	* GITHUB_REF or the ref from webhook start with `refs/tags/`, so we handle
+	* those here. If it doesn't but is still a tag - it must have been set
+	* explicitly by the user, so it's fair to just let the API respond with an error.
+	*/
 	if (mutableCommitish.startsWith("refs/tags/")) {
 		info(`${mutableCommitish} is not supported as release target, falling back to default branch`);
 		mutableCommitish = "";
@@ -1089,7 +1192,9 @@ const buildReleasePayload = (params) => {
 	info(`  patchVersion:      ${res.patchVersion}`);
 	return res;
 };
-const createRelease = async (params) => {
+//#endregion
+//#region src/actions/drafter/lib/upsert-release/create-release.ts
+var createRelease = async (params) => {
 	const octokit = getOctokit();
 	const { releasePayload } = params;
 	return octokit.rest.repos.createRelease({
@@ -1104,7 +1209,9 @@ const createRelease = async (params) => {
 		make_latest: releasePayload.prerelease ? "false" : releasePayload.make_latest.toString()
 	});
 };
-const updateRelease = async (params) => {
+//#endregion
+//#region src/actions/drafter/lib/upsert-release/update-release.ts
+var updateRelease = async (params) => {
 	const octokit = getOctokit();
 	const { draftRelease, releasePayload } = params;
 	const updateReleaseParameters = {
@@ -1126,7 +1233,9 @@ const updateRelease = async (params) => {
 		...updateReleaseParameters
 	});
 };
-const upsertRelease = async (params) => {
+//#endregion
+//#region src/actions/drafter/lib/upsert-release/upsert-release.ts
+var upsertRelease = async (params) => {
 	const { draftRelease, releasePayload } = params;
 	if (!draftRelease) {
 		info("Creating new release...");
@@ -1143,7 +1252,17 @@ const upsertRelease = async (params) => {
 		return res;
 	}
 };
-const main = async (params) => {
+//#endregion
+//#region src/actions/drafter/main.ts
+var main = async (params) => {
+	/**
+	* 1. find previous releases - returns latest release
+	* 2. find commits since latest release, with their associated pull-requests
+	* 3. sort those pull-requests according to the desired config (for release-body)
+	* 4. generate release info
+	* 5. create a release (may be a draft) or update previous draft
+	* 6. set action outputs
+	*/
 	const { config, input } = params;
 	const { draftRelease, lastRelease } = await findPreviousReleases(config);
 	const { commits, pullRequests } = await findPullRequests({
@@ -1165,7 +1284,9 @@ const main = async (params) => {
 		releasePayload
 	};
 };
-const setActionOutput = (params) => {
+//#endregion
+//#region src/actions/drafter/config/set-action-output.ts
+var setActionOutput = (params) => {
 	const { releasePayload, upsertedRelease } = params;
 	info("Set action outputs...");
 	const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl, tag_name: tagName, name } } = upsertedRelease;
@@ -1182,7 +1303,18 @@ const setActionOutput = (params) => {
 	setOutput("body", body);
 	info("Outputs set!");
 };
-const commonConfigSchema = object({
+//#endregion
+//#region src/actions/drafter/config/schemas/common-config.schema.ts
+/**
+* Configuration parameters that can be specified in both
+* the config file or the action input.
+*
+* Default values cannot be defined here,
+* as action inputs may override config file values.
+*
+* @see merge-input-and-config.ts for how the merging of config and input is handled, including default values.
+*/
+var commonConfigSchema = object({
 	latest: stringbool().or(boolean()).optional(),
 	prerelease: stringbool().or(boolean()).optional(),
 	"initial-commits-since": datetime().optional(),
@@ -1191,14 +1323,14 @@ const commonConfigSchema = object({
 	header: string().optional(),
 	footer: string().optional()
 });
-const actionInputSchema = object({
+var actionInputSchema = object({
 	"config-name": string().optional().default("release-drafter.yml"),
 	name: string().optional(),
 	tag: string().optional(),
 	version: string().optional(),
 	publish: stringbool().optional().default(false)
 }).and(sharedInputSchema).and(commonConfigSchema);
-const configSchema = object({
+var configSchema = object({
 	"change-template": string().optional().default("* $TITLE (#$NUMBER) @$AUTHOR"),
 	"change-title-escapes": string().optional(),
 	"no-changes-template": string().optional().default("* No changes"),
@@ -1247,7 +1379,9 @@ const configSchema = object({
 	title: "JSON schema for Release Drafter yaml files",
 	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
 }).and(commonConfigSchema);
-const getActionInput = () => {
+//#endregion
+//#region src/actions/drafter/config/get-action-inputs.ts
+var getActionInput = () => {
 	const getInput$1 = (name) => getInput(name) || void 0;
 	return actionInputSchema.parse({
 		"config-name": getInput$1("config-name"),
@@ -1265,7 +1399,16 @@ const getActionInput = () => {
 		footer: getInput$1("footer")
 	});
 };
-const mergeInputAndConfig = (params) => {
+//#endregion
+//#region src/actions/drafter/config/merge-input-and-config.ts
+/**
+* Returns a copy of `config`, updated with values from `input`.
+*
+* Also performs some validation.
+*
+* Input takes precedence, because it's more easy to change at runtime
+*/
+var mergeInputAndConfig = (params) => {
 	const { config: originalConfig, input } = params;
 	const config = structuredClone(originalConfig);
 	if (input.commitish) {
@@ -1302,7 +1445,7 @@ const mergeInputAndConfig = (params) => {
 	}
 	const commitish = config.commitish || context.ref || context.payload.ref;
 	const latest = typeof config.latest !== "boolean" ? true : config.latest;
-	const prerelease$2 = typeof config.prerelease !== "boolean" ? false : config.prerelease;
+	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
 	const replacers = config.replacers.map((r) => {
 		try {
 			return {
@@ -1323,7 +1466,7 @@ const mergeInputAndConfig = (params) => {
 		...config,
 		commitish,
 		latest,
-		prerelease: prerelease$2,
+		prerelease,
 		replacers,
 		categories
 	};
@@ -1331,12 +1474,21 @@ const mergeInputAndConfig = (params) => {
 	if (parsedConfig.categories.filter((category) => category.labels.length === 0).length > 1) throw new Error("Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.");
 	return parsedConfig;
 };
-const getConfig = async (configName) => {
+//#endregion
+//#region src/actions/drafter/config/get-config.ts
+var getConfig = async (configName) => {
 	const { config, contexts } = await composeConfigGet(configName, context);
 	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
 	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally." : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
 	return configSchema.parse(config);
 };
+//#endregion
+//#region src/actions/drafter/runner.ts
+/**
+* The main function for the action.
+*
+* @returns Resolves when the action is complete.
+*/
 async function run() {
 	try {
 		info("Parsing inputs and configuration...");
@@ -1352,9 +1504,21 @@ async function run() {
 			upsertedRelease,
 			releasePayload
 		});
-	} catch (error$1) {
-		if (error$1 instanceof Error) setFailed(error$1.message);
+	} catch (error) {
+		if (error instanceof Error) setFailed(error.message);
 	}
 }
+//#endregion
+//#region src/actions/drafter/run.ts
 /* node:coverage ignore file -- @preserve */
+/**
+* The entrypoint for the action. This file simply imports and runs the action's
+* main logic.
+*
+* Do not add any logic to this file; instead, add it to `runner.ts`.
+*
+* `runner.ts` is the entrypoint for tests and should contain all the action's
+* main logic.
+*/
 await run();
+//#endregion
