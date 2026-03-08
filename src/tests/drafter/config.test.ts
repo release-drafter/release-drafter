@@ -327,7 +327,7 @@ describe('get config file', () => {
         expect(mocks.readFileSync).not.toHaveBeenCalled()
 
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: hello-world:release-drafter.yml@main".'
+          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@main".'
         )
         expect(scope.isDone()).toBe(true)
 
@@ -586,7 +586,7 @@ describe('get config file', () => {
         const res = await composeConfigGet(inputConfigName, context)
 
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: file:./release-drafter.yml".'
+          'Recursion detected. Ignoring "_extends: file:./release-drafter.yml".'
         )
 
         expect(res.contexts.length).toBe(1)
@@ -626,7 +626,7 @@ describe('get config file', () => {
 
         // lastExtends at detection time is file B's _extends pointing back to file A
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: file:./release-drafter.yml".'
+          'Recursion detected. Ignoring "_extends: file:./release-drafter.yml".'
         )
 
         expect(res.contexts.length).toBe(2)
@@ -706,7 +706,7 @@ describe('get config file', () => {
         expect(scope.isDone()).toBe(true)
 
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/shared.yml".'
+          'Recursion detected. Ignoring "_extends: .github:/shared.yml".'
         )
 
         // 2 file: configs + 1 github: config
@@ -793,7 +793,7 @@ describe('get config file', () => {
 
         // lastExtends at detection time is github:C's _extends pointing back to github:B
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/shared.yml".'
+          'Recursion detected. Ignoring "_extends: .github:/shared.yml".'
         )
 
         // 1 file: config + 2 github: configs
@@ -865,7 +865,7 @@ describe('get config file', () => {
 
         // lastExtends at detection is github:B's _extends that points to github:A
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: hello-world:release-drafter.yml@main".'
+          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@main".'
         )
 
         // file:A and github:B only — github:A is not added to the chain
@@ -934,7 +934,7 @@ describe('get config file', () => {
 
         // lastExtends at detection is github:B's _extends pointing to github:A@v1.0
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: hello-world:release-drafter.yml@v1.0".'
+          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@v1.0".'
         )
 
         // file:A and github:B only — github:A@v1.0 is not added despite the ref mismatch

@@ -73,7 +73,7 @@ export const getConfigFiles = async (
     })
     if (alreadyLoaded) {
       core.warning(
-        `Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: ${lastExtends}".`
+        `Recursion detected. Ignoring "_extends: ${lastExtends}".`
       )
       core.debug(`getConfigFiles: Recursion detected, stopping extends chain`)
       return files
