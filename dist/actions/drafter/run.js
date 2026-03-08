@@ -342,8 +342,8 @@ const findPullRequests = async (params) => {
     );
   }
   const seen = /* @__PURE__ */ new Set();
-  const pullRequestsRaw = commits.flatMap((commit) => commit.associatedPullRequests?.nodes).filter((pr) => {
-    if (!pr || seen.has(pr.number)) return false;
+  const pullRequestsRaw = commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).filter((pr) => {
+    if (seen.has(pr.number)) return false;
     seen.add(pr.number);
     return true;
   });
