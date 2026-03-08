@@ -58,18 +58,21 @@ export const getConfigFiles = async (
       `getConfigFiles: Fetched extended config from ${extendRepoConfig.fetchedFrom.scheme}:${extendRepoConfig.fetchedFrom.filepath}`
     )
 
-    // Avoid loops
-    // Scheme is intentionally excluded: file:A and github:A (same filepath+ref+repo)
-    // are treated as the same source so that a local config loading a remote chain
-    // that circles back to the same file is correctly detected as recursion.
+    // Avoid loops.
+    // When a file: entry is already in the chain, any github: entry for the same
+    // filepath+repo is treated as a duplicate regardless of ref — the local file
+    // takes priority over any remote version (including at a different ref).
+    // For same-scheme comparisons the ref must also match.
     const { fetchedFrom: extendedFrom } = extendRepoConfig
-    const alreadyLoaded = files.find(
-      ({ fetchedFrom: loadedFrom }) =>
-        loadedFrom.filepath === extendedFrom.filepath &&
-        loadedFrom.ref === extendedFrom.ref &&
+    const alreadyLoaded = files.find(({ fetchedFrom: loadedFrom }) => {
+      const sameFilepath = loadedFrom.filepath === extendedFrom.filepath
+      const sameRepo =
         loadedFrom.repo.owner === extendedFrom.repo.owner &&
         loadedFrom.repo.repo === extendedFrom.repo.repo
-    )
+      const crossScheme =
+        loadedFrom.scheme === 'file' && extendedFrom.scheme === 'github'
+      return sameFilepath && sameRepo && (crossScheme || loadedFrom.ref === extendedFrom.ref)
+    })
     if (alreadyLoaded) {
       core.warning(
         `Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: ${extendRepoConfig.config._extends}".`

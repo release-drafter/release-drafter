@@ -898,6 +898,96 @@ describe('get config file', () => {
           }
         `)
       })
+
+      it('should prefer the local file:A over github:A even when the remote targets a different ref', async () => {
+        // Variant of the PR comment scenario where the remote chain targets a different ref.
+        // file:A is loaded locally (ref from context = 'main').
+        // github:B extends github:A@v1.0 — same filepath+repo as file:A but a different ref.
+        // The local file must take priority: ref is ignored when one side is file: scheme.
+        const workspace = '/home/runner/workspace'
+        vi.stubEnv('GITHUB_TOKEN', 'test')
+        vi.stubEnv('GITHUB_WORKSPACE', workspace)
+        const context = {
+          repo: { owner: 'octocat', repo: 'hello-world' },
+          ref: 'main'
+        }
+        const inputConfigName = 'file:release-drafter.yml'
+        const configChain = [
+          {
+            pathToFile: workspace + '/.github/release-drafter.yml',
+            file: `_extends: .github:/remote-base.yml\ntemplate: local-content`
+          },
+          {
+            // github:B — extends github:A at a different ref (v1.0 instead of main)
+            file: `_extends: hello-world:release-drafter.yml@v1.0\nremote: base`,
+            endpointFilepath: 'remote-base.yml',
+            endpoint: '',
+            context: { repo: { owner: 'octocat', repo: '.github' } }
+          },
+          {
+            // github:A@v1.0 — same filepath+repo as file:A, but different ref
+            file: `_extends: .github:/remote-base.yml\ntemplate: versioned-content`,
+            endpointFilepath: '.github/release-drafter.yml',
+            endpoint: '',
+            context: {
+              repo: { owner: 'octocat', repo: 'hello-world' },
+              ref: 'v1.0'
+            }
+          }
+        ].map((c) => ({
+          ...c,
+          endpoint: c.endpointFilepath
+            ? getContentEndpoint({
+                ...c.context,
+                path: c.endpointFilepath
+              })
+            : undefined
+        }))
+
+        mocks.existsSync.mockReturnValue(true)
+        mocks.readFileSync.mockImplementation(
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file
+        )
+
+        // github:B + github:A@v1.0 are fetched; github:A@v1.0 is detected as a
+        // cross-scheme duplicate of file:A and not added to the chain
+        const scope = nock('https://api.github.com')
+          .get((uri) =>
+            configChain
+              .filter((c) => !!c.endpoint)
+              .map((c) => c.endpoint)
+              .includes(uri)
+          )
+          .times(configChain.filter((c) => !!c.endpoint).length)
+          .reply(
+            200,
+            (uri) =>
+              configChain
+                .filter((c) => !!c.endpoint)
+                .find((c) => c.endpoint === uri)?.file,
+            {
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
+            }
+          )
+
+        const res = await composeConfigGet(inputConfigName, context)
+
+        expect(scope.isDone()).toBe(true)
+
+        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/remote-base.yml".'
+        )
+
+        // file:A and github:B only — github:A@v1.0 is not added despite the ref mismatch
+        expect(res.contexts.length).toBe(2)
+        expect(res.config).toMatchInlineSnapshot(`
+          {
+            "remote": "base",
+            "template": "local-content",
+          }
+        `)
+      })
     })
     describe('using the github: and then the file: scheme', () => {
       it('should throw an error', async () => {
