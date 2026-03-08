@@ -309,7 +309,7 @@ describe('get config file', () => {
 
         const scope = nock('https://api.github.com')
           .get((uri) => configChain.map((c) => c.endpoint).includes(uri))
-          .times(configChain.length + 1) // recursion !
+          .times(configChain.length) // no extra call — pre-fetch check stops the loop
           .reply(
             200,
             (uri) => configChain.find((c) => c.endpoint === uri)?.file,
@@ -327,7 +327,7 @@ describe('get config file', () => {
         expect(mocks.readFileSync).not.toHaveBeenCalled()
 
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/configs/common.yml".'
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: hello-world:release-drafter.yml@main".'
         )
         expect(scope.isDone()).toBe(true)
 
@@ -624,9 +624,9 @@ describe('get config file', () => {
 
         const res = await composeConfigGet(inputConfigName, context)
 
-        // extendRepoConfig is the already-loaded file A, whose _extends is the common.yml reference
+        // lastExtends at detection time is file B's _extends pointing back to file A
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: file:./common.yml".'
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: file:./release-drafter.yml".'
         )
 
         expect(res.contexts.length).toBe(2)
@@ -689,7 +689,7 @@ describe('get config file', () => {
               .map((c) => c.endpoint)
               .includes(uri)
           )
-          .times(configChain.filter((c) => !!c.endpoint).length + 1) // +1 for the self-loop attempt
+          .times(configChain.filter((c) => !!c.endpoint).length) // pre-fetch check stops the self-loop
           .reply(
             200,
             (uri) =>
@@ -775,7 +775,7 @@ describe('get config file', () => {
               .map((c) => c.endpoint)
               .includes(uri)
           )
-          .times(configChain.filter((c) => !!c.endpoint).length + 1) // +1 for the loop attempt
+          .times(configChain.filter((c) => !!c.endpoint).length) // pre-fetch check stops the loop
           .reply(
             200,
             (uri) =>
@@ -791,9 +791,9 @@ describe('get config file', () => {
 
         expect(scope.isDone()).toBe(true)
 
-        // extendRepoConfig is the already-loaded shared.yml, whose _extends is base.yml
+        // lastExtends at detection time is github:C's _extends pointing back to github:B
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/base.yml".'
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/shared.yml".'
         )
 
         // 1 file: config + 2 github: configs
@@ -860,7 +860,7 @@ describe('get config file', () => {
             configChain.find((c) => c.pathToFile === path)?.file
         )
 
-        // github:B + github:A are both fetched (check is post-fetch), but github:A is not added to the chain
+        // Only github:B is fetched — github:A is caught by the pre-fetch check (file:A already loaded)
         const scope = nock('https://api.github.com')
           .get((uri) =>
             configChain
@@ -868,7 +868,7 @@ describe('get config file', () => {
               .map((c) => c.endpoint)
               .includes(uri)
           )
-          .times(configChain.filter((c) => !!c.endpoint).length)
+          .times(configChain.filter((c) => !!c.endpoint).length - 1)
           .reply(
             200,
             (uri) =>
@@ -884,9 +884,9 @@ describe('get config file', () => {
 
         expect(scope.isDone()).toBe(true)
 
-        // github:A's _extends matches what file:A extends — the warning names it
+        // lastExtends at detection is github:B's _extends that points to github:A
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/remote-base.yml".'
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: hello-world:release-drafter.yml@main".'
         )
 
         // file:A and github:B only — github:A is not added to the chain
@@ -950,8 +950,7 @@ describe('get config file', () => {
             configChain.find((c) => c.pathToFile === path)?.file
         )
 
-        // github:B + github:A@v1.0 are fetched; github:A@v1.0 is detected as a
-        // cross-scheme duplicate of file:A and not added to the chain
+        // Only github:B is fetched — github:A@v1.0 is caught pre-fetch (file:A takes priority at any ref)
         const scope = nock('https://api.github.com')
           .get((uri) =>
             configChain
@@ -959,7 +958,7 @@ describe('get config file', () => {
               .map((c) => c.endpoint)
               .includes(uri)
           )
-          .times(configChain.filter((c) => !!c.endpoint).length)
+          .times(configChain.filter((c) => !!c.endpoint).length - 1)
           .reply(
             200,
             (uri) =>
@@ -975,8 +974,9 @@ describe('get config file', () => {
 
         expect(scope.isDone()).toBe(true)
 
+        // lastExtends at detection is github:B's _extends pointing to github:A@v1.0
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/remote-base.yml".'
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: hello-world:release-drafter.yml@v1.0".'
         )
 
         // file:A and github:B only — github:A@v1.0 is not added despite the ref mismatch
