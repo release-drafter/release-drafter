@@ -3,7 +3,6 @@ import { context } from '@actions/github'
 import { findCommitsWithPathChange } from './find-commits-with-path-change'
 import * as core from '@actions/core'
 import { findCommitsWithPr } from './find-commits-with-pr'
-import _ from 'lodash'
 import { ParsedConfig } from '../../config'
 
 export const findPullRequests = async (params: {
@@ -81,11 +80,16 @@ export const findPullRequests = async (params: {
     )
   }
 
-  // Extract PRs from commits
-  const pullRequestsRaw = _.uniqBy(
-    commits.flatMap((commit) => commit.associatedPullRequests?.nodes),
-    'number'
-  ).filter((pr) => !!pr)
+  // Extract PRs from commits, keeping first occurrence of each PR number (stable order)
+  const seen = new Set<number>()
+  const pullRequestsRaw = commits
+    .flatMap((commit) => commit.associatedPullRequests?.nodes ?? [])
+    .filter((pr) => pr != null)
+    .filter((pr) => {
+      if (seen.has(pr.number)) return false
+      seen.add(pr.number)
+      return true
+    })
 
   const pullRequests = pullRequestsRaw.filter(
     (pr) =>

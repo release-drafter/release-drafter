@@ -1,7 +1,8 @@
 import { configSchema } from 'src/actions/drafter/config'
 
 import { describe, expect, it } from 'vitest'
-import z from 'zod'
+import type * as z from 'zod'
+import { ZodError } from 'zod'
 
 type SuiteParams =
   | {
@@ -239,7 +240,7 @@ describe('schema parsing', () => {
     if (parseValid) {
       expect(output.data).toMatchObject(params.parseOutput || parseInput)
     } else {
-      expect(output.error).toBeInstanceOf(z.ZodError)
+      expect(output.error).toBeInstanceOf(ZodError)
       if (Array.isArray(params.errorContains)) {
         for (const error of params.errorContains) {
           expect(output.error?.message).toContain(error)

@@ -3,7 +3,7 @@ import { getConfigFile } from 'src/common/config/get-config-file'
 import nock from 'nock'
 
 // @ts-expect-error readFileSyncOriginal is the original unmocked function, whose mock is hoisted above
-import { readFileSyncOriginal } from 'fs'
+import { readFileSyncOriginal } from 'node:fs'
 
 const mocks = vi.hoisted(() => ({
   existsSync: vi.fn(),

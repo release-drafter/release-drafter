@@ -1,4 +1,3 @@
-import { isEqual, omit } from 'lodash'
 import { getConfigFile } from './get-config-file'
 import { parseConfigTarget } from './parse-config-target'
 import * as core from '@actions/core'
@@ -60,11 +59,14 @@ export const getConfigFiles = async (
     )
 
     // Avoid loops
-    const alreadyLoaded = files.find((file) =>
-      isEqual(
-        omit(file.config, '_extends'),
-        omit(extendRepoConfig.config, '_extends')
-      )
+    const { fetchedFrom: extendedFrom } = extendRepoConfig
+    const alreadyLoaded = files.find(
+      ({ fetchedFrom: loadedFrom }) =>
+        loadedFrom.scheme === extendedFrom.scheme &&
+        loadedFrom.filepath === extendedFrom.filepath &&
+        loadedFrom.ref === extendedFrom.ref &&
+        loadedFrom.repo.owner === extendedFrom.repo.owner &&
+        loadedFrom.repo.repo === extendedFrom.repo.repo
     )
     if (alreadyLoaded) {
       core.warning(

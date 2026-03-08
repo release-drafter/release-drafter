@@ -4,7 +4,7 @@ import {
   getFilterExcludedPullRequests,
   getFilterIncludedPullRequests
 } from './categorize-pull-requests'
-import * as semver from 'semver'
+import type { ReleaseType } from 'semver'
 import { Config } from '../../config'
 
 export const resolveVersionKeyIncrement = (params: {
@@ -17,7 +17,7 @@ export const resolveVersionKeyIncrement = (params: {
     | 'exclude-labels'
     | 'include-labels'
   >
-}): semver.ReleaseType => {
+}): ReleaseType => {
   const { pullRequests, config } = params
 
   const priorityMap = {
@@ -59,7 +59,7 @@ export const resolveVersionKeyIncrement = (params: {
 
   core.debug('versionKey: ' + versionKey)
 
-  let versionKeyIncrement: semver.ReleaseType =
+  let versionKeyIncrement: ReleaseType =
     versionKey || config['version-resolver'].default
 
   const shouldIncrementAsPrerelease =

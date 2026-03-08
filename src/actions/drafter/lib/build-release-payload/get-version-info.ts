@@ -1,6 +1,13 @@
 import { findPreviousReleases } from '../find-previous-releases'
 import { resolveVersionKeyIncrement } from './resolve-version-increment'
-import * as semver from 'semver'
+import type { SemVer, ReleaseType } from 'semver'
+import coerce from 'semver/functions/coerce'
+import inc from 'semver/functions/inc'
+import major from 'semver/functions/major'
+import minor from 'semver/functions/minor'
+import parse from 'semver/functions/parse'
+import patch from 'semver/functions/patch'
+import prerelease from 'semver/functions/prerelease'
 import { renderTemplate } from './render-template'
 import { Config, ExclusiveInput } from '../../config'
 
@@ -58,7 +65,7 @@ export const getVersionInfo = (params: {
       config['version-template'] &&
       config['version-template'] !== DEFAULT_VERSION_TEMPLATE
     ) {
-      const defaultVersion = toSemver('0.1.0') as semver.SemVer
+      const defaultVersion = toSemver('0.1.0') as SemVer
       const templateableVersion = getTemplatableVersion({
         version: defaultVersion,
         template: config['version-template'],
@@ -147,14 +154,14 @@ export const getVersionInfo = (params: {
   return templateableVersion
 }
 
-const toSemver = (version?: string | semver.SemVer | null | undefined) => {
-  const result = semver.parse(version)
+const toSemver = (version?: string | SemVer | null | undefined) => {
+  const result = parse(version)
   if (result) {
     return result
   }
 
   // doesn't handle prerelease
-  return semver.coerce(version)
+  return coerce(version)
 }
 
 /**
@@ -181,11 +188,11 @@ const coerceVersion = (
 }
 
 type VersionDescriptor = {
-  version: semver.SemVer | string | null | undefined
+  version: SemVer | string | null | undefined
   template: string
-  inputVersion: semver.SemVer | null
-  versionKeyIncrement: semver.ReleaseType
-  inc: semver.ReleaseType
+  inputVersion: SemVer | null
+  versionKeyIncrement: ReleaseType
+  inc: ReleaseType
   preReleaseIdentifier?: string
 }
 
@@ -277,21 +284,21 @@ const splitSemVersion = (
   }
 
   const version = input.inc
-    ? semver.inc(input[versionKey], input.inc, true, input.preReleaseIdentifier)
+    ? inc(input[versionKey], input.inc, true, input.preReleaseIdentifier)
     : typeof input[versionKey] === 'string'
       ? input[versionKey]
       : input[versionKey].version
 
   const prereleaseVersion = !version
     ? ''
-    : semver.prerelease(version)?.join('.') || ''
+    : prerelease(version)?.join('.') || ''
 
   return {
     ...input,
     version,
-    $MAJOR: semver.major(version || ''),
-    $MINOR: semver.minor(version || ''),
-    $PATCH: semver.patch(version || ''),
+    $MAJOR: major(version || ''),
+    $MINOR: minor(version || ''),
+    $PATCH: patch(version || ''),
     $PRERELEASE: prereleaseVersion ? `-${prereleaseVersion}` : '',
     $COMPLETE: version
   }

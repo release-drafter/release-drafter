@@ -1,6 +1,6 @@
 import { expect, vi } from 'vitest'
 
-import z from 'zod'
+import type * as z from 'zod'
 import { actionInputSchema } from 'src/actions/drafter/config'
 
 /**

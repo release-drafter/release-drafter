@@ -1,27 +1,23 @@
-import { writeFileSync } from 'fs'
-import { resolve } from 'path'
+import { writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
   commonConfigSchema
 } from 'src/actions/drafter/config'
 import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
-import z from 'zod'
+import { toJSONSchema, object, globalRegistry } from 'zod'
 
-const drafterSchema = z.toJSONSchema(
-  z
-    .object({
-      ...exclusiveConfigSchema.shape,
-      ...commonConfigSchema.shape
-    })
-    .meta({ ...z.globalRegistry.get(drafterConfigSchema) })
+const drafterSchema = toJSONSchema(
+  object({
+    ...exclusiveConfigSchema.shape,
+    ...commonConfigSchema.shape
+  }).meta({ ...globalRegistry.get(drafterConfigSchema) })
 )
-const autolabelerSchema = z.toJSONSchema(
-  z
-    .object({
-      ...autolabelerConfigSchema.shape
-    })
-    .meta({ ...z.globalRegistry.get(autolabelerConfigSchema) })
+const autolabelerSchema = toJSONSchema(
+  object({
+    ...autolabelerConfigSchema.shape
+  }).meta({ ...globalRegistry.get(autolabelerConfigSchema) })
 )
 
 const drafterFilePath = resolve(

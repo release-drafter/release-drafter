@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from 'fs'
-import path from 'path'
+import { existsSync, readFileSync } from 'node:fs'
+import path from 'node:path'
 import type { GithubActionEnvironment } from 'src/types'
 
 import { expect, vi } from 'vitest'

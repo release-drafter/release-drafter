@@ -1,6 +1,6 @@
-import { readFileSync } from 'fs'
+import { readFileSync } from 'node:fs'
 import nock from 'nock'
-import path from 'path'
+import path from 'node:path'
 
 type Query =
   | 'query findCommitsWithAssociatedPullRequests'

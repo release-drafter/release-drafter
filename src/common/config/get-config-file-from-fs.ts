@@ -1,5 +1,5 @@
-import path, { isAbsolute } from 'path'
-import { existsSync, readFileSync } from 'fs'
+import path, { isAbsolute } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
 import * as core from '@actions/core'
 
 export const getConfigFileFromFs = (normalizedFilepath: string) => {

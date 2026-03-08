@@ -1,4 +1,3 @@
-import { omit } from 'lodash'
 import { getConfigFiles } from './get-config-files'
 import * as core from '@actions/core'
 
@@ -27,7 +26,7 @@ export async function composeConfigGet(
   )
 
   const configs = configResults
-    .map((res) => omit(res.config, '_extends'))
+    .map(({ config: { _extends: _, ...rest } }) => rest)
     .reverse()
     .filter(Boolean)
 
