@@ -20,7 +20,8 @@
     "release-automation"
   ],
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.0.0",
+    "npm": ">=11.9.0"
   },
   "scripts": {
     "build": "vite build",
