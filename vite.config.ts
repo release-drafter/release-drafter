@@ -1,27 +1,29 @@
 import { builtinModules } from 'node:module'
-import { defineConfig } from 'vitest/config'
+import { readFile, writeFile } from 'node:fs/promises'
+import { defineConfig, type Plugin } from 'vitest/config'
 import tsconfigPaths from 'vite-tsconfig-paths'
-import copy from 'rollup-plugin-copy'
+
+const FROM = 'main: dist/actions/drafter/run.js'
+const TO = 'main: ../dist/actions/drafter/run.js'
+
+function syncDrafterActionYml(): Plugin {
+  return {
+    name: 'sync-drafter-action-yml',
+    async closeBundle() {
+      const [src, dest] = await Promise.all([
+        readFile('action.yml', 'utf8'),
+        readFile('drafter/action.yml', 'utf8')
+      ])
+      const expected = src.includes(FROM) ? src.replace(FROM, TO) : src
+      if (dest !== expected) {
+        await writeFile('drafter/action.yml', expected)
+      }
+    }
+  }
+}
 
 export default defineConfig({
-  plugins: [
-    tsconfigPaths(),
-    copy({
-      targets: [
-        {
-          src: 'action.yml',
-          dest: 'drafter/',
-          transform: (contents) =>
-            contents
-              .toString()
-              .replace(
-                'main: dist/actions/drafter/run.js',
-                'main: ../dist/actions/drafter/run.js'
-              )
-        }
-      ]
-    })
-  ],
+  plugins: [tsconfigPaths(), syncDrafterActionYml()],
   build: {
     target: 'node24',
     rollupOptions: {

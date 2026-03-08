@@ -1,4 +1,6 @@
 import { C as __commonJSMin, S as warning, b as setFailed, d as stringToRegex, h as context, m as getOctokit, o as object, p as composeConfigGet, r as array, s as string, t as sharedInputSchema, v as getInput, w as __toESM, x as setOutput, y as info } from "../../chunks/common.js";
+//#endregion
+//#region src/actions/autolabeler/main.ts
 var import_ignore = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	function makeArray(subject) {
 		return Array.isArray(subject) ? subject : [subject];
@@ -19,8 +21,8 @@ var import_ignore = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exp
 	/* istanbul ignore else */
 	if (typeof Symbol !== "undefined") TMP_KEY_IGNORE = Symbol.for("node-ignore");
 	var KEY_IGNORE = TMP_KEY_IGNORE;
-	var define = (object$1, key, value) => {
-		Object.defineProperty(object$1, key, { value });
+	var define = (object, key, value) => {
+		Object.defineProperty(object, key, { value });
 		return value;
 	};
 	var REGEX_REGEXP_RANGE = /([0-z])-([0-z])/g;
@@ -232,10 +234,13 @@ var import_ignore = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exp
 	module.exports.isPathValid = isPathValid;
 	define(module.exports, Symbol.for("setupWindows"), setupWindows);
 })))(), 1);
-const main = async (params) => {
+var main = async (params) => {
 	info(`Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`);
 	if (context.eventName !== "pull_request") throw new Error(`Event type is wrong. Expected 'pull_request', received '${context.eventName}'`);
 	const octokit = getOctokit();
+	/**
+	* @see https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request
+	*/
 	const payload = context.payload;
 	const changedFiles = await octokit.paginate(octokit.rest.pulls.listFiles, {
 		...context.repo,
@@ -289,7 +294,9 @@ const main = async (params) => {
 		labels: labels.size ? Array.from(labels).join(",") : void 0
 	};
 };
-const configSchema = object({ autolabeler: array(object({
+//#endregion
+//#region src/actions/autolabeler/config/config.schema.ts
+var configSchema = object({ autolabeler: array(object({
 	label: string().min(1),
 	files: array(string().min(1)).optional().default([]),
 	branch: array(string().min(1)).optional().default([]),
@@ -299,21 +306,36 @@ const configSchema = object({ autolabeler: array(object({
 	title: "JSON schema for Release Drafter's autolabeler action config.",
 	id: "https://github.com/release-drafter/release-drafter/blob/master/autolabeler/schema.json"
 });
-const actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
-const getActionInput = () => {
+//#endregion
+//#region src/actions/autolabeler/config/action-input.schema.ts
+var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
+//#endregion
+//#region src/actions/autolabeler/config/get-action-inputs.ts
+var getActionInput = () => {
 	const getInput$1 = (name) => getInput(name) || void 0;
 	return actionInputSchema.parse({
 		"config-name": getInput$1("config-name"),
 		token: getInput$1("token")
 	});
 };
-const getConfig = async (configName) => {
+//#endregion
+//#region src/actions/autolabeler/config/get-config.ts
+var getConfig = async (configName) => {
 	const { config, contexts } = await composeConfigGet(configName, context);
 	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
 	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally." : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
 	return configSchema.parse(config);
 };
-const parseConfig = ({ config: originalConfig }) => {
+//#endregion
+//#region src/actions/autolabeler/config/parse-config.ts
+/**
+* Returns a copy of `config`, updated with values from `input`.
+*
+* Also performs some validation.
+*
+* Input takes precedence, because it's more easy to change at runtime
+*/
+var parseConfig = ({ config: originalConfig }) => {
 	const config = structuredClone(originalConfig);
 	const autolabeler = config.autolabeler.map((autolabel) => {
 		try {
@@ -339,6 +361,13 @@ const parseConfig = ({ config: originalConfig }) => {
 		autolabeler
 	};
 };
+//#endregion
+//#region src/actions/autolabeler/runner.ts
+/**
+* The main function for the action.
+*
+* @returns Resolves when the action is complete.
+*/
 async function run() {
 	try {
 		const { labels, pr_number } = await main({ config: parseConfig({ config: await getConfig(getActionInput()["config-name"]) }) });
@@ -348,5 +377,17 @@ async function run() {
 		if (error instanceof Error) setFailed(error.message);
 	}
 }
+//#endregion
+//#region src/actions/autolabeler/run.ts
 /* node:coverage ignore file -- @preserve */
+/**
+* The entrypoint for the action. This file simply imports and runs the action's
+* main logic.
+*
+* Do not add any logic to this file; instead, add it to `runner.ts`.
+*
+* `runner.ts` is the entrypoint for tests and should contain all the action's
+* main logic.
+*/
 await run();
+//#endregion
