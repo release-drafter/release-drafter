@@ -59,10 +59,12 @@ export const getConfigFiles = async (
     )
 
     // Avoid loops
+    // Scheme is intentionally excluded: file:A and github:A (same filepath+ref+repo)
+    // are treated as the same source so that a local config loading a remote chain
+    // that circles back to the same file is correctly detected as recursion.
     const { fetchedFrom: extendedFrom } = extendRepoConfig
     const alreadyLoaded = files.find(
       ({ fetchedFrom: loadedFrom }) =>
-        loadedFrom.scheme === extendedFrom.scheme &&
         loadedFrom.filepath === extendedFrom.filepath &&
         loadedFrom.ref === extendedFrom.ref &&
         loadedFrom.repo.owner === extendedFrom.repo.owner &&
