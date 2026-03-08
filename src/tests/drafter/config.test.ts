@@ -821,60 +821,39 @@ describe('get config file', () => {
           ref: 'main'
         }
         const inputConfigName = 'file:release-drafter.yml'
-        const configChain = [
+        // file:A is local; github:B is fetched; github:A is caught pre-fetch (no endpoint needed)
+        const localChain = [
           {
             pathToFile: workspace + '/.github/release-drafter.yml',
             // file:A — extends github:B
             file: `_extends: .github:/remote-base.yml\ntemplate: local-content`
-          },
+          }
+        ]
+        const remoteChain = [
           {
             // github:B (octocat/.github:remote-base.yml) — extends the remote version of file:A
             file: `_extends: hello-world:release-drafter.yml@main\nremote: base`,
             endpointFilepath: 'remote-base.yml',
-            endpoint: '',
             context: { repo: { owner: 'octocat', repo: '.github' } }
-          },
-          {
-            // github:A (octocat/hello-world:.github/release-drafter.yml@main) — same filepath+ref+repo as file:A, different scheme
-            file: `_extends: .github:/remote-base.yml\ntemplate: local-content`,
-            endpointFilepath: '.github/release-drafter.yml',
-            endpoint: '',
-            context: {
-              repo: { owner: 'octocat', repo: 'hello-world' },
-              ref: 'main'
-            }
           }
+          // github:A would be octocat/hello-world:.github/release-drafter.yml@main —
+          // same filepath+ref+repo as file:A, different scheme — caught by pre-fetch check
         ].map((c) => ({
           ...c,
-          endpoint: c.endpointFilepath
-            ? getContentEndpoint({
-                ...c.context,
-                path: c.endpointFilepath
-              })
-            : undefined
+          endpoint: getContentEndpoint({ ...c.context, path: c.endpointFilepath })
         }))
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) => localChain.find((c) => c.pathToFile === path)?.file
         )
 
-        // Only github:B is fetched — github:A is caught by the pre-fetch check (file:A already loaded)
         const scope = nock('https://api.github.com')
-          .get((uri) =>
-            configChain
-              .filter((c) => !!c.endpoint)
-              .map((c) => c.endpoint)
-              .includes(uri)
-          )
-          .times(configChain.filter((c) => !!c.endpoint).length - 1)
+          .get((uri) => remoteChain.map((c) => c.endpoint).includes(uri))
+          .times(remoteChain.length)
           .reply(
             200,
-            (uri) =>
-              configChain
-                .filter((c) => !!c.endpoint)
-                .find((c) => c.endpoint === uri)?.file,
+            (uri) => remoteChain.find((c) => c.endpoint === uri)?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
             }
@@ -912,59 +891,38 @@ describe('get config file', () => {
           ref: 'main'
         }
         const inputConfigName = 'file:release-drafter.yml'
-        const configChain = [
+        // file:A is local; github:B is fetched; github:A@v1.0 is caught pre-fetch (no endpoint needed)
+        const localChain = [
           {
             pathToFile: workspace + '/.github/release-drafter.yml',
             file: `_extends: .github:/remote-base.yml\ntemplate: local-content`
-          },
+          }
+        ]
+        const remoteChain = [
           {
             // github:B — extends github:A at a different ref (v1.0 instead of main)
             file: `_extends: hello-world:release-drafter.yml@v1.0\nremote: base`,
             endpointFilepath: 'remote-base.yml',
-            endpoint: '',
             context: { repo: { owner: 'octocat', repo: '.github' } }
-          },
-          {
-            // github:A@v1.0 — same filepath+repo as file:A, but different ref
-            file: `_extends: .github:/remote-base.yml\ntemplate: versioned-content`,
-            endpointFilepath: '.github/release-drafter.yml',
-            endpoint: '',
-            context: {
-              repo: { owner: 'octocat', repo: 'hello-world' },
-              ref: 'v1.0'
-            }
           }
+          // github:A@v1.0 would be octocat/hello-world:.github/release-drafter.yml@v1.0 —
+          // same filepath+repo as file:A (different ref) — caught by pre-fetch check
         ].map((c) => ({
           ...c,
-          endpoint: c.endpointFilepath
-            ? getContentEndpoint({
-                ...c.context,
-                path: c.endpointFilepath
-              })
-            : undefined
+          endpoint: getContentEndpoint({ ...c.context, path: c.endpointFilepath })
         }))
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) => localChain.find((c) => c.pathToFile === path)?.file
         )
 
-        // Only github:B is fetched — github:A@v1.0 is caught pre-fetch (file:A takes priority at any ref)
         const scope = nock('https://api.github.com')
-          .get((uri) =>
-            configChain
-              .filter((c) => !!c.endpoint)
-              .map((c) => c.endpoint)
-              .includes(uri)
-          )
-          .times(configChain.filter((c) => !!c.endpoint).length - 1)
+          .get((uri) => remoteChain.map((c) => c.endpoint).includes(uri))
+          .times(remoteChain.length)
           .reply(
             200,
-            (uri) =>
-              configChain
-                .filter((c) => !!c.endpoint)
-                .find((c) => c.endpoint === uri)?.file,
+            (uri) => remoteChain.find((c) => c.endpoint === uri)?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
             }
