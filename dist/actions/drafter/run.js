@@ -341,12 +341,13 @@ const findPullRequests = async (params) => {
       `After filtering by path changes, ${commits.length} commits remain.`
     );
   }
-  const seen = /* @__PURE__ */ new Set();
-  const pullRequestsRaw = commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).filter((pr) => {
-    if (seen.has(pr.number)) return false;
-    seen.add(pr.number);
-    return true;
-  });
+  const pullRequestsRaw = [
+    ...new Map(
+      commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).map(
+        (pr) => [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr]
+      )
+    ).values()
+  ];
   const pullRequests = pullRequestsRaw.filter(
     (pr) => (
       // Ensure PR is from the same repository

@@ -1422,6 +1422,7 @@ describe('drafter e2e', () => {
             * Add alien technology (#23) @jetersen
             * Add documentation (#5) @TimonVS
             * Update dependencies (#4) @TimonVS
+            * 👽 Add alien technology (#1) @TimonVS
             ",
                 "draft": true,
                 "make_latest": "true",

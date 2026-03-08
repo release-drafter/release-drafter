@@ -80,16 +80,18 @@ export const findPullRequests = async (params: {
     )
   }
 
-  // Extract PRs from commits, keeping first occurrence of each PR number (stable order)
-  const seen = new Set<number>()
-  const pullRequestsRaw = commits
-    .flatMap((commit) => commit.associatedPullRequests?.nodes ?? [])
-    .filter((pr) => pr != null)
-    .filter((pr) => {
-      if (seen.has(pr.number)) return false
-      seen.add(pr.number)
-      return true
-    })
+  // Extract unique PRs from commits, deduplicated by repo + PR number
+  const pullRequestsRaw = [
+    ...new Map(
+      commits
+        .flatMap((commit) => commit.associatedPullRequests?.nodes ?? [])
+        .filter((pr) => pr != null)
+        .map(
+          (pr) =>
+            [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr] as const
+        )
+    ).values()
+  ]
 
   const pullRequests = pullRequestsRaw.filter(
     (pr) =>
