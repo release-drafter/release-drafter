@@ -52,6 +52,20 @@
         "type": "string"
       }
     },
+    "exclude-base-ref-names": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "include-base-ref-names": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
     "include-paths": {
       "type": "array",
       "default": [],
