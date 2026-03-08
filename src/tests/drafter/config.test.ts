@@ -561,6 +561,252 @@ describe('get config file', () => {
           `)
       })
     })
+    describe('using the file: scheme with circular references', () => {
+      it('should prevent direct self-recursion in file: scheme', async () => {
+        const workspace = '/home/runner/workspace'
+        vi.stubEnv('GITHUB_WORKSPACE', workspace)
+        const context = {
+          repo: { owner: 'octocat', repo: 'hello-world' },
+          ref: 'main'
+        }
+        const inputConfigName = 'file:release-drafter.yml'
+        const configChain = [
+          {
+            pathToFile: workspace + '/.github/release-drafter.yml',
+            file: `_extends: file:./release-drafter.yml\ntemplate: initial-content`
+          }
+        ]
+
+        mocks.existsSync.mockReturnValue(true)
+        mocks.readFileSync.mockImplementation(
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file
+        )
+
+        const res = await composeConfigGet(inputConfigName, context)
+
+        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: file:./release-drafter.yml".'
+        )
+
+        expect(res.contexts.length).toBe(1)
+        expect(res.config).toMatchInlineSnapshot(`
+          {
+            "template": "initial-content",
+          }
+        `)
+      })
+
+      it('should prevent mutual recursion between two local file: configs (A extends B extends A)', async () => {
+        const workspace = '/home/runner/workspace'
+        vi.stubEnv('GITHUB_WORKSPACE', workspace)
+        const context = {
+          repo: { owner: 'octocat', repo: 'hello-world' },
+          ref: 'main'
+        }
+        const inputConfigName = 'file:release-drafter.yml'
+        const configChain = [
+          {
+            pathToFile: workspace + '/.github/release-drafter.yml',
+            file: `_extends: file:./common.yml\ntemplate: initial-content`
+          },
+          {
+            pathToFile: workspace + '/.github/common.yml',
+            file: `_extends: file:./release-drafter.yml\nbase: setting`
+          }
+        ]
+
+        mocks.existsSync.mockReturnValue(true)
+        mocks.readFileSync.mockImplementation(
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file
+        )
+
+        const res = await composeConfigGet(inputConfigName, context)
+
+        // extendRepoConfig is the already-loaded file A, whose _extends is the common.yml reference
+        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: file:./common.yml".'
+        )
+
+        expect(res.contexts.length).toBe(2)
+        expect(res.config).toMatchInlineSnapshot(`
+          {
+            "base": "setting",
+            "template": "initial-content",
+          }
+        `)
+      })
+    })
+    describe('using the file: and then the github: scheme with circular references in the github: portion', () => {
+      it('should prevent a github: config from looping back to itself within a mixed chain', async () => {
+        const workspace = '/home/runner/workspace'
+        vi.stubEnv('GITHUB_TOKEN', 'test')
+        vi.stubEnv('GITHUB_WORKSPACE', workspace)
+        const context = {
+          repo: { owner: 'octocat', repo: 'hello-world' },
+          ref: 'main'
+        }
+        const inputConfigName = 'file:release-drafter.yml'
+        const configChain = [
+          {
+            pathToFile: workspace + '/.github/release-drafter.yml',
+            file: `_extends: file:./base.yml\ntemplate: initial-content`
+          },
+          {
+            pathToFile: workspace + '/.github/base.yml',
+            file: `_extends: .github:/shared.yml\nbase: setting`
+          },
+          {
+            // github: octocat/.github shared.yml — points back to itself
+            file: `_extends: .github:/shared.yml\nshared: value`,
+            endpointFilepath: 'shared.yml',
+            endpoint: '',
+            context: {
+              repo: { owner: 'octocat', repo: '.github' }
+            }
+          }
+        ].map((c) => ({
+          ...c,
+          endpoint: c.endpointFilepath
+            ? getContentEndpoint({
+                ...c.context,
+                path: c.endpointFilepath
+              })
+            : undefined
+        }))
+
+        mocks.existsSync.mockReturnValue(true)
+        mocks.readFileSync.mockImplementation(
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file
+        )
+
+        const scope = nock('https://api.github.com')
+          .get((uri) =>
+            configChain
+              .filter((c) => !!c.endpoint)
+              .map((c) => c.endpoint)
+              .includes(uri)
+          )
+          .times(configChain.filter((c) => !!c.endpoint).length + 1) // +1 for the self-loop attempt
+          .reply(
+            200,
+            (uri) =>
+              configChain
+                .filter((c) => !!c.endpoint)
+                .find((c) => c.endpoint === uri)?.file,
+            {
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
+            }
+          )
+
+        const res = await composeConfigGet(inputConfigName, context)
+
+        expect(scope.isDone()).toBe(true)
+
+        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/shared.yml".'
+        )
+
+        // 2 file: configs + 1 github: config
+        expect(res.contexts.length).toBe(3)
+        expect(res.config).toMatchInlineSnapshot(`
+          {
+            "base": "setting",
+            "shared": "value",
+            "template": "initial-content",
+          }
+        `)
+      })
+
+      it('should prevent mutual recursion between two github: configs within a mixed chain (B extends C extends B)', async () => {
+        const workspace = '/home/runner/workspace'
+        vi.stubEnv('GITHUB_TOKEN', 'test')
+        vi.stubEnv('GITHUB_WORKSPACE', workspace)
+        const context = {
+          repo: { owner: 'octocat', repo: 'hello-world' },
+          ref: 'main'
+        }
+        const inputConfigName = 'file:release-drafter.yml'
+        const configChain = [
+          {
+            pathToFile: workspace + '/.github/release-drafter.yml',
+            file: `_extends: .github:/shared.yml\ntemplate: initial-content`
+          },
+          {
+            // github: octocat/.github shared.yml — extends to another github: config
+            file: `_extends: .github:/base.yml\nshared: value`,
+            endpointFilepath: 'shared.yml',
+            endpoint: '',
+            context: {
+              repo: { owner: 'octocat', repo: '.github' }
+            }
+          },
+          {
+            // github: octocat/.github base.yml — loops back to shared.yml
+            file: `_extends: .github:/shared.yml\nbase: setting`,
+            endpointFilepath: 'base.yml',
+            endpoint: '',
+            context: {
+              repo: { owner: 'octocat', repo: '.github' }
+            }
+          }
+        ].map((c) => ({
+          ...c,
+          endpoint: c.endpointFilepath
+            ? getContentEndpoint({
+                ...c.context,
+                path: c.endpointFilepath
+              })
+            : undefined
+        }))
+
+        mocks.existsSync.mockReturnValue(true)
+        mocks.readFileSync.mockImplementation(
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file
+        )
+
+        const scope = nock('https://api.github.com')
+          .get((uri) =>
+            configChain
+              .filter((c) => !!c.endpoint)
+              .map((c) => c.endpoint)
+              .includes(uri)
+          )
+          .times(configChain.filter((c) => !!c.endpoint).length + 1) // +1 for the loop attempt
+          .reply(
+            200,
+            (uri) =>
+              configChain
+                .filter((c) => !!c.endpoint)
+                .find((c) => c.endpoint === uri)?.file,
+            {
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
+            }
+          )
+
+        const res = await composeConfigGet(inputConfigName, context)
+
+        expect(scope.isDone()).toBe(true)
+
+        // extendRepoConfig is the already-loaded shared.yml, whose _extends is base.yml
+        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+          'Recursion detected. Configuration with identical content was already loaded. Ignoring "_extends: .github:/base.yml".'
+        )
+
+        // 1 file: config + 2 github: configs
+        expect(res.contexts.length).toBe(3)
+        expect(res.config).toMatchInlineSnapshot(`
+          {
+            "base": "setting",
+            "shared": "value",
+            "template": "initial-content",
+          }
+        `)
+      })
+    })
     describe('using the github: and then the file: scheme', () => {
       it('should throw an error', async () => {
         const workspace = '/home/runner/workspace'
