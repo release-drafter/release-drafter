@@ -38,6 +38,7 @@ export type AvailableConfigs =
   | 'config-with-include-labels'
   | 'config-with-include-paths'
   | 'config-with-include-pre-releases-true'
+  | 'config-with-include-pre-releases-false'
   | 'config-with-input-version-template'
   | 'config-with-major-minor-patch-version-template'
   | 'config-with-major-minor-version-template'

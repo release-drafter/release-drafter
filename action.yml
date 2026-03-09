@@ -57,9 +57,9 @@ inputs:
       A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`.
     required: false
     default: ''
-  include-pre-releases:
+  'include-pre-releases':
     description: |
-      When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled).
+      When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.
     required: false
     default: ''
   commitish:

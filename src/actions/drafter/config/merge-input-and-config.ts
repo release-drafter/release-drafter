@@ -65,6 +65,17 @@ export const mergeInputAndConfig = (params: {
     }
     config.prerelease = input.prerelease
   }
+  if (typeof input['include-pre-releases'] === 'boolean') {
+    if (
+      typeof config['include-pre-releases'] === 'boolean' &&
+      config['include-pre-releases'] !== input['include-pre-releases']
+    ) {
+      core.info(
+        `Input's include-pre-releases "${input['include-pre-releases']}" overrides config's include-pre-releases "${config['include-pre-releases']}"`
+      )
+    }
+    config['include-pre-releases'] = input['include-pre-releases']
+  }
   if (typeof input.latest === 'boolean') {
     if (typeof config.latest === 'boolean' && config.latest !== input.latest) {
       core.info(

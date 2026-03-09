@@ -54,7 +54,12 @@ inputs:
     default: ''
   prerelease-identifier:
     description: |
-      A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version.
+      A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`.
+    required: false
+    default: ''
+  'include-pre-releases':
+    description: |
+      When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.
     required: false
     default: ''
   commitish:

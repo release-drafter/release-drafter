@@ -22,6 +22,7 @@ export const getActionInput = (): ActionInput => {
     prerelease: getInput('prerelease'),
     'initial-commits-since': getInput('initial-commits-since'),
     'prerelease-identifier': getInput('prerelease-identifier'),
+    'include-pre-releases': getInput('include-pre-releases'),
     commitish: getInput('commitish'),
     header: getInput('header'),
     footer: getInput('footer')

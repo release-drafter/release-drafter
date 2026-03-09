@@ -16,18 +16,27 @@ const RELEASE_COUNT_LIMIT = 1000
  * - get latest published release according to ./sort-releases.ts implementation
  *
  * Returns one of (or both) draft release and latest published release
+ * The last stable release is used to determine the range of commits to include in the changelog,
+ * and to resolve the next version number.
+ *
+ * The draft release is used to determine if we should create a new release or update the existing one.
  */
 export const findPreviousReleases = async (
   params: Pick<
     ParsedConfig,
-    'commitish' | 'filter-by-commitish' | 'include-pre-releases' | 'tag-prefix'
+    | 'commitish'
+    | 'filter-by-commitish'
+    | 'tag-prefix'
+    | 'prerelease'
+    | 'include-pre-releases'
   >
 ) => {
   const {
     commitish,
     'filter-by-commitish': filterByCommitish,
-    'include-pre-releases': includePreReleases,
-    'tag-prefix': tagPrefix
+    'tag-prefix': tagPrefix,
+    prerelease: isPreRelease,
+    'include-pre-releases': includePreReleases
   } = params
   const octokit = getOctokit()
 
@@ -63,10 +72,29 @@ export const findPreviousReleases = async (
   const filteredReleases = tagPrefix
     ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix))
     : commitishFilteredReleases
-  const sortedSelectedReleases = sortReleases({
-    releases: filteredReleases.filter(
-      (r) => !r.draft && (!r.prerelease || includePreReleases)
-    ),
+
+  // Split drafts and published releases
+  let publishedReleases = filteredReleases.filter((r) => !r.draft)
+  let draftReleases = filteredReleases.filter((r) => r.draft)
+
+  // Handle prereleases
+  publishedReleases = publishedReleases.filter(
+    (publishedRelease) =>
+      isPreRelease || includePreReleases
+        ? publishedRelease.prerelease || !publishedRelease.prerelease // Both prerelease and regular published-releases
+        : !publishedRelease.prerelease // Only regular published-releases
+  )
+  draftReleases = draftReleases.filter(
+    (draftRelease) =>
+      isPreRelease
+        ? draftRelease.prerelease // Only pre-releases drafts
+        : !draftRelease.prerelease // Only regular drafts
+  )
+
+  // Sort results
+  const draftRelease = draftReleases[0] // Should this be sorted ?
+  const lastRelease = sortReleases({
+    releases: publishedReleases,
     tagPrefix
   })
   const draftRelease = filteredReleases.find(

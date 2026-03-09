@@ -29,6 +29,10 @@ export const commonConfigSchema = object({
    */
   'prerelease-identifier': string().optional(),
   /**
+   * When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.
+   */
+  'include-pre-releases': stringbool().or(boolean()).optional(),
+  /**
    * The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.
    */
   commitish: string().optional(),

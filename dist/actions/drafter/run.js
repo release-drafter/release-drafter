@@ -97,9 +97,13 @@ var RELEASE_COUNT_LIMIT = 1e3;
 * - get latest published release according to ./sort-releases.ts implementation
 *
 * Returns one of (or both) draft release and latest published release
+* The last stable release is used to determine the range of commits to include in the changelog,
+* and to resolve the next version number.
+*
+* The draft release is used to determine if we should create a new release or update the existing one.
 */
 var findPreviousReleases = async (params) => {
-	const { commitish, "filter-by-commitish": filterByCommitish, "tag-prefix": tagPrefix, prerelease: isPreRelease } = params;
+	const { commitish, "filter-by-commitish": filterByCommitish, "tag-prefix": tagPrefix, prerelease: isPreRelease, "include-pre-releases": includePreReleases } = params;
 	const octokit = getOctokit();
 	info("Fetching releases from GitHub...");
 	let releaseCount = 0;
@@ -118,7 +122,7 @@ var findPreviousReleases = async (params) => {
 	const filteredReleases = tagPrefix ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix)) : commitishFilteredReleases;
 	let publishedReleases = filteredReleases.filter((r) => !r.draft);
 	let draftReleases = filteredReleases.filter((r) => r.draft);
-	publishedReleases = publishedReleases.filter((publishedRelease) => isPreRelease ? publishedRelease.prerelease || !publishedRelease.prerelease : !publishedRelease.prerelease);
+	publishedReleases = publishedReleases.filter((publishedRelease) => isPreRelease || includePreReleases ? publishedRelease.prerelease || !publishedRelease.prerelease : !publishedRelease.prerelease);
 	draftReleases = draftReleases.filter((draftRelease) => isPreRelease ? draftRelease.prerelease : !draftRelease.prerelease);
 	const draftRelease = draftReleases[0];
 	const lastRelease = sortReleases({
@@ -149,6 +153,9 @@ var findPreviousReleases = async (params) => {
 var find_commits_with_path_changes_default = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(path: $path, since: $since, after: $after) {\n          __typename\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts
+/**
+* @see https://docs.github.com/en/graphql/reference/objects#commit
+*/
 var findCommitsWithPathChange = async (paths, params) => {
 	const octokit = getOctokit();
 	const commitIdsMatchingPaths = {};
@@ -1319,6 +1326,7 @@ var commonConfigSchema = object({
 	prerelease: stringbool().or(boolean()).optional(),
 	"initial-commits-since": datetime().optional(),
 	"prerelease-identifier": string().optional(),
+	"include-pre-releases": stringbool().or(boolean()).optional(),
 	commitish: string().optional(),
 	header: string().optional(),
 	footer: string().optional()
@@ -1394,6 +1402,7 @@ var getActionInput = () => {
 		prerelease: getInput$1("prerelease"),
 		"initial-commits-since": getInput$1("initial-commits-since"),
 		"prerelease-identifier": getInput$1("prerelease-identifier"),
+		"include-pre-releases": getInput$1("include-pre-releases"),
 		commitish: getInput$1("commitish"),
 		header: getInput$1("header"),
 		footer: getInput$1("footer")
@@ -1430,6 +1439,10 @@ var mergeInputAndConfig = (params) => {
 	if (typeof input.prerelease === "boolean") {
 		if (typeof config.prerelease === "boolean" && config.prerelease !== input.prerelease) info(`Input's prerelease "${input.prerelease}" overrides config's prerelease "${config.prerelease}"`);
 		config.prerelease = input.prerelease;
+	}
+	if (typeof input["include-pre-releases"] === "boolean") {
+		if (typeof config["include-pre-releases"] === "boolean" && config["include-pre-releases"] !== input["include-pre-releases"]) info(`Input's include-pre-releases "${input["include-pre-releases"]}" overrides config's include-pre-releases "${config["include-pre-releases"]}"`);
+		config["include-pre-releases"] = input["include-pre-releases"];
 	}
 	if (typeof input.latest === "boolean") {
 		if (typeof config.latest === "boolean" && config.latest !== input.latest) info(`Input's latest "${input.latest}" overrides config's latest "${config.latest}"`);

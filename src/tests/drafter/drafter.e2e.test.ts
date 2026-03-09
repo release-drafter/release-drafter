@@ -976,6 +976,73 @@ describe('drafter e2e', () => {
       })
     })
 
+    describe('with include-pre-releases input override', () => {
+      it('includes pre releases when the input is true', async () => {
+        await mockContext('push')
+        await mockInput('include-pre-releases', 'true')
+        mocks.config.mockReturnValue('config-with-include-pre-releases-false')
+
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release-2', 'pre-release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+
+        await runDrafter()
+
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# What's Changed
+
+          * Add documentation (#5) @TimonVS
+          * Update dependencies (#4) @TimonVS
+          * Bug fixes (#3) @TimonVS
+          * Add big feature (#2) @TimonVS
+          * 👽 Add alien technology (#1) @TimonVS
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v1.5.0",
+              "prerelease": false,
+              "tag_name": "v1.5.0",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+
+      it('does not include pre releases when the input is false', async () => {
+        await mockContext('push')
+        await mockInput('include-pre-releases', 'false')
+        mocks.config.mockReturnValue('config-with-include-pre-releases-true')
+
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release-2', 'pre-release']
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+
+        await runDrafter()
+
+        const lastCallBody = mocks.postReleaseBody.mock.lastCall?.at(
+          0
+        ) as unknown as { name: string; tag_name: string } | undefined
+        expect(lastCallBody?.name).not.toBe('v1.5.0')
+        expect(lastCallBody?.tag_name).not.toBe('v1.5.0')
+
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+    })
+
     describe('with exclude-labels config', () => {
       it('excludes pull requests', async () => {
         await mockContext('push')
