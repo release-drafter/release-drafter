@@ -59,6 +59,13 @@
         "type": "string"
       }
     },
+    "exclude-paths": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
     "exclude-contributors": {
       "type": "array",
       "default": [],
