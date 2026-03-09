@@ -1,6 +1,7 @@
 import { RequestParameters } from '@octokit/graphql/types'
 
 const getPath = (obj: unknown, path: string[]) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   path.reduce((acc: any, key) => acc?.[key], obj)
 
 const hasPath = (obj: unknown, path: string[]) =>

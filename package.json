@@ -33,7 +33,7 @@
     "lint": "npx eslint .",
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "schemas": "npx tsx src/scripts/json-schema.ts && npx prettier --write **/schema.json schema.json",
-    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run build"
+    "all": "npm run format:write && npm run lint && npm run test:run && npm run coverage && npm run build"
   },
   "dependencies": {
     "@actions/core": "^3.0.0",

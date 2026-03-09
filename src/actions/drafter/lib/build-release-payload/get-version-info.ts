@@ -289,9 +289,7 @@ const splitSemVersion = (
       ? input[versionKey]
       : input[versionKey].version
 
-  const prereleaseVersion = !version
-    ? ''
-    : prerelease(version)?.join('.') || ''
+  const prereleaseVersion = !version ? '' : prerelease(version)?.join('.') || ''
 
   return {
     ...input,

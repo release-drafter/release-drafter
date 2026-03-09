@@ -26699,7 +26699,7 @@ export type Repository = Node & PackageOwner & ProjectOwner & ProjectV2Recent & 
   interactionAbility?: Maybe<RepositoryInteractionAbility>;
   /** Indicates if the repository is unmaintained. */
   isArchived: Scalars['Boolean']['output'];
-  /** Returns true if blank issue creation is allowed */
+  /** Returns true if the viewer can create a blank issue in this repository */
   isBlankIssuesEnabled: Scalars['Boolean']['output'];
   /** Returns whether or not this repository disabled. */
   isDisabled: Scalars['Boolean']['output'];

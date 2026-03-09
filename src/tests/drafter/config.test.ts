@@ -579,8 +579,7 @@ describe('get config file', () => {
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
         )
 
         const res = await composeConfigGet(inputConfigName, context)
@@ -618,8 +617,7 @@ describe('get config file', () => {
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
         )
 
         const res = await composeConfigGet(inputConfigName, context)
@@ -678,8 +676,7 @@ describe('get config file', () => {
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
         )
 
         const scope = nock('https://api.github.com')
@@ -764,8 +761,7 @@ describe('get config file', () => {
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
         )
 
         const scope = nock('https://api.github.com')
@@ -840,7 +836,10 @@ describe('get config file', () => {
           // same filepath+ref+repo as file:A, different scheme — caught by pre-fetch check
         ].map((c) => ({
           ...c,
-          endpoint: getContentEndpoint({ ...c.context, path: c.endpointFilepath })
+          endpoint: getContentEndpoint({
+            ...c.context,
+            path: c.endpointFilepath
+          })
         }))
 
         mocks.existsSync.mockReturnValue(true)
@@ -909,7 +908,10 @@ describe('get config file', () => {
           // same filepath+repo as file:A (different ref) — caught by pre-fetch check
         ].map((c) => ({
           ...c,
-          endpoint: getContentEndpoint({ ...c.context, path: c.endpointFilepath })
+          endpoint: getContentEndpoint({
+            ...c.context,
+            path: c.endpointFilepath
+          })
         }))
 
         mocks.existsSync.mockReturnValue(true)

@@ -68,8 +68,8 @@ export const exclusiveConfigSchema = object({
   /**
    * Filter previous releases to consider only those with the target matching `commitish`.
    */
-  'filter-by-commitish': z.boolean().optional().default(false),
-  'pull-request-limit': z.number().int().positive().optional().default(5),
+  'filter-by-commitish': boolean().optional().default(false),
+  'pull-request-limit': number().int().positive().optional().default(5),
   /**
    * Size of the pagination window when walking the repo. Can avoid erratic 502s from Github. Default: `15`
    */

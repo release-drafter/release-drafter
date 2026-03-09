@@ -36,7 +36,7 @@ export default defineConfig({
         format: 'es',
         entryFileNames: '[name].js',
         chunkFileNames: 'chunks/[name].js',
-        paths: (id) => builtinModules.includes(id) ? `node:${id}` : id
+        paths: (id) => (builtinModules.includes(id) ? `node:${id}` : id)
       }
     },
     minify: false

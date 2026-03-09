@@ -69,12 +69,14 @@ export const getConfigFiles = async (
         loadedFrom.repo.repo === preCheckTarget.repo.repo
       const crossScheme =
         loadedFrom.scheme === 'file' && preCheckTarget.scheme === 'github'
-      return sameFilepath && sameRepo && (crossScheme || loadedFrom.ref === preCheckTarget.ref)
+      return (
+        sameFilepath &&
+        sameRepo &&
+        (crossScheme || loadedFrom.ref === preCheckTarget.ref)
+      )
     })
     if (alreadyLoaded) {
-      core.warning(
-        `Recursion detected. Ignoring "_extends: ${lastExtends}".`
-      )
+      core.warning(`Recursion detected. Ignoring "_extends: ${lastExtends}".`)
       core.debug(`getConfigFiles: Recursion detected, stopping extends chain`)
       return files
     }
