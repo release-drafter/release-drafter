@@ -31,11 +31,9 @@
       "items": { "type": "string" }
     },
     "exclude-paths": {
-      "type": "array",
       "default": [],
-      "items": {
-        "type": "string"
-      }
+      "type": "array",
+      "items": { "type": "string" }
     },
     "exclude-contributors": {
       "default": [],
@@ -171,6 +169,9 @@
       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
     },
     "prerelease-identifier": { "type": "string" },
+    "include-pre-releases": {
+      "anyOf": [{ "type": "boolean" }, { "type": "boolean" }]
+    },
     "commitish": { "type": "string" },
     "header": { "type": "string" },
     "footer": { "type": "string" }
@@ -182,6 +183,7 @@
     "exclude-labels",
     "include-labels",
     "include-paths",
+    "exclude-paths",
     "exclude-contributors",
     "no-contributors-template",
     "sort-by",

@@ -45,6 +45,10 @@ const suites: SuiteParams[] = [
     parseInput: { template, 'pull-request-limit': 49 },
     parseValid: true
   },
+  {
+    parseInput: { template, 'exclude-paths': ['docs/'] },
+    parseValid: true
+  },
   { parseInput: { template, 'history-limit': 17 }, parseValid: true },
   {
     parseInput: { template, 'initial-commits-since': '2025-06-18T10:29:51Z' },

@@ -29,6 +29,7 @@ type Payload =
   | 'graphql-include-path-src-5.md-overlapping-label'
   | 'graphql-commits-paginated-2'
   | 'graphql-include-path-src-5.md-squash-merging'
+  | 'graphql-exclude-path-merge-commit'
 
 export const getGqlPayload = (payload: Payload) =>
   JSON.parse(

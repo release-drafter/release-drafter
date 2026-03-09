@@ -2,8 +2,10 @@
   "data": {
     "repository": {
       "object": {
+        "__typename": "Commit",
         "history": {
           "pageInfo": {
+            "__typename": "PageInfo",
             "hasNextPage": false,
             "endCursor": "00de634cb5f3c0b854eb30b0afe5b1816e372ed3 1"
           },

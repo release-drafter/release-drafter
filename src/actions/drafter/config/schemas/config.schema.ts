@@ -48,6 +48,10 @@ export const exclusiveConfigSchema = object({
    */
   'include-paths': array(string()).optional().default([]),
   /**
+   * Exclude pull requests from the release notes if they modified any of the paths in this array. Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
+   */
+  'exclude-paths': array(string()).optional().default([]),
+  /**
    * Exclude specific usernames from the generated `$CONTRIBUTORS` variable.
    */
   'exclude-contributors': array(string()).optional().default([]),

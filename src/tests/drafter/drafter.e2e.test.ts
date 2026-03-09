@@ -1816,6 +1816,86 @@ describe('drafter e2e', () => {
       expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
+
+    it('excludes commits that touch excluded paths from the release', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-exclude-paths')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = mockGraphqlQuery([
+        {
+          query: 'query findCommitsWithAssociatedPullRequests',
+          payload: 'graphql-commits-merge-commit'
+        },
+        {
+          query: 'query findCommitsWithPathChangesQuery',
+          payload: 'graphql-exclude-path-merge-commit'
+        }
+      ])
+      await runDrafter()
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+        * Bug fixes (#3) @TimonVS
+        * Add big feature (#2) @TimonVS
+        * 👽 Add alien technology (#1) @TimonVS
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "v$INPUT_VERSION (Code name: Placeholder)",
+            "prerelease": false,
+            "tag_name": "v$INPUT_VERSION",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+
+    it('exclude takes precedence over include when both list the same path', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-include-exclude-paths')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: []
+      })
+      const gqlScope = mockGraphqlQuery([
+        {
+          query: 'query findCommitsWithAssociatedPullRequests',
+          payload: 'graphql-commits-merge-commit'
+        },
+        {
+          query: 'query findCommitsWithPathChangesQuery',
+          payload: 'graphql-include-path-src-5.md-merge-commit'
+        },
+        {
+          query: 'query findCommitsWithPathChangesQuery',
+          payload: 'graphql-include-path-src-5.md-merge-commit'
+        }
+      ])
+      await runDrafter()
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+        * No changes
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "v$INPUT_VERSION (Code name: Placeholder)",
+            "prerelease": false,
+            "tag_name": "v$INPUT_VERSION",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
   })
 
   describe('with pull-request-limit config', () => {

@@ -12,35 +12,64 @@ export const findPullRequests = async (params: {
   const since =
     params.lastRelease?.created_at || params.config['initial-commits-since']
 
-  const shouldfilterByChangedPaths = params.config['include-paths'].length > 0
+  const shouldFilterByIncludedPaths = params.config['include-paths'].length > 0
+  const shouldFilterByExcludedPaths = params.config['exclude-paths'].length > 0
 
   /**
    * If include-paths are specified,
-   * find all commits that changed those paths to filter PRs later
+   * find all commits that changed those paths to filter PRs later.
+   *
+   * If exclude-paths are specified,
+   * find all commits that changed those paths and remove them from results.
    *
    * The underlying query does not bother fetching PRs along commits.
    */
-  let commitIdsMatchingPaths: Record<string, Set<string>> = {}
-  if (shouldfilterByChangedPaths) {
-    core.info('Finding commits with path changes...')
-    const {
-      commitIdsMatchingPaths: commitIdsMatchingPathsRes,
-      hasFoundCommits
-    } = await findCommitsWithPathChange(params.config['include-paths'], {
-      since,
-      name: context.repo.repo,
-      owner: context.repo.owner,
-      targetCommitish: params.config.commitish
-    })
+  const includedCommitIds = new Set<string>()
+  if (shouldFilterByIncludedPaths) {
+    core.info('Finding commits with included path changes...')
+    const { commitIdsMatchingPaths, hasFoundCommits } =
+      await findCommitsWithPathChange(params.config['include-paths'], {
+        since,
+        name: context.repo.repo,
+        owner: context.repo.owner,
+        targetCommitish: params.config.commitish
+      })
 
     // Short circuit to avoid blowing GraphQL budget
     if (!hasFoundCommits) {
       return { commits: [], pullRequests: [] }
     }
 
-    commitIdsMatchingPaths = commitIdsMatchingPathsRes
     Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
-      core.info(`Found ${ids.size} commits with changes to path "${path}"`)
+      core.info(
+        `Found ${ids.size} commits with changes to included path "${path}"`
+      )
+      for (const id of ids) {
+        includedCommitIds.add(id)
+      }
+    })
+  }
+
+  const excludedCommitIds = new Set<string>()
+  if (shouldFilterByExcludedPaths) {
+    core.info('Finding commits with excluded path changes...')
+    const { commitIdsMatchingPaths } = await findCommitsWithPathChange(
+      params.config['exclude-paths'],
+      {
+        since,
+        name: context.repo.repo,
+        owner: context.repo.owner,
+        targetCommitish: params.config.commitish
+      }
+    )
+
+    Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+      core.info(
+        `Found ${ids.size} commits with changes to excluded path "${path}"`
+      )
+      for (const id of ids) {
+        excludedCommitIds.add(id)
+      }
     })
   }
 
@@ -65,16 +94,21 @@ export const findPullRequests = async (params: {
 
   core.info(`Found ${commits.length} commits.`)
 
-  // Filter-out commits that did not change specified paths
-  commits = shouldfilterByChangedPaths
-    ? commits.filter((commit) =>
-        params.config['include-paths'].some((path) =>
-          commitIdsMatchingPaths[path].has(commit.id)
-        )
-      )
-    : commits
+  // Filter-out commits that did not change included paths.
+  // Excluded paths take precedence over included paths when both are configured.
+  commits = commits.filter((commit) => {
+    if (excludedCommitIds.has(commit.id)) {
+      return false
+    }
 
-  if (shouldfilterByChangedPaths) {
+    if (shouldFilterByIncludedPaths) {
+      return includedCommitIds.has(commit.id)
+    }
+
+    return true
+  })
+
+  if (shouldFilterByIncludedPaths || shouldFilterByExcludedPaths) {
     core.info(
       `After filtering by path changes, ${commits.length} commits remain.`
     )
