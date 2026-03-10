@@ -1207,6 +1207,296 @@ describe('drafter e2e', () => {
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
+
+      describe('component helper variables', () => {
+        it('with default version template', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config-with-component-helpers-default')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release']
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-merge-commit'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "Component helpers with default template behavior:
+            - MAJOR: 3.0.0
+            - MAJOR_MAJOR: 3
+            - MAJOR_MINOR: 0
+            - MAJOR_PATCH: 0
+
+            - MINOR: 2.1.0
+            - MINOR_MAJOR: 2
+            - MINOR_MINOR: 1
+            - MINOR_PATCH: 0
+
+            - PATCH: 2.0.1
+            - PATCH_MAJOR: 2
+            - PATCH_MINOR: 0
+            - PATCH_PATCH: 1
+
+            - PRERELEASE: -0
+
+            - Resolved : 2.0.1
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "Release Drafter v2.0.1",
+                "prerelease": false,
+                "tag_name": "v2.0.1",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true)
+          expect(gqlScope.isDone()).toBe(true)
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+
+        it('with $MAJOR.$MINOR template', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue(
+            'config-with-component-helpers-major-minor'
+          )
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release']
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-merge-commit'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "Component helpers with $MAJOR.$MINOR template:
+            - MAJOR: 3.0
+            - MAJOR_MAJOR: 3
+            - MAJOR_MINOR: 0
+            - MAJOR_PATCH: 0
+
+            - MINOR: 2.1
+            - MINOR_MAJOR: 2
+            - MINOR_MINOR: 1
+            - MINOR_PATCH: 0
+
+            - PATCH: 2.0
+            - PATCH_MAJOR: 2
+            - PATCH_MINOR: 0
+            - PATCH_PATCH: 1
+
+            - PRERELEASE: -0
+
+            - Resolved : 2.0
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "Release Drafter v2.0",
+                "prerelease": false,
+                "tag_name": "v2.0",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true)
+          expect(gqlScope.isDone()).toBe(true)
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+
+        it('with $MAJOR template', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config-with-component-helpers-major')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release']
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-merge-commit'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "Component helpers with $MAJOR template:
+            - MAJOR: 3
+            - MAJOR_MAJOR: 3
+            - MAJOR_MINOR: 0
+            - MAJOR_PATCH: 0
+
+            - MINOR: 2
+            - MINOR_MAJOR: 2
+            - MINOR_MINOR: 1
+            - MINOR_PATCH: 0
+
+            - PATCH: 2
+            - PATCH_MAJOR: 2
+            - PATCH_MINOR: 0
+            - PATCH_PATCH: 1
+
+            - PRERELEASE: -0
+
+            - Resolved : 2
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "Release Drafter v3",
+                "prerelease": false,
+                "tag_name": "v3",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true)
+          expect(gqlScope.isDone()).toBe(true)
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+
+        it('with custom format template', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config-with-component-helpers-custom')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release']
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-merge-commit'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "Component helpers with custom template:
+            - MAJOR: Major: 3, Minor: 0, Patch: 0, Prerelease: 
+            - MAJOR_MAJOR: 3
+            - MAJOR_MINOR: 0
+            - MAJOR_PATCH: 0
+
+            - MINOR: Major: 2, Minor: 1, Patch: 0, Prerelease: 
+            - MINOR_MAJOR: 2
+            - MINOR_MINOR: 1
+            - MINOR_PATCH: 0
+
+            - PATCH: Major: 2, Minor: 0, Patch: 1, Prerelease: 
+            - PATCH_MAJOR: 2
+            - PATCH_MINOR: 0
+            - PATCH_PATCH: 1
+
+            - PRERELEASE: -0
+
+            - Resolved : Major: 2, Minor: 0, Patch: 1, Prerelease: 
+            ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "Release Drafter vMajor: 2, Minor: 0, Patch: 1, Prerelease: ",
+                "prerelease": false,
+                "tag_name": "vMajor: 2, Minor: 0, Patch: 1, Prerelease: ",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true)
+          expect(gqlScope.isDone()).toBe(true)
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+
+        it('with prerelease enabled', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue(
+            'config-with-component-helpers-prerelease'
+          )
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release']
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-merge-commit'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "Component helpers with prerelease:
+            - MAJOR: 3.0.0
+            - MAJOR_MAJOR: 3
+            - MAJOR_MINOR: 0
+            - MAJOR_PATCH: 0
+
+            - MINOR: 2.1.0
+            - MINOR_MAJOR: 2
+            - MINOR_MINOR: 1
+            - MINOR_PATCH: 0
+
+            - PATCH: 2.0.1
+            - PATCH_MAJOR: 2
+            - PATCH_MINOR: 0
+            - PATCH_PATCH: 1
+
+            - PRERELEASE: -0
+
+            - Resolved : 2.0.1
+            ",
+                "draft": true,
+                "make_latest": "false",
+                "name": "Release Drafter v2.0.1",
+                "prerelease": true,
+                "tag_name": "v2.0.1",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true)
+          expect(gqlScope.isDone()).toBe(true)
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+
+        it('with prerelease and prerelease-identifier', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue(
+            'config-with-component-helpers-prerelease-identifier'
+          )
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release']
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-commits-merge-commit'
+          })
+          await runDrafter()
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "Component helpers with prerelease and identifier:
+            - MAJOR: 3.0.0
+            - MAJOR_MAJOR: 3
+            - MAJOR_MINOR: 0
+            - MAJOR_PATCH: 0
+
+            - MINOR: 2.1.0
+            - MINOR_MAJOR: 2
+            - MINOR_MINOR: 1
+            - MINOR_PATCH: 0
+
+            - PATCH: 2.0.1
+            - PATCH_MAJOR: 2
+            - PATCH_MINOR: 0
+            - PATCH_PATCH: 1
+
+            - PRERELEASE: -beta.0
+
+            - Resolved : 2.0.1-beta.0
+            ",
+                "draft": true,
+                "make_latest": "false",
+                "name": "Release Drafter v2.0.1-beta.0",
+                "prerelease": true,
+                "tag_name": "v2.0.1-beta.0",
+                "target_commitish": "refs/heads/master",
+              },
+            ]
+          `)
+          expect(scope.isDone()).toBe(true)
+          expect(gqlScope.isDone()).toBe(true)
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+      })
     })
 
     describe('with header and footer config', () => {

@@ -145,11 +145,6 @@ export const buildReleasePayload = (params: {
     mutableCommitish = ''
   }
 
-  const resolvedVersion = versionInfo.$RESOLVED_VERSION?.version
-  const majorVersion = versionInfo.$RESOLVED_VERSION?.$MAJOR
-  const minorVersion = versionInfo.$RESOLVED_VERSION?.$MINOR
-  const patchVersion = versionInfo.$RESOLVED_VERSION?.$PATCH
-
   const res = {
     name: mutableInputName,
     tag: mutableInputTag,
@@ -158,26 +153,28 @@ export const buildReleasePayload = (params: {
     prerelease: config['prerelease'],
     make_latest: config['latest'],
     draft: !input['publish'],
-    resolvedVersion,
-    majorVersion,
-    minorVersion,
-    patchVersion
+    resolvedVersion: versionInfo?.$RESOLVED_VERSION,
+    majorVersion: versionInfo?.$RESOLVED_VERSION_MAJOR,
+    minorVersion: versionInfo?.$RESOLVED_VERSION_MINOR,
+    patchVersion: versionInfo?.$RESOLVED_VERSION_PATCH,
+    prereleaseVersion: versionInfo?.$RESOLVED_VERSION_PRERELEASE
   }
 
   core.info(`Release payload built successfully`)
-  core.info(`  name:              ${res.name}`)
-  core.info(`  tag:               ${res.tag}`)
-  core.info(`  body:              ${res.body.length} characters long`)
-  core.info(`  targetCommitish:   ${res.targetCommitish}`)
-  core.info(`  prerelease:        ${res.prerelease}`)
-  core.info(`  make_latest:       ${res.make_latest}`)
+  core.info(`  name:                        ${res.name}`)
+  core.info(`  tag:                         ${res.tag}`)
+  core.info(`  body:                        ${res.body.length} characters long`)
+  core.info(`  targetCommitish:             ${res.targetCommitish}`)
+  core.info(`  prerelease:                  ${res.prerelease}`)
+  core.info(`  make_latest:                 ${res.make_latest}`)
   core.info(
-    `  draft:             ${res.draft}${!res.draft ? ' (will be published !)' : ''}`
+    `  draft:                       ${res.draft}${!res.draft ? ' (will be published !)' : ''}`
   )
-  core.info(`  resolvedVersion:   ${res.resolvedVersion}`)
-  core.info(`  majorVersion:      ${res.majorVersion}`)
-  core.info(`  minorVersion:      ${res.minorVersion}`)
-  core.info(`  patchVersion:      ${res.patchVersion}`)
+  core.info(`  RESOLVED_VERSION:            ${res.resolvedVersion}`)
+  core.info(`  RESOLVED_VERSION_MAJOR:      ${res.majorVersion}`)
+  core.info(`  RESOLVED_VERSION_MINOR:      ${res.minorVersion}`)
+  core.info(`  RESOLVED_VERSION_PATCH:      ${res.patchVersion}`)
+  core.info(`  RESOLVED_VERSION_PRERELEASE: ${res.prereleaseVersion}`)
 
   return res
 }

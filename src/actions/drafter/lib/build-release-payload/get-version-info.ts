@@ -1,29 +1,21 @@
 import { findPreviousReleases } from '../find-previous-releases'
 import { resolveVersionKeyIncrement } from './resolve-version-increment'
-import type { SemVer, ReleaseType } from 'semver'
-import coerce from 'semver/functions/coerce'
-import inc from 'semver/functions/inc'
-import major from 'semver/functions/major'
-import minor from 'semver/functions/minor'
-import parse from 'semver/functions/parse'
-import patch from 'semver/functions/patch'
-import prerelease from 'semver/functions/prerelease'
-import { renderTemplate } from './render-template'
+import type { ReleaseType } from 'semver'
 import { Config, ExclusiveInput } from '../../config'
+import { VersionDescriptor } from './version-descriptor'
 
 type Release = Exclude<
   Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease'],
   undefined
 >
 
-// TODO is this not supposed to be $MAJOR.$MINOR.$PATCH$PRERELEASE ?
-const DEFAULT_VERSION_TEMPLATE = '$MAJOR.$MINOR.$PATCH'
-
 export const getVersionInfo = (params: {
   lastRelease: Pick<Release, 'tag_name' | 'name'> | undefined
   config: Pick<
     Config,
-    'version-template' | 'tag-prefix' | 'prerelease-identifier'
+    | 'version-template' // TODO handle rendering custom versions
+    | 'tag-prefix'
+    | 'prerelease-identifier'
   >
   input: Pick<ExclusiveInput, 'version' | 'tag' | 'name'>
   versionKeyIncrement: ReturnType<typeof resolveVersionKeyIncrement>
@@ -35,340 +27,76 @@ export const getVersionInfo = (params: {
     versionKeyIncrement: _versionKeyIncrement
   } = params
 
-  let versionKeyIncrement = _versionKeyIncrement // local mutable copy
+  let _localIncrement: ReleaseType | 'no_increment' =
+    structuredClone(_versionKeyIncrement) // local mutable copy
 
-  const lastReleaseVersion = coerceVersion(lastRelease, {
-    tagPrefix: config['tag-prefix']
+  const versionFromLastRelease = new VersionDescriptor(lastRelease, {
+    tagPrefix: config['tag-prefix'],
+    preReleaseIdentifier: config['prerelease-identifier']
   })
-  const inputVersion = coerceVersion(
-    /**
-     * Use the first override parameter to identify
-     * a version, from the most accurate to the least
-     */
+  const versionFromInput = new VersionDescriptor(
     input.version || input.tag || input.name,
     {
-      tagPrefix: config['tag-prefix']
+      tagPrefix: config['tag-prefix'],
+      preReleaseIdentifier: config['prerelease-identifier']
     }
   )
 
-  const isPreVersionKeyIncrement = versionKeyIncrement?.startsWith('pre')
-
-  if (!lastReleaseVersion && !inputVersion) {
-    if (isPreVersionKeyIncrement) {
-      defaultVersionInfo['$RESOLVED_VERSION'] = structuredClone(
-        defaultVersionInfo['$NEXT_PRERELEASE_VERSION']
-      )
-    }
-
-    // Apply custom version template to default version info
-    if (
-      config['version-template'] &&
-      config['version-template'] !== DEFAULT_VERSION_TEMPLATE
-    ) {
-      const defaultVersion = toSemver('0.1.0') as SemVer
-      const templateableVersion = getTemplatableVersion({
-        version: defaultVersion,
-        template: config['version-template'],
-        inputVersion,
-        versionKeyIncrement: versionKeyIncrement || 'patch',
-        preReleaseIdentifier: config['prerelease-identifier']
-      })
-
-      for (const key of Object.keys(templateableVersion)) {
-        const keyTyped = key as keyof typeof templateableVersion
-        if (
-          templateableVersion[keyTyped] &&
-          typeof templateableVersion[keyTyped] === 'object' &&
-          templateableVersion[keyTyped].template
-        ) {
-          templateableVersion[keyTyped].version = renderTemplate({
-            template: templateableVersion[keyTyped].template,
-            object: templateableVersion[keyTyped]
-          })
-        }
-      }
-
-      // For first release, override $RESOLVED_VERSION to not increment
-      let resolvedVersionObj = splitSemVersion({
-        version: defaultVersion,
-        template: config['version-template'],
-        inputVersion,
-        versionKeyIncrement: versionKeyIncrement || 'patch',
-        preReleaseIdentifier: config['prerelease-identifier']
-      })
-
-      if (!resolvedVersionObj) {
-        throw new Error('Failed to generate resolved version object')
-      }
-
-      resolvedVersionObj = {
-        ...resolvedVersionObj,
-        version: renderTemplate({
-          template: config['version-template'],
-          object: resolvedVersionObj
-        })
-      }
-      templateableVersion.$RESOLVED_VERSION = resolvedVersionObj
-
-      return templateableVersion
-    }
-
-    return defaultVersionInfo
-  }
-
-  const shouldIncrementAsPrerelease =
-    isPreVersionKeyIncrement && lastReleaseVersion?.prerelease?.length
-
-  if (shouldIncrementAsPrerelease) {
-    versionKeyIncrement = 'prerelease'
-  }
-
-  const templateableVersion = getTemplatableVersion({
-    version: lastReleaseVersion,
-    template: config['version-template'],
-    inputVersion,
-    versionKeyIncrement,
-    preReleaseIdentifier: config['prerelease-identifier']
-  })
-
-  // Apply custom version template formatting if provided
   if (
-    config['version-template'] &&
-    config['version-template'] !== DEFAULT_VERSION_TEMPLATE
+    _localIncrement?.startsWith('pre') &&
+    versionFromLastRelease?.prerelease?.length
   ) {
-    for (const key of Object.keys(templateableVersion)) {
-      const keyTyped = key as keyof typeof templateableVersion
-      if (
-        templateableVersion[keyTyped] &&
-        typeof templateableVersion[keyTyped] === 'object' &&
-        templateableVersion[keyTyped].template
-      ) {
-        templateableVersion[keyTyped].version = renderTemplate({
-          template: templateableVersion[keyTyped].template,
-          object: templateableVersion[keyTyped]
-        })
-      }
-    }
+    _localIncrement = 'prerelease'
   }
 
-  return templateableVersion
-}
+  let referenceVersion: VersionDescriptor
 
-const toSemver = (version?: string | SemVer | null | undefined) => {
-  const result = parse(version)
-  if (result) {
-    return result
-  }
-
-  // doesn't handle prerelease
-  return coerce(version)
-}
-
-/**
- * Get a semver version from various input types
- */
-const coerceVersion = (
-  input: Pick<Release, 'tag_name' | 'name'> | string | undefined,
-  opt?: {
-    tagPrefix?: Config['tag-prefix']
-  }
-) => {
-  if (!input) {
-    return null
-  }
-
-  const stripTag = (input?: string | null) =>
-    !!opt?.tagPrefix && input?.startsWith(opt.tagPrefix)
-      ? input.slice(opt.tagPrefix.length)
-      : input
-
-  return typeof input === 'object'
-    ? toSemver(stripTag(input.tag_name)) || toSemver(stripTag(input.name))
-    : toSemver(stripTag(input))
-}
-
-type VersionDescriptor = {
-  version: SemVer | string | null | undefined
-  template: string
-  inputVersion: SemVer | null
-  versionKeyIncrement: ReleaseType
-  inc: ReleaseType
-  preReleaseIdentifier?: string
-}
-
-type VersionDescriptorTemplates = {
-  $MAJOR: number
-  $MINOR: number
-  $PATCH: number
-  $PRERELEASE: string
-  $COMPLETE?: string | null
-}
-
-// exported for tests
-export const defaultVersionInfo: Record<
-  `$${Uppercase<string>}`,
-  (VersionDescriptor & VersionDescriptorTemplates) | null
-> & {
-  $INPUT_VERSION: Omit<
-    VersionDescriptor & VersionDescriptorTemplates,
-    'inc'
-  > | null
-} = {
-  $NEXT_MAJOR_VERSION: {
-    version: '1.0.0',
-    template: '$MAJOR.$MINOR.$PATCH',
-    inputVersion: null,
-    versionKeyIncrement: 'patch',
-    inc: 'major',
-    $MAJOR: 1,
-    $MINOR: 0,
-    $PATCH: 0,
-    $PRERELEASE: ''
-  },
-  $NEXT_MINOR_VERSION: {
-    version: '0.1.0',
-    template: '$MAJOR.$MINOR.$PATCH',
-    inputVersion: null,
-    versionKeyIncrement: 'patch',
-    inc: 'minor',
-    $MAJOR: 0,
-    $MINOR: 1,
-    $PATCH: 0,
-    $PRERELEASE: ''
-  },
-  $NEXT_PATCH_VERSION: {
-    version: '0.1.0',
-    template: '$MAJOR.$MINOR.$PATCH',
-    inputVersion: null,
-    versionKeyIncrement: 'patch',
-    inc: 'patch',
-    $MAJOR: 0,
-    $MINOR: 1,
-    $PATCH: 0,
-    $PRERELEASE: ''
-  },
-  $NEXT_PRERELEASE_VERSION: {
-    version: '0.1.0-rc.0',
-    template: '$MAJOR.$MINOR.$PATCH$PRERELEASE',
-    inputVersion: null,
-    versionKeyIncrement: 'prerelease',
-    inc: 'prerelease',
-    preReleaseIdentifier: 'rc',
-    $MAJOR: 0,
-    $MINOR: 1,
-    $PATCH: 0,
-    $PRERELEASE: '-rc.0'
-  },
-  $INPUT_VERSION: null,
-  $RESOLVED_VERSION: {
-    version: '0.1.0',
-    template: '$MAJOR.$MINOR.$PATCH',
-    inputVersion: null,
-    versionKeyIncrement: 'patch',
-    inc: 'patch',
-    $MAJOR: 0,
-    $MINOR: 1,
-    $PATCH: 0,
-    $PRERELEASE: ''
-  }
-}
-
-const splitSemVersion = (
-  input:
-    | (Omit<VersionDescriptor, 'inc'> & Partial<Pick<VersionDescriptor, 'inc'>>)
-    | null,
-  versionKey: 'version' | 'inputVersion' = 'version'
-) => {
-  if (!input?.[versionKey]) {
-    return
-  }
-
-  const version = input.inc
-    ? inc(input[versionKey], input.inc, true, input.preReleaseIdentifier)
-    : typeof input[versionKey] === 'string'
-      ? input[versionKey]
-      : input[versionKey].version
-
-  const prereleaseVersion = !version ? '' : prerelease(version)?.join('.') || ''
-
-  return {
-    ...input,
-    version,
-    $MAJOR: major(version || ''),
-    $MINOR: minor(version || ''),
-    $PATCH: patch(version || ''),
-    $PRERELEASE: prereleaseVersion ? `-${prereleaseVersion}` : '',
-    $COMPLETE: version
-  }
-}
-
-const getTemplatableVersion = (input: Omit<VersionDescriptor, 'inc'>) => {
-  const templatableVersion = {
-    $NEXT_MAJOR_VERSION: splitSemVersion({
-      ...input,
-      inc: 'major'
-    }),
-    $NEXT_MAJOR_VERSION_MAJOR: splitSemVersion({
-      ...input,
-      inc: 'major',
-      template: '$MAJOR'
-    }),
-    $NEXT_MAJOR_VERSION_MINOR: splitSemVersion({
-      ...input,
-      inc: 'major',
-      template: '$MINOR'
-    }),
-    $NEXT_MAJOR_VERSION_PATCH: splitSemVersion({
-      ...input,
-      inc: 'major',
-      template: '$PATCH'
-    }),
-    $NEXT_MINOR_VERSION: splitSemVersion({ ...input, inc: 'minor' }),
-    $NEXT_MINOR_VERSION_MAJOR: splitSemVersion({
-      ...input,
-      inc: 'minor',
-      template: '$MAJOR'
-    }),
-    $NEXT_MINOR_VERSION_MINOR: splitSemVersion({
-      ...input,
-      inc: 'minor',
-      template: '$MINOR'
-    }),
-    $NEXT_MINOR_VERSION_PATCH: splitSemVersion({
-      ...input,
-      inc: 'minor',
-      template: '$PATCH'
-    }),
-    $NEXT_PATCH_VERSION: splitSemVersion({ ...input, inc: 'patch' }),
-    $NEXT_PATCH_VERSION_MAJOR: splitSemVersion({
-      ...input,
-      inc: 'patch',
-      template: '$MAJOR'
-    }),
-    $NEXT_PATCH_VERSION_MINOR: splitSemVersion({
-      ...input,
-      inc: 'patch',
-      template: '$MINOR'
-    }),
-    $NEXT_PATCH_VERSION_PATCH: splitSemVersion({
-      ...input,
-      inc: 'patch',
-      template: '$PATCH'
-    }),
-    $NEXT_PRERELEASE_VERSION: splitSemVersion({
-      ...input,
-      inc: 'prerelease',
-      template: '$PRERELEASE'
-    }),
-    $INPUT_VERSION: splitSemVersion(input, 'inputVersion'),
-    $RESOLVED_VERSION: splitSemVersion({
-      ...input,
-      inc: input.versionKeyIncrement || 'patch'
+  if (versionFromInput.version) {
+    referenceVersion = versionFromInput
+  } else if (versionFromLastRelease.version) {
+    referenceVersion = versionFromLastRelease
+  } else {
+    _localIncrement = 'no_increment' // stay at 0.1.0 since no version was provided / found
+    referenceVersion = new VersionDescriptor('0.1.0', {
+      preReleaseIdentifier: config['prerelease-identifier'],
+      tagPrefix: config['tag-prefix']
     })
   }
 
-  templatableVersion.$RESOLVED_VERSION =
-    templatableVersion.$INPUT_VERSION || templatableVersion.$RESOLVED_VERSION
-
-  return templatableVersion
+  return {
+    $NEXT_MAJOR_VERSION: referenceVersion
+      .incremented('major')
+      .rendered(config['version-template']),
+    $NEXT_MAJOR_VERSION_MAJOR: referenceVersion.incremented('major').major,
+    $NEXT_MAJOR_VERSION_MINOR: referenceVersion.incremented('major').minor,
+    $NEXT_MAJOR_VERSION_PATCH: referenceVersion.incremented('major').patch,
+    $NEXT_MINOR_VERSION: referenceVersion
+      .incremented('minor')
+      .rendered(config['version-template']),
+    $NEXT_MINOR_VERSION_MAJOR: referenceVersion.incremented('minor').major,
+    $NEXT_MINOR_VERSION_MINOR: referenceVersion.incremented('minor').minor,
+    $NEXT_MINOR_VERSION_PATCH: referenceVersion.incremented('minor').patch,
+    $NEXT_PATCH_VERSION: referenceVersion
+      .incremented('patch')
+      .rendered(config['version-template']),
+    $NEXT_PATCH_VERSION_MAJOR: referenceVersion.incremented('patch').major,
+    $NEXT_PATCH_VERSION_MINOR: referenceVersion.incremented('patch').minor,
+    $NEXT_PATCH_VERSION_PATCH: referenceVersion.incremented('patch').patch,
+    $NEXT_PRERELEASE_VERSION: referenceVersion
+      .incremented('prerelease')
+      .rendered(config['version-template']),
+    $NEXT_PRERELEASE_VERSION_PRERELEASE:
+      referenceVersion.incremented('prerelease').prerelease,
+    $RESOLVED_VERSION: referenceVersion
+      .incremented(_localIncrement)
+      .rendered(config['version-template']),
+    $RESOLVED_VERSION_MAJOR:
+      referenceVersion.incremented(_localIncrement).major,
+    $RESOLVED_VERSION_MINOR:
+      referenceVersion.incremented(_localIncrement).minor,
+    $RESOLVED_VERSION_PATCH:
+      referenceVersion.incremented(_localIncrement).patch,
+    $RESOLVED_VERSION_PRERELEASE:
+      referenceVersion.incremented(_localIncrement).prerelease
+  }
 }

@@ -117,7 +117,7 @@ You can configure Release Drafter using the following key in your
 | `name-template`            | Optional | The template for the name of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                |
 | `tag-template`             | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                 |
 | `tag-prefix`               | Optional | A known prefix used to filter release tags. For matching tags, this prefix is stripped before attempting to parse the version. Default: `""`                                                          |
-| `version-template`         | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH"`                               |
+| `version-template`         | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH$PRERELEASE"`                    |
 | `change-template`          | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`.                            |
 | `change-title-escapes`     | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                  |
 | `no-changes-template`      | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                           |
@@ -169,24 +169,100 @@ You can use any of the following variables in `category-template`:
 You can use any of the following variables in your `template`, `header`,
 `footer`, `name-template` and `tag-template`:
 
-| Variable              | Description                                                                                                                                             |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `$NEXT_PATCH_VERSION` | The next patch version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.2.4`. This is the most commonly used value. |
-| `$NEXT_MINOR_VERSION` | The next minor version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.3.0`.                                       |
-| `$NEXT_MAJOR_VERSION` | The next major version number. For example, if the last tag or release was `v1.2.3`, the value would be `v2.0.0`.                                       |
-| `$RESOLVED_VERSION`   | The next resolved version number, based on GitHub labels. Refer to [Version Resolver](#version-resolver) to learn more about this.                      |
+| Variable                   | Description                                                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `$NEXT_PATCH_VERSION`      | The next patch version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.2.4`. This is the most commonly used value. |
+| `$NEXT_MINOR_VERSION`      | The next minor version number. For example, if the last tag or release was `v1.2.3`, the value would be `v1.3.0`.                                       |
+| `$NEXT_MAJOR_VERSION`      | The next major version number. For example, if the last tag or release was `v1.2.3`, the value would be `v2.0.0`.                                       |
+| `$NEXT_PRERELEASE_VERSION` | The next prerelease suffix. Depends on `prerelease-identifier`. Ex: `-beta.3`. Default : `-0`                                                           |
+| `$RESOLVED_VERSION`        | The next resolved version number, based on GitHub labels. Refer to [Version Resolver](#version-resolver) to learn more about this.                      |
+
+### Next Version Component Helpers
+
+For each of the `$NEXT_{MAJOR,MINOR,PATCH}_VERSION` variables, additional
+component helper variables are available that extract individual version
+components:
+
+| Variable                    | Description                               |
+| --------------------------- | ----------------------------------------- |
+| `$NEXT_MAJOR_VERSION_MAJOR` | Major component of `$NEXT_MAJOR_VERSION`. |
+| `$NEXT_MAJOR_VERSION_MINOR` | Minor component of `$NEXT_MAJOR_VERSION`. |
+| `$NEXT_MAJOR_VERSION_PATCH` | Patch component of `$NEXT_MAJOR_VERSION`. |
+| `$NEXT_MINOR_VERSION_MAJOR` | Major component of `$NEXT_MINOR_VERSION`. |
+| `$NEXT_MINOR_VERSION_MINOR` | Minor component of `$NEXT_MINOR_VERSION`. |
+| `$NEXT_MINOR_VERSION_PATCH` | Patch component of `$NEXT_MINOR_VERSION`. |
+| `$NEXT_PATCH_VERSION_MAJOR` | Major component of `$NEXT_PATCH_VERSION`. |
+| `$NEXT_PATCH_VERSION_MINOR` | Minor component of `$NEXT_PATCH_VERSION`. |
+| `$NEXT_PATCH_VERSION_PATCH` | Patch component of `$NEXT_PATCH_VERSION`. |
+
+<!-- TODO Is the following accurate ? What does it mean "follow the same formatting" ? -->
+
+These component helpers follow the same formatting as their parent variables.
+See [Version template behavior](#version-template-behavior) for details on how
+they render with different template settings.
 
 ## Version Template Variables
 
 You can use any of the following variables in `version-template` to format the
 `$NEXT_{PATCH,MINOR,MAJOR}_VERSION` variables:
 
-| Variable    | Description                                                  |
-| ----------- | ------------------------------------------------------------ |
-| `$PATCH`    | The patch version number.                                    |
-| `$MINOR`    | The minor version number.                                    |
-| `$MAJOR`    | The major version number.                                    |
-| `$COMPLETE` | The complete version string (including any prerelease info). |
+| Variable      | Description                                                     |
+| ------------- | --------------------------------------------------------------- |
+| `$PATCH`      | The patch version number.                                       |
+| `$MINOR`      | The minor version number.                                       |
+| `$MAJOR`      | The major version number.                                       |
+| `$PRERELEASE` | The prerelease suffix (for example `-rc.0`) or an empty string. |
+
+### Version template behavior
+
+The `version-template` setting controls how both principal version variables
+(`$NEXT_MAJOR_VERSION`, `$NEXT_MINOR_VERSION`, `$NEXT_PATCH_VERSION`) and their
+component helpers are rendered:
+
+#### How version-template affects output
+
+Assuming the previous version is `v10.0.3`:
+
+**When omitted or set to default** (`$MAJOR.$MINOR.$PATCH$PRERELEASE`):
+
+- Principal variables render as full SemVer format
+- Component helper variables render as individual numeric components
+- `$NEXT_MAJOR_VERSION` = `11.0.0`
+- `$NEXT_MAJOR_VERSION_MAJOR` = `11`
+- `$NEXT_MAJOR_VERSION_MINOR` = `0`
+- `$NEXT_MAJOR_VERSION_PATCH` = `0`
+- `$NEXT_MINOR_VERSION` = `10.1.0`
+- `$NEXT_MINOR_VERSION_MAJOR` = `10`
+- `$NEXT_MINOR_VERSION_MINOR` = `1`
+- `$NEXT_MINOR_VERSION_PATCH` = `0`
+
+**When set to custom templates**, both principal and component variables are
+rendered using their templates:
+
+```yml
+version-template: $MAJOR.$MINOR
+```
+
+- `$NEXT_MAJOR_VERSION` = `11.0`
+- `$NEXT_MAJOR_VERSION_MAJOR` = `11`
+- `$NEXT_MAJOR_VERSION_MINOR` = `0`
+- `$NEXT_MAJOR_VERSION_PATCH` = `0`
+- `$NEXT_MINOR_VERSION` = `10.1`
+- `$NEXT_MINOR_VERSION_MAJOR` = `10`
+- `$NEXT_MINOR_VERSION_MINOR` = `1`
+
+```yml
+version-template: $MAJOR
+```
+
+- `$NEXT_MAJOR_VERSION` = `11`
+- `$NEXT_MAJOR_VERSION_MAJOR` = `11`
+- `$NEXT_MAJOR_VERSION_MINOR` = `0`
+- `$NEXT_MAJOR_VERSION_PATCH` = `0`
+- `$NEXT_MINOR_VERSION` = `10`
+- `$NEXT_MINOR_VERSION_MAJOR` = `10`
+- `$NEXT_MINOR_VERSION_MINOR` = `1`
+- `$NEXT_MINOR_VERSION_PATCH` = `0`
 
 ## Version Resolver
 
@@ -542,3 +618,90 @@ After pushing, the `release.yml` workflow will trigger (`on: push: tag`), and :
 - publish to npmjs
 - publish the release draft
 - update major tag (ex: pushing `v6.2.1` bumps `v6` to the same commit)
+
+## Breaking Changes
+
+### v7 - Major Version Changes
+
+#### Changed: Default `version-template` Value
+
+The default `version-template` has changed from `$MAJOR.$MINOR.$PATCH` to
+`$MAJOR.$MINOR.$PATCH$PRERELEASE`.
+
+**Impact:** This change affects how version numbers are calculated and rendered
+by default, particularly when working with prereleases.
+
+- **Before v7:** Default version variables excluded the prerelease suffix (e.g.,
+  `2.0.1`)
+- **After v7:** Default version variables include the prerelease suffix when
+  applicable (e.g., `2.0.1-rc.0` for prereleases, `2.0.1` for stable releases)
+
+**Migration:** If you prefer the old behavior without prerelease suffixes in
+version numbers, explicitly set:
+
+```yml
+version-template: $MAJOR.$MINOR.$PATCH
+```
+
+**Affected Variables:** This impacts all version variables when no custom
+`version-template` is specified:
+
+- `$NEXT_MAJOR_VERSION` (e.g., `3.0.0` or `3.0.0-rc.1`)
+- `$NEXT_MINOR_VERSION` (e.g., `2.1.0` or `2.1.0-beta.0`)
+- `$NEXT_PATCH_VERSION` (e.g., `2.0.1` or `2.0.1-alpha.2`)
+- `$NEXT_PRERELEASE_VERSION`
+- `$RESOLVED_VERSION`
+- Component helper variables inherit the same template format
+
+**Why this change?** The new default follows strict semantic versioning
+principles and ensures prerelease versions are properly formatted in release
+drafts without additional configuration.
+
+#### Removed: `$COMPLETE` Template Variable
+
+The `$COMPLETE` template variable is no longer supported in `version-template`.
+
+**Impact:** If you were using `$COMPLETE` in your `version-template`, your
+configuration will fail validation.
+
+**Migration example:**
+
+```yml
+# ❌ Before (no longer works)
+version-template: "Next version: $COMPLETE"
+
+# ✅ After (use explicit template)
+version-template: "Next version: $MAJOR.$MINOR.$PATCH$PRERELEASE"
+```
+
+**Reason for removal:** `$COMPLETE` was redundant as it always rendered
+identically to the default template. Removing it simplifies the configuration
+model.
+
+#### Fixed: Component Helper Variable Documentation
+
+The documentation for component helper variables (e.g.,
+`$NEXT_MAJOR_VERSION_MAJOR`, `$NEXT_MINOR_VERSION_PATCH`) has been corrected.
+
+**Impact:** This is purely a documentation fix; the actual behavior has not
+changed.
+
+**What was corrected:** Previous documentation incorrectly suggested that
+component helper variables rendered as full version strings with the default
+template. The documentation now correctly states:
+
+- Component helpers with suffix `_MAJOR`, `_MINOR`, `_PATCH` always render as
+  **individual numeric components** (e.g., `11`, `0`, `1`)
+- This is true regardless of the `version-template` setting
+- Principal variables (without suffixes) follow the `version-template` format
+
+**Example:**
+
+```yml
+# With default version-template
+$NEXT_MAJOR_VERSION → "3.0.0" $NEXT_MAJOR_VERSION_MAJOR → "3"
+$NEXT_MAJOR_VERSION_MINOR → "0" $NEXT_MAJOR_VERSION_PATCH → "0"
+```
+
+**Migration:** No changes needed. If your templates work as expected, they will
+continue to work the same way.
