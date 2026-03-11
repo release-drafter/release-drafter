@@ -7,8 +7,22 @@ import { updateRelease } from './update-release'
 export const upsertRelease = async (params: {
   draftRelease: Awaited<ReturnType<typeof findPreviousReleases>>['draftRelease']
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
+  dryRun?: boolean
 }) => {
-  const { draftRelease, releasePayload } = params
+  const { draftRelease, releasePayload, dryRun } = params
+
+  if (dryRun) {
+    if (!draftRelease) {
+      core.info(
+        `[dry-run] Would create a new release with payload: ${JSON.stringify(releasePayload, null, 2)}`
+      )
+    } else {
+      core.info(
+        `[dry-run] Would update existing release (id: ${draftRelease.id}) with payload: ${JSON.stringify(releasePayload, null, 2)}`
+      )
+    }
+    return undefined
+  }
 
   if (!draftRelease) {
     core.info('Creating new release...')

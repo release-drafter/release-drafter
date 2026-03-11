@@ -19,5 +19,11 @@ inputs:
       The config should still be located inside `.github` as that's where we are looking for config files.
     required: false
     default: 'release-drafter.yml'
+  dry-run:
+    description: |
+      A boolean indicating whether to run without performing any write operations.
+      When enabled, the action logs what it would have done instead of adding labels.
+    required: false
+    default: ''
 
 outputs: {}

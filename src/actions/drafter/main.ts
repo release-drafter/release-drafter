@@ -35,7 +35,11 @@ export const main = async (params: {
     pullRequests
   })
 
-  const upsertedRelease = await upsertRelease({ draftRelease, releasePayload })
+  const upsertedRelease = await upsertRelease({
+    draftRelease,
+    releasePayload,
+    dryRun: input['dry-run']
+  })
 
   return {
     upsertedRelease,

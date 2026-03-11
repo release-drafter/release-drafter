@@ -25,6 +25,7 @@ export const getActionInput = (): ActionInput => {
     'include-pre-releases': getInput('include-pre-releases'),
     commitish: getInput('commitish'),
     header: getInput('header'),
-    footer: getInput('footer')
+    footer: getInput('footer'),
+    'dry-run': getInput('dry-run')
   })
 }

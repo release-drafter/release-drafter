@@ -1151,7 +1151,12 @@ var updateRelease = async (params) => {
 //#endregion
 //#region src/actions/drafter/lib/upsert-release/upsert-release.ts
 var upsertRelease = async (params) => {
-	const { draftRelease, releasePayload } = params;
+	const { draftRelease, releasePayload, dryRun } = params;
+	if (dryRun) {
+		if (!draftRelease) info(`[dry-run] Would create a new release with payload: ${JSON.stringify(releasePayload, null, 2)}`);
+		else info(`[dry-run] Would update existing release (id: ${draftRelease.id}) with payload: ${JSON.stringify(releasePayload, null, 2)}`);
+		return;
+	}
 	if (!draftRelease) {
 		info("Creating new release...");
 		const res = await createRelease({ releasePayload });
@@ -1194,7 +1199,8 @@ var main = async (params) => {
 	return {
 		upsertedRelease: await upsertRelease({
 			draftRelease,
-			releasePayload
+			releasePayload,
+			dryRun: input["dry-run"]
 		}),
 		releasePayload
 	};
@@ -1204,13 +1210,15 @@ var main = async (params) => {
 var setActionOutput = (params) => {
 	const { releasePayload, upsertedRelease } = params;
 	info("Set action outputs...");
-	const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl, tag_name: tagName, name } } = upsertedRelease;
 	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body } = releasePayload;
-	if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
-	if (htmlUrl) setOutput("html_url", htmlUrl);
-	if (uploadUrl) setOutput("upload_url", uploadUrl);
-	if (tagName) setOutput("tag_name", tagName);
-	if (name) setOutput("name", name);
+	if (upsertedRelease) {
+		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl, tag_name: tagName, name } } = upsertedRelease;
+		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
+		if (htmlUrl) setOutput("html_url", htmlUrl);
+		if (uploadUrl) setOutput("upload_url", uploadUrl);
+		if (tagName) setOutput("tag_name", tagName);
+		if (name) setOutput("name", name);
+	}
 	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
 	if (majorVersion) setOutput("major_version", majorVersion);
 	if (minorVersion) setOutput("minor_version", minorVersion);
@@ -1324,7 +1332,8 @@ var getActionInput = () => {
 		"include-pre-releases": getInput$1("include-pre-releases"),
 		commitish: getInput$1("commitish"),
 		header: getInput$1("header"),
-		footer: getInput$1("footer")
+		footer: getInput$1("footer"),
+		"dry-run": getInput$1("dry-run")
 	});
 };
 //#endregion

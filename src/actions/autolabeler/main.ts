@@ -5,7 +5,10 @@ import { PullRequestEvent } from '@octokit/webhooks-types'
 import { getOctokit } from 'src/common'
 import ignore from 'ignore'
 
-export const main = async (params: { config: ParsedConfig }) => {
+export const main = async (params: {
+  config: ParsedConfig
+  dryRun?: boolean
+}) => {
   core.info(
     `Running for event "${context.eventName || '[undefined]'}.${context.payload.action || '[undefined]'}"`
   )
@@ -89,11 +92,17 @@ export const main = async (params: { config: ParsedConfig }) => {
   }
 
   if (labels.size > 0) {
-    await octokit.rest.issues.addLabels({
-      ...context.repo,
-      issue_number: payload.number,
-      labels: Array.from(labels)
-    })
+    if (params.dryRun) {
+      core.info(
+        `[dry-run] Would add labels [${Array.from(labels).join(', ')}] to PR #${payload.number}`
+      )
+    } else {
+      await octokit.rest.issues.addLabels({
+        ...context.repo,
+        issue_number: payload.number,
+        labels: Array.from(labels)
+      })
+    }
   }
 
   return {

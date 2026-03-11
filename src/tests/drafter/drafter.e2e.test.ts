@@ -5,6 +5,7 @@ import {
   mocks,
   nockGetAndPostReleases,
   nockGetAndPatchReleases,
+  nockGetReleases,
   mockInput,
   getGqlPayload
 } from '../mocks'
@@ -3297,6 +3298,66 @@ describe('drafter e2e', () => {
       expect(scope.isDone()).toBe(true) // should call the mocked endpoints
       expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('dry-run', () => {
+    describe('when no existing draft release exists (create)', () => {
+      it('does not perform any write operations and logs the payload', async () => {
+        await mockContext('push')
+        await mockInput('dry-run', 'true')
+        mocks.config.mockReturnValue('config')
+
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-no-prs'
+        })
+
+        // Only a GET scope — no POST scope, so any attempt to create a release
+        // would trigger an unmatched-request error from nock.
+        const scope = nockGetReleases({ releaseFiles: ['release'] })
+
+        await runDrafter()
+
+        // No write request should have been made
+        expect(mocks.postReleaseBody).not.toHaveBeenCalled()
+
+        // Dry-run message should have been logged
+        const infoMessages = mocks.core.info.mock.calls.flat()
+        expect(infoMessages.some((msg) => msg.includes('[dry-run]'))).toBe(true)
+
+        expect(scope.isDone()).toBe(true) // GET releases was called
+        expect(gqlScope.pendingMocks().length).toBe(0)
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('when an existing draft release exists (update)', () => {
+      it('does not perform any write operations and logs the payload', async () => {
+        await mockContext('push')
+        await mockInput('dry-run', 'true')
+        mocks.config.mockReturnValue('config')
+
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit'
+        })
+
+        // Only a GET scope — no PATCH scope, so any attempt to update a release
+        // would trigger an unmatched-request error from nock.
+        const scope = nockGetReleases({ releaseFiles: ['release-draft'] })
+
+        await runDrafter()
+
+        // No write request should have been made
+        expect(mocks.patchReleaseBody).not.toHaveBeenCalled()
+
+        // Dry-run message should have been logged
+        const infoMessages = mocks.core.info.mock.calls.flat()
+        expect(infoMessages.some((msg) => msg.includes('[dry-run]'))).toBe(true)
+
+        expect(scope.isDone()).toBe(true) // GET releases was called
+        expect(gqlScope.pendingMocks().length).toBe(0)
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
   })
 })

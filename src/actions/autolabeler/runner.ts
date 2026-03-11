@@ -14,7 +14,10 @@ export async function run(): Promise<void> {
       config: await getConfig(input['config-name'])
     })
 
-    const { labels, pr_number } = await main({ config })
+    const { labels, pr_number } = await main({
+      config,
+      dryRun: input['dry-run']
+    })
 
     if (pr_number) core.setOutput('number', pr_number)
     if (labels) core.setOutput('labels', labels)

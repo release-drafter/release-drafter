@@ -6,31 +6,35 @@ export const setActionOutput = (params: {
   upsertedRelease:
     | RestEndpointMethodTypes['repos']['createRelease']['response']
     | RestEndpointMethodTypes['repos']['updateRelease']['response']
+    | undefined
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
 }) => {
   const { releasePayload, upsertedRelease } = params
 
   core.info('Set action outputs...')
 
-  const {
-    data: {
-      id: releaseId,
-      html_url: htmlUrl,
-      upload_url: uploadUrl,
-      tag_name: tagName,
-      name: name
-    }
-  } = upsertedRelease
-
   const { resolvedVersion, majorVersion, minorVersion, patchVersion, body } =
     releasePayload
 
-  if (releaseId && Number.isInteger(releaseId))
-    core.setOutput('id', releaseId.toString())
-  if (htmlUrl) core.setOutput('html_url', htmlUrl)
-  if (uploadUrl) core.setOutput('upload_url', uploadUrl)
-  if (tagName) core.setOutput('tag_name', tagName)
-  if (name) core.setOutput('name', name)
+  if (upsertedRelease) {
+    const {
+      data: {
+        id: releaseId,
+        html_url: htmlUrl,
+        upload_url: uploadUrl,
+        tag_name: tagName,
+        name
+      }
+    } = upsertedRelease
+
+    if (releaseId && Number.isInteger(releaseId))
+      core.setOutput('id', releaseId.toString())
+    if (htmlUrl) core.setOutput('html_url', htmlUrl)
+    if (uploadUrl) core.setOutput('upload_url', uploadUrl)
+    if (tagName) core.setOutput('tag_name', tagName)
+    if (name) core.setOutput('name', name)
+  }
+
   if (resolvedVersion) core.setOutput('resolved_version', resolvedVersion)
   if (majorVersion) core.setOutput('major_version', majorVersion)
   if (minorVersion) core.setOutput('minor_version', minorVersion)

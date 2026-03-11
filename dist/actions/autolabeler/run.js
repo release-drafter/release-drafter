@@ -284,7 +284,8 @@ var main = async (params) => {
 			}
 		}
 	}
-	if (labels.size > 0) await octokit.rest.issues.addLabels({
+	if (labels.size > 0) if (params.dryRun) info(`[dry-run] Would add labels [${Array.from(labels).join(", ")}] to PR #${payload.number}`);
+	else await octokit.rest.issues.addLabels({
 		...context.repo,
 		issue_number: payload.number,
 		labels: Array.from(labels)
@@ -315,7 +316,8 @@ var getActionInput = () => {
 	const getInput$1 = (name) => getInput(name) || void 0;
 	return actionInputSchema.parse({
 		"config-name": getInput$1("config-name"),
-		token: getInput$1("token")
+		token: getInput$1("token"),
+		"dry-run": getInput$1("dry-run")
 	});
 };
 //#endregion
@@ -370,7 +372,11 @@ var parseConfig = ({ config: originalConfig }) => {
 */
 async function run() {
 	try {
-		const { labels, pr_number } = await main({ config: parseConfig({ config: await getConfig(getActionInput()["config-name"]) }) });
+		const input = getActionInput();
+		const { labels, pr_number } = await main({
+			config: parseConfig({ config: await getConfig(input["config-name"]) }),
+			dryRun: input["dry-run"]
+		});
 		if (pr_number) setOutput("number", pr_number);
 		if (labels) setOutput("labels", labels);
 	} catch (error) {
