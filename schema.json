@@ -35,13 +35,6 @@
       "type": "array",
       "items": { "type": "string" }
     },
-    "exclude-paths": {
-      "type": "array",
-      "default": [],
-      "items": {
-        "type": "string"
-      }
-    },
     "exclude-contributors": {
       "default": [],
       "type": "array",
