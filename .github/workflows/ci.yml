@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   smoke-test-drafter:
-    name: '[drafter] Smoke Test'
+    name: "[drafter] Smoke Test"
     runs-on: ubuntu-latest
 
     steps:
@@ -23,12 +23,12 @@ jobs:
 
       - uses: ./.github/actions/common-setup
 
-      - uses: release-drafter/release-drafter@${{ github.ref }}
+      - uses: ./
         with:
-          'dry-run': true
+          "dry-run": true
 
   smoke-test-autolabeler:
-    name: '[autolabeler] Smoke Test'
+    name: "[autolabeler] Smoke Test"
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
@@ -39,9 +39,9 @@ jobs:
 
       - uses: ./.github/actions/common-setup
 
-      - uses: release-drafter/release-drafter/autolabeler@${{ github.ref }}
+      - uses: ./autolabeler
         with:
-          'dry-run': true
+          "dry-run": true
 
   test-typescript:
     name: TypeScript Tests
