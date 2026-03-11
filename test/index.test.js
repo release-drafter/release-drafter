@@ -445,6 +445,32 @@ describe('release-drafter', () => {
         expect.assertions(2)
       })
 
+      it('does not call core.setFailed when not running as a GitHub Action', async () => {
+        getConfigMock()
+
+        const setFailedSpy = jest
+          .spyOn(core, 'setFailed')
+          .mockImplementation(() => {})
+
+        nock('https://api.github.com')
+          .get(
+            '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+          )
+          .replyWithError('simulated release fetch failure')
+
+        await expect(
+          probot.receive({
+            name: 'push',
+            payload: pushPayload,
+          })
+        ).rejects.toThrow('simulated release fetch failure')
+
+        expect(setFailedSpy).not.toHaveBeenCalled()
+
+        setFailedSpy.mockRestore()
+        expect.assertions(2)
+      })
+
       it('makes next versions available as template placeholders', async () => {
         getConfigMock('config-with-next-versioning.yml')
 
