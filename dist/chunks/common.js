@@ -30842,13 +30842,14 @@ var stringbool = (...args) => /* @__PURE__ */ _stringbool({
 * Inputs shared by release-drafter and autolabeler
 */
 var sharedInputSchema = object({
-	token: string().min(1).default({}.GITHUB_TOKEN || ""),
+	token: string().min(1).default(() => ({}).GITHUB_TOKEN || ""),
 	"dry-run": stringbool().or(boolean()).optional()
 }).superRefine((data, ctx) => {
 	if (data.token && !{}.GITHUB_TOKEN) ({}).GITHUB_TOKEN = data.token;
 	if (!{}.GITHUB_TOKEN) ctx.addIssue({
 		code: "custom",
-		message: "Unable to find a token. Please see input 'token'."
+		message: "Unable to find a token. Please see input 'token'.",
+		path: ["token"]
 	});
 });
 //#endregion
