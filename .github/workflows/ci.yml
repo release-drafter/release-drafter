@@ -21,8 +21,6 @@ jobs:
         id: checkout
         uses: actions/checkout@v6
 
-      - uses: ./.github/actions/common-setup
-
       - uses: ./
         with:
           "dry-run": true
@@ -36,8 +34,6 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v6
-
-      - uses: ./.github/actions/common-setup
 
       - uses: ./autolabeler
         with:
