@@ -11,6 +11,7 @@ import * as events from "node:events";
 import { StringDecoder } from "node:string_decoder";
 import * as child from "node:child_process";
 import { setTimeout as setTimeout$1 } from "node:timers";
+import process$1 from "node:process";
 import path, { dirname, isAbsolute, join, normalize } from "node:path";
 import { existsSync as existsSync$1, readFileSync as readFileSync$1 } from "node:fs";
 //#region \0rolldown/runtime.js
@@ -23671,8 +23672,8 @@ var browser_default = /* @__PURE__ */ __exportAll({
 //#region src/common/config/get-config-file-from-fs.ts
 var getConfigFileFromFs = (normalizedFilepath) => {
 	if (isAbsolute(normalizedFilepath)) throw new Error(`Absolute paths are not supported for config file path: ${normalizedFilepath}`);
-	if (!{}.GITHUB_WORKSPACE) throw new Error(`env GITHUB_WORKSPACE is not set. Cannot resolve local repo path.`);
-	const repoRoot = {}.GITHUB_WORKSPACE;
+	if (!process$1.env.GITHUB_WORKSPACE) throw new Error(`env GITHUB_WORKSPACE is not set. Cannot resolve local repo path.`);
+	const repoRoot = process$1.env.GITHUB_WORKSPACE;
 	const configPath = path.join(repoRoot, normalizedFilepath);
 	info(`Looking for config locally at ${configPath}...`);
 	if (!existsSync$1(repoRoot)) throw new Error(`Root repo path does not exist: ${repoRoot}`);
@@ -26749,7 +26750,7 @@ function getOctokit$1(token, options, ...additionalPlugins) {
 //#endregion
 //#region src/common/get-octokit.ts
 var getOctokit = () => {
-	return getOctokit$1({}.GITHUB_TOKEN || "", {
+	return getOctokit$1(process$1.env.GITHUB_TOKEN || "", {
 		log: {
 			...core_exports,
 			warn: warning
@@ -29719,7 +29720,7 @@ function initializeContext(params) {
 		external: params?.external ?? void 0
 	};
 }
-function process$1(schema, ctx, _params = {
+function process$2(schema, ctx, _params = {
 	path: [],
 	schemaPath: []
 }) {
@@ -29756,7 +29757,7 @@ function process$1(schema, ctx, _params = {
 		const parent = schema._zod.parent;
 		if (parent) {
 			if (!result.ref) result.ref = parent;
-			process$1(parent, ctx, params);
+			process$2(parent, ctx, params);
 			ctx.seen.get(parent).isParent = true;
 		}
 	}
@@ -29968,7 +29969,7 @@ var createToJSONSchemaMethod = (schema, processors = {}) => (params) => {
 		...params,
 		processors
 	});
-	process$1(schema, ctx);
+	process$2(schema, ctx);
 	extractDefs(ctx, schema);
 	return finalize(ctx, schema);
 };
@@ -29980,7 +29981,7 @@ var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) =
 		io,
 		processors
 	});
-	process$1(schema, ctx);
+	process$2(schema, ctx);
 	extractDefs(ctx, schema);
 	return finalize(ctx, schema);
 };
@@ -30066,7 +30067,7 @@ var arrayProcessor = (schema, ctx, _json, params) => {
 	if (typeof minimum === "number") json.minItems = minimum;
 	if (typeof maximum === "number") json.maxItems = maximum;
 	json.type = "array";
-	json.items = process$1(def.element, ctx, {
+	json.items = process$2(def.element, ctx, {
 		...params,
 		path: [...params.path, "items"]
 	});
@@ -30077,7 +30078,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
 	json.type = "object";
 	json.properties = {};
 	const shape = def.shape;
-	for (const key in shape) json.properties[key] = process$1(shape[key], ctx, {
+	for (const key in shape) json.properties[key] = process$2(shape[key], ctx, {
 		...params,
 		path: [
 			...params.path,
@@ -30095,7 +30096,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
 	if (def.catchall?._zod.def.type === "never") json.additionalProperties = false;
 	else if (!def.catchall) {
 		if (ctx.io === "output") json.additionalProperties = false;
-	} else if (def.catchall) json.additionalProperties = process$1(def.catchall, ctx, {
+	} else if (def.catchall) json.additionalProperties = process$2(def.catchall, ctx, {
 		...params,
 		path: [...params.path, "additionalProperties"]
 	});
@@ -30103,7 +30104,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
 var unionProcessor = (schema, ctx, json, params) => {
 	const def = schema._zod.def;
 	const isExclusive = def.inclusive === false;
-	const options = def.options.map((x, i) => process$1(x, ctx, {
+	const options = def.options.map((x, i) => process$2(x, ctx, {
 		...params,
 		path: [
 			...params.path,
@@ -30116,7 +30117,7 @@ var unionProcessor = (schema, ctx, json, params) => {
 };
 var intersectionProcessor = (schema, ctx, json, params) => {
 	const def = schema._zod.def;
-	const a = process$1(def.left, ctx, {
+	const a = process$2(def.left, ctx, {
 		...params,
 		path: [
 			...params.path,
@@ -30124,7 +30125,7 @@ var intersectionProcessor = (schema, ctx, json, params) => {
 			0
 		]
 	});
-	const b = process$1(def.right, ctx, {
+	const b = process$2(def.right, ctx, {
 		...params,
 		path: [
 			...params.path,
@@ -30137,7 +30138,7 @@ var intersectionProcessor = (schema, ctx, json, params) => {
 };
 var nullableProcessor = (schema, ctx, json, params) => {
 	const def = schema._zod.def;
-	const inner = process$1(def.innerType, ctx, params);
+	const inner = process$2(def.innerType, ctx, params);
 	const seen = ctx.seen.get(schema);
 	if (ctx.target === "openapi-3.0") {
 		seen.ref = def.innerType;
@@ -30146,27 +30147,27 @@ var nullableProcessor = (schema, ctx, json, params) => {
 };
 var nonoptionalProcessor = (schema, ctx, _json, params) => {
 	const def = schema._zod.def;
-	process$1(def.innerType, ctx, params);
+	process$2(def.innerType, ctx, params);
 	const seen = ctx.seen.get(schema);
 	seen.ref = def.innerType;
 };
 var defaultProcessor = (schema, ctx, json, params) => {
 	const def = schema._zod.def;
-	process$1(def.innerType, ctx, params);
+	process$2(def.innerType, ctx, params);
 	const seen = ctx.seen.get(schema);
 	seen.ref = def.innerType;
 	json.default = JSON.parse(JSON.stringify(def.defaultValue));
 };
 var prefaultProcessor = (schema, ctx, json, params) => {
 	const def = schema._zod.def;
-	process$1(def.innerType, ctx, params);
+	process$2(def.innerType, ctx, params);
 	const seen = ctx.seen.get(schema);
 	seen.ref = def.innerType;
 	if (ctx.io === "input") json._prefault = JSON.parse(JSON.stringify(def.defaultValue));
 };
 var catchProcessor = (schema, ctx, json, params) => {
 	const def = schema._zod.def;
-	process$1(def.innerType, ctx, params);
+	process$2(def.innerType, ctx, params);
 	const seen = ctx.seen.get(schema);
 	seen.ref = def.innerType;
 	let catchValue;
@@ -30180,20 +30181,20 @@ var catchProcessor = (schema, ctx, json, params) => {
 var pipeProcessor = (schema, ctx, _json, params) => {
 	const def = schema._zod.def;
 	const innerType = ctx.io === "input" ? def.in._zod.def.type === "transform" ? def.out : def.in : def.out;
-	process$1(innerType, ctx, params);
+	process$2(innerType, ctx, params);
 	const seen = ctx.seen.get(schema);
 	seen.ref = innerType;
 };
 var readonlyProcessor = (schema, ctx, json, params) => {
 	const def = schema._zod.def;
-	process$1(def.innerType, ctx, params);
+	process$2(def.innerType, ctx, params);
 	const seen = ctx.seen.get(schema);
 	seen.ref = def.innerType;
 	json.readOnly = true;
 };
 var optionalProcessor = (schema, ctx, _json, params) => {
 	const def = schema._zod.def;
-	process$1(def.innerType, ctx, params);
+	process$2(def.innerType, ctx, params);
 	const seen = ctx.seen.get(schema);
 	seen.ref = def.innerType;
 };
@@ -30842,11 +30843,11 @@ var stringbool = (...args) => /* @__PURE__ */ _stringbool({
 * Inputs shared by release-drafter and autolabeler
 */
 var sharedInputSchema = object({
-	token: string().min(1).default(() => ({}).GITHUB_TOKEN || ""),
+	token: string().min(1).default(() => process$1.env.GITHUB_TOKEN || ""),
 	"dry-run": stringbool().or(boolean()).optional()
 }).superRefine((data, ctx) => {
-	if (data.token && !{}.GITHUB_TOKEN) ({}).GITHUB_TOKEN = data.token;
-	if (!{}.GITHUB_TOKEN) ctx.addIssue({
+	if (data.token && !process$1.env.GITHUB_TOKEN) process$1.env.GITHUB_TOKEN = data.token;
+	if (!process$1.env.GITHUB_TOKEN) ctx.addIssue({
 		code: "custom",
 		message: "Unable to find a token. Please see input 'token'.",
 		path: ["token"]

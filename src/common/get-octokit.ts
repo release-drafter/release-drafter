@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { getOctokit as createOctokit } from '@actions/github'
 import * as core from '@actions/core'
 

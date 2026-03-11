@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { boolean, object, string, stringbool } from 'zod'
 
 /**

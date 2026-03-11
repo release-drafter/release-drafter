@@ -1,3 +1,4 @@
+import process from 'node:process'
 import path, { isAbsolute } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import * as core from '@actions/core'
