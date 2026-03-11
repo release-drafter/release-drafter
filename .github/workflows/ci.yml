@@ -23,7 +23,7 @@ jobs:
 
       - uses: ./
         with:
-          config-file: file:release-drafter.tests.yml
+          config-name: file:release-drafter.tests.yml
           'dry-run': true
 
   smoke-test-autolabeler:
@@ -38,7 +38,7 @@ jobs:
 
       - uses: ./autolabeler
         with:
-          config-file: file:release-drafter.autolabeler.tests.yml
+          config-name: file:release-drafter.autolabeler.tests.yml
           'dry-run': true
 
   tests:
