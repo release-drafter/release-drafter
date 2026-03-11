@@ -114,7 +114,7 @@ jobs:
       - name: Use dynamic release-drafter configuration
         uses: release-drafter/release-drafter@v7
         with:
-          config-name: release-drafter-parsed.yml
+          config-name: file:release-drafter-parsed.yml
 ```
 
 ### Extend other config files using `_extends`

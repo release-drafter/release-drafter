@@ -21,20 +21,9 @@ jobs:
         id: checkout
         uses: actions/checkout@v6
 
-      - name: Debug token wiring
-        env:
-          DEFAULT_TOKEN: ${{ github.token }}
-        run: |
-          node <<'NODE'
-          console.log(JSON.stringify({
-            githubTokenPresent: Boolean(process.env.DEFAULT_TOKEN),
-            githubWorkspacePresent: Boolean(process.env.GITHUB_WORKSPACE),
-            githubActionPathPresent: Boolean(process.env.GITHUB_ACTION_PATH)
-          }))
-          NODE
-
       - uses: ./
         with:
+          config-file: file:release-drafter.tests.yml
           'dry-run': true
 
   smoke-test-autolabeler:
@@ -47,20 +36,9 @@ jobs:
         id: checkout
         uses: actions/checkout@v6
 
-      - name: Debug token wiring
-        env:
-          DEFAULT_TOKEN: ${{ github.token }}
-        run: |
-          node <<'NODE'
-          console.log(JSON.stringify({
-            githubTokenPresent: Boolean(process.env.DEFAULT_TOKEN),
-            githubWorkspacePresent: Boolean(process.env.GITHUB_WORKSPACE),
-            githubActionPathPresent: Boolean(process.env.GITHUB_ACTION_PATH)
-          }))
-          NODE
-
       - uses: ./autolabeler
         with:
+          config-file: file:release-drafter.autolabeler.tests.yml
           'dry-run': true
 
   tests:
