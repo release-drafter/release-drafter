@@ -467,7 +467,7 @@ var resolveVersionKeyIncrement = (params) => {
 //#endregion
 //#region node_modules/semver/internal/debug.js
 var require_debug = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	module.exports = typeof process === "object" && {}.NODE_DEBUG && /\bsemver\b/i.test({}.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {};
+	module.exports = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {};
 }));
 //#endregion
 //#region node_modules/semver/internal/constants.js

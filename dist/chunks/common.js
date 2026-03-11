@@ -151,7 +151,7 @@ function escapeProperty(s) {
 //#endregion
 //#region node_modules/@actions/core/lib/file-command.js
 function issueFileCommand(command, message) {
-	const filePath = {}[`GITHUB_${command}`];
+	const filePath = process.env[`GITHUB_${command}`];
 	if (!filePath) throw new Error(`Unable to find environment variable for file command ${command}`);
 	if (!fs.existsSync(filePath)) throw new Error(`Missing file at path: ${filePath}`);
 	fs.appendFileSync(filePath, `${toCommandValue(message)}${os$1.EOL}`, { encoding: "utf8" });
@@ -169,8 +169,8 @@ function getProxyUrl(reqUrl) {
 	const usingSsl = reqUrl.protocol === "https:";
 	if (checkBypass(reqUrl)) return;
 	const proxyVar = (() => {
-		if (usingSsl) return {}["https_proxy"] || {}["HTTPS_PROXY"];
-		else return {}["http_proxy"] || {}["HTTP_PROXY"];
+		if (usingSsl) return process.env["https_proxy"] || process.env["HTTPS_PROXY"];
+		else return process.env["http_proxy"] || process.env["HTTP_PROXY"];
 	})();
 	if (proxyVar) try {
 		return new DecodedURL(proxyVar);
@@ -183,7 +183,7 @@ function checkBypass(reqUrl) {
 	if (!reqUrl.hostname) return false;
 	const reqHost = reqUrl.hostname;
 	if (isLoopbackAddress(reqHost)) return true;
-	const noProxy = {}["no_proxy"] || {}["NO_PROXY"] || "";
+	const noProxy = process.env["no_proxy"] || process.env["NO_PROXY"] || "";
 	if (!noProxy) return false;
 	let reqPort;
 	if (reqUrl.port) reqPort = Number(reqUrl.port);
@@ -403,7 +403,7 @@ var require_tunnel$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 		return target;
 	}
 	var debug;
-	if ({}.NODE_DEBUG && /\btunnel\b/.test({}.NODE_DEBUG)) debug = function() {
+	if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) debug = function() {
 		var args = Array.prototype.slice.call(arguments);
 		if (typeof args[0] === "string") args[0] = "TUNNEL: " + args[0];
 		else args.unshift("TUNNEL:");
@@ -2272,7 +2272,7 @@ var require_connect = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	function noop() {}
 	var tls;
 	var SessionCache;
-	if (global.FinalizationRegistry && !({}.NODE_V8_COVERAGE || {}.UNDICI_NO_FG)) SessionCache = class WeakSessionCache {
+	if (global.FinalizationRegistry && !(process.env.NODE_V8_COVERAGE || process.env.UNDICI_NO_FG)) SessionCache = class WeakSessionCache {
 		constructor(maxCachedSessions) {
 			this._maxCachedSessions = maxCachedSessions;
 			this._sessionCache = /* @__PURE__ */ new Map();
@@ -5175,7 +5175,7 @@ var require_client_h1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var removeAllListeners = util.removeAllListeners;
 	var extractBody;
 	async function lazyllhttp() {
-		const llhttpWasmData = {}.JEST_WORKER_ID ? require_llhttp_wasm() : void 0;
+		const llhttpWasmData = process.env.JEST_WORKER_ID ? require_llhttp_wasm() : void 0;
 		let mod;
 		try {
 			mod = await WebAssembly.compile(require_llhttp_simd_wasm());
@@ -7489,13 +7489,13 @@ var require_env_http_proxy_agent = /* @__PURE__ */ __commonJSMin(((exports, modu
 			}
 			const { httpProxy, httpsProxy, noProxy, ...agentOpts } = opts;
 			this[kNoProxyAgent] = new Agent(agentOpts);
-			const HTTP_PROXY = httpProxy ?? {}.http_proxy ?? {}.HTTP_PROXY;
+			const HTTP_PROXY = httpProxy ?? process.env.http_proxy ?? process.env.HTTP_PROXY;
 			if (HTTP_PROXY) this[kHttpProxyAgent] = new ProxyAgent({
 				...agentOpts,
 				uri: HTTP_PROXY
 			});
 			else this[kHttpProxyAgent] = this[kNoProxyAgent];
-			const HTTPS_PROXY = httpsProxy ?? {}.https_proxy ?? {}.HTTPS_PROXY;
+			const HTTPS_PROXY = httpsProxy ?? process.env.https_proxy ?? process.env.HTTPS_PROXY;
 			if (HTTPS_PROXY) this[kHttpsProxyAgent] = new ProxyAgent({
 				...agentOpts,
 				uri: HTTPS_PROXY
@@ -7559,7 +7559,7 @@ var require_env_http_proxy_agent = /* @__PURE__ */ __commonJSMin(((exports, modu
 			return this.#noProxyValue !== this.#noProxyEnv;
 		}
 		get #noProxyEnv() {
-			return {}.no_proxy ?? {}.NO_PROXY ?? "";
+			return process.env.no_proxy ?? process.env.NO_PROXY ?? "";
 		}
 	};
 	module.exports = EnvHttpProxyAgent;
@@ -9325,7 +9325,7 @@ var require_pending_interceptors_formatter = /* @__PURE__ */ __commonJSMin(((exp
 			} });
 			this.logger = new Console({
 				stdout: this.transform,
-				inspectOptions: { colors: !disableColors && !{}.CI }
+				inspectOptions: { colors: !disableColors && !process.env.CI }
 			});
 		}
 		format(pendingInterceptors) {
@@ -10523,7 +10523,7 @@ var require_dispatcher_weakref = /* @__PURE__ */ __commonJSMin(((exports, module
 		unregister(key) {}
 	};
 	module.exports = function() {
-		if ({}.NODE_V8_COVERAGE && process.version.startsWith("v18")) {
+		if (process.env.NODE_V8_COVERAGE && process.version.startsWith("v18")) {
 			process._rawDebug("Using compatibility WeakRef and FinalizationRegistry");
 			return {
 				WeakRef: CompatWeakRef,
@@ -16086,7 +16086,7 @@ var HttpClient = class {
 	}
 	_getUserAgentWithOrchestrationId(userAgent) {
 		const baseUserAgent = userAgent || "actions/http-client";
-		const orchId = {}["ACTIONS_ORCHESTRATION_ID"];
+		const orchId = process.env["ACTIONS_ORCHESTRATION_ID"];
 		if (orchId) return `${baseUserAgent} actions_orchestration_id/${orchId.replace(/[^a-z0-9_.-]/gi, "_")}`;
 		return baseUserAgent;
 	}
@@ -16223,12 +16223,12 @@ var OidcClient = class OidcClient {
 		return new HttpClient("actions/oidc-client", [new BearerCredentialHandler(OidcClient.getRequestToken())], requestOptions);
 	}
 	static getRequestToken() {
-		const token = {}["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
+		const token = process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
 		if (!token) throw new Error("Unable to get ACTIONS_ID_TOKEN_REQUEST_TOKEN env variable");
 		return token;
 	}
 	static getIDTokenUrl() {
-		const runtimeUrl = {}["ACTIONS_ID_TOKEN_REQUEST_URL"];
+		const runtimeUrl = process.env["ACTIONS_ID_TOKEN_REQUEST_URL"];
 		if (!runtimeUrl) throw new Error("Unable to get ACTIONS_ID_TOKEN_REQUEST_URL env variable");
 		return runtimeUrl;
 	}
@@ -16303,7 +16303,7 @@ var Summary = class {
 	filePath() {
 		return __awaiter$7(this, void 0, void 0, function* () {
 			if (this._filePath) return this._filePath;
-			const pathFromEnv = {}[SUMMARY_ENV_VAR];
+			const pathFromEnv = process.env[SUMMARY_ENV_VAR];
 			if (!pathFromEnv) throw new Error(`Unable to find environment variable for $${SUMMARY_ENV_VAR}. Check if your runtime environment supports job summaries.`);
 			try {
 				yield access(pathFromEnv, constants.R_OK | constants.W_OK);
@@ -16752,8 +16752,8 @@ function findInPath(tool) {
 	return __awaiter$5(this, void 0, void 0, function* () {
 		if (!tool) throw new Error("parameter 'tool' is required");
 		const extensions = [];
-		if (IS_WINDOWS$1 && {}["PATHEXT"]) {
-			for (const extension of {}["PATHEXT"].split(path$1.delimiter)) if (extension) extensions.push(extension);
+		if (IS_WINDOWS$1 && process.env["PATHEXT"]) {
+			for (const extension of process.env["PATHEXT"].split(path$1.delimiter)) if (extension) extensions.push(extension);
 		}
 		if (isRooted(tool)) {
 			const filePath = yield tryGetExecutablePath(tool, extensions);
@@ -16762,8 +16762,8 @@ function findInPath(tool) {
 		}
 		if (tool.includes(path$1.sep)) return [];
 		const directories = [];
-		if ({}.PATH) {
-			for (const p of {}.PATH.split(path$1.delimiter)) if (p) directories.push(p);
+		if (process.env.PATH) {
+			for (const p of process.env.PATH.split(path$1.delimiter)) if (p) directories.push(p);
 		}
 		const matches = [];
 		for (const directory of directories) {
@@ -16851,7 +16851,7 @@ var ToolRunner = class extends events.EventEmitter {
 	}
 	_getSpawnFileName() {
 		if (IS_WINDOWS) {
-			if (this._isCmdFile()) return {}["COMSPEC"] || "cmd.exe";
+			if (this._isCmdFile()) return process.env["COMSPEC"] || "cmd.exe";
 		}
 		return this.toolPath;
 	}
@@ -16943,7 +16943,7 @@ var ToolRunner = class extends events.EventEmitter {
 		options = options || {};
 		const result = {
 			cwd: options.cwd || process.cwd(),
-			env: options.env || {},
+			env: options.env || process.env,
 			silent: options.silent || false,
 			windowsVerbatimArguments: options.windowsVerbatimArguments || false,
 			failOnStdErr: options.failOnStdErr || false,
@@ -17381,8 +17381,8 @@ var ExitCode;
 */
 function exportVariable(name, val) {
 	const convertedVal = toCommandValue(val);
-	({})[name] = convertedVal;
-	if ({}["GITHUB_ENV"] || "") return issueFileCommand("ENV", prepareKeyValueMessage(name, val));
+	process.env[name] = convertedVal;
+	if (process.env["GITHUB_ENV"] || "") return issueFileCommand("ENV", prepareKeyValueMessage(name, val));
 	issueCommand("set-env", { name }, convertedVal);
 }
 /**
@@ -17422,9 +17422,9 @@ function setSecret(secret) {
 * @param inputPath
 */
 function addPath(inputPath) {
-	if ({}["GITHUB_PATH"] || "") issueFileCommand("PATH", inputPath);
+	if (process.env["GITHUB_PATH"] || "") issueFileCommand("PATH", inputPath);
 	else issueCommand("add-path", {}, inputPath);
-	({})["PATH"] = `${inputPath}${path$1.delimiter}${{}["PATH"]}`;
+	process.env["PATH"] = `${inputPath}${path$1.delimiter}${process.env["PATH"]}`;
 }
 /**
 * Gets the value of an input.
@@ -17436,7 +17436,7 @@ function addPath(inputPath) {
 * @returns   string
 */
 function getInput(name, options) {
-	const val = {}[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
+	const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
 	if (options && options.required && !val) throw new Error(`Input required and not supplied: ${name}`);
 	if (options && options.trimWhitespace === false) return val;
 	return val.trim();
@@ -17487,7 +17487,7 @@ function getBooleanInput(name, options) {
 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
 */
 function setOutput(name, value) {
-	if ({}["GITHUB_OUTPUT"] || "") return issueFileCommand("OUTPUT", prepareKeyValueMessage(name, value));
+	if (process.env["GITHUB_OUTPUT"] || "") return issueFileCommand("OUTPUT", prepareKeyValueMessage(name, value));
 	process.stdout.write(os$1.EOL);
 	issueCommand("set-output", { name }, toCommandValue(value));
 }
@@ -17512,7 +17512,7 @@ function setFailed(message) {
 * Gets whether Actions Step Debug is on or not
 */
 function isDebug() {
-	return {}["RUNNER_DEBUG"] === "1";
+	return process.env["RUNNER_DEBUG"] === "1";
 }
 /**
 * Writes debug message to user log
@@ -17595,7 +17595,7 @@ function group(name, fn) {
 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
 */
 function saveState(name, value) {
-	if ({}["GITHUB_STATE"] || "") return issueFileCommand("STATE", prepareKeyValueMessage(name, value));
+	if (process.env["GITHUB_STATE"] || "") return issueFileCommand("STATE", prepareKeyValueMessage(name, value));
 	issueCommand("save-state", { name }, toCommandValue(value));
 }
 /**
@@ -17605,7 +17605,7 @@ function saveState(name, value) {
 * @returns   string
 */
 function getState(name) {
-	return {}[`STATE_${name}`] || "";
+	return process.env[`STATE_${name}`] || "";
 }
 function getIDToken(aud) {
 	return __awaiter$1(this, void 0, void 0, function* () {
@@ -23690,32 +23690,32 @@ var Context = class {
 	constructor() {
 		var _a, _b, _c;
 		this.payload = {};
-		if ({}.GITHUB_EVENT_PATH) if (existsSync({}.GITHUB_EVENT_PATH)) this.payload = JSON.parse(readFileSync({}.GITHUB_EVENT_PATH, { encoding: "utf8" }));
+		if (process.env.GITHUB_EVENT_PATH) if (existsSync(process.env.GITHUB_EVENT_PATH)) this.payload = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, { encoding: "utf8" }));
 		else {
-			const path = {}.GITHUB_EVENT_PATH;
+			const path = process.env.GITHUB_EVENT_PATH;
 			process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${EOL}`);
 		}
-		this.eventName = {}.GITHUB_EVENT_NAME;
-		this.sha = {}.GITHUB_SHA;
-		this.ref = {}.GITHUB_REF;
-		this.workflow = {}.GITHUB_WORKFLOW;
-		this.action = {}.GITHUB_ACTION;
-		this.actor = {}.GITHUB_ACTOR;
-		this.job = {}.GITHUB_JOB;
-		this.runAttempt = parseInt({}.GITHUB_RUN_ATTEMPT, 10);
-		this.runNumber = parseInt({}.GITHUB_RUN_NUMBER, 10);
-		this.runId = parseInt({}.GITHUB_RUN_ID, 10);
-		this.apiUrl = (_a = {}.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
-		this.serverUrl = (_b = {}.GITHUB_SERVER_URL) !== null && _b !== void 0 ? _b : `https://github.com`;
-		this.graphqlUrl = (_c = {}.GITHUB_GRAPHQL_URL) !== null && _c !== void 0 ? _c : `https://api.github.com/graphql`;
+		this.eventName = process.env.GITHUB_EVENT_NAME;
+		this.sha = process.env.GITHUB_SHA;
+		this.ref = process.env.GITHUB_REF;
+		this.workflow = process.env.GITHUB_WORKFLOW;
+		this.action = process.env.GITHUB_ACTION;
+		this.actor = process.env.GITHUB_ACTOR;
+		this.job = process.env.GITHUB_JOB;
+		this.runAttempt = parseInt(process.env.GITHUB_RUN_ATTEMPT, 10);
+		this.runNumber = parseInt(process.env.GITHUB_RUN_NUMBER, 10);
+		this.runId = parseInt(process.env.GITHUB_RUN_ID, 10);
+		this.apiUrl = (_a = process.env.GITHUB_API_URL) !== null && _a !== void 0 ? _a : `https://api.github.com`;
+		this.serverUrl = (_b = process.env.GITHUB_SERVER_URL) !== null && _b !== void 0 ? _b : `https://github.com`;
+		this.graphqlUrl = (_c = process.env.GITHUB_GRAPHQL_URL) !== null && _c !== void 0 ? _c : `https://api.github.com/graphql`;
 	}
 	get issue() {
 		const payload = this.payload;
 		return Object.assign(Object.assign({}, this.repo), { number: (payload.issue || payload.pull_request || payload).number });
 	}
 	get repo() {
-		if ({}.GITHUB_REPOSITORY) {
-			const [owner, repo] = {}.GITHUB_REPOSITORY.split("/");
+		if (process.env.GITHUB_REPOSITORY) {
+			const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
 			return {
 				owner,
 				repo
@@ -23738,8 +23738,8 @@ var require_proxy = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const usingSsl = reqUrl.protocol === "https:";
 		if (checkBypass(reqUrl)) return;
 		const proxyVar = (() => {
-			if (usingSsl) return {}["https_proxy"] || {}["HTTPS_PROXY"];
-			else return {}["http_proxy"] || {}["HTTP_PROXY"];
+			if (usingSsl) return process.env["https_proxy"] || process.env["HTTPS_PROXY"];
+			else return process.env["http_proxy"] || process.env["HTTP_PROXY"];
 		})();
 		if (proxyVar) try {
 			return new DecodedURL(proxyVar);
@@ -23752,7 +23752,7 @@ var require_proxy = /* @__PURE__ */ __commonJSMin(((exports) => {
 		if (!reqUrl.hostname) return false;
 		const reqHost = reqUrl.hostname;
 		if (isLoopbackAddress(reqHost)) return true;
-		const noProxy = {}["no_proxy"] || {}["NO_PROXY"] || "";
+		const noProxy = process.env["no_proxy"] || process.env["NO_PROXY"] || "";
 		if (!noProxy) return false;
 		let reqPort;
 		if (reqUrl.port) reqPort = Number(reqUrl.port);
@@ -24314,7 +24314,7 @@ var import_lib$1 = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 		}
 		_getUserAgentWithOrchestrationId(userAgent) {
 			const baseUserAgent = userAgent || "actions/http-client";
-			const orchId = {}["ACTIONS_ORCHESTRATION_ID"];
+			const orchId = process.env["ACTIONS_ORCHESTRATION_ID"];
 			if (orchId) return `${baseUserAgent} actions_orchestration_id/${orchId.replace(/[^a-z0-9_.-]/gi, "_")}`;
 			return baseUserAgent;
 		}
@@ -24415,7 +24415,7 @@ function getProxyFetch(destinationUrl) {
 	return proxyFetch;
 }
 function getApiBaseUrl() {
-	return {}["GITHUB_API_URL"] || "https://api.github.com";
+	return process.env["GITHUB_API_URL"] || "https://api.github.com";
 }
 //#endregion
 //#region node_modules/universal-user-agent/index.js

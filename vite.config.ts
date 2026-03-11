@@ -24,6 +24,14 @@ function syncDrafterActionYml(): Plugin {
 
 export default defineConfig({
   plugins: [tsconfigPaths(), syncDrafterActionYml()],
+  // GitHub Actions libraries read inputs and context from process.env at runtime.
+  // Preserve those accesses in the actual build environment instead of replacing
+  // them with empty objects during bundling.
+  environments: {
+    client: {
+      keepProcessEnv: true
+    }
+  },
   build: {
     target: 'node24',
     rollupOptions: {
