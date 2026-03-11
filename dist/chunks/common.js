@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import * as os$1 from "node:os";
 import os, { EOL } from "node:os";
 import * as crypto from "node:crypto";
@@ -7,7 +8,6 @@ import * as path$1 from "node:path";
 import * as http$1 from "node:http";
 import * as https$1 from "node:https";
 import * as events from "node:events";
-import "node:assert";
 import { StringDecoder } from "node:string_decoder";
 import * as child from "node:child_process";
 import { setTimeout as setTimeout$1 } from "node:timers";
@@ -44,10 +44,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 	value: mod,
 	enumerable: true
 }) : target, mod));
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, { get: (a, b) => (typeof require !== "undefined" ? require : a)[b] }) : x)(function(x) {
-	if (typeof require !== "undefined") return require.apply(this, arguments);
-	throw Error("Calling `require` for \"" + x + "\" in an environment that doesn't expose the `require` function. See https://rolldown.rs/in-depth/bundling-cjs#require-external-modules for more details.");
-});
+var __require = /* @__PURE__ */ createRequire(import.meta.url);
 //#endregion
 //#region node_modules/@actions/core/lib/utils.js
 /**
