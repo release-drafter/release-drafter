@@ -1,4 +1,4 @@
-import { C as __commonJSMin, S as warning, b as setFailed, d as stringToRegex, h as context, m as getOctokit, o as object, p as composeConfigGet, r as array, s as string, t as sharedInputSchema, v as getInput, w as __toESM, x as setOutput, y as info } from "../../chunks/common.js";
+import { C as warning, S as setOutput, T as __toESM, b as info, c as string, f as stringToRegex, g as context, h as getOctokit, i as array, m as composeConfigGet, s as object, t as sharedInputSchema, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
 //#endregion
 //#region src/actions/autolabeler/main.ts
 var import_ignore = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {

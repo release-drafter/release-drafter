@@ -42,18 +42,16 @@ export const getVersionInfo = (params: {
     }
   )
 
-  if (
-    _localIncrement?.startsWith('pre') &&
-    versionFromLastRelease?.prerelease?.length
-  ) {
-    _localIncrement = 'prerelease'
-  }
-
   let referenceVersion: VersionDescriptor
-
   if (versionFromInput.version) {
+    _localIncrement = 'no_increment' // use that exact input version
     referenceVersion = versionFromInput
   } else if (versionFromLastRelease.version) {
+    _localIncrement =
+      _localIncrement?.startsWith('pre') &&
+      versionFromLastRelease?.prerelease?.length
+        ? 'prerelease'
+        : _localIncrement
     referenceVersion = versionFromLastRelease
   } else {
     _localIncrement = 'no_increment' // stay at 0.1.0 since no version was provided / found

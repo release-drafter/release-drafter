@@ -1238,7 +1238,8 @@ describe('drafter e2e', () => {
             - PATCH_MINOR: 0
             - PATCH_PATCH: 1
 
-            - PRERELEASE: -0
+            - PRERELEASE: 2.0.1-0
+            - PRERELEASE_PRE: -0
 
             - Resolved : 2.0.1
             ",
@@ -1287,7 +1288,8 @@ describe('drafter e2e', () => {
             - PATCH_MINOR: 0
             - PATCH_PATCH: 1
 
-            - PRERELEASE: -0
+            - PRERELEASE: 2.0
+            - PRERELEASE_PRE: -0
 
             - Resolved : 2.0
             ",
@@ -1334,7 +1336,8 @@ describe('drafter e2e', () => {
             - PATCH_MINOR: 0
             - PATCH_PATCH: 1
 
-            - PRERELEASE: -0
+            - PRERELEASE: 2
+            - PRERELEASE_PRE: -0
 
             - Resolved : 2
             ",
@@ -1381,7 +1384,7 @@ describe('drafter e2e', () => {
             - PATCH_MINOR: 0
             - PATCH_PATCH: 1
 
-            - PRERELEASE: -0
+            - PRERELEASE: Major: 2, Minor: 0, Patch: 1, Prerelease: -0
 
             - Resolved : Major: 2, Minor: 0, Patch: 1, Prerelease: 
             ",
@@ -1430,7 +1433,8 @@ describe('drafter e2e', () => {
             - PATCH_MINOR: 0
             - PATCH_PATCH: 1
 
-            - PRERELEASE: -0
+            - PRERELEASE: 2.0.1-0
+            - PRERELEASE_PRE: -0
 
             - Resolved : 2.0.1
             ",
@@ -1479,7 +1483,8 @@ describe('drafter e2e', () => {
             - PATCH_MINOR: 0
             - PATCH_PATCH: 1
 
-            - PRERELEASE: -beta.0
+            - PRERELEASE: 2.0.1-beta.0
+            - PRERELEASE_PRE: -beta.0
 
             - Resolved : 2.0.1-beta.0
             ",
@@ -2355,7 +2360,7 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.2.0, patch=2.1.2. Manual input version is 2.1.1.",
               "draft": true,
               "make_latest": "true",
               "name": "v2.1.1 (Code name: Placeholder)",
@@ -2386,7 +2391,7 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.2.0, patch=2.1.1. Manual input version is 2.1.1.",
               "draft": true,
               "make_latest": "true",
               "name": "v2.1.1 (Code name: Placeholder)",
@@ -2417,7 +2422,7 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=2.0.0, minor=1.1.0, patch=1.0.1.",
               "draft": true,
               "make_latest": "true",
               "name": "v1.0.0-beta (Code name: Hello World)",
@@ -2448,7 +2453,7 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.2.0, patch=2.1.2. Manual input version is 2.1.1.",
               "draft": true,
               "make_latest": "true",
               "name": "v2.1.1-alpha (Code name: Foxtrot Unicorn)",
@@ -2482,7 +2487,7 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=2.0.0, minor=1.1.0, patch=1.0.1.",
               "draft": true,
               "make_latest": "true",
               "name": "v1.0.0-RC1 (Code name: Hello World)",
@@ -2514,7 +2519,7 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.2.0, patch=2.1.2. Manual input version is 2.1.1.",
               "draft": false,
               "make_latest": "true",
               "name": "v2.1.1 (Code name: Placeholder)",
@@ -2545,12 +2550,12 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is $INPUT_VERSION.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.0.1.",
               "draft": true,
               "make_latest": "false",
-              "name": "v$INPUT_VERSION (Code name: Placeholder)",
+              "name": "v2.0.1 (Code name: Placeholder)",
               "prerelease": true,
-              "tag_name": "v$INPUT_VERSION",
+              "tag_name": "v2.0.1",
               "target_commitish": "refs/heads/master",
             },
           ]
@@ -2637,12 +2642,12 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is $INPUT_VERSION.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.0.1.",
               "draft": true,
               "make_latest": "true",
-              "name": "v$INPUT_VERSION (Code name: Placeholder)",
+              "name": "v2.0.1 (Code name: Placeholder)",
               "prerelease": false,
-              "tag_name": "v$INPUT_VERSION",
+              "tag_name": "v2.0.1",
               "target_commitish": "refs/heads/master",
             },
           ]
@@ -2669,12 +2674,12 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is $INPUT_VERSION.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.0.1.",
               "draft": false,
               "make_latest": "false",
-              "name": "v$INPUT_VERSION (Code name: Placeholder)",
+              "name": "v2.0.1 (Code name: Placeholder)",
               "prerelease": true,
-              "tag_name": "v$INPUT_VERSION",
+              "tag_name": "v2.0.1",
               "target_commitish": "refs/heads/master",
             },
           ]
@@ -2823,7 +2828,7 @@ describe('drafter e2e', () => {
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
-              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.1.0, patch=2.0.1. Manual input version is 2.1.1.",
+              "body": "Placeholder with example. Automatically calculated values based on previous releases are next major=3.0.0, minor=2.2.0, patch=2.1.1. Manual input version is 2.1.1.",
               "draft": true,
               "make_latest": "true",
               "name": "Foxtrot Unicorn",

@@ -1,4 +1,4 @@
-import { C as __commonJSMin, S as warning, _ as error, a as number, b as setFailed, c as stringbool, d as stringToRegex, f as escapeStringRegexp, g as debug, h as context, i as boolean, l as datetime, m as getOctokit, n as _enum, o as object, p as composeConfigGet, r as array, s as string, t as sharedInputSchema, u as paginateGraphql, v as getInput, w as __toESM, x as setOutput, y as info } from "../../chunks/common.js";
+import { C as warning, S as setOutput, T as __toESM, _ as debug, a as boolean, b as info, c as string, d as paginateGraphql, f as stringToRegex, g as context, h as getOctokit, i as array, l as stringbool, m as composeConfigGet, n as ZodDefault, o as number, p as escapeStringRegexp, r as _enum, s as object, t as sharedInputSchema, u as datetime, v as error, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
 //#region node_modules/compare-versions/index.mjs
 function compareVersions(v1, v2) {
 	const n1 = validateAndParse(v1);
@@ -876,7 +876,7 @@ var require_prerelease = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = prerelease;
 }));
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/get-version-info.ts
+//#region src/actions/drafter/lib/build-release-payload/version-descriptor.ts
 var import_coerce = /* @__PURE__ */ __toESM(require_coerce(), 1);
 var import_inc = /* @__PURE__ */ __toESM(require_inc(), 1);
 var import_major = /* @__PURE__ */ __toESM(require_major(), 1);
@@ -884,233 +884,121 @@ var import_minor = /* @__PURE__ */ __toESM(require_minor(), 1);
 var import_parse = /* @__PURE__ */ __toESM(require_parse(), 1);
 var import_patch = /* @__PURE__ */ __toESM(require_patch(), 1);
 var import_prerelease = /* @__PURE__ */ __toESM(require_prerelease(), 1);
-var DEFAULT_VERSION_TEMPLATE = "$MAJOR.$MINOR.$PATCH";
-var getVersionInfo = (params) => {
-	const { lastRelease, config, input, versionKeyIncrement: _versionKeyIncrement } = params;
-	let versionKeyIncrement = _versionKeyIncrement;
-	const lastReleaseVersion = coerceVersion(lastRelease, { tagPrefix: config["tag-prefix"] });
-	const inputVersion = coerceVersion(
-		/**
-		* Use the first override parameter to identify
-		* a version, from the most accurate to the least
-		*/
-		input.version || input.tag || input.name,
-		{ tagPrefix: config["tag-prefix"] }
-	);
-	const isPreVersionKeyIncrement = versionKeyIncrement?.startsWith("pre");
-	if (!lastReleaseVersion && !inputVersion) {
-		if (isPreVersionKeyIncrement) defaultVersionInfo["$RESOLVED_VERSION"] = structuredClone(defaultVersionInfo["$NEXT_PRERELEASE_VERSION"]);
-		if (config["version-template"] && config["version-template"] !== DEFAULT_VERSION_TEMPLATE) {
-			const defaultVersion = toSemver("0.1.0");
-			const templateableVersion = getTemplatableVersion({
-				version: defaultVersion,
-				template: config["version-template"],
-				inputVersion,
-				versionKeyIncrement: versionKeyIncrement || "patch",
-				preReleaseIdentifier: config["prerelease-identifier"]
-			});
-			for (const key of Object.keys(templateableVersion)) {
-				const keyTyped = key;
-				if (templateableVersion[keyTyped] && typeof templateableVersion[keyTyped] === "object" && templateableVersion[keyTyped].template) templateableVersion[keyTyped].version = renderTemplate({
-					template: templateableVersion[keyTyped].template,
-					object: templateableVersion[keyTyped]
-				});
-			}
-			let resolvedVersionObj = splitSemVersion({
-				version: defaultVersion,
-				template: config["version-template"],
-				inputVersion,
-				versionKeyIncrement: versionKeyIncrement || "patch",
-				preReleaseIdentifier: config["prerelease-identifier"]
-			});
-			if (!resolvedVersionObj) throw new Error("Failed to generate resolved version object");
-			resolvedVersionObj = {
-				...resolvedVersionObj,
-				version: renderTemplate({
-					template: config["version-template"],
-					object: resolvedVersionObj
-				})
-			};
-			templateableVersion.$RESOLVED_VERSION = resolvedVersionObj;
-			return templateableVersion;
-		}
-		return defaultVersionInfo;
+var VersionDescriptor = class VersionDescriptor {
+	version = null;
+	major = null;
+	minor = null;
+	patch = null;
+	prerelease = null;
+	preReleaseIdentifier;
+	tagPrefix;
+	constructor(from, opt) {
+		this.preReleaseIdentifier = opt?.preReleaseIdentifier;
+		this.tagPrefix = opt?.tagPrefix;
+		this.version = this._coerce(from);
+		this.major = this.version ? (0, import_major.default)(this.version).toString() : null;
+		this.minor = this.version ? (0, import_minor.default)(this.version).toString() : null;
+		this.patch = this.version ? (0, import_patch.default)(this.version).toString() : null;
+		this.prerelease = this.version === null ? null : (0, import_prerelease.default)(this.version) ? `-${(0, import_prerelease.default)(this.version)?.join(".")}` : "";
 	}
-	if (isPreVersionKeyIncrement && lastReleaseVersion?.prerelease?.length) versionKeyIncrement = "prerelease";
-	const templateableVersion = getTemplatableVersion({
-		version: lastReleaseVersion,
-		template: config["version-template"],
-		inputVersion,
-		versionKeyIncrement,
-		preReleaseIdentifier: config["prerelease-identifier"]
-	});
-	if (config["version-template"] && config["version-template"] !== DEFAULT_VERSION_TEMPLATE) for (const key of Object.keys(templateableVersion)) {
-		const keyTyped = key;
-		if (templateableVersion[keyTyped] && typeof templateableVersion[keyTyped] === "object" && templateableVersion[keyTyped].template) templateableVersion[keyTyped].version = renderTemplate({
-			template: templateableVersion[keyTyped].template,
-			object: templateableVersion[keyTyped]
+	_coerce(from) {
+		if (from) {
+			const ver = typeof from === "object" ? this._isRelease(from) ? this._toSemver(this._stripTag(from.tag_name)) || this._toSemver(this._stripTag(from.name)) : this._toSemver(from) : this._toSemver(this._stripTag(from));
+			if (!ver) {
+				warning(`Failed to parse version from input ${from}. Defaulting to null.`);
+				return null;
+			}
+			return ver;
+		} else {
+			warning(`No version input provided. Defaulting to null.`);
+			return null;
+		}
+	}
+	_isRelease(input) {
+		return typeof input === "object" && input !== null && (typeof input?.tag_name === "string" || typeof input?.name === "string");
+	}
+	_stripTag(input) {
+		return !!this.tagPrefix && input?.startsWith(this.tagPrefix) ? input.slice(this.tagPrefix.length) : input;
+	}
+	_toSemver(version) {
+		const result = (0, import_parse.default)(version);
+		if (result) return result;
+		return (0, import_coerce.default)(version);
+	}
+	/**
+	* Alters version in-place by incrementing it according to the specified release type (major, minor, patch, prerelease).
+	*/
+	incremented(increment) {
+		if (!this.version || increment === "no_increment") return this;
+		const _incrementedVersion = (0, import_inc.default)(this.version, increment, true, this.preReleaseIdentifier);
+		if (!_incrementedVersion) throw new Error(`Failed to increment version ${this.version} with increment ${increment}`);
+		const _incrementedSemver = this._toSemver(_incrementedVersion);
+		if (!_incrementedSemver) throw new Error(`Failed to parse version ${_incrementedVersion} after incrementing ${this.version} with increment ${increment}`);
+		return new VersionDescriptor(_incrementedSemver, {
+			tagPrefix: this.tagPrefix,
+			preReleaseIdentifier: this.preReleaseIdentifier
 		});
 	}
-	return templateableVersion;
-};
-var toSemver = (version) => {
-	const result = (0, import_parse.default)(version);
-	if (result) return result;
-	return (0, import_coerce.default)(version);
-};
-/**
-* Get a semver version from various input types
-*/
-var coerceVersion = (input, opt) => {
-	if (!input) return null;
-	const stripTag = (input) => !!opt?.tagPrefix && input?.startsWith(opt.tagPrefix) ? input.slice(opt.tagPrefix.length) : input;
-	return typeof input === "object" ? toSemver(stripTag(input.tag_name)) || toSemver(stripTag(input.name)) : toSemver(stripTag(input));
-};
-var defaultVersionInfo = {
-	$NEXT_MAJOR_VERSION: {
-		version: "1.0.0",
-		template: "$MAJOR.$MINOR.$PATCH",
-		inputVersion: null,
-		versionKeyIncrement: "patch",
-		inc: "major",
-		$MAJOR: 1,
-		$MINOR: 0,
-		$PATCH: 0,
-		$PRERELEASE: ""
-	},
-	$NEXT_MINOR_VERSION: {
-		version: "0.1.0",
-		template: "$MAJOR.$MINOR.$PATCH",
-		inputVersion: null,
-		versionKeyIncrement: "patch",
-		inc: "minor",
-		$MAJOR: 0,
-		$MINOR: 1,
-		$PATCH: 0,
-		$PRERELEASE: ""
-	},
-	$NEXT_PATCH_VERSION: {
-		version: "0.1.0",
-		template: "$MAJOR.$MINOR.$PATCH",
-		inputVersion: null,
-		versionKeyIncrement: "patch",
-		inc: "patch",
-		$MAJOR: 0,
-		$MINOR: 1,
-		$PATCH: 0,
-		$PRERELEASE: ""
-	},
-	$NEXT_PRERELEASE_VERSION: {
-		version: "0.1.0-rc.0",
-		template: "$MAJOR.$MINOR.$PATCH$PRERELEASE",
-		inputVersion: null,
-		versionKeyIncrement: "prerelease",
-		inc: "prerelease",
-		preReleaseIdentifier: "rc",
-		$MAJOR: 0,
-		$MINOR: 1,
-		$PATCH: 0,
-		$PRERELEASE: "-rc.0"
-	},
-	$INPUT_VERSION: null,
-	$RESOLVED_VERSION: {
-		version: "0.1.0",
-		template: "$MAJOR.$MINOR.$PATCH",
-		inputVersion: null,
-		versionKeyIncrement: "patch",
-		inc: "patch",
-		$MAJOR: 0,
-		$MINOR: 1,
-		$PATCH: 0,
-		$PRERELEASE: ""
+	rendered(template) {
+		return renderTemplate({
+			template,
+			object: {
+				$MAJOR: this.major ?? void 0,
+				$MINOR: this.minor ?? void 0,
+				$PATCH: this.patch ?? void 0,
+				$PRERELEASE: this.prerelease ?? void 0
+			}
+		});
 	}
 };
-var splitSemVersion = (input, versionKey = "version") => {
-	if (!input?.[versionKey]) return;
-	const version = input.inc ? (0, import_inc.default)(input[versionKey], input.inc, true, input.preReleaseIdentifier) : typeof input[versionKey] === "string" ? input[versionKey] : input[versionKey].version;
-	const prereleaseVersion = !version ? "" : (0, import_prerelease.default)(version)?.join(".") || "";
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/get-version-info.ts
+var getVersionInfo = (params) => {
+	const { lastRelease, config, input, versionKeyIncrement: _versionKeyIncrement } = params;
+	let _localIncrement = structuredClone(_versionKeyIncrement);
+	const versionFromLastRelease = new VersionDescriptor(lastRelease, {
+		tagPrefix: config["tag-prefix"],
+		preReleaseIdentifier: config["prerelease-identifier"]
+	});
+	const versionFromInput = new VersionDescriptor(input.version || input.tag || input.name, {
+		tagPrefix: config["tag-prefix"],
+		preReleaseIdentifier: config["prerelease-identifier"]
+	});
+	let referenceVersion;
+	if (versionFromInput.version) {
+		_localIncrement = "no_increment";
+		referenceVersion = versionFromInput;
+	} else if (versionFromLastRelease.version) {
+		_localIncrement = _localIncrement?.startsWith("pre") && versionFromLastRelease?.prerelease?.length ? "prerelease" : _localIncrement;
+		referenceVersion = versionFromLastRelease;
+	} else {
+		_localIncrement = "no_increment";
+		referenceVersion = new VersionDescriptor("0.1.0", {
+			preReleaseIdentifier: config["prerelease-identifier"],
+			tagPrefix: config["tag-prefix"]
+		});
+	}
 	return {
-		...input,
-		version,
-		$MAJOR: (0, import_major.default)(version || ""),
-		$MINOR: (0, import_minor.default)(version || ""),
-		$PATCH: (0, import_patch.default)(version || ""),
-		$PRERELEASE: prereleaseVersion ? `-${prereleaseVersion}` : "",
-		$COMPLETE: version
+		$NEXT_MAJOR_VERSION: referenceVersion.incremented("major").rendered(config["version-template"]),
+		$NEXT_MAJOR_VERSION_MAJOR: referenceVersion.incremented("major").major,
+		$NEXT_MAJOR_VERSION_MINOR: referenceVersion.incremented("major").minor,
+		$NEXT_MAJOR_VERSION_PATCH: referenceVersion.incremented("major").patch,
+		$NEXT_MINOR_VERSION: referenceVersion.incremented("minor").rendered(config["version-template"]),
+		$NEXT_MINOR_VERSION_MAJOR: referenceVersion.incremented("minor").major,
+		$NEXT_MINOR_VERSION_MINOR: referenceVersion.incremented("minor").minor,
+		$NEXT_MINOR_VERSION_PATCH: referenceVersion.incremented("minor").patch,
+		$NEXT_PATCH_VERSION: referenceVersion.incremented("patch").rendered(config["version-template"]),
+		$NEXT_PATCH_VERSION_MAJOR: referenceVersion.incremented("patch").major,
+		$NEXT_PATCH_VERSION_MINOR: referenceVersion.incremented("patch").minor,
+		$NEXT_PATCH_VERSION_PATCH: referenceVersion.incremented("patch").patch,
+		$NEXT_PRERELEASE_VERSION: referenceVersion.incremented("prerelease").rendered(config["version-template"]),
+		$NEXT_PRERELEASE_VERSION_PRERELEASE: referenceVersion.incremented("prerelease").prerelease,
+		$RESOLVED_VERSION: referenceVersion.incremented(_localIncrement).rendered(config["version-template"]),
+		$RESOLVED_VERSION_MAJOR: referenceVersion.incremented(_localIncrement).major,
+		$RESOLVED_VERSION_MINOR: referenceVersion.incremented(_localIncrement).minor,
+		$RESOLVED_VERSION_PATCH: referenceVersion.incremented(_localIncrement).patch,
+		$RESOLVED_VERSION_PRERELEASE: referenceVersion.incremented(_localIncrement).prerelease
 	};
-};
-var getTemplatableVersion = (input) => {
-	const templatableVersion = {
-		$NEXT_MAJOR_VERSION: splitSemVersion({
-			...input,
-			inc: "major"
-		}),
-		$NEXT_MAJOR_VERSION_MAJOR: splitSemVersion({
-			...input,
-			inc: "major",
-			template: "$MAJOR"
-		}),
-		$NEXT_MAJOR_VERSION_MINOR: splitSemVersion({
-			...input,
-			inc: "major",
-			template: "$MINOR"
-		}),
-		$NEXT_MAJOR_VERSION_PATCH: splitSemVersion({
-			...input,
-			inc: "major",
-			template: "$PATCH"
-		}),
-		$NEXT_MINOR_VERSION: splitSemVersion({
-			...input,
-			inc: "minor"
-		}),
-		$NEXT_MINOR_VERSION_MAJOR: splitSemVersion({
-			...input,
-			inc: "minor",
-			template: "$MAJOR"
-		}),
-		$NEXT_MINOR_VERSION_MINOR: splitSemVersion({
-			...input,
-			inc: "minor",
-			template: "$MINOR"
-		}),
-		$NEXT_MINOR_VERSION_PATCH: splitSemVersion({
-			...input,
-			inc: "minor",
-			template: "$PATCH"
-		}),
-		$NEXT_PATCH_VERSION: splitSemVersion({
-			...input,
-			inc: "patch"
-		}),
-		$NEXT_PATCH_VERSION_MAJOR: splitSemVersion({
-			...input,
-			inc: "patch",
-			template: "$MAJOR"
-		}),
-		$NEXT_PATCH_VERSION_MINOR: splitSemVersion({
-			...input,
-			inc: "patch",
-			template: "$MINOR"
-		}),
-		$NEXT_PATCH_VERSION_PATCH: splitSemVersion({
-			...input,
-			inc: "patch",
-			template: "$PATCH"
-		}),
-		$NEXT_PRERELEASE_VERSION: splitSemVersion({
-			...input,
-			inc: "prerelease",
-			template: "$PRERELEASE"
-		}),
-		$INPUT_VERSION: splitSemVersion(input, "inputVersion"),
-		$RESOLVED_VERSION: splitSemVersion({
-			...input,
-			inc: input.versionKeyIncrement || "patch"
-		})
-	};
-	templatableVersion.$RESOLVED_VERSION = templatableVersion.$INPUT_VERSION || templatableVersion.$RESOLVED_VERSION;
-	return templatableVersion;
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/build-release-payload.ts
@@ -1190,10 +1078,6 @@ var buildReleasePayload = (params) => {
 		info(`${mutableCommitish} is not supported as release target, falling back to default branch`);
 		mutableCommitish = "";
 	}
-	const resolvedVersion = versionInfo.$RESOLVED_VERSION?.version;
-	const majorVersion = versionInfo.$RESOLVED_VERSION?.$MAJOR;
-	const minorVersion = versionInfo.$RESOLVED_VERSION?.$MINOR;
-	const patchVersion = versionInfo.$RESOLVED_VERSION?.$PATCH;
 	const res = {
 		name: mutableInputName,
 		tag: mutableInputTag,
@@ -1202,23 +1086,25 @@ var buildReleasePayload = (params) => {
 		prerelease: config["prerelease"],
 		make_latest: config["latest"],
 		draft: !input["publish"],
-		resolvedVersion,
-		majorVersion,
-		minorVersion,
-		patchVersion
+		resolvedVersion: versionInfo?.$RESOLVED_VERSION,
+		majorVersion: versionInfo?.$RESOLVED_VERSION_MAJOR,
+		minorVersion: versionInfo?.$RESOLVED_VERSION_MINOR,
+		patchVersion: versionInfo?.$RESOLVED_VERSION_PATCH,
+		prereleaseVersion: versionInfo?.$RESOLVED_VERSION_PRERELEASE
 	};
 	info(`Release payload built successfully`);
-	info(`  name:              ${res.name}`);
-	info(`  tag:               ${res.tag}`);
-	info(`  body:              ${res.body.length} characters long`);
-	info(`  targetCommitish:   ${res.targetCommitish}`);
-	info(`  prerelease:        ${res.prerelease}`);
-	info(`  make_latest:       ${res.make_latest}`);
-	info(`  draft:             ${res.draft}${!res.draft ? " (will be published !)" : ""}`);
-	info(`  resolvedVersion:   ${res.resolvedVersion}`);
-	info(`  majorVersion:      ${res.majorVersion}`);
-	info(`  minorVersion:      ${res.minorVersion}`);
-	info(`  patchVersion:      ${res.patchVersion}`);
+	info(`  name:                        ${res.name}`);
+	info(`  tag:                         ${res.tag}`);
+	info(`  body:                        ${res.body.length} characters long`);
+	info(`  targetCommitish:             ${res.targetCommitish}`);
+	info(`  prerelease:                  ${res.prerelease}`);
+	info(`  make_latest:                 ${res.make_latest}`);
+	info(`  draft:                       ${res.draft}${!res.draft ? " (will be published !)" : ""}`);
+	info(`  RESOLVED_VERSION:            ${res.resolvedVersion}`);
+	info(`  RESOLVED_VERSION_MAJOR:      ${res.majorVersion}`);
+	info(`  RESOLVED_VERSION_MINOR:      ${res.minorVersion}`);
+	info(`  RESOLVED_VERSION_PATCH:      ${res.patchVersion}`);
+	info(`  RESOLVED_VERSION_PRERELEASE: ${res.prereleaseVersion}`);
 	return res;
 };
 //#endregion
@@ -1360,7 +1246,9 @@ var actionInputSchema = object({
 	version: string().optional(),
 	publish: stringbool().optional().default(false)
 }).and(sharedInputSchema).and(commonConfigSchema);
-var configSchema = object({
+//#endregion
+//#region src/actions/drafter/config/schemas/config.schema.ts
+var exclusiveConfigSchema = object({
 	"change-template": string().optional().default("* $TITLE (#$NUMBER) @$AUTHOR"),
 	"change-title-escapes": string().optional(),
 	"no-changes-template": string().optional().default("* No changes"),
@@ -1409,7 +1297,15 @@ var configSchema = object({
 }).meta({
 	title: "JSON schema for Release Drafter yaml files",
 	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
-}).and(commonConfigSchema);
+});
+var configSchema = exclusiveConfigSchema.and(commonConfigSchema);
+Object.fromEntries(Object.entries({
+	...exclusiveConfigSchema.shape,
+	...commonConfigSchema.shape
+}).map(([key, value]) => {
+	if (value instanceof ZodDefault) return [key, value.def.defaultValue];
+	return [key, void 0];
+}));
 //#endregion
 //#region src/actions/drafter/config/get-action-inputs.ts
 var getActionInput = () => {

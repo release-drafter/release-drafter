@@ -1,3 +1,4 @@
+import { configSchemaDefaults } from 'src/actions/drafter/config'
 import { getVersionInfo } from 'src/actions/drafter/lib/build-release-payload/get-version-info'
 import { resolveVersionKeyIncrement } from 'src/actions/drafter/lib/build-release-payload/resolve-version-increment'
 import { describe, expect, it } from 'vitest'
@@ -32,7 +33,7 @@ const suites: SuiteParams[] = [
         name: 'Some release'
       },
       config: {
-        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE'
+        'version-template': configSchemaDefaults['version-template']
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -53,7 +54,7 @@ const suites: SuiteParams[] = [
         name: '10.0.3'
       },
       config: {
-        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE'
+        'version-template': configSchemaDefaults['version-template']
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -74,7 +75,7 @@ const suites: SuiteParams[] = [
         name: '8.1.0'
       },
       config: {
-        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE'
+        'version-template': configSchemaDefaults['version-template']
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -95,7 +96,7 @@ const suites: SuiteParams[] = [
         name: 'Some release'
       },
       config: {
-        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE'
+        'version-template': configSchemaDefaults['version-template']
       },
       input: { version: 'v10.0.3-alpha' },
       versionKeyIncrement: 'patch',
@@ -116,7 +117,7 @@ const suites: SuiteParams[] = [
         name: 'Some release'
       },
       config: {
-        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE',
+        'version-template': configSchemaDefaults['version-template'],
         'prerelease-identifier': 'alpha'
       },
       input: {},
@@ -138,7 +139,7 @@ const suites: SuiteParams[] = [
         name: 'Some release'
       },
       config: {
-        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE'
+        'version-template': configSchemaDefaults['version-template']
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -185,12 +186,34 @@ describe('versions', () => {
     const versionInfo = getVersionInfo({
       lastRelease: undefined,
       input: {},
-      config: { 'version-template': '' },
+      config: { 'version-template': configSchemaDefaults['version-template']! },
       versionKeyIncrement: 'patch'
     })
 
     expect(versionInfo).toMatchInlineSnapshot(
-      'TODO : CHECK THIS IS CORRECT DEFAULT'
+      `
+      {
+        "$NEXT_MAJOR_VERSION": "1.0.0",
+        "$NEXT_MAJOR_VERSION_MAJOR": "1",
+        "$NEXT_MAJOR_VERSION_MINOR": "0",
+        "$NEXT_MAJOR_VERSION_PATCH": "0",
+        "$NEXT_MINOR_VERSION": "0.2.0",
+        "$NEXT_MINOR_VERSION_MAJOR": "0",
+        "$NEXT_MINOR_VERSION_MINOR": "2",
+        "$NEXT_MINOR_VERSION_PATCH": "0",
+        "$NEXT_PATCH_VERSION": "0.1.1",
+        "$NEXT_PATCH_VERSION_MAJOR": "0",
+        "$NEXT_PATCH_VERSION_MINOR": "1",
+        "$NEXT_PATCH_VERSION_PATCH": "1",
+        "$NEXT_PRERELEASE_VERSION": "0.1.1-0",
+        "$NEXT_PRERELEASE_VERSION_PRERELEASE": "-0",
+        "$RESOLVED_VERSION": "0.1.0",
+        "$RESOLVED_VERSION_MAJOR": "0",
+        "$RESOLVED_VERSION_MINOR": "1",
+        "$RESOLVED_VERSION_PATCH": "0",
+        "$RESOLVED_VERSION_PRERELEASE": "",
+      }
+    `
     )
   })
 
@@ -267,7 +290,9 @@ describe('versions', () => {
           name: 'Some release'
         },
         input: {},
-        config: { 'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE' },
+        config: {
+          'version-template': configSchemaDefaults['version-template']
+        },
         versionKeyIncrement: versionKey
       })
 
@@ -287,7 +312,7 @@ describe('versions', () => {
 
     const defaultTemplateVersionInfo = getVersionInfo({
       ...baseParams,
-      config: { 'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE' }
+      config: { 'version-template': configSchemaDefaults['version-template'] }
     })
 
     const customTemplateVersionInfo = getVersionInfo({
@@ -314,7 +339,7 @@ describe('versions', () => {
 
     const versionInfo = getVersionInfo({
       ...baseParams,
-      config: { 'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE' }
+      config: { 'version-template': configSchemaDefaults['version-template'] }
     })
 
     // With default template, principal variables are full SemVer

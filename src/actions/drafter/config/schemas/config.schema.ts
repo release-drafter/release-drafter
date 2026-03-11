@@ -1,5 +1,13 @@
 import type * as z from 'zod'
-import { object, string, array, number, boolean, enum as zenum } from 'zod'
+import {
+  object,
+  string,
+  array,
+  number,
+  boolean,
+  enum as zenum,
+  ZodDefault
+} from 'zod'
 import { commonConfigSchema } from './common-config.schema'
 
 export const exclusiveConfigSchema = object({
@@ -162,3 +170,13 @@ export type ExclusiveConfig = z.output<typeof exclusiveConfigSchema>
  * For the config params that can be overwritten by the action's input, see `CommonConfig`
  */
 export type Config = z.output<typeof configSchema>
+
+export const configSchemaDefaults = Object.fromEntries(
+  Object.entries({
+    ...exclusiveConfigSchema.shape,
+    ...commonConfigSchema.shape
+  }).map(([key, value]) => {
+    if (value instanceof ZodDefault) return [key, value.def.defaultValue]
+    return [key, undefined]
+  })
+) as Config

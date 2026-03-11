@@ -12,3 +12,4 @@ export {
   configSchema,
   exclusiveConfigSchema
 } from './config.schema'
+export { configSchemaDefaults } from './config.schema'
