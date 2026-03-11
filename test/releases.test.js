@@ -115,8 +115,38 @@ describe('releases', () => {
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
         * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @dependabot"
       `)
+    })
+
+    it('renders bot authors as plain login for custom author-link templates', () => {
+      const changelog = generateChangeLog(
+        [
+          {
+            title: 'PR Title',
+            number: 3203,
+            body: '',
+            url: 'https://github.com/nonebot/nonebot2/pull/3203',
+            labels: { nodes: [] },
+            author: {
+              login: 'noneflow[bot]',
+              __typename: 'Bot',
+              url: 'https://github.com/apps/noneflow',
+            },
+            baseRefName: 'main',
+            headRefName: 'feature',
+          },
+        ],
+        {
+          ...baseConfig,
+          'change-template':
+            '- $TITLE [@$AUTHOR](https://github.com/$AUTHOR) ([#$NUMBER]($URL))',
+        }
+      )
+
+      expect(changelog).toEqual(
+        '- PR Title [@noneflow[bot]](https://github.com/noneflow[bot]) ([#3203](https://github.com/nonebot/nonebot2/pull/3203))'
+      )
     })
     it('escapes titles with \\s correctly', () => {
       const config = {
@@ -133,7 +163,7 @@ describe('releases', () => {
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\\\\\confg.yml to __configs\\\\\\\\config.yml (#7) @ghost
         * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @dependabot"
       `)
     })
     it('escapes titles with \\<*_& correctly', () => {
@@ -151,7 +181,7 @@ describe('releases', () => {
         * 2\\\\*2 should equal to 4\\\\*1 (#6) @jetersen
         * Rename \\\\_\\\\_confgs\\\\\\\\confg.yml to \\\\_\\\\_configs\\\\\\\\config.yml (#7) @ghost
         * Adds @nullable annotations to the 1\\\\*1+2\\\\*4 test in \`tests.java\` (#0) @Happypig375
-        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @dependabot"
       `)
     })
     it('escapes titles with @s correctly', () => {
@@ -169,7 +199,7 @@ describe('releases', () => {
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
         * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @dependabot"
       `)
     })
     it('escapes titles with @s and #s correctly', () => {
@@ -187,7 +217,7 @@ describe('releases', () => {
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
         * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @dependabot"
       `)
     })
     it('escapes titles with \\<@*_&`# correctly', () => {
@@ -205,7 +235,7 @@ describe('releases', () => {
         * 2\\\\*2 should equal to 4\\\\*1 (#6) @jetersen
         * Rename \\\\_\\\\_confgs\\\\\\\\confg.yml to \\\\_\\\\_configs\\\\\\\\config.yml (#7) @ghost
         * Adds @<!---->nullable annotations to the 1\\\\*1+2\\\\*4 test in \\\\\`tests.java\\\\\` (#0) @Happypig375
-        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @dependabot"
       `)
     })
     it('adds proper details/summary markdown when collapse-after is set and more than 3 PRs', () => {
@@ -218,7 +248,7 @@ describe('releases', () => {
         "* B2 (#2) @ghost
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
         * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @dependabot
 
         ## Bugs
 
@@ -249,7 +279,7 @@ describe('releases', () => {
         * Fixes #4 (#5) @Happypig375
         * 2*2 should equal to 4*1 (#6) @jetersen
         * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
-        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)
+        * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @dependabot
 
         ## Feature
 
