@@ -21,6 +21,18 @@ jobs:
         id: checkout
         uses: actions/checkout@v6
 
+      - name: Debug token wiring
+        env:
+          DEFAULT_TOKEN: ${{ github.token }}
+        run: |
+          node <<'NODE'
+          console.log(JSON.stringify({
+            githubTokenPresent: Boolean(process.env.DEFAULT_TOKEN),
+            githubWorkspacePresent: Boolean(process.env.GITHUB_WORKSPACE),
+            githubActionPathPresent: Boolean(process.env.GITHUB_ACTION_PATH)
+          }))
+          NODE
+
       - uses: ./
         with:
           'dry-run': true
@@ -34,6 +46,18 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v6
+
+      - name: Debug token wiring
+        env:
+          DEFAULT_TOKEN: ${{ github.token }}
+        run: |
+          node <<'NODE'
+          console.log(JSON.stringify({
+            githubTokenPresent: Boolean(process.env.DEFAULT_TOKEN),
+            githubWorkspacePresent: Boolean(process.env.GITHUB_WORKSPACE),
+            githubActionPathPresent: Boolean(process.env.GITHUB_ACTION_PATH)
+          }))
+          NODE
 
       - uses: ./autolabeler
         with:
