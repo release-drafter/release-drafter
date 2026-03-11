@@ -13,9 +13,7 @@ export const getVersionInfo = (params: {
   lastRelease: Pick<Release, 'tag_name' | 'name'> | undefined
   config: Pick<
     Config,
-    | 'version-template' // TODO handle rendering custom versions
-    | 'tag-prefix'
-    | 'prerelease-identifier'
+    'version-template' | 'tag-prefix' | 'prerelease-identifier'
   >
   input: Pick<ExclusiveInput, 'version' | 'tag' | 'name'>
   versionKeyIncrement: ReturnType<typeof resolveVersionKeyIncrement>
