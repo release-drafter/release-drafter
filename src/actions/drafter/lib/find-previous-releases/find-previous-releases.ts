@@ -60,8 +60,8 @@ export const findPreviousReleases = async (
 
   core.info(`Found ${releases.length} releases`)
 
-  // `refs/heads/branch` and `branch` are the same thing in this context
-  const headRefRegex = /^refs\/heads\//
+  // Filter releases
+  const headRefRegex = /^refs\/heads\// // `refs/heads/branch` and `branch` are the same thing in this context
   const targetCommitishName = commitish.replace(headRefRegex, '')
   const commitishFilteredReleases = filterByCommitish
     ? releases.filter(
@@ -96,28 +96,37 @@ export const findPreviousReleases = async (
   const lastRelease = sortReleases({
     releases: publishedReleases,
     tagPrefix
-  })
-  const draftRelease = filteredReleases.find(
-    (r) => r.draft && r.prerelease === includePreReleases
-  )
-  const lastRelease = sortedSelectedReleases.at(-1)
+  })?.at(-1)
 
   if (draftRelease) {
-    core.info(`Draft release:`)
+    if (draftReleases.length > 1) {
+      core.warning(
+        `Multiple draft releases found : ${draftReleases
+          .map((r) => r.tag_name)
+          .join(', ')}`
+      )
+      core.warning(
+        `Using the first one returned by GitHub API: ${draftRelease.tag_name}`
+      )
+    }
+
+    core.info(`Draft release${isPreRelease ? ' (which is a prerelease)' : ''}:`)
     core.info(`  tag_name:  ${draftRelease.tag_name}`)
     core.info(`  name:      ${draftRelease.name}`)
   } else {
-    core.info(`No draft release found`)
+    core.info(
+      `No draft release found${isPreRelease ? ' (among prerelease drafts)' : ''}`
+    )
   }
 
   if (lastRelease) {
-    core.info(
-      `Last release${includePreReleases ? ' (including prerelease)' : ''}:`
-    )
+    core.info(`Last release${isPreRelease ? ' (including prerelease)' : ''}:`)
     core.info(`  tag_name:  ${lastRelease.tag_name}`)
     core.info(`  name:      ${lastRelease.name}`)
   } else {
-    core.info(`No last release found`)
+    core.info(
+      `No last release found${isPreRelease ? ' (including prerelease)' : ''}`
+    )
   }
 
   return { draftRelease, lastRelease }

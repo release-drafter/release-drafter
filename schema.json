@@ -55,7 +55,6 @@
       "enum": ["ascending", "descending"]
     },
     "filter-by-commitish": { "default": false, "type": "boolean" },
-    "include-pre-releases": { "default": false, "type": "boolean" },
     "pull-request-limit": {
       "default": 5,
       "type": "integer",
@@ -189,7 +188,6 @@
     "sort-by",
     "sort-direction",
     "filter-by-commitish",
-    "include-pre-releases",
     "pull-request-limit",
     "history-limit",
     "replacers",

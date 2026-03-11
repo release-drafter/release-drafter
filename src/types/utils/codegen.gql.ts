@@ -1,3 +1,4 @@
+/* node:coverage ignore file -- @preserve */
 import type { CodegenConfig } from '@graphql-codegen/cli'
 /**
  * This config is meant to be executed by the codegen CLI tool

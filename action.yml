@@ -49,7 +49,7 @@ inputs:
     default: ''
   prerelease:
     description: |
-      Whether to draft a prerelease, with changes since another prerelease (if applicable).
+      Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
     required: false
     default: ''
   prerelease-identifier:

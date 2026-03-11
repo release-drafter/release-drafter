@@ -16,7 +16,7 @@ export const commonConfigSchema = object({
    */
   latest: stringbool().or(boolean()).optional(),
   /**
-   * A boolean indicating whether the release being created or updated is a prerelease.
+   * Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
    */
   prerelease: stringbool().or(boolean()).optional(),
   /**
@@ -25,7 +25,7 @@ export const commonConfigSchema = object({
    */
   'initial-commits-since': iso.datetime().optional(),
   /**
-   * A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version.
+   * A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`.
    */
   'prerelease-identifier': string().optional(),
   /**

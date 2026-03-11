@@ -415,18 +415,41 @@ autolabeler:
 # ... rest of release-drafter config
 ```
 
-## Prerelease increment
+## Prerelease workflow
 
-When creating prerelease (`prerelease: true`), you can add a prerelease
-identifier to increment the prerelease version number, with the
-`prerelease-identifier` option. It accept any string, but it's recommended to
-use [Semantic Versioning](https://semver.org/) prerelease identifiers (alpha,
-beta, rc, etc).
+Release draft supports working with prereleases. It expects your workflow to be
+:
 
-Using `prerelease-identifier` automatically enable `include-prereleases`.
+- A stable release is published, ex: `v3.5.0`
+- You merge or add meaningful changes your users may want to see, but you are
+  not quite ready for production
+- You publish a prerelease, ex: `v3.5.0-rc.1`
+- You merge more changes
+- You publish another prerelease, ex: `v3.5.0-rc.2`
+- You decide code is ready for production, you publish `v3.5.1` (or another
+  increment based on your changes)
 
-```yml
-prerelease-identifier: 'alpha' # will create a prerelease with version number x.x.x-alpha.x
+With release-drafter, you can draft each of these releases and prereleases with
+the appropriate content using parameter '`prerelease`' and
+'`prerelease-identifier`' - available as either an input of from the
+config-file.
+
+```yaml
+jobs:
+  update_full_release_draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          prerelease: false # the default
+          # ... rest of your config
+  update_prerelease_draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          prerelease: true
+          prerelease-identifier: 'rc' # Use semver identifiers : alpha, beta, rc, etc
 ```
 
 Here, both jobs run in parallel every time you add changes to the configured
@@ -542,8 +565,8 @@ docker compose run --rm app
 
 ## Contributing
 
-Third-party contributions are welcome! 🙏🏼 See [CONTRIBUTING.md](CONTRIBUTING.md)
-for step-by-step instructions.
+Third-party contributions are welcome! 🙏🏼 See
+[CONTRIBUTING.md](docs/CONTRIBUTING.md) for step-by-step instructions.
 
 If you need help or have a question, let me know via a GitHub issue.
 

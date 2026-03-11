@@ -1,10 +1,11 @@
 {
-  "name": "release-drafter-github-app",
-  "type": "commonjs",
-  "version": "6.4.0",
-  "description": "A GitHub app that draft releases based on pull-request labels",
-  "author": "Tim Lucas <t@toolmantim.com> (https://github.com/toolmantim)",
-  "license": "ISC",
+  "name": "release-drafter",
+  "description": "Drafts your next release notes as pull requests are merged into your branch(es).",
+  "version": "0.0.0",
+  "author": "",
+  "type": "module",
+  "private": true,
+  "homepage": "https://github.com/release-drafter/release-drafter",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/release-drafter/release-drafter.git"
@@ -35,6 +36,7 @@
     "schemas": "npx tsx src/scripts/json-schema.ts && npx prettier --write **/schema.json schema.json",
     "all": "npm run format:write && npm run lint && npm run tsc:check && npm run test:run && npm run coverage && npm run schemas && npm run build"
   },
+  "license": "MIT",
   "dependencies": {
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0",
