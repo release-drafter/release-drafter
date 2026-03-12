@@ -36,7 +36,6 @@
         "noUnusedFunctionParameters": "error",
       },
       "suspicious": {
-        "noConsole": "off",
         "noEvolvingTypes": "error",
       },
     },
