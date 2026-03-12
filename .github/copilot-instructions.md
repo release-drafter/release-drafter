@@ -41,6 +41,18 @@ Install dependencies by running:
 npm install
 ```
 
+## Before Pushing
+
+Always run the full pipeline before pushing to ensure formatting, linting, type
+checks, tests, and all generated files (dist, schemas, coverage badge) are
+up-to-date:
+
+```bash
+npm run all
+```
+
+The CI pipeline will fail if any generated files are out of date.
+
 ## Testing
 
 Make sure types are correct by running:
