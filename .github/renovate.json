@@ -4,6 +4,9 @@
   "dependencyDashboard": false,
   "semanticCommits": "enabled",
   "rangeStrategy": "bump",
+  "constraints": {
+    "npm": "^11"
+  },
   "commitMessageExtra": "to {{newVersion}}",
   "schedule": ["every weekend"],
   "packageRules": [
