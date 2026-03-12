@@ -13,13 +13,13 @@ export type ConfigTarget = {
  */
 export function parseConfigTarget(
   target: string,
-  context: Pick<ConfigTarget, 'ref' | 'repo'>
+  context: Pick<ConfigTarget, 'ref' | 'repo'>,
 ): ConfigTarget {
   let _target = structuredClone(target).trim()
 
   const getErr = (m: string) =>
     new Error(
-      `invalid format: "${_target}". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. ${m}`
+      `invalid format: "${_target}". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. ${m}`,
     )
 
   if (_target.includes(' ')) {
@@ -103,6 +103,6 @@ export function parseConfigTarget(
     scheme: scheme,
     filepath: targetFilepath,
     ref: targetRef,
-    repo: targetRepo
+    repo: targetRepo,
   }
 }

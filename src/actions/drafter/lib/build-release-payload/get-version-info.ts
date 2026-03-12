@@ -1,7 +1,7 @@
-import { findPreviousReleases } from '../find-previous-releases'
-import { resolveVersionKeyIncrement } from './resolve-version-increment'
 import type { ReleaseType } from 'semver'
-import { Config, ExclusiveInput } from '../../config'
+import type { Config, ExclusiveInput } from '../../config'
+import type { findPreviousReleases } from '../find-previous-releases'
+import type { resolveVersionKeyIncrement } from './resolve-version-increment'
 import { VersionDescriptor } from './version-descriptor'
 
 type Release = Exclude<
@@ -22,7 +22,7 @@ export const getVersionInfo = (params: {
     lastRelease,
     config,
     input,
-    versionKeyIncrement: _versionKeyIncrement
+    versionKeyIncrement: _versionKeyIncrement,
   } = params
 
   let _localIncrement: ReleaseType | 'no_increment' =
@@ -30,14 +30,14 @@ export const getVersionInfo = (params: {
 
   const versionFromLastRelease = new VersionDescriptor(lastRelease, {
     tagPrefix: config['tag-prefix'],
-    preReleaseIdentifier: config['prerelease-identifier']
+    preReleaseIdentifier: config['prerelease-identifier'],
   })
   const versionFromInput = new VersionDescriptor(
     input.version || input.tag || input.name,
     {
       tagPrefix: config['tag-prefix'],
-      preReleaseIdentifier: config['prerelease-identifier']
-    }
+      preReleaseIdentifier: config['prerelease-identifier'],
+    },
   )
 
   let referenceVersion: VersionDescriptor
@@ -55,7 +55,7 @@ export const getVersionInfo = (params: {
     _localIncrement = 'no_increment' // stay at 0.1.0 since no version was provided / found
     referenceVersion = new VersionDescriptor('0.1.0', {
       preReleaseIdentifier: config['prerelease-identifier'],
-      tagPrefix: config['tag-prefix']
+      tagPrefix: config['tag-prefix'],
     })
   }
 
@@ -93,6 +93,6 @@ export const getVersionInfo = (params: {
     $RESOLVED_VERSION_PATCH:
       referenceVersion.incremented(_localIncrement).patch,
     $RESOLVED_VERSION_PRERELEASE:
-      referenceVersion.incremented(_localIncrement).prerelease
+      referenceVersion.incremented(_localIncrement).prerelease,
   }
 }

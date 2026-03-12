@@ -1,4 +1,71 @@
-import { C as warning, S as setOutput, T as __toESM, b as info, c as string, f as stringToRegex, g as context, h as getOctokit, i as array, m as composeConfigGet, s as object, t as sharedInputSchema, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
+import { C as warning, S as setOutput, T as __toESM, b as info, g as context, h as getOctokit, l as object, m as composeConfigGet, o as array, r as sharedInputSchema, t as stringToRegex, u as string, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
+//#region src/actions/autolabeler/config/action-input.schema.ts
+var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
+//#endregion
+//#region src/actions/autolabeler/config/config.schema.ts
+var configSchema = object({ autolabeler: array(object({
+	label: string().min(1),
+	files: array(string().min(1)).optional().default([]),
+	branch: array(string().min(1)).optional().default([]),
+	title: array(string().min(1)).optional().default([]),
+	body: array(string().min(1)).optional().default([])
+})).min(1) }).meta({
+	title: "JSON schema for Release Drafter's autolabeler action config.",
+	id: "https://github.com/release-drafter/release-drafter/blob/master/autolabeler/schema.json"
+});
+//#endregion
+//#region src/actions/autolabeler/config/get-action-inputs.ts
+var getActionInput = () => {
+	const getInput$1 = (name) => getInput(name) || void 0;
+	return actionInputSchema.parse({
+		"config-name": getInput$1("config-name"),
+		token: getInput$1("token"),
+		"dry-run": getInput$1("dry-run")
+	});
+};
+//#endregion
+//#region src/actions/autolabeler/config/get-config.ts
+var getConfig = async (configName) => {
+	const { config, contexts } = await composeConfigGet(configName, context);
+	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
+	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally." : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
+	return configSchema.parse(config);
+};
+//#endregion
+//#region src/actions/autolabeler/config/parse-config.ts
+/**
+* Returns a copy of `config`, updated with values from `input`.
+*
+* Also performs some validation.
+*
+* Input takes precedence, because it's more easy to change at runtime
+*/
+var parseConfig = ({ config: originalConfig }) => {
+	const config = structuredClone(originalConfig);
+	const autolabeler = config.autolabeler.map((autolabel) => {
+		try {
+			return {
+				...autolabel,
+				branch: autolabel.branch.map((reg) => {
+					return stringToRegex(reg);
+				}),
+				title: autolabel.title.map((reg) => {
+					return stringToRegex(reg);
+				}),
+				body: autolabel.body.map((reg) => {
+					return stringToRegex(reg);
+				})
+			};
+		} catch {
+			warning(`Bad autolabeler regex: '${autolabel.branch}', '${autolabel.title}' or '${autolabel.body}'`);
+			return false;
+		}
+	}).filter((a) => !!a);
+	return {
+		...config,
+		autolabeler
+	};
+};
 //#endregion
 //#region src/actions/autolabeler/main.ts
 var import_ignore = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
@@ -249,7 +316,7 @@ var main = async (params) => {
 		per_page: 100
 	}, (response) => response.data.map((file) => file.filename));
 	const labels = /* @__PURE__ */ new Set();
-	for (const autolabel of params.config["autolabeler"]) {
+	for (const autolabel of params.config.autolabeler) {
 		let found = false;
 		if (!found && autolabel.files.length > 0) {
 			const matcher = (0, import_ignore.default)().add(autolabel.files);
@@ -293,74 +360,6 @@ var main = async (params) => {
 	return {
 		pr_number: payload.number.toString(),
 		labels: labels.size ? Array.from(labels).join(",") : void 0
-	};
-};
-//#endregion
-//#region src/actions/autolabeler/config/config.schema.ts
-var configSchema = object({ autolabeler: array(object({
-	label: string().min(1),
-	files: array(string().min(1)).optional().default([]),
-	branch: array(string().min(1)).optional().default([]),
-	title: array(string().min(1)).optional().default([]),
-	body: array(string().min(1)).optional().default([])
-})).min(1) }).meta({
-	title: "JSON schema for Release Drafter's autolabeler action config.",
-	id: "https://github.com/release-drafter/release-drafter/blob/master/autolabeler/schema.json"
-});
-//#endregion
-//#region src/actions/autolabeler/config/action-input.schema.ts
-var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
-//#endregion
-//#region src/actions/autolabeler/config/get-action-inputs.ts
-var getActionInput = () => {
-	const getInput$1 = (name) => getInput(name) || void 0;
-	return actionInputSchema.parse({
-		"config-name": getInput$1("config-name"),
-		token: getInput$1("token"),
-		"dry-run": getInput$1("dry-run")
-	});
-};
-//#endregion
-//#region src/actions/autolabeler/config/get-config.ts
-var getConfig = async (configName) => {
-	const { config, contexts } = await composeConfigGet(configName, context);
-	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
-	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally." : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
-	return configSchema.parse(config);
-};
-//#endregion
-//#region src/actions/autolabeler/config/parse-config.ts
-/**
-* Returns a copy of `config`, updated with values from `input`.
-*
-* Also performs some validation.
-*
-* Input takes precedence, because it's more easy to change at runtime
-*/
-var parseConfig = ({ config: originalConfig }) => {
-	const config = structuredClone(originalConfig);
-	const autolabeler = config.autolabeler.map((autolabel) => {
-		try {
-			return {
-				...autolabel,
-				branch: autolabel.branch.map((reg) => {
-					return stringToRegex(reg);
-				}),
-				title: autolabel.title.map((reg) => {
-					return stringToRegex(reg);
-				}),
-				body: autolabel.body.map((reg) => {
-					return stringToRegex(reg);
-				})
-			};
-		} catch {
-			warning(`Bad autolabeler regex: '${autolabel.branch}', '${autolabel.title}' or '${autolabel.body}'`);
-			return false;
-		}
-	}).filter((a) => !!a);
-	return {
-		...config,
-		autolabeler
 	};
 };
 //#endregion

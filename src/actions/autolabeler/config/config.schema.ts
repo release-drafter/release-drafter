@@ -1,5 +1,5 @@
 import type * as z from 'zod'
-import { object, array, string } from 'zod'
+import { array, object, string } from 'zod'
 
 export const configSchema = object({
   /**
@@ -13,12 +13,12 @@ export const configSchema = object({
       files: array(string().min(1)).optional().default([]),
       branch: array(string().min(1)).optional().default([]),
       title: array(string().min(1)).optional().default([]),
-      body: array(string().min(1)).optional().default([])
-    })
-  ).min(1)
+      body: array(string().min(1)).optional().default([]),
+    }),
+  ).min(1),
 }).meta({
   title: "JSON schema for Release Drafter's autolabeler action config.",
-  id: 'https://github.com/release-drafter/release-drafter/blob/master/autolabeler/schema.json'
+  id: 'https://github.com/release-drafter/release-drafter/blob/master/autolabeler/schema.json',
 })
 
 export type Config = z.output<typeof configSchema>

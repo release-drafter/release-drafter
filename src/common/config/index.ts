@@ -1,5 +1,5 @@
-import { getConfigFiles } from './get-config-files'
 import * as core from '@actions/core'
+import { getConfigFiles } from './get-config-files'
 
 /**
  * Loads configuration from one or multiple files and resolves with
@@ -11,18 +11,18 @@ export async function composeConfigGet(
   currentContext: {
     repo: { owner: string; repo: string }
     ref: string
-  }
+  },
 ) {
   core.debug(
-    `composeConfigGet: Starting config composition with filename: ${configFilename}`
+    `composeConfigGet: Starting config composition with filename: ${configFilename}`,
   )
   core.debug(
-    `composeConfigGet: Current context - repo: ${currentContext.repo.owner}/${currentContext.repo.repo}, ref: ${currentContext.ref}`
+    `composeConfigGet: Current context - repo: ${currentContext.repo.owner}/${currentContext.repo.repo}, ref: ${currentContext.ref}`,
   )
 
   const configResults = await getConfigFiles(configFilename, currentContext)
   core.debug(
-    `composeConfigGet: Retrieved ${configResults.length} config file(s)`
+    `composeConfigGet: Retrieved ${configResults.length} config file(s)`,
   )
 
   const configs = configResults
@@ -34,16 +34,16 @@ export async function composeConfigGet(
   core.debug(`composeConfigGet: Resolved ${contexts.length} context(s)`)
   contexts.forEach((ctx, idx) => {
     core.debug(
-      `composeConfigGet: Context[${idx}] - scheme: ${ctx.scheme}, filepath: ${ctx.filepath}${ctx.repo ? `, repo: ${ctx.repo.owner}/${ctx.repo.repo}` : ''}`
+      `composeConfigGet: Context[${idx}] - scheme: ${ctx.scheme}, filepath: ${ctx.filepath}${ctx.repo ? `, repo: ${ctx.repo.owner}/${ctx.repo.repo}` : ''}`,
     )
   })
 
   const result = {
     contexts,
-    config: Object.assign({}, ...configs)
+    config: Object.assign({}, ...configs),
   }
   core.debug(
-    `composeConfigGet: Config composition complete with ${Object.keys(result.config).length} keys`
+    `composeConfigGet: Config composition complete with ${Object.keys(result.config).length} keys`,
   )
   return result
 }

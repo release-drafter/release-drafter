@@ -1,19 +1,22 @@
-import { composeConfigGet } from 'src/common'
+import type { composeConfigGet } from 'src/common'
 import { vi } from 'vitest'
-import { AvailableConfigs } from './config'
+import type { AvailableConfigs } from './config'
+
 export * from './context'
+
 import type * as core from '@actions/core'
-export { mockGraphqlQuery, getGqlPayload } from './graphql'
-export {
-  getReleasePayload,
-  nockGetReleases,
-  nockPostRelease,
-  nockGetAndPostReleases,
-  nockGetAndPatchReleases
-} from './releases'
+
 export { mockedConfigModule } from './config'
+export { getGqlPayload, mockGraphqlQuery } from './graphql'
 export { mockInput } from './input'
 export { nockGetPrFiles } from './pull_requests'
+export {
+  getReleasePayload,
+  nockGetAndPatchReleases,
+  nockGetAndPostReleases,
+  nockGetReleases,
+  nockPostRelease,
+} from './releases'
 
 const mocks = vi.hoisted(() => {
   const DEBUG_TESTS = false
@@ -45,8 +48,8 @@ const mocks = vi.hoisted(() => {
         filepath: 'oui',
         scheme: 'github',
         ref: 'main',
-        repo: { owner: 'cchanche', repo: 'proj' }
-      }
+        repo: { owner: 'cchanche', repo: 'proj' },
+      },
     ]),
     core: {
       debug: vi.fn<typeof core.debug>(DEBUG_TESTS ? console.debug : undefined),
@@ -55,9 +58,9 @@ const mocks = vi.hoisted(() => {
       warning: vi.fn<typeof core.warning>(),
       setOutput: vi.fn<typeof core.setOutput>(),
       setFailed: vi.fn<typeof core.setFailed>(
-        DEBUG_TESTS ? console.error : undefined
-      )
-    }
+        DEBUG_TESTS ? console.error : undefined,
+      ),
+    },
   }
 })
 

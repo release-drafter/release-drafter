@@ -11,9 +11,9 @@ import * as events from "node:events";
 import { StringDecoder } from "node:string_decoder";
 import * as child from "node:child_process";
 import { setTimeout as setTimeout$1 } from "node:timers";
-import process$1 from "node:process";
-import path, { dirname, isAbsolute, join, normalize } from "node:path";
 import { existsSync as existsSync$1, readFileSync as readFileSync$1 } from "node:fs";
+import path, { dirname, isAbsolute, join, normalize } from "node:path";
+import process$1 from "node:process";
 //#region \0rolldown/runtime.js
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -26982,34 +26982,14 @@ async function composeConfigGet(configFilename, currentContext) {
 	return result;
 }
 //#endregion
-//#region node_modules/escape-string-regexp/index.js
-function escapeStringRegexp(string) {
-	if (typeof string !== "string") throw new TypeError("Expected a string");
-	return string.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
-}
-//#endregion
-//#region src/common/string-to-regex.ts
-var import_lib = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
-	module.exports = function(input) {
-		if (typeof input !== "string") throw new Error("Invalid input. Input must be a string");
-		var m = input.match(/(\/?)(.+)\1([a-z]*)/i);
-		if (!m) throw new Error("Invalid regular expression format.");
-		var validFlags = Array.from(new Set(m[3])).filter(function(flag) {
-			return "gimsuy".includes(flag);
-		}).join("");
-		return new RegExp(m[2], validFlags);
-	};
-})))(), 1);
-var stringToRegex = (search) => {
-	return /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, import_lib.default)(search) : new RegExp(escapeStringRegexp(search), "g");
-};
-//#endregion
 //#region src/common/paginate-graphql.ts
 var getPath = (obj, path) => path.reduce((acc, key) => acc?.[key], obj);
 var hasPath = (obj, path) => getPath(obj, path) !== void 0;
 var setPath = (obj, path, value) => {
+	const lastKey = path[path.length - 1];
+	if (lastKey === void 0) return;
 	const parent = getPath(obj, path.slice(0, -1));
-	parent[path.at(-1)] = value;
+	parent[lastKey] = value;
 };
 /**
 * Utility function to paginate a GraphQL function using Relay-style cursor pagination.
@@ -30854,4 +30834,26 @@ var sharedInputSchema = object({
 	});
 });
 //#endregion
-export { warning as C, setOutput as S, __toESM as T, debug as _, boolean as a, info as b, string as c, paginateGraphql as d, stringToRegex as f, context as g, getOctokit as h, array as i, stringbool as l, composeConfigGet as m, ZodDefault as n, number as o, escapeStringRegexp as p, _enum as r, object as s, sharedInputSchema as t, datetime as u, error as v, __commonJSMin as w, setFailed as x, getInput as y };
+//#region node_modules/escape-string-regexp/index.js
+function escapeStringRegexp(string) {
+	if (typeof string !== "string") throw new TypeError("Expected a string");
+	return string.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
+}
+//#endregion
+//#region src/common/string-to-regex.ts
+var import_lib = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	module.exports = function(input) {
+		if (typeof input !== "string") throw new Error("Invalid input. Input must be a string");
+		var m = input.match(/(\/?)(.+)\1([a-z]*)/i);
+		if (!m) throw new Error("Invalid regular expression format.");
+		var validFlags = Array.from(new Set(m[3])).filter(function(flag) {
+			return "gimsuy".includes(flag);
+		}).join("");
+		return new RegExp(m[2], validFlags);
+	};
+})))(), 1);
+var stringToRegex = (search) => {
+	return /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, import_lib.default)(search) : new RegExp(escapeStringRegexp(search), "g");
+};
+//#endregion
+export { warning as C, setOutput as S, __toESM as T, debug as _, _enum as a, info as b, number as c, stringbool as d, datetime as f, context as g, getOctokit as h, ZodDefault as i, object as l, composeConfigGet as m, escapeStringRegexp as n, array as o, paginateGraphql as p, sharedInputSchema as r, boolean as s, stringToRegex as t, string as u, error as v, __commonJSMin as w, setFailed as x, getInput as y };

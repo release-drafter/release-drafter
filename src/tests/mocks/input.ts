@@ -1,7 +1,6 @@
+import type { actionInputSchema } from 'src/actions/drafter/config'
 import { expect, vi } from 'vitest'
-
 import type * as z from 'zod'
-import { actionInputSchema } from 'src/actions/drafter/config'
 
 /**
  * Mocking GitHub Action inputs for testing.
@@ -11,7 +10,7 @@ import { actionInputSchema } from 'src/actions/drafter/config'
  */
 export const mockInput = async (
   key: keyof z.input<typeof actionInputSchema>,
-  value: string
+  value: string,
 ) => {
   const envKey = `INPUT_${key.replace(/ /g, '_').toUpperCase()}`
 

@@ -1,6 +1,6 @@
 import process from 'node:process'
-import { getOctokit as createOctokit } from '@actions/github'
 import * as core from '@actions/core'
+import { getOctokit as createOctokit } from '@actions/github'
 
 export const getOctokit = () => {
   return createOctokit(process.env.GITHUB_TOKEN || '', {
@@ -9,8 +9,8 @@ export const getOctokit = () => {
       /**
        * Allows nock to intercept requests in tests
        */
-      fetch: global.fetch
-    }
+      fetch: global.fetch,
+    },
   })
 }
 

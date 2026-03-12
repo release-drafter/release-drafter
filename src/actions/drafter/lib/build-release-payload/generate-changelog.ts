@@ -1,5 +1,5 @@
-import { Config } from '../../config'
-import { findPullRequests } from '../find-pull-requests'
+import type { Config } from '../../config'
+import type { findPullRequests } from '../find-pull-requests'
 import { categorizePullRequests } from './categorize-pull-requests'
 import { pullRequestToString } from './pull-request-to-string'
 import { renderTemplate } from './render-template'
@@ -31,7 +31,7 @@ export const generateChangeLog = (params: {
   if (uncategorizedPullRequests.length > 0) {
     changeLog.push(
       pullRequestToString({ pullRequests: uncategorizedPullRequests, config }),
-      '\n\n'
+      '\n\n',
     )
   }
 
@@ -44,15 +44,15 @@ export const generateChangeLog = (params: {
     changeLog.push(
       renderTemplate({
         template: config['category-template'],
-        object: { $TITLE: category.title }
+        object: { $TITLE: category.title },
       }),
-      '\n\n'
+      '\n\n',
     )
 
     // Define the pull requests into a single string.
     const pullRequestString = pullRequestToString({
       pullRequests: category.pullRequests,
-      config
+      config,
     })
 
     // Determine the collapse status.
@@ -69,7 +69,7 @@ export const generateChangeLog = (params: {
         '\n\n',
         pullRequestString,
         '\n',
-        '</details>'
+        '</details>',
       )
     } else {
       changeLog.push(pullRequestString)

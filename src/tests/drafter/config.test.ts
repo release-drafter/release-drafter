@@ -1,18 +1,18 @@
-import { describe, expect, it, vi } from 'vitest'
-import { composeConfigGet } from 'src/common/config'
 import nock from 'nock'
+import { composeConfigGet } from 'src/common/config'
+import { describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   existsSync: vi.fn(),
-  readFileSync: vi.fn()
+  readFileSync: vi.fn(),
 }))
 
-vi.mock(import('fs'), async (iom) => {
+vi.mock(import('node:fs'), async (iom) => {
   const fs = await iom()
   return {
     ...fs,
     existsSync: mocks.existsSync,
-    readFileSync: mocks.readFileSync
+    readFileSync: mocks.readFileSync,
   }
 })
 
@@ -25,7 +25,7 @@ const getContentEndpoint = (params: {
   ref?: string
 }) => {
   return `/repos/${encodeURIComponent(params.repo.owner)}/${encodeURIComponent(
-    params.repo.repo
+    params.repo.repo,
   )}/contents/${encodeURIComponent(params.path)}${params.ref ? `?ref=${encodeURIComponent(params.ref)}` : ''}`
 }
 
@@ -38,17 +38,17 @@ describe('get config file', () => {
       const endpointFilepath = '.github/release-drafter.yml'
       const context = {
         repo: { owner: 'octocat', repo: 'hello-world' },
-        ref: 'main'
+        ref: 'main',
       }
 
       const endpoint = getContentEndpoint({
         ...context,
-        path: endpointFilepath
+        path: endpointFilepath,
       })
       const scope = nock('https://api.github.com')
         .get(endpoint)
         .reply(200, `template: fake-template-content`, {
-          'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
+          'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
         })
 
       const res = await composeConfigGet(inputConfigName, context)
@@ -83,19 +83,19 @@ describe('get config file', () => {
       const endpointFilepath = '.github/release-drafter.yml'
       const context = {
         repo: { owner: 'octocat', repo: 'hello-world' },
-        ref: 'main'
+        ref: 'main',
       }
 
       const endpoint = getContentEndpoint({
         ...context,
-        path: endpointFilepath
+        path: endpointFilepath,
       })
       const scope = nock('https://api.github.com').get(endpoint).reply(404)
 
       await expect(
-        composeConfigGet(inputConfigName, context)
+        composeConfigGet(inputConfigName, context),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `[Error: Repo load failed. Config file not found with error 404. (target: octocat/hello-world:.github/release-drafter.yml@main)]`
+        `[Error: Repo load failed. Config file not found with error 404. (target: octocat/hello-world:.github/release-drafter.yml@main)]`,
       )
 
       expect(mocks.existsSync).not.toHaveBeenCalled()
@@ -106,10 +106,10 @@ describe('get config file', () => {
     it('should return config content using the file: scheme', async () => {
       const inputConfigName = 'file:../configs/release-drafter.yml'
       const workspace = '/home/runner/workspace'
-      const endpointFilepath = workspace + '/configs/release-drafter.yml'
+      const endpointFilepath = `${workspace}/configs/release-drafter.yml`
       const context = {
         repo: { owner: 'octocat', repo: 'hello-world' },
-        ref: 'main'
+        ref: 'main',
       }
 
       vi.stubEnv('GITHUB_WORKSPACE', workspace)
@@ -124,7 +124,7 @@ describe('get config file', () => {
       expect(res.contexts.length).toBe(1)
       expect(res.contexts[0].scheme).toBe('file')
       expect(res.contexts[0].filepath).toMatchInlineSnapshot(
-        `"configs/release-drafter.yml"`
+        `"configs/release-drafter.yml"`,
       )
       expect(res.config).toMatchInlineSnapshot(`
             {
@@ -135,10 +135,10 @@ describe('get config file', () => {
     it('should error if config not exists using the file: scheme', async () => {
       const inputConfigName = 'file:../configs/release-drafter.yml'
       const workspace = '/home/runner/workspace'
-      const endpointFilepath = workspace + '/configs/release-drafter.yml'
+      const endpointFilepath = `${workspace}/configs/release-drafter.yml`
       const context = {
         repo: { owner: 'octocat', repo: 'hello-world' },
-        ref: 'main'
+        ref: 'main',
       }
 
       vi.stubEnv('GITHUB_WORKSPACE', workspace)
@@ -146,9 +146,9 @@ describe('get config file', () => {
       mocks.readFileSync.mockReturnValue(`template: fake-template-content`)
 
       await expect(
-        composeConfigGet(inputConfigName, context)
+        composeConfigGet(inputConfigName, context),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `[Error: Local load failed. Config file not found: /home/runner/workspace/configs/release-drafter.yml. Did you clone your sources ? (ex: using @actions/checkout)]`
+        `[Error: Local load failed. Config file not found: /home/runner/workspace/configs/release-drafter.yml. Did you clone your sources ? (ex: using @actions/checkout)]`,
       )
 
       expect(mocks.existsSync).toHaveBeenCalledTimes(2)
@@ -162,7 +162,7 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_TOKEN', 'test')
         const initialContext = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const configChain = [
           {
@@ -170,7 +170,7 @@ describe('get config file', () => {
             file: `_extends: common.yml\ntemplate: fake-template-content`,
             endpointFilepath: '.github/release-drafter.yml',
             endpoint: '',
-            context: initialContext
+            context: initialContext,
           },
           {
             file: `template: overridden-content\nsaul: goodman`,
@@ -178,15 +178,15 @@ describe('get config file', () => {
             endpoint: '',
             context: {
               repo: { owner: 'octocat', repo: 'hello-world' },
-              ref: 'main'
-            }
-          }
+              ref: 'main',
+            },
+          },
         ].map((c) => ({
           ...c,
           endpoint: getContentEndpoint({
             ...c.context,
-            path: c.endpointFilepath
-          })
+            path: c.endpointFilepath,
+          }),
         }))
 
         const scope = nock('https://api.github.com')
@@ -196,13 +196,13 @@ describe('get config file', () => {
             200,
             (uri) => configChain.find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         const res = await composeConfigGet(
           configChain[0].inputConfigName as string,
-          initialContext
+          initialContext,
         )
 
         expect(mocks.existsSync).not.toHaveBeenCalled()
@@ -222,7 +222,7 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_TOKEN', 'test')
         const initialContext = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const configChain = [
           {
@@ -230,22 +230,22 @@ describe('get config file', () => {
             file: `_extends: .github:/configs/common.yml\ntemplate: fake-template-content`,
             endpointFilepath: '.github/release-drafter.yml',
             endpoint: '',
-            context: initialContext
+            context: initialContext,
           },
           {
             file: `template: overridden-content\nsaul: goodman`,
             endpointFilepath: 'configs/common.yml',
             endpoint: '',
             context: {
-              repo: { owner: 'octocat', repo: '.github' }
-            }
-          }
+              repo: { owner: 'octocat', repo: '.github' },
+            },
+          },
         ].map((c) => ({
           ...c,
           endpoint: getContentEndpoint({
             ...c.context,
-            path: c.endpointFilepath
-          })
+            path: c.endpointFilepath,
+          }),
         }))
 
         const scope = nock('https://api.github.com')
@@ -255,13 +255,13 @@ describe('get config file', () => {
             200,
             (uri) => configChain.find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         const res = await composeConfigGet(
           configChain[0].inputConfigName as string,
-          initialContext
+          initialContext,
         )
 
         expect(mocks.existsSync).not.toHaveBeenCalled()
@@ -281,7 +281,7 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_TOKEN', 'test')
         const initialContext = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const configChain = [
           {
@@ -289,22 +289,22 @@ describe('get config file', () => {
             file: `_extends: .github:/configs/common.yml\ntemplate: fake-template-content`,
             endpointFilepath: '.github/release-drafter.yml',
             endpoint: '',
-            context: initialContext
+            context: initialContext,
           },
           {
             file: `_extends: hello-world:release-drafter.yml@main\ntemplate: overridden-content\nsaul: goodman`,
             endpointFilepath: 'configs/common.yml',
             endpoint: '',
             context: {
-              repo: { owner: 'octocat', repo: '.github' }
-            }
-          }
+              repo: { owner: 'octocat', repo: '.github' },
+            },
+          },
         ].map((c) => ({
           ...c,
           endpoint: getContentEndpoint({
             ...c.context,
-            path: c.endpointFilepath
-          })
+            path: c.endpointFilepath,
+          }),
         }))
 
         const scope = nock('https://api.github.com')
@@ -314,20 +314,20 @@ describe('get config file', () => {
             200,
             (uri) => configChain.find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         const res = await composeConfigGet(
           configChain[0].inputConfigName as string,
-          initialContext
+          initialContext,
         )
 
         expect(mocks.existsSync).not.toHaveBeenCalled()
         expect(mocks.readFileSync).not.toHaveBeenCalled()
 
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@main".'
+          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@main".',
         )
         expect(scope.isDone()).toBe(true)
 
@@ -343,7 +343,7 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_TOKEN', 'test')
         const initialContext = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const configChain = Array.from({ length: 34 }, (_, i) => i)
           .map((i) => ({
@@ -351,14 +351,14 @@ describe('get config file', () => {
             file: `_extends: ./release-drafter-${i + 1}.yml\ntemplate: fake-template-content\niteration: ${i}`,
             endpointFilepath: `.github/release-drafter-${i}.yml`,
             endpoint: '',
-            context: initialContext
+            context: initialContext,
           }))
           .map((c) => ({
             ...c,
             endpoint: getContentEndpoint({
               ...c.context,
-              path: c.endpointFilepath
-            })
+              path: c.endpointFilepath,
+            }),
           }))
 
         const scope = nock('https://api.github.com')
@@ -368,17 +368,17 @@ describe('get config file', () => {
             200,
             (uri) => configChain.find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         await expect(
           composeConfigGet(
             configChain[0].inputConfigName as string,
-            initialContext
-          )
+            initialContext,
+          ),
         ).rejects.toThrowErrorMatchingInlineSnapshot(
-          `[Error: Maximum extends depth (33) exceeded. Check for circular dependencies or reduce the chain of extended configurations.]`
+          `[Error: Maximum extends depth (33) exceeded. Check for circular dependencies or reduce the chain of extended configurations.]`,
         )
 
         expect(mocks.existsSync).not.toHaveBeenCalled()
@@ -393,27 +393,28 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         const configChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: file:./common.json\ntemplate: fake-template-content`
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: file:./common.json\ntemplate: fake-template-content`,
           },
           {
-            pathToFile: workspace + '/.github/common.json',
-            file: `{"template": "overridden-content","saul": "goodman", "_extends": "file:../top-level.yaml"}`
+            pathToFile: `${workspace}/.github/common.json`,
+            file: `{"template": "overridden-content","saul": "goodman", "_extends": "file:../top-level.yaml"}`,
           },
           {
-            pathToFile: workspace + '/top-level.yaml',
-            file: `better: call`
-          }
+            pathToFile: `${workspace}/top-level.yaml`,
+            file: `better: call`,
+          },
         ]
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const res = await composeConfigGet(inputConfigName, context)
@@ -439,23 +440,24 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         const configChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: file:/configs/common.yml\ntemplate: fake-template-content`
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: file:/configs/common.yml\ntemplate: fake-template-content`,
           },
           {
-            pathToFile: workspace + '/configs/common.yml',
-            file: `template: overridden-content\nsaul: goodman`
-          }
+            pathToFile: `${workspace}/configs/common.yml`,
+            file: `template: overridden-content\nsaul: goodman`,
+          },
         ]
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const res = await composeConfigGet(inputConfigName, context)
@@ -483,39 +485,40 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         const configChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: file:./common.json\ntemplate: fake-template-content`
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: file:./common.json\ntemplate: fake-template-content`,
           },
           {
-            pathToFile: workspace + '/.github/common.json',
-            file: `{"template": "overridden-content","saul": "goodman", "_extends": ".github:/top-level.yaml"}`
+            pathToFile: `${workspace}/.github/common.json`,
+            file: `{"template": "overridden-content","saul": "goodman", "_extends": ".github:/top-level.yaml"}`,
           },
           {
             file: `better: call`,
             endpointFilepath: 'top-level.yaml',
             endpoint: '',
             context: {
-              repo: { owner: 'octocat', repo: '.github' }
-            }
-          }
+              repo: { owner: 'octocat', repo: '.github' },
+            },
+          },
         ].map((c) => ({
           ...c,
           endpoint: c.endpointFilepath
             ? getContentEndpoint({
                 ...c.context,
-                path: c.endpointFilepath
+                path: c.endpointFilepath,
               })
-            : undefined
+            : undefined,
         }))
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const scope = nock('https://api.github.com')
@@ -523,7 +526,7 @@ describe('get config file', () => {
             configChain
               .filter((c) => !!c.endpoint)
               .map((c) => c.endpoint)
-              .includes(uri)
+              .includes(uri),
           )
           .times(configChain.filter((c) => !!c.endpoint).length)
           .reply(
@@ -533,14 +536,14 @@ describe('get config file', () => {
                 .filter((c) => !!c.endpoint)
                 .find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         const res = await composeConfigGet(inputConfigName, context)
 
         expect(mocks.existsSync).toHaveBeenCalledTimes(
-          configChain.filter((c) => !!c.pathToFile).length * 2
+          configChain.filter((c) => !!c.pathToFile).length * 2,
         )
         configChain
           .filter((c) => !!c.pathToFile)
@@ -567,25 +570,26 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         const configChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: file:./release-drafter.yml\ntemplate: initial-content`
-          }
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: file:./release-drafter.yml\ntemplate: initial-content`,
+          },
         ]
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const res = await composeConfigGet(inputConfigName, context)
 
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Ignoring "_extends: file:./release-drafter.yml".'
+          'Recursion detected. Ignoring "_extends: file:./release-drafter.yml".',
         )
 
         expect(res.contexts.length).toBe(1)
@@ -601,30 +605,31 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         const configChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: file:./common.yml\ntemplate: initial-content`
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: file:./common.yml\ntemplate: initial-content`,
           },
           {
-            pathToFile: workspace + '/.github/common.yml',
-            file: `_extends: file:./release-drafter.yml\nbase: setting`
-          }
+            pathToFile: `${workspace}/.github/common.yml`,
+            file: `_extends: file:./release-drafter.yml\nbase: setting`,
+          },
         ]
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const res = await composeConfigGet(inputConfigName, context)
 
         // lastExtends at detection time is file B's _extends pointing back to file A
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Ignoring "_extends: file:./release-drafter.yml".'
+          'Recursion detected. Ignoring "_extends: file:./release-drafter.yml".',
         )
 
         expect(res.contexts.length).toBe(2)
@@ -643,17 +648,17 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         const configChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: file:./base.yml\ntemplate: initial-content`
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: file:./base.yml\ntemplate: initial-content`,
           },
           {
-            pathToFile: workspace + '/.github/base.yml',
-            file: `_extends: .github:/shared.yml\nbase: setting`
+            pathToFile: `${workspace}/.github/base.yml`,
+            file: `_extends: .github:/shared.yml\nbase: setting`,
           },
           {
             // github: octocat/.github shared.yml — points back to itself
@@ -661,22 +666,23 @@ describe('get config file', () => {
             endpointFilepath: 'shared.yml',
             endpoint: '',
             context: {
-              repo: { owner: 'octocat', repo: '.github' }
-            }
-          }
+              repo: { owner: 'octocat', repo: '.github' },
+            },
+          },
         ].map((c) => ({
           ...c,
           endpoint: c.endpointFilepath
             ? getContentEndpoint({
                 ...c.context,
-                path: c.endpointFilepath
+                path: c.endpointFilepath,
               })
-            : undefined
+            : undefined,
         }))
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const scope = nock('https://api.github.com')
@@ -684,7 +690,7 @@ describe('get config file', () => {
             configChain
               .filter((c) => !!c.endpoint)
               .map((c) => c.endpoint)
-              .includes(uri)
+              .includes(uri),
           )
           .times(configChain.filter((c) => !!c.endpoint).length) // pre-fetch check stops the self-loop
           .reply(
@@ -694,8 +700,8 @@ describe('get config file', () => {
                 .filter((c) => !!c.endpoint)
                 .find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         const res = await composeConfigGet(inputConfigName, context)
@@ -703,7 +709,7 @@ describe('get config file', () => {
         expect(scope.isDone()).toBe(true)
 
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Ignoring "_extends: .github:/shared.yml".'
+          'Recursion detected. Ignoring "_extends: .github:/shared.yml".',
         )
 
         // 2 file: configs + 1 github: config
@@ -723,13 +729,13 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         const configChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: .github:/shared.yml\ntemplate: initial-content`
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: .github:/shared.yml\ntemplate: initial-content`,
           },
           {
             // github: octocat/.github shared.yml — extends to another github: config
@@ -737,8 +743,8 @@ describe('get config file', () => {
             endpointFilepath: 'shared.yml',
             endpoint: '',
             context: {
-              repo: { owner: 'octocat', repo: '.github' }
-            }
+              repo: { owner: 'octocat', repo: '.github' },
+            },
           },
           {
             // github: octocat/.github base.yml — loops back to shared.yml
@@ -746,22 +752,23 @@ describe('get config file', () => {
             endpointFilepath: 'base.yml',
             endpoint: '',
             context: {
-              repo: { owner: 'octocat', repo: '.github' }
-            }
-          }
+              repo: { owner: 'octocat', repo: '.github' },
+            },
+          },
         ].map((c) => ({
           ...c,
           endpoint: c.endpointFilepath
             ? getContentEndpoint({
                 ...c.context,
-                path: c.endpointFilepath
+                path: c.endpointFilepath,
               })
-            : undefined
+            : undefined,
         }))
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const scope = nock('https://api.github.com')
@@ -769,7 +776,7 @@ describe('get config file', () => {
             configChain
               .filter((c) => !!c.endpoint)
               .map((c) => c.endpoint)
-              .includes(uri)
+              .includes(uri),
           )
           .times(configChain.filter((c) => !!c.endpoint).length) // pre-fetch check stops the loop
           .reply(
@@ -779,8 +786,8 @@ describe('get config file', () => {
                 .filter((c) => !!c.endpoint)
                 .find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         const res = await composeConfigGet(inputConfigName, context)
@@ -789,7 +796,7 @@ describe('get config file', () => {
 
         // lastExtends at detection time is github:C's _extends pointing back to github:B
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Ignoring "_extends: .github:/shared.yml".'
+          'Recursion detected. Ignoring "_extends: .github:/shared.yml".',
         )
 
         // 1 file: config + 2 github: configs
@@ -814,37 +821,37 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         // file:A is local; github:B is fetched; github:A is caught pre-fetch (no endpoint needed)
         const localChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
             // file:A — extends github:B
-            file: `_extends: .github:/remote-base.yml\ntemplate: local-content`
-          }
+            file: `_extends: .github:/remote-base.yml\ntemplate: local-content`,
+          },
         ]
         const remoteChain = [
           {
             // github:B (octocat/.github:remote-base.yml) — extends the remote version of file:A
             file: `_extends: hello-world:release-drafter.yml@main\nremote: base`,
             endpointFilepath: 'remote-base.yml',
-            context: { repo: { owner: 'octocat', repo: '.github' } }
-          }
+            context: { repo: { owner: 'octocat', repo: '.github' } },
+          },
           // github:A would be octocat/hello-world:.github/release-drafter.yml@main —
           // same filepath+ref+repo as file:A, different scheme — caught by pre-fetch check
         ].map((c) => ({
           ...c,
           endpoint: getContentEndpoint({
             ...c.context,
-            path: c.endpointFilepath
-          })
+            path: c.endpointFilepath,
+          }),
         }))
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => localChain.find((c) => c.pathToFile === path)?.file
+          (path: string) => localChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const scope = nock('https://api.github.com')
@@ -854,8 +861,8 @@ describe('get config file', () => {
             200,
             (uri) => remoteChain.find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         const res = await composeConfigGet(inputConfigName, context)
@@ -864,7 +871,7 @@ describe('get config file', () => {
 
         // lastExtends at detection is github:B's _extends that points to github:A
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@main".'
+          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@main".',
         )
 
         // file:A and github:B only — github:A is not added to the chain
@@ -887,36 +894,36 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         // file:A is local; github:B is fetched; github:A@v1.0 is caught pre-fetch (no endpoint needed)
         const localChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: .github:/remote-base.yml\ntemplate: local-content`
-          }
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: .github:/remote-base.yml\ntemplate: local-content`,
+          },
         ]
         const remoteChain = [
           {
             // github:B — extends github:A at a different ref (v1.0 instead of main)
             file: `_extends: hello-world:release-drafter.yml@v1.0\nremote: base`,
             endpointFilepath: 'remote-base.yml',
-            context: { repo: { owner: 'octocat', repo: '.github' } }
-          }
+            context: { repo: { owner: 'octocat', repo: '.github' } },
+          },
           // github:A@v1.0 would be octocat/hello-world:.github/release-drafter.yml@v1.0 —
           // same filepath+repo as file:A (different ref) — caught by pre-fetch check
         ].map((c) => ({
           ...c,
           endpoint: getContentEndpoint({
             ...c.context,
-            path: c.endpointFilepath
-          })
+            path: c.endpointFilepath,
+          }),
         }))
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => localChain.find((c) => c.pathToFile === path)?.file
+          (path: string) => localChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const scope = nock('https://api.github.com')
@@ -926,8 +933,8 @@ describe('get config file', () => {
             200,
             (uri) => remoteChain.find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         const res = await composeConfigGet(inputConfigName, context)
@@ -936,7 +943,7 @@ describe('get config file', () => {
 
         // lastExtends at detection is github:B's _extends pointing to github:A@v1.0
         expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
-          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@v1.0".'
+          'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@v1.0".',
         )
 
         // file:A and github:B only — github:A@v1.0 is not added despite the ref mismatch
@@ -956,25 +963,25 @@ describe('get config file', () => {
         vi.stubEnv('GITHUB_WORKSPACE', workspace)
         const context = {
           repo: { owner: 'octocat', repo: 'hello-world' },
-          ref: 'main'
+          ref: 'main',
         }
         const inputConfigName = 'file:release-drafter.yml'
         const configChain = [
           {
-            pathToFile: workspace + '/.github/release-drafter.yml',
-            file: `_extends: file:./common.json\ntemplate: fake-template-content`
+            pathToFile: `${workspace}/.github/release-drafter.yml`,
+            file: `_extends: file:./common.json\ntemplate: fake-template-content`,
           },
           {
-            pathToFile: workspace + '/.github/common.json',
-            file: `{"template": "overridden-content","saul": "goodman", "_extends": ".github:/top-level.yaml"}`
+            pathToFile: `${workspace}/.github/common.json`,
+            file: `{"template": "overridden-content","saul": "goodman", "_extends": ".github:/top-level.yaml"}`,
           },
           {
             file: `better: call\n_extends: this-is-remote.json@v6`,
             endpointFilepath: 'top-level.yaml',
             endpoint: '',
             context: {
-              repo: { owner: 'octocat', repo: '.github' }
-            }
+              repo: { owner: 'octocat', repo: '.github' },
+            },
           },
           {
             file: `{"_extends": "file:/sould-not-be-imported.yaml", "the": {"cake": {"is": "a lie"}}}`,
@@ -982,22 +989,23 @@ describe('get config file', () => {
             endpoint: '',
             context: {
               repo: { owner: 'octocat', repo: '.github' },
-              ref: 'v6'
-            }
-          }
+              ref: 'v6',
+            },
+          },
         ].map((c) => ({
           ...c,
           endpoint: c.endpointFilepath
             ? getContentEndpoint({
                 ...c.context,
-                path: c.endpointFilepath
+                path: c.endpointFilepath,
               })
-            : undefined
+            : undefined,
         }))
 
         mocks.existsSync.mockReturnValue(true)
         mocks.readFileSync.mockImplementation(
-          (path: string) => configChain.find((c) => c.pathToFile === path)?.file
+          (path: string) =>
+            configChain.find((c) => c.pathToFile === path)?.file,
         )
 
         const scope = nock('https://api.github.com')
@@ -1005,7 +1013,7 @@ describe('get config file', () => {
             configChain
               .filter((c) => !!c.endpoint)
               .map((c) => c.endpoint)
-              .includes(uri)
+              .includes(uri),
           )
           .times(configChain.filter((c) => !!c.endpoint).length)
           .reply(
@@ -1015,18 +1023,18 @@ describe('get config file', () => {
                 .filter((c) => !!c.endpoint)
                 .find((c) => c.endpoint === uri)?.file,
             {
-              'content-type': 'application/vnd.github.v3.raw; charset=utf-8'
-            }
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
           )
 
         await expect(
-          composeConfigGet(inputConfigName, context)
+          composeConfigGet(inputConfigName, context),
         ).rejects.toThrowErrorMatchingInlineSnapshot(
-          `[Error: The '_extends' import-chain cannot contain github: to file: scheme transitions. Please change '_extends: file:/sould-not-be-imported.yaml' to use the github: scheme. ex: '_extends: octocat/.github:/sould-not-be-imported.yaml']`
+          `[Error: The '_extends' import-chain cannot contain github: to file: scheme transitions. Please change '_extends: file:/sould-not-be-imported.yaml' to use the github: scheme. ex: '_extends: octocat/.github:/sould-not-be-imported.yaml']`,
         )
 
         expect(mocks.existsSync).toHaveBeenCalledTimes(
-          configChain.filter((c) => !!c.pathToFile).length * 2
+          configChain.filter((c) => !!c.pathToFile).length * 2,
         )
         configChain
           .filter((c) => !!c.pathToFile)

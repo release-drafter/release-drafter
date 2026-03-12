@@ -1,8 +1,8 @@
-import path from 'node:path'
-import { mocks } from '.'
-import { composeConfigGet } from 'src/common/config'
-import { parse } from 'yaml'
 import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import type { composeConfigGet } from 'src/common/config'
+import { parse } from 'yaml'
+import { mocks } from '.'
 
 export type AvailableConfigs =
   | 'config-autolabeler'
@@ -67,7 +67,7 @@ export type AvailableConfigs =
   | 'config'
 
 export const mockedConfigModule = async (
-  iom: () => Promise<{ composeConfigGet: typeof composeConfigGet }>
+  iom: () => Promise<{ composeConfigGet: typeof composeConfigGet }>,
 ) => {
   const om = await iom()
 
@@ -78,22 +78,22 @@ export const mockedConfigModule = async (
         import.meta.dirname,
         '../fixtures',
         'config',
-        mockedConfig + '.yml'
+        `${mockedConfig}.yml`,
       )
       return {
         config: parse(readFileSync(p, 'utf-8')),
-        contexts: mocks.getContextsConfigWasFetchedFrom()
+        contexts: mocks.getContextsConfigWasFetchedFrom(),
       }
     } else {
       // will throw inside test-suites
       throw new Error(
-        "composeGonfigGet was called without an associated mocked config. Please use mocks.config.mockReturnValue('config')"
+        "composeGonfigGet was called without an associated mocked config. Please use mocks.config.mockReturnValue('config')",
       )
     }
   }
 
   return {
     ...om,
-    composeConfigGet: mockedComposeConfigGet
+    composeConfigGet: mockedComposeConfigGet,
   }
 }

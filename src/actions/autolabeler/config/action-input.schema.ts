@@ -8,7 +8,7 @@ export const actionInputSchema = object({
    * The config should still be located inside `.github` as that's where we are looking for config files.
    * @default 'release-drafter.yml'
    */
-  'config-name': string().optional().default('release-drafter.yml')
+  'config-name': string().optional().default('release-drafter.yml'),
 }).and(sharedInputSchema)
 
 /**

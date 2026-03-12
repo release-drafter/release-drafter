@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
-import { paginateGraphql } from 'src/common/paginate-graphql'
-import type { RequestParameters } from '@octokit/graphql/types'
 import type { graphql } from '@octokit/graphql'
+import type { RequestParameters } from '@octokit/graphql/types'
+import { paginateGraphql } from 'src/common/paginate-graphql'
+import { describe, expect, it, vi } from 'vitest'
 
 type GraphQLClient = typeof graphql
 
@@ -14,10 +14,10 @@ describe('paginateGraphql', () => {
             nodes: [{ id: '1' }, { id: '2' }],
             pageInfo: {
               hasNextPage: false,
-              endCursor: 'cursor1'
-            }
-          }
-        }
+              endCursor: 'cursor1',
+            },
+          },
+        },
       })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -28,7 +28,7 @@ describe('paginateGraphql', () => {
         mockClient as unknown as GraphQLClient,
         query,
         variables,
-        paginatePath
+        paginatePath,
       )
 
       expect(mockClient).toHaveBeenCalledTimes(1)
@@ -39,10 +39,10 @@ describe('paginateGraphql', () => {
             nodes: [{ id: '1' }, { id: '2' }],
             pageInfo: {
               hasNextPage: false,
-              endCursor: 'cursor1'
-            }
-          }
-        }
+              endCursor: 'cursor1',
+            },
+          },
+        },
       })
     })
 
@@ -53,10 +53,10 @@ describe('paginateGraphql', () => {
             nodes: [],
             pageInfo: {
               hasNextPage: false,
-              endCursor: null
-            }
-          }
-        }
+              endCursor: null,
+            },
+          },
+        },
       })
 
       const query = `query { repository { issues { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -87,10 +87,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '1' }, { id: '2' }],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor1'
-              }
-            }
-          }
+                endCursor: 'cursor1',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -98,10 +98,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '3' }, { id: '4' }],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor2'
-              }
-            }
-          }
+                endCursor: 'cursor2',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -109,10 +109,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '5' }],
               pageInfo: {
                 hasNextPage: false,
-                endCursor: 'cursor3'
-              }
-            }
-          }
+                endCursor: 'cursor3',
+              },
+            },
+          },
         })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -132,22 +132,22 @@ describe('paginateGraphql', () => {
       expect(mockClient).toHaveBeenNthCalledWith(1, query, variables)
       expect(mockClient).toHaveBeenNthCalledWith(2, query, {
         ...variables,
-        after: 'cursor1'
+        after: 'cursor1',
       })
       expect(mockClient).toHaveBeenNthCalledWith(3, query, {
         ...variables,
-        after: 'cursor2'
+        after: 'cursor2',
       })
       expect(result.repository.pullRequests.nodes).toEqual([
         { id: '1' },
         { id: '2' },
         { id: '3' },
         { id: '4' },
-        { id: '5' }
+        { id: '5' },
       ])
       expect(result.repository.pullRequests.pageInfo).toEqual({
         hasNextPage: false,
-        endCursor: 'cursor3'
+        endCursor: 'cursor3',
       })
     })
 
@@ -158,16 +158,16 @@ describe('paginateGraphql', () => {
 
       for (let i = 0; i < totalPages; i++) {
         const nodes = Array.from({ length: itemsPerPage }, (_, j) => ({
-          id: `${i * itemsPerPage + j + 1}`
+          id: `${i * itemsPerPage + j + 1}`,
         }))
         mockClient.mockResolvedValueOnce({
           search: {
             nodes,
             pageInfo: {
               hasNextPage: i < totalPages - 1,
-              endCursor: `cursor${i + 1}`
-            }
-          }
+              endCursor: `cursor${i + 1}`,
+            },
+          },
         })
       }
 
@@ -186,7 +186,7 @@ describe('paginateGraphql', () => {
       expect(result.search.nodes).toHaveLength(totalPages * itemsPerPage)
       expect(result.search.nodes[0]).toEqual({ id: '1' })
       expect(result.search.nodes[totalPages * itemsPerPage - 1]).toEqual({
-        id: `${totalPages * itemsPerPage}`
+        id: `${totalPages * itemsPerPage}`,
       })
     })
   })
@@ -201,12 +201,12 @@ describe('paginateGraphql', () => {
                 nodes: [{ id: '1' }],
                 pageInfo: {
                   hasNextPage: false,
-                  endCursor: 'cursor1'
-                }
-              }
-            }
-          }
-        }
+                  endCursor: 'cursor1',
+                },
+              },
+            },
+          },
+        },
       })
 
       const query = `query { viewer { organization { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } } } }`
@@ -215,7 +215,7 @@ describe('paginateGraphql', () => {
         'viewer',
         'organization',
         'repository',
-        'pullRequests'
+        'pullRequests',
       ]
 
       const result = await paginateGraphql<{
@@ -232,7 +232,7 @@ describe('paginateGraphql', () => {
       }>(mockClient as unknown as GraphQLClient, query, variables, paginatePath)
 
       expect(result.viewer.organization.repository.pullRequests.nodes).toEqual([
-        { id: '1' }
+        { id: '1' },
       ])
     })
 
@@ -242,9 +242,9 @@ describe('paginateGraphql', () => {
           nodes: [{ id: '1' }, { id: '2' }],
           pageInfo: {
             hasNextPage: false,
-            endCursor: 'cursor1'
-          }
-        }
+            endCursor: 'cursor1',
+          },
+        },
       })
 
       const query = `query { items { nodes { id } pageInfo { hasNextPage endCursor } } }`
@@ -270,10 +270,10 @@ describe('paginateGraphql', () => {
             // nodes field is missing
             pageInfo: {
               hasNextPage: false,
-              endCursor: 'cursor1'
-            }
-          }
-        }
+              endCursor: 'cursor1',
+            },
+          },
+        },
       })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -285,10 +285,10 @@ describe('paginateGraphql', () => {
           mockClient as unknown as GraphQLClient,
           query,
           variables,
-          paginatePath
-        )
+          paginatePath,
+        ),
       ).rejects.toThrowError(
-        "Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field."
+        "Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field.",
       )
     })
 
@@ -296,10 +296,10 @@ describe('paginateGraphql', () => {
       const mockClient = vi.fn().mockResolvedValueOnce({
         repository: {
           pullRequests: {
-            nodes: [{ id: '1' }]
+            nodes: [{ id: '1' }],
             // pageInfo field is missing
-          }
-        }
+          },
+        },
       })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -311,10 +311,10 @@ describe('paginateGraphql', () => {
           mockClient as unknown as GraphQLClient,
           query,
           variables,
-          paginatePath
-        )
+          paginatePath,
+        ),
       ).rejects.toThrowError(
-        "Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field."
+        "Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field.",
       )
     })
 
@@ -324,11 +324,11 @@ describe('paginateGraphql', () => {
           pullRequests: {
             nodes: [{ id: '1' }],
             pageInfo: {
-              hasNextPage: false
+              hasNextPage: false,
               // endCursor is missing
-            }
-          }
-        }
+            },
+          },
+        },
       })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -340,10 +340,10 @@ describe('paginateGraphql', () => {
           mockClient as unknown as GraphQLClient,
           query,
           variables,
-          paginatePath
-        )
+          paginatePath,
+        ),
       ).rejects.toThrowError(
-        "Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field."
+        "Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field.",
       )
     })
 
@@ -353,11 +353,11 @@ describe('paginateGraphql', () => {
           pullRequests: {
             nodes: [{ id: '1' }],
             pageInfo: {
-              endCursor: 'cursor1'
+              endCursor: 'cursor1',
               // hasNextPage is missing
-            }
-          }
-        }
+            },
+          },
+        },
       })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -369,10 +369,10 @@ describe('paginateGraphql', () => {
           mockClient as unknown as GraphQLClient,
           query,
           variables,
-          paginatePath
-        )
+          paginatePath,
+        ),
       ).rejects.toThrowError(
-        "Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field."
+        "Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field.",
       )
     })
 
@@ -383,10 +383,10 @@ describe('paginateGraphql', () => {
             nodes: [{ id: '1' }],
             pageInfo: {
               hasNextPage: false,
-              endCursor: 'cursor1'
-            }
-          }
-        }
+              endCursor: 'cursor1',
+            },
+          },
+        },
       })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -398,10 +398,10 @@ describe('paginateGraphql', () => {
           mockClient as unknown as GraphQLClient,
           query,
           variables,
-          paginatePath
-        )
+          paginatePath,
+        ),
       ).rejects.toThrowError(
-        "Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field."
+        "Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field.",
       )
     })
   })
@@ -416,10 +416,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '1' }],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor1'
-              }
-            }
-          }
+                endCursor: 'cursor1',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -427,10 +427,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '2' }],
               pageInfo: {
                 hasNextPage: false,
-                endCursor: 'cursor2'
-              }
-            }
-          }
+                endCursor: 'cursor2',
+              },
+            },
+          },
         })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -438,7 +438,7 @@ describe('paginateGraphql', () => {
         owner: 'test',
         repo: 'test',
         states: ['OPEN'],
-        labels: ['bug']
+        labels: ['bug'],
       }
       const paginatePath = ['repository', 'pullRequests']
 
@@ -446,21 +446,21 @@ describe('paginateGraphql', () => {
         mockClient as unknown as GraphQLClient,
         query,
         variables,
-        paginatePath
+        paginatePath,
       )
 
       expect(mockClient).toHaveBeenNthCalledWith(1, query, {
         owner: 'test',
         repo: 'test',
         states: ['OPEN'],
-        labels: ['bug']
+        labels: ['bug'],
       })
       expect(mockClient).toHaveBeenNthCalledWith(2, query, {
         owner: 'test',
         repo: 'test',
         states: ['OPEN'],
         labels: ['bug'],
-        after: 'cursor1'
+        after: 'cursor1',
       })
     })
 
@@ -473,10 +473,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '1' }],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor1'
-              }
-            }
-          }
+                endCursor: 'cursor1',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -484,10 +484,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '2' }],
               pageInfo: {
                 hasNextPage: false,
-                endCursor: null
-              }
-            }
-          }
+                endCursor: null,
+              },
+            },
+          },
         })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -516,10 +516,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '1' }],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor1'
-              }
-            }
-          }
+                endCursor: 'cursor1',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -527,17 +527,17 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '2' }],
               pageInfo: {
                 hasNextPage: false,
-                endCursor: 'cursor2'
-              }
-            }
-          }
+                endCursor: 'cursor2',
+              },
+            },
+          },
         })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
       const variables: RequestParameters = {
         owner: 'test',
         repo: 'test',
-        after: 'existingCursor'
+        after: 'existingCursor',
       }
       const paginatePath = ['repository', 'pullRequests']
 
@@ -545,20 +545,20 @@ describe('paginateGraphql', () => {
         mockClient as unknown as GraphQLClient,
         query,
         variables,
-        paginatePath
+        paginatePath,
       )
 
       // First call should use the provided after parameter
       expect(mockClient).toHaveBeenNthCalledWith(1, query, {
         owner: 'test',
         repo: 'test',
-        after: 'existingCursor'
+        after: 'existingCursor',
       })
       // Second call should override with the new cursor
       expect(mockClient).toHaveBeenNthCalledWith(2, query, {
         owner: 'test',
         repo: 'test',
-        after: 'cursor1'
+        after: 'cursor1',
       })
     })
   })
@@ -573,21 +573,21 @@ describe('paginateGraphql', () => {
                 id: '1',
                 title: 'PR 1',
                 author: { login: 'user1', id: '100' },
-                labels: { nodes: [{ name: 'bug' }] }
+                labels: { nodes: [{ name: 'bug' }] },
               },
               {
                 id: '2',
                 title: 'PR 2',
                 author: { login: 'user2', id: '101' },
-                labels: { nodes: [{ name: 'feature' }] }
-              }
+                labels: { nodes: [{ name: 'feature' }] },
+              },
             ],
             pageInfo: {
               hasNextPage: false,
-              endCursor: 'cursor1'
-            }
-          }
-        }
+              endCursor: 'cursor1',
+            },
+          },
+        },
       })
 
       const query = `query { repository { pullRequests { nodes { id title author { login id } labels { nodes { name } } } pageInfo { hasNextPage endCursor } } } }`
@@ -608,14 +608,14 @@ describe('paginateGraphql', () => {
           id: '1',
           title: 'PR 1',
           author: { login: 'user1', id: '100' },
-          labels: { nodes: [{ name: 'bug' }] }
+          labels: { nodes: [{ name: 'bug' }] },
         },
         {
           id: '2',
           title: 'PR 2',
           author: { login: 'user2', id: '101' },
-          labels: { nodes: [{ name: 'feature' }] }
-        }
+          labels: { nodes: [{ name: 'feature' }] },
+        },
       ])
     })
 
@@ -626,25 +626,25 @@ describe('paginateGraphql', () => {
           search: {
             nodes: [
               { id: '1', data: { value: 'a' } },
-              { id: '2', data: { value: 'b' } }
+              { id: '2', data: { value: 'b' } },
             ],
             pageInfo: {
               hasNextPage: true,
-              endCursor: 'cursor1'
-            }
-          }
+              endCursor: 'cursor1',
+            },
+          },
         })
         .mockResolvedValueOnce({
           search: {
             nodes: [
               { id: '3', data: { value: 'c' } },
-              { id: '4', data: { value: 'd' } }
+              { id: '4', data: { value: 'd' } },
             ],
             pageInfo: {
               hasNextPage: false,
-              endCursor: 'cursor2'
-            }
-          }
+              endCursor: 'cursor2',
+            },
+          },
         })
 
       const query = `query { search { nodes { id data { value } } pageInfo { hasNextPage endCursor } } }`
@@ -662,7 +662,7 @@ describe('paginateGraphql', () => {
         { id: '1', data: { value: 'a' } },
         { id: '2', data: { value: 'b' } },
         { id: '3', data: { value: 'c' } },
-        { id: '4', data: { value: 'd' } }
+        { id: '4', data: { value: 'd' } },
       ])
     })
   })
@@ -677,10 +677,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '1' }],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor1'
-              }
-            }
-          }
+                endCursor: 'cursor1',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -688,10 +688,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '2' }],
               pageInfo: {
                 hasNextPage: false,
-                endCursor: 'cursor2'
-              }
-            }
-          }
+                endCursor: 'cursor2',
+              },
+            },
+          },
         })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -709,7 +709,7 @@ describe('paginateGraphql', () => {
 
       expect(result.repository.pullRequests.nodes).toEqual([
         { id: '1' },
-        { id: '2' }
+        { id: '2' },
       ])
     })
 
@@ -722,10 +722,10 @@ describe('paginateGraphql', () => {
               nodes: [],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor1'
-              }
-            }
-          }
+                endCursor: 'cursor1',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -733,10 +733,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '1' }],
               pageInfo: {
                 hasNextPage: false,
-                endCursor: 'cursor2'
-              }
-            }
-          }
+                endCursor: 'cursor2',
+              },
+            },
+          },
         })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
@@ -764,10 +764,10 @@ describe('paginateGraphql', () => {
               nodes: [{ number: 3 }, { number: 2 }, { number: 1 }],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor1'
-              }
-            }
-          }
+                endCursor: 'cursor1',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -775,10 +775,10 @@ describe('paginateGraphql', () => {
               nodes: [{ number: 6 }, { number: 5 }, { number: 4 }],
               pageInfo: {
                 hasNextPage: false,
-                endCursor: 'cursor2'
-              }
-            }
-          }
+                endCursor: 'cursor2',
+              },
+            },
+          },
         })
 
       const query = `query { repository { issues { nodes { number } pageInfo { hasNextPage endCursor } } } }`
@@ -800,7 +800,7 @@ describe('paginateGraphql', () => {
         { number: 1 },
         { number: 6 },
         { number: 5 },
-        { number: 4 }
+        { number: 4 },
       ])
     })
 
@@ -813,10 +813,10 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '1' }],
               pageInfo: {
                 hasNextPage: true,
-                endCursor: 'cursor1'
-              }
-            }
-          }
+                endCursor: 'cursor1',
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -824,16 +824,16 @@ describe('paginateGraphql', () => {
               nodes: [{ id: '2' }],
               pageInfo: {
                 hasNextPage: false,
-                endCursor: 'cursor2'
-              }
-            }
-          }
+                endCursor: 'cursor2',
+              },
+            },
+          },
         })
 
       const query = `query { repository { pullRequests { nodes { id } pageInfo { hasNextPage endCursor } } } }`
       const originalVariables: RequestParameters = {
         owner: 'test',
-        repo: 'test'
+        repo: 'test',
       }
       const paginatePath = ['repository', 'pullRequests']
 
@@ -841,7 +841,7 @@ describe('paginateGraphql', () => {
         mockClient as unknown as GraphQLClient,
         query,
         originalVariables,
-        paginatePath
+        paginatePath,
       )
 
       // Original variables should not be modified
@@ -874,14 +874,14 @@ describe('paginateGraphql', () => {
           pullRequests: {
             nodes: [
               { id: '1', title: 'Test PR 1' },
-              { id: '2', title: 'Test PR 2' }
+              { id: '2', title: 'Test PR 2' },
             ],
             pageInfo: {
               hasNextPage: false,
-              endCursor: 'cursor1'
-            }
-          }
-        }
+              endCursor: 'cursor1',
+            },
+          },
+        },
       })
 
       const query = `query { repository { pullRequests { nodes { id title } pageInfo { hasNextPage endCursor } } } }`
@@ -892,7 +892,7 @@ describe('paginateGraphql', () => {
         mockClient as unknown as GraphQLClient,
         query,
         variables,
-        paginatePath
+        paginatePath,
       )
 
       // Type checking ensures these properties exist
@@ -915,11 +915,11 @@ describe('paginateGraphql', () => {
                 nodes: ['a', 'b', 'c'],
                 pageInfo: {
                   endCursor: 'aaa',
-                  hasNextPage: true
-                }
-              }
-            }
-          }
+                  hasNextPage: true,
+                },
+              },
+            },
+          },
         })
         .mockResolvedValueOnce({
           repository: {
@@ -928,11 +928,11 @@ describe('paginateGraphql', () => {
                 nodes: ['d', 'e', 'f'],
                 pageInfo: {
                   endCursor: 'bbb',
-                  hasNextPage: false
-                }
-              }
-            }
-          }
+                  hasNextPage: false,
+                },
+              },
+            },
+          },
         })
 
       const data = await paginateGraphql<{
@@ -947,7 +947,7 @@ describe('paginateGraphql', () => {
       }>(mockClient as unknown as GraphQLClient, query, {}, [
         'repository',
         'object',
-        'history'
+        'history',
       ])
 
       expect(mockClient).toHaveBeenCalledTimes(2)
@@ -957,11 +957,11 @@ describe('paginateGraphql', () => {
         'c',
         'd',
         'e',
-        'f'
+        'f',
       ])
       expect(data.repository.object.history.pageInfo).toEqual({
         endCursor: 'bbb',
-        hasNextPage: false
+        hasNextPage: false,
       })
     })
 
@@ -973,7 +973,7 @@ describe('paginateGraphql', () => {
       mockClient.mockResolvedValueOnce({})
 
       await expect(
-        paginateGraphql(mockClient as unknown as GraphQLClient, query, {}, [])
+        paginateGraphql(mockClient as unknown as GraphQLClient, query, {}, []),
       ).rejects.toThrow()
     })
   })

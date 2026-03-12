@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, join, normalize } from 'node:path'
-import { ConfigTarget } from './parse-config-target'
+import type { ConfigTarget } from './parse-config-target'
 
 /**
  * current path is assumed to be the ".github" folder in your repo
@@ -23,7 +23,7 @@ import { ConfigTarget } from './parse-config-target'
  */
 export const normalizeFilepath = (
   config: Pick<ConfigTarget, 'ref' | 'repo' | 'filepath'>,
-  parentConfig?: Pick<ConfigTarget, 'ref' | 'repo' | 'filepath'>
+  parentConfig?: Pick<ConfigTarget, 'ref' | 'repo' | 'filepath'>,
 ): string => {
   const _filepath = normalize(config.filepath)
 

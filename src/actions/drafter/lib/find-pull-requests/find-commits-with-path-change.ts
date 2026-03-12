@@ -1,17 +1,17 @@
 import { getOctokit, paginateGraphql } from 'src/common'
+import type { Config } from '../../config'
 import findCommitsWithPathChangeQuery from './graphql/find-commits-with-path-changes.gql?raw'
-import {
+import type {
   FindCommitsWithPathChangesQueryQuery,
-  FindCommitsWithPathChangesQueryQueryVariables
+  FindCommitsWithPathChangesQueryQueryVariables,
 } from './graphql/find-commits-with-path-changes.graphql.generated'
-import { Config } from '../../config'
 
 /**
  * @see https://docs.github.com/en/graphql/reference/objects#commit
  */
 export const findCommitsWithPathChange = async (
   paths: Config['include-paths'],
-  params: Omit<FindCommitsWithPathChangesQueryQueryVariables, 'path'>
+  params: Omit<FindCommitsWithPathChangesQueryQueryVariables, 'path'>,
 ) => {
   const octokit = getOctokit()
   const commitIdsMatchingPaths: Record<string, Set<string>> = {}
@@ -22,7 +22,7 @@ export const findCommitsWithPathChange = async (
       octokit.graphql,
       findCommitsWithPathChangeQuery,
       { ...params, path },
-      ['repository', 'object', 'history']
+      ['repository', 'object', 'history'],
     )
 
     if (data.repository?.object?.__typename !== 'Commit') {
@@ -30,7 +30,7 @@ export const findCommitsWithPathChange = async (
     }
 
     const commits = (data.repository?.object?.history.nodes || []).filter(
-      (c) => !!c
+      (c) => !!c,
     )
 
     commitIdsMatchingPaths[path] = commitIdsMatchingPaths[path] || new Set([])

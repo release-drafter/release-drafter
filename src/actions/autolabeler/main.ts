@@ -1,21 +1,21 @@
 import * as core from '@actions/core'
-import { ParsedConfig } from './config'
 import { context } from '@actions/github'
-import { PullRequestEvent } from '@octokit/webhooks-types'
-import { getOctokit } from 'src/common'
+import type { PullRequestEvent } from '@octokit/webhooks-types'
 import ignore from 'ignore'
+import { getOctokit } from 'src/common'
+import type { ParsedConfig } from './config'
 
 export const main = async (params: {
   config: ParsedConfig
   dryRun?: boolean
 }) => {
   core.info(
-    `Running for event "${context.eventName || '[undefined]'}.${context.payload.action || '[undefined]'}"`
+    `Running for event "${context.eventName || '[undefined]'}.${context.payload.action || '[undefined]'}"`,
   )
 
   if (context.eventName !== 'pull_request') {
     throw new Error(
-      `Event type is wrong. Expected 'pull_request', received '${context.eventName}'`
+      `Event type is wrong. Expected 'pull_request', received '${context.eventName}'`,
     )
   }
   const octokit = getOctokit()
@@ -31,13 +31,13 @@ export const main = async (params: {
       ...context.repo,
       issue_number: payload.number,
       pull_number: payload.number,
-      per_page: 100
+      per_page: 100,
     },
-    (response) => response.data.map((file) => file.filename)
+    (response) => response.data.map((file) => file.filename),
   )
   const labels = new Set<string>()
 
-  for (const autolabel of params.config['autolabeler']) {
+  for (const autolabel of params.config.autolabeler) {
     let found = false
 
     // check modified files
@@ -94,19 +94,19 @@ export const main = async (params: {
   if (labels.size > 0) {
     if (params.dryRun) {
       core.info(
-        `[dry-run] Would add labels [${Array.from(labels).join(', ')}] to PR #${payload.number}`
+        `[dry-run] Would add labels [${Array.from(labels).join(', ')}] to PR #${payload.number}`,
       )
     } else {
       await octokit.rest.issues.addLabels({
         ...context.repo,
         issue_number: payload.number,
-        labels: Array.from(labels)
+        labels: Array.from(labels),
       })
     }
   }
 
   return {
     pr_number: payload.number.toString(),
-    labels: labels.size ? Array.from(labels).join(',') : undefined
+    labels: labels.size ? Array.from(labels).join(',') : undefined,
   }
 }

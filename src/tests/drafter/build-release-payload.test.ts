@@ -1,12 +1,12 @@
-import { buildReleasePayload } from 'src/actions/drafter/lib'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { mockContext } from '../mocks'
 import {
   actionInputSchema,
   configSchema,
-  mergeInputAndConfig
+  mergeInputAndConfig,
 } from 'src/actions/drafter/config'
+import type { buildReleasePayload } from 'src/actions/drafter/lib'
 import { generateChangeLog } from 'src/actions/drafter/lib/build-release-payload/generate-changelog'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { mockContext } from '../mocks'
 
 describe('generate changelog', () => {
   let config: ReturnType<typeof mergeInputAndConfig>
@@ -16,18 +16,18 @@ describe('generate changelog', () => {
     config = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master']
+        references: ['master'],
       }),
       input: actionInputSchema.parse({
-        token: 'test'
-      })
+        token: 'test',
+      }),
     })
   })
 
   it('does not escape titles without setting change-title-escapes', () => {
     const changelog = generateChangeLog({
       config,
-      pullRequests
+      pullRequests,
     })
 
     expect(changelog).toMatchInlineSnapshot(`
@@ -46,7 +46,7 @@ describe('generate changelog', () => {
   it('escapes titles with \\s correctly', () => {
     const changelog = generateChangeLog({
       config: { ...config, 'change-title-escapes': '\\' },
-      pullRequests
+      pullRequests,
     })
 
     expect(changelog).toMatchInlineSnapshot(`
@@ -65,7 +65,7 @@ describe('generate changelog', () => {
   it('escapes titles with \\<*_& correctly', () => {
     const changelog = generateChangeLog({
       config: { ...config, 'change-title-escapes': '\\<*_&' },
-      pullRequests
+      pullRequests,
     })
 
     expect(changelog).toMatchInlineSnapshot(`
@@ -84,7 +84,7 @@ describe('generate changelog', () => {
   it('escapes titles with @s correctly', () => {
     const changelog = generateChangeLog({
       config: { ...config, 'change-title-escapes': '@' },
-      pullRequests
+      pullRequests,
     })
     expect(changelog).toMatchInlineSnapshot(`
       "* A1 (#1) @ghost
@@ -102,7 +102,7 @@ describe('generate changelog', () => {
   it('escapes titles with @s and #s correctly', () => {
     const changelog = generateChangeLog({
       config: { ...config, 'change-title-escapes': '@#' },
-      pullRequests
+      pullRequests,
     })
 
     expect(changelog).toMatchInlineSnapshot(`
@@ -121,7 +121,7 @@ describe('generate changelog', () => {
   it('escapes titles with \\<@*_&`# correctly', () => {
     const changelog = generateChangeLog({
       config: { ...config, 'change-title-escapes': '\\<@*_&`#' },
-      pullRequests
+      pullRequests,
     })
 
     expect(changelog).toMatchInlineSnapshot(`
@@ -141,9 +141,9 @@ describe('generate changelog', () => {
     const changelog = generateChangeLog({
       config: {
         ...config,
-        categories: [{ title: 'Bugs', 'collapse-after': 3, labels: ['bug'] }]
+        categories: [{ title: 'Bugs', 'collapse-after': 3, labels: ['bug'] }],
       },
-      pullRequests
+      pullRequests,
     })
     expect(changelog).toMatchInlineSnapshot(`
       "* B2 (#2) @ghost
@@ -170,10 +170,10 @@ describe('generate changelog', () => {
       config: {
         ...config,
         categories: [
-          { title: 'Feature', 'collapse-after': 3, labels: ['feature'] }
-        ]
+          { title: 'Feature', 'collapse-after': 3, labels: ['feature'] },
+        ],
       },
-      pullRequests
+      pullRequests,
     })
 
     expect(changelog).toMatchInlineSnapshot(`
@@ -203,12 +203,12 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'bug' }]
+        nodes: [{ __typename: 'Label', name: 'bug' }],
       },
       baseRefName: 'master',
       headRefName: 'fix-bug',
       isCrossRepository: false,
-      merged: true
+      merged: true,
     },
     {
       __typename: 'PullRequest',
@@ -218,12 +218,12 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'feature' }]
+        nodes: [{ __typename: 'Label', name: 'feature' }],
       },
       baseRefName: 'master',
       headRefName: 'implement-feature',
       isCrossRepository: false,
-      merged: true
+      merged: true,
     },
     {
       __typename: 'PullRequest',
@@ -233,17 +233,17 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'bug' }]
+        nodes: [{ __typename: 'Label', name: 'bug' }],
       },
       author: {
         __typename: 'User',
         login: 'jetersen',
-        url: 'https://github.com/jetersen'
+        url: 'https://github.com/jetersen',
       },
       baseRefName: 'master',
       headRefName: 'fix-bug',
       isCrossRepository: false,
-      merged: true
+      merged: true,
     },
     {
       __typename: 'PullRequest',
@@ -253,17 +253,17 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'bug' }]
+        nodes: [{ __typename: 'Label', name: 'bug' }],
       },
       author: {
         __typename: 'User',
         login: 'jetersen',
-        url: 'https://github.com/jetersen'
+        url: 'https://github.com/jetersen',
       },
       baseRefName: 'master',
       headRefName: 'fix-bug',
       isCrossRepository: false,
-      merged: true
+      merged: true,
     },
     {
       __typename: 'PullRequest',
@@ -273,17 +273,17 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'bug' }]
+        nodes: [{ __typename: 'Label', name: 'bug' }],
       },
       author: {
         __typename: 'User',
         login: 'Happypig375',
-        url: 'https://github.com/Happypig375'
+        url: 'https://github.com/Happypig375',
       },
       baseRefName: 'master',
       headRefName: 'fix-bug',
       isCrossRepository: false,
-      merged: true
+      merged: true,
     },
     {
       __typename: 'PullRequest',
@@ -293,17 +293,17 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'bug' }]
+        nodes: [{ __typename: 'Label', name: 'bug' }],
       },
       author: {
         __typename: 'User',
         login: 'jetersen',
-        url: 'https://github.com/jetersen'
+        url: 'https://github.com/jetersen',
       },
       baseRefName: 'master',
       headRefName: 'fix-bug',
       isCrossRepository: false,
-      merged: true
+      merged: true,
     },
     {
       __typename: 'PullRequest',
@@ -313,17 +313,17 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'bugfix' }]
+        nodes: [{ __typename: 'Label', name: 'bugfix' }],
       },
       author: {
         __typename: 'User',
         login: 'ghost',
-        url: 'https://github.com/ghost'
+        url: 'https://github.com/ghost',
       },
       baseRefName: 'master',
       headRefName: 'fix-bug',
       isCrossRepository: false,
-      merged: true
+      merged: true,
     },
     {
       __typename: 'PullRequest',
@@ -333,17 +333,17 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'feature' }]
+        nodes: [{ __typename: 'Label', name: 'feature' }],
       },
       author: {
         __typename: 'User',
         login: 'Happypig375',
-        url: 'https://github.com/Happypig375'
+        url: 'https://github.com/Happypig375',
       },
       baseRefName: 'master',
       headRefName: 'implement-feature',
       isCrossRepository: false,
-      merged: true
+      merged: true,
     },
     {
       __typename: 'PullRequest',
@@ -353,17 +353,17 @@ const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =
       url: 'https://github.com',
       labels: {
         __typename: 'LabelConnection',
-        nodes: [{ __typename: 'Label', name: 'dependencies' }]
+        nodes: [{ __typename: 'Label', name: 'dependencies' }],
       },
       author: {
         login: 'dependabot',
         // although the RESTful API returns a `type: "Bot"`, GraphQL only allows us to look up based on the `__typename`
         __typename: 'Bot',
-        url: 'https://github.com/apps/dependabot'
+        url: 'https://github.com/apps/dependabot',
       },
       baseRefName: 'master',
       headRefName: 'dependabot/go_modules/examples/golang.org/x/crypto-0.17.0',
       isCrossRepository: false,
-      merged: true
-    }
+      merged: true,
+    },
   ]

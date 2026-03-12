@@ -1,9 +1,9 @@
-import { ExclusiveInput, ParsedConfig } from './config'
+import type { ExclusiveInput, ParsedConfig } from './config'
 import {
+  buildReleasePayload,
   findPreviousReleases,
   findPullRequests,
-  buildReleasePayload,
-  upsertRelease
+  upsertRelease,
 } from './lib'
 
 export const main = async (params: {
@@ -24,7 +24,7 @@ export const main = async (params: {
 
   const { commits, pullRequests } = await findPullRequests({
     lastRelease,
-    config
+    config,
   })
 
   const releasePayload = buildReleasePayload({
@@ -32,17 +32,17 @@ export const main = async (params: {
     config,
     input,
     lastRelease,
-    pullRequests
+    pullRequests,
   })
 
   const upsertedRelease = await upsertRelease({
     draftRelease,
     releasePayload,
-    dryRun: input['dry-run']
+    dryRun: input['dry-run'],
   })
 
   return {
     upsertedRelease,
-    releasePayload
+    releasePayload,
   }
 }

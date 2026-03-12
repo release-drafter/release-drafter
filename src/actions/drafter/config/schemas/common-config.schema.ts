@@ -1,5 +1,5 @@
 import type * as z from 'zod'
-import { object, string, stringbool, boolean, iso } from 'zod'
+import { boolean, iso, object, string, stringbool } from 'zod'
 
 /**
  * Configuration parameters that can be specified in both
@@ -43,7 +43,7 @@ export const commonConfigSchema = object({
   /**
    * A string that would be added after the template body.
    */
-  footer: string().optional()
+  footer: string().optional(),
 })
 
 /**

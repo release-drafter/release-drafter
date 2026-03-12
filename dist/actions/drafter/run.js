@@ -1,313 +1,220 @@
-import { C as warning, S as setOutput, T as __toESM, _ as debug, a as boolean, b as info, c as string, d as paginateGraphql, f as stringToRegex, g as context, h as getOctokit, i as array, l as stringbool, m as composeConfigGet, n as ZodDefault, o as number, p as escapeStringRegexp, r as _enum, s as object, t as sharedInputSchema, u as datetime, v as error, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
-//#region node_modules/compare-versions/lib/esm/utils.js
-var semver = /^[v^~<>=]*?(\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+))?(?:-([\da-z\-]+(?:\.[\da-z\-]+)*))?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?)?)?$/i;
-var validateAndParse = (version) => {
-	if (typeof version !== "string") throw new TypeError("Invalid argument expected string");
-	const match = version.match(semver);
-	if (!match) throw new Error(`Invalid argument not valid semver ('${version}' received)`);
-	match.shift();
-	return match;
-};
-var isWildcard = (s) => s === "*" || s === "x" || s === "X";
-var tryParse = (v) => {
-	const n = parseInt(v, 10);
-	return isNaN(n) ? v : n;
-};
-var forceType = (a, b) => typeof a !== typeof b ? [String(a), String(b)] : [a, b];
-var compareStrings = (a, b) => {
-	if (isWildcard(a) || isWildcard(b)) return 0;
-	const [ap, bp] = forceType(tryParse(a), tryParse(b));
-	if (ap > bp) return 1;
-	if (ap < bp) return -1;
-	return 0;
-};
-var compareSegments = (a, b) => {
-	for (let i = 0; i < Math.max(a.length, b.length); i++) {
-		const r = compareStrings(a[i] || "0", b[i] || "0");
-		if (r !== 0) return r;
-	}
-	return 0;
-};
-//#endregion
-//#region node_modules/compare-versions/lib/esm/compareVersions.js
+import { C as warning, S as setOutput, T as __toESM, _ as debug, a as _enum, b as info, c as number, d as stringbool, f as datetime, g as context, h as getOctokit, i as ZodDefault, l as object, m as composeConfigGet, n as escapeStringRegexp, o as array, p as paginateGraphql, r as sharedInputSchema, s as boolean, t as stringToRegex, u as string, v as error, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
+//#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
-* Compare [semver](https://semver.org/) version strings to find greater, equal or lesser.
-* This library supports the full semver specification, including comparing versions with different number of digits like `1.0.0`, `1.0`, `1`, and pre-release versions like `1.0.0-alpha`.
-* @param v1 - First version to compare
-* @param v2 - Second version to compare
-* @returns Numeric value compatible with the [Array.sort(fn) interface](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Parameters).
+* Configuration parameters that can be specified in both
+* the config file or the action input.
+*
+* Default values cannot be defined here,
+* as action inputs may override config file values.
+*
+* @see merge-input-and-config.ts for how the merging of config and input is handled, including default values.
 */
-var compareVersions = (v1, v2) => {
-	const n1 = validateAndParse(v1);
-	const n2 = validateAndParse(v2);
-	const p1 = n1.pop();
-	const p2 = n2.pop();
-	const r = compareSegments(n1, n2);
-	if (r !== 0) return r;
-	if (p1 && p2) return compareSegments(p1.split("."), p2.split("."));
-	else if (p1 || p2) return p1 ? -1 : 1;
-	return 0;
+var commonConfigSchema = object({
+	latest: stringbool().or(boolean()).optional(),
+	prerelease: stringbool().or(boolean()).optional(),
+	"initial-commits-since": datetime().optional(),
+	"prerelease-identifier": string().optional(),
+	"include-pre-releases": stringbool().or(boolean()).optional(),
+	commitish: string().optional(),
+	header: string().optional(),
+	footer: string().optional()
+});
+var actionInputSchema = object({
+	"config-name": string().optional().default("release-drafter.yml"),
+	name: string().optional(),
+	tag: string().optional(),
+	version: string().optional(),
+	publish: stringbool().optional().default(false)
+}).and(sharedInputSchema).and(commonConfigSchema);
+//#endregion
+//#region src/actions/drafter/config/get-action-inputs.ts
+var getActionInput = () => {
+	const getInput$1 = (name) => getInput(name) || void 0;
+	return actionInputSchema.parse({
+		"config-name": getInput$1("config-name"),
+		name: getInput$1("name"),
+		tag: getInput$1("tag"),
+		version: getInput$1("version"),
+		publish: getInput$1("publish"),
+		token: getInput$1("token"),
+		latest: getInput$1("latest"),
+		prerelease: getInput$1("prerelease"),
+		"initial-commits-since": getInput$1("initial-commits-since"),
+		"prerelease-identifier": getInput$1("prerelease-identifier"),
+		"include-pre-releases": getInput$1("include-pre-releases"),
+		commitish: getInput$1("commitish"),
+		header: getInput$1("header"),
+		footer: getInput$1("footer"),
+		"dry-run": getInput$1("dry-run")
+	});
 };
 //#endregion
-//#region src/actions/drafter/lib/find-previous-releases/sort-releases.ts
-var sortReleases = (params) => {
-	const tagPrefixRexExp = params.tagPrefix ? new RegExp(`^${escapeStringRegexp(params.tagPrefix)}`) : void 0;
-	return params.releases.sort((r1, r2) => {
-		const tag_name_1 = tagPrefixRexExp ? r1.tag_name.replace(tagPrefixRexExp, "") : r1.tag_name;
-		const tag_name_2 = tagPrefixRexExp ? r2.tag_name.replace(tagPrefixRexExp, "") : r2.tag_name;
+//#region src/actions/drafter/config/schemas/config.schema.ts
+var exclusiveConfigSchema = object({
+	"change-template": string().optional().default("* $TITLE (#$NUMBER) @$AUTHOR"),
+	"change-title-escapes": string().optional(),
+	"no-changes-template": string().optional().default("* No changes"),
+	"version-template": string().optional().default("$MAJOR.$MINOR.$PATCH$PRERELEASE"),
+	"name-template": string().optional(),
+	"tag-prefix": string().optional(),
+	"tag-template": string().optional(),
+	"exclude-labels": array(string()).optional().default([]),
+	"include-labels": array(string()).optional().default([]),
+	"include-paths": array(string()).optional().default([]),
+	"exclude-paths": array(string()).optional().default([]),
+	"exclude-contributors": array(string()).optional().default([]),
+	"no-contributors-template": string().optional().default("No contributors"),
+	"sort-by": _enum(["merged_at", "title"]).optional().default("merged_at"),
+	"sort-direction": _enum(["ascending", "descending"]).optional().default("descending"),
+	"filter-by-commitish": boolean().optional().default(false),
+	"pull-request-limit": number().int().positive().optional().default(5),
+	"history-limit": number().int().positive().optional().default(15),
+	replacers: array(object({
+		search: string().min(1),
+		replace: string().min(0)
+	})).optional().default([]),
+	categories: array(object({
+		title: string().min(1),
+		"collapse-after": number().int().min(0).optional().default(0),
+		labels: array(string().min(1)).optional().default([]),
+		label: string().min(1).optional()
+	})).optional().default([]),
+	"version-resolver": object({
+		major: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
+		minor: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
+		patch: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
+		default: _enum([
+			"major",
+			"minor",
+			"patch"
+		]).optional().default("patch")
+	}).optional().default({
+		major: { labels: [] },
+		minor: { labels: [] },
+		patch: { labels: [] },
+		default: "patch"
+	}),
+	"category-template": string().optional().default("## $TITLE"),
+	template: string().optional().default("")
+}).meta({
+	title: "JSON schema for Release Drafter yaml files",
+	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
+});
+var configSchema = exclusiveConfigSchema.and(commonConfigSchema);
+Object.fromEntries(Object.entries({
+	...exclusiveConfigSchema.shape,
+	...commonConfigSchema.shape
+}).map(([key, value]) => {
+	if (value instanceof ZodDefault) return [key, value.def.defaultValue];
+	return [key, void 0];
+}));
+//#endregion
+//#region src/actions/drafter/config/get-config.ts
+var getConfig = async (configName) => {
+	const { config, contexts } = await composeConfigGet(configName, context);
+	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
+	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally." : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
+	return configSchema.parse(config);
+};
+//#endregion
+//#region src/actions/drafter/config/merge-input-and-config.ts
+/**
+* Returns a copy of `config`, updated with values from `input`.
+*
+* Also performs some validation.
+*
+* Input takes precedence, because it's more easy to change at runtime
+*/
+var mergeInputAndConfig = (params) => {
+	const { config: originalConfig, input } = params;
+	const config = structuredClone(originalConfig);
+	if (input.commitish) {
+		if (config.commitish && config.commitish !== input.commitish) info(`Input's commitish "${input.commitish}" overrides config's commitish "${config.commitish}"`);
+		config.commitish = input.commitish;
+	}
+	if (input.header) {
+		if (config.header && config.header !== input.header) info(`Input's header "${input.header}" overrides config's header "${config.header}"`);
+		config.header = input.header;
+	}
+	if (input.footer) {
+		if (config.footer && config.footer !== input.footer) info(`Input's footer "${input.footer}" overrides config's footer "${config.footer}"`);
+		config.footer = input.footer;
+	}
+	if (input["prerelease-identifier"]) {
+		if (config["prerelease-identifier"] && config["prerelease-identifier"] !== input["prerelease-identifier"]) info(`Input's prerelease-identifier "${input["prerelease-identifier"]}" overrides config's prerelease-identifier "${config["prerelease-identifier"]}"`);
+		config["prerelease-identifier"] = input["prerelease-identifier"];
+	}
+	if (typeof input.prerelease === "boolean") {
+		if (typeof config.prerelease === "boolean" && config.prerelease !== input.prerelease) info(`Input's prerelease "${input.prerelease}" overrides config's prerelease "${config.prerelease}"`);
+		config.prerelease = input.prerelease;
+	}
+	if (typeof input["include-pre-releases"] === "boolean") {
+		if (typeof config["include-pre-releases"] === "boolean" && config["include-pre-releases"] !== input["include-pre-releases"]) info(`Input's include-pre-releases "${input["include-pre-releases"]}" overrides config's include-pre-releases "${config["include-pre-releases"]}"`);
+		config["include-pre-releases"] = input["include-pre-releases"];
+	}
+	if (typeof input.latest === "boolean") {
+		if (typeof config.latest === "boolean" && config.latest !== input.latest) info(`Input's latest "${input.latest}" overrides config's latest "${config.latest}"`);
+		config.latest = input.latest;
+	}
+	if (config.latest && config.prerelease) {
+		warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
+		config.latest = false;
+	}
+	if (config["prerelease-identifier"] && !config.prerelease) {
+		warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
+		config.prerelease = true;
+	}
+	const commitish = config.commitish || context.ref || context.payload.ref;
+	const latest = typeof config.latest !== "boolean" ? true : config.latest;
+	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
+	const replacers = config.replacers.map((r) => {
 		try {
-			return compareVersions(tag_name_1, tag_name_2);
+			return {
+				...r,
+				search: stringToRegex(r.search)
+			};
 		} catch {
-			return new Date(r1.created_at).getTime() - new Date(r2.created_at).getTime();
+			warning(`Bad replacer regex: '${r.search}'`);
+			return false;
 		}
+	}).filter((r) => !!r);
+	const categories = config.categories.map((cat) => {
+		const { label, ..._cat } = cat;
+		_cat.labels = [...cat.labels, label].filter(Boolean);
+		return _cat;
 	});
-};
-//#endregion
-//#region src/actions/drafter/lib/find-previous-releases/find-previous-releases.ts
-var RELEASE_COUNT_LIMIT = 1e3;
-/**
-* Lists every release and :
-* - filters by commitish if specified
-* - filters by tag-prefix if specified
-* - filters out pre-releases unless specified
-* - extracts the first draft releases (according to return-order of GitHub API)
-* - get latest published release according to ./sort-releases.ts implementation
-*
-* Returns one of (or both) draft release and latest published release
-* The last stable release is used to determine the range of commits to include in the changelog,
-* and to resolve the next version number.
-*
-* The draft release is used to determine if we should create a new release or update the existing one.
-*/
-var findPreviousReleases = async (params) => {
-	const { commitish, "filter-by-commitish": filterByCommitish, "tag-prefix": tagPrefix, prerelease: isPreRelease, "include-pre-releases": includePreReleases } = params;
-	const octokit = getOctokit();
-	info("Fetching releases from GitHub...");
-	let releaseCount = 0;
-	const releases = await octokit.paginate(octokit.rest.repos.listReleases, {
-		...context.repo,
-		per_page: 100
-	}, (response, done) => {
-		releaseCount += response.data.length;
-		if (releaseCount >= RELEASE_COUNT_LIMIT) done();
-		return response.data;
-	});
-	info(`Found ${releases.length} releases`);
-	const headRefRegex = /^refs\/heads\//;
-	const targetCommitishName = commitish.replace(headRefRegex, "");
-	const commitishFilteredReleases = filterByCommitish ? releases.filter((r) => targetCommitishName === r.target_commitish.replace(headRefRegex, "")) : releases;
-	const filteredReleases = tagPrefix ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix)) : commitishFilteredReleases;
-	let publishedReleases = filteredReleases.filter((r) => !r.draft);
-	let draftReleases = filteredReleases.filter((r) => r.draft);
-	publishedReleases = publishedReleases.filter((publishedRelease) => isPreRelease || includePreReleases ? publishedRelease.prerelease || !publishedRelease.prerelease : !publishedRelease.prerelease);
-	draftReleases = draftReleases.filter((draftRelease) => isPreRelease ? draftRelease.prerelease : !draftRelease.prerelease);
-	const draftRelease = draftReleases[0];
-	const lastRelease = sortReleases({
-		releases: publishedReleases,
-		tagPrefix
-	})?.at(-1);
-	if (draftRelease) {
-		if (draftReleases.length > 1) {
-			warning(`Multiple draft releases found : ${draftReleases.map((r) => r.tag_name).join(", ")}`);
-			warning(`Using the first one returned by GitHub API: ${draftRelease.tag_name}`);
-		}
-		info(`Draft release${isPreRelease ? " (which is a prerelease)" : ""}:`);
-		info(`  tag_name:  ${draftRelease.tag_name}`);
-		info(`  name:      ${draftRelease.name}`);
-	} else info(`No draft release found${isPreRelease ? " (among prerelease drafts)" : ""}`);
-	if (lastRelease) {
-		info(`Last release${isPreRelease ? " (including prerelease)" : ""}:`);
-		info(`  tag_name:  ${lastRelease.tag_name}`);
-		info(`  name:      ${lastRelease.name}`);
-	} else info(`No last release found${isPreRelease ? " (including prerelease)" : ""}`);
-	return {
-		draftRelease,
-		lastRelease
+	const parsedConfig = {
+		...config,
+		commitish,
+		latest,
+		prerelease,
+		replacers,
+		categories
 	};
+	if (!parsedConfig.commitish) throw new Error("'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)");
+	if (parsedConfig.categories.filter((category) => category.labels.length === 0).length > 1) throw new Error("Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.");
+	return parsedConfig;
 };
 //#endregion
-//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-path-changes.gql?raw
-var find_commits_with_path_changes_default = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(path: $path, since: $since, after: $after) {\n          __typename\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts
-/**
-* @see https://docs.github.com/en/graphql/reference/objects#commit
-*/
-var findCommitsWithPathChange = async (paths, params) => {
-	const octokit = getOctokit();
-	const commitIdsMatchingPaths = {};
-	let hasFoundCommits = false;
-	for (const path of paths) {
-		const data = await paginateGraphql(octokit.graphql, find_commits_with_path_changes_default, {
-			...params,
-			path
-		}, [
-			"repository",
-			"object",
-			"history"
-		]);
-		if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
-		const commits = (data.repository?.object?.history.nodes || []).filter((c) => !!c);
-		commitIdsMatchingPaths[path] = commitIdsMatchingPaths[path] || /* @__PURE__ */ new Set([]);
-		for (const { id } of commits) {
-			hasFoundCommits = true;
-			commitIdsMatchingPaths[path].add(id);
-		}
+//#region src/actions/drafter/config/set-action-output.ts
+var setActionOutput = (params) => {
+	const { releasePayload, upsertedRelease } = params;
+	info("Set action outputs...");
+	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body } = releasePayload;
+	if (upsertedRelease) {
+		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl, tag_name: tagName, name } } = upsertedRelease;
+		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
+		if (htmlUrl) setOutput("html_url", htmlUrl);
+		if (uploadUrl) setOutput("upload_url", uploadUrl);
+		if (tagName) setOutput("tag_name", tagName);
+		if (name) setOutput("name", name);
 	}
-	return {
-		commitIdsMatchingPaths,
-		hasFoundCommits
-	};
-};
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-pr.gql?raw
-var find_commits_with_pr_default = "query findCommitsWithAssociatedPullRequests(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $withPullRequestBody: Boolean!\n  $withPullRequestURL: Boolean!\n  $since: GitTimestamp\n  $after: String\n  $withBaseRefName: Boolean!\n  $withHeadRefName: Boolean!\n  $pullRequestLimit: Int!\n  $historyLimit: Int!\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(first: $historyLimit, since: $since, after: $after) {\n          __typename\n          totalCount\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n            committedDate\n            message\n            author {\n              __typename\n              name\n              user {\n                __typename\n                login\n              }\n            }\n            associatedPullRequests(first: $pullRequestLimit) {\n              __typename\n              nodes {\n                __typename\n                title\n                number\n                url @include(if: $withPullRequestURL)\n                body @include(if: $withPullRequestBody)\n                author {\n                  __typename\n                  login\n                  url\n                }\n                baseRepository {\n                  __typename\n                  nameWithOwner\n                }\n                mergedAt\n                isCrossRepository\n                labels(first: 100) {\n                  __typename\n                  nodes {\n                    __typename\n                    name\n                  }\n                }\n                merged\n                baseRefName @include(if: $withBaseRefName)\n                headRefName @include(if: $withHeadRefName)\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n";
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/find-commits-with-pr.ts
-var findCommitsWithPr = async (params) => {
-	const data = await paginateGraphql(getOctokit().graphql, find_commits_with_pr_default, params, [
-		"repository",
-		"object",
-		"history"
-	]);
-	if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
-	/**
-	* Extract commit nodes from the paginated response
-	*/
-	const commits = (data.repository.object.history.nodes || []).filter((commit) => commit != null);
-	if (params.since) return commits.filter((commit) => !!commit?.committedDate && commit.committedDate != params.since);
-	else return commits;
-};
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
-var findPullRequests = async (params) => {
-	const since = params.lastRelease?.created_at || params.config["initial-commits-since"];
-	const shouldFilterByIncludedPaths = params.config["include-paths"].length > 0;
-	const shouldFilterByExcludedPaths = params.config["exclude-paths"].length > 0;
-	/**
-	* If include-paths are specified,
-	* find all commits that changed those paths to filter PRs later.
-	*
-	* If exclude-paths are specified,
-	* find all commits that changed those paths and remove them from results.
-	*
-	* The underlying query does not bother fetching PRs along commits.
-	*/
-	const includedCommitIds = /* @__PURE__ */ new Set();
-	if (shouldFilterByIncludedPaths) {
-		info("Finding commits with included path changes...");
-		const { commitIdsMatchingPaths, hasFoundCommits } = await findCommitsWithPathChange(params.config["include-paths"], {
-			since,
-			name: context.repo.repo,
-			owner: context.repo.owner,
-			targetCommitish: params.config.commitish
-		});
-		if (!hasFoundCommits) return {
-			commits: [],
-			pullRequests: []
-		};
-		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
-			info(`Found ${ids.size} commits with changes to included path "${path}"`);
-			for (const id of ids) includedCommitIds.add(id);
-		});
-	}
-	const excludedCommitIds = /* @__PURE__ */ new Set();
-	if (shouldFilterByExcludedPaths) {
-		info("Finding commits with excluded path changes...");
-		const { commitIdsMatchingPaths } = await findCommitsWithPathChange(params.config["exclude-paths"], {
-			since,
-			name: context.repo.repo,
-			owner: context.repo.owner,
-			targetCommitish: params.config.commitish
-		});
-		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
-			info(`Found ${ids.size} commits with changes to excluded path "${path}"`);
-			for (const id of ids) excludedCommitIds.add(id);
-		});
-	}
-	info(`Fetching parent commits of ${params.config["commitish"]}${since ? ` since ${since}` : ""}...`);
-	let commits = await findCommitsWithPr({
-		since,
-		name: context.repo.repo,
-		owner: context.repo.owner,
-		targetCommitish: params.config.commitish,
-		withPullRequestBody: params.config["change-template"].includes("$BODY"),
-		withPullRequestURL: params.config["change-template"].includes("$URL"),
-		withBaseRefName: params.config["change-template"].includes("$BASE_REF_NAME"),
-		withHeadRefName: params.config["change-template"].includes("$HEAD_REF_NAME"),
-		pullRequestLimit: params.config["pull-request-limit"],
-		historyLimit: params.config["history-limit"]
-	});
-	info(`Found ${commits.length} commits.`);
-	commits = commits.filter((commit) => {
-		if (excludedCommitIds.has(commit.id)) return false;
-		if (shouldFilterByIncludedPaths) return includedCommitIds.has(commit.id);
-		return true;
-	});
-	if (shouldFilterByIncludedPaths || shouldFilterByExcludedPaths) info(`After filtering by path changes, ${commits.length} commits remain.`);
-	const pullRequestsRaw = [...new Map(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).map((pr) => [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr])).values()];
-	const pullRequests = pullRequestsRaw.filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
-	info(`Found ${pullRequestsRaw.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and come from ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? ` : ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
-	return {
-		commits,
-		pullRequests
-	};
-};
-//#endregion
-//#region src/actions/drafter/lib/build-release-payload/sort-pull-requests.ts
-var sortPullRequests = (params) => {
-	const { pullRequests, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
-	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
-	const sort = sortDirection === "ascending" ? sortAscending : sortDescending;
-	return structuredClone(pullRequests).sort((a, b) => {
-		try {
-			return sort(getSortField(a), getSortField(b));
-		} catch (error$1) {
-			warning(`Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
-			error(error$1);
-			return 0;
-		}
-	});
-};
-var getTitle = (pr) => pr.title;
-var getMergedAt = (pr) => pr.mergedAt;
-var sortAscending = (a, b) => {
-	if (a == null && b == null) return 0;
-	if (a == null) return 1;
-	if (b == null) return -1;
-	if (a > b) return 1;
-	if (a < b) return -1;
-	return 0;
-};
-var sortDescending = (a, b) => {
-	if (a == null && b == null) return 0;
-	if (a == null) return -1;
-	if (b == null) return 1;
-	if (a > b) return -1;
-	if (a < b) return 1;
-	return 0;
-};
-//#endregion
-//#region src/actions/drafter/lib/build-release-payload/render-template.ts
-/**
-* replaces all uppercase dollar templates with their string representation from object
-* if replacement is undefined in object the dollar template string is left untouched
-*/
-var renderTemplate = (params) => {
-	const { template, object, replacers } = params;
-	let input = template.replace(/(\$[A-Z_]+)/g, (_, k) => {
-		let result;
-		const isValidKey = (key) => key in object && object[key] !== void 0 && object[key] !== null;
-		if (!isValidKey(k)) result = k;
-		else if (typeof object[k] === "object") result = renderTemplate({
-			template: object[k].template,
-			object: object[k]
-		});
-		else result = `${object[k]}`;
-		return result;
-	});
-	if (replacers) for (const { search, replace } of replacers) input = input.replace(search, replace);
-	return input;
+	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
+	if (majorVersion) setOutput("major_version", majorVersion);
+	if (minorVersion) setOutput("minor_version", minorVersion);
+	if (patchVersion) setOutput("patch_version", patchVersion);
+	setOutput("body", body);
+	info("Outputs set!");
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts
@@ -349,6 +256,30 @@ var getFilterIncludedPullRequests = (includeLabels) => {
 	};
 };
 //#endregion
+//#region src/actions/drafter/lib/build-release-payload/render-template.ts
+/**
+* replaces all uppercase dollar templates with their string representation from object
+* if replacement is undefined in object the dollar template string is left untouched
+*/
+var renderTemplate = (params) => {
+	const { template, object, replacers } = params;
+	let input = template.replace(/(\$[A-Z_]+)/g, (_, k) => {
+		let result;
+		const isValidKey = (key) => key in object && object[key] !== void 0 && object[key] !== null;
+		if (!isValidKey(k)) result = k;
+		else if (typeof object[k] === "object") {
+			const nested = object[k];
+			result = renderTemplate({
+				template: nested.template,
+				object: nested
+			});
+		} else result = `${object[k]}`;
+		return result;
+	});
+	if (replacers) for (const { search, replace } of replacers) input = input.replace(search, replace);
+	return input;
+};
+//#endregion
 //#region src/actions/drafter/lib/build-release-payload/pull-request-to-string.ts
 var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 	let pullAuthor = "ghost";
@@ -371,7 +302,7 @@ var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 }).join("\n");
 var escapeTitle = (params) => params.title.replace(new RegExp(`[${escapeStringRegexp(params.escapes || "")}]|\`.*?\``, "g"), (match) => {
 	if (match.length > 1) return match;
-	if (match == "@" || match == "#") return `${match}<!---->`;
+	if (match === "@" || match === "#") return `${match}<!---->`;
 	return `\\${match}`;
 });
 //#endregion
@@ -418,28 +349,6 @@ var generateContributorsSentence = (params) => {
 	if (sortedContributors.length > 1) return sortedContributors.slice(0, -1).join(", ") + " and " + sortedContributors.slice(-1);
 	else if (sortedContributors.length === 1) return sortedContributors[0];
 	else return config["no-contributors-template"];
-};
-//#endregion
-//#region src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts
-var resolveVersionKeyIncrement = (params) => {
-	const { pullRequests, config } = params;
-	const priorityMap = {
-		patch: 1,
-		minor: 2,
-		major: 3
-	};
-	const labelToKeyMap = Object.fromEntries(Object.keys(priorityMap).flatMap((key) => [config["version-resolver"][key].labels.map((label) => [label, key])]).flat());
-	debug("labelToKeyMap: " + JSON.stringify(labelToKeyMap));
-	const keys = pullRequests.filter(getFilterExcludedPullRequests(config["exclude-labels"])).filter(getFilterIncludedPullRequests(config["include-labels"])).flatMap((pr) => pr.labels?.nodes?.filter((n) => !!n?.name).map((node) => labelToKeyMap[node.name])).filter(Boolean);
-	debug("keys: " + JSON.stringify(keys));
-	const keyPriorities = keys.map((key) => priorityMap[key]);
-	const priority = Math.max(...keyPriorities);
-	const versionKey = Object.keys(priorityMap).find((key) => priorityMap[key] === priority);
-	debug("versionKey: " + versionKey);
-	let versionKeyIncrement = versionKey || config["version-resolver"].default;
-	if (config["prerelease"] && config["prerelease-identifier"]) versionKeyIncrement = `pre${versionKeyIncrement}`;
-	info(`Version increment: ${versionKeyIncrement}${!versionKey ? " (default)" : ""}`);
-	return versionKeyIncrement;
 };
 //#endregion
 //#region node_modules/semver/internal/debug.js
@@ -978,6 +887,62 @@ var getVersionInfo = (params) => {
 	};
 };
 //#endregion
+//#region src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts
+var resolveVersionKeyIncrement = (params) => {
+	const { pullRequests, config } = params;
+	const priorityMap = {
+		patch: 1,
+		minor: 2,
+		major: 3
+	};
+	const labelToKeyMap = Object.fromEntries(Object.keys(priorityMap).flatMap((key) => [config["version-resolver"][key].labels.map((label) => [label, key])]).flat());
+	debug(`labelToKeyMap: ${JSON.stringify(labelToKeyMap)}`);
+	const keys = pullRequests.filter(getFilterExcludedPullRequests(config["exclude-labels"])).filter(getFilterIncludedPullRequests(config["include-labels"])).flatMap((pr) => pr.labels?.nodes?.filter((n) => !!n?.name).map((node) => labelToKeyMap[node.name])).filter(Boolean);
+	debug(`keys: ${JSON.stringify(keys)}`);
+	const keyPriorities = keys.map((key) => priorityMap[key]);
+	const priority = Math.max(...keyPriorities);
+	const versionKey = Object.keys(priorityMap).find((key) => priorityMap[key] === priority);
+	debug(`versionKey: ${versionKey}`);
+	let versionKeyIncrement = versionKey || config["version-resolver"].default;
+	if (config.prerelease && config["prerelease-identifier"]) versionKeyIncrement = `pre${versionKeyIncrement}`;
+	info(`Version increment: ${versionKeyIncrement}${!versionKey ? " (default)" : ""}`);
+	return versionKeyIncrement;
+};
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/sort-pull-requests.ts
+var sortPullRequests = (params) => {
+	const { pullRequests, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
+	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
+	const sort = sortDirection === "ascending" ? sortAscending : sortDescending;
+	return structuredClone(pullRequests).sort((a, b) => {
+		try {
+			return sort(getSortField(a), getSortField(b));
+		} catch (error$1) {
+			warning(`Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
+			error(error$1);
+			return 0;
+		}
+	});
+};
+var getTitle = (pr) => pr.title;
+var getMergedAt = (pr) => pr.mergedAt;
+var sortAscending = (a, b) => {
+	if (a == null && b == null) return 0;
+	if (a == null) return 1;
+	if (b == null) return -1;
+	if (a > b) return 1;
+	if (a < b) return -1;
+	return 0;
+};
+var sortDescending = (a, b) => {
+	if (a == null && b == null) return 0;
+	if (a == null) return -1;
+	if (b == null) return 1;
+	if (a > b) return -1;
+	if (a < b) return 1;
+	return 0;
+};
+//#endregion
 //#region src/actions/drafter/lib/build-release-payload/build-release-payload.ts
 /**
 * Outputs the payload for creating or updating a release.
@@ -991,7 +956,7 @@ var buildReleasePayload = (params) => {
 		pullRequests,
 		config
 	});
-	let body = (config["header"] || "") + config.template + (config["footer"] || "");
+	let body = (config.header || "") + config.template + (config.footer || "");
 	body = renderTemplate({
 		template: body,
 		object: {
@@ -1019,14 +984,14 @@ var buildReleasePayload = (params) => {
 			config
 		})
 	});
-	debug("versionInfo: " + JSON.stringify(versionInfo, null, 2));
+	debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`);
 	if (versionInfo) body = renderTemplate({
 		template: body,
 		object: versionInfo
 	});
-	let mutableInputTag = structuredClone(input["tag"]);
-	let mutableInputName = structuredClone(input["name"]);
-	let mutableCommitish = structuredClone(config["commitish"]);
+	let mutableInputTag = structuredClone(input.tag);
+	let mutableInputName = structuredClone(input.name);
+	let mutableCommitish = structuredClone(config.commitish);
 	if (mutableInputTag === void 0) mutableInputTag = versionInfo ? renderTemplate({
 		template: config["tag-template"] || "",
 		object: versionInfo
@@ -1035,7 +1000,7 @@ var buildReleasePayload = (params) => {
 		template: mutableInputTag,
 		object: versionInfo
 	});
-	debug("tag: " + mutableInputTag);
+	debug(`tag: ${mutableInputTag}`);
 	if (mutableInputName === void 0) mutableInputName = versionInfo ? renderTemplate({
 		template: config["name-template"] || "",
 		object: versionInfo
@@ -1044,7 +1009,7 @@ var buildReleasePayload = (params) => {
 		template: mutableInputName,
 		object: versionInfo
 	});
-	debug("name: " + mutableInputName);
+	debug(`name: ${mutableInputName}`);
 	/**
 	* Tags are not supported as `target_commitish` by Github API.
 	* GITHUB_REF or the ref from webhook start with `refs/tags/`, so we handle
@@ -1060,9 +1025,9 @@ var buildReleasePayload = (params) => {
 		tag: mutableInputTag,
 		body,
 		targetCommitish: mutableCommitish,
-		prerelease: config["prerelease"],
-		make_latest: config["latest"],
-		draft: !input["publish"],
+		prerelease: config.prerelease,
+		make_latest: config.latest,
+		draft: !input.publish,
 		resolvedVersion: versionInfo?.$RESOLVED_VERSION,
 		majorVersion: versionInfo?.$RESOLVED_VERSION_MAJOR,
 		minorVersion: versionInfo?.$RESOLVED_VERSION_MINOR,
@@ -1083,6 +1048,261 @@ var buildReleasePayload = (params) => {
 	info(`  RESOLVED_VERSION_PATCH:      ${res.patchVersion}`);
 	info(`  RESOLVED_VERSION_PRERELEASE: ${res.prereleaseVersion}`);
 	return res;
+};
+//#endregion
+//#region node_modules/compare-versions/lib/esm/utils.js
+var semver = /^[v^~<>=]*?(\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+))?(?:-([\da-z\-]+(?:\.[\da-z\-]+)*))?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?)?)?$/i;
+var validateAndParse = (version) => {
+	if (typeof version !== "string") throw new TypeError("Invalid argument expected string");
+	const match = version.match(semver);
+	if (!match) throw new Error(`Invalid argument not valid semver ('${version}' received)`);
+	match.shift();
+	return match;
+};
+var isWildcard = (s) => s === "*" || s === "x" || s === "X";
+var tryParse = (v) => {
+	const n = parseInt(v, 10);
+	return isNaN(n) ? v : n;
+};
+var forceType = (a, b) => typeof a !== typeof b ? [String(a), String(b)] : [a, b];
+var compareStrings = (a, b) => {
+	if (isWildcard(a) || isWildcard(b)) return 0;
+	const [ap, bp] = forceType(tryParse(a), tryParse(b));
+	if (ap > bp) return 1;
+	if (ap < bp) return -1;
+	return 0;
+};
+var compareSegments = (a, b) => {
+	for (let i = 0; i < Math.max(a.length, b.length); i++) {
+		const r = compareStrings(a[i] || "0", b[i] || "0");
+		if (r !== 0) return r;
+	}
+	return 0;
+};
+//#endregion
+//#region node_modules/compare-versions/lib/esm/compareVersions.js
+/**
+* Compare [semver](https://semver.org/) version strings to find greater, equal or lesser.
+* This library supports the full semver specification, including comparing versions with different number of digits like `1.0.0`, `1.0`, `1`, and pre-release versions like `1.0.0-alpha`.
+* @param v1 - First version to compare
+* @param v2 - Second version to compare
+* @returns Numeric value compatible with the [Array.sort(fn) interface](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Parameters).
+*/
+var compareVersions = (v1, v2) => {
+	const n1 = validateAndParse(v1);
+	const n2 = validateAndParse(v2);
+	const p1 = n1.pop();
+	const p2 = n2.pop();
+	const r = compareSegments(n1, n2);
+	if (r !== 0) return r;
+	if (p1 && p2) return compareSegments(p1.split("."), p2.split("."));
+	else if (p1 || p2) return p1 ? -1 : 1;
+	return 0;
+};
+//#endregion
+//#region src/actions/drafter/lib/find-previous-releases/sort-releases.ts
+var sortReleases = (params) => {
+	const tagPrefixRexExp = params.tagPrefix ? new RegExp(`^${escapeStringRegexp(params.tagPrefix)}`) : void 0;
+	return params.releases.sort((r1, r2) => {
+		const tag_name_1 = tagPrefixRexExp ? r1.tag_name.replace(tagPrefixRexExp, "") : r1.tag_name;
+		const tag_name_2 = tagPrefixRexExp ? r2.tag_name.replace(tagPrefixRexExp, "") : r2.tag_name;
+		try {
+			return compareVersions(tag_name_1, tag_name_2);
+		} catch {
+			return new Date(r1.created_at).getTime() - new Date(r2.created_at).getTime();
+		}
+	});
+};
+//#endregion
+//#region src/actions/drafter/lib/find-previous-releases/find-previous-releases.ts
+var RELEASE_COUNT_LIMIT = 1e3;
+/**
+* Lists every release and :
+* - filters by commitish if specified
+* - filters by tag-prefix if specified
+* - filters out pre-releases unless specified
+* - extracts the first draft releases (according to return-order of GitHub API)
+* - get latest published release according to ./sort-releases.ts implementation
+*
+* Returns one of (or both) draft release and latest published release
+* The last stable release is used to determine the range of commits to include in the changelog,
+* and to resolve the next version number.
+*
+* The draft release is used to determine if we should create a new release or update the existing one.
+*/
+var findPreviousReleases = async (params) => {
+	const { commitish, "filter-by-commitish": filterByCommitish, "tag-prefix": tagPrefix, prerelease: isPreRelease, "include-pre-releases": includePreReleases } = params;
+	const octokit = getOctokit();
+	info("Fetching releases from GitHub...");
+	let releaseCount = 0;
+	const releases = await octokit.paginate(octokit.rest.repos.listReleases, {
+		...context.repo,
+		per_page: 100
+	}, (response, done) => {
+		releaseCount += response.data.length;
+		if (releaseCount >= RELEASE_COUNT_LIMIT) done();
+		return response.data;
+	});
+	info(`Found ${releases.length} releases`);
+	const headRefRegex = /^refs\/heads\//;
+	const targetCommitishName = commitish.replace(headRefRegex, "");
+	const commitishFilteredReleases = filterByCommitish ? releases.filter((r) => targetCommitishName === r.target_commitish.replace(headRefRegex, "")) : releases;
+	const filteredReleases = tagPrefix ? commitishFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix)) : commitishFilteredReleases;
+	let publishedReleases = filteredReleases.filter((r) => !r.draft);
+	let draftReleases = filteredReleases.filter((r) => r.draft);
+	publishedReleases = publishedReleases.filter((publishedRelease) => isPreRelease || includePreReleases ? publishedRelease.prerelease || !publishedRelease.prerelease : !publishedRelease.prerelease);
+	draftReleases = draftReleases.filter((draftRelease) => isPreRelease ? draftRelease.prerelease : !draftRelease.prerelease);
+	const draftRelease = draftReleases[0];
+	const lastRelease = sortReleases({
+		releases: publishedReleases,
+		tagPrefix
+	})?.at(-1);
+	if (draftRelease) {
+		if (draftReleases.length > 1) {
+			warning(`Multiple draft releases found : ${draftReleases.map((r) => r.tag_name).join(", ")}`);
+			warning(`Using the first one returned by GitHub API: ${draftRelease.tag_name}`);
+		}
+		info(`Draft release${isPreRelease ? " (which is a prerelease)" : ""}:`);
+		info(`  tag_name:  ${draftRelease.tag_name}`);
+		info(`  name:      ${draftRelease.name}`);
+	} else info(`No draft release found${isPreRelease ? " (among prerelease drafts)" : ""}`);
+	if (lastRelease) {
+		info(`Last release${isPreRelease ? " (including prerelease)" : ""}:`);
+		info(`  tag_name:  ${lastRelease.tag_name}`);
+		info(`  name:      ${lastRelease.name}`);
+	} else info(`No last release found${isPreRelease ? " (including prerelease)" : ""}`);
+	return {
+		draftRelease,
+		lastRelease
+	};
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-path-changes.gql?raw
+var find_commits_with_path_changes_default = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(path: $path, since: $since, after: $after) {\n          __typename\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts
+/**
+* @see https://docs.github.com/en/graphql/reference/objects#commit
+*/
+var findCommitsWithPathChange = async (paths, params) => {
+	const octokit = getOctokit();
+	const commitIdsMatchingPaths = {};
+	let hasFoundCommits = false;
+	for (const path of paths) {
+		const data = await paginateGraphql(octokit.graphql, find_commits_with_path_changes_default, {
+			...params,
+			path
+		}, [
+			"repository",
+			"object",
+			"history"
+		]);
+		if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
+		const commits = (data.repository?.object?.history.nodes || []).filter((c) => !!c);
+		commitIdsMatchingPaths[path] = commitIdsMatchingPaths[path] || /* @__PURE__ */ new Set([]);
+		for (const { id } of commits) {
+			hasFoundCommits = true;
+			commitIdsMatchingPaths[path].add(id);
+		}
+	}
+	return {
+		commitIdsMatchingPaths,
+		hasFoundCommits
+	};
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-pr.gql?raw
+var find_commits_with_pr_default = "query findCommitsWithAssociatedPullRequests(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $withPullRequestBody: Boolean!\n  $withPullRequestURL: Boolean!\n  $since: GitTimestamp\n  $after: String\n  $withBaseRefName: Boolean!\n  $withHeadRefName: Boolean!\n  $pullRequestLimit: Int!\n  $historyLimit: Int!\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(first: $historyLimit, since: $since, after: $after) {\n          __typename\n          totalCount\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n            committedDate\n            message\n            author {\n              __typename\n              name\n              user {\n                __typename\n                login\n              }\n            }\n            associatedPullRequests(first: $pullRequestLimit) {\n              __typename\n              nodes {\n                __typename\n                title\n                number\n                url @include(if: $withPullRequestURL)\n                body @include(if: $withPullRequestBody)\n                author {\n                  __typename\n                  login\n                  url\n                }\n                baseRepository {\n                  __typename\n                  nameWithOwner\n                }\n                mergedAt\n                isCrossRepository\n                labels(first: 100) {\n                  __typename\n                  nodes {\n                    __typename\n                    name\n                  }\n                }\n                merged\n                baseRefName @include(if: $withBaseRefName)\n                headRefName @include(if: $withHeadRefName)\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n";
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-commits-with-pr.ts
+var findCommitsWithPr = async (params) => {
+	const data = await paginateGraphql(getOctokit().graphql, find_commits_with_pr_default, params, [
+		"repository",
+		"object",
+		"history"
+	]);
+	if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
+	/**
+	* Extract commit nodes from the paginated response
+	*/
+	const commits = (data.repository.object.history.nodes || []).filter((commit) => commit != null);
+	if (params.since) return commits.filter((commit) => !!commit?.committedDate && commit.committedDate !== params.since);
+	else return commits;
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
+var findPullRequests = async (params) => {
+	const since = params.lastRelease?.created_at || params.config["initial-commits-since"];
+	const shouldFilterByIncludedPaths = params.config["include-paths"].length > 0;
+	const shouldFilterByExcludedPaths = params.config["exclude-paths"].length > 0;
+	/**
+	* If include-paths are specified,
+	* find all commits that changed those paths to filter PRs later.
+	*
+	* If exclude-paths are specified,
+	* find all commits that changed those paths and remove them from results.
+	*
+	* The underlying query does not bother fetching PRs along commits.
+	*/
+	const includedCommitIds = /* @__PURE__ */ new Set();
+	if (shouldFilterByIncludedPaths) {
+		info("Finding commits with included path changes...");
+		const { commitIdsMatchingPaths, hasFoundCommits } = await findCommitsWithPathChange(params.config["include-paths"], {
+			since,
+			name: context.repo.repo,
+			owner: context.repo.owner,
+			targetCommitish: params.config.commitish
+		});
+		if (!hasFoundCommits) return {
+			commits: [],
+			pullRequests: []
+		};
+		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+			info(`Found ${ids.size} commits with changes to included path "${path}"`);
+			for (const id of ids) includedCommitIds.add(id);
+		});
+	}
+	const excludedCommitIds = /* @__PURE__ */ new Set();
+	if (shouldFilterByExcludedPaths) {
+		info("Finding commits with excluded path changes...");
+		const { commitIdsMatchingPaths } = await findCommitsWithPathChange(params.config["exclude-paths"], {
+			since,
+			name: context.repo.repo,
+			owner: context.repo.owner,
+			targetCommitish: params.config.commitish
+		});
+		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+			info(`Found ${ids.size} commits with changes to excluded path "${path}"`);
+			for (const id of ids) excludedCommitIds.add(id);
+		});
+	}
+	info(`Fetching parent commits of ${params.config.commitish}${since ? ` since ${since}` : ""}...`);
+	let commits = await findCommitsWithPr({
+		since,
+		name: context.repo.repo,
+		owner: context.repo.owner,
+		targetCommitish: params.config.commitish,
+		withPullRequestBody: params.config["change-template"].includes("$BODY"),
+		withPullRequestURL: params.config["change-template"].includes("$URL"),
+		withBaseRefName: params.config["change-template"].includes("$BASE_REF_NAME"),
+		withHeadRefName: params.config["change-template"].includes("$HEAD_REF_NAME"),
+		pullRequestLimit: params.config["pull-request-limit"],
+		historyLimit: params.config["history-limit"]
+	});
+	info(`Found ${commits.length} commits.`);
+	commits = commits.filter((commit) => {
+		if (excludedCommitIds.has(commit.id)) return false;
+		if (shouldFilterByIncludedPaths) return includedCommitIds.has(commit.id);
+		return true;
+	});
+	if (shouldFilterByIncludedPaths || shouldFilterByExcludedPaths) info(`After filtering by path changes, ${commits.length} commits remain.`);
+	const pullRequestsRaw = [...new Map(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).map((pr) => [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr])).values()];
+	const pullRequests = pullRequestsRaw.filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
+	info(`Found ${pullRequestsRaw.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and come from ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? ` : ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
+	return {
+		commits,
+		pullRequests
+	};
 };
 //#endregion
 //#region src/actions/drafter/lib/upsert-release/create-release.ts
@@ -1181,224 +1401,6 @@ var main = async (params) => {
 		}),
 		releasePayload
 	};
-};
-//#endregion
-//#region src/actions/drafter/config/set-action-output.ts
-var setActionOutput = (params) => {
-	const { releasePayload, upsertedRelease } = params;
-	info("Set action outputs...");
-	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body } = releasePayload;
-	if (upsertedRelease) {
-		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl, tag_name: tagName, name } } = upsertedRelease;
-		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
-		if (htmlUrl) setOutput("html_url", htmlUrl);
-		if (uploadUrl) setOutput("upload_url", uploadUrl);
-		if (tagName) setOutput("tag_name", tagName);
-		if (name) setOutput("name", name);
-	}
-	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
-	if (majorVersion) setOutput("major_version", majorVersion);
-	if (minorVersion) setOutput("minor_version", minorVersion);
-	if (patchVersion) setOutput("patch_version", patchVersion);
-	setOutput("body", body);
-	info("Outputs set!");
-};
-//#endregion
-//#region src/actions/drafter/config/schemas/common-config.schema.ts
-/**
-* Configuration parameters that can be specified in both
-* the config file or the action input.
-*
-* Default values cannot be defined here,
-* as action inputs may override config file values.
-*
-* @see merge-input-and-config.ts for how the merging of config and input is handled, including default values.
-*/
-var commonConfigSchema = object({
-	latest: stringbool().or(boolean()).optional(),
-	prerelease: stringbool().or(boolean()).optional(),
-	"initial-commits-since": datetime().optional(),
-	"prerelease-identifier": string().optional(),
-	"include-pre-releases": stringbool().or(boolean()).optional(),
-	commitish: string().optional(),
-	header: string().optional(),
-	footer: string().optional()
-});
-var actionInputSchema = object({
-	"config-name": string().optional().default("release-drafter.yml"),
-	name: string().optional(),
-	tag: string().optional(),
-	version: string().optional(),
-	publish: stringbool().optional().default(false)
-}).and(sharedInputSchema).and(commonConfigSchema);
-//#endregion
-//#region src/actions/drafter/config/schemas/config.schema.ts
-var exclusiveConfigSchema = object({
-	"change-template": string().optional().default("* $TITLE (#$NUMBER) @$AUTHOR"),
-	"change-title-escapes": string().optional(),
-	"no-changes-template": string().optional().default("* No changes"),
-	"version-template": string().optional().default("$MAJOR.$MINOR.$PATCH$PRERELEASE"),
-	"name-template": string().optional(),
-	"tag-prefix": string().optional(),
-	"tag-template": string().optional(),
-	"exclude-labels": array(string()).optional().default([]),
-	"include-labels": array(string()).optional().default([]),
-	"include-paths": array(string()).optional().default([]),
-	"exclude-paths": array(string()).optional().default([]),
-	"exclude-contributors": array(string()).optional().default([]),
-	"no-contributors-template": string().optional().default("No contributors"),
-	"sort-by": _enum(["merged_at", "title"]).optional().default("merged_at"),
-	"sort-direction": _enum(["ascending", "descending"]).optional().default("descending"),
-	"filter-by-commitish": boolean().optional().default(false),
-	"pull-request-limit": number().int().positive().optional().default(5),
-	"history-limit": number().int().positive().optional().default(15),
-	replacers: array(object({
-		search: string().min(1),
-		replace: string().min(0)
-	})).optional().default([]),
-	categories: array(object({
-		title: string().min(1),
-		"collapse-after": number().int().min(0).optional().default(0),
-		labels: array(string().min(1)).optional().default([]),
-		label: string().min(1).optional()
-	})).optional().default([]),
-	"version-resolver": object({
-		major: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
-		minor: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
-		patch: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
-		default: _enum([
-			"major",
-			"minor",
-			"patch"
-		]).optional().default("patch")
-	}).optional().default({
-		major: { labels: [] },
-		minor: { labels: [] },
-		patch: { labels: [] },
-		default: "patch"
-	}),
-	"category-template": string().optional().default("## $TITLE"),
-	template: string().optional().default("")
-}).meta({
-	title: "JSON schema for Release Drafter yaml files",
-	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
-});
-var configSchema = exclusiveConfigSchema.and(commonConfigSchema);
-Object.fromEntries(Object.entries({
-	...exclusiveConfigSchema.shape,
-	...commonConfigSchema.shape
-}).map(([key, value]) => {
-	if (value instanceof ZodDefault) return [key, value.def.defaultValue];
-	return [key, void 0];
-}));
-//#endregion
-//#region src/actions/drafter/config/get-action-inputs.ts
-var getActionInput = () => {
-	const getInput$1 = (name) => getInput(name) || void 0;
-	return actionInputSchema.parse({
-		"config-name": getInput$1("config-name"),
-		name: getInput$1("name"),
-		tag: getInput$1("tag"),
-		version: getInput$1("version"),
-		publish: getInput$1("publish"),
-		token: getInput$1("token"),
-		latest: getInput$1("latest"),
-		prerelease: getInput$1("prerelease"),
-		"initial-commits-since": getInput$1("initial-commits-since"),
-		"prerelease-identifier": getInput$1("prerelease-identifier"),
-		"include-pre-releases": getInput$1("include-pre-releases"),
-		commitish: getInput$1("commitish"),
-		header: getInput$1("header"),
-		footer: getInput$1("footer"),
-		"dry-run": getInput$1("dry-run")
-	});
-};
-//#endregion
-//#region src/actions/drafter/config/merge-input-and-config.ts
-/**
-* Returns a copy of `config`, updated with values from `input`.
-*
-* Also performs some validation.
-*
-* Input takes precedence, because it's more easy to change at runtime
-*/
-var mergeInputAndConfig = (params) => {
-	const { config: originalConfig, input } = params;
-	const config = structuredClone(originalConfig);
-	if (input.commitish) {
-		if (config.commitish && config.commitish !== input.commitish) info(`Input's commitish "${input.commitish}" overrides config's commitish "${config.commitish}"`);
-		config.commitish = input.commitish;
-	}
-	if (input.header) {
-		if (config.header && config.header !== input.header) info(`Input's header "${input.header}" overrides config's header "${config.header}"`);
-		config.header = input.header;
-	}
-	if (input.footer) {
-		if (config.footer && config.footer !== input.footer) info(`Input's footer "${input.footer}" overrides config's footer "${config.footer}"`);
-		config.footer = input.footer;
-	}
-	if (input["prerelease-identifier"]) {
-		if (config["prerelease-identifier"] && config["prerelease-identifier"] !== input["prerelease-identifier"]) info(`Input's prerelease-identifier "${input["prerelease-identifier"]}" overrides config's prerelease-identifier "${config["prerelease-identifier"]}"`);
-		config["prerelease-identifier"] = input["prerelease-identifier"];
-	}
-	if (typeof input.prerelease === "boolean") {
-		if (typeof config.prerelease === "boolean" && config.prerelease !== input.prerelease) info(`Input's prerelease "${input.prerelease}" overrides config's prerelease "${config.prerelease}"`);
-		config.prerelease = input.prerelease;
-	}
-	if (typeof input["include-pre-releases"] === "boolean") {
-		if (typeof config["include-pre-releases"] === "boolean" && config["include-pre-releases"] !== input["include-pre-releases"]) info(`Input's include-pre-releases "${input["include-pre-releases"]}" overrides config's include-pre-releases "${config["include-pre-releases"]}"`);
-		config["include-pre-releases"] = input["include-pre-releases"];
-	}
-	if (typeof input.latest === "boolean") {
-		if (typeof config.latest === "boolean" && config.latest !== input.latest) info(`Input's latest "${input.latest}" overrides config's latest "${config.latest}"`);
-		config.latest = input.latest;
-	}
-	if (config.latest && config.prerelease) {
-		warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
-		config.latest = false;
-	}
-	if (config["prerelease-identifier"] && !config.prerelease) {
-		warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
-		config.prerelease = true;
-	}
-	const commitish = config.commitish || context.ref || context.payload.ref;
-	const latest = typeof config.latest !== "boolean" ? true : config.latest;
-	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
-	const replacers = config.replacers.map((r) => {
-		try {
-			return {
-				...r,
-				search: stringToRegex(r.search)
-			};
-		} catch {
-			warning(`Bad replacer regex: '${r.search}'`);
-			return false;
-		}
-	}).filter((r) => !!r);
-	const categories = config.categories.map((cat) => {
-		const { label, ..._cat } = cat;
-		_cat.labels = [...cat.labels, label].filter(Boolean);
-		return _cat;
-	});
-	const parsedConfig = {
-		...config,
-		commitish,
-		latest,
-		prerelease,
-		replacers,
-		categories
-	};
-	if (!parsedConfig.commitish) throw new Error("'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)");
-	if (parsedConfig.categories.filter((category) => category.labels.length === 0).length > 1) throw new Error("Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.");
-	return parsedConfig;
-};
-//#endregion
-//#region src/actions/drafter/config/get-config.ts
-var getConfig = async (configName) => {
-	const { config, contexts } = await composeConfigGet(configName, context);
-	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
-	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally." : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
-	return configSchema.parse(config);
 };
 //#endregion
 //#region src/actions/drafter/runner.ts
