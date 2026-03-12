@@ -113,7 +113,7 @@ Object.fromEntries(Object.entries({
 var getConfig = async (configName) => {
 	const { config, contexts } = await composeConfigGet(configName, context);
 	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
-	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally." : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
+	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally" : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
 	return configSchema.parse(config);
 };
 //#endregion

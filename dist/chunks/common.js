@@ -26989,6 +26989,7 @@ var setPath = (obj, path, value) => {
 	const lastKey = path[path.length - 1];
 	if (lastKey === void 0) return;
 	const parent = getPath(obj, path.slice(0, -1));
+	if (parent == null) return;
 	parent[lastKey] = value;
 };
 /**
