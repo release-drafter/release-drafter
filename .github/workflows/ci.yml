@@ -1,0 +1,49 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test-drafter:
+    name: 'Smoke Test for Drafter'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./
+        with:
+          config-name: file:release-drafter.tests.yml
+          dry-run: true
+
+  smoke-test-autolabeler:
+    name: 'Smoke Test for Autolabeler'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./autolabeler
+        with:
+          config-name: file:release-drafter.autolabeler.tests.yml
+          dry-run: true
+
+  tests:
+    name: Tests & Build-Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/common-setup
+
+      - uses: ./.github/actions/continuous-integration

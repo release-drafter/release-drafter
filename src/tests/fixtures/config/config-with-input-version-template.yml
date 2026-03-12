@@ -1,0 +1,7 @@
+template:
+  Placeholder with example. Automatically calculated values based on previous
+  releases are next major=$NEXT_MAJOR_VERSION, minor=$NEXT_MINOR_VERSION,
+  patch=$NEXT_PATCH_VERSION. Manual input version is $RESOLVED_VERSION.
+name-template: 'v$RESOLVED_VERSION (Code name: Placeholder)'
+tag-template: v$RESOLVED_VERSION
+version-template: $MAJOR.$MINOR.$PATCH
