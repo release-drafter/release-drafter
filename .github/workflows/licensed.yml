@@ -56,8 +56,12 @@ jobs:
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          git commit -m "chore: update cached license files"
-          git push
+          if git diff --staged --quiet; then
+            echo "No license updates to commit"
+          else
+            git commit -m "chore: update cached license files"
+            git push
+          fi
 
       # Last, check the status of the cached licenses.
       - name: Check Licenses
