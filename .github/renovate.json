@@ -4,6 +4,7 @@
   "dependencyDashboard": false,
   "semanticCommits": "enabled",
   "rangeStrategy": "bump",
+  "commitMessageExtra": "to {{newVersion}}",
   "schedule": ["every weekend"],
   "packageRules": [
     {
