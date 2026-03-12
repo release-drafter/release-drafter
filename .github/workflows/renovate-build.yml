@@ -1,0 +1,37 @@
+name: Renovate Build
+
+on:
+  push:
+    branches:
+      - renovate/**
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Rebuild artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/common-setup
+
+      - name: Run all checks and rebuild artifacts
+        run: npm run all
+
+      - name: Commit updated artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add dist/ \
+              src/types/github.graphql.generated.ts \
+              src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-path-changes.graphql.generated.ts \
+              src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-pr.graphql.generated.ts
+            git commit -m "chore: rebuild artifacts"
+            git push
+          else
+            echo "No changes to commit"
+          fi
