@@ -42,7 +42,7 @@ jobs:
           'dry-run': true
 
   tests:
-    name: Tests
+    name: Tests & Build-Checks
     runs-on: ubuntu-latest
 
     steps:
@@ -63,3 +63,24 @@ jobs:
 
       - name: Tests
         run: npm run test:run
+
+      - name: Remove dist/ Directory
+        run: rm -rf ./dist
+
+      - name: Build coverage badge
+        run: npm run coverage
+
+      - name: Build JSON schemas
+        run: npm run schemas
+
+      - name: Build dist/ Directory
+        run: npm run build
+
+      - name: Compare repository state
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::💥 Detected uncommitted or untracked changes after checks/build. No diffs are allowed. See status below:"
+            git status --short
+            git diff --ignore-space-at-eol --text
+            exit 1
+          fi
