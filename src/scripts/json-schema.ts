@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import {
   configSchema as drafterConfigSchema,
@@ -7,17 +7,20 @@ import {
 } from 'src/actions/drafter/config'
 import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
 import { toJSONSchema, object, globalRegistry } from 'zod'
+import { format, resolveConfig } from 'prettier'
 
 const drafterSchema = toJSONSchema(
   object({
     ...exclusiveConfigSchema.shape,
     ...commonConfigSchema.shape
-  }).meta({ ...globalRegistry.get(drafterConfigSchema) })
+  }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
+  { io: 'input' }
 )
 const autolabelerSchema = toJSONSchema(
   object({
     ...autolabelerConfigSchema.shape
-  }).meta({ ...globalRegistry.get(autolabelerConfigSchema) })
+  }).meta({ ...globalRegistry.get(autolabelerConfigSchema) }),
+  { io: 'input' }
 )
 
 const drafterFilePath = resolve(
@@ -42,15 +45,15 @@ const autolabelerFilePath = resolve(
   'schema.json'
 )
 
-writeFileSync(drafterFilePath, JSON.stringify(drafterSchema), {
-  encoding: 'utf-8',
-  flag: 'w'
-})
-writeFileSync(alternateDrafterFilePath, JSON.stringify(drafterSchema), {
-  encoding: 'utf-8',
-  flag: 'w'
-})
-writeFileSync(autolabelerFilePath, JSON.stringify(autolabelerSchema), {
-  encoding: 'utf-8',
-  flag: 'w'
-})
+async function writeFormatted(filePath: string, content: unknown) {
+  const prettierConfig = await resolveConfig(filePath)
+  const formatted = await format(JSON.stringify(content), {
+    ...prettierConfig,
+    filepath: filePath
+  })
+  await writeFile(filePath, formatted, { encoding: 'utf-8', flag: 'w' })
+}
+
+await writeFormatted(drafterFilePath, drafterSchema)
+await writeFormatted(alternateDrafterFilePath, drafterSchema)
+await writeFormatted(autolabelerFilePath, autolabelerSchema)

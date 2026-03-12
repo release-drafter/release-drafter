@@ -144,8 +144,9 @@ export const exclusiveConfigSchema = object({
   'category-template': string().optional().default('## $TITLE'),
   /**
    * The template for the body of the draft release.
+   * Optional as it may be inherited via `_extends`.
    */
-  template: string().min(1)
+  template: string().optional().default('')
 }).meta({
   title: 'JSON schema for Release Drafter yaml files',
   id: 'https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json'
