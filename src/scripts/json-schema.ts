@@ -7,6 +7,7 @@ import {
 } from 'src/actions/drafter/config'
 import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
 import { toJSONSchema, object, globalRegistry } from 'zod'
+import { format, resolveConfig } from 'prettier'
 
 const drafterSchema = toJSONSchema(
   object({
@@ -44,23 +45,15 @@ const autolabelerFilePath = resolve(
   'schema.json'
 )
 
-writeFileSync(drafterFilePath, JSON.stringify(drafterSchema, null, 2) + '\n', {
-  encoding: 'utf-8',
-  flag: 'w'
-})
-writeFileSync(
-  alternateDrafterFilePath,
-  JSON.stringify(drafterSchema, null, 2) + '\n',
-  {
-    encoding: 'utf-8',
-    flag: 'w'
-  }
-)
-writeFileSync(
-  autolabelerFilePath,
-  JSON.stringify(autolabelerSchema, null, 2) + '\n',
-  {
-    encoding: 'utf-8',
-    flag: 'w'
-  }
-)
+async function writeFormatted(filePath: string, content: unknown) {
+  const prettierConfig = await resolveConfig(filePath)
+  const formatted = await format(JSON.stringify(content), {
+    ...prettierConfig,
+    filepath: filePath
+  })
+  writeFileSync(filePath, formatted, { encoding: 'utf-8', flag: 'w' })
+}
+
+await writeFormatted(drafterFilePath, drafterSchema)
+await writeFormatted(alternateDrafterFilePath, drafterSchema)
+await writeFormatted(autolabelerFilePath, autolabelerSchema)
