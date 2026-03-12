@@ -94,13 +94,6 @@ describe('JSON schema', () => {
     ).toEqual([])
   })
 
-  it('should still require fields without defaults', () => {
-    const schema = generateDrafterJSONSchema()
-    const required = (schema.required as string[]) ?? []
-
-    expect(required).toContain('template')
-  })
-
   it('generated drafter schema should be prettier-formatted', async () => {
     expect(
       await isPrettierFormatted('schema.json', generateDrafterJSONSchema())

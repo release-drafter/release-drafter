@@ -1301,7 +1301,7 @@ var exclusiveConfigSchema = object({
 		default: "patch"
 	}),
 	"category-template": string().optional().default("## $TITLE"),
-	template: string().min(1)
+	template: string().optional().default("")
 }).meta({
 	title: "JSON schema for Release Drafter yaml files",
 	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"

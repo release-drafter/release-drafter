@@ -80,11 +80,6 @@ const suites: SuiteParams[] = [
     parseValid: false
   },
   {
-    parseInput: { template: '' },
-    errorContains: 'Too small: expected string to have >=1 characters',
-    parseValid: false
-  },
-  {
     parseInput: { template, header: true },
     errorContains: 'Invalid input: expected string, received boolean',
     parseValid: false

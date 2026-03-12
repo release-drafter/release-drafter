@@ -152,7 +152,7 @@
       }
     },
     "category-template": { "default": "## $TITLE", "type": "string" },
-    "template": { "type": "string", "minLength": 1 },
+    "template": { "default": "", "type": "string" },
     "latest": { "anyOf": [{ "type": "string" }, { "type": "boolean" }] },
     "prerelease": { "anyOf": [{ "type": "string" }, { "type": "boolean" }] },
     "initial-commits-since": {
@@ -167,6 +167,5 @@
     "commitish": { "type": "string" },
     "header": { "type": "string" },
     "footer": { "type": "string" }
-  },
-  "required": ["template"]
+  }
 }
