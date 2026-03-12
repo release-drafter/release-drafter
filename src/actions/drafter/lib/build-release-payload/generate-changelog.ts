@@ -26,7 +26,7 @@ export const generateChangeLog = (params: {
   const [uncategorizedPullRequests, categorizedPullRequests] =
     categorizePullRequests({ pullRequests, config })
 
-  const changeLog = []
+  const changeLog: string[] = []
 
   if (uncategorizedPullRequests.length > 0) {
     changeLog.push(
