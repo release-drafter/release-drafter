@@ -21,6 +21,10 @@
       "labels": ["type: security"]
     },
     {
+      "matchDepTypes": ["devDependencies"],
+      "labels": ["type: maintenance"]
+    },
+    {
       "matchPackageNames": [
         "eslint",
         "eslint-*",
