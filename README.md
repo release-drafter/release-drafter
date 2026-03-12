@@ -535,76 +535,16 @@ inputs to other Actions in the workflow
 | `minor_version`    | Minor part of resolved version by [Version Resolver](#version-resolver). i.e. `3` for version `6.3.1`                                                                                                                         |
 | `patch_version`    | Patch part of resolved version by [Version Resolver](#version-resolver). i.e. `1` for version `6.3.1`                                                                                                                         |
 
-## Developing
-
-If you have Node v10+ installed locally, you can run the tests, and a local app,
-using the following commands:
-
-```sh
-# Install dependencies
-npm install
-
-# Run the tests
-npm run test
-
-# Run the app locally
-npm run test:watch
-```
-
-Once you've started the app, visit `localhost:3000` and you'll get
-[step-by-step instructions](https://probot.github.io/docs/development/#configuring-a-github-app)
-for installing it in your GitHub account so you can start pushing commits and
-testing it locally.
-
-If you don’t have Node installed, you can use
-[Docker Compose](https://docs.docker.com/compose/):
-
-```sh
-# Run the tests
-docker compose run --rm app
-```
-
 ## Contributing
 
 Third-party contributions are welcome! 🙏🏼 See
 [CONTRIBUTING.md](docs/CONTRIBUTING.md) for step-by-step instructions.
 
-> [!important] Before pushing, run `npm run all` to format, lint, type-check,
-> test, and regenerate all build artifacts. The CI pipeline enforces that no
-> uncommitted changes remain after these steps.
+> [!IMPORTANT]
+>
+> Before pushing, run `npm run all` to format, lint, type-check, test, and
+> regenerate all build artifacts. The CI pipeline enforces that no uncommitted
+> changes remain after these steps.
 
-If you need help or have a question, let me know via a GitHub issue.
-
-## Deployment
-
-If you want to deploy your own copy of Release Drafter, follow the
-[Probot Deployment Guide](https://probot.github.io/docs/deployment/).
-
-## Releasing
-
-Run the following command:
-
-```bash
-git checkout master
-git pull
-npm version [major | minor | patch] -m "chore: release %s"
-```
-
-> [!IMPORTANT] You may want the version increment to correspond to the last
-> drafted release. You can use a verison number instead of
-> `major | minor | patch` if needed.
-
-The command does the following:
-
-- Run tests (`preversion` script)
-- Bumps the version number in [package.json](package.json) and create
-  corresponding tag
-- Stage changes for git (`version` script)
-- Commit and tag
-- Push & push tag (`postversion` script)
-
-After pushing, the `release.yml` workflow will trigger (`on: push: tag`), and :
-
-- publish to npmjs
-- publish the release draft
-- update major tag (ex: pushing `v6.2.1` bumps `v6` to the same commit)
+If you need help or have a question, let us know via
+[a GitHub issue](https://github.com/release-drafter/release-drafter/issues/new).
