@@ -7,27 +7,35 @@ runs:
   steps:
     - name: Check Format
       run: npm run format:check
+      shell: bash
 
     - name: Lint
       run: npm run lint
+      shell: bash
 
     - name: Type checks
       run: npm run tsc:check
+      shell: bash
 
     - name: Tests
       run: npm run test:run
+      shell: bash
 
     - name: Remove dist/ Directory
       run: rm -rf ./dist
+      shell: bash
 
     - name: Build coverage badge
       run: npm run coverage
+      shell: bash
 
     - name: Build JSON schemas
       run: npm run schemas
+      shell: bash
 
     - name: Build dist/ Directory
       run: npm run build
+      shell: bash
 
     - name: Compare repository state
       run: |
@@ -37,3 +45,4 @@ runs:
           git diff --ignore-space-at-eol --text
           exit 1
         fi
+      shell: bash
