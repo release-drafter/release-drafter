@@ -12,12 +12,14 @@ const drafterSchema = toJSONSchema(
   object({
     ...exclusiveConfigSchema.shape,
     ...commonConfigSchema.shape
-  }).meta({ ...globalRegistry.get(drafterConfigSchema) })
+  }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
+  { io: 'input' }
 )
 const autolabelerSchema = toJSONSchema(
   object({
     ...autolabelerConfigSchema.shape
-  }).meta({ ...globalRegistry.get(autolabelerConfigSchema) })
+  }).meta({ ...globalRegistry.get(autolabelerConfigSchema) }),
+  { io: 'input' }
 )
 
 const drafterFilePath = resolve(
