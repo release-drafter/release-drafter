@@ -28010,7 +28010,7 @@ var Doc = class {
 var version = {
 	major: 4,
 	minor: 3,
-	patch: 5
+	patch: 6
 };
 //#endregion
 //#region node_modules/zod/v4/core/schemas.js
@@ -29872,7 +29872,7 @@ function finalize(ctx, schema) {
 				if (key === "$ref" || key === "allOf") continue;
 				if (!(key in _cached)) delete schema[key];
 			}
-			if (refSchema.$ref) for (const key in schema) {
+			if (refSchema.$ref && refSeen.def) for (const key in schema) {
 				if (key === "$ref" || key === "allOf") continue;
 				if (key in refSeen.def && JSON.stringify(schema[key]) === JSON.stringify(refSeen.def[key])) delete schema[key];
 			}
