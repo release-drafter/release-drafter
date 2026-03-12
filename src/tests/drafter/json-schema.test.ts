@@ -102,12 +102,17 @@ describe('JSON schema', () => {
   })
 
   it('generated drafter schema should be prettier-formatted', async () => {
-    expect(await isPrettierFormatted('schema.json', generateDrafterJSONSchema())).toBe(true)
+    expect(
+      await isPrettierFormatted('schema.json', generateDrafterJSONSchema())
+    ).toBe(true)
   })
 
   it('generated autolabeler schema should be prettier-formatted', async () => {
     expect(
-      await isPrettierFormatted('autolabeler/schema.json', generateAutolabelerJSONSchema())
+      await isPrettierFormatted(
+        'autolabeler/schema.json',
+        generateAutolabelerJSONSchema()
+      )
     ).toBe(true)
   })
 })
