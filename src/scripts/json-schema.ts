@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
@@ -45,10 +46,13 @@ const autolabelerFilePath = resolve(
 )
 
 async function writeFormatted(filePath: string, content: unknown) {
-  await writeFile(filePath, `${JSON.stringify(content, null, 2)}\n`, {
-    encoding: 'utf-8',
-    flag: 'w',
-  })
+  const raw = JSON.stringify(content, null, 2)
+  const formatted = execFileSync(
+    'npx',
+    ['biome', 'format', '--stdin-file-path', filePath],
+    { input: raw, encoding: 'utf-8' },
+  )
+  await writeFile(filePath, formatted, { encoding: 'utf-8', flag: 'w' })
 }
 
 await writeFormatted(drafterFilePath, drafterSchema)
