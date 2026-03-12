@@ -25,9 +25,8 @@ it is generated from.
 | `drafter/`          | Entrypoint for the Drafter action                               |
 | `src/`              | TypeScript Source Code                                          |
 | `.node-version`     | Node.js Version Configuration                                   |
-| `.prettierrc.yml`   | Prettier Formatter Configuration                                |
+| `biome.jsonc`       | Biome Linter and Formatter Configuration                        |
 | `action.yml`        | Entrypoint to the Drafter action. Also available under drafter/ |
-| `eslint.config.mjs` | ESLint Configuration                                            |
 | `vite.config.ts`    | Vite configuration for bundling and testing                     |
 | `LICENSE`           | License File                                                    |
 | `package.json`      | NPM Package Configuration                                       |
