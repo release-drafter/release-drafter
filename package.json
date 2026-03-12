@@ -61,7 +61,7 @@
     "@types/semver": "^7.7.1",
     "@typescript-eslint/eslint-plugin": "^8.57.0",
     "@typescript-eslint/parser": "^8.57.0",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "@vitest/eslint-plugin": "^1.6.11",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
@@ -75,6 +75,6 @@
     "typescript": "^5.9.3",
     "vite": "^8.0.0",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }
