@@ -3,6 +3,7 @@
   "extends": ["config:recommended"],
   "dependencyDashboard": false,
   "semanticCommits": "enabled",
+  "labels": ["type: dependencies"],
   "rangeStrategy": "bump",
   "constraints": {
     "npm": "^11"
@@ -12,7 +13,12 @@
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
-      "semanticCommitType": "ci"
+      "semanticCommitType": "ci",
+      "labels": ["type: maintenance"]
+    },
+    {
+      "matchCategories": ["security"],
+      "labels": ["type: security"]
     },
     {
       "matchPackageNames": [
