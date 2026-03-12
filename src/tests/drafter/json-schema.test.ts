@@ -1,12 +1,11 @@
-import { describe, expect, it } from 'vitest'
-import {
-  exclusiveConfigSchema,
-  commonConfigSchema
-} from 'src/actions/drafter/config'
 import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
-import { toJSONSchema, object, globalRegistry } from 'zod'
-import { configSchema as drafterConfigSchema } from 'src/actions/drafter/config'
-import { check, format, resolveConfig } from 'prettier'
+import {
+  commonConfigSchema,
+  configSchema as drafterConfigSchema,
+  exclusiveConfigSchema,
+} from 'src/actions/drafter/config'
+import { describe, expect, it } from 'vitest'
+import { globalRegistry, object, toJSONSchema } from 'zod'
 
 /**
  * Mirrors the schema generation in src/scripts/json-schema.ts
@@ -16,28 +15,24 @@ function generateDrafterJSONSchema() {
   return toJSONSchema(
     object({
       ...exclusiveConfigSchema.shape,
-      ...commonConfigSchema.shape
+      ...commonConfigSchema.shape,
     }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
-    { io: 'input' }
+    { io: 'input' },
   )
 }
 
 function generateAutolabelerJSONSchema() {
   return toJSONSchema(
     object({ ...autolabelerConfigSchema.shape }).meta({
-      ...globalRegistry.get(autolabelerConfigSchema)
+      ...globalRegistry.get(autolabelerConfigSchema),
     }),
-    { io: 'input' }
+    { io: 'input' },
   )
 }
 
-async function isPrettierFormatted(filename: string, content: unknown) {
-  const prettierConfig = await resolveConfig(filename)
-  const formatted = await format(JSON.stringify(content), {
-    ...prettierConfig,
-    filepath: filename
-  })
-  return check(formatted, { ...prettierConfig, filepath: filename })
+function isJsonFormatted(content: unknown) {
+  const serialized = `${JSON.stringify(content, null, 2)}\n`
+  return `${JSON.stringify(JSON.parse(serialized), null, 2)}\n` === serialized
 }
 
 describe('JSON schema', () => {
@@ -58,12 +53,12 @@ describe('JSON schema', () => {
     const required = (schema.required as string[]) ?? []
 
     const requiredWithDefaults = required.filter(
-      (key) => properties[key] && 'default' in properties[key]
+      (key) => properties[key] && 'default' in properties[key],
     )
 
     expect(
       requiredWithDefaults,
-      `These fields have defaults but are marked as required: ${requiredWithDefaults.join(', ')}`
+      `These fields have defaults but are marked as required: ${requiredWithDefaults.join(', ')}`,
     ).toEqual([])
   })
 
@@ -79,33 +74,26 @@ describe('JSON schema', () => {
         }
       }
     >
-    const categoryItems = categories['categories']?.items
-    if (!categoryItems?.required || !categoryItems?.properties) return
+    const categoryItems = categories.categories?.items
+    const required = categoryItems?.required
+    const properties = categoryItems?.properties
+    if (!required || !properties) return
 
-    const requiredWithDefaults = categoryItems.required.filter(
-      (key) =>
-        categoryItems.properties![key] &&
-        'default' in categoryItems.properties![key]
+    const requiredWithDefaults = required.filter(
+      (key) => properties[key] && 'default' in properties[key],
     )
 
     expect(
       requiredWithDefaults,
-      `Category item fields have defaults but are marked as required: ${requiredWithDefaults.join(', ')}`
+      `Category item fields have defaults but are marked as required: ${requiredWithDefaults.join(', ')}`,
     ).toEqual([])
   })
 
-  it('generated drafter schema should be prettier-formatted', async () => {
-    expect(
-      await isPrettierFormatted('schema.json', generateDrafterJSONSchema())
-    ).toBe(true)
+  it('generated drafter schema should be json-formatted', () => {
+    expect(isJsonFormatted(generateDrafterJSONSchema())).toBe(true)
   })
 
-  it('generated autolabeler schema should be prettier-formatted', async () => {
-    expect(
-      await isPrettierFormatted(
-        'autolabeler/schema.json',
-        generateAutolabelerJSONSchema()
-      )
-    ).toBe(true)
+  it('generated autolabeler schema should be json-formatted', () => {
+    expect(isJsonFormatted(generateAutolabelerJSONSchema())).toBe(true)
   })
 })
