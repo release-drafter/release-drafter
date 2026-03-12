@@ -48,6 +48,10 @@
       "matchPackageNames": ["@types/node"],
       "allowedVersions": "<25",
       "groupName": "types"
+    },
+    {
+      "matchDepTypes": ["engines"],
+      "enabled": false
     }
   ]
 }
