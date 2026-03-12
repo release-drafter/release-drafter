@@ -44,15 +44,15 @@ const autolabelerFilePath = resolve(
   'schema.json'
 )
 
-writeFileSync(drafterFilePath, JSON.stringify(drafterSchema), {
+writeFileSync(drafterFilePath, JSON.stringify(drafterSchema, null, 2), {
   encoding: 'utf-8',
   flag: 'w'
 })
-writeFileSync(alternateDrafterFilePath, JSON.stringify(drafterSchema), {
+writeFileSync(alternateDrafterFilePath, JSON.stringify(drafterSchema, null, 2), {
   encoding: 'utf-8',
   flag: 'w'
 })
-writeFileSync(autolabelerFilePath, JSON.stringify(autolabelerSchema), {
+writeFileSync(autolabelerFilePath, JSON.stringify(autolabelerSchema, null, 2), {
   encoding: 'utf-8',
   flag: 'w'
 })
