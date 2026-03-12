@@ -33,6 +33,10 @@ runs:
       run: npm run schemas
       shell: bash
 
+    - name: Generate GraphQL types
+      run: npm run codegen
+      shell: bash
+
     - name: Build dist/ Directory
       run: npm run build
       shell: bash
