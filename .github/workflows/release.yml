@@ -20,13 +20,13 @@ jobs:
 
       - uses: ./.github/actions/common-setup
 
-      - name: test
-        run: npm run test
+      - uses: ./.github/actions/continuous-integration
 
-      - name: publish
+      - name: Publish
+        if: false # Publishing is currently disabled, see https://github.com/release-drafter/release-drafter/pull/1475#discussion_r2901869066
         run: npm publish # Publishes to npmjs, using package.json's version
 
-      - name: version
+      - name: Parse pushed tag version
         id: version
         run: |
           tag=${GITHUB_REF/refs\/tags\//}
@@ -36,14 +36,13 @@ jobs:
           echo "version=${version}" >> $GITHUB_OUTPUT
           echo "major=${major}" >> $GITHUB_OUTPUT
 
-      - uses: release-drafter/release-drafter@master
+      - name: Publish Release
+        uses: release-drafter/release-drafter@master
         with:
           version: ${{ steps.version.outputs.version }}
           publish: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: force update major tag
+      - name: Update major tag v${{ steps.version.outputs.major }}
         run: |
           git tag v${{ steps.version.outputs.major }} ${{ steps.version.outputs.tag }} -f
           git push origin refs/tags/v${{ steps.version.outputs.major }} -f

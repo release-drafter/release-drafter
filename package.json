@@ -34,7 +34,11 @@
     "lint": "npx eslint .",
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "schemas": "npx tsx src/scripts/json-schema.ts && npx prettier --write **/schema.json schema.json",
-    "all": "npm run format:write && npm run lint && npm run tsc:check && npm run test:run && npm run coverage && npm run schemas && npm run build"
+    "all": "npm run format:write && npm run lint && npm run tsc:check && npm run test:run && npm run coverage && npm run schemas && npm run build",
+    "check:clean": "if [ -n \"$(git status --porcelain)\" ]; then echo \"💥 Detected uncommitted or untracked changes after build checks. No diffs are allowed.\"; git status --short; git diff --ignore-space-at-eol --text; exit 1; fi",
+    "preversion": "npm run all && npm run check:clean",
+    "version": "git add package.json package-lock.json",
+    "postversion": "git push && git push --tags"
   },
   "license": "MIT",
   "dependencies": {

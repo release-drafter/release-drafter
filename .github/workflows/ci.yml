@@ -13,74 +13,37 @@ permissions:
 
 jobs:
   smoke-test-drafter:
-    name: '[drafter] Smoke Test'
+    name: 'Smoke Test for Drafter'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v6
+      - name: actions/checkout@v6
 
       - uses: ./
         with:
           config-name: file:release-drafter.tests.yml
-          'dry-run': true
+          dry-run: true
 
   smoke-test-autolabeler:
-    name: '[autolabeler] Smoke Test'
+    name: 'Smoke Test for Autolabeler'
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v6
+      - name: actions/checkout@v6
 
       - uses: ./autolabeler
         with:
           config-name: file:release-drafter.autolabeler.tests.yml
-          'dry-run': true
+          dry-run: true
 
   tests:
     name: Tests & Build-Checks
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v6
+      - name: actions/checkout@v6
 
       - uses: ./.github/actions/common-setup
 
-      - name: Check Format
-        run: npm run format:check
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Type checks
-        run: npm run tsc:check
-
-      - name: Tests
-        run: npm run test:run
-
-      - name: Remove dist/ Directory
-        run: rm -rf ./dist
-
-      - name: Build coverage badge
-        run: npm run coverage
-
-      - name: Build JSON schemas
-        run: npm run schemas
-
-      - name: Build dist/ Directory
-        run: npm run build
-
-      - name: Compare repository state
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "::error::💥 Detected uncommitted or untracked changes after checks/build. No diffs are allowed. See status below:"
-            git status --short
-            git diff --ignore-space-at-eol --text
-            exit 1
-          fi
+      - uses: ./.github/actions/continuous-integration
