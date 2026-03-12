@@ -52,7 +52,12 @@ describe('JSON schema', () => {
 
     const categories = schema.properties as Record<
       string,
-      { items?: { required?: string[]; properties?: Record<string, { default?: unknown }> } }
+      {
+        items?: {
+          required?: string[]
+          properties?: Record<string, { default?: unknown }>
+        }
+      }
     >
     const categoryItems = categories['categories']?.items
     if (!categoryItems?.required || !categoryItems?.properties) return

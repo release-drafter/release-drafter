@@ -68,18 +68,12 @@
     "sort-by": {
       "default": "merged_at",
       "type": "string",
-      "enum": [
-        "merged_at",
-        "title"
-      ]
+      "enum": ["merged_at", "title"]
     },
     "sort-direction": {
       "default": "descending",
       "type": "string",
-      "enum": [
-        "ascending",
-        "descending"
-      ]
+      "enum": ["ascending", "descending"]
     },
     "filter-by-commitish": {
       "default": false,
@@ -112,10 +106,7 @@
             "minLength": 0
           }
         },
-        "required": [
-          "search",
-          "replace"
-        ]
+        "required": ["search", "replace"]
       }
     },
     "categories": {
@@ -147,9 +138,7 @@
             "minLength": 1
           }
         },
-        "required": [
-          "title"
-        ]
+        "required": ["title"]
       }
     },
     "version-resolver": {
@@ -181,9 +170,7 @@
               }
             }
           },
-          "required": [
-            "labels"
-          ]
+          "required": ["labels"]
         },
         "minor": {
           "default": {
@@ -199,9 +186,7 @@
               }
             }
           },
-          "required": [
-            "labels"
-          ]
+          "required": ["labels"]
         },
         "patch": {
           "default": {
@@ -217,18 +202,12 @@
               }
             }
           },
-          "required": [
-            "labels"
-          ]
+          "required": ["labels"]
         },
         "default": {
           "default": "patch",
           "type": "string",
-          "enum": [
-            "major",
-            "minor",
-            "patch"
-          ]
+          "enum": ["major", "minor", "patch"]
         }
       }
     },
@@ -288,7 +267,5 @@
       "type": "string"
     }
   },
-  "required": [
-    "template"
-  ]
+  "required": ["template"]
 }

@@ -45,15 +45,11 @@
             }
           }
         },
-        "required": [
-          "label"
-        ]
+        "required": ["label"]
       }
     }
   },
-  "required": [
-    "autolabeler"
-  ],
+  "required": ["autolabeler"],
   "title": "JSON schema for Release Drafter's autolabeler action config.",
   "id": "https://github.com/release-drafter/release-drafter/blob/master/autolabeler/schema.json"
 }

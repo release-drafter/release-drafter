@@ -48,11 +48,19 @@ writeFileSync(drafterFilePath, JSON.stringify(drafterSchema, null, 2) + '\n', {
   encoding: 'utf-8',
   flag: 'w'
 })
-writeFileSync(alternateDrafterFilePath, JSON.stringify(drafterSchema, null, 2) + '\n', {
-  encoding: 'utf-8',
-  flag: 'w'
-})
-writeFileSync(autolabelerFilePath, JSON.stringify(autolabelerSchema, null, 2) + '\n', {
-  encoding: 'utf-8',
-  flag: 'w'
-})
+writeFileSync(
+  alternateDrafterFilePath,
+  JSON.stringify(drafterSchema, null, 2) + '\n',
+  {
+    encoding: 'utf-8',
+    flag: 'w'
+  }
+)
+writeFileSync(
+  autolabelerFilePath,
+  JSON.stringify(autolabelerSchema, null, 2) + '\n',
+  {
+    encoding: 'utf-8',
+    flag: 'w'
+  }
+)
