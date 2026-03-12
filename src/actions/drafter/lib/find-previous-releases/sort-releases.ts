@@ -1,5 +1,5 @@
 import regexEscape from 'escape-string-regexp'
-import compareVersions from 'compare-versions'
+import { compareVersions } from 'compare-versions'
 import { Octokit } from 'src/common/get-octokit'
 import { Config } from '../../config'
 
