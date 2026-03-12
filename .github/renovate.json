@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "dependencyDashboard": false,
+  "schedule": ["every weekend"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "semanticCommitType": "ci"
+    },
+    {
+      "matchPackageNames": [
+        "eslint",
+        "eslint-*",
+        "@eslint/*",
+        "@typescript-eslint/*",
+        "@vitest/eslint-plugin",
+        "prettier",
+        "prettier-eslint"
+      ],
+      "groupName": "linters"
+    },
+    {
+      "matchPackageNames": ["vitest", "@vitest/*"],
+      "excludePackageNames": ["@vitest/eslint-plugin"],
+      "groupName": "vitest"
+    },
+    {
+      "matchPackageNames": ["@graphql-codegen/*"],
+      "groupName": "graphql-codegen"
+    },
+    {
+      "matchPackageNames": ["vite", "vite-*"],
+      "groupName": "vite"
+    },
+    {
+      "matchPackageNames": ["@actions/*"],
+      "groupName": "actions"
+    },
+    {
+      "matchPackageNames": ["@types/*"],
+      "groupName": "types"
+    },
+    {
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<25",
+      "groupName": "types"
+    }
+  ]
+}
