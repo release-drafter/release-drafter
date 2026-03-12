@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import {
   configSchema as drafterConfigSchema,
@@ -51,7 +51,7 @@ async function writeFormatted(filePath: string, content: unknown) {
     ...prettierConfig,
     filepath: filePath
   })
-  writeFileSync(filePath, formatted, { encoding: 'utf-8', flag: 'w' })
+  await writeFile(filePath, formatted, { encoding: 'utf-8', flag: 'w' })
 }
 
 await writeFormatted(drafterFilePath, drafterSchema)

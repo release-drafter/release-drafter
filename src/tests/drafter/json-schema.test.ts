@@ -3,8 +3,10 @@ import {
   exclusiveConfigSchema,
   commonConfigSchema
 } from 'src/actions/drafter/config'
+import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
 import { toJSONSchema, object, globalRegistry } from 'zod'
 import { configSchema as drafterConfigSchema } from 'src/actions/drafter/config'
+import { check, format, resolveConfig } from 'prettier'
 
 /**
  * Mirrors the schema generation in src/scripts/json-schema.ts
@@ -18,6 +20,24 @@ function generateDrafterJSONSchema() {
     }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
     { io: 'input' }
   )
+}
+
+function generateAutolabelerJSONSchema() {
+  return toJSONSchema(
+    object({ ...autolabelerConfigSchema.shape }).meta({
+      ...globalRegistry.get(autolabelerConfigSchema)
+    }),
+    { io: 'input' }
+  )
+}
+
+async function isPrettierFormatted(filename: string, content: unknown) {
+  const prettierConfig = await resolveConfig(filename)
+  const formatted = await format(JSON.stringify(content), {
+    ...prettierConfig,
+    filepath: filename
+  })
+  return check(formatted, { ...prettierConfig, filepath: filename })
 }
 
 describe('JSON schema', () => {
@@ -79,5 +99,15 @@ describe('JSON schema', () => {
     const required = (schema.required as string[]) ?? []
 
     expect(required).toContain('template')
+  })
+
+  it('generated drafter schema should be prettier-formatted', async () => {
+    expect(await isPrettierFormatted('schema.json', generateDrafterJSONSchema())).toBe(true)
+  })
+
+  it('generated autolabeler schema should be prettier-formatted', async () => {
+    expect(
+      await isPrettierFormatted('autolabeler/schema.json', generateAutolabelerJSONSchema())
+    ).toBe(true)
   })
 })
