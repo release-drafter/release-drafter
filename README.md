@@ -569,6 +569,10 @@ docker compose run --rm app
 Third-party contributions are welcome! 🙏🏼 See
 [CONTRIBUTING.md](docs/CONTRIBUTING.md) for step-by-step instructions.
 
+> [!important] Before pushing, run `npm run all` to format, lint, type-check,
+> test, and regenerate all build artifacts. The CI pipeline enforces that no
+> uncommitted changes remain after these steps.
+
 If you need help or have a question, let me know via a GitHub issue.
 
 ## Deployment

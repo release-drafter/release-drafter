@@ -16,27 +16,27 @@ by its terms.
 
 1. [Fork][fork] and clone the repository
 2. Configure and install the dependencies: `npm install`
-3. Make sure the tests pass on your machine: `npm run test`, note: these tests
-   also apply the linter, so no need to lint separately
-4. Create a new branch: `git checkout -b my-branch-name`
-5. Make your change, add tests, build with
-   `npm run prettier && npm run lint --fix && npm run build` and make sure the
-   tests still pass
-6. Push to your fork and [submit a pull request][pr]
-7. Give yourself a high five, and wait for your pull request to be reviewed and
+3. Create a new branch: `git checkout -b my-branch-name`
+4. Make your change, add tests, and run `npm run all` before pushing — this runs
+   formatting, linting, type checking, tests, and builds the `dist/` directory.
+   The CI pipeline enforces that the repository has no uncommitted changes after
+   these steps, so **you must run `npm run all` locally before pushing** to
+   avoid build failures.
+5. Push to your fork and [submit a pull request][pr]
+6. Give yourself a high five, and wait for your pull request to be reviewed and
    merged.
 
 Here are a few things you can do that will increase the likelihood of your pull
 request being accepted:
 
 - Follow the [style guide][style] which is using standard. Any linting errors
-  should be shown when running `npm run test`
+  should be shown when running `npm run all`
 - Write and update tests.
 - Keep your change as focused as possible. If there are multiple changes you
   would like to make that are not dependent upon each other, consider submitting
   them as separate pull requests.
 - Write a
-  [good commit message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
+  [convetional commit message](https://www.conventionalcommits.org/en/v1.0.0/).
 
 Work in Progress pull requests are also welcome to get feedback early on, or if
 there is something blocked you.

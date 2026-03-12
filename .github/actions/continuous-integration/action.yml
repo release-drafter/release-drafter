@@ -43,6 +43,28 @@ runs:
           echo "::error::💥 Detected uncommitted or untracked changes after checks/build. No diffs are allowed. See status below:"
           git status --short
           git diff --ignore-space-at-eol --text
+          {
+            echo "## ❌ Repository state check failed"
+            echo ""
+            echo "Uncommitted or untracked changes were detected after running checks and build steps."
+            echo "This usually means the generated files (e.g. \`dist/\`, coverage badge, JSON schemas) are out of date."
+            echo ""
+            echo "### How to fix"
+            echo ""
+            echo "Run the following command locally before pushing:"
+            echo ""
+            echo '```sh'
+            echo "npm run all"
+            echo '```'
+            echo ""
+            echo "This will run formatting, linting, type checking, tests, and regenerate all build artifacts."
+            echo ""
+            echo "### Changed files"
+            echo ""
+            echo '```'
+            git status --short
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
           exit 1
         fi
       shell: bash
