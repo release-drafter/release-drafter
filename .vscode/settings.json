@@ -15,19 +15,9 @@
     }
   ],
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.biome": "explicit"
   },
-  "[json]": {
-    "files.insertFinalNewline": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[jsonc]": {
-    "files.insertFinalNewline": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  "editor.defaultFormatter": "biomejs.biome",
   "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
