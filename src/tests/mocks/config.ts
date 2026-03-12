@@ -87,7 +87,7 @@ export const mockedConfigModule = async (
     } else {
       // will throw inside test-suites
       throw new Error(
-        "composeGonfigGet was called without an associated mocked config. Please use mocks.config.mockReturnValue('config')",
+        "composeConfigGet was called without an associated mocked config. Please use mocks.config.mockReturnValue('config')",
       )
     }
   }

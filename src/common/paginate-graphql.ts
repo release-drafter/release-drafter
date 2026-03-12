@@ -1,8 +1,7 @@
 import type { RequestParameters } from '@octokit/graphql/types'
 
-const getPath = (obj: unknown, path: string[]) =>
-  // biome-ignore lint/suspicious/noExplicitAny: acc is intentionally untyped for dynamic path traversal
-  path.reduce((acc: any, key) => acc?.[key], obj)
+const getPath = <T = unknown>(obj: unknown, path: string[]): T =>
+  path.reduce((acc, key) => (acc as Record<string, unknown>)?.[key], obj) as T
 
 const hasPath = (obj: unknown, path: string[]) =>
   getPath(obj, path) !== undefined
@@ -10,7 +9,11 @@ const hasPath = (obj: unknown, path: string[]) =>
 const setPath = (obj: unknown, path: string[], value: unknown) => {
   const lastKey = path[path.length - 1]
   if (lastKey === undefined) return
-  const parent = getPath(obj, path.slice(0, -1)) as Record<string, unknown>
+  const parent = getPath<Record<string, unknown> | undefined>(
+    obj,
+    path.slice(0, -1),
+  )
+  if (parent == null) return
   parent[lastKey] = value
 }
 
@@ -57,11 +60,14 @@ export async function paginateGraphql<T extends object>(
       ...requestParameters,
       after: getPath(data, [...pageInfoPath, 'endCursor']),
     })
-    const newNodes = getPath(newData, nodesPath)
+    const newNodes = getPath<unknown[]>(newData, nodesPath)
     const newPageInfo = getPath(newData, pageInfoPath)
 
     setPath(data, pageInfoPath, newPageInfo)
-    setPath(data, nodesPath, [...getPath(data, nodesPath), ...newNodes])
+    setPath(data, nodesPath, [
+      ...getPath<unknown[]>(data, nodesPath),
+      ...newNodes,
+    ])
   }
 
   return data

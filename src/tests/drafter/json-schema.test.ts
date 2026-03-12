@@ -1,4 +1,3 @@
-import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
@@ -19,20 +18,6 @@ function generateDrafterJSONSchema() {
     }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
     { io: 'input' },
   )
-}
-
-function generateAutolabelerJSONSchema() {
-  return toJSONSchema(
-    object({ ...autolabelerConfigSchema.shape }).meta({
-      ...globalRegistry.get(autolabelerConfigSchema),
-    }),
-    { io: 'input' },
-  )
-}
-
-function isJsonFormatted(content: unknown) {
-  const serialized = `${JSON.stringify(content, null, 2)}\n`
-  return `${JSON.stringify(JSON.parse(serialized), null, 2)}\n` === serialized
 }
 
 describe('JSON schema', () => {
@@ -75,6 +60,10 @@ describe('JSON schema', () => {
       }
     >
     const categoryItems = categories.categories?.items
+    expect(
+      categoryItems,
+      'Expected categories.categories.items to exist in schema',
+    ).toBeDefined()
     const required = categoryItems?.required
     const properties = categoryItems?.properties
     if (!required || !properties) return
@@ -87,13 +76,5 @@ describe('JSON schema', () => {
       requiredWithDefaults,
       `Category item fields have defaults but are marked as required: ${requiredWithDefaults.join(', ')}`,
     ).toEqual([])
-  })
-
-  it('generated drafter schema should be json-formatted', () => {
-    expect(isJsonFormatted(generateDrafterJSONSchema())).toBe(true)
-  })
-
-  it('generated autolabeler schema should be json-formatted', () => {
-    expect(isJsonFormatted(generateAutolabelerJSONSchema())).toBe(true)
   })
 })
