@@ -1,16 +1,19 @@
 ---
-name: undici
-version: 6.23.0
+name: fast-content-type-parse
+version: 3.0.0
 type: npm
-summary: An HTTP/1.1 client, written from scratch for Node.js
-homepage: https://undici.nodejs.org
-license: mit
+summary: Parse HTTP Content-Type header according to RFC 7231
+homepage: https://github.com/fastify/fast-content-type-parse#readme
+license: other
 licenses:
 - sources: LICENSE
-  text: |
+  text: |-
     MIT License
 
-    Copyright (c) Matteo Collina and Undici contributors
+    Copyright (c) 2023 The Fastify Team
+
+    The Fastify team members are listed at https://github.com/fastify/fastify#team
+    and in the README file.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -30,5 +33,5 @@ licenses:
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 - sources: README.md
-  text: MIT
+  text: Licensed under [MIT](./LICENSE).
 notices: []

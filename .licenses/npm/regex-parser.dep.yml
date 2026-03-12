@@ -1,16 +1,17 @@
 ---
-name: undici
-version: 6.23.0
+name: regex-parser
+version: 2.3.1
 type: npm
-summary: An HTTP/1.1 client, written from scratch for Node.js
-homepage: https://undici.nodejs.org
+summary: A module that parses a string as regular expression and returns the parsed
+  value.
+homepage: https://github.com/IonicaBizau/regex-parser.js
 license: mit
 licenses:
 - sources: LICENSE
   text: |
-    MIT License
+    The MIT License (MIT)
 
-    Copyright (c) Matteo Collina and Undici contributors
+    Copyright (c) 2014-25 Ionică Bizău <bizauionica@gmail.com> (https://ionicabizau.net)
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +30,4 @@ licenses:
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
-- sources: README.md
-  text: MIT
 notices: []

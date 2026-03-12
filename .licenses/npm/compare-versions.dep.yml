@@ -1,16 +1,16 @@
 ---
-name: undici
-version: 6.23.0
+name: compare-versions
+version: 4.1.3
 type: npm
-summary: An HTTP/1.1 client, written from scratch for Node.js
-homepage: https://undici.nodejs.org
+summary: Compare semver version strings to find greater, equal or lesser.
+homepage: https://github.com/omichelsen/compare-versions#readme
 license: mit
 licenses:
 - sources: LICENSE
   text: |
-    MIT License
+    The MIT License (MIT)
 
-    Copyright (c) Matteo Collina and Undici contributors
+    Copyright (c) 2015-2021 Ole Michelsen
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,4 @@ licenses:
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
-- sources: README.md
-  text: MIT
 notices: []
