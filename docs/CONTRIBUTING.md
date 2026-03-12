@@ -90,7 +90,6 @@ The command does the following:
 
 After pushing, the `release.yml` workflow will trigger (`on: push: tag`), and :
 
-- publish to npmjs
 - publish the release draft
 - update major tag (ex: pushing `v6.2.1` bumps `v6` to the same commit)
 
