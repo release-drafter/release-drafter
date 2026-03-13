@@ -15,21 +15,22 @@
     }
   ],
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.biome": "explicit"
   },
-  "[json]": {
-    "files.insertFinalNewline": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  "biome.enabled": true,
+  "eslint.enable": false,
+  "editor.defaultFormatter": "biomejs.biome",
   "[jsonc]": {
-    "files.insertFinalNewline": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  "json.validate.enable": false,
   "[yaml]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome",
+    "yaml.format.enable": false // waiting for https://github.com/biomejs/biome/issues/2365
+  },
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "yaml.format.enable": false // waiting for https://github.com/biomejs/biome/issues/2365
   },
   "markdown.validate.enabled": true,
   "search.exclude": {
@@ -44,5 +45,8 @@
     "**/.hg": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
   }
 }
