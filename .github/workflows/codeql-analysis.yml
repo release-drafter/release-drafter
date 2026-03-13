@@ -2,8 +2,6 @@ name: CodeQL
 
 on:
   pull_request:
-    branches:
-      - master
   push:
     branches:
       - master
@@ -19,12 +17,6 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        language:
-          - typescript
-
     steps:
       - name: Checkout
         id: checkout
@@ -35,7 +27,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           config-file: .github/.codeql-config.yml
-          languages: ${{ matrix.language }}
+          languages: typescript
           source-root: src
 
       - name: Autobuild
