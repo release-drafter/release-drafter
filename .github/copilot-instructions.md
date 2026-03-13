@@ -25,9 +25,8 @@ it is generated from.
 | `drafter/`          | Entrypoint for the Drafter action                               |
 | `src/`              | TypeScript Source Code                                          |
 | `.node-version`     | Node.js Version Configuration                                   |
-| `.prettierrc.yml`   | Prettier Formatter Configuration                                |
+| `biome.jsonc`       | Biome Linter and Formatter Configuration                        |
 | `action.yml`        | Entrypoint to the Drafter action. Also available under drafter/ |
-| `eslint.config.mjs` | ESLint Configuration                                            |
 | `vite.config.ts`    | Vite configuration for bundling and testing                     |
 | `LICENSE`           | License File                                                    |
 | `package.json`      | NPM Package Configuration                                       |
@@ -41,6 +40,18 @@ Install dependencies by running:
 ```bash
 npm install
 ```
+
+## Before Pushing
+
+Always run the full pipeline before pushing to ensure formatting, linting, type
+checks, tests, and all generated files (dist, schemas, coverage badge) are
+up-to-date:
+
+```bash
+npm run all
+```
+
+The CI pipeline will fail if any generated files are out of date.
 
 ## Testing
 
