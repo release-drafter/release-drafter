@@ -36,7 +36,7 @@
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "schemas": "npx tsx src/scripts/json-schema.ts",
     "all": "npm run check && npm run tsc:check && npm run test:run && npm run coverage && npm run schemas && npm run codegen && npm run build",
-    "check:clean": "if [ -n \"$(git status --porcelain)\" ]; then echo \"💥 Detected uncommitted or untracked changes after build checks. No diffs are allowed.\"; git status --short; git diff --ignore-space-at-eol --text; exit 1; fi",
+    "check:clean": "npx tsx src/scripts/check-clean.ts",
     "preversion": "npm run all && npm run check:clean",
     "version": "git add package.json package-lock.json",
     "postversion": "git push && git push --tags"
