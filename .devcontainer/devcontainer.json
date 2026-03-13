@@ -10,20 +10,18 @@
       "extensions": [
         "bierner.markdown-preview-github-styles",
         "davidanson.vscode-markdownlint",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
+        "biomejs.biome",
         "github.copilot",
         "github.copilot-chat",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
         "me-dutour-mathieu.vscode-github-actions",
         "redhat.vscode-yaml",
-        "rvest.vs-code-prettier-eslint",
         "yzhang.markdown-all-in-one",
         "vivaxy.vscode-conventional-commits"
       ],
       "settings": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "biomejs.biome",
         "editor.tabSize": 2,
         "editor.formatOnSave": true,
         "markdown.extension.list.indentationSize": "adaptive",
@@ -36,8 +34,7 @@
     "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
   },
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers-community/npm-features/prettier:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "mounts": [
     /**
