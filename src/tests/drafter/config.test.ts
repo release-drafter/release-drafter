@@ -156,6 +156,30 @@ describe('get config file', () => {
 
       expect(scope.isDone()).toBe(true)
     })
+    it('should not fall back to org .github repo when already running in .github', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const inputConfigName = 'release-drafter.yml'
+      const context = {
+        repo: { owner: 'octocat', repo: '.github' },
+        ref: 'main',
+      }
+
+      const endpoint = getContentEndpoint({
+        ...context,
+        path: '.github/release-drafter.yml',
+      })
+      const scope = nock('https://api.github.com').get(endpoint).reply(404)
+
+      await expect(
+        composeConfigGet(inputConfigName, context),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `[Error: Repo load failed. Config file not found with error 404. (target: octocat/.github:.github/release-drafter.yml@main)]`,
+      )
+
+      // only one request — no fallback attempted
+      expect(scope.isDone()).toBe(true)
+    })
     it('should error if config not exists using the github: scheme', async () => {
       vi.stubEnv('GITHUB_TOKEN', 'test')
 

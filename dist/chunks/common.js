@@ -26909,12 +26909,12 @@ var getConfigFiles = async (configFilename, currentContext) => {
 	debug(`getConfigFiles: Starting with filename: ${configFilename}`);
 	let configTarget = parseConfigTarget(configFilename, currentContext);
 	debug(`getConfigFiles: Parsed config target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`);
-	const isCurrentRepoGithubScheme = configTarget.scheme === "github" && configTarget.repo.owner === currentContext.repo.owner && configTarget.repo.repo === currentContext.repo.repo;
+	const canFallBackToOrgRepo = configTarget.scheme === "github" && configTarget.repo.owner === currentContext.repo.owner && configTarget.repo.repo === currentContext.repo.repo && currentContext.repo.repo !== ".github";
 	let requestedRepoConfig;
 	try {
 		requestedRepoConfig = await getConfigFile(configTarget);
 	} catch (error) {
-		if (isCurrentRepoGithubScheme && error instanceof Error && error.message.includes("Config file not found")) {
+		if (canFallBackToOrgRepo && error instanceof Error && error.message.includes("Config file not found")) {
 			info(`Config not found in ${currentContext.repo.owner}/${currentContext.repo.repo}, falling back to ${currentContext.repo.owner}/.github`);
 			requestedRepoConfig = await getConfigFile({
 				...configTarget,

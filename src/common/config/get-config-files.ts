@@ -21,12 +21,16 @@ export const getConfigFiles = async (
     configTarget.repo.owner === currentContext.repo.owner &&
     configTarget.repo.repo === currentContext.repo.repo
 
+  // No point falling back to .github if we're already running in it
+  const canFallBackToOrgRepo =
+    isCurrentRepoGithubScheme && currentContext.repo.repo !== '.github'
+
   let requestedRepoConfig: Awaited<ReturnType<typeof getConfigFile>>
   try {
     requestedRepoConfig = await getConfigFile(configTarget)
   } catch (error) {
     if (
-      isCurrentRepoGithubScheme &&
+      canFallBackToOrgRepo &&
       error instanceof Error &&
       error.message.includes('Config file not found')
     ) {
