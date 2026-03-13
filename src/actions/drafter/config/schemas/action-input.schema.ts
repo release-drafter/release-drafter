@@ -28,7 +28,7 @@ export const exclusiveInputSchema = object({
   /**
    * A boolean indicating whether the release being created or updated should be immediately published.
    */
-  publish: stringbool().optional().default(false)
+  publish: stringbool().optional().default(false),
 }).and(sharedInputSchema)
 
 export const actionInputSchema = exclusiveInputSchema.and(commonConfigSchema)

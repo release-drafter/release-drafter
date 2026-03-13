@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { ActionInput, actionInputSchema } from './action-input.schema'
+import { type ActionInput, actionInputSchema } from './action-input.schema'
 
 export const getActionInput = (): ActionInput => {
   // getInput returns an empty string if the value is not defined.
@@ -11,6 +11,6 @@ export const getActionInput = (): ActionInput => {
   return actionInputSchema.parse({
     'config-name': getInput('config-name'),
     token: getInput('token'),
-    'dry-run': getInput('dry-run')
+    'dry-run': getInput('dry-run'),
   })
 }

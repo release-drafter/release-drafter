@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import { main } from './main'
 import { getActionInput, getConfig, parseConfig } from './config'
+import { main } from './main'
 
 /**
  * The main function for the action.
@@ -11,12 +11,12 @@ export async function run(): Promise<void> {
   try {
     const input = getActionInput()
     const config = parseConfig({
-      config: await getConfig(input['config-name'])
+      config: await getConfig(input['config-name']),
     })
 
     const { labels, pr_number } = await main({
       config,
-      dryRun: input['dry-run']
+      dryRun: input['dry-run'],
     })
 
     if (pr_number) core.setOutput('number', pr_number)

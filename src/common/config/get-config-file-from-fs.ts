@@ -1,6 +1,6 @@
-import process from 'node:process'
-import path, { isAbsolute } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
+import path, { isAbsolute } from 'node:path'
+import process from 'node:process'
 import * as core from '@actions/core'
 
 export const getConfigFileFromFs = (normalizedFilepath: string) => {
@@ -8,13 +8,13 @@ export const getConfigFileFromFs = (normalizedFilepath: string) => {
   // this is just a safety net
   if (isAbsolute(normalizedFilepath)) {
     throw new Error(
-      `Absolute paths are not supported for config file path: ${normalizedFilepath}`
+      `Absolute paths are not supported for config file path: ${normalizedFilepath}`,
     )
   }
 
   if (!process.env.GITHUB_WORKSPACE) {
     throw new Error(
-      `env GITHUB_WORKSPACE is not set. Cannot resolve local repo path.`
+      `env GITHUB_WORKSPACE is not set. Cannot resolve local repo path.`,
     )
   }
 
@@ -30,7 +30,7 @@ export const getConfigFileFromFs = (normalizedFilepath: string) => {
 
   if (!existsSync(configPath)) {
     throw new Error(
-      `Config file not found: ${configPath}. Did you clone your sources ? (ex: using @actions/checkout)`
+      `Config file not found: ${configPath}. Did you clone your sources ? (ex: using @actions/checkout)`,
     )
   }
 

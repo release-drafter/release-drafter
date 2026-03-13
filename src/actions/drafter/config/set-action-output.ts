@@ -1,6 +1,6 @@
-import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods'
-import { buildReleasePayload } from '../lib'
 import * as core from '@actions/core'
+import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods'
+import type { buildReleasePayload } from '../lib'
 
 export const setActionOutput = (params: {
   upsertedRelease:
@@ -23,8 +23,8 @@ export const setActionOutput = (params: {
         html_url: htmlUrl,
         upload_url: uploadUrl,
         tag_name: tagName,
-        name
-      }
+        name,
+      },
     } = upsertedRelease
 
     if (releaseId && Number.isInteger(releaseId))

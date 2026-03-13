@@ -1,6 +1,6 @@
-import { buildReleasePayload } from '../build-release-payload'
-import { getOctokit } from 'src/common'
 import { context } from '@actions/github'
+import { getOctokit } from 'src/common'
+import type { buildReleasePayload } from '../build-release-payload'
 
 export const createRelease = async (params: {
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
@@ -19,6 +19,6 @@ export const createRelease = async (params: {
     prerelease: releasePayload.prerelease,
     make_latest: releasePayload.prerelease
       ? 'false'
-      : (releasePayload.make_latest.toString() as 'true' | 'false')
+      : (releasePayload.make_latest.toString() as 'true' | 'false'),
   })
 }

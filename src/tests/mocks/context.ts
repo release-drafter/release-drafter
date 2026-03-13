@@ -1,11 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
-import type { GithubActionEnvironment } from 'src/types'
-
-import { expect, vi } from 'vitest'
-
 import * as github from '@actions/github'
-import { WebhookPayload } from 'node_modules/@actions/github/lib/interfaces'
+import type { WebhookPayload } from 'node_modules/@actions/github/lib/interfaces'
+import type { GithubActionEnvironment } from 'src/types'
+import { expect, vi } from 'vitest'
 
 type AllowedPayload =
   | 'push'
@@ -17,7 +15,7 @@ const getEventPayloadPath = (type: AllowedPayload) => {
   const baseDir = path.join(
     path.dirname(import.meta.filename),
     '../fixtures',
-    'events'
+    'events',
   )
   return path.join(baseDir, `${type}.json`)
 }
@@ -77,7 +75,7 @@ export const mockContext = async (desiredPayload: AllowedPayload) => {
     RUNNER_TEMP: '',
     RUNNER_TOOL_CACHE: '',
     ACTIONS_STEP_DEBUG: 'true',
-    INPUT_MILLISECONDS: '2400'
+    INPUT_MILLISECONDS: '2400',
   }
 
   const pathToPayload = getEventPayloadPath(desiredPayload)
@@ -115,13 +113,13 @@ export const mockContext = async (desiredPayload: AllowedPayload) => {
     GITHUB_TRIGGERING_ACTOR: payload.pusher?.login,
     GITHUB_WORKSPACE: path.resolve(
       path.dirname(import.meta.filename),
-      '../../..'
-    )
+      '../../..',
+    ),
   }
 
   Object.entries({
     ...defaultEnv,
-    ...envFromPayload
+    ...envFromPayload,
   })
     .filter(([key, value]) => value !== undefined && value !== null && !!key)
     .forEach(([key, value]) => {

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
-import nock from 'nock'
 import path from 'node:path'
+import nock from 'nock'
 import { mocks } from '.'
 
 /**
@@ -14,12 +14,12 @@ const getPrFilesPayload = (f: Files) =>
       path.join(
         path.dirname(import.meta.filename),
         '../fixtures/pull_requests',
-        f + '.json'
+        `${f}.json`,
       ),
       {
-        encoding: 'utf8'
-      }
-    )
+        encoding: 'utf8',
+      },
+    ),
   )
 
 export const nockGetPrFiles = (params: {
@@ -30,7 +30,7 @@ export const nockGetPrFiles = (params: {
 
   return nock('https://api.github.com')
     .get(
-      `/repos/${pr?.owner || 'release-drafter'}/${pr?.repo || 'release-drafter'}/pulls/${pr?.number || 1475}/files`
+      `/repos/${pr?.owner || 'release-drafter'}/${pr?.repo || 'release-drafter'}/pulls/${pr?.number || 1475}/files`,
     )
     .query(true)
     .reply(200, getPrFilesPayload(files))
@@ -44,7 +44,7 @@ export const nockPostPrLabels = (params: {
   return nock('https://api.github.com')
     .post(
       `/repos/${pr?.owner || 'release-drafter'}/${pr?.repo || 'release-drafter'}/issues/${pr?.number || 1475}/labels`,
-      mocks.postPrLabelsBody
+      mocks.postPrLabelsBody,
     )
     .reply(201)
 }

@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest'
 import {
-  ConfigTarget,
-  parseConfigTarget
+  type ConfigTarget,
+  parseConfigTarget,
 } from 'src/common/config/parse-config-target'
+import { describe, expect, it } from 'vitest'
 
 const testSuites: Array<{
   input: [string, Pick<ConfigTarget, 'ref' | 'repo'>]
@@ -13,40 +13,40 @@ const testSuites: Array<{
     suiteName: 'basic github target',
     input: [
       'release-drafter.yml',
-      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' }
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
     ],
     expected: {
       scheme: 'github',
       filepath: 'release-drafter.yml',
       ref: 'main',
-      repo: { owner: 'cchanche', repo: 'hello-world' }
-    }
+      repo: { owner: 'cchanche', repo: 'hello-world' },
+    },
   },
   {
     suiteName: 'github target with explicit github: scheme',
     input: [
       'github:release-drafter.yml',
-      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' }
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
     ],
     expected: {
       scheme: 'github',
       filepath: 'release-drafter.yml',
       ref: 'main',
-      repo: { owner: 'cchanche', repo: 'hello-world' }
-    }
+      repo: { owner: 'cchanche', repo: 'hello-world' },
+    },
   },
   {
     suiteName: 'github target with repo specifier',
     input: [
       'github:bye-world:release-drafter.yml',
-      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' }
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
     ],
     expected: {
       scheme: 'github',
       filepath: 'release-drafter.yml',
       ref: undefined,
-      repo: { owner: 'cchanche', repo: 'bye-world' }
-    }
+      repo: { owner: 'cchanche', repo: 'bye-world' },
+    },
   },
   {
     suiteName: 'github target with repo specifier and no explicit ref',
@@ -54,15 +54,15 @@ const testSuites: Array<{
       'github:bye-world:release-drafter.yml',
       {
         repo: { owner: 'cchanche', repo: 'hello-world' },
-        ref: 'feature/destroyer-of-worlds'
-      }
+        ref: 'feature/destroyer-of-worlds',
+      },
     ],
     expected: {
       scheme: 'github',
       filepath: 'release-drafter.yml',
       ref: undefined,
-      repo: { owner: 'cchanche', repo: 'bye-world' }
-    }
+      repo: { owner: 'cchanche', repo: 'bye-world' },
+    },
   },
   {
     suiteName: 'github target with repo and ref specifiers',
@@ -70,15 +70,15 @@ const testSuites: Array<{
       'github:bye-world:release-drafter.yml@main',
       {
         repo: { owner: 'cchanche', repo: 'hello-world' },
-        ref: 'feature/destroyer-of-worlds'
-      }
+        ref: 'feature/destroyer-of-worlds',
+      },
     ],
     expected: {
       scheme: 'github',
       filepath: 'release-drafter.yml',
       ref: 'main',
-      repo: { owner: 'cchanche', repo: 'bye-world' }
-    }
+      repo: { owner: 'cchanche', repo: 'bye-world' },
+    },
   },
   {
     suiteName:
@@ -87,15 +87,15 @@ const testSuites: Array<{
       'bye-world:release-drafter.yml@main',
       {
         repo: { owner: 'cchanche', repo: 'hello-world' },
-        ref: 'feature/destroyer-of-worlds'
-      }
+        ref: 'feature/destroyer-of-worlds',
+      },
     ],
     expected: {
       scheme: 'github',
       filepath: 'release-drafter.yml',
       ref: 'main',
-      repo: { owner: 'cchanche', repo: 'bye-world' }
-    }
+      repo: { owner: 'cchanche', repo: 'bye-world' },
+    },
   },
   {
     suiteName: 'github target with owner/repo specifier',
@@ -103,15 +103,15 @@ const testSuites: Array<{
       'worlds/bye-world:release-drafter.yml',
       {
         repo: { owner: 'cchanche', repo: 'hello-world' },
-        ref: 'feature/destroyer-of-worlds'
-      }
+        ref: 'feature/destroyer-of-worlds',
+      },
     ],
     expected: {
       scheme: 'github',
       filepath: 'release-drafter.yml',
       ref: undefined,
-      repo: { owner: 'worlds', repo: 'bye-world' }
-    }
+      repo: { owner: 'worlds', repo: 'bye-world' },
+    },
   },
   {
     suiteName: 'different config name',
@@ -119,15 +119,15 @@ const testSuites: Array<{
       'alternative-config-name.json',
       {
         repo: { owner: 'cchanche', repo: 'hello-world' },
-        ref: 'feature/destroyer-of-worlds'
-      }
+        ref: 'feature/destroyer-of-worlds',
+      },
     ],
     expected: {
       scheme: 'github',
       filepath: 'alternative-config-name.json',
       ref: 'feature/destroyer-of-worlds',
-      repo: { owner: 'cchanche', repo: 'hello-world' }
-    }
+      repo: { owner: 'cchanche', repo: 'hello-world' },
+    },
   },
   {
     suiteName: 'file scheme',
@@ -135,15 +135,15 @@ const testSuites: Array<{
       'file:conf.yaml',
       {
         repo: { owner: 'does', repo: 'not' },
-        ref: 'matter'
-      }
+        ref: 'matter',
+      },
     ],
     expected: {
       scheme: 'file',
       filepath: 'conf.yaml',
       ref: 'matter',
-      repo: { owner: 'does', repo: 'not' }
-    }
+      repo: { owner: 'does', repo: 'not' },
+    },
   },
   {
     suiteName: 'file scheme with @ (invalid)',
@@ -151,12 +151,12 @@ const testSuites: Array<{
       'file:conf.yaml@main',
       {
         repo: { owner: 'does', repo: 'not' },
-        ref: 'matter'
-      }
+        ref: 'matter',
+      },
     ],
     expected: new Error(
-      'invalid format: "conf.yaml@main". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. Local file targets cannot have "@" github specifiers.'
-    )
+      'invalid format: "conf.yaml@main". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. Local file targets cannot have "@" github specifiers.',
+    ),
   },
   {
     suiteName: 'invalid string with only specifiers',
@@ -164,12 +164,12 @@ const testSuites: Array<{
       ':@',
       {
         repo: { owner: 'does', repo: 'not' },
-        ref: 'matter'
-      }
+        ref: 'matter',
+      },
     ],
     expected: new Error(
-      'invalid format: ":@". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. Missing ref specifier.'
-    )
+      'invalid format: ":@". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. Missing ref specifier.',
+    ),
   },
   {
     suiteName: 'repo and filepath',
@@ -177,15 +177,15 @@ const testSuites: Array<{
       'hello:world',
       {
         repo: { owner: 'does', repo: 'not' },
-        ref: 'matter'
-      }
+        ref: 'matter',
+      },
     ],
     expected: {
       scheme: 'github',
       filepath: 'world',
       ref: undefined,
-      repo: { owner: 'does', repo: 'hello' }
-    }
+      repo: { owner: 'does', repo: 'hello' },
+    },
   },
   {
     suiteName: 'invalid string with too many specifiers',
@@ -193,13 +193,13 @@ const testSuites: Array<{
       'for:those:who:come:after',
       {
         repo: { owner: 'does', repo: 'not' },
-        ref: 'matter'
-      }
+        ref: 'matter',
+      },
     ],
     expected: new Error(
-      'invalid format: "for:those:who:come:after". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. ":" or "@" was specified more than once.'
-    )
-  }
+      'invalid format: "for:those:who:come:after". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. ":" or "@" was specified more than once.',
+    ),
+  },
 ]
 
 describe('parse a config target', () => {

@@ -1,5 +1,5 @@
-import { Config } from '../../config'
-import { findPullRequests } from '../find-pull-requests'
+import type { Config } from '../../config'
+import type { findPullRequests } from '../find-pull-requests'
 
 export const generateContributorsSentence = (params: {
   commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
@@ -29,7 +29,7 @@ export const generateContributorsSentence = (params: {
     ) {
       if (pullRequest.author.__typename === 'Bot') {
         contributors.add(
-          `[${pullRequest.author.login}[bot]](${pullRequest.author.url})`
+          `[${pullRequest.author.login}[bot]](${pullRequest.author.url})`,
         )
       } else {
         contributors.add(`@${pullRequest.author.login}`)

@@ -1,12 +1,12 @@
 import type * as z from 'zod'
 import {
+  array,
+  boolean,
+  number,
   object,
   string,
-  array,
-  number,
-  boolean,
+  ZodDefault,
   enum as zenum,
-  ZodDefault
 } from 'zod'
 import { commonConfigSchema } from './common-config.schema'
 
@@ -92,8 +92,8 @@ export const exclusiveConfigSchema = object({
   replacers: array(
     object({
       search: string().min(1),
-      replace: string().min(0)
-    })
+      replace: string().min(0),
+    }),
   )
     .optional()
     .default([]),
@@ -105,8 +105,8 @@ export const exclusiveConfigSchema = object({
       title: string().min(1),
       'collapse-after': number().int().min(0).optional().default(0),
       labels: array(string().min(1)).optional().default([]),
-      label: string().min(1).optional()
-    })
+      label: string().min(1).optional(),
+    }),
   )
     .optional()
     .default([]),
@@ -115,28 +115,28 @@ export const exclusiveConfigSchema = object({
    */
   'version-resolver': object({
     major: object({
-      labels: array(string().min(1))
+      labels: array(string().min(1)),
     })
       .optional()
       .default({ labels: [] }),
     minor: object({
-      labels: array(string().min(1))
+      labels: array(string().min(1)),
     })
       .optional()
       .default({ labels: [] }),
     patch: object({
-      labels: array(string().min(1))
+      labels: array(string().min(1)),
     })
       .optional()
       .default({ labels: [] }),
-    default: zenum(['major', 'minor', 'patch']).optional().default('patch')
+    default: zenum(['major', 'minor', 'patch']).optional().default('patch'),
   })
     .optional()
     .default({
       major: { labels: [] },
       minor: { labels: [] },
       patch: { labels: [] },
-      default: 'patch'
+      default: 'patch',
     }),
   /**
    * The template to use for each category.
@@ -146,10 +146,10 @@ export const exclusiveConfigSchema = object({
    * The template for the body of the draft release.
    * Optional as it may be inherited via `_extends`.
    */
-  template: string().optional().default('')
+  template: string().optional().default(''),
 }).meta({
   title: 'JSON schema for Release Drafter yaml files',
-  id: 'https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json'
+  id: 'https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json',
 })
 
 export const configSchema = exclusiveConfigSchema.and(commonConfigSchema)
@@ -175,9 +175,9 @@ export type Config = z.output<typeof configSchema>
 export const configSchemaDefaults = Object.fromEntries(
   Object.entries({
     ...exclusiveConfigSchema.shape,
-    ...commonConfigSchema.shape
+    ...commonConfigSchema.shape,
   }).map(([key, value]) => {
     if (value instanceof ZodDefault) return [key, value.def.defaultValue]
     return [key, undefined]
-  })
+  }),
 ) as Config

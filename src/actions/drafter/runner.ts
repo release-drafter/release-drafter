@@ -1,11 +1,11 @@
 import * as core from '@actions/core'
-import { main } from './main'
 import {
   getActionInput,
   getConfig,
   mergeInputAndConfig,
-  setActionOutput
+  setActionOutput,
 } from './config'
+import { main } from './main'
 
 /**
  * The main function for the action.
@@ -18,14 +18,14 @@ export async function run(): Promise<void> {
     const input = getActionInput()
     const config = mergeInputAndConfig({
       config: await getConfig(input['config-name']),
-      input
+      input,
     })
 
     const { upsertedRelease, releasePayload } = await main({ input, config })
 
     setActionOutput({
       upsertedRelease,
-      releasePayload
+      releasePayload,
     })
   } catch (error) {
     // Fail the workflow run if an error occurs

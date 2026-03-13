@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { mockContext, mocks, nockGetPrFiles, mockInput } from '../mocks'
 import { runAutolabeler } from '../helpers'
+import { mockContext, mockInput, mocks, nockGetPrFiles } from '../mocks'
 import { nockPostPrLabels } from '../mocks/pull_requests'
 
 describe('autolabeler e2e', async () => {

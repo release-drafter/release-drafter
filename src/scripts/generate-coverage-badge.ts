@@ -13,17 +13,17 @@ const coverageSummaryPath = resolve(
   import.meta.dirname,
   '../..',
   'coverage',
-  'coverage-summary.json'
+  'coverage-summary.json',
 )
 const outputBadgePath = resolve(
   import.meta.dirname,
   '../..',
   'badges',
-  'coverage.svg'
+  'coverage.svg',
 )
 
 const coverageSummaryContent = readFileSync(coverageSummaryPath, {
-  encoding: 'utf-8'
+  encoding: 'utf-8',
 })
 const coverageSummary = JSON.parse(coverageSummaryContent) as CoverageSummary
 
@@ -34,7 +34,7 @@ if (
   Number.isNaN(statementsCoveragePct)
 ) {
   throw new Error(
-    'Unable to read statements coverage percentage from coverage-summary.json'
+    'Unable to read statements coverage percentage from coverage-summary.json',
   )
 }
 
@@ -61,5 +61,5 @@ const badgeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" 
 
 writeFileSync(outputBadgePath, badgeSvg, {
   encoding: 'utf-8',
-  flag: 'w'
+  flag: 'w',
 })

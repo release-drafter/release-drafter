@@ -1,7 +1,7 @@
-import { describe, expect, it, beforeEach } from 'vitest'
 import { mergeInputAndConfig } from 'src/actions/drafter/config'
-import { configSchema } from 'src/actions/drafter/config/schemas/config.schema'
 import { commonConfigSchema } from 'src/actions/drafter/config/schemas/common-config.schema'
+import { configSchema } from 'src/actions/drafter/config/schemas/config.schema'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { mockContext, mocks } from '../mocks'
 
 describe('mergeInputAndConfig', () => {
@@ -13,17 +13,17 @@ describe('mergeInputAndConfig', () => {
     it('should merge input and config with input taking precedence for commitish', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
-        commitish: 'config-commitish'
+        commitish: 'config-commitish',
       })
       const input = commonConfigSchema.parse({
-        commitish: 'input-commitish'
+        commitish: 'input-commitish',
       })
 
       const result = mergeInputAndConfig({ config, input })
 
       expect(result.commitish).toBe('input-commitish')
       expect(mocks.core.info).toHaveBeenCalledWith(
-        'Input\'s commitish "input-commitish" overrides config\'s commitish "config-commitish"'
+        'Input\'s commitish "input-commitish" overrides config\'s commitish "config-commitish"',
       )
     })
 
@@ -31,17 +31,17 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        header: 'config-header'
+        header: 'config-header',
       })
       const input = commonConfigSchema.parse({
-        header: 'input-header'
+        header: 'input-header',
       })
 
       const result = mergeInputAndConfig({ config, input })
 
       expect(result.header).toBe('input-header')
       expect(mocks.core.info).toHaveBeenCalledWith(
-        'Input\'s header "input-header" overrides config\'s header "config-header"'
+        'Input\'s header "input-header" overrides config\'s header "config-header"',
       )
     })
 
@@ -49,17 +49,17 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        footer: 'config-footer'
+        footer: 'config-footer',
       })
       const input = commonConfigSchema.parse({
-        footer: 'input-footer'
+        footer: 'input-footer',
       })
 
       const result = mergeInputAndConfig({ config, input })
 
       expect(result.footer).toBe('input-footer')
       expect(mocks.core.info).toHaveBeenCalledWith(
-        'Input\'s footer "input-footer" overrides config\'s footer "config-footer"'
+        'Input\'s footer "input-footer" overrides config\'s footer "config-footer"',
       )
     })
 
@@ -67,17 +67,17 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        'prerelease-identifier': 'config-identifier'
+        'prerelease-identifier': 'config-identifier',
       })
       const input = commonConfigSchema.parse({
-        'prerelease-identifier': 'input-identifier'
+        'prerelease-identifier': 'input-identifier',
       })
 
       const result = mergeInputAndConfig({ config, input })
 
       expect(result['prerelease-identifier']).toBe('input-identifier')
       expect(mocks.core.info).toHaveBeenCalledWith(
-        'Input\'s prerelease-identifier "input-identifier" overrides config\'s prerelease-identifier "config-identifier"'
+        'Input\'s prerelease-identifier "input-identifier" overrides config\'s prerelease-identifier "config-identifier"',
       )
     })
 
@@ -85,17 +85,17 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        prerelease: true
+        prerelease: true,
       })
       const input = commonConfigSchema.parse({
-        prerelease: false
+        prerelease: false,
       })
 
       const result = mergeInputAndConfig({ config, input })
 
       expect(result.prerelease).toBe(false)
       expect(mocks.core.info).toHaveBeenCalledWith(
-        'Input\'s prerelease "false" overrides config\'s prerelease "true"'
+        'Input\'s prerelease "false" overrides config\'s prerelease "true"',
       )
     })
 
@@ -103,17 +103,17 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        latest: false
+        latest: false,
       })
       const input = commonConfigSchema.parse({
-        latest: true
+        latest: true,
       })
 
       const result = mergeInputAndConfig({ config, input })
 
       expect(result.latest).toBe(true)
       expect(mocks.core.info).toHaveBeenCalledWith(
-        'Input\'s latest "true" overrides config\'s latest "false"'
+        'Input\'s latest "true" overrides config\'s latest "false"',
       )
     })
 
@@ -125,7 +125,7 @@ describe('mergeInputAndConfig', () => {
         footer: 'config-footer',
         'prerelease-identifier': 'config-identifier',
         prerelease: true,
-        latest: false
+        latest: false,
       })
       const input = commonConfigSchema.parse({})
 
@@ -142,10 +142,10 @@ describe('mergeInputAndConfig', () => {
     it('should not log info message when input does not override config', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
-        commitish: 'main'
+        commitish: 'main',
       })
       const input = commonConfigSchema.parse({
-        header: 'input-header'
+        header: 'input-header',
       })
 
       mergeInputAndConfig({ config, input })
@@ -161,7 +161,7 @@ describe('mergeInputAndConfig', () => {
         template: '$CHANGES',
         commitish: 'main',
         prerelease: true,
-        latest: true
+        latest: true,
       })
       const input = commonConfigSchema.parse({})
 
@@ -170,7 +170,7 @@ describe('mergeInputAndConfig', () => {
       expect(result.latest).toBe(false)
       expect(result.prerelease).toBe(true)
       expect(mocks.core.warning).toHaveBeenCalledWith(
-        "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release."
+        "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.",
       )
     })
 
@@ -178,7 +178,7 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        'prerelease-identifier': 'alpha'
+        'prerelease-identifier': 'alpha',
       })
       const input = commonConfigSchema.parse({})
 
@@ -186,7 +186,7 @@ describe('mergeInputAndConfig', () => {
 
       expect(result.prerelease).toBe(true)
       expect(mocks.core.warning).toHaveBeenCalledWith(
-        "You specified a 'prerelease-identifier' (alpha), but 'prerelease' is set to false. Switching to true."
+        "You specified a 'prerelease-identifier' (alpha), but 'prerelease' is set to false. Switching to true.",
       )
     })
 
@@ -195,7 +195,7 @@ describe('mergeInputAndConfig', () => {
         template: '$CHANGES',
         commitish: 'main',
         'prerelease-identifier': 'alpha',
-        prerelease: true
+        prerelease: true,
       })
       const input = commonConfigSchema.parse({})
 
@@ -210,7 +210,7 @@ describe('mergeInputAndConfig', () => {
       await mockContext('push')
 
       const config = configSchema.parse({
-        template: '$CHANGES'
+        template: '$CHANGES',
       })
       const input = commonConfigSchema.parse({})
 
@@ -222,7 +222,7 @@ describe('mergeInputAndConfig', () => {
     it('should default latest to true when not a boolean', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
-        commitish: 'main'
+        commitish: 'main',
       })
       const input = commonConfigSchema.parse({})
 
@@ -234,7 +234,7 @@ describe('mergeInputAndConfig', () => {
     it('should default prerelease to false when not a boolean', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
-        commitish: 'main'
+        commitish: 'main',
       })
       const input = commonConfigSchema.parse({})
 
@@ -247,7 +247,7 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        latest: false
+        latest: false,
       })
       const input = commonConfigSchema.parse({})
 
@@ -260,7 +260,7 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        prerelease: true
+        prerelease: true,
       })
       const input = commonConfigSchema.parse({})
 
@@ -274,10 +274,10 @@ describe('mergeInputAndConfig', () => {
 
       const config = configSchema.parse({
         template: '$CHANGES',
-        commitish: 'config-commitish'
+        commitish: 'config-commitish',
       })
       const input = commonConfigSchema.parse({
-        commitish: 'input-commitish'
+        commitish: 'input-commitish',
       })
 
       const result = mergeInputAndConfig({ config, input })
@@ -293,8 +293,8 @@ describe('mergeInputAndConfig', () => {
         commitish: 'main',
         replacers: [
           { search: 'foo', replace: 'bar' },
-          { search: '/test.*/g', replace: 'replaced' }
-        ]
+          { search: '/test.*/g', replace: 'replaced' },
+        ],
       })
       const input = commonConfigSchema.parse({})
 
@@ -318,8 +318,8 @@ describe('mergeInputAndConfig', () => {
         replacers: [
           { search: 'valid-pattern', replace: 'bar' },
           { search: '/(?invalid/i', replace: 'baz' },
-          { search: 'another-valid', replace: 'qux' }
-        ]
+          { search: 'another-valid', replace: 'qux' },
+        ],
       })
       const input = commonConfigSchema.parse({})
 
@@ -330,7 +330,7 @@ describe('mergeInputAndConfig', () => {
       expect(result.replacers[0].search.source).toBe('valid\\x2dpattern')
       expect(result.replacers[1].search.source).toBe('another\\x2dvalid')
       expect(mocks.core.warning).toHaveBeenCalledWith(
-        "Bad replacer regex: '/(?invalid/i'"
+        "Bad replacer regex: '/(?invalid/i'",
       )
     })
 
@@ -338,7 +338,7 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        replacers: []
+        replacers: [],
       })
       const input = commonConfigSchema.parse({})
 
@@ -351,7 +351,7 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        replacers: [{ search: '/^v(\\d+\\.\\d+\\.\\d+)$/i', replace: '$1' }]
+        replacers: [{ search: '/^v(\\d+\\.\\d+\\.\\d+)$/i', replace: '$1' }],
       })
       const input = commonConfigSchema.parse({})
 
@@ -375,12 +375,12 @@ describe('mergeInputAndConfig', () => {
       github.context.payload.ref = undefined
 
       const config = configSchema.parse({
-        template: '$CHANGES'
+        template: '$CHANGES',
       })
       const input = commonConfigSchema.parse({})
 
       expect(() => mergeInputAndConfig({ config, input })).toThrow(
-        "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
+        "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)",
       )
     })
     it('should throw error when multiple empty categories', async () => {
@@ -388,19 +388,19 @@ describe('mergeInputAndConfig', () => {
         template: '$CHANGES',
         categories: [
           {
-            title: '📝 Other Changes'
+            title: '📝 Other Changes',
           },
           {
-            title: '📝 Yet Other Changes'
-          }
-        ]
+            title: '📝 Yet Other Changes',
+          },
+        ],
       })
       const input = commonConfigSchema.parse({})
 
       expect(() =>
-        mergeInputAndConfig({ config, input })
+        mergeInputAndConfig({ config, input }),
       ).toThrowErrorMatchingInlineSnapshot(
-        `[Error: Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.]`
+        `[Error: Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.]`,
       )
     })
   })
@@ -414,7 +414,7 @@ describe('mergeInputAndConfig', () => {
         footer: 'config-footer',
         'prerelease-identifier': 'config-identifier',
         prerelease: true,
-        latest: true
+        latest: true,
       })
       const input = commonConfigSchema.parse({
         commitish: 'input-commitish',
@@ -422,7 +422,7 @@ describe('mergeInputAndConfig', () => {
         footer: 'input-footer',
         'prerelease-identifier': 'input-identifier',
         prerelease: false,
-        latest: false
+        latest: false,
       })
 
       const result = mergeInputAndConfig({ config, input })
@@ -443,11 +443,11 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'original-commitish',
-        replacers: [{ search: 'test', replace: 'replaced' }]
+        replacers: [{ search: 'test', replace: 'replaced' }],
       })
       const originalConfig = JSON.parse(JSON.stringify(config))
       const input = commonConfigSchema.parse({
-        commitish: 'new-commitish'
+        commitish: 'new-commitish',
       })
 
       mergeInputAndConfig({ config, input })
@@ -461,10 +461,10 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        prerelease: false
+        prerelease: false,
       })
       const input = commonConfigSchema.parse({
-        'prerelease-identifier': 'beta'
+        'prerelease-identifier': 'beta',
       })
 
       const result = mergeInputAndConfig({ config, input })
@@ -472,7 +472,7 @@ describe('mergeInputAndConfig', () => {
       expect(result['prerelease-identifier']).toBe('beta')
       expect(result.prerelease).toBe(true)
       expect(mocks.core.warning).toHaveBeenCalledWith(
-        "You specified a 'prerelease-identifier' (beta), but 'prerelease' is set to false. Switching to true."
+        "You specified a 'prerelease-identifier' (beta), but 'prerelease' is set to false. Switching to true.",
       )
     })
 
@@ -481,11 +481,11 @@ describe('mergeInputAndConfig', () => {
         template: '$CHANGES',
         commitish: 'main',
         prerelease: false,
-        latest: false
+        latest: false,
       })
       const input = commonConfigSchema.parse({
         prerelease: true,
-        latest: true
+        latest: true,
       })
 
       const result = mergeInputAndConfig({ config, input })
@@ -495,7 +495,7 @@ describe('mergeInputAndConfig', () => {
       // But validation should still apply - latest should be false when prerelease is true
       expect(result.latest).toBe(false)
       expect(mocks.core.warning).toHaveBeenCalledWith(
-        "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release."
+        "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.",
       )
     })
   })
@@ -505,7 +505,7 @@ describe('mergeInputAndConfig', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
         commitish: 'main',
-        replacers: [{ search: 'test', replace: 'replaced' }]
+        replacers: [{ search: 'test', replace: 'replaced' }],
       })
       const input = commonConfigSchema.parse({})
 

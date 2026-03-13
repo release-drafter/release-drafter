@@ -1,9 +1,9 @@
-import { findPreviousReleases } from '../find-previous-releases'
-import { context } from '@actions/github'
-import { findCommitsWithPathChange } from './find-commits-with-path-change'
 import * as core from '@actions/core'
+import { context } from '@actions/github'
+import type { ParsedConfig } from '../../config'
+import type { findPreviousReleases } from '../find-previous-releases'
+import { findCommitsWithPathChange } from './find-commits-with-path-change'
 import { findCommitsWithPr } from './find-commits-with-pr'
-import { ParsedConfig } from '../../config'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
@@ -32,7 +32,7 @@ export const findPullRequests = async (params: {
         since,
         name: context.repo.repo,
         owner: context.repo.owner,
-        targetCommitish: params.config.commitish
+        targetCommitish: params.config.commitish,
       })
 
     // Short circuit to avoid blowing GraphQL budget
@@ -42,7 +42,7 @@ export const findPullRequests = async (params: {
 
     Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
       core.info(
-        `Found ${ids.size} commits with changes to included path "${path}"`
+        `Found ${ids.size} commits with changes to included path "${path}"`,
       )
       for (const id of ids) {
         includedCommitIds.add(id)
@@ -59,13 +59,13 @@ export const findPullRequests = async (params: {
         since,
         name: context.repo.repo,
         owner: context.repo.owner,
-        targetCommitish: params.config.commitish
-      }
+        targetCommitish: params.config.commitish,
+      },
     )
 
     Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
       core.info(
-        `Found ${ids.size} commits with changes to excluded path "${path}"`
+        `Found ${ids.size} commits with changes to excluded path "${path}"`,
       )
       for (const id of ids) {
         excludedCommitIds.add(id)
@@ -74,7 +74,7 @@ export const findPullRequests = async (params: {
   }
 
   core.info(
-    `Fetching parent commits of ${params.config['commitish']}${since ? ` since ${since}` : ''}...`
+    `Fetching parent commits of ${params.config.commitish}${since ? ` since ${since}` : ''}...`,
   )
 
   let commits = await findCommitsWithPr({
@@ -89,7 +89,7 @@ export const findPullRequests = async (params: {
     withHeadRefName:
       params.config['change-template'].includes('$HEAD_REF_NAME'),
     pullRequestLimit: params.config['pull-request-limit'],
-    historyLimit: params.config['history-limit']
+    historyLimit: params.config['history-limit'],
   })
 
   core.info(`Found ${commits.length} commits.`)
@@ -110,7 +110,7 @@ export const findPullRequests = async (params: {
 
   if (shouldFilterByIncludedPaths || shouldFilterByExcludedPaths) {
     core.info(
-      `After filtering by path changes, ${commits.length} commits remain.`
+      `After filtering by path changes, ${commits.length} commits remain.`,
     )
   }
 
@@ -122,9 +122,9 @@ export const findPullRequests = async (params: {
         .filter((pr) => pr != null)
         .map(
           (pr) =>
-            [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr] as const
-        )
-    ).values()
+            [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr] as const,
+        ),
+    ).values(),
   ]
 
   const pullRequests = pullRequestsRaw.filter(
@@ -133,7 +133,7 @@ export const findPullRequests = async (params: {
       pr.baseRepository?.nameWithOwner ===
         `${context.repo.owner}/${context.repo.repo}` &&
       // Ensure PR is merged
-      pr.merged
+      pr.merged,
   )
 
   core.info(
@@ -141,7 +141,7 @@ export const findPullRequests = async (params: {
       pullRequests.length > 0
         ? ` : ${pullRequests.map((pr) => `#${pr.number}`).join(', ')}`
         : '.'
-    }`
+    }`,
   )
 
   return { commits, pullRequests }

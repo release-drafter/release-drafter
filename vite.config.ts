@@ -1,7 +1,7 @@
-import { builtinModules } from 'node:module'
 import { readFile, writeFile } from 'node:fs/promises'
-import { defineConfig, type Plugin } from 'vitest/config'
+import { builtinModules } from 'node:module'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { defineConfig, type Plugin } from 'vitest/config'
 
 const FROM = 'main: dist/actions/drafter/run.js'
 const TO = 'main: ../dist/actions/drafter/run.js'
@@ -12,13 +12,13 @@ function syncDrafterActionYml(): Plugin {
     async closeBundle() {
       const [src, dest] = await Promise.all([
         readFile('action.yml', 'utf8'),
-        readFile('drafter/action.yml', 'utf8')
+        readFile('drafter/action.yml', 'utf8'),
       ])
       const expected = src.includes(FROM) ? src.replace(FROM, TO) : src
       if (dest !== expected) {
         await writeFile('drafter/action.yml', expected)
       }
-    }
+    },
   }
 }
 
@@ -29,8 +29,8 @@ export default defineConfig({
   // them with empty objects during bundling.
   environments: {
     client: {
-      keepProcessEnv: true
-    }
+      keepProcessEnv: true,
+    },
   },
   build: {
     target: 'node24',
@@ -43,16 +43,16 @@ export default defineConfig({
       external: (id) => id.startsWith('node:') || builtinModules.includes(id),
       input: {
         'actions/drafter/run': 'src/actions/drafter/run.ts',
-        'actions/autolabeler/run': 'src/actions/autolabeler/run.ts'
+        'actions/autolabeler/run': 'src/actions/autolabeler/run.ts',
       },
       output: {
         format: 'es',
         entryFileNames: '[name].js',
         chunkFileNames: 'chunks/[name].js',
-        paths: (id) => (builtinModules.includes(id) ? `node:${id}` : id)
-      }
+        paths: (id) => (builtinModules.includes(id) ? `node:${id}` : id),
+      },
     },
-    minify: false
+    minify: false,
   },
   test: {
     include: ['src/tests/**/*.test.ts'],
@@ -65,8 +65,8 @@ export default defineConfig({
       exclude: [
         'src/tests/**/*.ts',
         'src/scripts/**/*',
-        'src/**/*.generated.ts'
-      ]
-    }
-  }
+        'src/**/*.generated.ts',
+      ],
+    },
+  },
 })

@@ -1,6 +1,6 @@
-import { findPullRequests } from '../find-pull-requests'
 import * as core from '@actions/core'
-import { Config } from '../../config'
+import type { Config } from '../../config'
+import type { findPullRequests } from '../find-pull-requests'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
 
@@ -10,7 +10,7 @@ export const sortPullRequests = (params: {
 }) => {
   const {
     pullRequests,
-    config: { 'sort-by': sortBy, 'sort-direction': sortDirection }
+    config: { 'sort-by': sortBy, 'sort-direction': sortDirection },
   } = params
 
   const getSortField = sortBy === 'title' ? getTitle : getMergedAt
@@ -22,7 +22,7 @@ export const sortPullRequests = (params: {
       return sort(getSortField(a), getSortField(b))
     } catch (error) {
       core.warning(
-        `Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`
+        `Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`,
       )
       core.error(error as Error)
       return 0
