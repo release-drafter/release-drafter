@@ -71,18 +71,18 @@ Run the following command:
 ```bash
 git checkout master
 git pull
-npm version [major | minor | patch] -m "chore: release %s"
+npm version [major | minor | patch] -m "chore: release v%s"
 ```
 
 > [!IMPORTANT]
 >
 > You may want the version increment to correspond to the last drafted release.
-> You can use a verison number instead of `major | minor | patch` if needed.
+> You can use a version number instead of `major | minor | patch` if needed.
 
 The command does the following:
 
 - Run tests (`preversion` script)
-- Bumps the version number in [package.json](package.json) and create
+- Bumps the version number in [package.json](../package.json) and create
   corresponding tag
 - Stage changes for git (`version` script)
 - Commit and tag
