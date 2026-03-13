@@ -46,4 +46,8 @@ jobs:
 
       - uses: ./.github/actions/common-setup
 
-      - uses: ./.github/actions/continuous-integration
+      - name: Run all checks and rebuild artifacts
+        run: npm run all
+
+      - name: Check for clean working directory
+        run: npm run check:clean
