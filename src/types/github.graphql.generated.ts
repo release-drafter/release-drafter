@@ -21188,7 +21188,7 @@ export type ProjectV2IssueFieldValues = IssueFieldDateValue | IssueFieldNumberVa
 /** An item within a Project. */
 export type ProjectV2Item = Node & {
   __typename?: 'ProjectV2Item';
-  /** The content of the referenced draft issue, issue, or pull request */
+  /** The content of the referenced draft issue, issue, pull request */
   content?: Maybe<ProjectV2ItemContent>;
   /** Identifies the date and time when the object was created. */
   createdAt: Scalars['DateTime']['output'];

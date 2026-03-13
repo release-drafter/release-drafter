@@ -76,6 +76,86 @@ describe('get config file', () => {
         }
       `)
     })
+    it('should fall back to org .github repo if config not found in current repo', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const inputConfigName = 'release-drafter.yml'
+      const context = {
+        repo: { owner: 'octocat', repo: 'hello-world' },
+        ref: 'main',
+      }
+
+      const currentRepoEndpoint = getContentEndpoint({
+        ...context,
+        path: '.github/release-drafter.yml',
+      })
+      const orgFallbackEndpoint = getContentEndpoint({
+        repo: { owner: 'octocat', repo: '.github' },
+        path: '.github/release-drafter.yml',
+      })
+
+      const scope = nock('https://api.github.com')
+        .get(currentRepoEndpoint)
+        .reply(404)
+        .get(orgFallbackEndpoint)
+        .reply(200, `template: org-template-content`, {
+          'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+        })
+
+      const res = await composeConfigGet(inputConfigName, context)
+
+      expect(scope.isDone()).toBe(true)
+
+      expect(res.contexts.length).toBe(1)
+      expect(res.config).toMatchInlineSnapshot(`
+        {
+          "template": "org-template-content",
+        }
+      `)
+      expect(res.contexts[0]).toMatchInlineSnapshot(`
+        {
+          "filepath": ".github/release-drafter.yml",
+          "ref": undefined,
+          "repo": {
+            "owner": "octocat",
+            "repo": ".github",
+          },
+          "scheme": "github",
+        }
+      `)
+    })
+    it('should error if config not found in current repo and org .github repo', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const inputConfigName = 'release-drafter.yml'
+      const context = {
+        repo: { owner: 'octocat', repo: 'hello-world' },
+        ref: 'main',
+      }
+
+      const currentRepoEndpoint = getContentEndpoint({
+        ...context,
+        path: '.github/release-drafter.yml',
+      })
+      const orgFallbackEndpoint = getContentEndpoint({
+        repo: { owner: 'octocat', repo: '.github' },
+        path: '.github/release-drafter.yml',
+      })
+
+      const scope = nock('https://api.github.com')
+        .get(currentRepoEndpoint)
+        .reply(404)
+        .get(orgFallbackEndpoint)
+        .reply(404)
+
+      await expect(
+        composeConfigGet(inputConfigName, context),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `[Error: Repo load failed. Config file not found with error 404. (target: octocat/.github:.github/release-drafter.yml)]`,
+      )
+
+      expect(scope.isDone()).toBe(true)
+    })
     it('should error if config not exists using the github: scheme', async () => {
       vi.stubEnv('GITHUB_TOKEN', 'test')
 
@@ -86,16 +166,24 @@ describe('get config file', () => {
         ref: 'main',
       }
 
-      const endpoint = getContentEndpoint({
+      const currentRepoEndpoint = getContentEndpoint({
         ...context,
         path: endpointFilepath,
       })
-      const scope = nock('https://api.github.com').get(endpoint).reply(404)
+      const orgFallbackEndpoint = getContentEndpoint({
+        repo: { owner: 'octocat', repo: '.github' },
+        path: endpointFilepath,
+      })
+      const scope = nock('https://api.github.com')
+        .get(currentRepoEndpoint)
+        .reply(404)
+        .get(orgFallbackEndpoint)
+        .reply(404)
 
       await expect(
         composeConfigGet(inputConfigName, context),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `[Error: Repo load failed. Config file not found with error 404. (target: octocat/hello-world:.github/release-drafter.yml@main)]`,
+        `[Error: Repo load failed. Config file not found with error 404. (target: octocat/.github:.github/release-drafter.yml)]`,
       )
 
       expect(mocks.existsSync).not.toHaveBeenCalled()
