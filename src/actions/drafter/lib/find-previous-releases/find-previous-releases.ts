@@ -1,8 +1,8 @@
-import { getOctokit } from 'src/common'
-import { context } from '@actions/github'
 import * as core from '@actions/core'
+import { context } from '@actions/github'
+import { getOctokit } from 'src/common'
+import type { ParsedConfig } from '../../config'
 import { sortReleases } from './sort-releases'
-import { type ParsedConfig } from '../../config'
 
 // GitHub API currently returns a 500 HTTP response if you attempt to fetch over 1000 releases.
 const RELEASE_COUNT_LIMIT = 1000
@@ -29,14 +29,14 @@ export const findPreviousReleases = async (
     | 'tag-prefix'
     | 'prerelease'
     | 'include-pre-releases'
-  >
+  >,
 ) => {
   const {
     commitish,
     'filter-by-commitish': filterByCommitish,
     'tag-prefix': tagPrefix,
     prerelease: isPreRelease,
-    'include-pre-releases': includePreReleases
+    'include-pre-releases': includePreReleases,
   } = params
   const octokit = getOctokit()
 
@@ -47,7 +47,7 @@ export const findPreviousReleases = async (
     octokit.rest.repos.listReleases,
     {
       ...context.repo,
-      per_page: 100
+      per_page: 100,
     },
     (response, done) => {
       releaseCount += response.data.length
@@ -55,7 +55,7 @@ export const findPreviousReleases = async (
         done()
       }
       return response.data
-    }
+    },
   )
 
   core.info(`Found ${releases.length} releases`)
@@ -66,7 +66,7 @@ export const findPreviousReleases = async (
   const commitishFilteredReleases = filterByCommitish
     ? releases.filter(
         (r) =>
-          targetCommitishName === r.target_commitish.replace(headRefRegex, '')
+          targetCommitishName === r.target_commitish.replace(headRefRegex, ''),
       )
     : releases
   const filteredReleases = tagPrefix
@@ -82,20 +82,20 @@ export const findPreviousReleases = async (
     (publishedRelease) =>
       isPreRelease || includePreReleases
         ? publishedRelease.prerelease || !publishedRelease.prerelease // Both prerelease and regular published-releases
-        : !publishedRelease.prerelease // Only regular published-releases
+        : !publishedRelease.prerelease, // Only regular published-releases
   )
   draftReleases = draftReleases.filter(
     (draftRelease) =>
       isPreRelease
         ? draftRelease.prerelease // Only pre-releases drafts
-        : !draftRelease.prerelease // Only regular drafts
+        : !draftRelease.prerelease, // Only regular drafts
   )
 
   // Sort results
   const draftRelease = draftReleases[0] // Should this be sorted ?
   const lastRelease = sortReleases({
     releases: publishedReleases,
-    tagPrefix
+    tagPrefix,
   })?.at(-1)
 
   if (draftRelease) {
@@ -103,10 +103,10 @@ export const findPreviousReleases = async (
       core.warning(
         `Multiple draft releases found : ${draftReleases
           .map((r) => r.tag_name)
-          .join(', ')}`
+          .join(', ')}`,
       )
       core.warning(
-        `Using the first one returned by GitHub API: ${draftRelease.tag_name}`
+        `Using the first one returned by GitHub API: ${draftRelease.tag_name}`,
       )
     }
 
@@ -115,7 +115,7 @@ export const findPreviousReleases = async (
     core.info(`  name:      ${draftRelease.name}`)
   } else {
     core.info(
-      `No draft release found${isPreRelease ? ' (among prerelease drafts)' : ''}`
+      `No draft release found${isPreRelease ? ' (among prerelease drafts)' : ''}`,
     )
   }
 
@@ -125,7 +125,7 @@ export const findPreviousReleases = async (
     core.info(`  name:      ${lastRelease.name}`)
   } else {
     core.info(
-      `No last release found${isPreRelease ? ' (including prerelease)' : ''}`
+      `No last release found${isPreRelease ? ' (including prerelease)' : ''}`,
     )
   }
 

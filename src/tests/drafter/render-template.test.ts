@@ -14,8 +14,8 @@ describe('render template', () => {
       object: {
         $MAJOR: 1,
         $MINOR: 0,
-        $PATCH: 0
-      }
+        $PATCH: 0,
+      },
     })
 
     expect(output).toEqual('1.0.0')
@@ -30,8 +30,8 @@ describe('render template', () => {
     const output = renderTemplate({
       template: input,
       object: {
-        $CHANGES: 'NO CHANGES'
-      }
+        $CHANGES: 'NO CHANGES',
+      },
     })
 
     expect(output).toEqual(expect.stringContaining('v$NEXT_PATCH_VERSION'))
@@ -48,11 +48,11 @@ describe('render template', () => {
           $PATCH: 0,
           $THIRD: {
             $NEST: 'THIRD LEVEL',
-            template: '$NEST'
+            template: '$NEST',
           },
-          template: '$MAJOR.$MINOR.$PATCH.$THIRD'
-        }
-      }
+          template: '$MAJOR.$MINOR.$PATCH.$THIRD',
+        },
+      },
     })
 
     expect(output).toEqual('1.0.0.THIRD LEVEL')
@@ -65,13 +65,13 @@ describe('render template', () => {
         {
           search: /\bJENKINS-(\d+)\b/g,
           replace:
-            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
-        }
-      ]
+            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)',
+        },
+      ],
     })
 
     expect(output).toEqual(
-      'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234)'
+      'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234)',
     )
   })
   it('word custom replacer', () => {
@@ -81,9 +81,9 @@ describe('render template', () => {
       replacers: [
         {
           search: /JENKINS/g,
-          replace: 'heyyyyyyy'
-        }
-      ]
+          replace: 'heyyyyyyy',
+        },
+      ],
     })
 
     expect(output).toEqual('This is my body heyyyyyyy-1234')
@@ -95,13 +95,13 @@ describe('render template', () => {
       replacers: [
         {
           search: /JENKINS/g,
-          replace: 'heyyyyyyy'
+          replace: 'heyyyyyyy',
         },
         {
           search: /heyyyyyyy/g,
-          replace: 'something else'
-        }
-      ]
+          replace: 'something else',
+        },
+      ],
     })
 
     expect(output).toEqual('This is my body something else-1234')
@@ -114,19 +114,19 @@ describe('render template', () => {
         {
           search: /\bJENKINS-(\d+)\b/g,
           replace:
-            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
+            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)',
         },
         {
           search:
             /\[\[https:\/\/issues\.jenkins-ci\.org\/browse\/JENKINS-(\d+)\]\(JENKINS-(\d+)\)\]/g,
           replace:
-            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)'
-        }
-      ]
+            '[https://issues.jenkins-ci.org/browse/JENKINS-$1](JENKINS-$1)',
+        },
+      ],
     })
 
     expect(output).toEqual(
-      'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-456](JENKINS-456)'
+      'This is my body [https://issues.jenkins-ci.org/browse/JENKINS-1234](JENKINS-1234) [https://issues.jenkins-ci.org/browse/JENKINS-456](JENKINS-456)',
     )
   })
 })

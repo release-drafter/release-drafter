@@ -1,8 +1,8 @@
-import { buildReleasePayload } from '../build-release-payload'
-import { findPreviousReleases } from '../find-previous-releases'
-import { getOctokit } from 'src/common'
 import { context } from '@actions/github'
 import type { Endpoints } from '@octokit/types'
+import { getOctokit } from 'src/common'
+import type { buildReleasePayload } from '../build-release-payload'
+import type { findPreviousReleases } from '../find-previous-releases'
 
 export const updateRelease = async (params: {
   draftRelease: Exclude<
@@ -23,7 +23,7 @@ export const updateRelease = async (params: {
   > = {
     name: releasePayload.name || draftRelease.name || undefined,
     tag_name: releasePayload.tag || draftRelease.tag_name,
-    target_commitish: releasePayload.targetCommitish
+    target_commitish: releasePayload.targetCommitish,
   }
 
   // Let GitHub figure out `name` and `tag_name` if undefined
@@ -50,6 +50,6 @@ export const updateRelease = async (params: {
     make_latest: releasePayload.prerelease
       ? 'false'
       : (releasePayload.make_latest.toString() as 'true' | 'false'),
-    ...updateReleaseParameters
+    ...updateReleaseParameters,
   })
 }

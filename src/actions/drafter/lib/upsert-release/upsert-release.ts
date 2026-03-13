@@ -1,6 +1,6 @@
-import { buildReleasePayload } from '../build-release-payload'
-import { findPreviousReleases } from '../find-previous-releases'
 import * as core from '@actions/core'
+import type { buildReleasePayload } from '../build-release-payload'
+import type { findPreviousReleases } from '../find-previous-releases'
 import { createRelease } from './create-release'
 import { updateRelease } from './update-release'
 
@@ -14,11 +14,11 @@ export const upsertRelease = async (params: {
   if (dryRun) {
     if (!draftRelease) {
       core.info(
-        `[dry-run] Would create a new release with payload: ${JSON.stringify(releasePayload, null, 2)}`
+        `[dry-run] Would create a new release with payload: ${JSON.stringify(releasePayload, null, 2)}`,
       )
     } else {
       core.info(
-        `[dry-run] Would update existing release (id: ${draftRelease.id}) with payload: ${JSON.stringify(releasePayload, null, 2)}`
+        `[dry-run] Would update existing release (id: ${draftRelease.id}) with payload: ${JSON.stringify(releasePayload, null, 2)}`,
       )
     }
     return undefined
@@ -27,7 +27,7 @@ export const upsertRelease = async (params: {
   if (!draftRelease) {
     core.info('Creating new release...')
     const res = await createRelease({
-      releasePayload
+      releasePayload,
     })
     core.info('Release created!')
     return res
@@ -35,7 +35,7 @@ export const upsertRelease = async (params: {
     core.info('Updating existing release...')
     const res = await updateRelease({
       draftRelease,
-      releasePayload
+      releasePayload,
     })
     core.info('Release updated!')
     return res

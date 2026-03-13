@@ -1,15 +1,15 @@
 /* node:coverage ignore file -- @preserve */
 export {
-  actionInputSchema,
-  exclusiveInputSchema,
   type ActionInput,
-  type ExclusiveInput
+  actionInputSchema,
+  type ExclusiveInput,
+  exclusiveInputSchema,
 } from './action-input.schema'
 export { type CommonConfig, commonConfigSchema } from './common-config.schema'
 export {
   type Config,
-  type ExclusiveConfig,
   configSchema,
-  exclusiveConfigSchema
+  configSchemaDefaults,
+  type ExclusiveConfig,
+  exclusiveConfigSchema,
 } from './config.schema'
-export { configSchemaDefaults } from './config.schema'

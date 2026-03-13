@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
-import nock from 'nock'
 import path from 'node:path'
+import nock from 'nock'
 
 type Query =
   | 'query findCommitsWithAssociatedPullRequests'
@@ -37,10 +37,10 @@ export const getGqlPayload = (payload: Payload) =>
       path.join(
         path.dirname(import.meta.filename),
         '../fixtures/graphql',
-        payload + '.json'
+        `${payload}.json`,
       ),
-      { encoding: 'utf8' }
-    )
+      { encoding: 'utf8' },
+    ),
   )
 
 export const mockGraphqlQuery = (
@@ -52,7 +52,7 @@ export const mockGraphqlQuery = (
     | Array<{
         query?: Query
         payload: Payload | Payload[]
-      }>
+      }>,
 ) => {
   const paramsList = Array.isArray(params) ? params : [params]
 
@@ -67,8 +67,8 @@ export const mockGraphqlQuery = (
       scope = scope
         .post('/graphql', (body) =>
           body.query.includes(
-            param.query || 'query findCommitsWithAssociatedPullRequests'
-          )
+            param.query || 'query findCommitsWithAssociatedPullRequests',
+          ),
         )
         .reply(200, getGqlPayload(payload))
     }

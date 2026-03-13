@@ -9,4 +9,5 @@
  * main logic.
  */
 import { run } from './runner'
+
 await run()

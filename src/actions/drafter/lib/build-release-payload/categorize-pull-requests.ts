@@ -1,5 +1,5 @@
-import { Config } from '../../config'
-import { findPullRequests } from '../find-pull-requests'
+import type { Config } from '../../config'
+import type { findPullRequests } from '../find-pull-requests'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
 
@@ -10,7 +10,7 @@ export const categorizePullRequests = (params: {
   const { pullRequests, config } = params
 
   const allCategoryLabels = new Set(
-    config.categories.flatMap((category) => category.labels)
+    config.categories.flatMap((category) => category.labels),
   )
   const uncategorizedPullRequests: Pr[] = []
   const categorizedPullRequests: (Config['categories'][number] & {
@@ -20,7 +20,7 @@ export const categorizePullRequests = (params: {
   })
 
   const uncategorizedCategoryIndex = config.categories.findIndex(
-    (category) => category.labels.length === 0
+    (category) => category.labels.length === 0,
   )
 
   const filterUncategorizedPullRequests = (pullRequest: Pr) => {
@@ -29,14 +29,14 @@ export const categorizePullRequests = (params: {
     if (
       labels.length === 0 ||
       !labels.some(
-        (label) => !!label?.name && allCategoryLabels.has(label?.name)
+        (label) => !!label?.name && allCategoryLabels.has(label?.name),
       )
     ) {
       if (uncategorizedCategoryIndex === -1) {
         uncategorizedPullRequests.push(pullRequest)
       } else {
         categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(
-          pullRequest
+          pullRequest,
         )
       }
       return false
@@ -58,7 +58,7 @@ export const categorizePullRequests = (params: {
       const labels = pullRequest.labels?.nodes || []
       if (
         labels.some(
-          (label) => !!label?.name && category.labels.includes(label.name)
+          (label) => !!label?.name && category.labels.includes(label.name),
         )
       ) {
         category.pullRequests.push(pullRequest)
@@ -70,13 +70,13 @@ export const categorizePullRequests = (params: {
 }
 
 export const getFilterExcludedPullRequests = (
-  excludeLabels: Config['exclude-labels']
+  excludeLabels: Config['exclude-labels'],
 ) => {
   return (pullRequest: Pr) => {
     const labels = pullRequest.labels?.nodes || []
     if (
       labels.some(
-        (label) => !!label?.name && excludeLabels.includes(label.name)
+        (label) => !!label?.name && excludeLabels.includes(label.name),
       )
     ) {
       return false
@@ -86,14 +86,14 @@ export const getFilterExcludedPullRequests = (
 }
 
 export const getFilterIncludedPullRequests = (
-  includeLabels: Config['include-labels']
+  includeLabels: Config['include-labels'],
 ) => {
   return (pullRequest: Pr) => {
     const labels = pullRequest.labels?.nodes || []
     if (
       includeLabels.length === 0 ||
       labels.some(
-        (label) => !!label?.name && includeLabels.includes(label.name)
+        (label) => !!label?.name && includeLabels.includes(label.name),
       )
     ) {
       return true

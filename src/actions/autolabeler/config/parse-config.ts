@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { stringToRegex } from 'src/common'
-import { Config } from './config.schema'
+import type { Config } from './config.schema'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.
@@ -27,11 +27,11 @@ export const parseConfig = ({ config: originalConfig }: { config: Config }) => {
           }),
           body: autolabel.body.map((reg) => {
             return stringToRegex(reg)
-          })
+          }),
         }
       } catch {
         core.warning(
-          `Bad autolabeler regex: '${autolabel.branch}', '${autolabel.title}' or '${autolabel.body}'`
+          `Bad autolabeler regex: '${autolabel.branch}', '${autolabel.title}' or '${autolabel.body}'`,
         )
         return false
       }
@@ -41,7 +41,7 @@ export const parseConfig = ({ config: originalConfig }: { config: Config }) => {
   // Build parsed config object - alters original type
   const parsedConfig = {
     ...config,
-    autolabeler
+    autolabeler,
   }
 
   return parsedConfig

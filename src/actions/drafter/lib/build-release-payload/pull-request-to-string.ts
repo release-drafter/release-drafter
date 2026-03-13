@@ -1,7 +1,7 @@
-import { Config } from '../../config'
-import { findPullRequests } from '../find-pull-requests'
-import { renderTemplate } from './render-template'
 import regexEscape from 'escape-string-regexp'
+import type { Config } from '../../config'
+import type { findPullRequests } from '../find-pull-requests'
+import { renderTemplate } from './render-template'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
 
@@ -25,15 +25,15 @@ export const pullRequestToString = (params: {
         object: {
           $TITLE: escapeTitle({
             title: pullRequest.title,
-            escapes: params.config['change-title-escapes']
+            escapes: params.config['change-title-escapes'],
           }),
           $NUMBER: pullRequest.number.toString(),
           $AUTHOR: pullAuthor,
           $BODY: pullRequest.body,
           $URL: pullRequest.url,
           $BASE_REF_NAME: pullRequest.baseRefName,
-          $HEAD_REF_NAME: pullRequest.headRefName
-        }
+          $HEAD_REF_NAME: pullRequest.headRefName,
+        },
       })
     })
     .join('\n')
@@ -48,7 +48,7 @@ const escapeTitle = (params: {
     new RegExp(`[${regexEscape(params.escapes || '')}]|\`.*?\``, 'g'),
     (match) => {
       if (match.length > 1) return match
-      if (match == '@' || match == '#') return `${match}<!---->`
+      if (match === '@' || match === '#') return `${match}<!---->`
       return `\\${match}`
-    }
+    },
   )

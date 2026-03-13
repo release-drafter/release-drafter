@@ -1,12 +1,12 @@
 import { getOctokit, paginateGraphql } from 'src/common'
-import {
-  FindCommitsWithAssociatedPullRequestsQuery,
-  FindCommitsWithAssociatedPullRequestsQueryVariables
-} from './graphql/find-commits-with-pr.graphql.generated'
 import findCommitsWithPrQuery from './graphql/find-commits-with-pr.gql?raw'
+import type {
+  FindCommitsWithAssociatedPullRequestsQuery,
+  FindCommitsWithAssociatedPullRequestsQueryVariables,
+} from './graphql/find-commits-with-pr.graphql.generated'
 
 export const findCommitsWithPr = async (
-  params: FindCommitsWithAssociatedPullRequestsQueryVariables
+  params: FindCommitsWithAssociatedPullRequestsQueryVariables,
 ) => {
   const octokit = getOctokit()
 
@@ -15,7 +15,7 @@ export const findCommitsWithPr = async (
       octokit.graphql,
       findCommitsWithPrQuery,
       params,
-      ['repository', 'object', 'history']
+      ['repository', 'object', 'history'],
     )
 
   if (data.repository?.object?.__typename !== 'Commit') {
@@ -26,7 +26,7 @@ export const findCommitsWithPr = async (
    * Extract commit nodes from the paginated response
    */
   const commits = (data.repository.object.history.nodes || []).filter(
-    (commit): commit is NonNullable<typeof commit> => commit != null
+    (commit): commit is NonNullable<typeof commit> => commit != null,
   )
 
   if (params.since) {
@@ -34,7 +34,7 @@ export const findCommitsWithPr = async (
     // commit from the last tag is included, so we remove this here.
     return commits.filter(
       (commit) =>
-        !!commit?.committedDate && commit.committedDate != params.since
+        !!commit?.committedDate && commit.committedDate !== params.since,
     )
   } else {
     return commits

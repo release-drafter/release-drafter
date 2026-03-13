@@ -1,15 +1,14 @@
-import { findPullRequests } from '../find-pull-requests'
-import { findPreviousReleases } from '../find-previous-releases'
-import { sortPullRequests } from './sort-pull-requests'
-import { renderTemplate } from './render-template'
+import * as core from '@actions/core'
+import { context } from '@actions/github'
+import type { ExclusiveInput, ParsedConfig } from '../../config'
+import type { findPreviousReleases } from '../find-previous-releases'
+import type { findPullRequests } from '../find-pull-requests'
 import { generateChangeLog } from './generate-changelog'
 import { generateContributorsSentence } from './generate-contributors-sentence'
-import { context } from '@actions/github'
-import { resolveVersionKeyIncrement } from './resolve-version-increment'
-
-import * as core from '@actions/core'
 import { getVersionInfo } from './get-version-info'
-import { ParsedConfig, ExclusiveInput } from '../../config'
+import { renderTemplate } from './render-template'
+import { resolveVersionKeyIncrement } from './resolve-version-increment'
+import { sortPullRequests } from './sort-pull-requests'
 
 /**
  * Outputs the payload for creating or updating a release.
@@ -55,11 +54,10 @@ export const buildReleasePayload = (params: {
 
   const sortedPullRequests = sortPullRequests({
     pullRequests,
-    config
+    config,
   })
 
-  let body =
-    (config['header'] || '') + config.template + (config['footer'] || '')
+  let body = (config.header || '') + config.template + (config.footer || '')
 
   body = renderTemplate({
     template: body,
@@ -69,67 +67,67 @@ export const buildReleasePayload = (params: {
       $CONTRIBUTORS: generateContributorsSentence({
         commits,
         pullRequests: sortedPullRequests,
-        config
+        config,
       }),
       $OWNER: context.repo.owner,
-      $REPOSITORY: context.repo.repo
+      $REPOSITORY: context.repo.repo,
     },
-    replacers: config.replacers
+    replacers: config.replacers,
   })
 
   const versionKeyIncrement = resolveVersionKeyIncrement({
     pullRequests,
-    config
+    config,
   })
 
   const versionInfo = getVersionInfo({
     lastRelease,
     config,
     input,
-    versionKeyIncrement
+    versionKeyIncrement,
   })
 
-  core.debug('versionInfo: ' + JSON.stringify(versionInfo, null, 2))
+  core.debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`)
 
   if (versionInfo) {
     body = renderTemplate({ template: body, object: versionInfo })
   }
 
-  let mutableInputTag = structuredClone(input['tag'])
-  let mutableInputName = structuredClone(input['name'])
-  let mutableCommitish = structuredClone(config['commitish'])
+  let mutableInputTag = structuredClone(input.tag)
+  let mutableInputName = structuredClone(input.name)
+  let mutableCommitish = structuredClone(config.commitish)
 
   if (mutableInputTag === undefined) {
     mutableInputTag = versionInfo
       ? renderTemplate({
           template: config['tag-template'] || '',
-          object: versionInfo
+          object: versionInfo,
         })
       : ''
   } else if (versionInfo) {
     mutableInputTag = renderTemplate({
       template: mutableInputTag,
-      object: versionInfo
+      object: versionInfo,
     })
   }
 
-  core.debug('tag: ' + mutableInputTag)
+  core.debug(`tag: ${mutableInputTag}`)
 
   if (mutableInputName === undefined) {
     mutableInputName = versionInfo
       ? renderTemplate({
           template: config['name-template'] || '',
-          object: versionInfo
+          object: versionInfo,
         })
       : ''
   } else if (versionInfo) {
     mutableInputName = renderTemplate({
       template: mutableInputName,
-      object: versionInfo
+      object: versionInfo,
     })
   }
 
-  core.debug('name: ' + mutableInputName)
+  core.debug(`name: ${mutableInputName}`)
 
   /**
    * Tags are not supported as `target_commitish` by Github API.
@@ -139,7 +137,7 @@ export const buildReleasePayload = (params: {
    */
   if (mutableCommitish.startsWith('refs/tags/')) {
     core.info(
-      `${mutableCommitish} is not supported as release target, falling back to default branch`
+      `${mutableCommitish} is not supported as release target, falling back to default branch`,
     )
 
     mutableCommitish = ''
@@ -150,14 +148,14 @@ export const buildReleasePayload = (params: {
     tag: mutableInputTag,
     body,
     targetCommitish: mutableCommitish,
-    prerelease: config['prerelease'],
-    make_latest: config['latest'],
-    draft: !input['publish'],
+    prerelease: config.prerelease,
+    make_latest: config.latest,
+    draft: !input.publish,
     resolvedVersion: versionInfo?.$RESOLVED_VERSION,
     majorVersion: versionInfo?.$RESOLVED_VERSION_MAJOR,
     minorVersion: versionInfo?.$RESOLVED_VERSION_MINOR,
     patchVersion: versionInfo?.$RESOLVED_VERSION_PATCH,
-    prereleaseVersion: versionInfo?.$RESOLVED_VERSION_PRERELEASE
+    prereleaseVersion: versionInfo?.$RESOLVED_VERSION_PRERELEASE,
   }
 
   core.info(`Release payload built successfully`)
@@ -168,7 +166,7 @@ export const buildReleasePayload = (params: {
   core.info(`  prerelease:                  ${res.prerelease}`)
   core.info(`  make_latest:                 ${res.make_latest}`)
   core.info(
-    `  draft:                       ${res.draft}${!res.draft ? ' (will be published !)' : ''}`
+    `  draft:                       ${res.draft}${!res.draft ? ' (will be published !)' : ''}`,
   )
   core.info(`  RESOLVED_VERSION:            ${res.resolvedVersion}`)
   core.info(`  RESOLVED_VERSION_MAJOR:      ${res.majorVersion}`)

@@ -1,14 +1,14 @@
-import { ConfigTarget } from './parse-config-target'
 import yaml from 'yaml'
 import { getConfigFileFromFs } from './get-config-file-from-fs'
 import { getConfigFileFromRepo } from './get-config-file-from-repo'
 import { normalizeFilepath } from './normalize-filepath'
+import type { ConfigTarget } from './parse-config-target'
 
 const SUPPORTED_FILE_EXTENSIONS = ['json', 'yml', 'yaml']
 
 export const getConfigFile = async (
   configTarget: ConfigTarget,
-  parentTarget?: ConfigTarget
+  parentTarget?: ConfigTarget,
 ) => {
   const _configTarget = structuredClone(configTarget)
   const fileExtension = (
@@ -17,14 +17,14 @@ export const getConfigFile = async (
 
   if (!SUPPORTED_FILE_EXTENSIONS.includes(fileExtension)) {
     throw new Error(
-      `Unsupported file extension: .${fileExtension}. Supported extensions are: ${SUPPORTED_FILE_EXTENSIONS.join(', ')}`
+      `Unsupported file extension: .${fileExtension}. Supported extensions are: ${SUPPORTED_FILE_EXTENSIONS.join(', ')}`,
     )
   }
 
   if (parentTarget?.scheme) {
     if (parentTarget?.scheme === 'github' && _configTarget.scheme === 'file') {
       throw new Error(
-        `The '_extends' import-chain cannot contain github: to file: scheme transitions. Please change '_extends: ${configTarget.scheme}:${configTarget.filepath}' to use the github: scheme. ex: '_extends: ${parentTarget.repo.owner}/${parentTarget.repo.repo}:${configTarget.filepath}'`
+        `The '_extends' import-chain cannot contain github: to file: scheme transitions. Please change '_extends: ${configTarget.scheme}:${configTarget.filepath}' to use the github: scheme. ex: '_extends: ${parentTarget.repo.owner}/${parentTarget.repo.repo}:${configTarget.filepath}'`,
       )
     }
   }

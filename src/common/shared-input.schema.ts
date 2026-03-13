@@ -17,7 +17,7 @@ export const sharedInputSchema = object({
    * When enabled, no write operations (creating/updating releases or adding
    * labels) are performed. Instead, the action logs what it would have done.
    */
-  'dry-run': stringbool().or(boolean()).optional()
+  'dry-run': stringbool().or(boolean()).optional(),
 }).superRefine((data, ctx) => {
   // Inject token into environment variable for use by octokit
   if (data.token && !process.env.GITHUB_TOKEN) {
@@ -28,7 +28,7 @@ export const sharedInputSchema = object({
     ctx.addIssue({
       code: 'custom',
       message: "Unable to find a token. Please see input 'token'.",
-      path: ['token']
+      path: ['token'],
     })
   }
 })

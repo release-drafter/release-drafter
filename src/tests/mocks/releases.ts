@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
-import nock from 'nock'
 import path from 'node:path'
+import nock from 'nock'
 import { mocks } from '.'
 
 /**
@@ -20,12 +20,12 @@ export const getReleasePayload = (f: Release) =>
       path.join(
         path.dirname(import.meta.filename),
         '../fixtures/releases',
-        f + '.json'
+        `${f}.json`,
       ),
       {
-        encoding: 'utf8'
-      }
-    )
+        encoding: 'utf8',
+      },
+    ),
   )
 
 export const nockGetReleases = (params: {
@@ -36,12 +36,12 @@ export const nockGetReleases = (params: {
 
   return nock('https://api.github.com')
     .get(
-      `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`
+      `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
     )
     .query(true)
     .reply(
       200,
-      releaseFiles.map((f) => getReleasePayload(f))
+      releaseFiles.map((f) => getReleasePayload(f)),
     )
 }
 
@@ -54,7 +54,7 @@ export const nockPostRelease = (params?: {
   const postScope = nock('https://api.github.com')
     .post(
       `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
-      mocks.postReleaseBody
+      mocks.postReleaseBody,
     )
     .reply(200, getReleasePayload(replyRelease || 'release'))
 
@@ -71,19 +71,19 @@ export const nockGetAndPostReleases = (params: {
 
   return nock('https://api.github.com')
     .get(
-      `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`
+      `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
     )
     .query(true)
     .reply(
       200,
       fetchedReleases.map((f, i) => ({
         ...getReleasePayload(f),
-        ...params.fetchedReleasesOverrides?.[i]
-      }))
+        ...params.fetchedReleasesOverrides?.[i],
+      })),
     )
     .post(
       `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
-      mocks.postReleaseBody
+      mocks.postReleaseBody,
     )
     .reply(200, getReleasePayload(replyRelease || 'release'))
 }
@@ -98,21 +98,21 @@ export const nockGetAndPatchReleases = (params: {
 
   return nock('https://api.github.com')
     .get(
-      `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`
+      `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
     )
     .query(true)
     .reply(
       200,
       fetchedReleases.map((f, i) => ({
         ...getReleasePayload(f),
-        ...params.fetchedReleasesOverrides?.[i]
-      }))
+        ...params.fetchedReleasesOverrides?.[i],
+      })),
     )
     .patch(
       new RegExp(
-        `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases/\\d+`
+        `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases/\\d+`,
       ),
-      mocks.patchReleaseBody
+      mocks.patchReleaseBody,
     )
     .reply(200, getReleasePayload(replyRelease || 'release'))
 }

@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
-import { Config } from './schemas/config.schema'
-import { CommonConfig } from './schemas'
 import { context } from '@actions/github'
 import { stringToRegex } from 'src/common'
+import type { CommonConfig } from './schemas'
+import type { Config } from './schemas/config.schema'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.
@@ -22,7 +22,7 @@ export const mergeInputAndConfig = (params: {
   if (input.commitish) {
     if (config.commitish && config.commitish !== input.commitish) {
       core.info(
-        `Input's commitish "${input.commitish}" overrides config's commitish "${config.commitish}"`
+        `Input's commitish "${input.commitish}" overrides config's commitish "${config.commitish}"`,
       )
     }
     config.commitish = input.commitish
@@ -30,7 +30,7 @@ export const mergeInputAndConfig = (params: {
   if (input.header) {
     if (config.header && config.header !== input.header) {
       core.info(
-        `Input's header "${input.header}" overrides config's header "${config.header}"`
+        `Input's header "${input.header}" overrides config's header "${config.header}"`,
       )
     }
     config.header = input.header
@@ -38,7 +38,7 @@ export const mergeInputAndConfig = (params: {
   if (input.footer) {
     if (config.footer && config.footer !== input.footer) {
       core.info(
-        `Input's footer "${input.footer}" overrides config's footer "${config.footer}"`
+        `Input's footer "${input.footer}" overrides config's footer "${config.footer}"`,
       )
     }
     config.footer = input.footer
@@ -49,7 +49,7 @@ export const mergeInputAndConfig = (params: {
       config['prerelease-identifier'] !== input['prerelease-identifier']
     ) {
       core.info(
-        `Input's prerelease-identifier "${input['prerelease-identifier']}" overrides config's prerelease-identifier "${config['prerelease-identifier']}"`
+        `Input's prerelease-identifier "${input['prerelease-identifier']}" overrides config's prerelease-identifier "${config['prerelease-identifier']}"`,
       )
     }
     config['prerelease-identifier'] = input['prerelease-identifier']
@@ -60,7 +60,7 @@ export const mergeInputAndConfig = (params: {
       config.prerelease !== input.prerelease
     ) {
       core.info(
-        `Input's prerelease "${input.prerelease}" overrides config's prerelease "${config.prerelease}"`
+        `Input's prerelease "${input.prerelease}" overrides config's prerelease "${config.prerelease}"`,
       )
     }
     config.prerelease = input.prerelease
@@ -71,7 +71,7 @@ export const mergeInputAndConfig = (params: {
       config['include-pre-releases'] !== input['include-pre-releases']
     ) {
       core.info(
-        `Input's include-pre-releases "${input['include-pre-releases']}" overrides config's include-pre-releases "${config['include-pre-releases']}"`
+        `Input's include-pre-releases "${input['include-pre-releases']}" overrides config's include-pre-releases "${config['include-pre-releases']}"`,
       )
     }
     config['include-pre-releases'] = input['include-pre-releases']
@@ -79,20 +79,20 @@ export const mergeInputAndConfig = (params: {
   if (typeof input.latest === 'boolean') {
     if (typeof config.latest === 'boolean' && config.latest !== input.latest) {
       core.info(
-        `Input's latest "${input.latest}" overrides config's latest "${config.latest}"`
+        `Input's latest "${input.latest}" overrides config's latest "${config.latest}"`,
       )
     }
     config.latest = input.latest
   }
   if (config.latest && config.prerelease) {
     core.warning(
-      "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release."
+      "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.",
     )
     config.latest = false
   }
   if (config['prerelease-identifier'] && !config.prerelease) {
     core.warning(
-      `You specified a 'prerelease-identifier' (${config['prerelease-identifier']}), but 'prerelease' is set to false. Switching to true.`
+      `You specified a 'prerelease-identifier' (${config['prerelease-identifier']}), but 'prerelease' is set to false. Switching to true.`,
     )
     config.prerelease = true
   }
@@ -129,13 +129,13 @@ export const mergeInputAndConfig = (params: {
     latest,
     prerelease,
     replacers,
-    categories
+    categories,
   }
 
   // Throw some more validation errors
   if (!parsedConfig.commitish) {
     throw new Error(
-      "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)"
+      "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)",
     )
   }
   if (
@@ -143,7 +143,7 @@ export const mergeInputAndConfig = (params: {
       .length > 1
   ) {
     throw new Error(
-      'Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.'
+      'Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.',
     )
   }
 

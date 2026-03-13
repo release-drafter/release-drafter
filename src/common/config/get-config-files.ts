@@ -1,24 +1,24 @@
-import { getConfigFile } from './get-config-file'
-import { parseConfigTarget } from './parse-config-target'
-import { normalizeFilepath } from './normalize-filepath'
 import * as core from '@actions/core'
+import { getConfigFile } from './get-config-file'
+import { normalizeFilepath } from './normalize-filepath'
+import { parseConfigTarget } from './parse-config-target'
 
 export const getConfigFiles = async (
   configFilename: string,
   currentContext: {
     repo: { owner: string; repo: string }
     ref: string
-  }
+  },
 ) => {
   core.debug(`getConfigFiles: Starting with filename: ${configFilename}`)
   let configTarget = parseConfigTarget(configFilename, currentContext)
   core.debug(
-    `getConfigFiles: Parsed config target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`
+    `getConfigFiles: Parsed config target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`,
   )
 
   const requestedRepoConfig = await getConfigFile(configTarget)
   core.debug(
-    `getConfigFiles: Fetched initial config from ${requestedRepoConfig.fetchedFrom.scheme}:${requestedRepoConfig.fetchedFrom.filepath}`
+    `getConfigFiles: Fetched initial config from ${requestedRepoConfig.fetchedFrom.scheme}:${requestedRepoConfig.fetchedFrom.filepath}`,
   )
 
   const files = [requestedRepoConfig]
@@ -28,7 +28,7 @@ export const getConfigFiles = async (
   // if the configuration has no `_extends` key, we are done here.
   if (!lastExtends) {
     core.debug(
-      `getConfigFiles: No _extends found in config, returning single file`
+      `getConfigFiles: No _extends found in config, returning single file`,
     )
     return files
   }
@@ -40,7 +40,7 @@ export const getConfigFiles = async (
   do {
     extendsDepth++
     core.debug(
-      `getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends}`
+      `getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends}`,
     )
 
     if (extendsDepth > MAX_EXTENDS_DEPTH) {
@@ -51,7 +51,7 @@ export const getConfigFiles = async (
 
     configTarget = parseConfigTarget(lastExtends, lastFetchedFrom)
     core.debug(
-      `getConfigFiles: Parsed _extends target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`
+      `getConfigFiles: Parsed _extends target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`,
     )
 
     // Pre-fetch duplicate check: compute what fetchedFrom will be (same logic as
@@ -83,18 +83,18 @@ export const getConfigFiles = async (
 
     const extendRepoConfig = await getConfigFile(configTarget, lastFetchedFrom)
     core.debug(
-      `getConfigFiles: Fetched extended config from ${extendRepoConfig.fetchedFrom.scheme}:${extendRepoConfig.fetchedFrom.filepath}`
+      `getConfigFiles: Fetched extended config from ${extendRepoConfig.fetchedFrom.scheme}:${extendRepoConfig.fetchedFrom.filepath}`,
     )
 
     lastFetchedFrom = extendRepoConfig.fetchedFrom
     lastExtends = extendRepoConfig.config._extends
     files.push(extendRepoConfig)
     core.debug(
-      `getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends || 'none'}`
+      `getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends || 'none'}`,
     )
   } while (lastExtends)
   core.debug(
-    `getConfigFiles: Extends chain complete with ${files.length} file(s)`
+    `getConfigFiles: Extends chain complete with ${files.length} file(s)`,
   )
 
   return files
