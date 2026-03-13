@@ -1,7 +1,0 @@
-.DS_Store
-.licenses/
-dist/
-node_modules/
-coverage/
-*.generated.ts
-src/tests/fixtures/config/config-with-yaml-exception.yml

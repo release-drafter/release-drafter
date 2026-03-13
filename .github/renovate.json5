@@ -1,12 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^biome\\.jsonc$"],
+      "matchStrings": ["biomejs\\.dev/schemas/(?<currentValue>[^/]+)"],
+      "depNameTemplate": "@biomejs/biome",
+      "datasourceTemplate": "npm",
+    },
+  ],
   "dependencyDashboard": false,
   "semanticCommits": "enabled",
   "labels": ["type: dependencies"],
   "rangeStrategy": "bump",
   "constraints": {
-    "npm": "^11"
+    "npm": "^11",
   },
   "commitMessageExtra": "to {{newVersion}}",
   "schedule": ["every weekend"],
@@ -14,57 +23,48 @@
     {
       "matchManagers": ["github-actions"],
       "semanticCommitType": "ci",
-      "labels": ["type: maintenance"]
+      "labels": ["type: maintenance"],
     },
     {
       "matchCategories": ["security"],
-      "labels": ["type: security"]
+      "labels": ["type: security"],
     },
     {
       "matchDepTypes": ["devDependencies"],
-      "labels": ["type: maintenance"]
+      "labels": ["type: maintenance"],
     },
     {
-      "matchPackageNames": [
-        "eslint",
-        "eslint-*",
-        "@eslint/*",
-        "@typescript-eslint/*",
-        "@vitest/eslint-plugin",
-        "prettier",
-        "prettier-eslint"
-      ],
-      "groupName": "linters"
+      "matchPackageNames": ["@biomejs/biome"],
+      "groupName": "biome",
     },
     {
       "matchPackageNames": ["vitest", "@vitest/*"],
-      "excludePackageNames": ["@vitest/eslint-plugin"],
-      "groupName": "vitest"
+      "groupName": "vitest",
     },
     {
       "matchPackageNames": ["@graphql-codegen/*"],
-      "groupName": "graphql-codegen"
+      "groupName": "graphql-codegen",
     },
     {
       "matchPackageNames": ["vite", "vite-*"],
-      "groupName": "vite"
+      "groupName": "vite",
     },
     {
       "matchPackageNames": ["@actions/*"],
-      "groupName": "actions"
+      "groupName": "actions",
     },
     {
       "matchPackageNames": ["@types/*"],
-      "groupName": "types"
+      "groupName": "types",
     },
     {
       "matchPackageNames": ["@types/node"],
       "allowedVersions": "<25",
-      "groupName": "types"
+      "groupName": "types",
     },
     {
       "matchDepTypes": ["engines"],
-      "enabled": false
-    }
-  ]
+      "enabled": false,
+    },
+  ],
 }

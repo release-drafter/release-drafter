@@ -1,4 +1,4 @@
-import { ParsedConfig } from '../../config'
+import type { ParsedConfig } from '../../config'
 
 export type Template = {
   [key: `$${Uppercase<string>}`]:
@@ -30,7 +30,7 @@ export const renderTemplate = (params: {
   const { template, object, replacers } = params
 
   let input = template.replace(/(\$[A-Z_]+)/g, (_, k: string): string => {
-    let result
+    let result: string
 
     const isValidKey = (key: unknown): key is keyof typeof object =>
       (key as keyof typeof object) in object &&
@@ -40,9 +40,10 @@ export const renderTemplate = (params: {
     if (!isValidKey(k)) {
       result = k
     } else if (typeof object[k] === 'object') {
+      const nested = object[k] as NestedTemplate
       result = renderTemplate({
-        template: object[k]!.template,
-        object: object[k]!
+        template: nested.template,
+        object: nested,
       })
     } else {
       result = `${object[k]}`

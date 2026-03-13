@@ -1,11 +1,11 @@
-import { findPullRequests } from '../find-pull-requests'
 import * as core from '@actions/core'
+import type { ReleaseType } from 'semver'
+import type { Config } from '../../config'
+import type { findPullRequests } from '../find-pull-requests'
 import {
   getFilterExcludedPullRequests,
-  getFilterIncludedPullRequests
+  getFilterIncludedPullRequests,
 } from './categorize-pull-requests'
-import type { ReleaseType } from 'semver'
-import { Config } from '../../config'
 
 export const resolveVersionKeyIncrement = (params: {
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
@@ -23,7 +23,7 @@ export const resolveVersionKeyIncrement = (params: {
   const priorityMap = {
     patch: 1,
     minor: 2,
-    major: 3
+    major: 3,
   }
 
   const labelToKeyMap: Record<string, keyof typeof priorityMap> =
@@ -32,45 +32,47 @@ export const resolveVersionKeyIncrement = (params: {
         .flatMap((key) => [
           config['version-resolver'][
             key as keyof typeof priorityMap
-          ].labels.map((label) => [label, key])
+          ].labels.map((label) => [label, key]),
         ])
-        .flat()
+        .flat(),
     )
 
-  core.debug('labelToKeyMap: ' + JSON.stringify(labelToKeyMap))
+  core.debug(`labelToKeyMap: ${JSON.stringify(labelToKeyMap)}`)
 
   const keys = pullRequests
     .filter(getFilterExcludedPullRequests(config['exclude-labels']))
     .filter(getFilterIncludedPullRequests(config['include-labels']))
     .flatMap((pr) =>
       pr.labels?.nodes
-        ?.filter((n) => !!n?.name)
-        .map((node) => labelToKeyMap[node!.name])
+        ?.filter(
+          (n): n is NonNullable<typeof n> & { name: string } => !!n?.name,
+        )
+        .map((node) => labelToKeyMap[node.name]),
     )
     .filter(Boolean) as (keyof typeof priorityMap)[]
 
-  core.debug('keys: ' + JSON.stringify(keys))
+  core.debug(`keys: ${JSON.stringify(keys)}`)
 
   const keyPriorities = keys.map((key) => priorityMap[key])
   const priority = Math.max(...keyPriorities)
   const versionKey = Object.keys(priorityMap).find(
-    (key) => priorityMap[key as keyof typeof priorityMap] === priority
+    (key) => priorityMap[key as keyof typeof priorityMap] === priority,
   ) as keyof typeof priorityMap | undefined
 
-  core.debug('versionKey: ' + versionKey)
+  core.debug(`versionKey: ${versionKey}`)
 
   let versionKeyIncrement: ReleaseType =
     versionKey || config['version-resolver'].default
 
   const shouldIncrementAsPrerelease =
-    config['prerelease'] && config['prerelease-identifier']
+    config.prerelease && config['prerelease-identifier']
 
   if (shouldIncrementAsPrerelease) {
     versionKeyIncrement = `pre${versionKeyIncrement}`
   }
 
   core.info(
-    `Version increment: ${versionKeyIncrement}${!versionKey ? ' (default)' : ''}`
+    `Version increment: ${versionKeyIncrement}${!versionKey ? ' (default)' : ''}`,
   )
 
   return versionKeyIncrement

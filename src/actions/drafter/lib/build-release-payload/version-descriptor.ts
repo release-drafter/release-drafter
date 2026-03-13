@@ -1,6 +1,5 @@
-import type { SemVer, ReleaseType } from 'semver'
-import { findPreviousReleases } from '../find-previous-releases'
-import { Config } from 'src/actions/drafter/config'
+import * as core from '@actions/core'
+import type { ReleaseType, SemVer } from 'semver'
 import coerce from 'semver/functions/coerce'
 import inc from 'semver/functions/inc'
 import major from 'semver/functions/major'
@@ -8,7 +7,8 @@ import minor from 'semver/functions/minor'
 import parse from 'semver/functions/parse'
 import patch from 'semver/functions/patch'
 import prerelease from 'semver/functions/prerelease'
-import * as core from '@actions/core'
+import type { Config } from 'src/actions/drafter/config'
+import type { findPreviousReleases } from '../find-previous-releases'
 import { renderTemplate } from './render-template'
 
 type Release = Exclude<
@@ -32,7 +32,7 @@ export class VersionDescriptor {
     opt?: {
       preReleaseIdentifier?: string
       tagPrefix?: Config['tag-prefix']
-    }
+    },
   ) {
     this.preReleaseIdentifier = opt?.preReleaseIdentifier
     this.tagPrefix = opt?.tagPrefix
@@ -51,7 +51,7 @@ export class VersionDescriptor {
   }
 
   private _coerce(
-    from: SemVer | Pick<Release, 'tag_name' | 'name'> | string | undefined
+    from: SemVer | Pick<Release, 'tag_name' | 'name'> | string | undefined,
   ) {
     if (from) {
       const ver =
@@ -64,19 +64,19 @@ export class VersionDescriptor {
 
       if (!ver) {
         core.warning(
-          `Failed to parse version from input ${from}. Defaulting to null.`
+          `Failed to parse version from input ${from}. Defaulting to null.`,
         )
         return null
       }
       return ver
     } else {
       core.warning(`No version input provided. Defaulting to null.`)
-      return null!
+      return null
     }
   }
 
   private _isRelease(
-    input: unknown
+    input: unknown,
   ): input is Pick<Release, 'tag_name' | 'name'> {
     return (
       typeof input === 'object' &&
@@ -115,12 +115,12 @@ export class VersionDescriptor {
       this.version,
       increment,
       true,
-      this.preReleaseIdentifier
+      this.preReleaseIdentifier,
     )
 
     if (!_incrementedVersion) {
       throw new Error(
-        `Failed to increment version ${this.version} with increment ${increment}`
+        `Failed to increment version ${this.version} with increment ${increment}`,
       )
     }
 
@@ -128,13 +128,13 @@ export class VersionDescriptor {
 
     if (!_incrementedSemver) {
       throw new Error(
-        `Failed to parse version ${_incrementedVersion} after incrementing ${this.version} with increment ${increment}`
+        `Failed to parse version ${_incrementedVersion} after incrementing ${this.version} with increment ${increment}`,
       )
     }
 
     return new VersionDescriptor(_incrementedSemver, {
       tagPrefix: this.tagPrefix,
-      preReleaseIdentifier: this.preReleaseIdentifier
+      preReleaseIdentifier: this.preReleaseIdentifier,
     })
   }
 
@@ -145,8 +145,8 @@ export class VersionDescriptor {
         $MAJOR: this.major ?? undefined,
         $MINOR: this.minor ?? undefined,
         $PATCH: this.patch ?? undefined,
-        $PRERELEASE: this.prerelease ?? undefined
-      }
+        $PRERELEASE: this.prerelease ?? undefined,
+      },
     })
   }
 }
