@@ -1,33 +1,33 @@
+import { execFileSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
 import {
+  commonConfigSchema,
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
-  commonConfigSchema
 } from 'src/actions/drafter/config'
-import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
-import { toJSONSchema, object, globalRegistry } from 'zod'
-import { format, resolveConfig } from 'prettier'
+import { globalRegistry, object, toJSONSchema } from 'zod'
 
 const drafterSchema = toJSONSchema(
   object({
     ...exclusiveConfigSchema.shape,
-    ...commonConfigSchema.shape
+    ...commonConfigSchema.shape,
   }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
-  { io: 'input' }
+  { io: 'input' },
 )
 const autolabelerSchema = toJSONSchema(
   object({
-    ...autolabelerConfigSchema.shape
+    ...autolabelerConfigSchema.shape,
   }).meta({ ...globalRegistry.get(autolabelerConfigSchema) }),
-  { io: 'input' }
+  { io: 'input' },
 )
 
 const drafterFilePath = resolve(
   import.meta.dirname,
   '../..',
   'drafter',
-  'schema.json'
+  'schema.json',
 )
 
 // Also place in root folder for json schema store to keep working
@@ -35,22 +35,23 @@ const drafterFilePath = resolve(
 const alternateDrafterFilePath = resolve(
   import.meta.dirname,
   '../..',
-  'schema.json'
+  'schema.json',
 )
 
 const autolabelerFilePath = resolve(
   import.meta.dirname,
   '../..',
   'autolabeler',
-  'schema.json'
+  'schema.json',
 )
 
 async function writeFormatted(filePath: string, content: unknown) {
-  const prettierConfig = await resolveConfig(filePath)
-  const formatted = await format(JSON.stringify(content), {
-    ...prettierConfig,
-    filepath: filePath
-  })
+  const raw = JSON.stringify(content, null, 2)
+  const formatted = execFileSync(
+    'npx',
+    ['biome', 'format', '--stdin-file-path', filePath],
+    { input: raw, encoding: 'utf-8' },
+  )
   await writeFile(filePath, formatted, { encoding: 'utf-8', flag: 'w' })
 }
 

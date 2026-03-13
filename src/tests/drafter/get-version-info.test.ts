@@ -1,6 +1,6 @@
 import { configSchemaDefaults } from 'src/actions/drafter/config'
 import { getVersionInfo } from 'src/actions/drafter/lib/build-release-payload/get-version-info'
-import { resolveVersionKeyIncrement } from 'src/actions/drafter/lib/build-release-payload/resolve-version-increment'
+import type { resolveVersionKeyIncrement } from 'src/actions/drafter/lib/build-release-payload/resolve-version-increment'
 import { describe, expect, it } from 'vitest'
 
 type SuiteParams = [
@@ -21,7 +21,7 @@ type SuiteParams = [
         string
       >
     >
-  }
+  },
 ]
 
 const suites: SuiteParams[] = [
@@ -30,10 +30,10 @@ const suites: SuiteParams[] = [
     {
       lastRelease: {
         tag_name: 'v10.0.3',
-        name: 'Some release'
+        name: 'Some release',
       },
       config: {
-        'version-template': configSchemaDefaults['version-template']
+        'version-template': configSchemaDefaults['version-template'],
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -42,19 +42,19 @@ const suites: SuiteParams[] = [
         $MINOR: '10.1.0',
         $PATCH: '10.0.4',
         $PRERELEASE: '10.0.4-0',
-        $RESOLVED: '10.0.4'
-      }
-    }
+        $RESOLVED: '10.0.4',
+      },
+    },
   ],
   [
     "extracts a version-like string from the last release name if the tag isn't a version",
     {
       lastRelease: {
         tag_name: 'notaproperversion',
-        name: '10.0.3'
+        name: '10.0.3',
       },
       config: {
-        'version-template': configSchemaDefaults['version-template']
+        'version-template': configSchemaDefaults['version-template'],
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -63,19 +63,19 @@ const suites: SuiteParams[] = [
         $MINOR: '10.1.0',
         $PATCH: '10.0.4',
         $RESOLVED: '10.0.4',
-        $PRERELEASE: '10.0.4-0'
-      }
-    }
+        $PRERELEASE: '10.0.4-0',
+      },
+    },
   ],
   [
     'preferences tags over release names',
     {
       lastRelease: {
         tag_name: '10.0.3',
-        name: '8.1.0'
+        name: '8.1.0',
       },
       config: {
-        'version-template': configSchemaDefaults['version-template']
+        'version-template': configSchemaDefaults['version-template'],
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -84,19 +84,19 @@ const suites: SuiteParams[] = [
         $MINOR: '10.1.0',
         $PATCH: '10.0.4',
         $PRERELEASE: '10.0.4-0',
-        $RESOLVED: '10.0.4'
-      }
-    }
+        $RESOLVED: '10.0.4',
+      },
+    },
   ],
   [
     'handles alpha/beta releases',
     {
       lastRelease: {
         tag_name: 'v10.0.3-alpha',
-        name: 'Some release'
+        name: 'Some release',
       },
       config: {
-        'version-template': configSchemaDefaults['version-template']
+        'version-template': configSchemaDefaults['version-template'],
       },
       input: { version: 'v10.0.3-alpha' },
       versionKeyIncrement: 'patch',
@@ -105,20 +105,20 @@ const suites: SuiteParams[] = [
         $MINOR: '10.1.0',
         $PATCH: '10.0.3',
         $PRERELEASE: '10.0.3-alpha.0',
-        $RESOLVED: '10.0.3-alpha'
-      }
-    }
+        $RESOLVED: '10.0.3-alpha',
+      },
+    },
   ],
   [
     'handles incremental prereleases',
     {
       lastRelease: {
         tag_name: 'v10.0.3',
-        name: 'Some release'
+        name: 'Some release',
       },
       config: {
         'version-template': configSchemaDefaults['version-template'],
-        'prerelease-identifier': 'alpha'
+        'prerelease-identifier': 'alpha',
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -127,19 +127,19 @@ const suites: SuiteParams[] = [
         $MINOR: '10.1.0',
         $PATCH: '10.0.4',
         $PRERELEASE: '10.0.4-alpha.0',
-        $RESOLVED: '10.0.4'
-      }
-    }
+        $RESOLVED: '10.0.4',
+      },
+    },
   ],
   [
     'handles incremental prereleases on existing prereleases',
     {
       lastRelease: {
         tag_name: 'v10.0.3-alpha.2',
-        name: 'Some release'
+        name: 'Some release',
       },
       config: {
-        'version-template': configSchemaDefaults['version-template']
+        'version-template': configSchemaDefaults['version-template'],
       },
       input: {},
       versionKeyIncrement: 'patch',
@@ -148,46 +148,49 @@ const suites: SuiteParams[] = [
         $MINOR: '10.1.0',
         $PATCH: '10.0.3',
         $PRERELEASE: '10.0.3-alpha.3',
-        $RESOLVED: '10.0.3'
-      }
-    }
-  ]
+        $RESOLVED: '10.0.3',
+      },
+    },
+  ],
 ]
 
 describe('versions', () => {
-  it.each<SuiteParams>(suites)(
-    `%s`,
-    (_, { config, expected, input, lastRelease, versionKeyIncrement }) => {
-      const versionInfo = getVersionInfo({
-        config,
-        input,
-        lastRelease,
-        versionKeyIncrement
-      })
+  it.each<SuiteParams>(suites)(`%s`, (_, {
+    config,
+    expected,
+    input,
+    lastRelease,
+    versionKeyIncrement,
+  }) => {
+    const versionInfo = getVersionInfo({
+      config,
+      input,
+      lastRelease,
+      versionKeyIncrement,
+    })
 
-      // Next major version checks
-      expect(versionInfo.$NEXT_MAJOR_VERSION).toEqual(expected.$MAJOR)
+    // Next major version checks
+    expect(versionInfo.$NEXT_MAJOR_VERSION).toEqual(expected.$MAJOR)
 
-      // Next minor version checks
-      expect(versionInfo.$NEXT_MINOR_VERSION).toEqual(expected.$MINOR)
+    // Next minor version checks
+    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual(expected.$MINOR)
 
-      // Next patch version checks
-      expect(versionInfo.$NEXT_PATCH_VERSION).toEqual(expected.$PATCH)
+    // Next patch version checks
+    expect(versionInfo.$NEXT_PATCH_VERSION).toEqual(expected.$PATCH)
 
-      // Next prerelease version checks
-      expect(versionInfo.$NEXT_PRERELEASE_VERSION).toEqual(expected.$PRERELEASE)
+    // Next prerelease version checks
+    expect(versionInfo.$NEXT_PRERELEASE_VERSION).toEqual(expected.$PRERELEASE)
 
-      // Input & Resolved version checks
-      expect(versionInfo.$RESOLVED_VERSION).toEqual(expected.$RESOLVED)
-    }
-  )
+    // Input & Resolved version checks
+    expect(versionInfo.$RESOLVED_VERSION).toEqual(expected.$RESOLVED)
+  })
 
   it('returns default version info if no version was found in tag or name', () => {
     const versionInfo = getVersionInfo({
       lastRelease: undefined,
       input: {},
-      config: { 'version-template': configSchemaDefaults['version-template']! },
-      versionKeyIncrement: 'patch'
+      config: { 'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE' },
+      versionKeyIncrement: 'patch',
     })
 
     expect(versionInfo).toMatchInlineSnapshot(
@@ -213,7 +216,7 @@ describe('versions', () => {
         "$RESOLVED_VERSION_PATCH": "0",
         "$RESOLVED_VERSION_PRERELEASE": "",
       }
-    `
+    `,
     )
   })
 
@@ -222,7 +225,7 @@ describe('versions', () => {
       lastRelease: undefined,
       input: {},
       config: { 'version-template': '$MAJOR.$MINOR' }, // Custom template - should use MAJOR.MINOR format
-      versionKeyIncrement: 'minor'
+      versionKeyIncrement: 'minor',
     })
 
     expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1')
@@ -235,7 +238,7 @@ describe('versions', () => {
       lastRelease: undefined,
       input: {},
       config: { 'version-template': '$MINOR.$PATCH' }, // Custom template - should use MAJOR.MINOR format (no major)
-      versionKeyIncrement: 'patch'
+      versionKeyIncrement: 'patch',
     })
 
     expect(versionInfo.$RESOLVED_VERSION).toEqual('1.0')
@@ -249,11 +252,11 @@ describe('versions', () => {
     const versionInfo = getVersionInfo({
       lastRelease: {
         tag_name: 'v1.3', // This should be parsed as 1.3.0 internally
-        name: 'Some release'
+        name: 'Some release',
       },
       input: {},
       config: { 'version-template': '1.$MINOR.$PATCH' }, // Custom template - should use MAJOR.MINOR format (no major)
-      versionKeyIncrement: 'patch'
+      versionKeyIncrement: 'patch',
     })
 
     expect(versionInfo.$RESOLVED_VERSION).toEqual('1.3.1') // From 1.3.0 -> 1.3.1 -> formatted as "3.1"
@@ -265,11 +268,11 @@ describe('versions', () => {
     const versionInfo = getVersionInfo({
       lastRelease: {
         tag_name: 'v5.3', // This should be parsed as 5.3.0 internally
-        name: 'Some release'
+        name: 'Some release',
       },
       input: {},
       config: { 'version-template': '$MINOR.$PATCH' }, // Custom template - should use MAJOR.MINOR format (no major)
-      versionKeyIncrement: 'patch'
+      versionKeyIncrement: 'patch',
     })
 
     expect(versionInfo.$RESOLVED_VERSION).toEqual('3.1') // From 5.3.0 -> 5.3.1 -> formatted as "3.1"
@@ -280,44 +283,41 @@ describe('versions', () => {
   it.each<[ReturnType<typeof resolveVersionKeyIncrement>, string]>([
     ['patch', '10.0.4'],
     ['minor', '10.1.0'],
-    ['major', '11.0.0']
-  ])(
-    "when the resolver versionKey increment is '%s'",
-    (versionKey, expected) => {
-      const versionInfo = getVersionInfo({
-        lastRelease: {
-          tag_name: 'v10.0.3',
-          name: 'Some release'
-        },
-        input: {},
-        config: {
-          'version-template': configSchemaDefaults['version-template']
-        },
-        versionKeyIncrement: versionKey
-      })
+    ['major', '11.0.0'],
+  ])("when the resolver versionKey increment is '%s'", (versionKey, expected) => {
+    const versionInfo = getVersionInfo({
+      lastRelease: {
+        tag_name: 'v10.0.3',
+        name: 'Some release',
+      },
+      input: {},
+      config: {
+        'version-template': configSchemaDefaults['version-template'],
+      },
+      versionKeyIncrement: versionKey,
+    })
 
-      expect(versionInfo.$RESOLVED_VERSION).toEqual(expected)
-    }
-  )
+    expect(versionInfo.$RESOLVED_VERSION).toEqual(expected)
+  })
 
   it('uses full semver helper values for default template and token-rendered helper values for custom template', () => {
     const baseParams = {
       lastRelease: {
         tag_name: 'v10.0.3',
-        name: 'Some release'
+        name: 'Some release',
       },
       input: {},
-      versionKeyIncrement: 'patch' as const
+      versionKeyIncrement: 'patch' as const,
     }
 
     const defaultTemplateVersionInfo = getVersionInfo({
       ...baseParams,
-      config: { 'version-template': configSchemaDefaults['version-template'] }
+      config: { 'version-template': configSchemaDefaults['version-template'] },
     })
 
     const customTemplateVersionInfo = getVersionInfo({
       ...baseParams,
-      config: { 'version-template': '$MAJOR.$MINOR.$PATCH' }
+      config: { 'version-template': '$MAJOR.$MINOR.$PATCH' },
     })
 
     expect(defaultTemplateVersionInfo.$NEXT_MAJOR_VERSION).toEqual('11.0.0')
@@ -331,15 +331,15 @@ describe('versions', () => {
     const baseParams = {
       lastRelease: {
         tag_name: 'v10.0.3',
-        name: 'Previous release'
+        name: 'Previous release',
       },
       input: {},
-      versionKeyIncrement: 'patch' as const
+      versionKeyIncrement: 'patch' as const,
     }
 
     const versionInfo = getVersionInfo({
       ...baseParams,
-      config: { 'version-template': configSchemaDefaults['version-template'] }
+      config: { 'version-template': configSchemaDefaults['version-template'] },
     })
 
     // With default template, principal variables are full SemVer
@@ -365,15 +365,15 @@ describe('versions', () => {
     const baseParams = {
       lastRelease: {
         tag_name: 'v10.0.3',
-        name: 'Previous release'
+        name: 'Previous release',
       },
       input: {},
-      versionKeyIncrement: 'patch' as const
+      versionKeyIncrement: 'patch' as const,
     }
 
     const versionInfo = getVersionInfo({
       ...baseParams,
-      config: { 'version-template': '$MAJOR.$MINOR' }
+      config: { 'version-template': '$MAJOR.$MINOR' },
     })
 
     // With custom template, principal variables use the template
@@ -399,15 +399,15 @@ describe('versions', () => {
     const baseParams = {
       lastRelease: {
         tag_name: 'v10.0.3',
-        name: 'Previous release'
+        name: 'Previous release',
       },
       input: {},
-      versionKeyIncrement: 'patch' as const
+      versionKeyIncrement: 'patch' as const,
     }
 
     const versionInfo = getVersionInfo({
       ...baseParams,
-      config: { 'version-template': '$MAJOR' }
+      config: { 'version-template': '$MAJOR' },
     })
 
     // With $MAJOR template, principal variables contain only major version
