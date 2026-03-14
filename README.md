@@ -376,7 +376,12 @@ replacers:
     replace: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2'
   - search: 'myname'
     replace: 'My Name'
+  - search: '/- ([a-z])/g'
+    replace: '- \u$1' # Uppercase the first letter of each changelog entry
 ```
+
+`search` will be parsed to a RegExp, and `replace` supports substitution in the
+[same flavour VSCode does](https://code.visualstudio.com/docs/editing/codebasics#_case-changing-in-regex-replace).
 
 ## Autolabeler
 
