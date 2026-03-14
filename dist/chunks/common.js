@@ -26909,7 +26909,23 @@ var getConfigFiles = async (configFilename, currentContext) => {
 	debug(`getConfigFiles: Starting with filename: ${configFilename}`);
 	let configTarget = parseConfigTarget(configFilename, currentContext);
 	debug(`getConfigFiles: Parsed config target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`);
-	const requestedRepoConfig = await getConfigFile(configTarget);
+	const canFallBackToOrgRepo = configTarget.scheme === "github" && configTarget.repo.owner === currentContext.repo.owner && configTarget.repo.repo === currentContext.repo.repo && currentContext.repo.repo !== ".github";
+	let requestedRepoConfig;
+	try {
+		requestedRepoConfig = await getConfigFile(configTarget);
+	} catch (error) {
+		if (canFallBackToOrgRepo && error instanceof Error && error.message.includes("Config file not found") && configTarget.scheme === "github") {
+			info(`Config not found in ${currentContext.repo.owner}/${currentContext.repo.repo}, falling back to ${currentContext.repo.owner}/.github`);
+			requestedRepoConfig = await getConfigFile({
+				...configTarget,
+				repo: {
+					owner: currentContext.repo.owner,
+					repo: ".github"
+				},
+				ref: void 0
+			});
+		} else throw error;
+	}
 	debug(`getConfigFiles: Fetched initial config from ${requestedRepoConfig.fetchedFrom.scheme}:${requestedRepoConfig.fetchedFrom.filepath}`);
 	const files = [requestedRepoConfig];
 	let lastFetchedFrom = requestedRepoConfig.fetchedFrom;
