@@ -10,6 +10,7 @@ a variety of syntax combinations to fetch your config file(s).
     - [Load your config from another repo](#load-your-config-from-another-repo)
     - [Load a file on the runner's file-system (dynamic config)](#load-a-file-on-the-runners-file-system-dynamic-config)
     - [Extend other config files using `_extends`](#extend-other-config-files-using-_extends)
+  - [Org-wide config via the `.github` repo](#org-wide-config-via-the-github-repo)
   - [Edge-cases](#edge-cases)
     - [Load config from your default branch](#load-config-from-your-default-branch)
     - [Fetching from a repo named `github`](#fetching-from-a-repo-named-github)
@@ -159,6 +160,31 @@ template: |
 > - `_extends: github:../configs/release-drafter-common.yml`
 > - `_extends: file:../configs/release-drafter-common.yml`
 >   - make sure to `actions/checkout@v6` the repo beforehand
+
+### Org-wide config via the `.github` repo
+
+If release-drafter cannot find the config file in the current repository, it
+will automatically look for it in your organisation's
+[`.github` repository](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file).
+
+This means you can keep a single shared config in `<your-org>/.github` and all
+repositories in your organisation will pick it up without any per-repo
+configuration:
+
+```yaml
+# <your-org>/.github/.github/release-drafter.yml
+template: |
+  ## What's Changed
+
+  $CHANGES
+```
+
+> [!note]
+> The fallback only applies when:
+>
+> - the `config-name:` does not explicitly target another repository, and
+> - release-drafter is **not** already running inside the `.github` repository
+>   itself (to avoid an infinite loop).
 
 ## Edge-cases
 

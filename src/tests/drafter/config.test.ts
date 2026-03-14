@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import nock from 'nock'
 import { composeConfigGet } from 'src/common/config'
 import { describe, expect, it, vi } from 'vitest'
@@ -106,6 +107,10 @@ describe('get config file', () => {
 
       expect(scope.isDone()).toBe(true)
 
+      expect(core.info).toHaveBeenCalledWith(
+        'Config not found in octocat/hello-world, falling back to octocat/.github',
+      )
+
       expect(res.contexts.length).toBe(1)
       expect(res.config).toMatchInlineSnapshot(`
         {
@@ -115,6 +120,58 @@ describe('get config file', () => {
       expect(res.contexts[0]).toMatchInlineSnapshot(`
         {
           "filepath": ".github/release-drafter.yml",
+          "ref": undefined,
+          "repo": {
+            "owner": "octocat",
+            "repo": ".github",
+          },
+          "scheme": "github",
+        }
+      `)
+    })
+    it('should fall back to org .github repo for a non-default config filename', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const inputConfigName = 'other-release-drafter.yml'
+      const context = {
+        repo: { owner: 'octocat', repo: 'hello-world' },
+        ref: 'main',
+      }
+
+      const currentRepoEndpoint = getContentEndpoint({
+        ...context,
+        path: '.github/other-release-drafter.yml',
+      })
+      const orgFallbackEndpoint = getContentEndpoint({
+        repo: { owner: 'octocat', repo: '.github' },
+        path: '.github/other-release-drafter.yml',
+      })
+
+      const scope = nock('https://api.github.com')
+        .get(currentRepoEndpoint)
+        .reply(404)
+        .get(orgFallbackEndpoint)
+        .reply(200, `template: org-template-content`, {
+          'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+        })
+
+      const res = await composeConfigGet(inputConfigName, context)
+
+      expect(scope.isDone()).toBe(true)
+
+      expect(core.info).toHaveBeenCalledWith(
+        'Config not found in octocat/hello-world, falling back to octocat/.github',
+      )
+
+      expect(res.contexts.length).toBe(1)
+      expect(res.config).toMatchInlineSnapshot(`
+        {
+          "template": "org-template-content",
+        }
+      `)
+      expect(res.contexts[0]).toMatchInlineSnapshot(`
+        {
+          "filepath": ".github/other-release-drafter.yml",
           "ref": undefined,
           "repo": {
             "owner": "octocat",
@@ -175,6 +232,63 @@ describe('get config file', () => {
         composeConfigGet(inputConfigName, context),
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `[Error: Repo load failed. Config file not found with error 404. (target: octocat/.github:.github/release-drafter.yml@main)]`,
+      )
+
+      // only one request — no fallback attempted
+      expect(scope.isDone()).toBe(true)
+    })
+    it('should not fall back to org .github repo when using the file: scheme', async () => {
+      const inputConfigName = 'file:my-config.yml'
+      const workspace = '/home/runner/workspace'
+      const context = {
+        repo: { owner: 'octocat', repo: 'hello-world' },
+        ref: 'main',
+      }
+
+      vi.stubEnv('GITHUB_WORKSPACE', workspace)
+      mocks.existsSync.mockImplementation((path: string) => path === workspace) // workspace exists but file doesn't
+
+      // set up an interceptor for the .github fallback — it must NOT be called
+      const orgFallbackEndpoint = getContentEndpoint({
+        repo: { owner: 'octocat', repo: '.github' },
+        path: '.github/my-config.yml',
+      })
+      const scope = nock('https://api.github.com')
+        .get(orgFallbackEndpoint)
+        .reply(200, 'template: should-not-be-reached')
+
+      await expect(
+        composeConfigGet(inputConfigName, context),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `[Error: Local load failed. Config file not found: /home/runner/workspace/.github/my-config.yml. Did you clone your sources ? (ex: using @actions/checkout)]`,
+      )
+
+      // fallback endpoint was never hit
+      expect(scope.isDone()).toBe(false)
+      nock.cleanAll()
+    })
+    it('should not fall back to org .github repo when configTarget is on another repo', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const inputConfigName = 'other-repo:release-drafter.yml'
+      const context = {
+        repo: { owner: 'octocat', repo: 'hello-world' },
+        ref: 'main',
+      }
+
+      const otherRepoEndpoint = getContentEndpoint({
+        repo: { owner: 'octocat', repo: 'other-repo' },
+        path: '.github/release-drafter.yml',
+      })
+
+      const scope = nock('https://api.github.com')
+        .get(otherRepoEndpoint)
+        .reply(404)
+
+      await expect(
+        composeConfigGet(inputConfigName, context),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `[Error: Repo load failed. Config file not found with error 404. (target: octocat/other-repo:.github/release-drafter.yml)]`,
       )
 
       // only one request — no fallback attempted
@@ -438,7 +552,7 @@ describe('get config file', () => {
         expect(mocks.existsSync).not.toHaveBeenCalled()
         expect(mocks.readFileSync).not.toHaveBeenCalled()
 
-        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+        expect(core.warning).toHaveBeenCalledWith(
           'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@main".',
         )
         expect(scope.isDone()).toBe(true)
@@ -700,7 +814,7 @@ describe('get config file', () => {
 
         const res = await composeConfigGet(inputConfigName, context)
 
-        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+        expect(core.warning).toHaveBeenCalledWith(
           'Recursion detected. Ignoring "_extends: file:./release-drafter.yml".',
         )
 
@@ -740,7 +854,7 @@ describe('get config file', () => {
         const res = await composeConfigGet(inputConfigName, context)
 
         // lastExtends at detection time is file B's _extends pointing back to file A
-        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+        expect(core.warning).toHaveBeenCalledWith(
           'Recursion detected. Ignoring "_extends: file:./release-drafter.yml".',
         )
 
@@ -820,7 +934,7 @@ describe('get config file', () => {
 
         expect(scope.isDone()).toBe(true)
 
-        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+        expect(core.warning).toHaveBeenCalledWith(
           'Recursion detected. Ignoring "_extends: .github:/shared.yml".',
         )
 
@@ -907,7 +1021,7 @@ describe('get config file', () => {
         expect(scope.isDone()).toBe(true)
 
         // lastExtends at detection time is github:C's _extends pointing back to github:B
-        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+        expect(core.warning).toHaveBeenCalledWith(
           'Recursion detected. Ignoring "_extends: .github:/shared.yml".',
         )
 
@@ -982,7 +1096,7 @@ describe('get config file', () => {
         expect(scope.isDone()).toBe(true)
 
         // lastExtends at detection is github:B's _extends that points to github:A
-        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+        expect(core.warning).toHaveBeenCalledWith(
           'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@main".',
         )
 
@@ -1054,7 +1168,7 @@ describe('get config file', () => {
         expect(scope.isDone()).toBe(true)
 
         // lastExtends at detection is github:B's _extends pointing to github:A@v1.0
-        expect((await import('@actions/core')).warning).toHaveBeenCalledWith(
+        expect(core.warning).toHaveBeenCalledWith(
           'Recursion detected. Ignoring "_extends: hello-world:release-drafter.yml@v1.0".',
         )
 

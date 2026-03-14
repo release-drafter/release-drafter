@@ -32,7 +32,8 @@ export const getConfigFiles = async (
     if (
       canFallBackToOrgRepo &&
       error instanceof Error &&
-      error.message.includes('Config file not found')
+      error.message.includes('Config file not found') &&
+      configTarget.scheme === 'github'
     ) {
       core.info(
         `Config not found in ${currentContext.repo.owner}/${currentContext.repo.repo}, falling back to ${currentContext.repo.owner}/.github`,

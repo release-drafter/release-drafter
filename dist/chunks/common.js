@@ -26914,7 +26914,7 @@ var getConfigFiles = async (configFilename, currentContext) => {
 	try {
 		requestedRepoConfig = await getConfigFile(configTarget);
 	} catch (error) {
-		if (canFallBackToOrgRepo && error instanceof Error && error.message.includes("Config file not found")) {
+		if (canFallBackToOrgRepo && error instanceof Error && error.message.includes("Config file not found") && configTarget.scheme === "github") {
 			info(`Config not found in ${currentContext.repo.owner}/${currentContext.repo.repo}, falling back to ${currentContext.repo.owner}/.github`);
 			requestedRepoConfig = await getConfigFile({
 				...configTarget,
