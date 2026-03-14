@@ -364,6 +364,178 @@ describe('mergeInputAndConfig', () => {
     })
   })
 
+  describe('conventional matcher normalization', () => {
+    it('should normalize conventional matcher aliases into array-only fields', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        categories: [
+          {
+            title: 'Features',
+            conventional: {
+              orType: 'feat',
+              andScope: 'ui',
+              breaking: true,
+            },
+          },
+        ],
+      })
+      const input = commonConfigSchema.parse({})
+
+      const result = mergeInputAndConfig({ config, input })
+
+      expect(result.categories[0].conventional).toEqual({
+        types: new Set<string>(),
+        andTypes: new Set<string>(),
+        orTypes: new Set(['feat']),
+        scopes: new Set<string>(),
+        andScopes: new Set(['ui']),
+        orScopes: new Set<string>(),
+        breaking: true,
+        andBreaking: undefined,
+        orBreaking: undefined,
+      })
+    })
+
+    it('should keep conventional undefined when category does not define it', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        categories: [
+          {
+            title: 'Features',
+          },
+        ],
+      })
+      const input = commonConfigSchema.parse({})
+
+      const result = mergeInputAndConfig({ config, input })
+
+      expect(result.categories[0].conventional).toBeUndefined()
+    })
+
+    it('should deduplicate matcher arrays as sets', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        categories: [
+          {
+            title: 'Features',
+            conventional: {
+              orTypes: ['feat', 'feat', 'fix', 'fix'],
+            },
+          },
+        ],
+      })
+      const input = commonConfigSchema.parse({})
+
+      const result = mergeInputAndConfig({ config, input })
+
+      expect(result.categories[0].conventional).toEqual({
+        types: new Set<string>(),
+        andTypes: new Set<string>(),
+        orTypes: new Set(['feat', 'fix']),
+        scopes: new Set<string>(),
+        andScopes: new Set<string>(),
+        orScopes: new Set<string>(),
+        breaking: undefined,
+        andBreaking: undefined,
+        orBreaking: undefined,
+      })
+    })
+
+    it('should deduplicate category labels as a set', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        categories: [
+          {
+            title: 'Features',
+            labels: ['enhancement', 'enhancement'],
+            label: 'enhancement',
+          },
+        ],
+      })
+      const input = commonConfigSchema.parse({})
+
+      const result = mergeInputAndConfig({ config, input })
+
+      expect(result.categories[0].labels).toEqual(new Set(['enhancement']))
+    })
+
+    it('should throw when multiple type matcher aliases are specified', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        categories: [
+          {
+            title: 'Features',
+            conventional: {
+              orType: 'feat',
+              types: ['fix'],
+            },
+          },
+        ],
+      })
+      const input = commonConfigSchema.parse({})
+
+      expect(() => mergeInputAndConfig({ config, input })).toThrow(
+        'only one type matcher alias can be used at a time',
+      )
+      expect(() => mergeInputAndConfig({ config, input })).toThrow(
+        'Use exactly one of type, types, andType, andTypes, orType, orTypes',
+      )
+    })
+
+    it('should throw when multiple scope matcher aliases are specified', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        categories: [
+          {
+            title: 'Features',
+            conventional: {
+              andScope: 'ui',
+              scopes: ['api'],
+            },
+          },
+        ],
+      })
+      const input = commonConfigSchema.parse({})
+
+      expect(() => mergeInputAndConfig({ config, input })).toThrow(
+        'only one scope matcher alias can be used at a time',
+      )
+      expect(() => mergeInputAndConfig({ config, input })).toThrow(
+        'Use exactly one of scope, scopes, andScope, andScopes, orScope, orScopes',
+      )
+    })
+
+    it('should throw when multiple breaking matcher aliases are specified', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        categories: [
+          {
+            title: 'Features',
+            conventional: {
+              breaking: true,
+              andBreaking: false,
+            },
+          },
+        ],
+      })
+      const input = commonConfigSchema.parse({})
+
+      expect(() => mergeInputAndConfig({ config, input })).toThrow(
+        'only one breaking matcher alias can be used at a time',
+      )
+      expect(() => mergeInputAndConfig({ config, input })).toThrow(
+        'Use exactly one of breaking, andBreaking, orBreaking',
+      )
+    })
+  })
+
   describe('error handling', () => {
     it('should throw error when commitish is not provided in config or input', async () => {
       // Create a context where ref is undefined

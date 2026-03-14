@@ -1,26 +1,29 @@
-import type { Config } from '../../config'
-import type { findPullRequests } from '../find-pull-requests'
+import type { ParsedConfig } from 'src/actions/drafter/config'
+import type { findPullRequests } from '../../find-pull-requests'
+import { hasConventionalCriteria } from './conventional-matching'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
 
 export const categorizePullRequests = (params: {
   pullRequests: Pr[]
-  config: Pick<Config, 'exclude-labels' | 'include-labels' | 'categories'>
-}): [Pr[], (Config['categories'][number] & { pullRequests: Pr[] })[]] => {
+  config: Pick<ParsedConfig, 'exclude-labels' | 'include-labels' | 'categories'>
+}): [Pr[], (ParsedConfig['categories'][number] & { pullRequests: Pr[] })[]] => {
   const { pullRequests, config } = params
 
   const allCategoryLabels = new Set(
-    config.categories.flatMap((category) => category.labels),
+    config.categories.flatMap((category) => [...category.labels]),
   )
   const uncategorizedPullRequests: Pr[] = []
-  const categorizedPullRequests: (Config['categories'][number] & {
+  const categorizedPullRequests: (ParsedConfig['categories'][number] & {
     pullRequests: Pr[]
   })[] = [...config.categories].map((category) => {
     return { ...category, pullRequests: [] }
   })
 
   const uncategorizedCategoryIndex = config.categories.findIndex(
-    (category) => category.labels.length === 0,
+    (category) =>
+      category.labels.size === 0 &&
+      !hasConventionalCriteria(category.conventional),
   )
 
   const filterUncategorizedPullRequests = (pullRequest: Pr) => {
@@ -58,7 +61,7 @@ export const categorizePullRequests = (params: {
       const labels = pullRequest.labels?.nodes || []
       if (
         labels.some(
-          (label) => !!label?.name && category.labels.includes(label.name),
+          (label) => !!label?.name && category.labels.has(label.name),
         )
       ) {
         category.pullRequests.push(pullRequest)
@@ -70,13 +73,13 @@ export const categorizePullRequests = (params: {
 }
 
 export const getFilterExcludedPullRequests = (
-  excludeLabels: Config['exclude-labels'],
+  excludeLabels: ParsedConfig['exclude-labels'],
 ) => {
   return (pullRequest: Pr) => {
     const labels = pullRequest.labels?.nodes || []
     if (
       labels.some(
-        (label) => !!label?.name && excludeLabels.includes(label.name),
+        (label) => !!label?.name && excludeLabels.has(label.name),
       )
     ) {
       return false
@@ -86,14 +89,14 @@ export const getFilterExcludedPullRequests = (
 }
 
 export const getFilterIncludedPullRequests = (
-  includeLabels: Config['include-labels'],
+  includeLabels: ParsedConfig['include-labels'],
 ) => {
   return (pullRequest: Pr) => {
     const labels = pullRequest.labels?.nodes || []
     if (
-      includeLabels.length === 0 ||
+      includeLabels.size === 0 ||
       labels.some(
-        (label) => !!label?.name && includeLabels.includes(label.name),
+        (label) => !!label?.name && includeLabels.has(label.name),
       )
     ) {
       return true
