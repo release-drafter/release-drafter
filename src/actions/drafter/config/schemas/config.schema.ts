@@ -1,4 +1,3 @@
-import type * as z from 'zod'
 import {
   array,
   boolean,
@@ -98,7 +97,9 @@ export const exclusiveConfigSchema = object({
     .optional()
     .default([]),
   /**
-   * Categorize pull requests using labels.
+   * Categorize changes
+   *
+   * Either using PR labels, or the conventional commit spec, or both.
    */
   categories: array(
     object({
@@ -106,6 +107,30 @@ export const exclusiveConfigSchema = object({
       'collapse-after': number().int().min(0).optional().default(0),
       labels: array(string().min(1)).optional().default([]),
       label: string().min(1).optional(),
+      /**
+       * Specify either scope(s), type(s) and/or the breaking aspect
+       * of changes this category should group.
+       *
+       * Uses the conventional commit spec
+       * @example "<type>(<scope>): <header>[\nBREAKING CHANGE: <body>]""
+       */
+      conventional: object({
+        type: string().min(1).optional(),
+        andType: string().min(1).optional(),
+        orType: string().min(1).optional(),
+        types: array(string().min(1)).optional().default([]),
+        andTypes: array(string().min(1)).optional().default([]),
+        orTypes: array(string().min(1)).optional().default([]),
+        scope: string().min(1).optional(),
+        andScope: string().min(1).optional(),
+        orScope: string().min(1).optional(),
+        scopes: array(string().min(1)).optional().default([]),
+        andScopes: array(string().min(1)).optional().default([]),
+        orScopes: array(string().min(1)).optional().default([]),
+        breaking: boolean().optional(),
+        andBreaking: boolean().optional(),
+        orBreaking: boolean().optional(),
+      }).optional(),
     }),
   )
     .optional()

@@ -1,8 +1,11 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
 import { stringToRegex } from 'src/common'
-import type { CommonConfig } from './schemas'
-import type { Config } from './schemas/config.schema'
+import type { CommonConfig } from '../schemas'
+import type { Config } from '../schemas/config.schema'
+import { normalizeConventionalConfig } from './conventional-config'
+
+const toUniqueSet = <T>(values: T[]) => new Set(values)
 
 /**
  * Returns a copy of `config`, updated with values from `input`.
@@ -103,6 +106,8 @@ export const mergeInputAndConfig = (params: {
   const latest = typeof config.latest !== 'boolean' ? true : config.latest
   const prerelease =
     typeof config.prerelease !== 'boolean' ? false : config.prerelease
+  const excludeLabels = toUniqueSet(config['exclude-labels'])
+  const includeLabels = toUniqueSet(config['include-labels'])
 
   // Apply some transformations
   const replacers = config.replacers
@@ -117,9 +122,23 @@ export const mergeInputAndConfig = (params: {
     })
     .filter((r) => !!r)
   const categories = config.categories.map((cat) => {
-    const { label, ..._cat } = cat
-    _cat.labels = [...cat.labels, label].filter(Boolean) as string[]
-    return _cat
+    const { label, conventional, labels, ...restCategory } = cat
+    const normalizedLabels = toUniqueSet(
+      [...labels, label].filter(Boolean) as string[],
+    )
+
+    const normalizedConventional = normalizeConventionalConfig({
+      categoryTitle: cat.title,
+      conventional,
+    })
+
+    return {
+      ...restCategory,
+      labels: normalizedLabels,
+      ...(normalizedConventional === undefined
+        ? {}
+        : { conventional: normalizedConventional }),
+    }
   })
 
   // Build parsed config object - alters original type
@@ -128,6 +147,8 @@ export const mergeInputAndConfig = (params: {
     commitish,
     latest,
     prerelease,
+    'exclude-labels': excludeLabels,
+    'include-labels': includeLabels,
     replacers,
     categories,
   }
@@ -139,7 +160,7 @@ export const mergeInputAndConfig = (params: {
     )
   }
   if (
-    parsedConfig.categories.filter((category) => category.labels.length === 0)
+    parsedConfig.categories.filter((category) => category.labels.size === 0)
       .length > 1
   ) {
     throw new Error(

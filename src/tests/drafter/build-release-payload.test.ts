@@ -141,7 +141,9 @@ describe('generate changelog', () => {
     const changelog = generateChangeLog({
       config: {
         ...config,
-        categories: [{ title: 'Bugs', 'collapse-after': 3, labels: ['bug'] }],
+        categories: [
+          { title: 'Bugs', 'collapse-after': 3, labels: new Set(['bug']) },
+        ],
       },
       pullRequests,
     })
@@ -170,7 +172,11 @@ describe('generate changelog', () => {
       config: {
         ...config,
         categories: [
-          { title: 'Feature', 'collapse-after': 3, labels: ['feature'] },
+          {
+            title: 'Feature',
+            'collapse-after': 3,
+            labels: new Set(['feature']),
+          },
         ],
       },
       pullRequests,

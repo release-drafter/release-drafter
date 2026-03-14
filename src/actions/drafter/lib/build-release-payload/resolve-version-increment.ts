@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import type { ReleaseType } from 'semver'
-import type { Config } from '../../config'
+import type { ParsedConfig } from '../../config'
 import type { findPullRequests } from '../find-pull-requests'
 import {
   getFilterExcludedPullRequests,
@@ -10,7 +10,7 @@ import {
 export const resolveVersionKeyIncrement = (params: {
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
   config: Pick<
-    Config,
+    ParsedConfig,
     | 'version-resolver'
     | 'prerelease'
     | 'prerelease-identifier'

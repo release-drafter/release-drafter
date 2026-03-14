@@ -1,4 +1,4 @@
-import type { Config } from '../../config'
+import type { ParsedConfig } from '../../config'
 import type { findPullRequests } from '../find-pull-requests'
 import { categorizePullRequests } from './categorize-pull-requests'
 import { pullRequestToString } from './pull-request-to-string'
@@ -7,7 +7,7 @@ import { renderTemplate } from './render-template'
 export const generateChangeLog = (params: {
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
   config: Pick<
-    Config,
+    ParsedConfig,
     | 'change-title-escapes'
     | 'no-changes-template'
     | 'exclude-labels'
