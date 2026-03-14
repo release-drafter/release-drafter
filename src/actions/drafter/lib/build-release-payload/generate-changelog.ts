@@ -19,12 +19,20 @@ export const generateChangeLog = (params: {
 }) => {
   const { pullRequests, config } = params
 
-  if (pullRequests.length === 0) {
-    return config['no-changes-template']
-  }
-
   const [uncategorizedPullRequests, categorizedPullRequests] =
     categorizePullRequests({ pullRequests, config })
+
+  const categorizedPullRequestsCount = categorizedPullRequests.reduce(
+    (sum, category) => sum + category.pullRequests.length,
+    0,
+  )
+
+  const totalPullRequestsInChangelog =
+    categorizedPullRequestsCount + uncategorizedPullRequests.length
+
+  if (totalPullRequestsInChangelog === 0) {
+    return config['no-changes-template']
+  }
 
   const changeLog: string[] = []
 
