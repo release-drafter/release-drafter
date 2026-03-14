@@ -18,9 +18,13 @@ jobs:
     steps:
       - name: "Check for type: label"
         env:
-          LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          if echo "$LABELS" | grep -qE '"type: '; then
+          # Fetch at runtime so that re-running a failed workflow 
+          # after adding a label will pick up the newly added label.
+          LABELS=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/labels" --jq '.[].name')
+          if echo "$LABELS" | grep -qE '^type: '; then
             echo "PR has a valid 'type: ' label."
           else
             echo "Error: PR must have at least one label starting with 'type: '."
