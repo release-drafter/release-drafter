@@ -117,6 +117,24 @@ describe('mergeInputAndConfig', () => {
       )
     })
 
+    it('should merge input and config with input taking precedence for filter-by-range', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        'filter-by-range': '^1.0.0',
+      })
+      const input = commonConfigSchema.parse({
+        'filter-by-range': '^2.0.0',
+      })
+
+      const result = mergeInputAndConfig({ config, input })
+
+      expect(result['filter-by-range']).toBe('^2.0.0')
+      expect(mocks.core.info).toHaveBeenCalledWith(
+        'Input\'s filter-by-range "^2.0.0" overrides config\'s filter-by-range "^1.0.0"',
+      )
+    })
+
     it('should use config values when input values are not provided', () => {
       const config = configSchema.parse({
         template: '$CHANGES',
@@ -401,6 +419,19 @@ describe('mergeInputAndConfig', () => {
         mergeInputAndConfig({ config, input }),
       ).toThrowErrorMatchingInlineSnapshot(
         `[Error: Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.]`,
+      )
+    })
+    it('should throw error when filter-by-range is invalid', async () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        'filter-by-range': 'not-a-range',
+      })
+      const input = commonConfigSchema.parse({})
+
+      expect(() =>
+        mergeInputAndConfig({ config, input }),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[Error: 'filter-by-range' value "not-a-range" could not be parsed as a valid semver range.]`,
       )
     })
   })
