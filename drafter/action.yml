@@ -94,6 +94,11 @@ inputs:
       When enabled, the action logs what it would have done instead of creating or updating releases.
     required: false
     default: ''
+  filter-by-range:
+    description: |
+      Filter releases that satisfies this semver range. Evaluates the tag name againts node's semver.satisfies().
+    required: false
+    default: ''
   initial-commits-since:
     description: |
       A date in ISO format (eg: '2025-06-18T10:29:51Z') marking the initial commit for the release draft. This is applied only when no prior release is available.

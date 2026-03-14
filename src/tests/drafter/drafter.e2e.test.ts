@@ -3228,6 +3228,42 @@ describe('drafter e2e', () => {
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
+
+    describe('with filter-by-range', () => {
+      it('allows specification of a filter-by-range', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-filter-range')
+        const scope = nockGetAndPatchReleases({
+          fetchedReleases: [
+            'release-2',
+            'release',
+            'release-3',
+            'release-draft',
+          ],
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-empty',
+        })
+        await runDrafter()
+        expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "# There's new stuff!
+          ",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v3.0.0-beta",
+              "prerelease": false,
+              "tag_name": "v3.0.0-beta",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+    })
   })
 
   describe('with initial-commits-since', () => {

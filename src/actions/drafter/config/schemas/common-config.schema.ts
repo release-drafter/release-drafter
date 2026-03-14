@@ -44,6 +44,10 @@ export const commonConfigSchema = object({
    * A string that would be added after the template body.
    */
   footer: string().optional(),
+  /**
+   * Filter releases that satisfies this semver range. Evaluates the tag name againts node's semver.satisfies().
+   */
+  'filter-by-range': string().optional(),
 })
 
 /**
