@@ -191,6 +191,39 @@ describe('generate changelog', () => {
       * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375"
     `)
   })
+
+  it('returns no-changes-template when no pull requests are provided', () => {
+    const changelog = generateChangeLog({
+      config,
+      pullRequests: [],
+    })
+
+    expect(changelog).toBe('* No changes')
+  })
+
+  it('returns no-changes-template when all pull requests are excluded by exclude-labels', () => {
+    const changelog = generateChangeLog({
+      config: {
+        ...config,
+        'exclude-labels': ['bug', 'feature', 'bugfix', 'dependencies'],
+      },
+      pullRequests,
+    })
+
+    expect(changelog).toBe('* No changes')
+  })
+
+  it('returns no-changes-template when no pull requests match include-labels', () => {
+    const changelog = generateChangeLog({
+      config: {
+        ...config,
+        'include-labels': ['non-existent-label'],
+      },
+      pullRequests,
+    })
+
+    expect(changelog).toBe('* No changes')
+  })
 })
 
 const pullRequests: Parameters<typeof buildReleasePayload>[0]['pullRequests'] =

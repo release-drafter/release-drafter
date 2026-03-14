@@ -1421,11 +1421,11 @@ var escapeTitle = (params) => params.title.replace(new RegExp(`[${escapeStringRe
 //#region src/actions/drafter/lib/build-release-payload/generate-changelog.ts
 var generateChangeLog = (params) => {
 	const { pullRequests, config } = params;
-	if (pullRequests.length === 0) return config["no-changes-template"];
 	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
 		pullRequests,
 		config
 	});
+	if (categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) + uncategorizedPullRequests.length === 0) return config["no-changes-template"];
 	const changeLog = [];
 	if (uncategorizedPullRequests.length > 0) changeLog.push(pullRequestToString({
 		pullRequests: uncategorizedPullRequests,
