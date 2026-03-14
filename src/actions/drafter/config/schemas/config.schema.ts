@@ -178,6 +178,15 @@ export const exclusiveConfigSchema = object({
        */
       label: string().min(1).optional(),
 
+      /**
+       * How different matching criterias combine.
+       *
+       * @default "labels-and-paths"
+       */
+      'matching-mode': zenum(['labels-and-paths', 'labels-or-paths'])
+        .optional()
+        .default('labels-and-paths'),
+
       matches: object({
         /**
          * Label to match against a change's labels.
