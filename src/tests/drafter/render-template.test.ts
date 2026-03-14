@@ -217,5 +217,20 @@ describe('render template', () => {
 
       expect(output).toMatchInlineSnapshot('"abc ABC"')
     })
+
+    it('supports \\E to terminate case operations before subsequent capture groups', () => {
+      const output = renderTemplate({
+        template: 'hello world',
+        object: {},
+        replacers: [
+          {
+            search: /(hello) (world)/g,
+            replace: '\\U$1\\E $2',
+          },
+        ],
+      })
+
+      expect(output).toMatchInlineSnapshot('"HELLO world"')
+    })
   })
 })
