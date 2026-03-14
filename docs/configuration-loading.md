@@ -10,7 +10,7 @@ a variety of syntax combinations to fetch your config file(s).
     - [Load your config from another repo](#load-your-config-from-another-repo)
     - [Load a file on the runner's file-system (dynamic config)](#load-a-file-on-the-runners-file-system-dynamic-config)
     - [Extend other config files using `_extends`](#extend-other-config-files-using-_extends)
-  - [Org-wide config via the `.github` repo](#org-wide-config-via-the-github-repo)
+    - [Org-wide config via the `.github` repo](#org-wide-config-via-the-github-repo)
   - [Edge-cases](#edge-cases)
     - [Load config from your default branch](#load-config-from-your-default-branch)
     - [Fetching from a repo named `github`](#fetching-from-a-repo-named-github)
