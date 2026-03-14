@@ -10,6 +10,23 @@ permissions:
   contents: read
 
 jobs:
+  check-pr-labels:
+    name: 'Check PR Labels'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: "Check for type: label"
+        env:
+          LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          if echo "$LABELS" | grep -qE '"type: '; then
+            echo "PR has a valid 'type: ' label."
+          else
+            echo "Error: PR must have at least one label starting with 'type: '."
+            exit 1
+          fi
+
   smoke-test-drafter:
     name: 'Smoke Test for Drafter'
     runs-on: ubuntu-latest
