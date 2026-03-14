@@ -107,6 +107,10 @@ export class ReplacePattern {
               repl.push(match[idx].toLowerCase())
               opIdx++
               break
+            case 'E':
+              repl.push(match.slice(idx))
+              idx = len // force loop exit after this iteration
+              break
             default:
               repl.push(match[idx])
           }
@@ -246,6 +250,7 @@ class ReplacePieceBuilder {
  * \U			=> upper-cases ALL remaining characters in a match.
  * \l			=> lower-cases one character in a match.
  * \L			=> lower-cases ALL remaining characters in a match.
+ * \E			=> ends a \U or \L case-change sequence.
  * $$			=> inserts a "$".
  * $& and $0	=> inserts the matched substring.
  * $n			=> Where n is a non-negative integer lesser than 100, inserts the nth parenthesized submatch string
@@ -301,7 +306,9 @@ export function parseReplaceString(replaceString: string): ReplacePattern {
         case CharCode.l:
         // \l => lower-cases one character.
         case CharCode.L:
-          // \L => lower-cases ALL following characters.
+        // \L => lower-cases ALL following characters.
+        case CharCode.E:
+          // \E => ends case-change sequence.
           result.emitUnchanged(i - 1)
           result.emitStatic('', i + 1)
           caseOps.push(String.fromCharCode(nextChCode))

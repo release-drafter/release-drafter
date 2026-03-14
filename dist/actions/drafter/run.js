@@ -1070,6 +1070,7 @@ var CharCode = /* @__PURE__ */ function(CharCode) {
 	CharCode[CharCode["Digit8"] = 56] = "Digit8";
 	CharCode[CharCode["Digit9"] = 57] = "Digit9";
 	CharCode[CharCode["A"] = 65] = "A";
+	CharCode[CharCode["E"] = 69] = "E";
 	CharCode[CharCode["L"] = 76] = "L";
 	CharCode[CharCode["U"] = 85] = "U";
 	CharCode[CharCode["a"] = 97] = "a";
@@ -1093,8 +1094,8 @@ function buildReplaceStringWithCasePreserved(matches, pattern) {
 		else if (!containsHyphens && containsUnderscores) return buildReplaceStringForSpecificSpecialCharacter(matches, pattern, "_");
 		if (matches[0].toUpperCase() === matches[0]) return pattern.toUpperCase();
 		else if (matches[0].toLowerCase() === matches[0]) return pattern.toLowerCase();
-		else if (containsUppercaseCharacter(matches[0][0]) && pattern.length > 0) return pattern[0].toUpperCase() + pattern.substr(1);
-		else if (matches[0][0].toUpperCase() !== matches[0][0] && pattern.length > 0) return pattern[0].toLowerCase() + pattern.substr(1);
+		else if (containsUppercaseCharacter(matches[0][0]) && pattern.length > 0) return pattern[0].toUpperCase() + pattern.substring(1);
+		else if (matches[0][0].toUpperCase() !== matches[0][0] && pattern.length > 0) return pattern[0].toLowerCase() + pattern.substring(1);
 		else return pattern;
 	} else return pattern;
 }
@@ -1182,6 +1183,10 @@ var ReplacePattern = class ReplacePattern {
 						case "l":
 							repl.push(match[idx].toLowerCase());
 							opIdx++;
+							break;
+						case "E":
+							repl.push(match.slice(idx));
+							idx = len;
 							break;
 						default: repl.push(match[idx]);
 					}
@@ -1277,6 +1282,7 @@ var ReplacePieceBuilder = class {
 * \U			=> upper-cases ALL remaining characters in a match.
 * \l			=> lower-cases one character in a match.
 * \L			=> lower-cases ALL remaining characters in a match.
+* \E			=> ends a \U or \L case-change sequence.
 * $$			=> inserts a "$".
 * $& and $0	=> inserts the matched substring.
 * $n			=> Where n is a non-negative integer lesser than 100, inserts the nth parenthesized submatch string
@@ -1311,6 +1317,7 @@ function parseReplaceString(replaceString) {
 				case CharCode.U:
 				case CharCode.l:
 				case CharCode.L:
+				case CharCode.E:
 					result.emitUnchanged(i - 1);
 					result.emitStatic("", i + 1);
 					caseOps.push(String.fromCharCode(nextChCode));
