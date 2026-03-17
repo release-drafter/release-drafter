@@ -25,6 +25,9 @@ on:
     branches:
       - main
       - master
+  # pull_request_target event is required for autolabeler to support PRs from forks
+  # pull_request_target:
+  #   types: [opened, reopened, synchronize]
 
 permissions:
   contents: write # allow GITHUB_TOKEN to update releases
