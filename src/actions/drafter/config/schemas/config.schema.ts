@@ -10,9 +10,70 @@ import {
 } from 'zod'
 import { commonConfigSchema } from './common-config.schema'
 
+/**
+ * A single set of predicates that are combined with AND logic.
+ * All specified predicates must be satisfied for a change to match.
+ */
+const changeConditionSchema = object({
+  /**
+   * Label predicate: matches a change that carries this label.
+   *
+   * Same as specifying a single `labels` value.
+   *
+   * Use `labels-mode` to configure how this label is compared to change labels.
+   */
+  label: string().min(1).optional(),
+  /**
+   * Labels predicate: matches a change that carries these labels.
+   *
+   * Use `labels-mode` to configure how these labels are compared to change labels.
+   */
+  labels: array(string().min(1)).optional().default([]),
+  /**
+   * Matching mode for the `labels` predicate.
+   *
+   * The comparison is set-based (label order is ignored).
+   *
+   * - `any`: Pull request and configured labels overlap (current behavior).
+   * - `all`: Pull request contains every configured label. Pull request can have more labels.
+   * - `only`: Every pull request label is included in configured labels. Configured labels can specify more.
+   * - `exactly`: Pull request labels and configured labels are the same set.
+   */
+  'labels-mode': zenum(['any', 'all', 'only', 'exactly'])
+    .optional()
+    .default('any'),
+  /**
+   * Path predicate: matches a change that touched this path. Supports a glob pattern.
+   *
+   * Same as specifying a single `paths` value.
+   *
+   * Use `paths-mode` to configure how this path is matched against the changed paths.
+   */
+  path: string().min(1).optional(),
+  /**
+   * Paths predicate: matches a change that touched any of these paths. Values support glob patterns.
+   *
+   * Use `paths-mode` to configure how these paths are compared to the changed paths.
+   */
+  paths: array(string().min(1)).optional().default([]),
+  /**
+   * Matching mode for the `paths` predicate.
+   *
+   * The comparison is set-based (path order is ignored).
+   *
+   * - `any`: Changed paths and configured paths overlap (current behavior).
+   * - `all`: Changed paths contain every configured path. Changed paths can have more paths.
+   * - `only`: Every changed path is included in configured paths. Configured paths can specify more.
+   * - `exactly`: Changed paths and configured paths are the same set.
+   */
+  'paths-mode': zenum(['any', 'all', 'only', 'exactly'])
+    .optional()
+    .default('any'),
+})
+
 export const exclusiveConfigSchema = object({
   /**
-   * The template to use for each merged pull request.
+   * The template to use for each merged change.
    */
   'change-template': string()
     .optional()
@@ -45,18 +106,28 @@ export const exclusiveConfigSchema = object({
   'tag-template': string().optional(),
   /**
    * Exclude pull requests using labels.
+   *
+   * @deprecated Use a `type: pre-exclude` category with `matches.labels` instead.
    */
   'exclude-labels': array(string()).optional().default([]),
   /**
    * Include only the specified pull requests using labels.
+   *
+   * @deprecated Use a `type: pre-include` category with `matches.labels` instead.
    */
   'include-labels': array(string()).optional().default([]),
   /**
-   * Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories.
+   * Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array.
+   * Supports files and directories.
+   *
+   * @deprecated Use a `type: pre-include` category with `matches.paths` instead.
    */
   'include-paths': array(string()).optional().default([]),
   /**
-   * Exclude pull requests from the release notes if they modified any of the paths in this array. Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
+   * Exclude pull requests from the release notes if they modified any of the paths in this array.
+   * Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
+   *
+   * @deprecated Use a `type: pre-exclude` category with `matches.paths` instead.
    */
   'exclude-paths': array(string()).optional().default([]),
   /**
@@ -97,21 +168,122 @@ export const exclusiveConfigSchema = object({
   )
     .optional()
     .default([]),
+
   /**
-   * Categorize pull requests using labels.
+   * Categorize changes
    */
   categories: array(
     object({
-      title: string().min(1),
-      'collapse-after': number().int().min(-1).optional().default(-1),
+      /**
+       * Expanded in $TITLE in the category-template.
+       *
+       * May be omitted if `type` is not `changelog`.
+       */
+      title: string().min(1).optional(),
+
+      /**
+       * The type of the category.
+       *
+       * - `changelog`: Included in the generated changelog.
+       * - `pre-include`: Keep only matching changes for later changelog categorization.
+       * - `pre-exclude`: Exclude matching changes for later changelog categorization. Is run against changes that were included in category type `pre-include` if specified.
+       * - `version-resolver`: Used solely to determine `$RESOLVED_VERSION` based on matching changes, and isolate changelog from version resolution concerns. Use `type: 'changelog'` (default) and `categories[*].semver-increment` instead if this category should also be included in the changelog.
+       *
+       * `pre-include` always runs before `pre-exclude` in the pipeline.
+       *
+       * @default "changelog"
+       */
+      type: zenum([
+        'changelog',
+        'pre-include',
+        'pre-exclude',
+        'version-resolver',
+      ])
+        .optional()
+        .default('changelog'),
+
+      /**
+       * Whether changes included in this category should be excluded from other categories.
+       *
+       * Default behavior allows changes to appear in multiple categories if they match multiple category criteria.
+       *
+       * Only applicable to (and effective on) categories of `type: changelog`.
+       *
+       * @default false
+       */
+      exclusive: boolean().optional().default(false),
+
+      /**
+       * Collapses the category's change list into a `<details>`/`<summary>` block
+       * when the number of changes exceeds this value.
+       *
+       * Only applicable to categories of `type: changelog`.
+       *
+       * Set to `0` to always collapse. (default: `-1`, no collapsing)
+       */
+      'collapse-after': number().int().min(-1).optional().default(0),
+
+      /**
+       * How to adjust the `$RESOLVED_VERSION` if there are changes matching this category.
+       *
+       * Increments of every categories that include at least one change are sorted by
+       * semver severity, and final increment will be the most severe one.
+       *
+       * For example, if there are changes matching a category with `semver-increment: 'minor'` and another category with `semver-increment: 'patch'`, the resulting increment will be `minor`.
+       *
+       * Applicable to categories of `type: changelog` and `type: version-resolver`.
+       *
+       * @default "patch"
+       */
+      'semver-increment': zenum(['major', 'minor', 'patch'])
+        .optional()
+        .default('patch'),
+
+      /**
+       * @deprecated Use a `when` condition with `labels` instead.
+       */
       labels: array(string().min(1)).optional().default([]),
+      /**
+       * @deprecated Use a `when` condition with `label` instead.
+       */
       label: string().min(1).optional(),
+
+      /**
+       * Conditions that determine whether a change belongs to this category.
+       *
+       * Can be specified as:
+       * - A **single condition** (object): the change must satisfy all predicates in that condition.
+       * - An **array of conditions**: the change must satisfy all predicates of **at least one**
+       *   condition (OR logic across conditions, AND logic within each condition).
+       *
+       * An empty array (default) matches all changes.
+       *
+       * @example
+       * # Shorthand: single condition (must have label "bug" AND touch "src/")
+       * when:
+       *   labels: [bug]
+       *   paths: [src/**]
+       *
+       * @example
+       * # Array: (label "bug" AND path "src/") OR (label "enhancement")
+       * when:
+       *   - labels: [bug]
+       *     paths: [src/**]
+       *   - labels: [enhancement]
+       */
+      when: changeConditionSchema
+        .or(array(changeConditionSchema))
+        .optional()
+        .default([]),
     }),
   )
     .optional()
     .default([]),
+
   /**
    * Adjust the `$RESOLVED_VERSION` variable using labels.
+   *
+   * @deprecated Use a category with a `semver-increment` instead. Use category[ies] with `type: version-resolver` to separate version resolution from changelog inclusion concerns.
    */
   'version-resolver': object({
     major: object({
@@ -138,6 +310,7 @@ export const exclusiveConfigSchema = object({
       patch: { labels: [] },
       default: 'patch',
     }),
+
   /**
    * The template to use for each category.
    */
