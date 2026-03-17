@@ -303,7 +303,7 @@ var import_ignore = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exp
 })))(), 1);
 var main = async (params) => {
 	info(`Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`);
-	if (context.eventName !== "pull_request") throw new Error(`Event type is wrong. Expected 'pull_request', received '${context.eventName}'`);
+	if (context.eventName !== "pull_request" && context.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`);
 	const octokit = getOctokit();
 	/**
 	* @see https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request

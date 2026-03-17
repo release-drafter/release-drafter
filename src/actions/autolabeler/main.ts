@@ -13,9 +13,12 @@ export const main = async (params: {
     `Running for event "${context.eventName || '[undefined]'}.${context.payload.action || '[undefined]'}"`,
   )
 
-  if (context.eventName !== 'pull_request') {
+  if (
+    context.eventName !== 'pull_request' &&
+    context.eventName !== 'pull_request_target'
+  ) {
     throw new Error(
-      `Event type is wrong. Expected 'pull_request', received '${context.eventName}'`,
+      `Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`,
     )
   }
   const octokit = getOctokit()
