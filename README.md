@@ -25,9 +25,6 @@ on:
     branches:
       - main
       - master
-  # pull_request_target event is required for autolabeler to support PRs from forks
-  # pull_request_target:
-  #   types: [opened, reopened, synchronize]
 
 permissions:
   contents: write # allow GITHUB_TOKEN to update releases
@@ -393,9 +390,27 @@ You can add automatically a label into a pull request, with the `autolabeler`
 action.
 
 ```yaml
-steps:
-  # runs autolabeler
-  - uses: release-drafter/release-drafter/autolabeler@latest
+name: Auto Label
+
+on:
+  pull_request:
+    # Only following types are handled by the action, but one can default to all as well
+    types: [opened, reopened, synchronize]
+  # pull_request_target event is required for autolabeler to support PRs from forks
+  # pull_request_target:
+  #   types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  auto_label:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      # runs autolabeler
+      - uses: release-drafter/release-drafter/autolabeler@latest
 ```
 
 Available matchers are `files` (glob), `branch` (regex), `title` (regex) and
