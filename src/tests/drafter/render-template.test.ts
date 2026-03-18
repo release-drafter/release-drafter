@@ -218,4 +218,39 @@ describe('render template', () => {
       expect(output).toMatchInlineSnapshot('"abc ABC"')
     })
   })
+
+  describe('semantic prefix replacers (issue #1228)', () => {
+    const multilineBody = [
+      "# What's Changed",
+      '',
+      '* feat(foo): Add feature (#1) @user',
+      '* fix: Bug fix (#2) @user',
+      '* ci(deps): Update dependencies (#3) @user',
+      '* chore: Regular maintenance (#4) @user',
+    ].join('\n')
+
+    it('regex using ^ with multiline flag AND accounting for the "* " prefix strips semantic prefixes', () => {
+      // An alternative that preserves the `^` intent: capture the `* ` prefix
+      // together and put it back in the replacement.
+      const output = renderTemplate({
+        template: multilineBody,
+        object: {},
+        replacers: [
+          {
+            search: /^(\* )(fix|feat|ci)(\(.+?\))?: /gm,
+            replace: '$1',
+          },
+        ],
+      })
+
+      expect(output).toMatchInlineSnapshot(`
+        "# What's Changed
+
+        * Add feature (#1) @user
+        * Bug fix (#2) @user
+        * Update dependencies (#3) @user
+        * chore: Regular maintenance (#4) @user"
+      `)
+    })
+  })
 })
