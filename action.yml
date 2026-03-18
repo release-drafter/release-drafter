@@ -78,16 +78,6 @@ inputs:
       A string that would be added after the template body.
     required: false
     default: ''
-  disable-releaser:
-    description: |
-      A boolean indicating whether the releaser mode is disabled.
-    required: false
-    default: ''
-  disable-autolabeler:
-    description: |
-      A boolean indicating whether the autolabeler mode is disabled.
-    required: false
-    default: ''
   dry-run:
     description: |
       A boolean indicating whether to run without performing any write operations.
