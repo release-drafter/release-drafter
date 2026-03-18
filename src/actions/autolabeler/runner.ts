@@ -10,6 +10,12 @@ import { main } from './main'
 export async function run(): Promise<void> {
   try {
     const input = getActionInput()
+
+    if (input['disable-autolabeler']) {
+      core.info('Autolabeler is disabled via disable-autolabeler input. Skipping labeling.')
+      return
+    }
+
     const config = parseConfig({
       config: await getConfig(input['config-name']),
     })

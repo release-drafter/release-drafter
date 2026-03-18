@@ -20,6 +20,7 @@ export const getActionInput = (): ActionInput => {
     version: getInput('version'),
     publish: getInput('publish'),
     token: getInput('token'),
+    'disable-releaser': getInput('disable-releaser'),
 
     // can override the config
     latest: getInput('latest'),

@@ -16,6 +16,12 @@ export async function run(): Promise<void> {
   try {
     core.info('Parsing inputs and configuration...')
     const input = getActionInput()
+
+    if (input['disable-releaser']) {
+      core.info('Releaser is disabled via disable-releaser input. Skipping release creation.')
+      return
+    }
+
     const config = mergeInputAndConfig({
       config: await getConfig(input['config-name']),
       input,

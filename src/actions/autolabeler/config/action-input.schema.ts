@@ -1,6 +1,6 @@
 import { sharedInputSchema } from 'src/common'
 import type * as z from 'zod'
-import { object, string } from 'zod'
+import { boolean, object, string, stringbool } from 'zod'
 
 export const actionInputSchema = object({
   /**
@@ -9,6 +9,11 @@ export const actionInputSchema = object({
    * @default 'release-drafter.yml'
    */
   'config-name': string().optional().default('release-drafter.yml'),
+  /**
+   * A boolean indicating whether the autolabeler mode is disabled.
+   * When true, the autolabeler will skip labeling entirely.
+   */
+  'disable-autolabeler': stringbool().or(boolean()).optional(),
 }).and(sharedInputSchema)
 
 /**

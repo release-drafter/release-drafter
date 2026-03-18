@@ -1,6 +1,6 @@
 import { sharedInputSchema } from 'src/common'
 import type * as z from 'zod'
-import { object, string, stringbool } from 'zod'
+import { boolean, object, string, stringbool } from 'zod'
 import { commonConfigSchema } from './common-config.schema'
 
 export const exclusiveInputSchema = object({
@@ -29,6 +29,11 @@ export const exclusiveInputSchema = object({
    * A boolean indicating whether the release being created or updated should be immediately published.
    */
   publish: stringbool().optional().default(false),
+  /**
+   * A boolean indicating whether the releaser mode is disabled.
+   * When true, the drafter will skip release creation/update entirely.
+   */
+  'disable-releaser': stringbool().or(boolean()).optional(),
 }).and(sharedInputSchema)
 
 export const actionInputSchema = exclusiveInputSchema.and(commonConfigSchema)

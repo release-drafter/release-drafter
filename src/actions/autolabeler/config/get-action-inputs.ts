@@ -12,5 +12,6 @@ export const getActionInput = (): ActionInput => {
     'config-name': getInput('config-name'),
     token: getInput('token'),
     'dry-run': getInput('dry-run'),
+    'disable-autolabeler': getInput('disable-autolabeler'),
   })
 }

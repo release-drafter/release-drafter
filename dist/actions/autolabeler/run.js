@@ -1,6 +1,9 @@
-import { C as warning, S as setOutput, T as __toESM, b as info, g as context, h as getOctokit, l as object, m as composeConfigGet, o as array, r as sharedInputSchema, t as stringToRegex, u as string, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
+import { C as warning, S as setOutput, T as __toESM, b as info, d as stringbool, g as context, h as getOctokit, l as object, m as composeConfigGet, o as array, r as sharedInputSchema, s as boolean, t as stringToRegex, u as string, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
 //#region src/actions/autolabeler/config/action-input.schema.ts
-var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
+var actionInputSchema = object({
+	"config-name": string().optional().default("release-drafter.yml"),
+	"disable-autolabeler": stringbool().or(boolean()).optional()
+}).and(sharedInputSchema);
 //#endregion
 //#region src/actions/autolabeler/config/config.schema.ts
 var configSchema = object({ autolabeler: array(object({
@@ -20,7 +23,8 @@ var getActionInput = () => {
 	return actionInputSchema.parse({
 		"config-name": getInput$1("config-name"),
 		token: getInput$1("token"),
-		"dry-run": getInput$1("dry-run")
+		"dry-run": getInput$1("dry-run"),
+		"disable-autolabeler": getInput$1("disable-autolabeler")
 	});
 };
 //#endregion
@@ -372,6 +376,10 @@ var main = async (params) => {
 async function run() {
 	try {
 		const input = getActionInput();
+		if (input["disable-autolabeler"]) {
+			info("Autolabeler is disabled via disable-autolabeler input. Skipping labeling.");
+			return;
+		}
 		const { labels, pr_number } = await main({
 			config: parseConfig({ config: await getConfig(input["config-name"]) }),
 			dryRun: input["dry-run"]

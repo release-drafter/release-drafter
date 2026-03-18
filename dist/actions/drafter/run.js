@@ -25,7 +25,8 @@ var actionInputSchema = object({
 	name: string().optional(),
 	tag: string().optional(),
 	version: string().optional(),
-	publish: stringbool().optional().default(false)
+	publish: stringbool().optional().default(false),
+	"disable-releaser": stringbool().or(boolean()).optional()
 }).and(sharedInputSchema).and(commonConfigSchema);
 //#endregion
 //#region src/actions/drafter/config/get-action-inputs.ts
@@ -38,6 +39,7 @@ var getActionInput = () => {
 		version: getInput$1("version"),
 		publish: getInput$1("publish"),
 		token: getInput$1("token"),
+		"disable-releaser": getInput$1("disable-releaser"),
 		latest: getInput$1("latest"),
 		prerelease: getInput$1("prerelease"),
 		"initial-commits-since": getInput$1("initial-commits-since"),
@@ -2232,6 +2234,10 @@ async function run() {
 	try {
 		info("Parsing inputs and configuration...");
 		const input = getActionInput();
+		if (input["disable-releaser"]) {
+			info("Releaser is disabled via disable-releaser input. Skipping release creation.");
+			return;
+		}
 		const { upsertedRelease, releasePayload } = await main({
 			input,
 			config: mergeInputAndConfig({
