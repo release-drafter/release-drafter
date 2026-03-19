@@ -65,7 +65,7 @@ export const generateChangeLog = (params: {
 
     // Determine the collapse status.
     const shouldCollapse =
-      category['collapse-after'] !== 0 &&
+      category['collapse-after'] !== -1 &&
       category.pullRequests.length > category['collapse-after']
 
     // Add the pull requests to the changelog.
@@ -73,7 +73,9 @@ export const generateChangeLog = (params: {
       changeLog.push(
         '<details>',
         '\n',
-        `<summary>${category.pullRequests.length} changes</summary>`,
+        `<summary>${category.pullRequests.length} change${
+          category.pullRequests.length > 1 ? 's' : ''
+        }</summary>`,
         '\n\n',
         pullRequestString,
         '\n',

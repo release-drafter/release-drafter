@@ -103,7 +103,7 @@ export const exclusiveConfigSchema = object({
   categories: array(
     object({
       title: string().min(1),
-      'collapse-after': number().int().min(0).optional().default(0),
+      'collapse-after': number().int().min(-1).optional().default(-1),
       labels: array(string().min(1)).optional().default([]),
       label: string().min(1).optional(),
     }),
