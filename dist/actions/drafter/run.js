@@ -78,7 +78,7 @@ var exclusiveConfigSchema = object({
 	})).optional().default([]),
 	categories: array(object({
 		title: string().min(1),
-		"collapse-after": number().int().min(0).optional().default(0),
+		"collapse-after": number().int().min(-1).optional().default(-1),
 		labels: array(string().min(1)).optional().default([]),
 		label: string().min(1).optional()
 	})).optional().default([]),
@@ -1441,7 +1441,7 @@ var generateChangeLog = (params) => {
 			pullRequests: category.pullRequests,
 			config
 		});
-		if (category["collapse-after"] !== 0 && category.pullRequests.length > category["collapse-after"]) changeLog.push("<details>", "\n", `<summary>${category.pullRequests.length} changes</summary>`, "\n\n", pullRequestString, "\n", "</details>");
+		if (category["collapse-after"] !== -1 && category.pullRequests.length > category["collapse-after"]) changeLog.push("<details>", "\n", `<summary>${category.pullRequests.length} change${category.pullRequests.length > 1 ? "s" : ""}</summary>`, "\n\n", pullRequestString, "\n", "</details>");
 		else changeLog.push(pullRequestString);
 		if (index + 1 !== categorizedPullRequests.length) changeLog.push("\n\n");
 	}

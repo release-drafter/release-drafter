@@ -165,6 +165,25 @@ describe('generate changelog', () => {
     `)
   })
 
+  it('adds proper details/summary markdown when collapse-after is set to 0 and has a PR', () => {
+    const changelog = generateChangeLog({
+      config: {
+        ...config,
+        categories: [{ title: 'Bugs', 'collapse-after': 0, labels: ['bug'] }],
+      },
+      pullRequests: pullRequests.slice(0, 1),
+    })
+    expect(changelog).toMatchInlineSnapshot(`
+      "## Bugs
+
+      <details>
+      <summary>1 change</summary>
+
+      * A1 (#1) @ghost
+      </details>"
+    `)
+  })
+
   it('does not add proper details/summary markdown when collapse-after is set and less than 3 PRs', () => {
     const changelog = generateChangeLog({
       config: {

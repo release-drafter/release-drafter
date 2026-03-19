@@ -313,8 +313,9 @@ Adding such labels to your PRs can be automated by using the embedded
 
 Optionally you can add a `collapse-after` entry to your category item, if the
 category has more than the defined `collapse-after` pull requests then it will
-show all pull requests collapsed for that category. Append the `collapse-after`
-integer to your category as following:
+show all pull requests collapsed for that category. Setting `collapse-after` to
+`0` will always collapse the category regardless of the number of pull requests.
+Append the `collapse-after` integer to your category as following:
 
 ```yml
 categories:
