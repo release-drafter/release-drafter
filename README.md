@@ -26,8 +26,10 @@ on:
       - main
       - master
 
+# Permissions for default token (secrets.GITHUB_TOKEN)
 permissions:
-  contents: write # allow GITHUB_TOKEN to update releases
+  contents: write
+  pull-requests: read
 
 jobs:
   update_release_draft:
@@ -70,32 +72,32 @@ The following is a more complicated configuration, which categorises the changes
 into headings, and automatically suggests the next version number:
 
 ```yml
-name-template: 'v$RESOLVED_VERSION 🌈'
-tag-template: 'v$RESOLVED_VERSION'
+name-template: "v$RESOLVED_VERSION 🌈"
+tag-template: "v$RESOLVED_VERSION"
 categories:
-  - title: '🚀 Features'
+  - title: "🚀 Features"
     labels:
-      - 'feature'
-      - 'enhancement'
-  - title: '🐛 Bug Fixes'
+      - "feature"
+      - "enhancement"
+  - title: "🐛 Bug Fixes"
     labels:
-      - 'fix'
-      - 'bugfix'
-      - 'bug'
-  - title: '🧰 Maintenance'
-    label: 'chore'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+      - "fix"
+      - "bugfix"
+      - "bug"
+  - title: "🧰 Maintenance"
+    label: "chore"
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 version-resolver:
   major:
     labels:
-      - 'major'
+      - "major"
   minor:
     labels:
-      - 'minor'
+      - "minor"
   patch:
     labels:
-      - 'patch'
+      - "patch"
   default: patch
 template: |
   ## Changes
@@ -212,7 +214,7 @@ You can use any of the following variables in `version-template` to format the
 You may want to use this when producing non semver output.
 
 ```yaml
-version-template: 'ver $MAJOR'
+version-template: "ver $MAJOR"
 ```
 
 > [!IMPORTANT]
@@ -221,7 +223,7 @@ version-template: 'ver $MAJOR'
 > versions parseable by semver.coerce() (we enbale `loose` mode)
 >
 > ```ts
-> semver.coerce('ver 1', true) // { version: '1.0.0' }
+> semver.coerce("ver 1", true); // { version: '1.0.0' }
 > ```
 >
 > If you simply want a verbose title for your releases, use the `name-template`
@@ -237,13 +239,13 @@ to your `.github/release-drafter.yml` file:
 version-resolver:
   major:
     labels:
-      - 'major'
+      - "major"
   minor:
     labels:
-      - 'minor'
+      - "minor"
   patch:
     labels:
-      - 'patch'
+      - "patch"
   default: patch
 ```
 
@@ -295,13 +297,13 @@ using labels. For example, append the following to your
 
 ```yml
 categories:
-  - title: '🚀 Features'
-    label: 'feature'
-  - title: '🐛 Bug Fixes'
+  - title: "🚀 Features"
+    label: "feature"
+  - title: "🐛 Bug Fixes"
     labels:
-      - 'fix'
-      - 'bugfix'
-      - 'bug'
+      - "fix"
+      - "bugfix"
+      - "bug"
 ```
 
 Pull requests with the label "feature" or "fix" will now be grouped together:
@@ -319,10 +321,10 @@ Append the `collapse-after` integer to your category as following:
 
 ```yml
 categories:
-  - title: '⬆️ Dependencies'
+  - title: "⬆️ Dependencies"
     collapse-after: 3
     labels:
-      - 'dependencies'
+      - "dependencies"
 ```
 
 ## Exclude Pull Requests
@@ -333,7 +335,7 @@ notes using labels. For example, append the following to your
 
 ```yml
 exclude-labels:
-  - 'skip-changelog'
+  - "skip-changelog"
 ```
 
 Pull requests with the label "skip-changelog" will now be excluded from the
@@ -348,7 +350,7 @@ included in the release draft. For example, append the following to your
 
 ```yml
 include-labels:
-  - 'app-foo'
+  - "app-foo"
 ```
 
 Pull requests with the label "app-foo" will be the only pull requests included
@@ -363,7 +365,7 @@ include yourself, to better highlight only the third-party contributions.
 
 ```yml
 exclude-contributors:
-  - 'myusername'
+  - "myusername"
 ```
 
 ## Replacers
@@ -375,10 +377,10 @@ order.
 ```yml
 replacers:
   - search: '/CVE-(\d{4})-(\d+)/g'
-    replace: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2'
-  - search: 'myname'
-    replace: 'My Name'
-  - search: '/- ([a-z])/g'
+    replace: "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2"
+  - search: "myname"
+    replace: "My Name"
+  - search: "/- ([a-z])/g"
     replace: '- \u$1' # Uppercase the first letter of each changelog entry
 ```
 
@@ -421,21 +423,21 @@ at least one of the matchers meets the criteria.
 ```yml
 # .github/release-drafter.yml
 autolabeler:
-  - label: 'chore'
+  - label: "chore"
     files:
-      - '*.md'
+      - "*.md"
     branch:
       - '/docs{0,1}\/.+/'
-  - label: 'bug'
+  - label: "bug"
     branch:
       - '/fix\/.+/'
     title:
-      - '/fix/i'
-  - label: 'enhancement'
+      - "/fix/i"
+  - label: "enhancement"
     branch:
       - '/feature\/.+/'
     body:
-      - '/JIRA-[0-9]{1,4}/'
+      - "/JIRA-[0-9]{1,4}/"
 
 # ... rest of release-drafter config
 ```
@@ -474,7 +476,7 @@ jobs:
       - uses: release-drafter/release-drafter@v6
         with:
           prerelease: true
-          prerelease-identifier: 'rc' # Use semver identifiers : alpha, beta, rc, etc
+          prerelease-identifier: "rc" # Use semver identifiers : alpha, beta, rc, etc
 ```
 
 Here, both jobs run in parallel every time you add changes to the configured
