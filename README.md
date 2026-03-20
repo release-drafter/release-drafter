@@ -413,7 +413,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # runs autolabeler
-      - uses: release-drafter/release-drafter/autolabeler@latest
+      - uses: release-drafter/release-drafter/autolabeler@v7
 ```
 
 Available matchers are `files` (glob), `branch` (regex), `title` (regex) and
