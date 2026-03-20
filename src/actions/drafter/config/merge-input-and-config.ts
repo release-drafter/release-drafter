@@ -2,10 +2,23 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 import validRange from 'semver/ranges/valid.js'
 import { stringToRegex } from '#src/common/index.ts'
+import { parseCategories } from './parse-categories.ts'
 import type { Config } from './schemas/config.schema.ts'
 import type { CommonConfig } from './schemas/index.ts'
 
-type MutableConfig = ReturnType<typeof structuredClone<Config>>
+type DeprecatedCategoryConfig = Pick<
+  Config,
+  | 'exclude-labels'
+  | 'include-labels'
+  | 'include-paths'
+  | 'exclude-paths'
+  | 'version-resolver'
+>
+type CompatibilityConfig = Pick<Config, 'exclude-paths'>
+type MutableConfig = Omit<
+  ReturnType<typeof structuredClone<Config>>,
+  keyof DeprecatedCategoryConfig
+>
 
 type SharedConfigKey = keyof CommonConfig & keyof MutableConfig
 type SharedKeysByValue<Value> = {
@@ -38,14 +51,30 @@ export const mergeInputAndConfig = (params: {
   input: CommonConfig
 }) => {
   const { config: originalConfig, input } = params
-
-  const config = structuredClone(originalConfig)
+  const {
+    'exclude-labels': excludeLabels,
+    'include-labels': includeLabels,
+    'include-paths': includePaths,
+    'exclude-paths': excludePaths,
+    'version-resolver': versionResolver,
+    ...config
+  } = structuredClone(originalConfig)
+  const deprecatedCategoryConfig: DeprecatedCategoryConfig = {
+    'exclude-labels': excludeLabels,
+    'include-labels': includeLabels,
+    'include-paths': includePaths,
+    'exclude-paths': excludePaths,
+    'version-resolver': versionResolver,
+  }
+  const compatibility: CompatibilityConfig = {
+    'exclude-paths': excludePaths,
+  }
 
   applyOverrides(config, input)
 
   const { commitish, latest, prerelease } = getParsedDefaults(config)
   const replacers = getTransformedReplacers(config)
-  const categories = getTransformedCategories(config)
+  const categories = getTransformedCategories(config, deprecatedCategoryConfig)
 
   // Build parsed config object - alters original type
   const parsedConfig = {
@@ -55,6 +84,7 @@ export const mergeInputAndConfig = (params: {
     prerelease,
     replacers,
     categories,
+    compatibility,
   }
 
   validateParsedConfig(parsedConfig)
@@ -162,27 +192,31 @@ const getTransformedReplacers = (config: MutableConfig) =>
     })
     .filter((r) => !!r)
 
-const getTransformedCategories = (config: MutableConfig) =>
-  config.categories.map((cat) => {
-    const { label, ..._cat } = cat
-    _cat.labels = [...cat.labels, label].filter(Boolean) as string[]
-    return _cat
-  })
+const getTransformedCategories = (
+  config: Pick<MutableConfig, 'categories'>,
+  deprecatedCategoryConfig: DeprecatedCategoryConfig,
+) => parseCategories(config, deprecatedCategoryConfig)
 
-const validateParsedConfig = (
-  parsedConfig: ReturnType<typeof mergeInputAndConfig>,
-) => {
+const validateParsedConfig = (parsedConfig: ParsedConfig) => {
   if (!parsedConfig.commitish) {
     throw new Error(
       "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)",
     )
   }
-  if (
-    parsedConfig.categories.filter((category) => category.labels.length === 0)
-      .length > 1
-  ) {
+  const changelogCategoriesMissingTitle = parsedConfig.categories.filter(
+    (category) => category.type === 'changelog' && !category.title,
+  )
+  if (changelogCategoriesMissingTitle.length > 0) {
     throw new Error(
-      'Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.',
+      "Every 'type: \"changelog\"' category must define a non-empty 'title'.",
+    )
+  }
+  const uncategorizedChangelogCategories = parsedConfig.categories.filter(
+    (category) => category.type === 'changelog' && category.when.length === 0,
+  )
+  if (uncategorizedChangelogCategories.length > 1) {
+    throw new Error(
+      "Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.",
     )
   }
   if (

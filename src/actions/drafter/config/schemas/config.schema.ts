@@ -207,7 +207,8 @@ export const exclusiveConfigSchema = object({
        *
        * Default behavior allows changes to appear in multiple categories if they match multiple category criteria.
        *
-       * Only applicable to (and effective on) categories of `type: changelog`.
+       * Only applicable to categories of `type: changelog` or `type: version-resolver`.
+       * This only controls inclusion for a single category type at a time.
        *
        * @default false
        */
