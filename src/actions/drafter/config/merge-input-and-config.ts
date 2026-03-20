@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 import validRange from 'semver/ranges/valid'
 import { stringToRegex } from 'src/common'
+import { parseCategories } from './parse-categories'
 import type { CommonConfig } from './schemas'
 import type { Config } from './schemas/config.schema'
 
@@ -17,7 +18,14 @@ export const mergeInputAndConfig = (params: {
   input: CommonConfig
 }) => {
   const { config: originalConfig, input } = params
-  const config = structuredClone(originalConfig)
+  const {
+    'exclude-labels': excludeLabels,
+    'include-labels': includeLabels,
+    'include-paths': includePaths,
+    'exclude-paths': excludePaths,
+    'version-resolver': versionResolver,
+    ...config
+  } = structuredClone(originalConfig)
 
   // Handle overrides
   if (input.commitish) {
@@ -129,10 +137,12 @@ export const mergeInputAndConfig = (params: {
       }
     })
     .filter((r) => !!r)
-  const categories = config.categories.map((cat) => {
-    const { label, ..._cat } = cat
-    _cat.labels = [...cat.labels, label].filter(Boolean) as string[]
-    return _cat
+  const categories = parseCategories(config, {
+    'exclude-labels': excludeLabels,
+    'include-labels': includeLabels,
+    'include-paths': includePaths,
+    'exclude-paths': excludePaths,
+    'version-resolver': versionResolver,
   })
 
   // Build parsed config object - alters original type
@@ -152,11 +162,21 @@ export const mergeInputAndConfig = (params: {
     )
   }
   if (
-    parsedConfig.categories.filter((category) => category.labels.length === 0)
-      .length > 1
+    parsedConfig.categories.filter(
+      (category) => category.type === 'changelog' && category.when.length === 0,
+    ).length > 1
   ) {
     throw new Error(
-      'Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.',
+      "Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized pull requests.",
+    )
+  }
+  if (
+    parsedConfig.categories.filter(
+      (category) => category.type === 'changelog' && category.when.length === 0,
+    ).length > 1
+  ) {
+    throw new Error(
+      "Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized pull requests.",
     )
   }
   if (
