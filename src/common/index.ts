@@ -1,5 +1,6 @@
 /* node:coverage ignore file -- @preserve */
 export { composeConfigGet } from './config'
+export { executeGraphql } from './execute-graphql'
 export { getOctokit } from './get-octokit'
 export { paginateGraphql } from './paginate-graphql'
 export { sharedInputSchema } from './shared-input.schema'

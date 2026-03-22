@@ -10,6 +10,7 @@ import {
   nockGetAndPatchReleases,
   nockGetAndPostReleases,
   nockGetReleases,
+  nockGetTags,
 } from '../mocks'
 
 describe('drafter e2e', () => {
@@ -20,7 +21,7 @@ describe('drafter e2e', () => {
         mocks.config.mockReturnValue('config')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-no-prs',
+          payload: 'graphql-comparison-no-prs',
         })
 
         const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
@@ -56,7 +57,7 @@ describe('drafter e2e', () => {
         mocks.config.mockReturnValue('config')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-no-prs',
+          payload: 'graphql-comparison-no-prs',
         })
 
         const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
@@ -92,7 +93,7 @@ describe('drafter e2e', () => {
         mocks.config.mockReturnValue('config')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
@@ -131,6 +132,7 @@ describe('drafter e2e', () => {
         await mockContext('push')
         mocks.config.mockReturnValue('config-previous-tag')
 
+        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-merge-commit',
         })
@@ -176,7 +178,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release-2', 'release', 'release-3'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -212,7 +214,7 @@ describe('drafter e2e', () => {
         mocks.config.mockReturnValue('config')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         const scope = nockGetAndPostReleases({
           fetchedReleases: ['release-2', 'release', 'release-3'],
@@ -251,7 +253,7 @@ describe('drafter e2e', () => {
         mocks.config.mockReturnValue('config-with-next-versioning')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         const scope = nockGetAndPostReleases({
           fetchedReleases: ['release'],
@@ -287,7 +289,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
 
           await runDrafter()
@@ -325,7 +327,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
 
           await runDrafter()
@@ -363,7 +365,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
 
           await runDrafter()
@@ -401,7 +403,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
 
           await runDrafter()
@@ -433,7 +435,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-empty',
+            payload: 'graphql-comparison-empty',
           })
 
           await runDrafter()
@@ -467,7 +469,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
 
           await runDrafter()
@@ -499,7 +501,7 @@ describe('drafter e2e', () => {
         mocks.config.mockReturnValue('config')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-empty',
+          payload: 'graphql-comparison-empty',
         })
         const scope = nockGetAndPostReleases({
           fetchedReleases: ['release-2', 'release', 'release-3'],
@@ -533,6 +535,7 @@ describe('drafter e2e', () => {
           await mockContext('push')
           mocks.config.mockReturnValue('config-with-changes-templates')
 
+          nockGetTags([])
           const gqlScope = mockGraphqlQuery({
             payload: 'graphql-commits-empty',
           })
@@ -564,13 +567,14 @@ describe('drafter e2e', () => {
     })
 
     describe('with an existing draft release', () => {
-      it('updates the existing release’s body', async () => {
+      it("updates the existing release's body", async () => {
         await mockContext('push')
         mocks.config.mockReturnValue('config')
 
         const scope = nockGetAndPatchReleases({
           fetchedReleases: ['release-draft'],
         })
+        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-merge-commit',
         })
@@ -613,7 +617,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -662,7 +666,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -709,7 +713,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -756,7 +760,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -801,7 +805,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-overlapping-label',
+          payload: 'graphql-comparison-overlapping-label',
         })
 
         await runDrafter()
@@ -846,7 +850,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-overlapping-label',
+          payload: 'graphql-comparison-overlapping-label',
         })
 
         await runDrafter()
@@ -897,7 +901,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -945,7 +949,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release-2', 'pre-release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -987,7 +991,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release-2', 'pre-release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -1027,7 +1031,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release-2', 'pre-release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -1052,7 +1056,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1094,7 +1098,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1132,7 +1136,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1160,7 +1164,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1188,7 +1192,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1217,7 +1221,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1267,7 +1271,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1315,7 +1319,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1363,7 +1367,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1412,7 +1416,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1462,7 +1466,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1513,7 +1517,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1542,7 +1546,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1571,7 +1575,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1603,7 +1607,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1634,7 +1638,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1665,6 +1669,7 @@ describe('drafter e2e', () => {
           const scope = nockGetAndPostReleases({
             fetchedReleases: [],
           })
+          nockGetTags([])
           const gqlScope = mockGraphqlQuery({
             payload: 'graphql-commits-merge-commit',
           })
@@ -1702,6 +1707,7 @@ describe('drafter e2e', () => {
           const scope = nockGetAndPostReleases({
             fetchedReleases: [],
           })
+          nockGetTags([])
           const gqlScope = mockGraphqlQuery({
             payload: 'graphql-commits-rebase-merging',
           })
@@ -1739,6 +1745,7 @@ describe('drafter e2e', () => {
           const scope = nockGetAndPostReleases({
             fetchedReleases: [],
           })
+          nockGetTags([])
           const gqlScope = mockGraphqlQuery({
             payload: 'graphql-commits-squash-merging',
           })
@@ -1775,7 +1782,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release-shared-commit-date'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-squash-merging',
+            payload: 'graphql-comparison-squash-merging',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1787,6 +1794,7 @@ describe('drafter e2e', () => {
             * Update dependencies (#14) @TimonVS
             * Bug fixes (#13) @TimonVS
             * Add big feature (#12) @TimonVS
+            * 👽 Add alien technology (#11) @TimonVS
             ",
                 "draft": true,
                 "make_latest": "true",
@@ -1811,7 +1819,7 @@ describe('drafter e2e', () => {
             fetchedReleases: ['release'],
           })
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-forking',
+            payload: 'graphql-comparison-forking',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1849,13 +1857,13 @@ describe('drafter e2e', () => {
         await mockContext('push')
         mocks.config.mockReturnValue('config')
         const scope = nockGetAndPostReleases({
-          fetchedReleases: [],
+          fetchedReleases: ['release'],
         })
         const gqlScope1 = mockGraphqlQuery({
-          payload: 'graphql-commits-paginated-1',
+          payload: 'graphql-comparison-paginated-1',
         })
         const gqlScope2 = mockGraphqlQuery({
-          payload: 'graphql-commits-paginated-2',
+          payload: 'graphql-comparison-paginated-2',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1903,6 +1911,7 @@ describe('drafter e2e', () => {
         const scope = nockGetAndPostReleases({
           fetchedReleases: [],
         })
+        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-merge-commit',
         })
@@ -1939,13 +1948,13 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-sort-by-title')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
       const gqlScope1 = mockGraphqlQuery({
-        payload: 'graphql-commits-paginated-1',
+        payload: 'graphql-comparison-paginated-1',
       })
       const gqlScope2 = mockGraphqlQuery({
-        payload: 'graphql-commits-paginated-2',
+        payload: 'graphql-comparison-paginated-2',
       })
       await runDrafter()
       expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1991,10 +2000,13 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-sort-direction-ascending')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
       const gqlScope = mockGraphqlQuery({
-        payload: ['graphql-commits-paginated-1', 'graphql-commits-paginated-2'],
+        payload: [
+          'graphql-comparison-paginated-1',
+          'graphql-comparison-paginated-2',
+        ],
       })
       await runDrafter()
       expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2041,6 +2053,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = mockGraphqlQuery([
         {
           query: 'query findCommitsWithAssociatedPullRequests',
@@ -2082,6 +2095,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = mockGraphqlQuery([
         {
           query: 'query findCommitsWithAssociatedPullRequests',
@@ -2119,6 +2133,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = mockGraphqlQuery([
         {
           query: 'query findCommitsWithAssociatedPullRequests',
@@ -2158,6 +2173,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = mockGraphqlQuery([
         {
           query: 'query findCommitsWithAssociatedPullRequests',
@@ -2201,6 +2217,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post('/graphql', (body) => {
           if (
@@ -2228,6 +2245,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post('/graphql', (body) => {
           if (
@@ -2257,6 +2275,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post('/graphql', (body) => {
           if (
@@ -2284,6 +2303,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post('/graphql', (body) => {
           if (
@@ -2355,7 +2375,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2386,7 +2406,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2417,7 +2437,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2448,7 +2468,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2482,7 +2502,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2514,7 +2534,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2545,7 +2565,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2574,7 +2594,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2606,7 +2626,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2637,7 +2657,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2669,7 +2689,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2700,7 +2720,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2731,7 +2751,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2761,7 +2781,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2791,7 +2811,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2823,7 +2843,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2855,6 +2875,7 @@ describe('drafter e2e', () => {
         const scope = nockGetAndPostReleases({
           fetchedReleases: [],
         })
+        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-empty',
         })
@@ -2898,7 +2919,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-no-prs',
+          payload: 'graphql-comparison-no-prs',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2910,7 +2931,7 @@ describe('drafter e2e', () => {
 
           ## Contributors
 
-          No contributors
+          @TimonVS
 
           ## Previous release
 
@@ -2938,6 +2959,7 @@ describe('drafter e2e', () => {
         const scope = nockGetAndPostReleases({
           fetchedReleases: [],
         })
+        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-empty',
         })
@@ -2980,7 +3002,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-no-prs',
+          payload: 'graphql-comparison-no-prs',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2992,7 +3014,7 @@ describe('drafter e2e', () => {
 
           ## Contributors
 
-          No contributors
+          @TimonVS
 
           ## Previous release
 
@@ -3024,7 +3046,7 @@ describe('drafter e2e', () => {
           ],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-no-prs',
+          payload: 'graphql-comparison-no-prs',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3057,7 +3079,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-forking',
+          payload: 'graphql-comparison-forking',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3087,7 +3109,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-forking',
+          payload: 'graphql-comparison-forking',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3117,7 +3139,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-forking',
+          payload: 'graphql-comparison-forking',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3147,7 +3169,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-forking',
+          payload: 'graphql-comparison-forking',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3177,7 +3199,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-forking',
+          payload: 'graphql-comparison-forking',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3207,7 +3229,7 @@ describe('drafter e2e', () => {
           fetchedReleases: ['release'],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-forking',
+          payload: 'graphql-comparison-forking',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3241,7 +3263,9 @@ describe('drafter e2e', () => {
             'release-draft',
           ],
         })
+        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
+          query: 'query findCommitsWithAssociatedPullRequests',
           payload: 'graphql-commits-empty',
         })
         await runDrafter()
@@ -3277,11 +3301,10 @@ describe('drafter e2e', () => {
         .post(
           '/graphql',
           (body) =>
-            body.query.includes(
-              'query findCommitsWithAssociatedPullRequests',
-            ) && body.variables.since === '2018-06-29T05:45:15Z',
+            body.query.includes('query findCommitsInComparison') &&
+            body.variables.baseRef === 'refs/tags/v2.0.0',
         )
-        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+        .reply(200, getGqlPayload('graphql-comparison-no-prs'))
 
       await runDrafter()
 
@@ -3296,6 +3319,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post(
           '/graphql',
@@ -3319,6 +3343,7 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: [],
       })
+      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post(
           '/graphql',
@@ -3345,7 +3370,7 @@ describe('drafter e2e', () => {
         mocks.config.mockReturnValue('config')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-no-prs',
+          payload: 'graphql-comparison-no-prs',
         })
 
         // Only a GET scope — no POST scope, so any attempt to create a release
@@ -3373,6 +3398,7 @@ describe('drafter e2e', () => {
         await mockInput('dry-run', 'true')
         mocks.config.mockReturnValue('config')
 
+        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-commits-merge-commit',
         })

@@ -1,4 +1,4 @@
-import { C as warning, S as setOutput, T as __toESM, _ as debug, a as _enum, b as info, c as number, d as stringbool, f as datetime, g as context, h as getOctokit, i as ZodDefault, l as object, m as composeConfigGet, n as escapeStringRegexp, o as array, p as paginateGraphql, r as sharedInputSchema, s as boolean, t as stringToRegex, u as string, v as error, w as __commonJSMin, x as setFailed, y as getInput } from "../../chunks/common.js";
+import { C as setOutput, E as __toESM, S as setFailed, T as __commonJSMin, _ as context, a as _enum, b as getInput, c as number, d as stringbool, f as datetime, g as getOctokit, h as composeConfigGet, i as ZodDefault, l as object, m as executeGraphql, n as escapeStringRegexp, o as array, p as paginateGraphql, r as sharedInputSchema, s as boolean, t as stringToRegex, u as string, v as debug, w as warning, x as info, y as error } from "../../chunks/common.js";
 //#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
@@ -1957,6 +1957,7 @@ var findPreviousReleases = async (params) => {
 	const commitishFilteredReleases = filterByCommitish ? releases.filter((r) => targetCommitishName === r.target_commitish.replace(headRefRegex, "")) : releases;
 	const semverRangeFilteredReleases = filterByRange && filterByRange !== "*" ? commitishFilteredReleases.filter((r) => {
 		const parsedRange = (0, import_valid.default)(filterByRange);
+		if (!parsedRange) return false;
 		const parsedVersion = (0, import_coerce.default)(r.tag_name, { loose: true })?.version;
 		if (!parsedVersion) {
 			warning(`Failed to coerce semver version for "${r.tag_name}" : will be excluded from releases considered for drafting.`);
@@ -1996,8 +1997,1101 @@ var findPreviousReleases = async (params) => {
 	};
 };
 //#endregion
-//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-path-changes.gql?raw
-var find_commits_with_path_changes_default = "query findCommitsWithPathChangesQuery(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $since: GitTimestamp\n  $after: String\n  $path: String\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(path: $path, since: $since, after: $after) {\n          __typename\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n          }\n        }\n      }\n    }\n  }\n}\n";
+//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-in-comparison.graphql.generated.ts
+var FindCommitsInComparisonDocument = {
+	"kind": "Document",
+	"definitions": [{
+		"kind": "OperationDefinition",
+		"operation": "query",
+		"name": {
+			"kind": "Name",
+			"value": "findCommitsInComparison"
+		},
+		"variableDefinitions": [
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "baseRef"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "headRef"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "withPullRequestBody"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Boolean"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "withPullRequestURL"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Boolean"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "after"
+					}
+				},
+				"type": {
+					"kind": "NamedType",
+					"name": {
+						"kind": "Name",
+						"value": "String"
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "withBaseRefName"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Boolean"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "withHeadRefName"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Boolean"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "pullRequestLimit"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Int"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "historyLimit"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Int"
+						}
+					}
+				}
+			}
+		],
+		"selectionSet": {
+			"kind": "SelectionSet",
+			"selections": [{
+				"kind": "Field",
+				"name": {
+					"kind": "Name",
+					"value": "repository"
+				},
+				"arguments": [{
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "name"
+						}
+					}
+				}, {
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "owner"
+						}
+					}
+				}],
+				"selectionSet": {
+					"kind": "SelectionSet",
+					"selections": [{
+						"kind": "Field",
+						"name": {
+							"kind": "Name",
+							"value": "ref"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "qualifiedName"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "baseRef"
+								}
+							}
+						}],
+						"selectionSet": {
+							"kind": "SelectionSet",
+							"selections": [{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "compare"
+								},
+								"arguments": [{
+									"kind": "Argument",
+									"name": {
+										"kind": "Name",
+										"value": "headRef"
+									},
+									"value": {
+										"kind": "Variable",
+										"name": {
+											"kind": "Name",
+											"value": "headRef"
+										}
+									}
+								}],
+								"selectionSet": {
+									"kind": "SelectionSet",
+									"selections": [{
+										"kind": "Field",
+										"name": {
+											"kind": "Name",
+											"value": "commits"
+										},
+										"arguments": [{
+											"kind": "Argument",
+											"name": {
+												"kind": "Name",
+												"value": "first"
+											},
+											"value": {
+												"kind": "Variable",
+												"name": {
+													"kind": "Name",
+													"value": "historyLimit"
+												}
+											}
+										}, {
+											"kind": "Argument",
+											"name": {
+												"kind": "Name",
+												"value": "after"
+											},
+											"value": {
+												"kind": "Variable",
+												"name": {
+													"kind": "Name",
+													"value": "after"
+												}
+											}
+										}],
+										"selectionSet": {
+											"kind": "SelectionSet",
+											"selections": [
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "__typename"
+													}
+												},
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "pageInfo"
+													},
+													"selectionSet": {
+														"kind": "SelectionSet",
+														"selections": [
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "__typename"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "hasNextPage"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "endCursor"
+																}
+															}
+														]
+													}
+												},
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "nodes"
+													},
+													"selectionSet": {
+														"kind": "SelectionSet",
+														"selections": [
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "__typename"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "id"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "committedDate"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "message"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "author"
+																},
+																"selectionSet": {
+																	"kind": "SelectionSet",
+																	"selections": [
+																		{
+																			"kind": "Field",
+																			"name": {
+																				"kind": "Name",
+																				"value": "__typename"
+																			}
+																		},
+																		{
+																			"kind": "Field",
+																			"name": {
+																				"kind": "Name",
+																				"value": "name"
+																			}
+																		},
+																		{
+																			"kind": "Field",
+																			"name": {
+																				"kind": "Name",
+																				"value": "user"
+																			},
+																			"selectionSet": {
+																				"kind": "SelectionSet",
+																				"selections": [{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "__typename"
+																					}
+																				}, {
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "login"
+																					}
+																				}]
+																			}
+																		}
+																	]
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "associatedPullRequests"
+																},
+																"arguments": [{
+																	"kind": "Argument",
+																	"name": {
+																		"kind": "Name",
+																		"value": "first"
+																	},
+																	"value": {
+																		"kind": "Variable",
+																		"name": {
+																			"kind": "Name",
+																			"value": "pullRequestLimit"
+																		}
+																	}
+																}],
+																"selectionSet": {
+																	"kind": "SelectionSet",
+																	"selections": [{
+																		"kind": "Field",
+																		"name": {
+																			"kind": "Name",
+																			"value": "__typename"
+																		}
+																	}, {
+																		"kind": "Field",
+																		"name": {
+																			"kind": "Name",
+																			"value": "nodes"
+																		},
+																		"selectionSet": {
+																			"kind": "SelectionSet",
+																			"selections": [
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "__typename"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "title"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "number"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "url"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withPullRequestURL"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "body"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withPullRequestBody"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "author"
+																					},
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "__typename"
+																								}
+																							},
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "login"
+																								}
+																							},
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "url"
+																								}
+																							}
+																						]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "baseRepository"
+																					},
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [{
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "__typename"
+																							}
+																						}, {
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "nameWithOwner"
+																							}
+																						}]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "mergedAt"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "isCrossRepository"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "labels"
+																					},
+																					"arguments": [{
+																						"kind": "Argument",
+																						"name": {
+																							"kind": "Name",
+																							"value": "first"
+																						},
+																						"value": {
+																							"kind": "IntValue",
+																							"value": "100"
+																						}
+																					}],
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [{
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "__typename"
+																							}
+																						}, {
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "nodes"
+																							},
+																							"selectionSet": {
+																								"kind": "SelectionSet",
+																								"selections": [{
+																									"kind": "Field",
+																									"name": {
+																										"kind": "Name",
+																										"value": "__typename"
+																									}
+																								}, {
+																									"kind": "Field",
+																									"name": {
+																										"kind": "Name",
+																										"value": "name"
+																									}
+																								}]
+																							}
+																						}]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "merged"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "baseRefName"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withBaseRefName"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "headRefName"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withHeadRefName"
+																								}
+																							}
+																						}]
+																					}]
+																				}
+																			]
+																		}
+																	}]
+																}
+															}
+														]
+													}
+												}
+											]
+										}
+									}]
+								}
+							}]
+						}
+					}]
+				}
+			}]
+		}
+	}]
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts
+var findCommitsInComparison = async (params) => {
+	const data = await paginateGraphql(getOctokit().graphql, FindCommitsInComparisonDocument, params, [
+		"repository",
+		"ref",
+		"compare",
+		"commits"
+	]);
+	if (!data.repository?.ref?.compare) throw new Error("Query returned an unexpected result: ref or comparison not found");
+	return (data.repository.ref.compare.commits.nodes || []).filter((commit) => commit != null);
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-path-changes.graphql.generated.ts
+var FindCommitsWithPathChangesQueryDocument = {
+	"kind": "Document",
+	"definitions": [{
+		"kind": "OperationDefinition",
+		"operation": "query",
+		"name": {
+			"kind": "Name",
+			"value": "findCommitsWithPathChangesQuery"
+		},
+		"variableDefinitions": [
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "targetCommitish"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "after"
+					}
+				},
+				"type": {
+					"kind": "NamedType",
+					"name": {
+						"kind": "Name",
+						"value": "String"
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "path"
+					}
+				},
+				"type": {
+					"kind": "NamedType",
+					"name": {
+						"kind": "Name",
+						"value": "String"
+					}
+				}
+			}
+		],
+		"selectionSet": {
+			"kind": "SelectionSet",
+			"selections": [{
+				"kind": "Field",
+				"name": {
+					"kind": "Name",
+					"value": "repository"
+				},
+				"arguments": [{
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "name"
+						}
+					}
+				}, {
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "owner"
+						}
+					}
+				}],
+				"selectionSet": {
+					"kind": "SelectionSet",
+					"selections": [{
+						"kind": "Field",
+						"name": {
+							"kind": "Name",
+							"value": "object"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "expression"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "targetCommitish"
+								}
+							}
+						}],
+						"selectionSet": {
+							"kind": "SelectionSet",
+							"selections": [{
+								"kind": "InlineFragment",
+								"typeCondition": {
+									"kind": "NamedType",
+									"name": {
+										"kind": "Name",
+										"value": "Commit"
+									}
+								},
+								"selectionSet": {
+									"kind": "SelectionSet",
+									"selections": [{
+										"kind": "Field",
+										"name": {
+											"kind": "Name",
+											"value": "__typename"
+										}
+									}, {
+										"kind": "Field",
+										"name": {
+											"kind": "Name",
+											"value": "history"
+										},
+										"arguments": [{
+											"kind": "Argument",
+											"name": {
+												"kind": "Name",
+												"value": "path"
+											},
+											"value": {
+												"kind": "Variable",
+												"name": {
+													"kind": "Name",
+													"value": "path"
+												}
+											}
+										}, {
+											"kind": "Argument",
+											"name": {
+												"kind": "Name",
+												"value": "after"
+											},
+											"value": {
+												"kind": "Variable",
+												"name": {
+													"kind": "Name",
+													"value": "after"
+												}
+											}
+										}],
+										"selectionSet": {
+											"kind": "SelectionSet",
+											"selections": [
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "__typename"
+													}
+												},
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "pageInfo"
+													},
+													"selectionSet": {
+														"kind": "SelectionSet",
+														"selections": [
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "__typename"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "hasNextPage"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "endCursor"
+																}
+															}
+														]
+													}
+												},
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "nodes"
+													},
+													"selectionSet": {
+														"kind": "SelectionSet",
+														"selections": [{
+															"kind": "Field",
+															"name": {
+																"kind": "Name",
+																"value": "__typename"
+															}
+														}, {
+															"kind": "Field",
+															"name": {
+																"kind": "Name",
+																"value": "id"
+															}
+														}]
+													}
+												}
+											]
+										}
+									}]
+								}
+							}]
+						}
+					}]
+				}
+			}]
+		}
+	}]
+};
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts
 /**
@@ -2008,20 +3102,26 @@ var findCommitsWithPathChange = async (paths, params) => {
 	const commitIdsMatchingPaths = {};
 	let hasFoundCommits = false;
 	for (const path of paths) {
-		const data = await paginateGraphql(octokit.graphql, find_commits_with_path_changes_default, {
-			...params,
-			path
-		}, [
-			"repository",
-			"object",
-			"history"
-		]);
-		if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
-		const commits = (data.repository?.object?.history.nodes || []).filter((c) => !!c);
-		commitIdsMatchingPaths[path] = commitIdsMatchingPaths[path] || /* @__PURE__ */ new Set([]);
-		for (const { id } of commits) {
-			hasFoundCommits = true;
-			commitIdsMatchingPaths[path].add(id);
+		commitIdsMatchingPaths[path] = /* @__PURE__ */ new Set();
+		let after = null;
+		while (true) {
+			const variables = {
+				name: params.name,
+				owner: params.owner,
+				targetCommitish: params.targetCommitish,
+				path,
+				after
+			};
+			const data = await executeGraphql(octokit.graphql, FindCommitsWithPathChangesQueryDocument, variables);
+			if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
+			const matchingNodes = (data.repository.object.history.nodes ?? []).filter((c) => c != null).filter((c) => params.comparisonCommitIds.has(c.id));
+			for (const { id } of matchingNodes) {
+				hasFoundCommits = true;
+				commitIdsMatchingPaths[path].add(id);
+			}
+			const { hasNextPage, endCursor } = data.repository.object.history.pageInfo;
+			if (!hasNextPage || matchingNodes.length === 0) break;
+			after = endCursor ?? null;
 		}
 	}
 	return {
@@ -2030,30 +3130,1092 @@ var findCommitsWithPathChange = async (paths, params) => {
 	};
 };
 //#endregion
-//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-pr.gql?raw
-var find_commits_with_pr_default = "query findCommitsWithAssociatedPullRequests(\n  $name: String!\n  $owner: String!\n  $targetCommitish: String!\n  $withPullRequestBody: Boolean!\n  $withPullRequestURL: Boolean!\n  $since: GitTimestamp\n  $after: String\n  $withBaseRefName: Boolean!\n  $withHeadRefName: Boolean!\n  $pullRequestLimit: Int!\n  $historyLimit: Int!\n) {\n  repository(name: $name, owner: $owner) {\n    object(expression: $targetCommitish) {\n      ... on Commit {\n        __typename\n        history(first: $historyLimit, since: $since, after: $after) {\n          __typename\n          totalCount\n          pageInfo {\n            __typename\n            hasNextPage\n            endCursor\n          }\n          nodes {\n            __typename\n            id\n            committedDate\n            message\n            author {\n              __typename\n              name\n              user {\n                __typename\n                login\n              }\n            }\n            associatedPullRequests(first: $pullRequestLimit) {\n              __typename\n              nodes {\n                __typename\n                title\n                number\n                url @include(if: $withPullRequestURL)\n                body @include(if: $withPullRequestBody)\n                author {\n                  __typename\n                  login\n                  url\n                }\n                baseRepository {\n                  __typename\n                  nameWithOwner\n                }\n                mergedAt\n                isCrossRepository\n                labels(first: 100) {\n                  __typename\n                  nodes {\n                    __typename\n                    name\n                  }\n                }\n                merged\n                baseRefName @include(if: $withBaseRefName)\n                headRefName @include(if: $withHeadRefName)\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n";
+//#region src/actions/drafter/lib/find-pull-requests/graphql/find-most-recent-tag.graphql.generated.ts
+var FindMostRecentTagDocument = {
+	"kind": "Document",
+	"definitions": [{
+		"kind": "OperationDefinition",
+		"operation": "query",
+		"name": {
+			"kind": "Name",
+			"value": "findMostRecentTag"
+		},
+		"variableDefinitions": [
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "first"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Int"
+						}
+					}
+				}
+			}
+		],
+		"selectionSet": {
+			"kind": "SelectionSet",
+			"selections": [{
+				"kind": "Field",
+				"name": {
+					"kind": "Name",
+					"value": "repository"
+				},
+				"arguments": [{
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "name"
+						}
+					}
+				}, {
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "owner"
+						}
+					}
+				}],
+				"selectionSet": {
+					"kind": "SelectionSet",
+					"selections": [{
+						"kind": "Field",
+						"name": {
+							"kind": "Name",
+							"value": "refs"
+						},
+						"arguments": [
+							{
+								"kind": "Argument",
+								"name": {
+									"kind": "Name",
+									"value": "refPrefix"
+								},
+								"value": {
+									"kind": "StringValue",
+									"value": "refs/tags/",
+									"block": false
+								}
+							},
+							{
+								"kind": "Argument",
+								"name": {
+									"kind": "Name",
+									"value": "first"
+								},
+								"value": {
+									"kind": "Variable",
+									"name": {
+										"kind": "Name",
+										"value": "first"
+									}
+								}
+							},
+							{
+								"kind": "Argument",
+								"name": {
+									"kind": "Name",
+									"value": "orderBy"
+								},
+								"value": {
+									"kind": "ObjectValue",
+									"fields": [{
+										"kind": "ObjectField",
+										"name": {
+											"kind": "Name",
+											"value": "field"
+										},
+										"value": {
+											"kind": "EnumValue",
+											"value": "TAG_COMMIT_DATE"
+										}
+									}, {
+										"kind": "ObjectField",
+										"name": {
+											"kind": "Name",
+											"value": "direction"
+										},
+										"value": {
+											"kind": "EnumValue",
+											"value": "DESC"
+										}
+									}]
+								}
+							}
+						],
+						"selectionSet": {
+							"kind": "SelectionSet",
+							"selections": [{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "nodes"
+								},
+								"selectionSet": {
+									"kind": "SelectionSet",
+									"selections": [{
+										"kind": "Field",
+										"name": {
+											"kind": "Name",
+											"value": "__typename"
+										}
+									}, {
+										"kind": "Field",
+										"name": {
+											"kind": "Name",
+											"value": "name"
+										}
+									}]
+								}
+							}]
+						}
+					}]
+				}
+			}]
+		}
+	}]
+};
 //#endregion
-//#region src/actions/drafter/lib/find-pull-requests/find-commits-with-pr.ts
-var findCommitsWithPr = async (params) => {
-	const data = await paginateGraphql(getOctokit().graphql, find_commits_with_pr_default, params, [
-		"repository",
-		"object",
-		"history"
-	]);
-	if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
-	/**
-	* Extract commit nodes from the paginated response
-	*/
-	const commits = (data.repository.object.history.nodes || []).filter((commit) => commit != null);
-	if (params.since) return commits.filter((commit) => !!commit?.committedDate && commit.committedDate !== params.since);
-	else return commits;
+//#region src/actions/drafter/lib/find-pull-requests/find-most-recent-tag.ts
+var findMostRecentTag = async (params) => {
+	const octokit = getOctokit();
+	const variables = {
+		name: params.name,
+		owner: params.owner,
+		first: 20
+	};
+	const tags = ((await executeGraphql(octokit.graphql, FindMostRecentTagDocument, variables)).repository?.refs?.nodes ?? []).filter((n) => n != null);
+	const { tagPrefix } = params;
+	return (tagPrefix ? tags.filter((t) => t.name.startsWith(tagPrefix)) : tags)[0]?.name;
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-pr.graphql.generated.ts
+var FindCommitsWithAssociatedPullRequestsDocument = {
+	"kind": "Document",
+	"definitions": [{
+		"kind": "OperationDefinition",
+		"operation": "query",
+		"name": {
+			"kind": "Name",
+			"value": "findCommitsWithAssociatedPullRequests"
+		},
+		"variableDefinitions": [
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "targetCommitish"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "withPullRequestBody"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Boolean"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "withPullRequestURL"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Boolean"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "since"
+					}
+				},
+				"type": {
+					"kind": "NamedType",
+					"name": {
+						"kind": "Name",
+						"value": "GitTimestamp"
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "after"
+					}
+				},
+				"type": {
+					"kind": "NamedType",
+					"name": {
+						"kind": "Name",
+						"value": "String"
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "withBaseRefName"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Boolean"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "withHeadRefName"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Boolean"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "pullRequestLimit"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Int"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "historyLimit"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Int"
+						}
+					}
+				}
+			}
+		],
+		"selectionSet": {
+			"kind": "SelectionSet",
+			"selections": [{
+				"kind": "Field",
+				"name": {
+					"kind": "Name",
+					"value": "repository"
+				},
+				"arguments": [{
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "name"
+						}
+					}
+				}, {
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "owner"
+						}
+					}
+				}],
+				"selectionSet": {
+					"kind": "SelectionSet",
+					"selections": [{
+						"kind": "Field",
+						"name": {
+							"kind": "Name",
+							"value": "object"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "expression"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "targetCommitish"
+								}
+							}
+						}],
+						"selectionSet": {
+							"kind": "SelectionSet",
+							"selections": [{
+								"kind": "InlineFragment",
+								"typeCondition": {
+									"kind": "NamedType",
+									"name": {
+										"kind": "Name",
+										"value": "Commit"
+									}
+								},
+								"selectionSet": {
+									"kind": "SelectionSet",
+									"selections": [{
+										"kind": "Field",
+										"name": {
+											"kind": "Name",
+											"value": "__typename"
+										}
+									}, {
+										"kind": "Field",
+										"name": {
+											"kind": "Name",
+											"value": "history"
+										},
+										"arguments": [
+											{
+												"kind": "Argument",
+												"name": {
+													"kind": "Name",
+													"value": "first"
+												},
+												"value": {
+													"kind": "Variable",
+													"name": {
+														"kind": "Name",
+														"value": "historyLimit"
+													}
+												}
+											},
+											{
+												"kind": "Argument",
+												"name": {
+													"kind": "Name",
+													"value": "since"
+												},
+												"value": {
+													"kind": "Variable",
+													"name": {
+														"kind": "Name",
+														"value": "since"
+													}
+												}
+											},
+											{
+												"kind": "Argument",
+												"name": {
+													"kind": "Name",
+													"value": "after"
+												},
+												"value": {
+													"kind": "Variable",
+													"name": {
+														"kind": "Name",
+														"value": "after"
+													}
+												}
+											}
+										],
+										"selectionSet": {
+											"kind": "SelectionSet",
+											"selections": [
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "__typename"
+													}
+												},
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "totalCount"
+													}
+												},
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "pageInfo"
+													},
+													"selectionSet": {
+														"kind": "SelectionSet",
+														"selections": [
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "__typename"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "hasNextPage"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "endCursor"
+																}
+															}
+														]
+													}
+												},
+												{
+													"kind": "Field",
+													"name": {
+														"kind": "Name",
+														"value": "nodes"
+													},
+													"selectionSet": {
+														"kind": "SelectionSet",
+														"selections": [
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "__typename"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "id"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "committedDate"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "message"
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "author"
+																},
+																"selectionSet": {
+																	"kind": "SelectionSet",
+																	"selections": [
+																		{
+																			"kind": "Field",
+																			"name": {
+																				"kind": "Name",
+																				"value": "__typename"
+																			}
+																		},
+																		{
+																			"kind": "Field",
+																			"name": {
+																				"kind": "Name",
+																				"value": "name"
+																			}
+																		},
+																		{
+																			"kind": "Field",
+																			"name": {
+																				"kind": "Name",
+																				"value": "user"
+																			},
+																			"selectionSet": {
+																				"kind": "SelectionSet",
+																				"selections": [{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "__typename"
+																					}
+																				}, {
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "login"
+																					}
+																				}]
+																			}
+																		}
+																	]
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "associatedPullRequests"
+																},
+																"arguments": [{
+																	"kind": "Argument",
+																	"name": {
+																		"kind": "Name",
+																		"value": "first"
+																	},
+																	"value": {
+																		"kind": "Variable",
+																		"name": {
+																			"kind": "Name",
+																			"value": "pullRequestLimit"
+																		}
+																	}
+																}],
+																"selectionSet": {
+																	"kind": "SelectionSet",
+																	"selections": [{
+																		"kind": "Field",
+																		"name": {
+																			"kind": "Name",
+																			"value": "__typename"
+																		}
+																	}, {
+																		"kind": "Field",
+																		"name": {
+																			"kind": "Name",
+																			"value": "nodes"
+																		},
+																		"selectionSet": {
+																			"kind": "SelectionSet",
+																			"selections": [
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "__typename"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "title"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "number"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "url"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withPullRequestURL"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "body"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withPullRequestBody"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "author"
+																					},
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "__typename"
+																								}
+																							},
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "login"
+																								}
+																							},
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "url"
+																								}
+																							}
+																						]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "baseRepository"
+																					},
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [{
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "__typename"
+																							}
+																						}, {
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "nameWithOwner"
+																							}
+																						}]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "mergedAt"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "isCrossRepository"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "labels"
+																					},
+																					"arguments": [{
+																						"kind": "Argument",
+																						"name": {
+																							"kind": "Name",
+																							"value": "first"
+																						},
+																						"value": {
+																							"kind": "IntValue",
+																							"value": "100"
+																						}
+																					}],
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [{
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "__typename"
+																							}
+																						}, {
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "nodes"
+																							},
+																							"selectionSet": {
+																								"kind": "SelectionSet",
+																								"selections": [{
+																									"kind": "Field",
+																									"name": {
+																										"kind": "Name",
+																										"value": "__typename"
+																									}
+																								}, {
+																									"kind": "Field",
+																									"name": {
+																										"kind": "Name",
+																										"value": "name"
+																									}
+																								}]
+																							}
+																						}]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "merged"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "baseRefName"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withBaseRefName"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "headRefName"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withHeadRefName"
+																								}
+																							}
+																						}]
+																					}]
+																				}
+																			]
+																		}
+																	}]
+																}
+															}
+														]
+													}
+												}
+											]
+										}
+									}]
+								}
+							}]
+						}
+					}]
+				}
+			}]
+		}
+	}]
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
 var findPullRequests = async (params) => {
-	const since = params.lastRelease?.created_at || params.config["initial-commits-since"];
+	const octokit = getOctokit();
 	const shouldFilterByIncludedPaths = params.config["include-paths"].length > 0;
 	const shouldFilterByExcludedPaths = params.config["exclude-paths"].length > 0;
+	const sharedComparisonParams = {
+		name: context.repo.repo,
+		owner: context.repo.owner,
+		headRef: params.config.commitish,
+		withPullRequestBody: params.config["change-template"].includes("$BODY"),
+		withPullRequestURL: params.config["change-template"].includes("$URL"),
+		withBaseRefName: params.config["change-template"].includes("$BASE_REF_NAME"),
+		withHeadRefName: params.config["change-template"].includes("$HEAD_REF_NAME"),
+		pullRequestLimit: params.config["pull-request-limit"],
+		historyLimit: params.config["history-limit"]
+	};
+	let commits;
+	if (params.lastRelease?.tag_name) {
+		info(`Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`);
+		commits = await findCommitsInComparison({
+			baseRef: `refs/tags/${params.lastRelease.tag_name}`,
+			...sharedComparisonParams
+		});
+	} else {
+		const mostRecentTag = await findMostRecentTag({
+			name: context.repo.repo,
+			owner: context.repo.owner,
+			tagPrefix: params.config["tag-prefix"] || void 0
+		});
+		if (mostRecentTag) {
+			info(`No previous release found. Using most recent tag refs/tags/${mostRecentTag} as base.`);
+			info(`Finding commits between refs/tags/${mostRecentTag} and ${params.config.commitish}...`);
+			commits = await findCommitsInComparison({
+				baseRef: `refs/tags/${mostRecentTag}`,
+				...sharedComparisonParams
+			});
+		} else {
+			info(`No previous release or tag found. Fetching first page of commits (cap-and-bail)...`);
+			const capResult = await executeGraphql(octokit.graphql, FindCommitsWithAssociatedPullRequestsDocument, {
+				name: context.repo.repo,
+				owner: context.repo.owner,
+				targetCommitish: params.config.commitish,
+				since: params.config["initial-commits-since"],
+				after: null,
+				withPullRequestBody: params.config["change-template"].includes("$BODY"),
+				withPullRequestURL: params.config["change-template"].includes("$URL"),
+				withBaseRefName: params.config["change-template"].includes("$BASE_REF_NAME"),
+				withHeadRefName: params.config["change-template"].includes("$HEAD_REF_NAME"),
+				pullRequestLimit: params.config["pull-request-limit"],
+				historyLimit: params.config["history-limit"]
+			});
+			if (capResult.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
+			if (capResult.repository.object.history.pageInfo.hasNextPage) {
+				info("Commit history exceeds limit for first release. No changes will be listed.");
+				commits = [];
+			} else commits = (capResult.repository.object.history.nodes ?? []).filter((c) => c != null);
+		}
+	}
+	info(`Found ${commits.length} commits.`);
+	const comparisonCommitIds = new Set(commits.map((c) => c.id));
 	/**
 	* If include-paths are specified,
 	* find all commits that changed those paths to filter PRs later.
@@ -2067,10 +4229,10 @@ var findPullRequests = async (params) => {
 	if (shouldFilterByIncludedPaths) {
 		info("Finding commits with included path changes...");
 		const { commitIdsMatchingPaths, hasFoundCommits } = await findCommitsWithPathChange(params.config["include-paths"], {
-			since,
 			name: context.repo.repo,
 			owner: context.repo.owner,
-			targetCommitish: params.config.commitish
+			targetCommitish: params.config.commitish,
+			comparisonCommitIds
 		});
 		if (!hasFoundCommits) return {
 			commits: [],
@@ -2085,30 +4247,16 @@ var findPullRequests = async (params) => {
 	if (shouldFilterByExcludedPaths) {
 		info("Finding commits with excluded path changes...");
 		const { commitIdsMatchingPaths } = await findCommitsWithPathChange(params.config["exclude-paths"], {
-			since,
 			name: context.repo.repo,
 			owner: context.repo.owner,
-			targetCommitish: params.config.commitish
+			targetCommitish: params.config.commitish,
+			comparisonCommitIds
 		});
 		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
 			info(`Found ${ids.size} commits with changes to excluded path "${path}"`);
 			for (const id of ids) excludedCommitIds.add(id);
 		});
 	}
-	info(`Fetching parent commits of ${params.config.commitish}${since ? ` since ${since}` : ""}...`);
-	let commits = await findCommitsWithPr({
-		since,
-		name: context.repo.repo,
-		owner: context.repo.owner,
-		targetCommitish: params.config.commitish,
-		withPullRequestBody: params.config["change-template"].includes("$BODY"),
-		withPullRequestURL: params.config["change-template"].includes("$URL"),
-		withBaseRefName: params.config["change-template"].includes("$BASE_REF_NAME"),
-		withHeadRefName: params.config["change-template"].includes("$HEAD_REF_NAME"),
-		pullRequestLimit: params.config["pull-request-limit"],
-		historyLimit: params.config["history-limit"]
-	});
-	info(`Found ${commits.length} commits.`);
 	commits = commits.filter((commit) => {
 		if (excludedCommitIds.has(commit.id)) return false;
 		if (shouldFilterByIncludedPaths) return includedCommitIds.has(commit.id);

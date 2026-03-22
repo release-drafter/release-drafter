@@ -77,8 +77,8 @@ export const findPreviousReleases = async (
   const semverRangeFilteredReleases =
     filterByRange && filterByRange !== '*'
       ? commitishFilteredReleases.filter((r) => {
-          // biome-ignore lint/style/noNonNullAssertion: ensured by config validation
-          const parsedRange = validRange(filterByRange)!
+          const parsedRange = validRange(filterByRange)
+          if (!parsedRange) return false
           const parsedVersion = coerce(r.tag_name, { loose: true })?.version
 
           if (!parsedVersion) {

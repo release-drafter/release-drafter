@@ -1,0 +1,73 @@
+query findCommitsInComparison(
+  $name: String!
+  $owner: String!
+  $baseRef: String!
+  $headRef: String!
+  $withPullRequestBody: Boolean!
+  $withPullRequestURL: Boolean!
+  $after: String
+  $withBaseRefName: Boolean!
+  $withHeadRefName: Boolean!
+  $pullRequestLimit: Int!
+  $historyLimit: Int!
+) {
+  repository(name: $name, owner: $owner) {
+    ref(qualifiedName: $baseRef) {
+      compare(headRef: $headRef) {
+        commits(first: $historyLimit, after: $after) {
+          __typename
+          pageInfo {
+            __typename
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            __typename
+            id
+            committedDate
+            message
+            author {
+              __typename
+              name
+              user {
+                __typename
+                login
+              }
+            }
+            associatedPullRequests(first: $pullRequestLimit) {
+              __typename
+              nodes {
+                __typename
+                title
+                number
+                url @include(if: $withPullRequestURL)
+                body @include(if: $withPullRequestBody)
+                author {
+                  __typename
+                  login
+                  url
+                }
+                baseRepository {
+                  __typename
+                  nameWithOwner
+                }
+                mergedAt
+                isCrossRepository
+                labels(first: 100) {
+                  __typename
+                  nodes {
+                    __typename
+                    name
+                  }
+                }
+                merged
+                baseRefName @include(if: $withBaseRefName)
+                headRefName @include(if: $withHeadRefName)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -30,7 +30,7 @@ const githubConfig: CodegenConfig = {
         extension: '.graphql.generated.ts',
         baseTypesPath: 'types/github.graphql.generated.ts',
       },
-      plugins: ['typescript-operations'],
+      plugins: ['typescript-operations', 'typed-document-node'],
     },
   },
 }

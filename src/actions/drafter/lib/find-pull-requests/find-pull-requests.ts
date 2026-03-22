@@ -1,19 +1,110 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
+import { executeGraphql, getOctokit } from 'src/common'
 import type { ParsedConfig } from '../../config'
 import type { findPreviousReleases } from '../find-previous-releases'
+import { findCommitsInComparison } from './find-commits-in-comparison'
 import { findCommitsWithPathChange } from './find-commits-with-path-change'
-import { findCommitsWithPr } from './find-commits-with-pr'
+import { findMostRecentTag } from './find-most-recent-tag'
+import { FindCommitsWithAssociatedPullRequestsDocument } from './graphql/find-commits-with-pr.graphql.generated'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
 }) => {
-  const since =
-    params.lastRelease?.created_at || params.config['initial-commits-since']
+  const octokit = getOctokit()
 
   const shouldFilterByIncludedPaths = params.config['include-paths'].length > 0
   const shouldFilterByExcludedPaths = params.config['exclude-paths'].length > 0
+
+  const sharedComparisonParams = {
+    name: context.repo.repo,
+    owner: context.repo.owner,
+    headRef: params.config.commitish,
+    withPullRequestBody: params.config['change-template'].includes('$BODY'),
+    withPullRequestURL: params.config['change-template'].includes('$URL'),
+    withBaseRefName:
+      params.config['change-template'].includes('$BASE_REF_NAME'),
+    withHeadRefName:
+      params.config['change-template'].includes('$HEAD_REF_NAME'),
+    pullRequestLimit: params.config['pull-request-limit'],
+    historyLimit: params.config['history-limit'],
+  }
+
+  let commits: Awaited<ReturnType<typeof findCommitsInComparison>>
+
+  if (params.lastRelease?.tag_name) {
+    // Case 1: previous release with tag → comparison
+    core.info(
+      `Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`,
+    )
+    commits = await findCommitsInComparison({
+      baseRef: `refs/tags/${params.lastRelease.tag_name}`,
+      ...sharedComparisonParams,
+    })
+  } else {
+    // Case 2: no previous release, look for most recent tag
+    const mostRecentTag = await findMostRecentTag({
+      name: context.repo.repo,
+      owner: context.repo.owner,
+      tagPrefix: params.config['tag-prefix'] || undefined,
+    })
+
+    if (mostRecentTag) {
+      core.info(
+        `No previous release found. Using most recent tag refs/tags/${mostRecentTag} as base.`,
+      )
+      core.info(
+        `Finding commits between refs/tags/${mostRecentTag} and ${params.config.commitish}...`,
+      )
+      commits = await findCommitsInComparison({
+        baseRef: `refs/tags/${mostRecentTag}`,
+        ...sharedComparisonParams,
+      })
+    } else {
+      // Case 3: no tags at all → cap-and-bail
+      core.info(
+        `No previous release or tag found. Fetching first page of commits (cap-and-bail)...`,
+      )
+      const capResult = await executeGraphql(
+        octokit.graphql,
+        FindCommitsWithAssociatedPullRequestsDocument,
+        {
+          name: context.repo.repo,
+          owner: context.repo.owner,
+          targetCommitish: params.config.commitish,
+          since: params.config['initial-commits-since'],
+          after: null,
+          withPullRequestBody:
+            params.config['change-template'].includes('$BODY'),
+          withPullRequestURL: params.config['change-template'].includes('$URL'),
+          withBaseRefName:
+            params.config['change-template'].includes('$BASE_REF_NAME'),
+          withHeadRefName:
+            params.config['change-template'].includes('$HEAD_REF_NAME'),
+          pullRequestLimit: params.config['pull-request-limit'],
+          historyLimit: params.config['history-limit'],
+        },
+      )
+      if (capResult.repository?.object?.__typename !== 'Commit') {
+        throw new Error('Query returned an unexpected result')
+      }
+      if (capResult.repository.object.history.pageInfo.hasNextPage) {
+        core.info(
+          'Commit history exceeds limit for first release. No changes will be listed.',
+        )
+        commits = []
+      } else {
+        commits = (capResult.repository.object.history.nodes ?? []).filter(
+          (c): c is NonNullable<typeof c> => c != null,
+        )
+      }
+    }
+  }
+
+  core.info(`Found ${commits.length} commits.`)
+
+  const comparisonCommitIds = new Set(commits.map((c) => c.id))
 
   /**
    * If include-paths are specified,
@@ -29,10 +120,10 @@ export const findPullRequests = async (params: {
     core.info('Finding commits with included path changes...')
     const { commitIdsMatchingPaths, hasFoundCommits } =
       await findCommitsWithPathChange(params.config['include-paths'], {
-        since,
         name: context.repo.repo,
         owner: context.repo.owner,
         targetCommitish: params.config.commitish,
+        comparisonCommitIds,
       })
 
     // Short circuit to avoid blowing GraphQL budget
@@ -56,10 +147,10 @@ export const findPullRequests = async (params: {
     const { commitIdsMatchingPaths } = await findCommitsWithPathChange(
       params.config['exclude-paths'],
       {
-        since,
         name: context.repo.repo,
         owner: context.repo.owner,
         targetCommitish: params.config.commitish,
+        comparisonCommitIds,
       },
     )
 
@@ -72,27 +163,6 @@ export const findPullRequests = async (params: {
       }
     })
   }
-
-  core.info(
-    `Fetching parent commits of ${params.config.commitish}${since ? ` since ${since}` : ''}...`,
-  )
-
-  let commits = await findCommitsWithPr({
-    since,
-    name: context.repo.repo,
-    owner: context.repo.owner,
-    targetCommitish: params.config.commitish,
-    withPullRequestBody: params.config['change-template'].includes('$BODY'),
-    withPullRequestURL: params.config['change-template'].includes('$URL'),
-    withBaseRefName:
-      params.config['change-template'].includes('$BASE_REF_NAME'),
-    withHeadRefName:
-      params.config['change-template'].includes('$HEAD_REF_NAME'),
-    pullRequestLimit: params.config['pull-request-limit'],
-    historyLimit: params.config['history-limit'],
-  })
-
-  core.info(`Found ${commits.length} commits.`)
 
   // Filter-out commits that did not change included paths.
   // Excluded paths take precedence over included paths when both are configured.
