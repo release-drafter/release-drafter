@@ -1,6 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { builtinModules } from 'node:module'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig, type Plugin } from 'vitest/config'
 
 const FROM = 'main: dist/actions/drafter/run.js'
@@ -23,7 +22,10 @@ function syncDrafterActionYml(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [tsconfigPaths(), syncDrafterActionYml()],
+  plugins: [syncDrafterActionYml()],
+  resolve: {
+    tsconfigPaths: true,
+  },
   // GitHub Actions libraries read inputs and context from process.env at runtime.
   // Preserve those accesses in the actual build environment instead of replacing
   // them with empty objects during bundling.
