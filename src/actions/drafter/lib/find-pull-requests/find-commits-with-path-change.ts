@@ -1,9 +1,8 @@
-import { getOctokit, paginateGraphql } from 'src/common'
+import { executeGraphql, getOctokit } from 'src/common'
 import type { Config } from '../../config'
-import findCommitsWithPathChangeQuery from './graphql/find-commits-with-path-changes.gql?raw'
-import type {
-  FindCommitsWithPathChangesQueryQuery,
-  FindCommitsWithPathChangesQueryQueryVariables,
+import {
+  FindCommitsWithPathChangesQueryDocument,
+  type FindCommitsWithPathChangesQueryQueryVariables,
 } from './graphql/find-commits-with-path-changes.graphql.generated'
 
 /**
@@ -11,33 +10,59 @@ import type {
  */
 export const findCommitsWithPathChange = async (
   paths: Config['include-paths'],
-  params: Omit<FindCommitsWithPathChangesQueryQueryVariables, 'path'>,
+  params: {
+    name: string
+    owner: string
+    targetCommitish: string
+    comparisonCommitIds: Set<string>
+  },
 ) => {
   const octokit = getOctokit()
   const commitIdsMatchingPaths: Record<string, Set<string>> = {}
   let hasFoundCommits = false
 
   for (const path of paths) {
-    const data = await paginateGraphql<FindCommitsWithPathChangesQueryQuery>(
-      octokit.graphql,
-      findCommitsWithPathChangeQuery,
-      { ...params, path },
-      ['repository', 'object', 'history'],
-    )
+    commitIdsMatchingPaths[path] = new Set()
+    let after: FindCommitsWithPathChangesQueryQueryVariables['after'] = null
 
-    if (data.repository?.object?.__typename !== 'Commit') {
-      throw new Error('Query returned an unexpected result')
-    }
+    while (true) {
+      const variables: FindCommitsWithPathChangesQueryQueryVariables = {
+        name: params.name,
+        owner: params.owner,
+        targetCommitish: params.targetCommitish,
+        path,
+        after,
+      }
+      const data = await executeGraphql(
+        octokit.graphql,
+        FindCommitsWithPathChangesQueryDocument,
+        variables,
+      )
 
-    const commits = (data.repository?.object?.history.nodes || []).filter(
-      (c) => !!c,
-    )
+      if (data.repository?.object?.__typename !== 'Commit') {
+        throw new Error('Query returned an unexpected result')
+      }
 
-    commitIdsMatchingPaths[path] = commitIdsMatchingPaths[path] || new Set([])
+      const nodes = (data.repository.object.history.nodes ?? []).filter(
+        (c): c is NonNullable<typeof c> => c != null,
+      )
 
-    for (const { id } of commits) {
-      hasFoundCommits = true
-      commitIdsMatchingPaths[path].add(id)
+      const matchingNodes = nodes.filter((c) =>
+        params.comparisonCommitIds.has(c.id),
+      )
+
+      for (const { id } of matchingNodes) {
+        hasFoundCommits = true
+        commitIdsMatchingPaths[path].add(id)
+      }
+
+      const { hasNextPage, endCursor } = data.repository.object.history.pageInfo
+
+      // Stop if no more pages or if none of this page's commits are in the
+      // comparison range (we've gone past the base ref)
+      if (!hasNextPage || matchingNodes.length === 0) break
+
+      after = endCursor ?? null
     }
   }
 

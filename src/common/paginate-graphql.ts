@@ -1,4 +1,7 @@
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
+import type { graphql } from '@octokit/graphql'
 import type { RequestParameters } from '@octokit/graphql/types'
+import { print } from 'graphql'
 
 const getPath = <T = unknown>(obj: unknown, path: string[]): T =>
   path.reduce((acc, key) => (acc as Record<string, unknown>)?.[key], obj) as T
@@ -21,23 +24,27 @@ const setPath = (obj: unknown, path: string[], value: unknown) => {
  * Utility function to paginate a GraphQL function using Relay-style cursor pagination.
  *
  * @param {Function} queryFn - function used to query the GraphQL API
- * @param {string} query - GraphQL query, must include `nodes` and `pageInfo` fields for the field that will be paginated
+ * @param {TypedDocumentNode} query - GraphQL query, must include `nodes` and `pageInfo` fields for the field that will be paginated
  * @param {Object} variables
  * @param {string[]} paginatePath - path to field to paginate
  */
-export async function paginateGraphql<T extends object>(
-  client: typeof import('@octokit/graphql').graphql,
-  query: string,
+export async function paginateGraphql<
+  T extends object,
+  TVariables extends Record<string, unknown> = Record<string, unknown>,
+>(
+  client: typeof graphql,
+  query: TypedDocumentNode<T, TVariables> | string,
   requestParameters: RequestParameters,
   paginatePath: string[],
-) {
+): Promise<T> {
+  const queryString = typeof query === 'string' ? query : print(query)
   const nodesPath = [...paginatePath, 'nodes']
   const pageInfoPath = [...paginatePath, 'pageInfo']
   const endCursorPath = [...pageInfoPath, 'endCursor']
   const hasNextPagePath = [...pageInfoPath, 'hasNextPage']
   const hasNextPage = (data: T) => getPath(data, hasNextPagePath)
 
-  const data = await client<T>(query, requestParameters)
+  const data = await client<T>(queryString, requestParameters)
 
   if (!hasPath(data, nodesPath)) {
     throw new Error(
@@ -56,7 +63,7 @@ export async function paginateGraphql<T extends object>(
   }
 
   while (hasNextPage(data)) {
-    const newData = await client<T>(query, {
+    const newData = await client<T>(queryString, {
       ...requestParameters,
       after: getPath(data, [...pageInfoPath, 'endCursor']),
     })

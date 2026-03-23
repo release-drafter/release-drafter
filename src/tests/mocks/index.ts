@@ -7,7 +7,7 @@ export * from './context'
 import type * as core from '@actions/core'
 
 export { mockedConfigModule } from './config'
-export { getGqlPayload, mockGraphqlQuery } from './graphql'
+export { getGqlPayload, mockGraphqlQuery, nockGetTags } from './graphql'
 export { mockInput } from './input'
 export { nockGetPrFiles } from './pull_requests'
 export {

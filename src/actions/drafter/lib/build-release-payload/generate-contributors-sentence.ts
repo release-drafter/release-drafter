@@ -10,8 +10,9 @@ export const generateContributorsSentence = (params: {
 
   const contributors = new Set<string>()
 
-  // Add from commits
+  // Add from commits that have associated pull requests
   for (const commit of commits) {
+    if ((commit.associatedPullRequests?.nodes?.length ?? 0) === 0) continue
     if (commit.author?.user) {
       if (!config['exclude-contributors'].includes(commit.author.user.login)) {
         contributors.add(`@${commit.author.user.login}`)

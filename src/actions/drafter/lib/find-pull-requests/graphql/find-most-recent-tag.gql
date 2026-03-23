@@ -1,0 +1,14 @@
+query findMostRecentTag($name: String!, $owner: String!, $first: Int!) {
+  repository(name: $name, owner: $owner) {
+    refs(
+      refPrefix: "refs/tags/"
+      first: $first
+      orderBy: { field: TAG_COMMIT_DATE, direction: DESC }
+    ) {
+      nodes {
+        __typename
+        name
+      }
+    }
+  }
+}
