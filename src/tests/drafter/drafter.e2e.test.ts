@@ -411,7 +411,7 @@ describe('drafter e2e', () => {
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
             [
               {
-                "body": "A big thanks to: @TimonVS and Ada Lovelace",
+                "body": "A big thanks to: @TimonVS",
                 "draft": true,
                 "make_latest": "true",
                 "name": "",
@@ -477,7 +477,7 @@ describe('drafter e2e', () => {
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
             [
               {
-                "body": "A big thanks to: Ada Lovelace",
+                "body": "A big thanks to: No contributors",
                 "draft": true,
                 "make_latest": "true",
                 "name": "",
@@ -2931,7 +2931,7 @@ describe('drafter e2e', () => {
 
           ## Contributors
 
-          @TimonVS
+          No contributors
 
           ## Previous release
 
@@ -3014,7 +3014,7 @@ describe('drafter e2e', () => {
 
           ## Contributors
 
-          @TimonVS
+          No contributors
 
           ## Previous release
 
