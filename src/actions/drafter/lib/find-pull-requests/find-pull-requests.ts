@@ -1,19 +1,14 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { executeGraphql, getOctokit } from 'src/common'
 import type { ParsedConfig } from '../../config'
 import type { findPreviousReleases } from '../find-previous-releases'
 import { findCommitsInComparison } from './find-commits-in-comparison'
 import { findCommitsWithPathChange } from './find-commits-with-path-change'
-import { findMostRecentTag } from './find-most-recent-tag'
-import { FindCommitsWithAssociatedPullRequestsDocument } from './graphql/find-commits-with-pr.graphql.generated'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
 }) => {
-  const octokit = getOctokit()
-
   const shouldFilterByIncludedPaths = params.config['include-paths'].length > 0
   const shouldFilterByExcludedPaths = params.config['exclude-paths'].length > 0
 
@@ -33,74 +28,18 @@ export const findPullRequests = async (params: {
 
   let commits: Awaited<ReturnType<typeof findCommitsInComparison>>
 
-  if (params.lastRelease?.tag_name) {
-    // Case 1: previous release with tag → comparison
-    core.info(
-      `Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`,
-    )
-    commits = await findCommitsInComparison({
-      baseRef: `refs/tags/${params.lastRelease.tag_name}`,
-      ...sharedComparisonParams,
-    })
-  } else {
-    // Case 2: no previous release, look for most recent tag
-    const mostRecentTag = await findMostRecentTag({
-      name: context.repo.repo,
-      owner: context.repo.owner,
-      tagPrefix: params.config['tag-prefix'] || undefined,
-    })
-
-    if (mostRecentTag) {
-      core.info(
-        `No previous release found. Using most recent tag refs/tags/${mostRecentTag} as base.`,
-      )
-      core.info(
-        `Finding commits between refs/tags/${mostRecentTag} and ${params.config.commitish}...`,
-      )
-      commits = await findCommitsInComparison({
-        baseRef: `refs/tags/${mostRecentTag}`,
-        ...sharedComparisonParams,
-      })
-    } else {
-      // Case 3: no tags at all → cap-and-bail
-      core.info(
-        `No previous release or tag found. Fetching first page of commits (cap-and-bail)...`,
-      )
-      const capResult = await executeGraphql(
-        octokit.graphql,
-        FindCommitsWithAssociatedPullRequestsDocument,
-        {
-          name: context.repo.repo,
-          owner: context.repo.owner,
-          targetCommitish: params.config.commitish,
-          since: params.config['initial-commits-since'],
-          after: null,
-          withPullRequestBody:
-            params.config['change-template'].includes('$BODY'),
-          withPullRequestURL: params.config['change-template'].includes('$URL'),
-          withBaseRefName:
-            params.config['change-template'].includes('$BASE_REF_NAME'),
-          withHeadRefName:
-            params.config['change-template'].includes('$HEAD_REF_NAME'),
-          pullRequestLimit: params.config['pull-request-limit'],
-          historyLimit: params.config['history-limit'],
-        },
-      )
-      if (capResult.repository?.object?.__typename !== 'Commit') {
-        throw new Error('Query returned an unexpected result')
-      }
-      if (capResult.repository.object.history.pageInfo.hasNextPage) {
-        core.info(
-          'Commit history exceeds limit for first release. No changes will be listed.',
-        )
-        commits = []
-      } else {
-        commits = (capResult.repository.object.history.nodes ?? []).filter(
-          (c): c is NonNullable<typeof c> => c != null,
-        )
-      }
-    }
+  if (!params.lastRelease?.tag_name) {
+    core.warning('A previous (published) release is required to find changes')
+    return { commits: [], pullRequests: [] }
   }
+
+  core.info(
+    `Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`,
+  )
+  commits = await findCommitsInComparison({
+    baseRef: `refs/tags/${params.lastRelease.tag_name}`,
+    ...sharedComparisonParams,
+  })
 
   core.info(`Found ${commits.length} commits.`)
 
