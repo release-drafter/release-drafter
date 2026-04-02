@@ -1,0 +1,113 @@
+name: Previous published release not found
+description: Report cases where Release Drafter could not detect the expected previous published release
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Release Drafter could not find a previous published release and created a draft without a comparison baseline.
+
+        Please fill out the details below so the behavior can be investigated.
+
+  - type: checkboxes
+    attributes:
+      label: I have checked my repo's config
+      description: Please pay attention to the following before submitting this issue
+      options:
+        - label: My repo does contain a previously published release release-drafter was supposed to find (or similar)
+          required: true
+        - label: My release-drafter config seem to point to that release (e.g. no unexpected tag-prefix, correct commitish, etc.)
+          required: true
+
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered. (see [Issues](https://github.com/release-drafter/release-drafter/issues))
+      options:
+        - label: I have searched the existing issues
+          required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/release-drafter/release-drafter/blob/master/docs/CODE_OF_CONDUCT.md).
+      options:
+          - label: I agree to follow this project's Code of Conduct
+            required: true
+
+  - type: input
+    id: repository
+    attributes:
+      label: Repository
+      description: Which repository is affected? Leave empty if private.
+      placeholder: owner/repository
+    validations:
+      required: false
+
+  - type: input
+    id: branch_or_channel
+    attributes:
+      label: Branch or release channel
+      description: Which branch, commitish, or release channel were you drafting for?
+      placeholder: "'commitish: main' without tag-prefix"
+    validations:
+      required: true
+
+  - type: input
+    id: expected_release
+    attributes:
+      label: Expected previous published release
+      description: Which published release did you expect Release Drafter to use as the baseline? Enter the tag_name of that release
+      placeholder: v1.2.3
+    validations:
+      required: false
+
+  - type: dropdown
+    id: release_state
+    attributes:
+      label: What was in your repo before the (attempted) release-drafter run?
+      description: Select all that apply.
+      multiple: true
+      options:
+        - One or multiple published GitHub releases
+        - One or multiple draft releases
+        - One or multiple prerelease releases
+        - One or multiple git tags (that are not associated with a GitHub release)
+        - I am not sure
+        - I don't want to share this information
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant Release Drafter config(s) and workflows.
+      description: Paste the relevant config(s), including Github Actions workflow(s). (Formatted as YAML)
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste action logs. If possible, rerun the workflow with debug logging enabled and paste the relevant logs here.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Paste relevant screenshots of the releases page.
+    validations:
+      required: false
+
+  - type: textarea
+    id: details
+    attributes:
+      label: What did you expect to happen?
+      description: Describe why you expected a previous published release to be found.
+    validations:
+      required: true
