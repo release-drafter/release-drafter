@@ -1,3 +1,4 @@
+import { basename } from 'node:path'
 import * as core from '@actions/core'
 import { getConfigFile } from './get-config-file'
 import { normalizeFilepath } from './normalize-filepath'
@@ -81,6 +82,13 @@ export const getConfigFiles = async (
     }
 
     configTarget = parseConfigTarget(lastExtends, lastFetchedFrom)
+
+    // Support repo-only _extends (e.g., "org/repo" or "repo") by defaulting
+    // to the parent config's filename when no filepath is specified.
+    if (!configTarget.filepath) {
+      configTarget.filepath = basename(lastFetchedFrom.filepath)
+    }
+
     core.debug(
       `getConfigFiles: Parsed _extends target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`,
     )

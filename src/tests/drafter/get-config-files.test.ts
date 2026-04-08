@@ -2,6 +2,7 @@
 import { readFileSyncOriginal } from 'node:fs'
 import nock from 'nock'
 import { getConfigFile } from 'src/common/config/get-config-file'
+import { getConfigFiles } from 'src/common/config/get-config-files'
 import { describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
@@ -30,7 +31,9 @@ const getContentEndpoint = (
   )}/contents/${encodeURIComponent(path)}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}`
 }
 
-describe('get config file', () => {
+const RAW_CONTENT_TYPE = 'application/vnd.github.v3.raw; charset=utf-8'
+
+describe('getConfigFile', () => {
   it('should throw error on unsupported file extension', async () => {
     await expect(
       getConfigFile({
@@ -148,7 +151,7 @@ describe('get config file', () => {
       const scope = nock('https://api.github.com')
         .get(endpoint)
         .reply(200, `template: fake-template-content`, {
-          'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+          'content-type': RAW_CONTENT_TYPE,
         })
 
       const res = await getConfigFile({
@@ -255,6 +258,156 @@ describe('get config file', () => {
       expect(mocks.readFileSync).not.toHaveBeenCalled()
 
       expect(scope.isDone()).toBe(true)
+    })
+  })
+})
+
+describe('getConfigFiles', () => {
+  describe('_extends with repo-only defaults filepath from parent', () => {
+    it('should default filepath when _extends is owner/repo', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const parentEndpoint = getContentEndpoint(
+        'ansible',
+        'ansible-navigator',
+        '.github/release-drafter.yml',
+        'main',
+      )
+      const extendsEndpoint = getContentEndpoint(
+        'ansible',
+        'team-devtools',
+        '.github/release-drafter.yml',
+      )
+
+      const scope = nock('https://api.github.com')
+        .get(parentEndpoint)
+        .reply(
+          200,
+          `_extends: ansible/team-devtools\ntemplate: child-template`,
+          { 'content-type': RAW_CONTENT_TYPE },
+        )
+        .get(extendsEndpoint)
+        .reply(200, `template: parent-template`, {
+          'content-type': RAW_CONTENT_TYPE,
+        })
+
+      const files = await getConfigFiles('release-drafter.yml', {
+        repo: { owner: 'ansible', repo: 'ansible-navigator' },
+        ref: 'main',
+      })
+
+      expect(scope.isDone()).toBe(true)
+      expect(files).toHaveLength(2)
+      expect(files[0].fetchedFrom.filepath).toBe('.github/release-drafter.yml')
+      expect(files[1].fetchedFrom.filepath).toBe('.github/release-drafter.yml')
+      expect(files[1].fetchedFrom.repo).toEqual({
+        owner: 'ansible',
+        repo: 'team-devtools',
+      })
+    })
+
+    it('should default filepath when _extends is repo-only (no owner)', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const parentEndpoint = getContentEndpoint(
+        'ansible',
+        'ansible-navigator',
+        '.github/release-drafter.yml',
+        'main',
+      )
+      const extendsEndpoint = getContentEndpoint(
+        'ansible',
+        'team-devtools',
+        '.github/release-drafter.yml',
+      )
+
+      const scope = nock('https://api.github.com')
+        .get(parentEndpoint)
+        .reply(200, `_extends: team-devtools\ntemplate: child-template`, {
+          'content-type': RAW_CONTENT_TYPE,
+        })
+        .get(extendsEndpoint)
+        .reply(200, `template: parent-template`, {
+          'content-type': RAW_CONTENT_TYPE,
+        })
+
+      const files = await getConfigFiles('release-drafter.yml', {
+        repo: { owner: 'ansible', repo: 'ansible-navigator' },
+        ref: 'main',
+      })
+
+      expect(scope.isDone()).toBe(true)
+      expect(files).toHaveLength(2)
+      expect(files[1].fetchedFrom.filepath).toBe('.github/release-drafter.yml')
+      expect(files[1].fetchedFrom.repo).toEqual({
+        owner: 'ansible',
+        repo: 'team-devtools',
+      })
+    })
+
+    it('should default filepath with custom config name', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const parentEndpoint = getContentEndpoint(
+        'myorg',
+        'myrepo',
+        '.github/custom-drafter.yml',
+        'main',
+      )
+      const extendsEndpoint = getContentEndpoint(
+        'myorg',
+        'shared-configs',
+        '.github/custom-drafter.yml',
+      )
+
+      const scope = nock('https://api.github.com')
+        .get(parentEndpoint)
+        .reply(
+          200,
+          `_extends: myorg/shared-configs\ntemplate: child-template`,
+          { 'content-type': RAW_CONTENT_TYPE },
+        )
+        .get(extendsEndpoint)
+        .reply(200, `template: parent-template`, {
+          'content-type': RAW_CONTENT_TYPE,
+        })
+
+      const files = await getConfigFiles('custom-drafter.yml', {
+        repo: { owner: 'myorg', repo: 'myrepo' },
+        ref: 'main',
+      })
+
+      expect(scope.isDone()).toBe(true)
+      expect(files).toHaveLength(2)
+      expect(files[1].fetchedFrom.filepath).toBe('.github/custom-drafter.yml')
+    })
+  })
+
+  describe('no _extends', () => {
+    it('should return a single config file', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const endpoint = getContentEndpoint(
+        'octocat',
+        'hello-world',
+        '.github/release-drafter.yml',
+        'main',
+      )
+
+      const scope = nock('https://api.github.com')
+        .get(endpoint)
+        .reply(200, `template: standalone`, {
+          'content-type': RAW_CONTENT_TYPE,
+        })
+
+      const files = await getConfigFiles('release-drafter.yml', {
+        repo: { owner: 'octocat', repo: 'hello-world' },
+        ref: 'main',
+      })
+
+      expect(scope.isDone()).toBe(true)
+      expect(files).toHaveLength(1)
+      expect(files[0].config.template).toBe('standalone')
     })
   })
 })
