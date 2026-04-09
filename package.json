@@ -44,7 +44,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^3.0.0",
-    "@actions/github": "^9.0.0",
+    "@actions/github": "^9.1.0",
     "compare-versions": "^6.1.1",
     "escape-string-regexp": "^5.0.0",
     "ignore": "^7.0.5",
