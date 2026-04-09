@@ -25,9 +25,15 @@
     "noEmit": true,
     "useDefineForClassFields": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": "./",
+    "paths": { "src/*": ["./src/*"] },
     "skipLibCheck": true
   },
-  "exclude": ["coverage", "dist", "node_modules", "**/*.generated.ts"],
+  "exclude": [
+    "coverage",
+    "dist",
+    "node_modules",
+    "**/*.generated.ts",
+    "src/tests"
+  ],
   "include": ["src"]
 }

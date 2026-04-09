@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "src/*": ["./src/*"],
+      "node_modules/*": ["./node_modules/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["coverage", "dist", "node_modules", "**/*.generated.ts"]
+}
