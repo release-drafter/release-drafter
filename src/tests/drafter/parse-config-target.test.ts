@@ -114,6 +114,22 @@ const testSuites: Array<{
     },
   },
   {
+    suiteName: 'github target with owner/repo, filepath, and ref',
+    input: [
+      'worlds/bye-world:release-drafter.yml@main',
+      {
+        repo: { owner: 'cchanche', repo: 'hello-world' },
+        ref: 'feature/destroyer-of-worlds',
+      },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: 'release-drafter.yml',
+      ref: 'main',
+      repo: { owner: 'worlds', repo: 'bye-world' },
+    },
+  },
+  {
     suiteName: 'different config name',
     input: [
       'alternative-config-name.json',
@@ -157,6 +173,110 @@ const testSuites: Array<{
     expected: new Error(
       'invalid format: "conf.yaml@main". Expected format [github:][owner/repo:]filepath[@ref] or file:filepath. Local file targets cannot have "@" github specifiers.',
     ),
+  },
+  {
+    suiteName: 'repo-only without colon (owner/repo)',
+    input: [
+      'ansible/team-devtools',
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: undefined,
+      repo: { owner: 'ansible', repo: 'team-devtools' },
+    },
+  },
+  {
+    suiteName: 'repo-only without colon (repo)',
+    input: [
+      'team-devtools',
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: undefined,
+      repo: { owner: 'cchanche', repo: 'team-devtools' },
+    },
+  },
+  {
+    suiteName: 'repo-only without colon with ref (owner/repo@ref)',
+    input: [
+      'ansible/team-devtools@v2',
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: 'v2',
+      repo: { owner: 'ansible', repo: 'team-devtools' },
+    },
+  },
+  {
+    suiteName: 'repo-only with colon and no filepath',
+    input: [
+      'ansible/team-devtools:',
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: undefined,
+      repo: { owner: 'ansible', repo: 'team-devtools' },
+    },
+  },
+  {
+    suiteName: 'repo-only with explicit github: scheme (owner/repo)',
+    input: [
+      'github:ansible/team-devtools',
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: undefined,
+      repo: { owner: 'ansible', repo: 'team-devtools' },
+    },
+  },
+  {
+    suiteName: 'repo-only without owner with ref (repo@ref)',
+    input: [
+      'team-devtools@v2',
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: 'v2',
+      repo: { owner: 'cchanche', repo: 'team-devtools' },
+    },
+  },
+  {
+    suiteName: 'repo-only with colon, ref, and no filepath',
+    input: [
+      'ansible/team-devtools:@main',
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'develop' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: 'main',
+      repo: { owner: 'ansible', repo: 'team-devtools' },
+    },
+  },
+  {
+    suiteName: 'repo-only with explicit github: scheme and trailing colon',
+    input: [
+      'github:ansible/team-devtools:',
+      { repo: { owner: 'cchanche', repo: 'hello-world' }, ref: 'main' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: undefined,
+      repo: { owner: 'ansible', repo: 'team-devtools' },
+    },
   },
   {
     suiteName: 'invalid string with only specifiers',

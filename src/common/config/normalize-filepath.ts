@@ -45,7 +45,10 @@ export const normalizeFilepath = (
       // Resolve relative to the parent config file's directory
       return normalize(join(dirname(parentConfig.filepath), _filepath))
     } else {
-      // Prepend .github/
+      // Prepend .github/ unless the path already starts with .github/
+      if (_filepath.startsWith('.github/')) {
+        return _filepath
+      }
       return join('.github', _filepath)
     }
   }

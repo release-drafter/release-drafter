@@ -11,8 +11,8 @@ import * as events from "node:events";
 import { StringDecoder } from "node:string_decoder";
 import * as child from "node:child_process";
 import { setTimeout as setTimeout$1 } from "node:timers";
+import path, { basename, dirname, isAbsolute, join, normalize } from "node:path";
 import { existsSync as existsSync$1, readFileSync as readFileSync$1 } from "node:fs";
-import path, { dirname, isAbsolute, join, normalize } from "node:path";
 import process$1 from "node:process";
 //#region \0rolldown/runtime.js
 var __create = Object.create;
@@ -26807,7 +26807,10 @@ var normalizeFilepath = (config, parentConfig) => {
 	if (isAbsolute(_filepath)) if (_filepath.startsWith("/")) return _filepath.slice(1);
 	else throw new Error(`Encountered malformed absolute path ${_filepath}`);
 	else if (parentConfig && parentConfig.repo.owner === config.repo.owner && parentConfig.repo.repo === config.repo.repo && config.ref === parentConfig.ref) return normalize(join(dirname(parentConfig.filepath), _filepath));
-	else return join(".github", _filepath);
+	else {
+		if (_filepath.startsWith(".github/")) return _filepath;
+		return join(".github", _filepath);
+	}
 };
 //#endregion
 //#region src/common/config/get-config-file.ts
@@ -26856,11 +26859,19 @@ function parseConfigTarget(target, context) {
 	const scheme = _target.startsWith("file:") ? "file" : "github";
 	if (_target.startsWith("file:")) _target = _target.slice(5);
 	if (_target.startsWith("github:")) _target = _target.slice(7);
-	const hasRepoSpecifier = _target.includes(":");
+	let hasRepoSpecifier = _target.includes(":");
 	const hasRefSpecifier = _target.includes("@");
 	if (scheme === "file") {
 		if (hasRepoSpecifier) throw getErr("Local file targets cannot have \":\" github specifiers.");
 		if (hasRefSpecifier) throw getErr("Local file targets cannot have \"@\" github specifiers.");
+	}
+	if (!hasRepoSpecifier && scheme !== "file") {
+		const targetWithoutRef = hasRefSpecifier ? _target.slice(0, _target.indexOf("@")) : _target;
+		if (!targetWithoutRef.includes(".")) {
+			if (hasRefSpecifier) _target = `${targetWithoutRef}:${_target.slice(_target.indexOf("@"))}`;
+			else _target = `${_target}:`;
+			hasRepoSpecifier = true;
+		}
 	}
 	const parts = _target.split(":").flatMap((part) => part.split("@"));
 	let targetRepo;
@@ -26894,11 +26905,9 @@ function parseConfigTarget(target, context) {
 		targetRef = refSpecifier;
 	} else targetRef = isCurrentRepo ? context.ref : void 0;
 	const filepathIndex = hasRepoSpecifier ? 1 : 0;
-	const targetFilepath = parts.at(filepathIndex);
-	if (!targetFilepath) throw getErr("Missing filepath.");
 	return {
 		scheme,
-		filepath: targetFilepath,
+		filepath: parts.at(filepathIndex) || "",
 		ref: targetRef,
 		repo: targetRepo
 	};
@@ -26946,6 +26955,7 @@ var getConfigFiles = async (configFilename, currentContext) => {
 			throw new Error(error$1);
 		}
 		configTarget = parseConfigTarget(lastExtends, lastFetchedFrom);
+		if (!configTarget.filepath) configTarget.filepath = basename(lastFetchedFrom.filepath);
 		debug(`getConfigFiles: Parsed _extends target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`);
 		const normalizedFilepath = normalizeFilepath(configTarget, lastFetchedFrom);
 		const preCheckTarget = {
