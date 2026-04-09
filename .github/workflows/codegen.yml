@@ -24,7 +24,7 @@ jobs:
         run: npm run codegen
 
       - name: Create PR if changed
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: 'chore: update generated GraphQL types'
           title: 'chore: update generated GraphQL types'
