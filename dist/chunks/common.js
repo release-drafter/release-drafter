@@ -27169,10 +27169,7 @@ function assignProp(target, prop, value) {
 }
 function mergeDefs(...defs) {
 	const mergedDescriptors = {};
-	for (const def of defs) {
-		const descriptors = Object.getOwnPropertyDescriptors(def);
-		Object.assign(mergedDescriptors, descriptors);
-	}
+	for (const def of defs) Object.assign(mergedDescriptors, Object.getOwnPropertyDescriptors(def));
 	return Object.defineProperties({}, mergedDescriptors);
 }
 function esc(str) {
