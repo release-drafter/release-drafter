@@ -28,7 +28,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "coverage": "npx tsx src/scripts/generate-coverage-badge.ts",
-    "tsc:check": "tsc --noEmit",
+    "tsc:check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "format:write": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome lint .",

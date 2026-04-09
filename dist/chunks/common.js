@@ -18779,7 +18779,6 @@ function createStringifyContext(doc, options) {
 		nullStr: "null",
 		simpleKeys: false,
 		singleQuote: null,
-		trailingComma: false,
 		trueStr: "true",
 		verifyAliasOrder: true
 	}, doc.schema.toStringOptions, options);
@@ -19136,13 +19135,9 @@ function stringifyFlowCollection({ items }, ctx, { flowChars, itemIndent }) {
 		}
 		if (comment) reqNewline = true;
 		let str = stringify$2(item, itemCtx, () => comment = null);
-		reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
 		if (i < items.length - 1) str += ",";
-		else if (ctx.options.trailingComma) {
-			if (ctx.options.lineWidth > 0) reqNewline || (reqNewline = lines.reduce((sum, line) => sum + line.length + 2, 2) + (str.length + 2) > ctx.options.lineWidth);
-			if (reqNewline) str += ",";
-		}
 		if (comment) str += lineComment(str, itemIndent, commentString(comment));
+		if (!reqNewline && (lines.length > linesAtValue || str.includes("\n"))) reqNewline = true;
 		lines.push(str);
 		linesAtValue = lines.length;
 	}
@@ -21428,18 +21423,14 @@ function composeNode(ctx, token, props, onError) {
 		case "block-map":
 		case "block-seq":
 		case "flow-collection":
-			try {
-				node = composeCollection(CN, ctx, token, props, onError);
-				if (anchor) node.anchor = anchor.source.substring(1);
-			} catch (error) {
-				onError(token, "RESOURCE_EXHAUSTION", error instanceof Error ? error.message : String(error));
-			}
+			node = composeCollection(CN, ctx, token, props, onError);
+			if (anchor) node.anchor = anchor.source.substring(1);
 			break;
 		default:
 			onError(token, "UNEXPECTED_TOKEN", token.type === "error" ? token.message : `Unsupported token (type: ${token.type})`);
+			node = composeEmptyNode(ctx, token.offset, void 0, null, props, onError);
 			isSrcToken = false;
 	}
-	node ?? (node = composeEmptyNode(ctx, token.offset, void 0, null, props, onError));
 	if (anchor && node.anchor === "") onError(anchor, "BAD_ALIAS", "Anchor cannot be an empty string");
 	if (atKey && ctx.options.stringKeys && (!isScalar$1(node) || typeof node.value !== "string" || node.tag && node.tag !== "tag:yaml.org,2002:str")) onError(tag ?? token, "NON_STRING_KEY", "With stringKeys, all keys must be strings");
 	if (spaceBefore) node.spaceBefore = true;
@@ -24426,16 +24417,6 @@ function getProxyFetch(destinationUrl) {
 function getApiBaseUrl() {
 	return process.env["GITHUB_API_URL"] || "https://api.github.com";
 }
-function getUserAgentWithOrchestrationId(baseUserAgent) {
-	var _a;
-	const orchId = (_a = process.env["ACTIONS_ORCHESTRATION_ID"]) === null || _a === void 0 ? void 0 : _a.trim();
-	if (orchId) {
-		const tag = `actions_orchestration_id/${orchId.replace(/[^a-z0-9_.-]/gi, "_")}`;
-		if (baseUserAgent === null || baseUserAgent === void 0 ? void 0 : baseUserAgent.includes(tag)) return baseUserAgent;
-		return `${baseUserAgent ? `${baseUserAgent} ` : ""}${tag}`;
-	}
-	return baseUserAgent;
-}
 //#endregion
 //#region node_modules/universal-user-agent/index.js
 function getUserAgent() {
@@ -26752,8 +26733,6 @@ function getOctokitOptions(token, options) {
 	const opts = Object.assign({}, options || {});
 	const auth = getAuthString(token, opts);
 	if (auth) opts.auth = auth;
-	const userAgent = getUserAgentWithOrchestrationId(opts.userAgent);
-	if (userAgent) opts.userAgent = userAgent;
 	return opts;
 }
 //#endregion
@@ -27190,7 +27169,10 @@ function assignProp(target, prop, value) {
 }
 function mergeDefs(...defs) {
 	const mergedDescriptors = {};
-	for (const def of defs) Object.assign(mergedDescriptors, Object.getOwnPropertyDescriptors(def));
+	for (const def of defs) {
+		const descriptors = Object.getOwnPropertyDescriptors(def);
+		Object.assign(mergedDescriptors, descriptors);
+	}
 	return Object.defineProperties({}, mergedDescriptors);
 }
 function esc(str) {
