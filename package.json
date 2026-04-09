@@ -39,7 +39,7 @@
     "check:clean": "npx tsx src/scripts/check-clean.ts",
     "preversion": "npm run all && npm run check:clean",
     "version": "git add package.json package-lock.json",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push origin v$npm_package_version"
   },
   "license": "MIT",
   "dependencies": {
