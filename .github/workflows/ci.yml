@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 jobs:
   check-pr-labels:
@@ -70,3 +71,23 @@ jobs:
 
       - name: Check for clean working directory
         run: npm run check:clean
+
+      - name: Generate coverage summary
+        id: coverage
+        run: |
+          COVERAGE=$(npx tsx src/scripts/coverage-summary.ts)
+          echo "pct=$COVERAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Set coverage status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pct = '${{ steps.coverage.outputs.pct }}';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              description: `${pct}%`,
+              context: 'Coverage',
+            });

@@ -6,7 +6,6 @@
 
 ![CI](https://github.com/release-drafter/release-drafter/actions/workflows/ci.yml/badge.svg)
 ![CodeQL](https://github.com/release-drafter/release-drafter/actions/workflows/codeql-analysis.yml/badge.svg)
-![Coverage](./badges/coverage.svg)
 
 ## Usage
 
