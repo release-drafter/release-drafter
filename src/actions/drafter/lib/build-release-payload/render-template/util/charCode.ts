@@ -18,6 +18,7 @@ export enum CharCode {
   Digit8 = 56,
   Digit9 = 57,
   A = 65,
+  E = 69,
   L = 76,
   U = 85,
   a = 97,
