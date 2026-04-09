@@ -35,7 +35,7 @@
     "check": "biome check --write .",
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "schemas": "npx tsx src/scripts/json-schema.ts",
-    "all": "npm run check && npm run tsc:check && npm run test:run && npm run coverage && npm run schemas && npm run codegen && npm run build",
+    "all": "npm run check && npm run tsc:check && npm run test:run && npm run coverage && npm run schemas && npm run build",
     "check:clean": "npx tsx src/scripts/check-clean.ts",
     "preversion": "npm run all && npm run check:clean",
     "version": "git add package.json package-lock.json",
