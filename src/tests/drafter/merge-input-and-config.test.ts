@@ -135,6 +135,24 @@ describe('mergeInputAndConfig', () => {
       )
     })
 
+    it('should merge input and config with input taking precedence for initial-commits-since', () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'main',
+        'initial-commits-since': '2026-03-30T00:00:00Z',
+      })
+      const input = commonConfigSchema.parse({
+        'initial-commits-since': '2026-03-27T00:00:00Z',
+      })
+
+      const result = mergeInputAndConfig({ config, input })
+
+      expect(result['initial-commits-since']).toBe('2026-03-27T00:00:00Z')
+      expect(mocks.core.info).toHaveBeenCalledWith(
+        'Input\'s initial-commits-since "2026-03-27T00:00:00Z" overrides config\'s initial-commits-since "2026-03-30T00:00:00Z"',
+      )
+    })
+
     it('should use config values when input values are not provided', () => {
       const config = configSchema.parse({
         template: '$CHANGES',

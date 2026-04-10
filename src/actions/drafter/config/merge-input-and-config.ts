@@ -110,6 +110,18 @@ export const mergeInputAndConfig = (params: {
     config['filter-by-range'] = input['filter-by-range']
   }
 
+  if (input['initial-commits-since']) {
+    if (
+      config['initial-commits-since'] &&
+      config['initial-commits-since'] !== input['initial-commits-since']
+    ) {
+      core.info(
+        `Input's initial-commits-since "${input['initial-commits-since']}" overrides config's initial-commits-since "${config['initial-commits-since']}"`,
+      )
+    }
+    config['initial-commits-since'] = input['initial-commits-since']
+  }
+
   // Write defaults
   const commitish =
     config.commitish || context.ref || (context.payload.ref as string)
