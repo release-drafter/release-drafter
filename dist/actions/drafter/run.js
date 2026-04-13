@@ -957,6 +957,10 @@ var mergeInputAndConfig = (params) => {
 		if (config["filter-by-range"] && config["filter-by-range"] !== input["filter-by-range"]) info(`Input's filter-by-range "${input["filter-by-range"]}" overrides config's filter-by-range "${config["filter-by-range"]}"`);
 		config["filter-by-range"] = input["filter-by-range"];
 	}
+	if (input["initial-commits-since"]) {
+		if (config["initial-commits-since"] && config["initial-commits-since"] !== input["initial-commits-since"]) info(`Input's initial-commits-since "${input["initial-commits-since"]}" overrides config's initial-commits-since "${config["initial-commits-since"]}"`);
+		config["initial-commits-since"] = input["initial-commits-since"];
+	}
 	const commitish = config.commitish || context.ref || context.payload.ref;
 	const latest = typeof config.latest !== "boolean" ? true : config.latest;
 	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
