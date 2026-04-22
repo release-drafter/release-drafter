@@ -2657,6 +2657,35 @@ describe('drafter e2e', () => {
         expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
+
+      it('doesnt let a config prerelease-identifier turn the release into a prerelease', async () => {
+        await mockContext('push')
+        await mockInput('prerelease', 'false')
+        mocks.config.mockReturnValue('config-with-pre-release-identifier')
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release'],
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-commits-merge-commit',
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "This is a Pre-release with identifier.",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v2.0.1",
+              "prerelease": false,
+              "tag_name": "v2.0.1",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('with input prerelease and publish: true', () => {
