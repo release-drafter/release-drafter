@@ -44,7 +44,11 @@ export const mergeInputAndConfig = (params: {
     }
     config.footer = input.footer
   }
-  if (input['prerelease-identifier']) {
+
+  const hasInputPrerelease = typeof input.prerelease === 'boolean'
+  const hasInputPrereleaseIdentifier = !!input['prerelease-identifier']
+
+  if (hasInputPrereleaseIdentifier) {
     if (
       config['prerelease-identifier'] &&
       config['prerelease-identifier'] !== input['prerelease-identifier']
@@ -55,7 +59,7 @@ export const mergeInputAndConfig = (params: {
     }
     config['prerelease-identifier'] = input['prerelease-identifier']
   }
-  if (typeof input.prerelease === 'boolean') {
+  if (hasInputPrerelease) {
     if (
       typeof config.prerelease === 'boolean' &&
       config.prerelease !== input.prerelease
@@ -91,7 +95,11 @@ export const mergeInputAndConfig = (params: {
     )
     config.latest = false
   }
-  if (config['prerelease-identifier'] && !config.prerelease) {
+  if (
+    config['prerelease-identifier'] &&
+    !config.prerelease &&
+    (!hasInputPrerelease || hasInputPrereleaseIdentifier)
+  ) {
     core.warning(
       `You specified a 'prerelease-identifier' (${config['prerelease-identifier']}), but 'prerelease' is set to false. Switching to true.`,
     )

@@ -929,11 +929,13 @@ var mergeInputAndConfig = (params) => {
 		if (config.footer && config.footer !== input.footer) info(`Input's footer "${input.footer}" overrides config's footer "${config.footer}"`);
 		config.footer = input.footer;
 	}
-	if (input["prerelease-identifier"]) {
+	const hasInputPrerelease = typeof input.prerelease === "boolean";
+	const hasInputPrereleaseIdentifier = !!input["prerelease-identifier"];
+	if (hasInputPrereleaseIdentifier) {
 		if (config["prerelease-identifier"] && config["prerelease-identifier"] !== input["prerelease-identifier"]) info(`Input's prerelease-identifier "${input["prerelease-identifier"]}" overrides config's prerelease-identifier "${config["prerelease-identifier"]}"`);
 		config["prerelease-identifier"] = input["prerelease-identifier"];
 	}
-	if (typeof input.prerelease === "boolean") {
+	if (hasInputPrerelease) {
 		if (typeof config.prerelease === "boolean" && config.prerelease !== input.prerelease) info(`Input's prerelease "${input.prerelease}" overrides config's prerelease "${config.prerelease}"`);
 		config.prerelease = input.prerelease;
 	}
@@ -949,7 +951,7 @@ var mergeInputAndConfig = (params) => {
 		warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
 		config.latest = false;
 	}
-	if (config["prerelease-identifier"] && !config.prerelease) {
+	if (config["prerelease-identifier"] && !config.prerelease && (!hasInputPrerelease || hasInputPrereleaseIdentifier)) {
 		warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
 		config.prerelease = true;
 	}
