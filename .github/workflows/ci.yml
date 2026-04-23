@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  statuses: write
 
 jobs:
   check-pr-labels:
@@ -69,25 +68,62 @@ jobs:
       - name: Run all checks and rebuild artifacts
         run: npm run all
 
+      - name: Upload coverage summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary
+          path: coverage/coverage-summary.json
+          if-no-files-found: error
+
       - name: Check for clean working directory
         run: npm run check:clean
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: tests
+    env:
+      COVERAGE_THRESHOLD: '90'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/common-setup
+
+      # Downloads the artifact named below from this workflow run; `needs: tests` ensures that upload finished first.
+      - name: Download coverage summary
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-summary
+          path: coverage
 
       - name: Generate coverage summary
         id: coverage
         run: |
-          COVERAGE=$(npx tsx src/scripts/coverage-summary.ts)
+          COVERAGE=$(npm run --silent coverage)
           echo "pct=$COVERAGE" >> "$GITHUB_OUTPUT"
 
-      - name: Set coverage status
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pct = '${{ steps.coverage.outputs.pct }}';
-            await github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: context.sha,
-              state: 'success',
-              description: `${pct}%`,
-              context: 'Coverage',
-            });
+      - name: Enforce coverage threshold
+        env:
+          COVERAGE_PCT: ${{ steps.coverage.outputs.pct }}
+          COVERAGE_MIN: ${{ env.COVERAGE_THRESHOLD }}
+        run: |
+          node --input-type=module <<'EOF'
+          const pct = Number(process.env.COVERAGE_PCT)
+          const min = Number(process.env.COVERAGE_MIN)
+
+          if (Number.isNaN(pct)) {
+            throw new Error(`Invalid coverage percentage: ${process.env.COVERAGE_PCT}`)
+          }
+
+          if (pct < min) {
+            console.error(
+              `Coverage ${pct.toFixed(2)}% is below required ${min.toFixed(0)}%`,
+            )
+            process.exit(1)
+          }
+
+          console.log(
+            `Coverage ${pct.toFixed(2)}% meets required ${min.toFixed(0)}%`,
+          )
+          EOF

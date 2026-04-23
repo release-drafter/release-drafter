@@ -28,6 +28,8 @@ if (!total?.statements?.pct && total?.statements?.pct !== 0) {
 }
 
 const pct = total.statements.pct
+const threshold = Number(process.env.COVERAGE_THRESHOLD ?? '90')
+const meetsThreshold = pct >= threshold
 
 // Print coverage percentage for CI to capture
 console.log(pct.toFixed(2))
@@ -35,10 +37,13 @@ console.log(pct.toFixed(2))
 // Write GitHub Actions job summary if running in CI
 const summaryFile = process.env.GITHUB_STEP_SUMMARY
 if (summaryFile) {
-  const emoji = pct >= 90 ? '🟢' : pct >= 80 ? '🟡' : pct >= 70 ? '🟠' : '🔴'
+  const emoji = meetsThreshold ? '🟢' : '🔴'
+  const status = meetsThreshold ? 'meets' : 'is below'
 
   const summary = [
     `## ${emoji} Code Coverage: ${pct.toFixed(2)}%`,
+    '',
+    `Coverage ${status} the ${threshold.toFixed(0)}% threshold.`,
     '',
     '| Metric | Coverage | Covered | Total |',
     '| --- | --- | --- | --- |',
