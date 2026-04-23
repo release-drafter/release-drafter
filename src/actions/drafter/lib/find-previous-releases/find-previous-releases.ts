@@ -158,8 +158,8 @@ export const findPreviousReleases = async (
     core.info(`  tag_name:  ${lastRelease.tag_name}`)
     core.info(`  name:      ${lastRelease.name}`)
   } else {
-    core.info(
-      `No last release found${isPreRelease ? ' (including prerelease)' : ''}`,
+    core.warning(
+      `No published release found${isPreRelease ? ' (including prerelease)' : ''}`,
     )
   }
 

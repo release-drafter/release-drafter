@@ -24,7 +24,6 @@ export const getActionInput = (): ActionInput => {
     // can override the config
     latest: getInput('latest'),
     prerelease: getInput('prerelease'),
-    'initial-commits-since': getInput('initial-commits-since'),
     'prerelease-identifier': getInput('prerelease-identifier'),
     'include-pre-releases': getInput('include-pre-releases'),
     commitish: getInput('commitish'),

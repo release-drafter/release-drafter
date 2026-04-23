@@ -20,7 +20,6 @@ export type AvailableConfigs =
   | 'config-with-changes-templates-and-url'
   | 'config-with-changes-templates'
   | 'config-with-commitish'
-  | 'config-with-commits-since'
   | 'config-with-compare-link'
   | 'config-with-component-helpers-custom'
   | 'config-with-component-helpers-default'
