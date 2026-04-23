@@ -1591,12 +1591,12 @@ var VersionDescriptor = class VersionDescriptor {
 		if (from) {
 			const ver = typeof from === "object" ? this._isRelease(from) ? this._toSemver(this._stripTag(from.tag_name)) || this._toSemver(this._stripTag(from.name)) : this._toSemver(from) : this._toSemver(this._stripTag(from));
 			if (!ver) {
-				warning(`Failed to parse version from input ${from}. Defaulting to null.`);
+				warning(`Failed to parse version from input ${from}. Defaulting coerced version to null.`);
 				return null;
 			}
 			return ver;
 		} else {
-			warning(`No version input provided. Defaulting to null.`);
+			debug(`Building version descriptor without version input. Defaulting coerced version to null.`);
 			return null;
 		}
 	}
@@ -1641,15 +1641,23 @@ var VersionDescriptor = class VersionDescriptor {
 //#region src/actions/drafter/lib/build-release-payload/get-version-info.ts
 var getVersionInfo = (params) => {
 	const { lastRelease, config, input, versionKeyIncrement: _versionKeyIncrement } = params;
+	info(`Resolving version info based on:`);
+	info(`   - last release: ${lastRelease?.tag_name || "none"}`);
+	info(`   - version input: ${input.version || input.tag || input.name || "none"}`);
+	info(`   - version key increment: ${_versionKeyIncrement}`);
 	let _localIncrement = structuredClone(_versionKeyIncrement);
+	info(`Coerce and parse versions from last release...`);
 	const versionFromLastRelease = new VersionDescriptor(lastRelease, {
 		tagPrefix: config["tag-prefix"],
 		preReleaseIdentifier: config["prerelease-identifier"]
 	});
+	info(`Parsed version from last release: ${versionFromLastRelease.version?.format() || "none"}.`);
+	info(`Coerce and parse versions from input...`);
 	const versionFromInput = new VersionDescriptor(input.version || input.tag || input.name, {
 		tagPrefix: config["tag-prefix"],
 		preReleaseIdentifier: config["prerelease-identifier"]
 	});
+	info(`Parsed version from input: ${versionFromInput.version?.format() || "none"}.`);
 	let referenceVersion;
 	if (versionFromInput.version) {
 		_localIncrement = "no_increment";
