@@ -10,7 +10,6 @@ import {
   nockGetAndPatchReleases,
   nockGetAndPostReleases,
   nockGetReleases,
-  nockGetTags,
 } from '../mocks'
 
 describe('drafter e2e', () => {
@@ -128,13 +127,12 @@ describe('drafter e2e', () => {
     })
 
     describe('with no past releases', () => {
-      it('sets $CHANGES based on all commits, and $PREVIOUS_TAG to blank', async () => {
+      it('inserts no comparison baseline warning, and $PREVIOUS_TAG to blank', async () => {
         await mockContext('push')
         mocks.config.mockReturnValue('config-previous-tag')
 
-        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         const scope = nockGetAndPostReleases({ fetchedReleases: [] })
@@ -145,13 +143,21 @@ describe('drafter e2e', () => {
           [
             {
               "body": "Changes:
-          * Add documentation (#5) @TimonVS
-          * Update dependencies (#4) @TimonVS
-          * Bug fixes (#3) @TimonVS
-          * Add big feature (#2) @TimonVS
-          * 👽 Add alien technology (#1) @TimonVS
+          * No changes
 
           Previous tag: ''
+
+          ---
+          > [!WARNING]
+          > Release Drafter could not find a previous **published release** for \`toolmantim/release-drafter-test-project\`. This draft was created **without a comparison baseline**.
+
+          > [!IMPORTANT]
+          > Treat this draft as a manual starting point.
+          > Review the proposed version, tag, and notes before publishing.
+
+          If you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).
+
+          ---
           ",
               "draft": true,
               "make_latest": "true",
@@ -164,7 +170,7 @@ describe('drafter e2e', () => {
         `)
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(false) // gql not called
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
@@ -535,12 +541,11 @@ describe('drafter e2e', () => {
           await mockContext('push')
           mocks.config.mockReturnValue('config-with-changes-templates')
 
-          nockGetTags([])
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-empty',
+            payload: 'graphql-comparison-empty',
           })
           const scope = nockGetAndPostReleases({
-            fetchedReleases: [],
+            fetchedReleases: ['release'],
           })
 
           await runDrafter()
@@ -572,11 +577,10 @@ describe('drafter e2e', () => {
         mocks.config.mockReturnValue('config')
 
         const scope = nockGetAndPatchReleases({
-          fetchedReleases: ['release-draft'],
+          fetchedReleases: ['release', 'release-draft'],
         })
-        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         await runDrafter()
@@ -1667,11 +1671,10 @@ describe('drafter e2e', () => {
           await mockContext('push')
           mocks.config.mockReturnValue('config')
           const scope = nockGetAndPostReleases({
-            fetchedReleases: [],
+            fetchedReleases: ['release'],
           })
-          nockGetTags([])
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-merge-commit',
+            payload: 'graphql-comparison-merge-commit',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1705,11 +1708,10 @@ describe('drafter e2e', () => {
           await mockContext('push')
           mocks.config.mockReturnValue('config')
           const scope = nockGetAndPostReleases({
-            fetchedReleases: [],
+            fetchedReleases: ['release'],
           })
-          nockGetTags([])
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-rebase-merging',
+            payload: 'graphql-comparison-rebase-merging',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1743,11 +1745,10 @@ describe('drafter e2e', () => {
           await mockContext('push')
           mocks.config.mockReturnValue('config')
           const scope = nockGetAndPostReleases({
-            fetchedReleases: [],
+            fetchedReleases: ['release'],
           })
-          nockGetTags([])
           const gqlScope = mockGraphqlQuery({
-            payload: 'graphql-commits-squash-merging',
+            payload: 'graphql-comparison-squash-merging',
           })
           await runDrafter()
           expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -1909,11 +1910,10 @@ describe('drafter e2e', () => {
         await mockContext('push')
         mocks.config.mockReturnValue('config-with-replacers')
         const scope = nockGetAndPostReleases({
-          fetchedReleases: [],
+          fetchedReleases: ['release'],
         })
-        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2051,13 +2051,12 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-include-paths')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
-      nockGetTags([])
       const gqlScope = mockGraphqlQuery([
         {
-          query: 'query findCommitsWithAssociatedPullRequests',
-          payload: 'graphql-commits-merge-commit',
+          query: 'query findCommitsInComparison',
+          payload: 'graphql-comparison-merge-commit',
         },
         {
           query: 'query findCommitsWithPathChangesQuery',
@@ -2077,9 +2076,9 @@ describe('drafter e2e', () => {
         ",
             "draft": true,
             "make_latest": "true",
-            "name": "v0.1.0 (Code name: Placeholder)",
+            "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
-            "tag_name": "v0.1.0",
+            "tag_name": "v2.0.1",
             "target_commitish": "refs/heads/master",
           },
         ]
@@ -2093,13 +2092,12 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-include-paths')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
-      nockGetTags([])
       const gqlScope = mockGraphqlQuery([
         {
-          query: 'query findCommitsWithAssociatedPullRequests',
-          payload: 'graphql-commits-merge-commit',
+          query: 'query findCommitsInComparison',
+          payload: 'graphql-comparison-merge-commit',
         },
         {
           query: 'query findCommitsWithPathChangesQuery',
@@ -2115,9 +2113,9 @@ describe('drafter e2e', () => {
         ",
             "draft": true,
             "make_latest": "true",
-            "name": "v0.1.0 (Code name: Placeholder)",
+            "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
-            "tag_name": "v0.1.0",
+            "tag_name": "v2.0.1",
             "target_commitish": "refs/heads/master",
           },
         ]
@@ -2131,13 +2129,12 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-exclude-paths')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
-      nockGetTags([])
       const gqlScope = mockGraphqlQuery([
         {
-          query: 'query findCommitsWithAssociatedPullRequests',
-          payload: 'graphql-commits-merge-commit',
+          query: 'query findCommitsInComparison',
+          payload: 'graphql-comparison-merge-commit',
         },
         {
           query: 'query findCommitsWithPathChangesQuery',
@@ -2155,9 +2152,9 @@ describe('drafter e2e', () => {
         ",
             "draft": true,
             "make_latest": "true",
-            "name": "v0.1.0 (Code name: Placeholder)",
+            "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
-            "tag_name": "v0.1.0",
+            "tag_name": "v2.0.1",
             "target_commitish": "refs/heads/master",
           },
         ]
@@ -2171,13 +2168,12 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-include-exclude-paths')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
-      nockGetTags([])
       const gqlScope = mockGraphqlQuery([
         {
-          query: 'query findCommitsWithAssociatedPullRequests',
-          payload: 'graphql-commits-merge-commit',
+          query: 'query findCommitsInComparison',
+          payload: 'graphql-comparison-merge-commit',
         },
         {
           query: 'query findCommitsWithPathChangesQuery',
@@ -2197,9 +2193,9 @@ describe('drafter e2e', () => {
         ",
             "draft": true,
             "make_latest": "true",
-            "name": "v0.1.0 (Code name: Placeholder)",
+            "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
-            "tag_name": "v0.1.0",
+            "tag_name": "v2.0.1",
             "target_commitish": "refs/heads/master",
           },
         ]
@@ -2215,22 +2211,19 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
-      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post('/graphql', (body) => {
           if (
-            body.query.includes(
-              'query findCommitsWithAssociatedPullRequests',
-            ) &&
+            body.query.includes('query findCommitsInComparison') &&
             body.variables.pullRequestLimit === 5
           ) {
             return true
           }
           return false
         })
-        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+        .reply(200, getGqlPayload('graphql-comparison-no-prs'))
 
       await runDrafter()
 
@@ -2243,22 +2236,19 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-pull-request-limit')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
-      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post('/graphql', (body) => {
           if (
-            body.query.includes(
-              'query findCommitsWithAssociatedPullRequests',
-            ) &&
+            body.query.includes('query findCommitsInComparison') &&
             body.variables.pullRequestLimit === 34
           ) {
             return true
           }
           return false
         })
-        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+        .reply(200, getGqlPayload('graphql-comparison-no-prs'))
 
       await runDrafter()
 
@@ -2273,22 +2263,19 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
-      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post('/graphql', (body) => {
           if (
-            body.query.includes(
-              'query findCommitsWithAssociatedPullRequests',
-            ) &&
+            body.query.includes('query findCommitsInComparison') &&
             body.variables.historyLimit === 15
           ) {
             return true
           }
           return false
         })
-        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+        .reply(200, getGqlPayload('graphql-comparison-no-prs'))
 
       await runDrafter()
 
@@ -2301,22 +2288,19 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-history-limit')
       const scope = nockGetAndPostReleases({
-        fetchedReleases: [],
+        fetchedReleases: ['release'],
       })
-      nockGetTags([])
       const gqlScope = nock('https://api.github.com')
         .post('/graphql', (body) => {
           if (
-            body.query.includes(
-              'query findCommitsWithAssociatedPullRequests',
-            ) &&
+            body.query.includes('query findCommitsInComparison') &&
             body.variables.historyLimit === 42
           ) {
             return true
           }
           return false
         })
-        .reply(200, getGqlPayload('graphql-commits-no-prs'))
+        .reply(200, getGqlPayload('graphql-comparison-no-prs'))
 
       await runDrafter()
 
@@ -2875,9 +2859,8 @@ describe('drafter e2e', () => {
         const scope = nockGetAndPostReleases({
           fetchedReleases: [],
         })
-        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-empty',
+          payload: 'graphql-comparison-empty',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2894,6 +2877,18 @@ describe('drafter e2e', () => {
           ## Previous release
 
 
+
+          ---
+          > [!WARNING]
+          > Release Drafter could not find a previous **published release** for \`toolmantim/release-drafter-test-project\`. This draft was created **without a comparison baseline**.
+
+          > [!IMPORTANT]
+          > Treat this draft as a manual starting point.
+          > Review the proposed version, tag, and notes before publishing.
+
+          If you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).
+
+          ---
           ",
               "draft": true,
               "make_latest": "true",
@@ -2905,7 +2900,7 @@ describe('drafter e2e', () => {
           ]
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(false) // gql not called
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
@@ -2959,9 +2954,8 @@ describe('drafter e2e', () => {
         const scope = nockGetAndPostReleases({
           fetchedReleases: [],
         })
-        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-empty',
+          payload: 'graphql-comparison-empty',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2978,6 +2972,18 @@ describe('drafter e2e', () => {
           ## Previous release
 
 
+
+          ---
+          > [!WARNING]
+          > Release Drafter could not find a previous **published release** for \`toolmantim/release-drafter-test-project\`. This draft was created **without a comparison baseline**.
+
+          > [!IMPORTANT]
+          > Treat this draft as a manual starting point.
+          > Review the proposed version, tag, and notes before publishing.
+
+          If you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).
+
+          ---
           ",
               "draft": true,
               "make_latest": "true",
@@ -2989,7 +2995,7 @@ describe('drafter e2e', () => {
           ]
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(false) // gql not called
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
@@ -3263,16 +3269,27 @@ describe('drafter e2e', () => {
             'release-draft',
           ],
         })
-        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
-          query: 'query findCommitsWithAssociatedPullRequests',
-          payload: 'graphql-commits-empty',
+          query: 'query findCommitsInComparison',
+          payload: 'graphql-comparison-empty',
         })
         await runDrafter()
         expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
           [
             {
               "body": "# There's new stuff!
+
+          ---
+          > [!WARNING]
+          > Release Drafter could not find a previous **published release** for \`toolmantim/release-drafter-test-project\`. This draft was created **without a comparison baseline**.
+
+          > [!IMPORTANT]
+          > Treat this draft as a manual starting point.
+          > Review the proposed version, tag, and notes before publishing.
+
+          If you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).
+
+          ---
           ",
               "draft": true,
               "make_latest": "true",
@@ -3284,7 +3301,7 @@ describe('drafter e2e', () => {
           ]
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(false) // gql not called
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
@@ -3326,14 +3343,15 @@ describe('drafter e2e', () => {
         await mockInput('dry-run', 'true')
         mocks.config.mockReturnValue('config')
 
-        nockGetTags([])
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-commits-merge-commit',
+          payload: 'graphql-comparison-merge-commit',
         })
 
         // Only a GET scope — no PATCH scope, so any attempt to update a release
         // would trigger an unmatched-request error from nock.
-        const scope = nockGetReleases({ releaseFiles: ['release-draft'] })
+        const scope = nockGetReleases({
+          releaseFiles: ['release', 'release-draft'],
+        })
 
         await runDrafter()
 
