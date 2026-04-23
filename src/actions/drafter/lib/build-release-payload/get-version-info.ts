@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import type { ReleaseType } from 'semver'
 import type { Config, ExclusiveInput } from '../../config'
 import type { findPreviousReleases } from '../find-previous-releases'
@@ -25,19 +26,35 @@ export const getVersionInfo = (params: {
     versionKeyIncrement: _versionKeyIncrement,
   } = params
 
+  core.info(`Resolving version info based on:`)
+  core.info(`   - last release: ${lastRelease?.tag_name || 'none'}`)
+  core.info(
+    `   - version input: ${input.version || input.tag || input.name || 'none'}`,
+  )
+  core.info(`   - version key increment: ${_versionKeyIncrement}`)
+
   let _localIncrement: ReleaseType | 'no_increment' =
     structuredClone(_versionKeyIncrement) // local mutable copy
 
+  core.info(`Coerce and parse versions from last release...`)
   const versionFromLastRelease = new VersionDescriptor(lastRelease, {
     tagPrefix: config['tag-prefix'],
     preReleaseIdentifier: config['prerelease-identifier'],
   })
+  core.info(
+    `Parsed version from last release: ${versionFromLastRelease.version?.format() || 'none'}.`,
+  )
+
+  core.info(`Coerce and parse versions from input...`)
   const versionFromInput = new VersionDescriptor(
     input.version || input.tag || input.name,
     {
       tagPrefix: config['tag-prefix'],
       preReleaseIdentifier: config['prerelease-identifier'],
     },
+  )
+  core.info(
+    `Parsed version from input: ${versionFromInput.version?.format() || 'none'}.`,
   )
 
   let referenceVersion: VersionDescriptor
