@@ -1,5 +1,5 @@
 import type * as z from 'zod'
-import { boolean, iso, object, string, stringbool } from 'zod'
+import { boolean, object, string, stringbool } from 'zod'
 
 /**
  * Configuration parameters that can be specified in both
