@@ -69,7 +69,7 @@ jobs:
         run: npm run all
 
       - name: Upload coverage summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-summary
           path: coverage/coverage-summary.json
@@ -92,7 +92,7 @@ jobs:
 
       # Downloads the artifact named below from this workflow run; `needs: tests` ensures that upload finished first.
       - name: Download coverage summary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: coverage-summary
           path: coverage
