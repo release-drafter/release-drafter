@@ -27941,6 +27941,27 @@ async function paginateGraphql(client, query, requestParameters, paginatePath) {
 	}
 	return data;
 }
+//#endregion
+//#region src/common/parse-commitish.ts
+/**
+* Tags are not supported as `target_commitish` by Github API.
+* GITHUB_REF or the ref from webhook start with `refs/tags/`, so we handle
+* those here.
+*
+* If it doesn't but is still a tag (e.g. "v1.2.3") - it must have been set
+* explicitly by the user, so it's fair to just let the API respond with an error.
+*
+* Note that this cannot be distinguished from a branch name accurately without manually
+* fetching branch refs from the remote. (TODO ? Overkill ?)
+*/
+var parseCommitishForRelease = (commitish) => {
+	let mutableCommitish = structuredClone(commitish);
+	if (mutableCommitish.startsWith("refs/tags/")) {
+		info(`${mutableCommitish} is not supported as release target, falling back to default branch`);
+		mutableCommitish = "";
+	}
+	return mutableCommitish;
+};
 Object.freeze({ status: "aborted" });
 function $constructor(name, initializer, params) {
 	function init(inst, def) {
@@ -31778,4 +31799,4 @@ var stringToRegex = (search) => {
 	return /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, import_lib.default)(search) : new RegExp(escapeStringRegexp(search), "g");
 };
 //#endregion
-export { setOutput as C, __toESM as E, setFailed as S, __commonJSMin as T, context as _, _enum as a, getInput as b, number as c, stringbool as d, datetime as f, getOctokit as g, composeConfigGet as h, ZodDefault as i, object as l, executeGraphql as m, escapeStringRegexp as n, array as o, paginateGraphql as p, sharedInputSchema as r, boolean as s, stringToRegex as t, string as u, debug as v, warning as w, info as x, error as y };
+export { setOutput as C, __toESM as E, setFailed as S, __commonJSMin as T, context as _, _enum as a, getInput as b, number as c, stringbool as d, parseCommitishForRelease as f, getOctokit as g, composeConfigGet as h, ZodDefault as i, object as l, executeGraphql as m, escapeStringRegexp as n, array as o, paginateGraphql as p, sharedInputSchema as r, boolean as s, stringToRegex as t, string as u, debug as v, warning as w, info as x, error as y };
