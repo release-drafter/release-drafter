@@ -20,11 +20,6 @@ export const commonConfigSchema = object({
    */
   prerelease: stringbool().or(boolean()).optional(),
   /**
-   * When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date. Default: undefined (scan all commits).
-   * @see https://zod.dev/api?id=iso-dates#iso-datetimes
-   */
-  'initial-commits-since': iso.datetime().optional(),
-  /**
    * A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`.
    */
   'prerelease-identifier': string().optional(),
