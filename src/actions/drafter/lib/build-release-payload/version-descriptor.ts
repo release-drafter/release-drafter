@@ -64,13 +64,15 @@ export class VersionDescriptor {
 
       if (!ver) {
         core.warning(
-          `Failed to parse version from input ${from}. Defaulting to null.`,
+          `Failed to parse version from input ${from}. Defaulting coerced version to null.`,
         )
         return null
       }
       return ver
     } else {
-      core.warning(`No version input provided. Defaulting to null.`)
+      core.debug(
+        `Building version descriptor without version input. Defaulting coerced version to null.`,
+      )
       return null
     }
   }
