@@ -3014,8 +3014,9 @@ export type CommitComment = Comment & Deletable & Minimizable & Node & Reactable
   lastEditedAt?: Maybe<Scalars['DateTime']['output']>;
   /**
    * Returns why the comment was minimized. One of `abuse`, `off-topic`,
-   * `outdated`, `resolved`, `duplicate` and `spam`. Note that the case and
-   * formatting of these values differs from the inputs to the `MinimizeComment` mutation.
+   * `outdated`, `resolved`, `duplicate`, `spam`, and `low-quality`. Note that the
+   * case and formatting of these values differs from the inputs to the
+   * `MinimizeComment` mutation.
    */
   minimizedReason?: Maybe<Scalars['String']['output']>;
   /** Identifies the file path associated with the comment. */
@@ -6679,8 +6680,9 @@ export type DiscussionComment = Comment & Deletable & Minimizable & Node & React
   lastEditedAt?: Maybe<Scalars['DateTime']['output']>;
   /**
    * Returns why the comment was minimized. One of `abuse`, `off-topic`,
-   * `outdated`, `resolved`, `duplicate` and `spam`. Note that the case and
-   * formatting of these values differs from the inputs to the `MinimizeComment` mutation.
+   * `outdated`, `resolved`, `duplicate`, `spam`, and `low-quality`. Note that the
+   * case and formatting of these values differs from the inputs to the
+   * `MinimizeComment` mutation.
    */
   minimizedReason?: Maybe<Scalars['String']['output']>;
   /** Identifies when the comment was published at. */
@@ -9202,8 +9204,9 @@ export type GistComment = Comment & Deletable & Minimizable & Node & Updatable &
   lastEditedAt?: Maybe<Scalars['DateTime']['output']>;
   /**
    * Returns why the comment was minimized. One of `abuse`, `off-topic`,
-   * `outdated`, `resolved`, `duplicate` and `spam`. Note that the case and
-   * formatting of these values differs from the inputs to the `MinimizeComment` mutation.
+   * `outdated`, `resolved`, `duplicate`, `spam`, and `low-quality`. Note that the
+   * case and formatting of these values differs from the inputs to the
+   * `MinimizeComment` mutation.
    */
   minimizedReason?: Maybe<Scalars['String']['output']>;
   /** Identifies when the comment was published at. */
@@ -10210,8 +10213,9 @@ export type IssueComment = Comment & Deletable & Minimizable & Node & Pinnable &
   lastEditedAt?: Maybe<Scalars['DateTime']['output']>;
   /**
    * Returns why the comment was minimized. One of `abuse`, `off-topic`,
-   * `outdated`, `resolved`, `duplicate` and `spam`. Note that the case and
-   * formatting of these values differs from the inputs to the `MinimizeComment` mutation.
+   * `outdated`, `resolved`, `duplicate`, `spam`, and `low-quality`. Note that the
+   * case and formatting of these values differs from the inputs to the
+   * `MinimizeComment` mutation.
    */
   minimizedReason?: Maybe<Scalars['String']['output']>;
   /** Identifies the date and time when this entity was pinned. */
@@ -10409,6 +10413,44 @@ export type IssueEdge = {
   node?: Maybe<Issue>;
 };
 
+/** Represents a 'issue_field_added' event on a given issue. */
+export type IssueFieldAddedEvent = Node & {
+  __typename?: 'IssueFieldAddedEvent';
+  /** Identifies the actor who performed the event. */
+  actor?: Maybe<Actor>;
+  /** The color if it is a single-select field. */
+  color?: Maybe<Scalars['String']['output']>;
+  /** Identifies the date and time when the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The Node ID of the IssueFieldAddedEvent object */
+  id: Scalars['ID']['output'];
+  /** The issue field added. */
+  issueField?: Maybe<IssueFields>;
+  /** The value of the added field. */
+  value?: Maybe<Scalars['String']['output']>;
+};
+
+/** Represents a 'issue_field_changed' event on a given issue. */
+export type IssueFieldChangedEvent = Node & {
+  __typename?: 'IssueFieldChangedEvent';
+  /** Identifies the actor who performed the event. */
+  actor?: Maybe<Actor>;
+  /** Identifies the date and time when the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The Node ID of the IssueFieldChangedEvent object */
+  id: Scalars['ID']['output'];
+  /** The issue field changed. */
+  issueField?: Maybe<IssueFields>;
+  /** The new color if it is a single-select field. */
+  newColor?: Maybe<Scalars['String']['output']>;
+  /** The new value of the field. */
+  newValue?: Maybe<Scalars['String']['output']>;
+  /** The previous color if it was a single-select field. */
+  previousColor?: Maybe<Scalars['String']['output']>;
+  /** The previous value of the field. */
+  previousValue?: Maybe<Scalars['String']['output']>;
+};
+
 /** Common fields across different issue field types */
 export type IssueFieldCommon = {
   /** The issue field's creation timestamp. */
@@ -10521,6 +10563,19 @@ export type IssueFieldOrderField =
   /** Order issue fields by name */
   | 'NAME';
 
+/** Represents a 'issue_field_removed' event on a given issue. */
+export type IssueFieldRemovedEvent = Node & {
+  __typename?: 'IssueFieldRemovedEvent';
+  /** Identifies the actor who performed the event. */
+  actor?: Maybe<Actor>;
+  /** Identifies the date and time when the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The Node ID of the IssueFieldRemovedEvent object */
+  id: Scalars['ID']['output'];
+  /** The issue field removed. */
+  issueField?: Maybe<IssueFields>;
+};
+
 /** Represents a single select issue field. */
 export type IssueFieldSingleSelect = IssueFieldCommon & Node & {
   __typename?: 'IssueFieldSingleSelect';
@@ -10601,6 +10656,8 @@ export type IssueFieldSingleSelectValue = IssueFieldValueCommon & Node & {
   name: Scalars['String']['output'];
   /** The selected option's global relay ID. */
   optionId?: Maybe<Scalars['String']['output']>;
+  /** The option's name text (alias for `name`, for consistency with other field value types). */
+  value: Scalars['String']['output'];
 };
 
 /** Represents a text issue field. */
@@ -10749,6 +10806,15 @@ export type IssueOrderField =
   /** Order issues by update time */
   | 'UPDATED_AT';
 
+/** Type of issue search performed */
+export type IssueSearchType =
+  /** Hybrid search combining lexical and semantic approaches */
+  | 'HYBRID'
+  /** Lexical (keyword-based) search */
+  | 'LEXICAL'
+  /** Semantic (meaning-based) search using embeddings */
+  | 'SEMANTIC';
+
 /** The possible states of an issue. */
 export type IssueState =
   /** An issue that has been closed */
@@ -10833,7 +10899,7 @@ export type IssueTimelineItemEdge = {
 };
 
 /** An item in an issue timeline */
-export type IssueTimelineItems = AddedToProjectEvent | AddedToProjectV2Event | AssignedEvent | BlockedByAddedEvent | BlockedByRemovedEvent | BlockingAddedEvent | BlockingRemovedEvent | ClosedEvent | CommentDeletedEvent | ConnectedEvent | ConvertedFromDraftEvent | ConvertedNoteToIssueEvent | ConvertedToDiscussionEvent | CrossReferencedEvent | DemilestonedEvent | DisconnectedEvent | IssueComment | IssueCommentPinnedEvent | IssueCommentUnpinnedEvent | IssueTypeAddedEvent | IssueTypeChangedEvent | IssueTypeRemovedEvent | LabeledEvent | LockedEvent | MarkedAsDuplicateEvent | MentionedEvent | MilestonedEvent | MovedColumnsInProjectEvent | ParentIssueAddedEvent | ParentIssueRemovedEvent | PinnedEvent | ProjectV2ItemStatusChangedEvent | ReferencedEvent | RemovedFromProjectEvent | RemovedFromProjectV2Event | RenamedTitleEvent | ReopenedEvent | SubIssueAddedEvent | SubIssueRemovedEvent | SubscribedEvent | TransferredEvent | UnassignedEvent | UnlabeledEvent | UnlockedEvent | UnmarkedAsDuplicateEvent | UnpinnedEvent | UnsubscribedEvent | UserBlockedEvent;
+export type IssueTimelineItems = AddedToProjectEvent | AddedToProjectV2Event | AssignedEvent | BlockedByAddedEvent | BlockedByRemovedEvent | BlockingAddedEvent | BlockingRemovedEvent | ClosedEvent | CommentDeletedEvent | ConnectedEvent | ConvertedFromDraftEvent | ConvertedNoteToIssueEvent | ConvertedToDiscussionEvent | CrossReferencedEvent | DemilestonedEvent | DisconnectedEvent | IssueComment | IssueCommentPinnedEvent | IssueCommentUnpinnedEvent | IssueFieldAddedEvent | IssueFieldChangedEvent | IssueFieldRemovedEvent | IssueTypeAddedEvent | IssueTypeChangedEvent | IssueTypeRemovedEvent | LabeledEvent | LockedEvent | MarkedAsDuplicateEvent | MentionedEvent | MilestonedEvent | MovedColumnsInProjectEvent | ParentIssueAddedEvent | ParentIssueRemovedEvent | PinnedEvent | ProjectV2ItemStatusChangedEvent | ReferencedEvent | RemovedFromProjectEvent | RemovedFromProjectV2Event | RenamedTitleEvent | ReopenedEvent | SubIssueAddedEvent | SubIssueRemovedEvent | SubscribedEvent | TransferredEvent | UnassignedEvent | UnlabeledEvent | UnlockedEvent | UnmarkedAsDuplicateEvent | UnpinnedEvent | UnsubscribedEvent | UserBlockedEvent;
 
 /** The connection type for IssueTimelineItems. */
 export type IssueTimelineItemsConnection = {
@@ -11297,6 +11363,23 @@ export type LanguageOrder = {
 export type LanguageOrderField =
   /** Order languages by the size of all files containing the language */
   | 'SIZE';
+
+/** Reason why a semantic or hybrid issue search fell back to lexical search */
+export type LexicalFallbackReason =
+  /** Query targets non-issue types (e.g., pull requests) */
+  | 'NON_ISSUE_TARGET'
+  /** Scoped query resolved to zero accessible repositories */
+  | 'NO_ACCESSIBLE_REPOS'
+  /** Query has only qualifiers and no free text terms */
+  | 'NO_TEXT_TERMS'
+  /** Query uses an in: qualifier targeting non-semantic fields */
+  | 'ONLY_NON_SEMANTIC_FIELDS_REQUESTED'
+  /** Query contains OR operators (nested boolean qualifiers) */
+  | 'OR_BOOLEAN_NOT_SUPPORTED'
+  /** Query contains quoted text requiring exact matches */
+  | 'QUOTED_TEXT'
+  /** Embedding generation failed or timed out */
+  | 'SERVER_ERROR';
 
 /** A repository's open source license */
 export type License = Node & {
@@ -12739,8 +12822,9 @@ export type Minimizable = {
   isMinimized: Scalars['Boolean']['output'];
   /**
    * Returns why the comment was minimized. One of `abuse`, `off-topic`,
-   * `outdated`, `resolved`, `duplicate` and `spam`. Note that the case and
-   * formatting of these values differs from the inputs to the `MinimizeComment` mutation.
+   * `outdated`, `resolved`, `duplicate`, `spam`, and `low-quality`. Note that the
+   * case and formatting of these values differs from the inputs to the
+   * `MinimizeComment` mutation.
    */
   minimizedReason?: Maybe<Scalars['String']['output']>;
   /** Check if the current viewer can minimize this object. */
@@ -23074,8 +23158,9 @@ export type PullRequestReview = Comment & Deletable & Minimizable & Node & React
   lastEditedAt?: Maybe<Scalars['DateTime']['output']>;
   /**
    * Returns why the comment was minimized. One of `abuse`, `off-topic`,
-   * `outdated`, `resolved`, `duplicate` and `spam`. Note that the case and
-   * formatting of these values differs from the inputs to the `MinimizeComment` mutation.
+   * `outdated`, `resolved`, `duplicate`, `spam`, and `low-quality`. Note that the
+   * case and formatting of these values differs from the inputs to the
+   * `MinimizeComment` mutation.
    */
   minimizedReason?: Maybe<Scalars['String']['output']>;
   /** A list of teams that this review was made on behalf of. */
@@ -23200,8 +23285,9 @@ export type PullRequestReviewComment = Comment & Deletable & Minimizable & Node 
   line?: Maybe<Scalars['Int']['output']>;
   /**
    * Returns why the comment was minimized. One of `abuse`, `off-topic`,
-   * `outdated`, `resolved`, `duplicate` and `spam`. Note that the case and
-   * formatting of these values differs from the inputs to the `MinimizeComment` mutation.
+   * `outdated`, `resolved`, `duplicate`, `spam`, and `low-quality`. Note that the
+   * case and formatting of these values differs from the inputs to the
+   * `MinimizeComment` mutation.
    */
   minimizedReason?: Maybe<Scalars['String']['output']>;
   /** Identifies the original commit associated with the comment. */
@@ -23579,7 +23665,7 @@ export type PullRequestTimelineItemEdge = {
 };
 
 /** An item in a pull request timeline */
-export type PullRequestTimelineItems = AddedToMergeQueueEvent | AddedToProjectEvent | AddedToProjectV2Event | AssignedEvent | AutoMergeDisabledEvent | AutoMergeEnabledEvent | AutoRebaseEnabledEvent | AutoSquashEnabledEvent | AutomaticBaseChangeFailedEvent | AutomaticBaseChangeSucceededEvent | BaseRefChangedEvent | BaseRefDeletedEvent | BaseRefForcePushedEvent | BlockedByAddedEvent | BlockedByRemovedEvent | BlockingAddedEvent | BlockingRemovedEvent | ClosedEvent | CommentDeletedEvent | ConnectedEvent | ConvertToDraftEvent | ConvertedFromDraftEvent | ConvertedNoteToIssueEvent | ConvertedToDiscussionEvent | CrossReferencedEvent | DemilestonedEvent | DeployedEvent | DeploymentEnvironmentChangedEvent | DisconnectedEvent | HeadRefDeletedEvent | HeadRefForcePushedEvent | HeadRefRestoredEvent | IssueComment | IssueCommentPinnedEvent | IssueCommentUnpinnedEvent | IssueTypeAddedEvent | IssueTypeChangedEvent | IssueTypeRemovedEvent | LabeledEvent | LockedEvent | MarkedAsDuplicateEvent | MentionedEvent | MergedEvent | MilestonedEvent | MovedColumnsInProjectEvent | ParentIssueAddedEvent | ParentIssueRemovedEvent | PinnedEvent | ProjectV2ItemStatusChangedEvent | PullRequestCommit | PullRequestCommitCommentThread | PullRequestReview | PullRequestReviewThread | PullRequestRevisionMarker | ReadyForReviewEvent | ReferencedEvent | RemovedFromMergeQueueEvent | RemovedFromProjectEvent | RemovedFromProjectV2Event | RenamedTitleEvent | ReopenedEvent | ReviewDismissedEvent | ReviewRequestRemovedEvent | ReviewRequestedEvent | SubIssueAddedEvent | SubIssueRemovedEvent | SubscribedEvent | TransferredEvent | UnassignedEvent | UnlabeledEvent | UnlockedEvent | UnmarkedAsDuplicateEvent | UnpinnedEvent | UnsubscribedEvent | UserBlockedEvent;
+export type PullRequestTimelineItems = AddedToMergeQueueEvent | AddedToProjectEvent | AddedToProjectV2Event | AssignedEvent | AutoMergeDisabledEvent | AutoMergeEnabledEvent | AutoRebaseEnabledEvent | AutoSquashEnabledEvent | AutomaticBaseChangeFailedEvent | AutomaticBaseChangeSucceededEvent | BaseRefChangedEvent | BaseRefDeletedEvent | BaseRefForcePushedEvent | BlockedByAddedEvent | BlockedByRemovedEvent | BlockingAddedEvent | BlockingRemovedEvent | ClosedEvent | CommentDeletedEvent | ConnectedEvent | ConvertToDraftEvent | ConvertedFromDraftEvent | ConvertedNoteToIssueEvent | ConvertedToDiscussionEvent | CrossReferencedEvent | DemilestonedEvent | DeployedEvent | DeploymentEnvironmentChangedEvent | DisconnectedEvent | HeadRefDeletedEvent | HeadRefForcePushedEvent | HeadRefRestoredEvent | IssueComment | IssueCommentPinnedEvent | IssueCommentUnpinnedEvent | IssueFieldAddedEvent | IssueFieldChangedEvent | IssueFieldRemovedEvent | IssueTypeAddedEvent | IssueTypeChangedEvent | IssueTypeRemovedEvent | LabeledEvent | LockedEvent | MarkedAsDuplicateEvent | MentionedEvent | MergedEvent | MilestonedEvent | MovedColumnsInProjectEvent | ParentIssueAddedEvent | ParentIssueRemovedEvent | PinnedEvent | ProjectV2ItemStatusChangedEvent | PullRequestCommit | PullRequestCommitCommentThread | PullRequestReview | PullRequestReviewThread | PullRequestRevisionMarker | ReadyForReviewEvent | ReferencedEvent | RemovedFromMergeQueueEvent | RemovedFromProjectEvent | RemovedFromProjectV2Event | RenamedTitleEvent | ReopenedEvent | ReviewDismissedEvent | ReviewRequestRemovedEvent | ReviewRequestedEvent | SubIssueAddedEvent | SubIssueRemovedEvent | SubscribedEvent | TransferredEvent | UnassignedEvent | UnlabeledEvent | UnlockedEvent | UnmarkedAsDuplicateEvent | UnpinnedEvent | UnsubscribedEvent | UserBlockedEvent;
 
 /** The connection type for PullRequestTimelineItems. */
 export type PullRequestTimelineItemsConnection = {
@@ -28022,6 +28108,7 @@ export type RepositoryVulnerabilityAlertArgs = {
 export type RepositoryVulnerabilityAlertsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  classifications?: InputMaybe<Array<SecurityAdvisoryClassification>>;
   dependencyScopes?: InputMaybe<Array<RepositoryVulnerabilityAlertDependencyScope>>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -30084,6 +30171,10 @@ export type SearchResultItemConnection = {
    * total number of matches, a maximum of 1,000 results will be available across all types.
    */
   issueCount: Scalars['Int']['output'];
+  /** The type of search that was performed for issues (lexical, semantic, or hybrid) */
+  issueSearchType?: Maybe<IssueSearchType>;
+  /** When a semantic or hybrid search falls back to lexical, the reasons why the fallback occurred. */
+  lexicalFallbackReason?: Maybe<Array<LexicalFallbackReason>>;
   /** A list of nodes. */
   nodes?: Maybe<Array<Maybe<SearchResultItem>>>;
   /** Information to aid in pagination. */
@@ -30126,6 +30217,10 @@ export type SearchType =
   | 'ISSUE'
   /** Returns results matching issues in repositories. */
   | 'ISSUE_ADVANCED'
+  /** Returns results matching issues using hybrid (lexical + semantic) search. */
+  | 'ISSUE_HYBRID'
+  /** Returns results matching issues using semantic search. */
+  | 'ISSUE_SEMANTIC'
   /** Returns results matching repositories. */
   | 'REPOSITORY'
   /** Returns results matching users and organizations on GitHub. */

@@ -44,12 +44,12 @@ export function buildReplaceStringWithCasePreserved(
       containsUppercaseCharacter(matches[0][0]) &&
       pattern.length > 0
     ) {
-      return pattern[0].toUpperCase() + pattern.substr(1)
+      return pattern[0].toUpperCase() + pattern.substring(1)
     } else if (
       matches[0][0].toUpperCase() !== matches[0][0] &&
       pattern.length > 0
     ) {
-      return pattern[0].toLowerCase() + pattern.substr(1)
+      return pattern[0].toLowerCase() + pattern.substring(1)
     } else {
       // We do not understand its pattern yet.
       return pattern

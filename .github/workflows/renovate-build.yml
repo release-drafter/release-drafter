@@ -28,9 +28,6 @@ jobs:
           if [ -n "$(git status --porcelain)" ]; then
               git add dist/ \
               badges/coverage.svg \
-              src/types/github.graphql.generated.ts \
-              src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-path-changes.graphql.generated.ts \
-              src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-pr.graphql.generated.ts \
               schema.json \
               autolabeler/schema.json \
               drafter/schema.json

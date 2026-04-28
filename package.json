@@ -1,7 +1,7 @@
 {
   "name": "release-drafter",
   "description": "Drafts your next release notes as pull requests are merged into your branch(es).",
-  "version": "7.1.1",
+  "version": "7.2.0",
   "author": "",
   "type": "module",
   "private": true,
@@ -27,24 +27,24 @@
     "build": "vite build",
     "test": "vitest",
     "test:run": "vitest run",
-    "coverage": "npx tsx src/scripts/generate-coverage-badge.ts",
-    "tsc:check": "tsc --noEmit",
+    "coverage": "npx tsx src/scripts/coverage-summary.ts",
+    "tsc:check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "format:write": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome lint .",
     "check": "biome check --write .",
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "schemas": "npx tsx src/scripts/json-schema.ts",
-    "all": "npm run check && npm run tsc:check && npm run test:run && npm run coverage && npm run schemas && npm run codegen && npm run build",
+    "all": "npm run check && npm run tsc:check && npm run test:run && npm run schemas && npm run build",
     "check:clean": "npx tsx src/scripts/check-clean.ts",
     "preversion": "npm run all && npm run check:clean",
     "version": "git add package.json package-lock.json",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push origin v$npm_package_version"
   },
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^3.0.0",
-    "@actions/github": "^9.0.0",
+    "@actions/github": "^9.1.0",
     "compare-versions": "^6.1.1",
     "escape-string-regexp": "^5.0.0",
     "ignore": "^7.0.5",
@@ -54,19 +54,18 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.6",
+    "@biomejs/biome": "2.4.10",
     "@graphql-codegen/cli": "^6.2.1",
     "@graphql-codegen/near-operation-file-preset": "^5.0.0",
     "@graphql-codegen/typed-document-node": "^6.1.7",
     "@octokit/webhooks-types": "^7.6.1",
-    "@types/node": "^24.12.0",
+    "@types/node": "^24.12.2",
     "@types/semver": "^7.7.1",
-    "@vitest/coverage-v8": "^4.1.0",
-    "nock": "^14.0.11",
+    "@vitest/coverage-v8": "^4.1.4",
+    "nock": "^14.0.12",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "vite": "^8.0.0",
-    "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.4"
   }
 }

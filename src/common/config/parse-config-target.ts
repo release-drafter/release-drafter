@@ -32,7 +32,7 @@ export function parseConfigTarget(
   if (_target.startsWith('github:')) _target = _target.slice(7)
 
   // Check if target is a local file path (no repo specifier)
-  const hasRepoSpecifier = _target.includes(':')
+  let hasRepoSpecifier = _target.includes(':')
 
   const hasRefSpecifier = _target.includes('@')
 
@@ -42,6 +42,24 @@ export function parseConfigTarget(
       throw getErr('Local file targets cannot have ":" github specifiers.')
     if (hasRefSpecifier)
       throw getErr('Local file targets cannot have "@" github specifiers.')
+  }
+
+  // Detect repo-only references without ":" (e.g., "org/repo" or "org/repo@ref").
+  // Config filepaths always have a file extension, so if there is no ":" and the
+  // target (minus any @ref suffix) has no ".", treat it as a repo-only reference.
+  if (!hasRepoSpecifier && scheme !== 'file') {
+    const targetWithoutRef = hasRefSpecifier
+      ? _target.slice(0, _target.indexOf('@'))
+      : _target
+    if (!targetWithoutRef.includes('.')) {
+      // Treat as repo-only: rewrite to "repo:@ref" or "repo:" so normal parsing handles it
+      if (hasRefSpecifier) {
+        _target = `${targetWithoutRef}:${_target.slice(_target.indexOf('@'))}`
+      } else {
+        _target = `${_target}:`
+      }
+      hasRepoSpecifier = true
+    }
   }
 
   const parts = _target.split(':').flatMap((part) => part.split('@'))
@@ -95,9 +113,7 @@ export function parseConfigTarget(
   }
 
   const filepathIndex = hasRepoSpecifier ? 1 : 0
-  const targetFilepath = parts.at(filepathIndex)
-
-  if (!targetFilepath) throw getErr('Missing filepath.')
+  const targetFilepath = parts.at(filepathIndex) || ''
 
   return {
     scheme: scheme,

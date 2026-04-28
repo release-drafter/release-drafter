@@ -20,7 +20,7 @@ export const commonConfigSchema = object({
    */
   prerelease: stringbool().or(boolean()).optional(),
   /**
-   * A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` if not already set to `true`. Default `''`.
+   * A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` when both values come from the same config location; explicit action inputs still take precedence. Default `''`.
    */
   'prerelease-identifier': string().optional(),
   /**
