@@ -917,7 +917,7 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 var mergeInputAndConfig = (params) => {
 	const { config: originalConfig, input } = params;
 	const config = structuredClone(originalConfig);
-	applyReleaseModeValidation(config, applyOverrides(config, input));
+	applyOverrides(config, input);
 	const { commitish, latest, prerelease } = getParsedDefaults(config);
 	const replacers = getTransformedReplacers(config);
 	const categories = getTransformedCategories(config);
@@ -932,30 +932,28 @@ var mergeInputAndConfig = (params) => {
 	validateParsedConfig(parsedConfig);
 	return parsedConfig;
 };
-var applyReleaseModeValidation = (config, params) => {
-	if (config.latest && config.prerelease) {
-		warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
-		config.latest = false;
-	}
-	if (config["prerelease-identifier"] && !config.prerelease && (!params.hasInputPrerelease || params.hasInputPrereleaseIdentifier)) {
-		warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
-		config.prerelease = true;
-	}
-};
 var applyOverrides = (config, input) => {
 	applyStringOverride(config, input, "commitish");
 	applyStringOverride(config, input, "header");
 	applyStringOverride(config, input, "footer");
-	const hasInputPrereleaseIdentifier = !!input["prerelease-identifier"];
 	applyStringOverride(config, input, "prerelease-identifier");
 	applyBooleanOverride(config, input, "prerelease");
 	applyBooleanOverride(config, input, "include-pre-releases");
 	applyBooleanOverride(config, input, "latest");
 	applyStringOverride(config, input, "filter-by-range");
-	return {
-		hasInputPrerelease: typeof input.prerelease === "boolean",
-		hasInputPrereleaseIdentifier
-	};
+	applyReleaseModeOverrides(config, input);
+};
+var applyReleaseModeOverrides = (config, input) => {
+	if (config.latest && config.prerelease) {
+		warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
+		config.latest = false;
+	}
+	const hasInputPrerelease = typeof input.prerelease === "boolean";
+	const hasInputPrereleaseIdentifier = !!input["prerelease-identifier"];
+	if (config["prerelease-identifier"] && !config.prerelease && (!hasInputPrerelease || hasInputPrereleaseIdentifier)) {
+		warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
+		config.prerelease = true;
+	}
 };
 var applyBooleanOverride = (config, input, key) => {
 	const inputValue = input[key];

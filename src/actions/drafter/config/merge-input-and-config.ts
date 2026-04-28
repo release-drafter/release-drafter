@@ -41,9 +41,7 @@ export const mergeInputAndConfig = (params: {
 
   const config = structuredClone(originalConfig)
 
-  const prereleaseScope = applyOverrides(config, input)
-
-  applyReleaseModeValidation(config, prereleaseScope)
+  applyOverrides(config, input)
 
   const { commitish, latest, prerelease } = getParsedDefaults(config)
   const replacers = getTransformedReplacers(config)
@@ -64,12 +62,24 @@ export const mergeInputAndConfig = (params: {
   return parsedConfig
 }
 
-const applyReleaseModeValidation = (
+const applyOverrides = (config: MutableConfig, input: CommonConfig) => {
+  applyStringOverride(config, input, 'commitish')
+  applyStringOverride(config, input, 'header')
+  applyStringOverride(config, input, 'footer')
+
+  applyStringOverride(config, input, 'prerelease-identifier')
+
+  applyBooleanOverride(config, input, 'prerelease')
+  applyBooleanOverride(config, input, 'include-pre-releases')
+  applyBooleanOverride(config, input, 'latest')
+  applyStringOverride(config, input, 'filter-by-range')
+
+  applyReleaseModeOverrides(config, input)
+}
+
+const applyReleaseModeOverrides = (
   config: MutableConfig,
-  params: {
-    hasInputPrerelease: boolean
-    hasInputPrereleaseIdentifier: boolean
-  },
+  input: CommonConfig,
 ) => {
   if (config.latest && config.prerelease) {
     core.warning(
@@ -78,34 +88,18 @@ const applyReleaseModeValidation = (
     config.latest = false
   }
 
+  const hasInputPrerelease = typeof input.prerelease === 'boolean'
+  const hasInputPrereleaseIdentifier = !!input['prerelease-identifier']
+
   if (
     config['prerelease-identifier'] &&
     !config.prerelease &&
-    (!params.hasInputPrerelease || params.hasInputPrereleaseIdentifier)
+    (!hasInputPrerelease || hasInputPrereleaseIdentifier)
   ) {
     core.warning(
       `You specified a 'prerelease-identifier' (${config['prerelease-identifier']}), but 'prerelease' is set to false. Switching to true.`,
     )
     config.prerelease = true
-  }
-}
-
-const applyOverrides = (config: MutableConfig, input: CommonConfig) => {
-  applyStringOverride(config, input, 'commitish')
-  applyStringOverride(config, input, 'header')
-  applyStringOverride(config, input, 'footer')
-
-  const hasInputPrereleaseIdentifier = !!input['prerelease-identifier']
-  applyStringOverride(config, input, 'prerelease-identifier')
-
-  applyBooleanOverride(config, input, 'prerelease')
-  applyBooleanOverride(config, input, 'include-pre-releases')
-  applyBooleanOverride(config, input, 'latest')
-  applyStringOverride(config, input, 'filter-by-range')
-
-  return {
-    hasInputPrerelease: typeof input.prerelease === 'boolean',
-    hasInputPrereleaseIdentifier,
   }
 }
 
