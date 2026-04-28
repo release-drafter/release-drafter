@@ -5,6 +5,27 @@ import { stringToRegex } from 'src/common'
 import type { CommonConfig } from './schemas'
 import type { Config } from './schemas/config.schema'
 
+type MutableConfig = ReturnType<typeof structuredClone<Config>>
+
+type SharedConfigKey = keyof CommonConfig & keyof MutableConfig
+type SharedKeysByValue<Value> = {
+  [Key in SharedConfigKey]: Exclude<CommonConfig[Key], undefined> extends Value
+    ? Exclude<MutableConfig[Key], undefined> extends Value
+      ? Key
+      : never
+    : never
+}[SharedConfigKey]
+
+type SharedStringKey = SharedKeysByValue<string>
+type SharedBooleanKey = SharedKeysByValue<boolean>
+
+/**
+ * Similar to Config, but with input values merged in and defaults applied.
+ *
+ * @see mergeInputAndConfig
+ */
+export type ParsedConfig = ReturnType<typeof mergeInputAndConfig>
+
 /**
  * Returns a copy of `config`, updated with values from `input`.
  *
@@ -17,123 +38,14 @@ export const mergeInputAndConfig = (params: {
   input: CommonConfig
 }) => {
   const { config: originalConfig, input } = params
+
   const config = structuredClone(originalConfig)
 
-  // Handle overrides
-  if (input.commitish) {
-    if (config.commitish && config.commitish !== input.commitish) {
-      core.info(
-        `Input's commitish "${input.commitish}" overrides config's commitish "${config.commitish}"`,
-      )
-    }
-    config.commitish = input.commitish
-  }
-  if (input.header) {
-    if (config.header && config.header !== input.header) {
-      core.info(
-        `Input's header "${input.header}" overrides config's header "${config.header}"`,
-      )
-    }
-    config.header = input.header
-  }
-  if (input.footer) {
-    if (config.footer && config.footer !== input.footer) {
-      core.info(
-        `Input's footer "${input.footer}" overrides config's footer "${config.footer}"`,
-      )
-    }
-    config.footer = input.footer
-  }
-  if (input['prerelease-identifier']) {
-    if (
-      config['prerelease-identifier'] &&
-      config['prerelease-identifier'] !== input['prerelease-identifier']
-    ) {
-      core.info(
-        `Input's prerelease-identifier "${input['prerelease-identifier']}" overrides config's prerelease-identifier "${config['prerelease-identifier']}"`,
-      )
-    }
-    config['prerelease-identifier'] = input['prerelease-identifier']
-  }
-  if (typeof input.prerelease === 'boolean') {
-    if (
-      typeof config.prerelease === 'boolean' &&
-      config.prerelease !== input.prerelease
-    ) {
-      core.info(
-        `Input's prerelease "${input.prerelease}" overrides config's prerelease "${config.prerelease}"`,
-      )
-    }
-    config.prerelease = input.prerelease
-  }
-  if (typeof input['include-pre-releases'] === 'boolean') {
-    if (
-      typeof config['include-pre-releases'] === 'boolean' &&
-      config['include-pre-releases'] !== input['include-pre-releases']
-    ) {
-      core.info(
-        `Input's include-pre-releases "${input['include-pre-releases']}" overrides config's include-pre-releases "${config['include-pre-releases']}"`,
-      )
-    }
-    config['include-pre-releases'] = input['include-pre-releases']
-  }
-  if (typeof input.latest === 'boolean') {
-    if (typeof config.latest === 'boolean' && config.latest !== input.latest) {
-      core.info(
-        `Input's latest "${input.latest}" overrides config's latest "${config.latest}"`,
-      )
-    }
-    config.latest = input.latest
-  }
-  if (config.latest && config.prerelease) {
-    core.warning(
-      "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.",
-    )
-    config.latest = false
-  }
-  if (config['prerelease-identifier'] && !config.prerelease) {
-    core.warning(
-      `You specified a 'prerelease-identifier' (${config['prerelease-identifier']}), but 'prerelease' is set to false. Switching to true.`,
-    )
-    config.prerelease = true
-  }
+  applyOverrides(config, input)
 
-  if (input['filter-by-range']) {
-    if (
-      config['filter-by-range'] &&
-      config['filter-by-range'] !== input['filter-by-range']
-    ) {
-      core.info(
-        `Input's filter-by-range "${input['filter-by-range']}" overrides config's filter-by-range "${config['filter-by-range']}"`,
-      )
-    }
-    config['filter-by-range'] = input['filter-by-range']
-  }
-
-  // Write defaults
-  const commitish =
-    config.commitish || context.ref || (context.payload.ref as string)
-  const latest = typeof config.latest !== 'boolean' ? true : config.latest
-  const prerelease =
-    typeof config.prerelease !== 'boolean' ? false : config.prerelease
-
-  // Apply some transformations
-  const replacers = config.replacers
-    .map((r) => {
-      // convert 'search' to regex and remove invalid entries
-      try {
-        return { ...r, search: stringToRegex(r.search) }
-      } catch {
-        core.warning(`Bad replacer regex: '${r.search}'`)
-        return false
-      }
-    })
-    .filter((r) => !!r)
-  const categories = config.categories.map((cat) => {
-    const { label, ..._cat } = cat
-    _cat.labels = [...cat.labels, label].filter(Boolean) as string[]
-    return _cat
-  })
+  const { commitish, latest, prerelease } = getParsedDefaults(config)
+  const replacers = getTransformedReplacers(config)
+  const categories = getTransformedCategories(config)
 
   // Build parsed config object - alters original type
   const parsedConfig = {
@@ -145,7 +57,121 @@ export const mergeInputAndConfig = (params: {
     categories,
   }
 
-  // Throw some more validation errors
+  validateParsedConfig(parsedConfig)
+
+  return parsedConfig
+}
+
+const applyOverrides = (config: MutableConfig, input: CommonConfig) => {
+  applyStringOverride(config, input, 'commitish')
+  applyStringOverride(config, input, 'header')
+  applyStringOverride(config, input, 'footer')
+
+  applyStringOverride(config, input, 'prerelease-identifier')
+
+  applyBooleanOverride(config, input, 'prerelease')
+  applyBooleanOverride(config, input, 'include-pre-releases')
+  applyBooleanOverride(config, input, 'latest')
+  applyStringOverride(config, input, 'filter-by-range')
+
+  applyReleaseModeOverrides(config, input)
+}
+
+const applyReleaseModeOverrides = (
+  config: MutableConfig,
+  input: CommonConfig,
+) => {
+  if (config.latest && config.prerelease) {
+    core.warning(
+      "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.",
+    )
+    config.latest = false
+  }
+
+  const hasInputPrerelease = typeof input.prerelease === 'boolean'
+  const hasInputPrereleaseIdentifier = !!input['prerelease-identifier']
+
+  if (
+    config['prerelease-identifier'] &&
+    !config.prerelease &&
+    (!hasInputPrerelease || hasInputPrereleaseIdentifier)
+  ) {
+    core.warning(
+      `You specified a 'prerelease-identifier' (${config['prerelease-identifier']}), but 'prerelease' is set to false. Switching to true.`,
+    )
+    config.prerelease = true
+  }
+}
+
+const applyBooleanOverride = (
+  config: MutableConfig,
+  input: CommonConfig,
+  key: SharedBooleanKey,
+) => {
+  const inputValue = input[key]
+  if (typeof inputValue !== 'boolean') {
+    return
+  }
+
+  const configValue = config[key]
+  if (typeof configValue === 'boolean' && configValue !== inputValue) {
+    core.info(
+      `Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`,
+    )
+  }
+
+  config[key] = inputValue
+}
+
+const applyStringOverride = (
+  config: MutableConfig,
+  input: CommonConfig,
+  key: SharedStringKey,
+) => {
+  const inputValue = input[key]
+  if (!inputValue) {
+    return
+  }
+
+  const configValue = config[key]
+  if (configValue && configValue !== inputValue) {
+    core.info(
+      `Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`,
+    )
+  }
+
+  config[key] = inputValue
+}
+
+const getParsedDefaults = (config: MutableConfig) => ({
+  commitish: config.commitish || context.ref || (context.payload.ref as string),
+  latest: typeof config.latest !== 'boolean' ? true : config.latest,
+  prerelease:
+    typeof config.prerelease !== 'boolean' ? false : config.prerelease,
+})
+
+const getTransformedReplacers = (config: MutableConfig) =>
+  config.replacers
+    .map((r) => {
+      try {
+        return { ...r, search: stringToRegex(r.search) }
+      } catch {
+        core.warning(`Bad replacer regex: '${r.search}'`)
+        return false
+      }
+    })
+    .filter((r) => !!r)
+
+const getTransformedCategories = (config: MutableConfig) =>
+  config.categories.map((cat) => {
+    const { label, ..._cat } = cat
+    _cat.labels = [...cat.labels, label].filter(Boolean) as string[]
+    return _cat
+  })
+
+const validateParsedConfig = (
+  parsedConfig: ReturnType<typeof mergeInputAndConfig>,
+) => {
   if (!parsedConfig.commitish) {
     throw new Error(
       "'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)",
@@ -167,13 +193,4 @@ export const mergeInputAndConfig = (params: {
       `'filter-by-range' value "${parsedConfig['filter-by-range']}" could not be parsed as a valid semver range.`,
     )
   }
-
-  return parsedConfig
 }
-
-/**
- * Similar to Config, but with input values merged in and defaults applied.
- *
- * @see mergeInputAndConfig
- */
-export type ParsedConfig = ReturnType<typeof mergeInputAndConfig>
