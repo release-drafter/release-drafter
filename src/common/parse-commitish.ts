@@ -2,8 +2,8 @@ import * as core from '@actions/core'
 import type { ParsedConfig } from 'src/actions/drafter/config'
 
 /**
- * Tags are not supported as `target_commitish` by Github API.
- * GITHUB_REF or the ref from webhook start with `refs/tags/`, so we handle
+ * Tags and PRs are not supported as `target_commitish` by Github API.
+ * If GITHUB_REF or the ref from webhook start with `refs/[tags|pull]/`, we handle
  * those here.
  *
  * If it doesn't but is still a tag (e.g. "v1.2.3") - it must have been set
@@ -17,10 +17,13 @@ export const parseCommitishForRelease = (
 ) => {
   let mutableCommitish = structuredClone(commitish)
 
-  if (mutableCommitish.startsWith('refs/tags/')) {
-    // TODO retrieve the commitish that the tag points to, and use it as target_commitish instead of default branch
-    core.info(
-      `${mutableCommitish} is not supported as release target, falling back to default branch`,
+  if (
+    mutableCommitish.startsWith('refs/tags/') ||
+    mutableCommitish.startsWith('refs/pull/')
+  ) {
+    // TODO retrieve the commitish that the tag/the pr points to, and use it as target_commitish instead of default branch
+    core.warning(
+      `${mutableCommitish} is not supported as release target (commitish), falling back to default branch`,
     )
 
     mutableCommitish = ''

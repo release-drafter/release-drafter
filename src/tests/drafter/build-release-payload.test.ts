@@ -3,10 +3,10 @@ import {
   configSchema,
   mergeInputAndConfig,
 } from 'src/actions/drafter/config'
-import type { buildReleasePayload } from 'src/actions/drafter/lib'
+import { buildReleasePayload } from 'src/actions/drafter/lib'
 import { generateChangeLog } from 'src/actions/drafter/lib/build-release-payload/generate-changelog'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { mockContext } from '../mocks'
+import { mockContext, mocks as sharedMocks } from '../mocks'
 
 describe('generate changelog', () => {
   let config: ReturnType<typeof mergeInputAndConfig>
@@ -242,6 +242,66 @@ describe('generate changelog', () => {
     })
 
     expect(changelog).toBe('* No changes')
+  })
+})
+
+describe('build release payload', () => {
+  let config: ReturnType<typeof mergeInputAndConfig>
+
+  beforeEach(async () => {
+    await mockContext('push')
+    config = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        references: ['master'],
+      }),
+      input: actionInputSchema.parse({
+        token: 'test',
+      }),
+    })
+  })
+
+  it('falls back to the default branch for tag refs', () => {
+    const releasePayload = buildReleasePayload({
+      commits: [],
+      config: { ...config, commitish: 'refs/tags/v1.2.3' },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease: undefined,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.targetCommitish).toBe('')
+    expect(sharedMocks.core.warning).toHaveBeenCalledWith(
+      'refs/tags/v1.2.3 is not supported as release target (commitish), falling back to default branch',
+    )
+  })
+
+  it('falls back to the default branch for pull request refs', () => {
+    const releasePayload = buildReleasePayload({
+      commits: [],
+      config: { ...config, commitish: 'refs/pull/123/merge' },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease: undefined,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.targetCommitish).toBe('')
+    expect(sharedMocks.core.warning).toHaveBeenCalledWith(
+      'refs/pull/123/merge is not supported as release target (commitish), falling back to default branch',
+    )
+  })
+
+  it('keeps branch refs unchanged', () => {
+    const releasePayload = buildReleasePayload({
+      commits: [],
+      config,
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease: undefined,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.targetCommitish).toBe('refs/heads/master')
+    expect(sharedMocks.core.warning).not.toHaveBeenCalled()
   })
 })
 
