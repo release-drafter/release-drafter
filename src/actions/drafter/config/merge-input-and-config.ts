@@ -73,7 +73,6 @@ const applyOverrides = (config: MutableConfig, input: CommonConfig) => {
   applyBooleanOverride(config, input, 'include-pre-releases')
   applyBooleanOverride(config, input, 'latest')
   applyStringOverride(config, input, 'filter-by-range')
-  applyStringOverride(config, input, 'initial-commits-since')
 
   applyReleaseModeOverrides(config, input)
 }
