@@ -143,7 +143,6 @@ You can configure Release Drafter using the following key in your
 | `exclude-paths`            | Optional | Exclude pull requests from the release notes if they modified any of the paths in this array. Supports files and directories. If used with `include-paths`, exclusion takes precedence. Default: `[]` |
 | `pull-request-limit`       | Optional | Limit for associatedPullRequests API call. Use this when working with long-lived non-default branches. See #1354. Default: `5`                                                                        |
 | `history-limit`            | Optional | Size of the pagination window when walking the repo. Can avoid erratic 502s from Github. Default: `15`                                                                                                |
-| `initial-commits-since`    | Optional | When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date, ex: `"2025-06-18T10:29:51Z"`. Default: `""` (unlimited)                                              |
 
 ## Template Variables
 
@@ -541,7 +540,6 @@ specified in your `release-drafter.yml` config.
 | `commitish`             | A string specifying the target branch for the release being created.                                                                                                                                                                                                                                                                                               |
 | `header`                | A string that would be added before the template body.                                                                                                                                                                                                                                                                                                             |
 | `footer`                | A string that would be added after the template body.                                                                                                                                                                                                                                                                                                              |
-| `initial-commits-since` | When drafting your first release, limit the amount of scanned commits. Expects an ISO 8601 date, ex: `"2025-06-18T10:29:51Z"`. Default: `""` (unlimited)                                                                                                                                                                                                           |
 
 ## Action Outputs
 

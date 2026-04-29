@@ -2,7 +2,6 @@ query findCommitsWithPathChangesQuery(
   $name: String!
   $owner: String!
   $targetCommitish: String!
-  $since: GitTimestamp
   $after: String
   $path: String
 ) {
@@ -10,7 +9,7 @@ query findCommitsWithPathChangesQuery(
     object(expression: $targetCommitish) {
       ... on Commit {
         __typename
-        history(path: $path, since: $since, after: $after) {
+        history(path: $path, after: $after) {
           __typename
           pageInfo {
             __typename

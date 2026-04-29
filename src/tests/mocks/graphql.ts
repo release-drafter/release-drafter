@@ -3,33 +3,33 @@ import path from 'node:path'
 import nock from 'nock'
 
 type Query =
-  | 'query findCommitsWithAssociatedPullRequests'
   | 'query findCommitsWithPathChangesQuery'
+  | 'query findCommitsInComparison'
 
 /**
  * Available files in fixtures/graphql
  */
 type Payload =
-  | 'graphql-commits-paginated-1'
-  | 'graphql-commits-overlapping-label'
-  | 'graphql-commits-no-prs'
-  | 'graphql-commits-empty'
-  | 'graphql-commits-merge-commit'
-  | 'graphql-commits-rebase-merging'
   | 'graphql-include-path-src-5.md-forking'
-  | 'graphql-commits-forking'
   | 'graphql-include-null-path-merge-commit'
   | 'graphql-include-path-src-5.md-rebase-merging'
   | 'graphql-include-null-path-overlapping-label'
-  | 'graphql-commits-squash-merging'
   | 'graphql-include-null-path-forking'
   | 'graphql-include-null-path-rebase-merging'
   | 'graphql-include-null-path-squash-merging'
   | 'graphql-include-path-src-5.md-merge-commit'
   | 'graphql-include-path-src-5.md-overlapping-label'
-  | 'graphql-commits-paginated-2'
   | 'graphql-include-path-src-5.md-squash-merging'
   | 'graphql-exclude-path-merge-commit'
+  | 'graphql-comparison-merge-commit'
+  | 'graphql-comparison-no-prs'
+  | 'graphql-comparison-empty'
+  | 'graphql-comparison-overlapping-label'
+  | 'graphql-comparison-forking'
+  | 'graphql-comparison-rebase-merging'
+  | 'graphql-comparison-squash-merging'
+  | 'graphql-comparison-paginated-1'
+  | 'graphql-comparison-paginated-2'
 
 export const getGqlPayload = (payload: Payload) =>
   JSON.parse(
@@ -63,12 +63,12 @@ export const mockGraphqlQuery = (
       ? param.payload
       : [param.payload]
 
+    const defaultQuery: Query = 'query findCommitsInComparison'
+
     for (const payload of payloads) {
       scope = scope
         .post('/graphql', (body) =>
-          body.query.includes(
-            param.query || 'query findCommitsWithAssociatedPullRequests',
-          ),
+          body.query.includes(param.query || defaultQuery),
         )
         .reply(200, getGqlPayload(payload))
     }

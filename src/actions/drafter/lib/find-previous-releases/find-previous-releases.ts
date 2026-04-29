@@ -77,8 +77,8 @@ export const findPreviousReleases = async (
   const semverRangeFilteredReleases =
     filterByRange && filterByRange !== '*'
       ? commitishFilteredReleases.filter((r) => {
-          // biome-ignore lint/style/noNonNullAssertion: ensured by config validation
-          const parsedRange = validRange(filterByRange)!
+          const parsedRange = validRange(filterByRange)
+          if (!parsedRange) return false
           const parsedVersion = coerce(r.tag_name, { loose: true })?.version
 
           if (!parsedVersion) {
@@ -158,8 +158,8 @@ export const findPreviousReleases = async (
     core.info(`  tag_name:  ${lastRelease.tag_name}`)
     core.info(`  name:      ${lastRelease.name}`)
   } else {
-    core.info(
-      `No last release found${isPreRelease ? ' (including prerelease)' : ''}`,
+    core.warning(
+      `No published release found${isPreRelease ? ' (including prerelease)' : ''}`,
     )
   }
 

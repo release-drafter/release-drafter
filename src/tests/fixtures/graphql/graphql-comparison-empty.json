@@ -1,0 +1,19 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "compare": {
+          "commits": {
+            "__typename": "ComparisonCommitConnection",
+            "pageInfo": {
+              "__typename": "PageInfo",
+              "hasNextPage": false,
+              "endCursor": "83041a4962107d6bd0282e518ae402dd97ca8daf 24"
+            },
+            "nodes": []
+          }
+        }
+      }
+    }
+  }
+}

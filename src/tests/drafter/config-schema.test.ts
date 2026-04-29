@@ -51,10 +51,6 @@ const suites: SuiteParams[] = [
   },
   { parseInput: { template, 'history-limit': 17 }, parseValid: true },
   {
-    parseInput: { template, 'initial-commits-since': '2025-06-18T10:29:51Z' },
-    parseValid: true,
-  },
-  {
     parseInput: { template: true },
     errorContains: 'Invalid input: expected string, received boolean',
     parseValid: false,
@@ -198,24 +194,6 @@ const suites: SuiteParams[] = [
   {
     parseInput: { template, 'history-limit': 'seventeen' },
     errorContains: 'Invalid input: expected number, received string',
-    parseValid: false,
-  },
-  {
-    parseInput: { 'initial-commits-since': '' },
-    errorContains: 'Invalid ISO datetime',
-    parseValid: false,
-  },
-  {
-    parseInput: { 'initial-commits-since': 'a day' },
-    errorContains: 'Invalid ISO datetime',
-    parseValid: false,
-  },
-  {
-    parseInput: {
-      'initial-commits-since':
-        'Wed Dec 10 2025 19:33:48 GMT+0100 (Central European Standard Time)',
-    },
-    errorContains: 'Invalid ISO datetime',
     parseValid: false,
   },
   {

@@ -1,0 +1,27 @@
+name: Generic issue template
+description: Report a generic issue, bug or feature request that does not fit into any of the other issue templates.
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered. (see [Issues](https://github.com/release-drafter/release-drafter/issues))
+      options:
+      - label: I have searched the existing issues
+        required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/release-drafter/release-drafter/blob/master/docs/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Add a description
+      description: Provide a detailed description of the issue, bug, or feature request.
+    validations:
+      required: true

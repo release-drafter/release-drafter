@@ -55,7 +55,9 @@ const mocks = vi.hoisted(() => {
       debug: vi.fn<typeof core.debug>(DEBUG_TESTS ? console.debug : undefined),
       error: vi.fn<typeof core.error>(DEBUG_TESTS ? console.error : undefined),
       info: vi.fn<typeof core.info>(DEBUG_TESTS ? console.info : undefined),
-      warning: vi.fn<typeof core.warning>(),
+      warning: vi.fn<typeof core.warning>(
+        DEBUG_TESTS ? console.warn : undefined,
+      ),
       setOutput: vi.fn<typeof core.setOutput>(),
       setFailed: vi.fn<typeof core.setFailed>(
         DEBUG_TESTS ? console.error : undefined,

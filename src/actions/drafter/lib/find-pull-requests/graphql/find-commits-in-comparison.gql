@@ -1,10 +1,10 @@
-query findCommitsWithAssociatedPullRequests(
+query findCommitsInComparison(
   $name: String!
   $owner: String!
-  $targetCommitish: String!
+  $baseRef: String!
+  $headRef: String!
   $withPullRequestBody: Boolean!
   $withPullRequestURL: Boolean!
-  $since: GitTimestamp
   $after: String
   $withBaseRefName: Boolean!
   $withHeadRefName: Boolean!
@@ -12,12 +12,10 @@ query findCommitsWithAssociatedPullRequests(
   $historyLimit: Int!
 ) {
   repository(name: $name, owner: $owner) {
-    object(expression: $targetCommitish) {
-      ... on Commit {
-        __typename
-        history(first: $historyLimit, since: $since, after: $after) {
+    ref(qualifiedName: $baseRef) {
+      compare(headRef: $headRef) {
+        commits(first: $historyLimit, after: $after) {
           __typename
-          totalCount
           pageInfo {
             __typename
             hasNextPage
