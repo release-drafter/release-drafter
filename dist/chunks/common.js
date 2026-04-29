@@ -28034,8 +28034,8 @@ async function paginateGraphql(client, query, requestParameters, paginatePath) {
 //#endregion
 //#region src/common/parse-commitish.ts
 /**
-* Tags are not supported as `target_commitish` by Github API.
-* GITHUB_REF or the ref from webhook start with `refs/tags/`, so we handle
+* Tags and PRs are not supported as `target_commitish` by Github API.
+* If GITHUB_REF or the ref from webhook start with `refs/[tags|pull]/`, we handle
 * those here.
 *
 * If it doesn't but is still a tag (e.g. "v1.2.3") - it must have been set
@@ -28046,8 +28046,8 @@ async function paginateGraphql(client, query, requestParameters, paginatePath) {
 */
 var parseCommitishForRelease = (commitish) => {
 	let mutableCommitish = structuredClone(commitish);
-	if (mutableCommitish.startsWith("refs/tags/")) {
-		info(`${mutableCommitish} is not supported as release target, falling back to default branch`);
+	if (mutableCommitish.startsWith("refs/tags/") || mutableCommitish.startsWith("refs/pull/")) {
+		warning(`${mutableCommitish} is not supported as release target (commitish), falling back to default branch`);
 		mutableCommitish = "";
 	}
 	return mutableCommitish;
