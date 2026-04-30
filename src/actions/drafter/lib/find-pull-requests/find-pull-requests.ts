@@ -138,7 +138,9 @@ export const findPullRequests = async (params: {
 
   const pullRequests = pullRequestsRaw.filter(
     (pr) =>
-      // Ensure PR is from the same repository
+      // `baseRepository` is the repository the PR targets, not the head/fork repo.
+      // Keep fork PRs that target the current repository, and exclude associated
+      // PRs that belong to some other repository but share the same commit.
       pr.baseRepository?.nameWithOwner ===
         `${context.repo.owner}/${context.repo.repo}` &&
       // Ensure PR is merged
@@ -146,7 +148,7 @@ export const findPullRequests = async (params: {
   )
 
   core.info(
-    `Found ${pullRequestsRaw.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and come from ${context.repo.owner}/${context.repo.repo}${
+    `Found ${pullRequestsRaw.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and target ${context.repo.owner}/${context.repo.repo}${
       pullRequests.length > 0
         ? ` : ${pullRequests.map((pr) => `#${pr.number}`).join(', ')}`
         : '.'

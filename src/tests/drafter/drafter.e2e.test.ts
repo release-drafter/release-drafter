@@ -1812,8 +1812,8 @@ describe('drafter e2e', () => {
         })
       })
 
-      describe('with forked pull request', () => {
-        it('exclude forked pull requests', async () => {
+      describe('with associated pull requests from another repository', () => {
+        it('excludes pull requests targeting another repository', async () => {
           await mockContext('push')
           mocks.config.mockReturnValue('config')
           const scope = nockGetAndPostReleases({
@@ -1846,6 +1846,9 @@ describe('drafter e2e', () => {
               },
             ]
           `)
+          expect(mocks.core.info).toHaveBeenCalledWith(
+            'Found 9 pull requests associated with those commits. 8 of those are merged and target toolmantim/release-drafter-test-project : #28, #27, #25, #24, #23, #5, #4, #1',
+          )
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
           expect(mocks.core.setFailed).not.toHaveBeenCalled()
