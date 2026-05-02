@@ -1847,7 +1847,7 @@ describe('drafter e2e', () => {
             ]
           `)
           expect(mocks.core.info).toHaveBeenCalledWith(
-            'Found 9 pull requests associated with those commits. 8 of those are merged and target toolmantim/release-drafter-test-project : #28, #27, #25, #24, #23, #5, #4, #1',
+            'Found 8 merged pull requests targeting toolmantim/release-drafter-test-project: #28, #27, #25, #24, #23, #5, #4, #1',
           )
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
@@ -3406,10 +3406,6 @@ describe('drafter e2e', () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config')
 
-      // First GraphQL query: comparison returns a commit with an OID but no
-      // associatedPullRequests (simulating GitHub's index lag)
-      // Second GraphQL query: direct PR query returns the missing PR with a
-      // mergeCommit.oid that matches the commit from the comparison
       const gqlScope = mockGraphqlQuery([
         { payload: 'graphql-comparison-missing-pr' },
         {
@@ -3434,6 +3430,53 @@ describe('drafter e2e', () => {
             "name": "",
             "prerelease": false,
             "tag_name": "",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+
+      expect(scope.isDone()).toBe(true)
+      expect(gqlScope.pendingMocks().length).toBe(0)
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+
+    // Regression: the OID set used to gate recovery must be built AFTER path
+    // filtering, otherwise the safety net recovers PRs whose merge commit was
+    // excluded by include-paths/exclude-paths.
+    it('respects include-paths when recovering missing PRs', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-include-paths')
+
+      const gqlScope = mockGraphqlQuery([
+        {
+          query: 'query findCommitsInComparison',
+          payload: 'graphql-comparison-missing-pr-with-paths',
+        },
+        {
+          query: 'query findCommitsWithPathChangesQuery',
+          payload: 'graphql-include-path-missing-pr',
+        },
+        {
+          query: 'query findRecentMergedPullRequests',
+          payload: 'graphql-recent-merged-prs-with-paths',
+        },
+      ])
+
+      const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
+
+      await runDrafter()
+
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+        * Touches src (#100) @TimonVS
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "v2.0.1 (Code name: Placeholder)",
+            "prerelease": false,
+            "tag_name": "v2.0.1",
             "target_commitish": "refs/heads/master",
           },
         ]

@@ -1,0 +1,46 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "compare": {
+          "commits": {
+            "__typename": "ComparisonCommitConnection",
+            "pageInfo": {
+              "__typename": "PageInfo",
+              "hasNextPage": false,
+              "endCursor": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb 1"
+            },
+            "nodes": [
+              {
+                "__typename": "Commit",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+                "oid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "committedDate": "2019-04-27T14:00:00Z",
+                "message": "Merge pull request #100 from TimonVS/touches-src\n\nDocs change",
+                "author": {
+                  "__typename": "GitActor",
+                  "name": "Timon van Spronsen",
+                  "user": { "__typename": "User", "login": "TimonVS" }
+                },
+                "associatedPullRequests": { "nodes": [] }
+              },
+              {
+                "__typename": "Commit",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI=",
+                "oid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "committedDate": "2019-04-27T15:00:00Z",
+                "message": "Merge pull request #101 from TimonVS/touches-other\n\nUnrelated change",
+                "author": {
+                  "__typename": "GitActor",
+                  "name": "Timon van Spronsen",
+                  "user": { "__typename": "User", "login": "TimonVS" }
+                },
+                "associatedPullRequests": { "nodes": [] }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

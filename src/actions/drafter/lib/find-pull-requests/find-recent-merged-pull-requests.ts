@@ -1,9 +1,7 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { print } from 'graphql'
-import { getOctokit } from 'src/common'
+import { executeGraphql, getOctokit } from 'src/common'
 import type { findCommitsInComparison } from './find-commits-in-comparison'
-import type { FindRecentMergedPullRequestsQuery } from './graphql/find-recent-merged-pull-requests.graphql.generated'
 import { FindRecentMergedPullRequestsDocument } from './graphql/find-recent-merged-pull-requests.graphql.generated'
 
 type CommitNode = Awaited<ReturnType<typeof findCommitsInComparison>>[number]
@@ -12,35 +10,33 @@ export type GraphqlPullRequest = NonNullable<
   NonNullable<CommitNode['associatedPullRequests']>['nodes']
 >[number]
 
-const RECENT_PR_LOOKBACK = 5
-
-/**
- * Fetches the most recently merged PRs directly from the PR table via GraphQL
- * and returns any whose mergeCommit.oid is in the comparison but were not found
- * via commit.associatedPullRequests (which uses a separate index that can lag
- * for very recently merged PRs).
- */
-export const findRecentMergedPullRequests = async (params: {
-  commitOids: Set<string>
-  foundPrKeys: Set<string>
+export type PullRequestFieldFlags = {
   withPullRequestBody: boolean
   withPullRequestURL: boolean
   withBaseRefName: boolean
   withHeadRefName: boolean
+}
+
+const RECENT_PR_LOOKBACK = 5
+
+export const findRecentMergedPullRequests = async (params: {
+  baseRefName: string | null
+  commitOids: Set<string>
+  foundPrKeys: Set<string>
+  fieldFlags: PullRequestFieldFlags
 }): Promise<NonNullable<GraphqlPullRequest>[]> => {
   const octokit = getOctokit()
   const nameWithOwner = `${context.repo.owner}/${context.repo.repo}`
 
-  const data = await octokit.graphql<FindRecentMergedPullRequestsQuery>(
-    print(FindRecentMergedPullRequestsDocument),
+  const data = await executeGraphql(
+    octokit.graphql,
+    FindRecentMergedPullRequestsDocument,
     {
       name: context.repo.repo,
       owner: context.repo.owner,
+      baseRefName: params.baseRefName,
       limit: RECENT_PR_LOOKBACK,
-      withPullRequestBody: params.withPullRequestBody,
-      withPullRequestURL: params.withPullRequestURL,
-      withBaseRefName: params.withBaseRefName,
-      withHeadRefName: params.withHeadRefName,
+      ...params.fieldFlags,
     },
   )
 

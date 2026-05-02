@@ -32,7 +32,10 @@ type Payload =
   | 'graphql-comparison-paginated-1'
   | 'graphql-comparison-paginated-2'
   | 'graphql-comparison-missing-pr'
+  | 'graphql-comparison-missing-pr-with-paths'
+  | 'graphql-include-path-missing-pr'
   | 'graphql-recent-merged-prs'
+  | 'graphql-recent-merged-prs-with-paths'
 
 export const getGqlPayload = (payload: Payload) =>
   JSON.parse(

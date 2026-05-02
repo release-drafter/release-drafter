@@ -83,10 +83,13 @@ vi.mock(import('src/common/get-octokit'), async (iom) => {
 })
 
 const baseOpts = {
-  withPullRequestBody: false,
-  withPullRequestURL: false,
-  withBaseRefName: false,
-  withHeadRefName: false,
+  baseRefName: 'master' as string | null,
+  fieldFlags: {
+    withPullRequestBody: false,
+    withPullRequestURL: false,
+    withBaseRefName: false,
+    withHeadRefName: false,
+  },
 }
 
 describe('findRecentMergedPullRequests', () => {
@@ -219,12 +222,29 @@ describe('findRecentMergedPullRequests', () => {
       expect.objectContaining({
         owner: OWNER,
         name: REPO,
+        baseRefName: 'master',
         limit: 5,
         withPullRequestBody: false,
         withPullRequestURL: false,
         withBaseRefName: false,
         withHeadRefName: false,
       }),
+    )
+  })
+
+  it('passes null baseRefName when commitish is not a confirmed branch', async () => {
+    localMocks.graphql.mockResolvedValueOnce(makeGraphqlResponse([]))
+
+    await findRecentMergedPullRequests({
+      ...baseOpts,
+      baseRefName: null,
+      commitOids: new Set(['abc123']),
+      foundPrKeys: new Set(),
+    })
+
+    expect(localMocks.graphql).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ baseRefName: null }),
     )
   })
 })
