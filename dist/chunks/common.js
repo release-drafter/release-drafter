@@ -804,6 +804,21 @@ var require_errors = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		}
 		[kSecureProxyConnectionError] = true;
 	};
+	var kMessageSizeExceededError = Symbol.for("undici.error.UND_ERR_WS_MESSAGE_SIZE_EXCEEDED");
+	var MessageSizeExceededError = class extends UndiciError {
+		constructor(message) {
+			super(message);
+			this.name = "MessageSizeExceededError";
+			this.message = message || "Max decompressed message size exceeded";
+			this.code = "UND_ERR_WS_MESSAGE_SIZE_EXCEEDED";
+		}
+		static [Symbol.hasInstance](instance) {
+			return instance && instance[kMessageSizeExceededError] === true;
+		}
+		get [kMessageSizeExceededError]() {
+			return true;
+		}
+	};
 	module.exports = {
 		AbortError,
 		HTTPParserError,
@@ -827,7 +842,8 @@ var require_errors = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		ResponseExceededMaxSizeError,
 		RequestRetryError,
 		ResponseError,
-		SecureProxyConnectionError
+		SecureProxyConnectionError,
+		MessageSizeExceededError
 	};
 }));
 //#endregion
@@ -1622,6 +1638,7 @@ var require_request$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			if (typeof method !== "string") throw new InvalidArgumentError("method must be a string");
 			else if (normalizedMethodRecords[method] === void 0 && !isValidHTTPToken(method)) throw new InvalidArgumentError("invalid request method");
 			if (upgrade && typeof upgrade !== "string") throw new InvalidArgumentError("upgrade must be a string");
+			if (upgrade && !isValidHeaderValue(upgrade)) throw new InvalidArgumentError("invalid upgrade header");
 			if (headersTimeout != null && (!Number.isFinite(headersTimeout) || headersTimeout < 0)) throw new InvalidArgumentError("invalid headersTimeout");
 			if (bodyTimeout != null && (!Number.isFinite(bodyTimeout) || bodyTimeout < 0)) throw new InvalidArgumentError("invalid bodyTimeout");
 			if (reset != null && typeof reset !== "boolean") throw new InvalidArgumentError("invalid reset");
@@ -1801,10 +1818,12 @@ var require_request$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			if (!isValidHeaderValue(val)) throw new InvalidArgumentError(`invalid ${key} header`);
 		} else if (val === null) val = "";
 		else val = `${val}`;
-		if (request.host === null && headerName === "host") {
+		if (headerName === "host") {
+			if (request.host !== null) throw new InvalidArgumentError("duplicate host header");
 			if (typeof val !== "string") throw new InvalidArgumentError("invalid host header");
 			request.host = val;
-		} else if (request.contentLength === null && headerName === "content-length") {
+		} else if (headerName === "content-length") {
+			if (request.contentLength !== null) throw new InvalidArgumentError("duplicate content-length header");
 			request.contentLength = parseInt(val, 10);
 			if (!Number.isFinite(request.contentLength)) throw new InvalidArgumentError("invalid content-length header");
 		} else if (request.contentType === null && headerName === "content-type") {
@@ -13955,11 +13974,13 @@ var require_util$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	* @param {string} value
 	*/
 	function isValidClientWindowBits(value) {
+		if (value.length === 0) return false;
 		for (let i = 0; i < value.length; i++) {
 			const byte = value.charCodeAt(i);
 			if (byte < 48 || byte > 57) return false;
 		}
-		return true;
+		const num = Number.parseInt(value, 10);
+		return num >= 8 && num <= 15;
 	}
 	var hasIntl = typeof process.versions.icu === "string";
 	var fatalDecoder = hasIntl ? new TextDecoder("utf-8", { fatal: true }) : void 0;
@@ -14232,6 +14253,7 @@ var require_connection = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 var require_permessage_deflate = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var { createInflateRaw, Z_DEFAULT_WINDOWBITS } = __require("node:zlib");
 	var { isValidClientWindowBits } = require_util$1();
+	var { MessageSizeExceededError } = require_errors();
 	var tail = Buffer.from([
 		0,
 		0,
@@ -14240,15 +14262,27 @@ var require_permessage_deflate = /* @__PURE__ */ __commonJSMin(((exports, module
 	]);
 	var kBuffer = Symbol("kBuffer");
 	var kLength = Symbol("kLength");
+	var kDefaultMaxDecompressedSize = 4 * 1024 * 1024;
 	var PerMessageDeflate = class {
 		/** @type {import('node:zlib').InflateRaw} */
 		#inflate;
 		#options = {};
+		/** @type {boolean} */
+		#aborted = false;
+		/** @type {Function|null} */
+		#currentCallback = null;
+		/**
+		* @param {Map<string, string>} extensions
+		*/
 		constructor(extensions) {
 			this.#options.serverNoContextTakeover = extensions.has("server_no_context_takeover");
 			this.#options.serverMaxWindowBits = extensions.get("server_max_window_bits");
 		}
 		decompress(chunk, fin, callback) {
+			if (this.#aborted) {
+				callback(new MessageSizeExceededError());
+				return;
+			}
 			if (!this.#inflate) {
 				let windowBits = Z_DEFAULT_WINDOWBITS;
 				if (this.#options.serverMaxWindowBits) {
@@ -14258,24 +14292,45 @@ var require_permessage_deflate = /* @__PURE__ */ __commonJSMin(((exports, module
 					}
 					windowBits = Number.parseInt(this.#options.serverMaxWindowBits);
 				}
-				this.#inflate = createInflateRaw({ windowBits });
+				try {
+					this.#inflate = createInflateRaw({ windowBits });
+				} catch (err) {
+					callback(err);
+					return;
+				}
 				this.#inflate[kBuffer] = [];
 				this.#inflate[kLength] = 0;
 				this.#inflate.on("data", (data) => {
-					this.#inflate[kBuffer].push(data);
+					if (this.#aborted) return;
 					this.#inflate[kLength] += data.length;
+					if (this.#inflate[kLength] > kDefaultMaxDecompressedSize) {
+						this.#aborted = true;
+						this.#inflate.removeAllListeners();
+						this.#inflate.destroy();
+						this.#inflate = null;
+						if (this.#currentCallback) {
+							const cb = this.#currentCallback;
+							this.#currentCallback = null;
+							cb(new MessageSizeExceededError());
+						}
+						return;
+					}
+					this.#inflate[kBuffer].push(data);
 				});
 				this.#inflate.on("error", (err) => {
 					this.#inflate = null;
 					callback(err);
 				});
 			}
+			this.#currentCallback = callback;
 			this.#inflate.write(chunk);
 			if (fin) this.#inflate.write(tail);
 			this.#inflate.flush(() => {
+				if (this.#aborted || !this.#inflate) return;
 				const full = Buffer.concat(this.#inflate[kBuffer], this.#inflate[kLength]);
 				this.#inflate[kBuffer].length = 0;
 				this.#inflate[kLength] = 0;
+				this.#currentCallback = null;
 				callback(null, full);
 			});
 		}
@@ -14303,6 +14358,10 @@ var require_receiver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		#fragments = [];
 		/** @type {Map<string, PerMessageDeflate>} */
 		#extensions;
+		/**
+		* @param {import('./websocket').WebSocket} ws
+		* @param {Map<string, string>|null} extensions
+		*/
 		constructor(ws, extensions) {
 			super();
 			this.ws = ws;
@@ -14394,12 +14453,12 @@ var require_receiver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				if (this.#byteOffset < 8) return callback();
 				const buffer = this.consume(8);
 				const upper = buffer.readUInt32BE(0);
-				if (upper > 2 ** 31 - 1) {
+				const lower = buffer.readUInt32BE(4);
+				if (upper !== 0 || lower > 2 ** 31 - 1) {
 					failWebsocketConnection(this.ws, "Received payload length > 2^31 bytes.");
 					return;
 				}
-				const lower = buffer.readUInt32BE(4);
-				this.#info.payloadLength = (upper << 8) + lower;
+				this.#info.payloadLength = lower;
 				this.#state = parserStates.READ_DATA;
 			} else if (this.#state === parserStates.READ_DATA) {
 				if (this.#byteOffset < this.#info.payloadLength) return callback();
@@ -14418,7 +14477,7 @@ var require_receiver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				} else {
 					this.#extensions.get("permessage-deflate").decompress(body, this.#info.fin, (error, data) => {
 						if (error) {
-							closeWebSocketConnection(this.ws, 1007, error.message, error.message.length);
+							failWebsocketConnection(this.ws, error.message);
 							return;
 						}
 						this.#fragments.push(data);
@@ -18779,6 +18838,7 @@ function createStringifyContext(doc, options) {
 		nullStr: "null",
 		simpleKeys: false,
 		singleQuote: null,
+		trailingComma: false,
 		trueStr: "true",
 		verifyAliasOrder: true
 	}, doc.schema.toStringOptions, options);
@@ -19135,9 +19195,13 @@ function stringifyFlowCollection({ items }, ctx, { flowChars, itemIndent }) {
 		}
 		if (comment) reqNewline = true;
 		let str = stringify$2(item, itemCtx, () => comment = null);
+		reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
 		if (i < items.length - 1) str += ",";
+		else if (ctx.options.trailingComma) {
+			if (ctx.options.lineWidth > 0) reqNewline || (reqNewline = lines.reduce((sum, line) => sum + line.length + 2, 2) + (str.length + 2) > ctx.options.lineWidth);
+			if (reqNewline) str += ",";
+		}
 		if (comment) str += lineComment(str, itemIndent, commentString(comment));
-		if (!reqNewline && (lines.length > linesAtValue || str.includes("\n"))) reqNewline = true;
 		lines.push(str);
 		linesAtValue = lines.length;
 	}
@@ -21423,14 +21487,18 @@ function composeNode(ctx, token, props, onError) {
 		case "block-map":
 		case "block-seq":
 		case "flow-collection":
-			node = composeCollection(CN, ctx, token, props, onError);
-			if (anchor) node.anchor = anchor.source.substring(1);
+			try {
+				node = composeCollection(CN, ctx, token, props, onError);
+				if (anchor) node.anchor = anchor.source.substring(1);
+			} catch (error) {
+				onError(token, "RESOURCE_EXHAUSTION", error instanceof Error ? error.message : String(error));
+			}
 			break;
 		default:
 			onError(token, "UNEXPECTED_TOKEN", token.type === "error" ? token.message : `Unsupported token (type: ${token.type})`);
-			node = composeEmptyNode(ctx, token.offset, void 0, null, props, onError);
 			isSrcToken = false;
 	}
+	node ?? (node = composeEmptyNode(ctx, token.offset, void 0, null, props, onError));
 	if (anchor && node.anchor === "") onError(anchor, "BAD_ALIAS", "Anchor cannot be an empty string");
 	if (atKey && ctx.options.stringKeys && (!isScalar$1(node) || typeof node.value !== "string" || node.tag && node.tag !== "tag:yaml.org,2002:str")) onError(tag ?? token, "NON_STRING_KEY", "With stringKeys, all keys must be strings");
 	if (spaceBefore) node.spaceBefore = true;
@@ -24417,6 +24485,16 @@ function getProxyFetch(destinationUrl) {
 function getApiBaseUrl() {
 	return process.env["GITHUB_API_URL"] || "https://api.github.com";
 }
+function getUserAgentWithOrchestrationId(baseUserAgent) {
+	var _a;
+	const orchId = (_a = process.env["ACTIONS_ORCHESTRATION_ID"]) === null || _a === void 0 ? void 0 : _a.trim();
+	if (orchId) {
+		const tag = `actions_orchestration_id/${orchId.replace(/[^a-z0-9_.-]/gi, "_")}`;
+		if (baseUserAgent === null || baseUserAgent === void 0 ? void 0 : baseUserAgent.includes(tag)) return baseUserAgent;
+		return `${baseUserAgent ? `${baseUserAgent} ` : ""}${tag}`;
+	}
+	return baseUserAgent;
+}
 //#endregion
 //#region node_modules/universal-user-agent/index.js
 function getUserAgent() {
@@ -26733,6 +26811,8 @@ function getOctokitOptions(token, options) {
 	const opts = Object.assign({}, options || {});
 	const auth = getAuthString(token, opts);
 	if (auth) opts.auth = auth;
+	const userAgent = getUserAgentWithOrchestrationId(opts.userAgent);
+	if (userAgent) opts.userAgent = userAgent;
 	return opts;
 }
 //#endregion
@@ -27012,8 +27092,8 @@ async function composeConfigGet(configFilename, currentContext) {
 function devAssert(condition, message) {
 	if (!Boolean(condition)) throw new Error(message);
 }
-Symbol.toStringTag;
-Symbol.toStringTag;
+//#endregion
+//#region node_modules/graphql/language/ast.mjs
 /**
 * The list of all possible AST node types.
 */
@@ -28095,10 +28175,7 @@ function assignProp(target, prop, value) {
 }
 function mergeDefs(...defs) {
 	const mergedDescriptors = {};
-	for (const def of defs) {
-		const descriptors = Object.getOwnPropertyDescriptors(def);
-		Object.assign(mergedDescriptors, descriptors);
-	}
+	for (const def of defs) Object.assign(mergedDescriptors, Object.getOwnPropertyDescriptors(def));
 	return Object.defineProperties({}, mergedDescriptors);
 }
 function esc(str) {
