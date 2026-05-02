@@ -2560,268 +2560,13 @@ var FindCommitsInComparisonDocument = {
 																		},
 																		"selectionSet": {
 																			"kind": "SelectionSet",
-																			"selections": [
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "__typename"
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "title"
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "number"
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "url"
-																					},
-																					"directives": [{
-																						"kind": "Directive",
-																						"name": {
-																							"kind": "Name",
-																							"value": "include"
-																						},
-																						"arguments": [{
-																							"kind": "Argument",
-																							"name": {
-																								"kind": "Name",
-																								"value": "if"
-																							},
-																							"value": {
-																								"kind": "Variable",
-																								"name": {
-																									"kind": "Name",
-																									"value": "withPullRequestURL"
-																								}
-																							}
-																						}]
-																					}]
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "body"
-																					},
-																					"directives": [{
-																						"kind": "Directive",
-																						"name": {
-																							"kind": "Name",
-																							"value": "include"
-																						},
-																						"arguments": [{
-																							"kind": "Argument",
-																							"name": {
-																								"kind": "Name",
-																								"value": "if"
-																							},
-																							"value": {
-																								"kind": "Variable",
-																								"name": {
-																									"kind": "Name",
-																									"value": "withPullRequestBody"
-																								}
-																							}
-																						}]
-																					}]
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "author"
-																					},
-																					"selectionSet": {
-																						"kind": "SelectionSet",
-																						"selections": [
-																							{
-																								"kind": "Field",
-																								"name": {
-																									"kind": "Name",
-																									"value": "__typename"
-																								}
-																							},
-																							{
-																								"kind": "Field",
-																								"name": {
-																									"kind": "Name",
-																									"value": "login"
-																								}
-																							},
-																							{
-																								"kind": "Field",
-																								"name": {
-																									"kind": "Name",
-																									"value": "url"
-																								}
-																							}
-																						]
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "baseRepository"
-																					},
-																					"selectionSet": {
-																						"kind": "SelectionSet",
-																						"selections": [{
-																							"kind": "Field",
-																							"name": {
-																								"kind": "Name",
-																								"value": "__typename"
-																							}
-																						}, {
-																							"kind": "Field",
-																							"name": {
-																								"kind": "Name",
-																								"value": "nameWithOwner"
-																							}
-																						}]
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "mergedAt"
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "isCrossRepository"
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "labels"
-																					},
-																					"arguments": [{
-																						"kind": "Argument",
-																						"name": {
-																							"kind": "Name",
-																							"value": "first"
-																						},
-																						"value": {
-																							"kind": "IntValue",
-																							"value": "100"
-																						}
-																					}],
-																					"selectionSet": {
-																						"kind": "SelectionSet",
-																						"selections": [{
-																							"kind": "Field",
-																							"name": {
-																								"kind": "Name",
-																								"value": "__typename"
-																							}
-																						}, {
-																							"kind": "Field",
-																							"name": {
-																								"kind": "Name",
-																								"value": "nodes"
-																							},
-																							"selectionSet": {
-																								"kind": "SelectionSet",
-																								"selections": [{
-																									"kind": "Field",
-																									"name": {
-																										"kind": "Name",
-																										"value": "__typename"
-																									}
-																								}, {
-																									"kind": "Field",
-																									"name": {
-																										"kind": "Name",
-																										"value": "name"
-																									}
-																								}]
-																							}
-																						}]
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "merged"
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "baseRefName"
-																					},
-																					"directives": [{
-																						"kind": "Directive",
-																						"name": {
-																							"kind": "Name",
-																							"value": "include"
-																						},
-																						"arguments": [{
-																							"kind": "Argument",
-																							"name": {
-																								"kind": "Name",
-																								"value": "if"
-																							},
-																							"value": {
-																								"kind": "Variable",
-																								"name": {
-																									"kind": "Name",
-																									"value": "withBaseRefName"
-																								}
-																							}
-																						}]
-																					}]
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "headRefName"
-																					},
-																					"directives": [{
-																						"kind": "Directive",
-																						"name": {
-																							"kind": "Name",
-																							"value": "include"
-																						},
-																						"arguments": [{
-																							"kind": "Argument",
-																							"name": {
-																								"kind": "Name",
-																								"value": "if"
-																							},
-																							"value": {
-																								"kind": "Variable",
-																								"name": {
-																									"kind": "Name",
-																									"value": "withHeadRefName"
-																								}
-																							}
-																						}]
-																					}]
+																			"selections": [{
+																				"kind": "FragmentSpread",
+																				"name": {
+																					"kind": "Name",
+																					"value": "PullRequestFields"
 																				}
-																			]
+																			}]
 																		}
 																	}]
 																}
@@ -2838,6 +2583,284 @@ var FindCommitsInComparisonDocument = {
 					}]
 				}
 			}]
+		}
+	}, {
+		"kind": "FragmentDefinition",
+		"name": {
+			"kind": "Name",
+			"value": "PullRequestFields"
+		},
+		"typeCondition": {
+			"kind": "NamedType",
+			"name": {
+				"kind": "Name",
+				"value": "PullRequest"
+			}
+		},
+		"selectionSet": {
+			"kind": "SelectionSet",
+			"selections": [
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "__typename"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "title"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "number"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "url"
+					},
+					"directives": [{
+						"kind": "Directive",
+						"name": {
+							"kind": "Name",
+							"value": "include"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "if"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "withPullRequestURL"
+								}
+							}
+						}]
+					}]
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "body"
+					},
+					"directives": [{
+						"kind": "Directive",
+						"name": {
+							"kind": "Name",
+							"value": "include"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "if"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "withPullRequestBody"
+								}
+							}
+						}]
+					}]
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "author"
+					},
+					"selectionSet": {
+						"kind": "SelectionSet",
+						"selections": [
+							{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "__typename"
+								}
+							},
+							{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "login"
+								}
+							},
+							{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "url"
+								}
+							}
+						]
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "baseRepository"
+					},
+					"selectionSet": {
+						"kind": "SelectionSet",
+						"selections": [{
+							"kind": "Field",
+							"name": {
+								"kind": "Name",
+								"value": "__typename"
+							}
+						}, {
+							"kind": "Field",
+							"name": {
+								"kind": "Name",
+								"value": "nameWithOwner"
+							}
+						}]
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "mergedAt"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "isCrossRepository"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "labels"
+					},
+					"arguments": [{
+						"kind": "Argument",
+						"name": {
+							"kind": "Name",
+							"value": "first"
+						},
+						"value": {
+							"kind": "IntValue",
+							"value": "100"
+						}
+					}],
+					"selectionSet": {
+						"kind": "SelectionSet",
+						"selections": [{
+							"kind": "Field",
+							"name": {
+								"kind": "Name",
+								"value": "__typename"
+							}
+						}, {
+							"kind": "Field",
+							"name": {
+								"kind": "Name",
+								"value": "nodes"
+							},
+							"selectionSet": {
+								"kind": "SelectionSet",
+								"selections": [{
+									"kind": "Field",
+									"name": {
+										"kind": "Name",
+										"value": "__typename"
+									}
+								}, {
+									"kind": "Field",
+									"name": {
+										"kind": "Name",
+										"value": "name"
+									}
+								}]
+							}
+						}]
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "merged"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "baseRefName"
+					},
+					"directives": [{
+						"kind": "Directive",
+						"name": {
+							"kind": "Name",
+							"value": "include"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "if"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "withBaseRefName"
+								}
+							}
+						}]
+					}]
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "headRefName"
+					},
+					"directives": [{
+						"kind": "Directive",
+						"name": {
+							"kind": "Name",
+							"value": "include"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "if"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "withHeadRefName"
+								}
+							}
+						}]
+					}]
+				}
+			]
 		}
 	}]
 };
@@ -3488,297 +3511,319 @@ var FindRecentMergedPullRequestsDocument = {
 								},
 								"selectionSet": {
 									"kind": "SelectionSet",
-									"selections": [
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "__typename"
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "title"
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "number"
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "url"
-											},
-											"directives": [{
-												"kind": "Directive",
-												"name": {
-													"kind": "Name",
-													"value": "include"
-												},
-												"arguments": [{
-													"kind": "Argument",
-													"name": {
-														"kind": "Name",
-														"value": "if"
-													},
-													"value": {
-														"kind": "Variable",
-														"name": {
-															"kind": "Name",
-															"value": "withPullRequestURL"
-														}
-													}
-												}]
-											}]
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "body"
-											},
-											"directives": [{
-												"kind": "Directive",
-												"name": {
-													"kind": "Name",
-													"value": "include"
-												},
-												"arguments": [{
-													"kind": "Argument",
-													"name": {
-														"kind": "Name",
-														"value": "if"
-													},
-													"value": {
-														"kind": "Variable",
-														"name": {
-															"kind": "Name",
-															"value": "withPullRequestBody"
-														}
-													}
-												}]
-											}]
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "author"
-											},
-											"selectionSet": {
-												"kind": "SelectionSet",
-												"selections": [
-													{
-														"kind": "Field",
-														"name": {
-															"kind": "Name",
-															"value": "__typename"
-														}
-													},
-													{
-														"kind": "Field",
-														"name": {
-															"kind": "Name",
-															"value": "login"
-														}
-													},
-													{
-														"kind": "Field",
-														"name": {
-															"kind": "Name",
-															"value": "url"
-														}
-													}
-												]
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "baseRepository"
-											},
-											"selectionSet": {
-												"kind": "SelectionSet",
-												"selections": [{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "__typename"
-													}
-												}, {
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "nameWithOwner"
-													}
-												}]
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "mergedAt"
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "isCrossRepository"
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "labels"
-											},
-											"arguments": [{
-												"kind": "Argument",
-												"name": {
-													"kind": "Name",
-													"value": "first"
-												},
-												"value": {
-													"kind": "IntValue",
-													"value": "100"
-												}
-											}],
-											"selectionSet": {
-												"kind": "SelectionSet",
-												"selections": [{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "__typename"
-													}
-												}, {
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "nodes"
-													},
-													"selectionSet": {
-														"kind": "SelectionSet",
-														"selections": [{
-															"kind": "Field",
-															"name": {
-																"kind": "Name",
-																"value": "__typename"
-															}
-														}, {
-															"kind": "Field",
-															"name": {
-																"kind": "Name",
-																"value": "name"
-															}
-														}]
-													}
-												}]
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "merged"
-											}
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "baseRefName"
-											},
-											"directives": [{
-												"kind": "Directive",
-												"name": {
-													"kind": "Name",
-													"value": "include"
-												},
-												"arguments": [{
-													"kind": "Argument",
-													"name": {
-														"kind": "Name",
-														"value": "if"
-													},
-													"value": {
-														"kind": "Variable",
-														"name": {
-															"kind": "Name",
-															"value": "withBaseRefName"
-														}
-													}
-												}]
-											}]
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "headRefName"
-											},
-											"directives": [{
-												"kind": "Directive",
-												"name": {
-													"kind": "Name",
-													"value": "include"
-												},
-												"arguments": [{
-													"kind": "Argument",
-													"name": {
-														"kind": "Name",
-														"value": "if"
-													},
-													"value": {
-														"kind": "Variable",
-														"name": {
-															"kind": "Name",
-															"value": "withHeadRefName"
-														}
-													}
-												}]
-											}]
-										},
-										{
-											"kind": "Field",
-											"name": {
-												"kind": "Name",
-												"value": "mergeCommit"
-											},
-											"selectionSet": {
-												"kind": "SelectionSet",
-												"selections": [{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "__typename"
-													}
-												}, {
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "oid"
-													}
-												}]
-											}
+									"selections": [{
+										"kind": "FragmentSpread",
+										"name": {
+											"kind": "Name",
+											"value": "PullRequestFields"
 										}
-									]
+									}, {
+										"kind": "Field",
+										"name": {
+											"kind": "Name",
+											"value": "mergeCommit"
+										},
+										"selectionSet": {
+											"kind": "SelectionSet",
+											"selections": [{
+												"kind": "Field",
+												"name": {
+													"kind": "Name",
+													"value": "__typename"
+												}
+											}, {
+												"kind": "Field",
+												"name": {
+													"kind": "Name",
+													"value": "oid"
+												}
+											}]
+										}
+									}]
 								}
 							}]
 						}
 					}]
 				}
 			}]
+		}
+	}, {
+		"kind": "FragmentDefinition",
+		"name": {
+			"kind": "Name",
+			"value": "PullRequestFields"
+		},
+		"typeCondition": {
+			"kind": "NamedType",
+			"name": {
+				"kind": "Name",
+				"value": "PullRequest"
+			}
+		},
+		"selectionSet": {
+			"kind": "SelectionSet",
+			"selections": [
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "__typename"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "title"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "number"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "url"
+					},
+					"directives": [{
+						"kind": "Directive",
+						"name": {
+							"kind": "Name",
+							"value": "include"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "if"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "withPullRequestURL"
+								}
+							}
+						}]
+					}]
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "body"
+					},
+					"directives": [{
+						"kind": "Directive",
+						"name": {
+							"kind": "Name",
+							"value": "include"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "if"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "withPullRequestBody"
+								}
+							}
+						}]
+					}]
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "author"
+					},
+					"selectionSet": {
+						"kind": "SelectionSet",
+						"selections": [
+							{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "__typename"
+								}
+							},
+							{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "login"
+								}
+							},
+							{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "url"
+								}
+							}
+						]
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "baseRepository"
+					},
+					"selectionSet": {
+						"kind": "SelectionSet",
+						"selections": [{
+							"kind": "Field",
+							"name": {
+								"kind": "Name",
+								"value": "__typename"
+							}
+						}, {
+							"kind": "Field",
+							"name": {
+								"kind": "Name",
+								"value": "nameWithOwner"
+							}
+						}]
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "mergedAt"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "isCrossRepository"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "labels"
+					},
+					"arguments": [{
+						"kind": "Argument",
+						"name": {
+							"kind": "Name",
+							"value": "first"
+						},
+						"value": {
+							"kind": "IntValue",
+							"value": "100"
+						}
+					}],
+					"selectionSet": {
+						"kind": "SelectionSet",
+						"selections": [{
+							"kind": "Field",
+							"name": {
+								"kind": "Name",
+								"value": "__typename"
+							}
+						}, {
+							"kind": "Field",
+							"name": {
+								"kind": "Name",
+								"value": "nodes"
+							},
+							"selectionSet": {
+								"kind": "SelectionSet",
+								"selections": [{
+									"kind": "Field",
+									"name": {
+										"kind": "Name",
+										"value": "__typename"
+									}
+								}, {
+									"kind": "Field",
+									"name": {
+										"kind": "Name",
+										"value": "name"
+									}
+								}]
+							}
+						}]
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "merged"
+					}
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "baseRefName"
+					},
+					"directives": [{
+						"kind": "Directive",
+						"name": {
+							"kind": "Name",
+							"value": "include"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "if"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "withBaseRefName"
+								}
+							}
+						}]
+					}]
+				},
+				{
+					"kind": "Field",
+					"name": {
+						"kind": "Name",
+						"value": "headRefName"
+					},
+					"directives": [{
+						"kind": "Directive",
+						"name": {
+							"kind": "Name",
+							"value": "include"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "if"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "withHeadRefName"
+								}
+							}
+						}]
+					}]
+				}
+			]
 		}
 	}]
 };
@@ -3800,8 +3845,8 @@ var findRecentMergedPullRequests = async (params) => {
 		return params.commitOids.has(pr.mergeCommit.oid) && !params.foundPrKeys.has(prKey);
 	});
 	if (missingPRs.length === 0) return [];
-	info(`Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr.number}`).join(", ")}`);
-	return missingPRs;
+	info(`Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(", ")}`);
+	return missingPRs.filter((pr) => pr != null);
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts

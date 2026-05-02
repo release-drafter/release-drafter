@@ -17,32 +17,7 @@ query findRecentMergedPullRequests(
     ) {
       __typename
       nodes {
-        __typename
-        title
-        number
-        url @include(if: $withPullRequestURL)
-        body @include(if: $withPullRequestBody)
-        author {
-          __typename
-          login
-          url
-        }
-        baseRepository {
-          __typename
-          nameWithOwner
-        }
-        mergedAt
-        isCrossRepository
-        labels(first: 100) {
-          __typename
-          nodes {
-            __typename
-            name
-          }
-        }
-        merged
-        baseRefName @include(if: $withBaseRefName)
-        headRefName @include(if: $withHeadRefName)
+        ...PullRequestFields
         mergeCommit {
           __typename
           oid

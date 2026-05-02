@@ -30,7 +30,11 @@ const githubConfig: CodegenConfig = {
         extension: '.graphql.generated.ts',
         baseTypesPath: 'types/github.graphql.generated.ts',
       },
-      plugins: ['typescript-operations', 'typed-document-node'],
+      plugins: [
+        { add: { content: '/* eslint-disable */\n// @ts-nocheck' } },
+        'typescript-operations',
+        'typed-document-node',
+      ],
     },
   },
 }
