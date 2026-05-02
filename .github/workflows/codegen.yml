@@ -23,6 +23,9 @@ jobs:
       - name: Run codegen
         run: npm run codegen
 
+      - name: Rebuild dist and run validation
+        run: npm run all
+
       - name: Create PR if changed
         uses: peter-evans/create-pull-request@v8
         with:
