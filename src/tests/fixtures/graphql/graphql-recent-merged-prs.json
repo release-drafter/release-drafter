@@ -1,0 +1,40 @@
+{
+  "data": {
+    "repository": {
+      "pullRequests": {
+        "__typename": "PullRequestConnection",
+        "nodes": [
+          {
+            "__typename": "PullRequest",
+            "title": "Add new feature",
+            "number": 6,
+            "url": "https://github.com/toolmantim/release-drafter-test-project/pull/6",
+            "body": "New feature description",
+            "author": {
+              "__typename": "User",
+              "login": "TimonVS",
+              "url": "https://github.com/TimonVS"
+            },
+            "baseRepository": {
+              "__typename": "Repository",
+              "nameWithOwner": "toolmantim/release-drafter-test-project"
+            },
+            "mergedAt": "2019-04-27T14:00:00Z",
+            "isCrossRepository": false,
+            "labels": {
+              "__typename": "LabelConnection",
+              "nodes": []
+            },
+            "merged": true,
+            "baseRefName": "master",
+            "headRefName": "new-feature",
+            "mergeCommit": {
+              "__typename": "Commit",
+              "oid": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

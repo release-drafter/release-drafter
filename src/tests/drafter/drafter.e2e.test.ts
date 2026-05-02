@@ -3400,4 +3400,48 @@ describe('drafter e2e', () => {
       })
     })
   })
+
+  describe('recent PR safety net', () => {
+    it('recovers a PR missing from GraphQL associatedPullRequests index via direct PR query', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config')
+
+      // First GraphQL query: comparison returns a commit with an OID but no
+      // associatedPullRequests (simulating GitHub's index lag)
+      // Second GraphQL query: direct PR query returns the missing PR with a
+      // mergeCommit.oid that matches the commit from the comparison
+      const gqlScope = mockGraphqlQuery([
+        { payload: 'graphql-comparison-missing-pr' },
+        {
+          query: 'query findRecentMergedPullRequests',
+          payload: 'graphql-recent-merged-prs',
+        },
+      ])
+
+      const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
+
+      await runDrafter()
+
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+
+        * Add new feature (#6) @TimonVS
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "",
+            "prerelease": false,
+            "tag_name": "",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+
+      expect(scope.isDone()).toBe(true)
+      expect(gqlScope.pendingMocks().length).toBe(0)
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+  })
 })

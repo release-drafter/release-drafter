@@ -5,6 +5,7 @@ import nock from 'nock'
 type Query =
   | 'query findCommitsWithPathChangesQuery'
   | 'query findCommitsInComparison'
+  | 'query findRecentMergedPullRequests'
 
 /**
  * Available files in fixtures/graphql
@@ -30,6 +31,8 @@ type Payload =
   | 'graphql-comparison-squash-merging'
   | 'graphql-comparison-paginated-1'
   | 'graphql-comparison-paginated-2'
+  | 'graphql-comparison-missing-pr'
+  | 'graphql-recent-merged-prs'
 
 export const getGqlPayload = (payload: Payload) =>
   JSON.parse(

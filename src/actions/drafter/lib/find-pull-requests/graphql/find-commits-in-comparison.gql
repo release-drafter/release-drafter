@@ -24,6 +24,7 @@ query findCommitsInComparison(
           nodes {
             __typename
             id
+            oid
             committedDate
             message
             author {

@@ -1,4 +1,4 @@
-import { C as setOutput, E as __toESM, S as setFailed, T as __commonJSMin, _ as context, b as getInput, g as getOctokit, h as composeConfigGet, l as object, o as array, r as sharedInputSchema, t as stringToRegex, u as string, w as warning, x as info } from "../../chunks/common.js";
+import { C as setFailed, D as __toESM, E as __commonJSMin, S as info, T as warning, _ as getOctokit, g as composeConfigGet, l as object, o as array, r as sharedInputSchema, t as stringToRegex, u as string, v as context, w as setOutput, x as getInput } from "../../chunks/common.js";
 //#region src/actions/autolabeler/config/action-input.schema.ts
 var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
 //#endregion

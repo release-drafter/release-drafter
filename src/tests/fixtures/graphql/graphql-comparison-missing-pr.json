@@ -1,0 +1,38 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "compare": {
+          "commits": {
+            "__typename": "ComparisonCommitConnection",
+            "pageInfo": {
+              "__typename": "PageInfo",
+              "hasNextPage": false,
+              "endCursor": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 1"
+            },
+            "nodes": [
+              {
+                "__typename": "Commit",
+                "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmExYjJjM2Q0ZTVmNmExYjJjM2Q0ZTVmNmExYjJjM2Q0ZTVmNmExYjI=",
+                "oid": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "committedDate": "2019-04-27T14:00:00Z",
+                "message": "Merge pull request #6 from TimonVS/new-feature\n\nAdd new feature",
+                "author": {
+                  "__typename": "GitActor",
+                  "name": "Timon van Spronsen",
+                  "user": {
+                    "__typename": "User",
+                    "login": "TimonVS"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": []
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

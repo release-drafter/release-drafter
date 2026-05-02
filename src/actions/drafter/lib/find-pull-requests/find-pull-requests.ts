@@ -4,6 +4,7 @@ import type { ParsedConfig } from '../../config'
 import type { findPreviousReleases } from '../find-previous-releases'
 import { findCommitsInComparison } from './find-commits-in-comparison'
 import { findCommitsWithPathChange } from './find-commits-with-path-change'
+import { findRecentMergedPullRequests } from './find-recent-merged-pull-requests'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
@@ -44,6 +45,9 @@ export const findPullRequests = async (params: {
   core.info(`Found ${commits.length} commits.`)
 
   const comparisonCommitIds = new Set(commits.map((c) => c.id))
+  const comparisonCommitOids = new Set(
+    commits.flatMap((c) => (c.oid ? [c.oid] : [])),
+  )
 
   /**
    * If include-paths are specified,
@@ -136,7 +140,27 @@ export const findPullRequests = async (params: {
     ).values(),
   ]
 
-  const pullRequests = pullRequestsRaw.filter(
+  // Safety net: cross-reference with recently merged PRs via REST to recover
+  // any PRs whose merge commit is in the comparison but were missed because
+  // GitHub's associatedPullRequests index lags for very recent merges.
+  const foundPrKeys = new Set(
+    pullRequestsRaw.map(
+      (pr) => `${pr.baseRepository?.nameWithOwner}#${pr.number}`,
+    ),
+  )
+  const recoveredPRs =
+    comparisonCommitOids.size > 0
+      ? await findRecentMergedPullRequests({
+          commitOids: comparisonCommitOids,
+          foundPrKeys,
+          withPullRequestBody: sharedComparisonParams.withPullRequestBody,
+          withPullRequestURL: sharedComparisonParams.withPullRequestURL,
+          withBaseRefName: sharedComparisonParams.withBaseRefName,
+          withHeadRefName: sharedComparisonParams.withHeadRefName,
+        })
+      : []
+
+  const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter(
     (pr) =>
       // `baseRepository` is the repository the PR targets, not the head/fork repo.
       // Keep fork PRs that target the current repository, and exclude associated
@@ -148,7 +172,7 @@ export const findPullRequests = async (params: {
   )
 
   core.info(
-    `Found ${pullRequestsRaw.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and target ${context.repo.owner}/${context.repo.repo}${
+    `Found ${pullRequests.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and target ${context.repo.owner}/${context.repo.repo}${
       pullRequests.length > 0
         ? ` : ${pullRequests.map((pr) => `#${pr.number}`).join(', ')}`
         : '.'

@@ -1,0 +1,51 @@
+query findRecentMergedPullRequests(
+  $name: String!
+  $owner: String!
+  $limit: Int!
+  $withPullRequestBody: Boolean!
+  $withPullRequestURL: Boolean!
+  $withBaseRefName: Boolean!
+  $withHeadRefName: Boolean!
+) {
+  repository(name: $name, owner: $owner) {
+    pullRequests(
+      states: [MERGED]
+      orderBy: { field: UPDATED_AT, direction: DESC }
+      first: $limit
+    ) {
+      __typename
+      nodes {
+        __typename
+        title
+        number
+        url @include(if: $withPullRequestURL)
+        body @include(if: $withPullRequestBody)
+        author {
+          __typename
+          login
+          url
+        }
+        baseRepository {
+          __typename
+          nameWithOwner
+        }
+        mergedAt
+        isCrossRepository
+        labels(first: 100) {
+          __typename
+          nodes {
+            __typename
+            name
+          }
+        }
+        merged
+        baseRefName @include(if: $withBaseRefName)
+        headRefName @include(if: $withHeadRefName)
+        mergeCommit {
+          __typename
+          oid
+        }
+      }
+    }
+  }
+}
