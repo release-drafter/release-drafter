@@ -3440,7 +3440,7 @@ describe('drafter e2e', () => {
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
 
-    // Regression: the OID set used to gate recovery must be built AFTER path
+    // the OID set used to gate recovery must be built AFTER path
     // filtering, otherwise the safety net recovers PRs whose merge commit was
     // excluded by include-paths/exclude-paths.
     it('respects include-paths when recovering missing PRs', async () => {
