@@ -1,0 +1,21 @@
+{
+  "data": {
+    "repository": {
+      "object": {
+        "__typename": "Commit",
+        "history": {
+          "pageInfo": {
+            "__typename": "PageInfo",
+            "hasNextPage": false,
+            "endCursor": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1"
+          },
+          "nodes": [
+            {
+              "id": "MDY6Q29tbWl0MTgzNzY2OTUzOmFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE="
+            }
+          ]
+        }
+      }
+    }
+  }
+}

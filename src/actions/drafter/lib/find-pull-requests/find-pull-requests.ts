@@ -4,6 +4,7 @@ import type { ParsedConfig } from '../../config'
 import type { findPreviousReleases } from '../find-previous-releases'
 import { findCommitsInComparison } from './find-commits-in-comparison'
 import { findCommitsWithPathChange } from './find-commits-with-path-change'
+import { findRecentMergedPullRequests } from './find-recent-merged-pull-requests'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
@@ -124,19 +125,50 @@ export const findPullRequests = async (params: {
   }
 
   // Extract unique PRs from commits, deduplicated by repo + PR number
-  const pullRequestsRaw = [
-    ...new Map(
-      commits
-        .flatMap((commit) => commit.associatedPullRequests?.nodes ?? [])
-        .filter((pr) => pr != null)
-        .map(
-          (pr) =>
-            [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr] as const,
-        ),
-    ).values(),
-  ]
+  const pullRequestsByKey = new Map(
+    commits
+      .flatMap((commit) => commit.associatedPullRequests?.nodes ?? [])
+      .filter((pr) => pr != null)
+      .map(
+        (pr) =>
+          [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr] as const,
+      ),
+  )
+  const pullRequestsRaw = [...pullRequestsByKey.values()]
 
-  const pullRequests = pullRequestsRaw.filter(
+  // GitHub's associatedPullRequests index lags for very recently merged PRs;
+  // query the PR table directly to recover any whose merge commit is in range.
+  // Build the OID set from path-filtered commits so excluded paths don't recover.
+  const comparisonCommitOids = new Set(
+    commits.flatMap((c) => (c.oid ? [c.oid] : [])),
+  )
+  // Filter by branch only when commitish is a confirmed branch ref
+  // (refs/heads/...). For bare values (e.g. "main", "v1.2.3") we can't tell
+  // branch from tag, so fall back to no filter and rely on OID intersection.
+  // Skip the safety net entirely for tag/pull refs since PRs don't merge into
+  // those.
+  const { commitish } = params.config
+  const isBranchRef = commitish.startsWith('refs/heads/')
+  const isUnsupportedRef =
+    commitish.startsWith('refs/tags/') || commitish.startsWith('refs/pull/')
+  const recoveredPRs =
+    comparisonCommitOids.size === 0 || isUnsupportedRef
+      ? []
+      : await findRecentMergedPullRequests({
+          baseRefName: isBranchRef
+            ? commitish.replace(/^refs\/heads\//, '')
+            : null,
+          commitOids: comparisonCommitOids,
+          foundPrKeys: new Set(pullRequestsByKey.keys()),
+          fieldFlags: {
+            withPullRequestBody: sharedComparisonParams.withPullRequestBody,
+            withPullRequestURL: sharedComparisonParams.withPullRequestURL,
+            withBaseRefName: sharedComparisonParams.withBaseRefName,
+            withHeadRefName: sharedComparisonParams.withHeadRefName,
+          },
+        })
+
+  const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter(
     (pr) =>
       // `baseRepository` is the repository the PR targets, not the head/fork repo.
       // Keep fork PRs that target the current repository, and exclude associated
@@ -148,9 +180,9 @@ export const findPullRequests = async (params: {
   )
 
   core.info(
-    `Found ${pullRequestsRaw.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and target ${context.repo.owner}/${context.repo.repo}${
+    `Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${
       pullRequests.length > 0
-        ? ` : ${pullRequests.map((pr) => `#${pr.number}`).join(', ')}`
+        ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(', ')}`
         : '.'
     }`,
   )

@@ -1,0 +1,63 @@
+{
+  "data": {
+    "repository": {
+      "pullRequests": {
+        "__typename": "PullRequestConnection",
+        "nodes": [
+          {
+            "__typename": "PullRequest",
+            "title": "Touches src",
+            "number": 100,
+            "url": "https://github.com/toolmantim/release-drafter-test-project/pull/100",
+            "body": "Updates src/5.md",
+            "author": {
+              "__typename": "User",
+              "login": "TimonVS",
+              "url": "https://github.com/TimonVS"
+            },
+            "baseRepository": {
+              "__typename": "Repository",
+              "nameWithOwner": "toolmantim/release-drafter-test-project"
+            },
+            "mergedAt": "2019-04-27T14:00:00Z",
+            "isCrossRepository": false,
+            "labels": { "__typename": "LabelConnection", "nodes": [] },
+            "merged": true,
+            "baseRefName": "master",
+            "headRefName": "touches-src",
+            "mergeCommit": {
+              "__typename": "Commit",
+              "oid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          {
+            "__typename": "PullRequest",
+            "title": "Touches other",
+            "number": 101,
+            "url": "https://github.com/toolmantim/release-drafter-test-project/pull/101",
+            "body": "Unrelated change",
+            "author": {
+              "__typename": "User",
+              "login": "TimonVS",
+              "url": "https://github.com/TimonVS"
+            },
+            "baseRepository": {
+              "__typename": "Repository",
+              "nameWithOwner": "toolmantim/release-drafter-test-project"
+            },
+            "mergedAt": "2019-04-27T15:00:00Z",
+            "isCrossRepository": false,
+            "labels": { "__typename": "LabelConnection", "nodes": [] },
+            "merged": true,
+            "baseRefName": "master",
+            "headRefName": "touches-other",
+            "mergeCommit": {
+              "__typename": "Commit",
+              "oid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
