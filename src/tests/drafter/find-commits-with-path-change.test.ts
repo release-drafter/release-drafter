@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findCommitsWithPathChange } from '#src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts'
 import type { Octokit } from '#src/common/get-octokit.ts'
-import { mockContext } from '../mocks/index.ts'
+import { mockContext } from '#tests/mocks/index.ts'
 
 const makeHistoryPage = (
   ids: string[],

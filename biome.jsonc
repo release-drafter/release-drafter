@@ -34,7 +34,6 @@
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
         "noUnusedFunctionParameters": "error",
-        "useImportExtensions": "error",
       },
       "suspicious": {
         "noEvolvingTypes": "error",
@@ -55,6 +54,7 @@
     },
     "domains": {
       "test": "recommended",
+      "project": "all",
     },
   },
   "javascript": {
@@ -75,6 +75,17 @@
       "json": {
         "formatter": {
           "trailingCommas": "all",
+        },
+      },
+    },
+    {
+      // Vitest catches broken imports; nock's package.json trips the resolver.
+      "includes": ["src/tests/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnresolvedImports": "off",
+          },
         },
       },
     },

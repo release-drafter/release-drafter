@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findPreviousReleases } from '#src/actions/drafter/lib/index.ts'
 import type { Octokit } from '#src/common/get-octokit.ts'
-import { mockContext, mocks as sharedMocks } from '../mocks/index.ts'
+import { mockContext, mocks as sharedMocks } from '#tests/mocks/index.ts'
 
 const localMocks = vi.hoisted(() => {
   return {

@@ -10,7 +10,7 @@ import nock from 'nock'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import type * as z from 'zod'
 import type { sharedInputSchema } from '#src/common/shared-input.schema.ts'
-import { mocks } from './mocks/index.ts'
+import { mocks } from '#tests/mocks/index.ts'
 
 /**
  * The call to vi.mock is hoisted, so it doesn't matter where you call it.
@@ -18,7 +18,7 @@ import { mocks } from './mocks/index.ts'
  */
 vi.mock(
   import('#src/common/config/index.ts'),
-  (await import('./mocks/index.ts')).mockedConfigModule,
+  (await import('#tests/mocks/index.ts')).mockedConfigModule,
 )
 vi.mock(import('@actions/core'), async (iom) => {
   const om = await iom()

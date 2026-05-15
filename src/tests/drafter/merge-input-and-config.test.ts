@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { mergeInputAndConfig } from '#src/actions/drafter/config/index.ts'
 import { commonConfigSchema } from '#src/actions/drafter/config/schemas/common-config.schema.ts'
 import { configSchema } from '#src/actions/drafter/config/schemas/config.schema.ts'
-import { mockContext, mocks } from '../mocks/index.ts'
+import { mockContext, mocks } from '#tests/mocks/index.ts'
 
 describe('mergeInputAndConfig', () => {
   beforeEach(async () => {

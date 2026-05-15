@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { parse } from 'yaml'
 import type { composeConfigGet } from '#src/common/config/index.ts'
-import { mocks } from './index.ts'
+import { mocks } from './hoisted.ts'
 
 export type AvailableConfigs =
   | 'config-autolabeler'

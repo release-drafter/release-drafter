@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import * as github from '@actions/github'
-import type { WebhookPayload } from 'node_modules/@actions/github/lib/interfaces'
 import { expect, vi } from 'vitest'
 import type { GithubActionEnvironment } from '#src/types/index.ts'
+
+type WebhookPayload = typeof github.context.payload
 
 type AllowedPayload =
   | 'push'
@@ -126,10 +127,27 @@ export const mockContext = async (desiredPayload: AllowedPayload) => {
       vi.stubEnv(key, value)
     })
 
-  // Context class is not explicitly exported by @actions/github
-  const newContext = new (
-    await import('node_modules/@actions/github/lib/context')
-  ).Context()
+  // Inline Context shape (mirrors @actions/github/lib/context constructor)
+  // to avoid importing the unexported internal Context class. Field
+  // semantics — including undefined when env vars are unset — must match
+  // the upstream constructor exactly so tests see the same behavior.
+  const newContext = {
+    payload,
+    eventName: process.env.GITHUB_EVENT_NAME,
+    sha: process.env.GITHUB_SHA,
+    ref: process.env.GITHUB_REF,
+    workflow: process.env.GITHUB_WORKFLOW,
+    action: process.env.GITHUB_ACTION,
+    actor: process.env.GITHUB_ACTOR,
+    job: process.env.GITHUB_JOB,
+    runAttempt: parseInt(process.env.GITHUB_RUN_ATTEMPT as string, 10),
+    runNumber: parseInt(process.env.GITHUB_RUN_NUMBER as string, 10),
+    runId: parseInt(process.env.GITHUB_RUN_ID as string, 10),
+    apiUrl: process.env.GITHUB_API_URL ?? 'https://api.github.com',
+    serverUrl: process.env.GITHUB_SERVER_URL ?? 'https://github.com',
+    graphqlUrl:
+      process.env.GITHUB_GRAPHQL_URL ?? 'https://api.github.com/graphql',
+  } as unknown as typeof github.context
 
   // Hack to change github.context despite being read-only - @actions/github has side effects on import that need to be re-initialized
   Object.keys(github.context).forEach((contextKey) => {

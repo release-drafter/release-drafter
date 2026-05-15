@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findRecentMergedPullRequests } from '#src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts'
 import type { Octokit } from '#src/common/get-octokit.ts'
-import { mockContext } from '../mocks/index.ts'
+import { mockContext } from '#tests/mocks/index.ts'
 
 const OWNER = 'toolmantim'
 const REPO = 'release-drafter-test-project'

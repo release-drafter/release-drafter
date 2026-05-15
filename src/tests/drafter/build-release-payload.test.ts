@@ -6,7 +6,7 @@ import {
 } from '#src/actions/drafter/config/index.ts'
 import { generateChangeLog } from '#src/actions/drafter/lib/build-release-payload/generate-changelog.ts'
 import { buildReleasePayload } from '#src/actions/drafter/lib/index.ts'
-import { mockContext, mocks as sharedMocks } from '../mocks/index.ts'
+import { mockContext, mocks as sharedMocks } from '#tests/mocks/index.ts'
 
 describe('generate changelog', () => {
   let config: ReturnType<typeof mergeInputAndConfig>
