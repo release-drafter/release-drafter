@@ -1,8 +1,8 @@
+import { describe, expect, it } from 'vitest'
 import {
   type ConfigTarget,
   parseConfigTarget,
-} from 'src/common/config/parse-config-target'
-import { describe, expect, it } from 'vitest'
+} from '#src/common/config/parse-config-target.ts'
 
 const testSuites: Array<{
   input: [string, Pick<ConfigTarget, 'ref' | 'repo'>]

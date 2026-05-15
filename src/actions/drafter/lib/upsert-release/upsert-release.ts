@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
-import type { buildReleasePayload } from '../build-release-payload'
-import type { findPreviousReleases } from '../find-previous-releases'
-import { createRelease } from './create-release'
-import { updateRelease } from './update-release'
+import type { buildReleasePayload } from '../build-release-payload/index.ts'
+import type { findPreviousReleases } from '../find-previous-releases/index.ts'
+import { createRelease } from './create-release.ts'
+import { updateRelease } from './update-release.ts'
 
 export const upsertRelease = async (params: {
   draftRelease: Awaited<ReturnType<typeof findPreviousReleases>>['draftRelease']

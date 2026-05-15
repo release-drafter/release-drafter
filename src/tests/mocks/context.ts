@@ -2,8 +2,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import * as github from '@actions/github'
 import type { WebhookPayload } from 'node_modules/@actions/github/lib/interfaces'
-import type { GithubActionEnvironment } from 'src/types'
 import { expect, vi } from 'vitest'
+import type { GithubActionEnvironment } from '#src/types/index.ts'
 
 type AllowedPayload =
   | 'push'

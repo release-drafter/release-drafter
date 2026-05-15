@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { executeGraphql, getOctokit } from 'src/common'
-import { FindRecentMergedPullRequestsDocument } from './graphql/find-recent-merged-pull-requests.graphql.generated'
-import type { PullRequestFieldsFragment } from './graphql/pull-request-fields.fragment.graphql.generated'
+import { executeGraphql, getOctokit } from '#src/common/index.ts'
+import { FindRecentMergedPullRequestsDocument } from './graphql/find-recent-merged-pull-requests.graphql.generated.ts'
+import type { PullRequestFieldsFragment } from './graphql/pull-request-fields.fragment.graphql.generated.ts'
 
 export type PullRequestFieldFlags = {
   withPullRequestBody: boolean

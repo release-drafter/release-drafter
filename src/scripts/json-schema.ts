@@ -1,13 +1,13 @@
 import { execFileSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { configSchema as autolabelerConfigSchema } from 'src/actions/autolabeler/config'
+import { globalRegistry, object, toJSONSchema } from 'zod'
+import { configSchema as autolabelerConfigSchema } from '#src/actions/autolabeler/config/index.ts'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
-} from 'src/actions/drafter/config'
-import { globalRegistry, object, toJSONSchema } from 'zod'
+} from '#src/actions/drafter/config/index.ts'
 
 const drafterSchema = toJSONSchema(
   object({

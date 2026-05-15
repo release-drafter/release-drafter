@@ -1,11 +1,11 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import coerce from 'semver/functions/coerce'
-import satisfies from 'semver/functions/satisfies'
-import validRange from 'semver/ranges/valid'
-import { getOctokit } from 'src/common'
-import type { ParsedConfig } from '../../config'
-import { sortReleases } from './sort-releases'
+import coerce from 'semver/functions/coerce.js'
+import satisfies from 'semver/functions/satisfies.js'
+import validRange from 'semver/ranges/valid.js'
+import { getOctokit } from '#src/common/index.ts'
+import type { ParsedConfig } from '../../config/index.ts'
+import { sortReleases } from './sort-releases.ts'
 
 // GitHub API currently returns a 500 HTTP response if you attempt to fetch over 1000 releases.
 const RELEASE_COUNT_LIMIT = 1000

@@ -1,12 +1,12 @@
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   actionInputSchema,
   configSchema,
   mergeInputAndConfig,
-} from 'src/actions/drafter/config'
-import { buildReleasePayload } from 'src/actions/drafter/lib'
-import { generateChangeLog } from 'src/actions/drafter/lib/build-release-payload/generate-changelog'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { mockContext, mocks as sharedMocks } from '../mocks'
+} from '#src/actions/drafter/config/index.ts'
+import { generateChangeLog } from '#src/actions/drafter/lib/build-release-payload/generate-changelog.ts'
+import { buildReleasePayload } from '#src/actions/drafter/lib/index.ts'
+import { mockContext, mocks as sharedMocks } from '../mocks/index.ts'
 
 describe('generate changelog', () => {
   let config: ReturnType<typeof mergeInputAndConfig>

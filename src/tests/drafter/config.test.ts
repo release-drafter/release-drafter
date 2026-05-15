@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import nock from 'nock'
-import { composeConfigGet } from 'src/common/config'
 import { describe, expect, it, vi } from 'vitest'
+import { composeConfigGet } from '#src/common/config/index.ts'
 
 const mocks = vi.hoisted(() => ({
   existsSync: vi.fn(),
@@ -18,7 +18,7 @@ vi.mock(import('node:fs'), async (iom) => {
 })
 
 // disable mocks from setup file
-vi.unmock(import('src/common/config'))
+vi.unmock(import('#src/common/config/index.ts'))
 
 const getContentEndpoint = (params: {
   path: string

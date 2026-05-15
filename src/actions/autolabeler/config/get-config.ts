@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { composeConfigGet } from 'src/common'
-import { configSchema } from './config.schema'
+import { composeConfigGet } from '#src/common/index.ts'
+import { configSchema } from './config.schema.ts'
 
 export const getConfig = async (configName: string) => {
   const { config, contexts } = await composeConfigGet(configName, context)

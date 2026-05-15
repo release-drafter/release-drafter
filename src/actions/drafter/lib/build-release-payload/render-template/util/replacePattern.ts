@@ -6,8 +6,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from './charCode'
-import { buildReplaceStringWithCasePreserved } from './search'
+import { CharCode } from './charCode.ts'
+import { buildReplaceStringWithCasePreserved } from './search.ts'
 
 enum ReplacePatternKind {
   StaticValue = 0,

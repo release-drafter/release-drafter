@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { getConfigFiles } from './get-config-files'
+import { getConfigFiles } from './get-config-files.ts'
 
 /**
  * Loads configuration from one or multiple files and resolves with

@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import type { ParsedConfig } from 'src/actions/drafter/config'
+import type { ParsedConfig } from '#src/actions/drafter/config/index.ts'
 
 /**
  * Tags and PRs are not supported as `target_commitish` by Github API.

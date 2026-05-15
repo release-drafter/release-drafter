@@ -1,6 +1,6 @@
-import { sharedInputSchema } from 'src/common'
 import type * as z from 'zod'
 import { object, string } from 'zod'
+import { sharedInputSchema } from '#src/common/index.ts'
 
 export const actionInputSchema = object({
   /**

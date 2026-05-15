@@ -1,5 +1,5 @@
-import type { Config } from '../../config'
-import type { findPullRequests } from '../find-pull-requests'
+import type { Config } from '../../config/index.ts'
+import type { findPullRequests } from '../find-pull-requests/index.ts'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
 

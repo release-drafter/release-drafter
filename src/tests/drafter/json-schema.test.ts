@@ -1,10 +1,10 @@
+import { describe, expect, it } from 'vitest'
+import { globalRegistry, object, toJSONSchema } from 'zod'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
-} from 'src/actions/drafter/config'
-import { describe, expect, it } from 'vitest'
-import { globalRegistry, object, toJSONSchema } from 'zod'
+} from '#src/actions/drafter/config/index.ts'
 
 /**
  * Mirrors the schema generation in src/scripts/json-schema.ts

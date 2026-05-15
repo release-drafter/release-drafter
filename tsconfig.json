@@ -25,7 +25,7 @@
     "noEmit": true,
     "useDefineForClassFields": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": { "src/*": ["./src/*"] },
+    "paths": { "#src/*": ["./src/*"] },
     "skipLibCheck": true
   },
   "exclude": [

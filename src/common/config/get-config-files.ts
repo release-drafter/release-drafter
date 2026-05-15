@@ -1,8 +1,8 @@
 import { basename } from 'node:path'
 import * as core from '@actions/core'
-import { getConfigFile } from './get-config-file'
-import { normalizeFilepath } from './normalize-filepath'
-import { parseConfigTarget } from './parse-config-target'
+import { getConfigFile } from './get-config-file.ts'
+import { normalizeFilepath } from './normalize-filepath.ts'
+import { parseConfigTarget } from './parse-config-target.ts'
 
 export const getConfigFiles = async (
   configFilename: string,

@@ -1,11 +1,11 @@
 import * as core from '@actions/core'
 import type { ReleaseType } from 'semver'
-import type { Config } from '../../config'
-import type { findPullRequests } from '../find-pull-requests'
+import type { Config } from '../../config/index.ts'
+import type { findPullRequests } from '../find-pull-requests/index.ts'
 import {
   getFilterExcludedPullRequests,
   getFilterIncludedPullRequests,
-} from './categorize-pull-requests'
+} from './categorize-pull-requests.ts'
 
 export const resolveVersionKeyIncrement = (params: {
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']

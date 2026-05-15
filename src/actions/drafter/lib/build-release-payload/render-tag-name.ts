@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
-import type { ParsedConfig } from '../../config'
-import type { getVersionInfo } from './get-version-info'
-import { renderTemplate } from './render-template'
+import type { ParsedConfig } from '../../config/index.ts'
+import type { getVersionInfo } from './get-version-info.ts'
+import { renderTemplate } from './render-template/index.ts'
 
 /**
  * Renders the tag name for the release,

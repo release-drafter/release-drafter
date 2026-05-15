@@ -1,22 +1,22 @@
-import type { composeConfigGet } from 'src/common'
 import { vi } from 'vitest'
-import type { AvailableConfigs } from './config'
+import type { composeConfigGet } from '#src/common/index.ts'
+import type { AvailableConfigs } from './config.ts'
 
-export * from './context'
+export * from './context.ts'
 
 import type * as core from '@actions/core'
 
-export { mockedConfigModule } from './config'
-export { getGqlPayload, mockGraphqlQuery } from './graphql'
-export { mockInput } from './input'
-export { nockGetPrFiles } from './pull_requests'
+export { mockedConfigModule } from './config.ts'
+export { getGqlPayload, mockGraphqlQuery } from './graphql.ts'
+export { mockInput } from './input.ts'
+export { nockGetPrFiles } from './pull_requests.ts'
 export {
   getReleasePayload,
   nockGetAndPatchReleases,
   nockGetAndPostReleases,
   nockGetReleases,
   nockPostRelease,
-} from './releases'
+} from './releases.ts'
 
 const mocks = vi.hoisted(() => {
   const DEBUG_TESTS = false

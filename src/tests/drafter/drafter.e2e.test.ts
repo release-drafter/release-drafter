@@ -1,6 +1,6 @@
 import nock from 'nock'
 import { describe, expect, it } from 'vitest'
-import { runDrafter } from '../helpers'
+import { runDrafter } from '../helpers/index.ts'
 import {
   getGqlPayload,
   mockContext,
@@ -10,7 +10,7 @@ import {
   nockGetAndPatchReleases,
   nockGetAndPostReleases,
   nockGetReleases,
-} from '../mocks'
+} from '../mocks/index.ts'
 
 describe('drafter e2e', () => {
   describe('push', () => {

@@ -1,8 +1,7 @@
-import { configSchema } from 'src/actions/drafter/config'
-
 import { describe, expect, it } from 'vitest'
 import type * as z from 'zod'
 import { ZodError } from 'zod'
+import { configSchema } from '#src/actions/drafter/config/index.ts'
 
 type SuiteParams =
   | {

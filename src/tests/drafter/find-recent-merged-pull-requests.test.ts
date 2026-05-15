@@ -1,7 +1,7 @@
-import { findRecentMergedPullRequests } from 'src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests'
-import type { Octokit } from 'src/common/get-octokit'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockContext } from '../mocks'
+import { findRecentMergedPullRequests } from '#src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts'
+import type { Octokit } from '#src/common/get-octokit.ts'
+import { mockContext } from '../mocks/index.ts'
 
 const OWNER = 'toolmantim'
 const REPO = 'release-drafter-test-project'
@@ -70,7 +70,7 @@ const localMocks = vi.hoisted(() => ({
   graphql: vi.fn(),
 }))
 
-vi.mock(import('src/common/get-octokit'), async (iom) => {
+vi.mock(import('#src/common/get-octokit.ts'), async (iom) => {
   const om = await iom()
   process.env.GITHUB_TOKEN = 'test'
   return {

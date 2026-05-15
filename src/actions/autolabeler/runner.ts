@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import { getActionInput, getConfig, parseConfig } from './config'
-import { main } from './main'
+import { getActionInput, getConfig, parseConfig } from './config/index.ts'
+import { main } from './main.ts'
 
 /**
  * The main function for the action.

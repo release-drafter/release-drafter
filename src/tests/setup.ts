@@ -7,18 +7,18 @@
  */
 
 import nock from 'nock'
-import type { sharedInputSchema } from 'src/common/shared-input.schema'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import type * as z from 'zod'
-import { mocks } from './mocks'
+import type { sharedInputSchema } from '#src/common/shared-input.schema.ts'
+import { mocks } from './mocks/index.ts'
 
 /**
  * The call to vi.mock is hoisted, so it doesn't matter where you call it.
  * @see https://vitest.dev/api/vi.html#vi-mock
  */
 vi.mock(
-  import('src/common/config'),
-  (await import('./mocks')).mockedConfigModule,
+  import('#src/common/config/index.ts'),
+  (await import('./mocks/index.ts')).mockedConfigModule,
 )
 vi.mock(import('@actions/core'), async (iom) => {
   const om = await iom()

@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods'
-import type { buildReleasePayload } from '../lib'
+import type { buildReleasePayload } from '../lib/index.ts'
 
 export const setActionOutput = (params: {
   upsertedRelease:

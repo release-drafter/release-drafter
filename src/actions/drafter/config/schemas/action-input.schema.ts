@@ -1,7 +1,7 @@
-import { sharedInputSchema } from 'src/common'
 import type * as z from 'zod'
 import { object, string, stringbool } from 'zod'
-import { commonConfigSchema } from './common-config.schema'
+import { sharedInputSchema } from '#src/common/index.ts'
+import { commonConfigSchema } from './common-config.schema.ts'
 
 export const exclusiveInputSchema = object({
   /**

@@ -1,6 +1,6 @@
 import type { RequestError } from '@octokit/request-error'
-import { getOctokit } from '../get-octokit'
-import type { ConfigTarget } from './parse-config-target'
+import { getOctokit } from '../get-octokit.ts'
+import type { ConfigTarget } from './parse-config-target.ts'
 
 export const getConfigFileFromRepo = async (
   configTarget: ConfigTarget,

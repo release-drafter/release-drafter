@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import { stringToRegex } from 'src/common'
-import type { Config } from './config.schema'
+import { stringToRegex } from '#src/common/index.ts'
+import type { Config } from './config.schema.ts'
 
 /**
  * Returns a copy of `config`, updated with values from `input`.

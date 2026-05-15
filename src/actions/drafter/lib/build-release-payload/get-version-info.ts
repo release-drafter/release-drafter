@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import type { ReleaseType } from 'semver'
-import type { Config, ExclusiveInput } from '../../config'
-import type { findPreviousReleases } from '../find-previous-releases'
-import type { resolveVersionKeyIncrement } from './resolve-version-increment'
-import { VersionDescriptor } from './version-descriptor'
+import type { Config, ExclusiveInput } from '../../config/index.ts'
+import type { findPreviousReleases } from '../find-previous-releases/index.ts'
+import type { resolveVersionKeyIncrement } from './resolve-version-increment.ts'
+import { VersionDescriptor } from './version-descriptor.ts'
 
 type Release = Exclude<
   Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease'],

@@ -1,8 +1,8 @@
-import type { Config } from '../../config'
-import type { findPullRequests } from '../find-pull-requests'
-import { categorizePullRequests } from './categorize-pull-requests'
-import { pullRequestToString } from './pull-request-to-string'
-import { renderTemplate } from './render-template'
+import type { Config } from '../../config/index.ts'
+import type { findPullRequests } from '../find-pull-requests/index.ts'
+import { categorizePullRequests } from './categorize-pull-requests.ts'
+import { pullRequestToString } from './pull-request-to-string.ts'
+import { renderTemplate } from './render-template/index.ts'
 
 export const generateChangeLog = (params: {
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']

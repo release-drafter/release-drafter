@@ -2,4 +2,4 @@ export {
   type NestedTemplate,
   renderTemplate,
   type Template,
-} from './render-template'
+} from './render-template.ts'

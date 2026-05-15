@@ -1,5 +1,5 @@
-import { renderTemplate } from 'src/actions/drafter/lib/build-release-payload/render-template'
 import { describe, expect, it } from 'vitest'
+import { renderTemplate } from '#src/actions/drafter/lib/build-release-payload/render-template/index.ts'
 
 describe('render template', () => {
   it('replaces $A with B', () => {

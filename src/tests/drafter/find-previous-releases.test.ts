@@ -1,7 +1,7 @@
-import { findPreviousReleases } from 'src/actions/drafter/lib'
-import type { Octokit } from 'src/common/get-octokit'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockContext, mocks as sharedMocks } from '../mocks'
+import { findPreviousReleases } from '#src/actions/drafter/lib/index.ts'
+import type { Octokit } from '#src/common/get-octokit.ts'
+import { mockContext, mocks as sharedMocks } from '../mocks/index.ts'
 
 const localMocks = vi.hoisted(() => {
   return {
@@ -9,7 +9,7 @@ const localMocks = vi.hoisted(() => {
   }
 })
 
-vi.mock(import('src/common/get-octokit'), async (iom) => {
+vi.mock(import('#src/common/get-octokit.ts'), async (iom) => {
   const om = await iom()
   process.env.GITHUB_TOKEN = 'test'
   return {

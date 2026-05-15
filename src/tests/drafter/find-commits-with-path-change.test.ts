@@ -1,7 +1,7 @@
-import { findCommitsWithPathChange } from 'src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change'
-import type { Octokit } from 'src/common/get-octokit'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mockContext } from '../mocks'
+import { findCommitsWithPathChange } from '#src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts'
+import type { Octokit } from '#src/common/get-octokit.ts'
+import { mockContext } from '../mocks/index.ts'
 
 const makeHistoryPage = (
   ids: string[],
@@ -24,7 +24,7 @@ const localMocks = vi.hoisted(() => ({
   graphql: vi.fn(),
 }))
 
-vi.mock(import('src/common/get-octokit'), async (iom) => {
+vi.mock(import('#src/common/get-octokit.ts'), async (iom) => {
   const om = await iom()
   process.env.GITHUB_TOKEN = 'test'
   return {

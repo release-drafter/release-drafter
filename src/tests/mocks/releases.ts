@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import nock from 'nock'
-import { mocks } from '.'
+import { mocks } from './index.ts'
 
 /**
  * Available files in fixtures/releases

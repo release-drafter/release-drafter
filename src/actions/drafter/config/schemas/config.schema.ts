@@ -8,7 +8,7 @@ import {
   ZodDefault,
   enum as zenum,
 } from 'zod'
-import { commonConfigSchema } from './common-config.schema'
+import { commonConfigSchema } from './common-config.schema.ts'
 
 export const exclusiveConfigSchema = object({
   /**

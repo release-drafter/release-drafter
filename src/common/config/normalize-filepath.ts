@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, join, normalize } from 'node:path'
-import type { ConfigTarget } from './parse-config-target'
+import type { ConfigTarget } from './parse-config-target.ts'
 
 /**
  * current path is assumed to be the ".github" folder in your repo

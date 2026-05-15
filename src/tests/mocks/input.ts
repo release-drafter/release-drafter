@@ -1,6 +1,6 @@
-import type { actionInputSchema } from 'src/actions/drafter/config'
 import { expect, vi } from 'vitest'
 import type * as z from 'zod'
+import type { actionInputSchema } from '#src/actions/drafter/config/index.ts'
 
 /**
  * Mocking GitHub Action inputs for testing.

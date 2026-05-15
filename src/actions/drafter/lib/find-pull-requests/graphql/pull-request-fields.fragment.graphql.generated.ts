@@ -1,6 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
-import * as Types from '../../../../../types/github.graphql.generated';
+import * as Types from '../../../../../types/github.graphql.generated.ts';
 
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type PullRequestFieldsFragment = { __typename: 'PullRequest', title: string, number: number, url?: string, body?: string, mergedAt?: string | null, isCrossRepository: boolean, merged: boolean, baseRefName?: string, headRefName?: string, author?:

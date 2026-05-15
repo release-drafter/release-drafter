@@ -21,22 +21,25 @@
   ],
   "engines": {
     "node": ">=24.0.0",
-    "npm": ">=11.9.0"
+    "npm": ">=11.10.0"
+  },
+  "imports": {
+    "#src/*": "./src/*"
   },
   "scripts": {
     "build": "vite build",
     "test": "vitest",
     "test:run": "vitest run",
-    "coverage": "npx tsx src/scripts/coverage-summary.ts",
+    "coverage": "node src/scripts/coverage-summary.ts",
     "tsc:check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "format:write": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome lint .",
     "check": "biome check --write .",
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
-    "schemas": "npx tsx src/scripts/json-schema.ts",
+    "schemas": "node src/scripts/json-schema.ts",
     "all": "npm run check && npm run tsc:check && npm run test:run && npm run schemas && npm run build",
-    "check:clean": "npx tsx src/scripts/check-clean.ts",
+    "check:clean": "node src/scripts/check-clean.ts",
     "preversion": "npm run all && npm run check:clean",
     "version": "git add package.json package-lock.json",
     "postversion": "git push && git push origin v$npm_package_version"
@@ -63,7 +66,6 @@
     "@types/semver": "^7.7.1",
     "@vitest/coverage-v8": "^4.1.4",
     "nock": "^14.0.12",
-    "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.4"

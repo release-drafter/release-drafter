@@ -1,9 +1,9 @@
-import { executeGraphql, getOctokit } from 'src/common'
-import type { Config } from '../../config'
+import { executeGraphql, getOctokit } from '#src/common/index.ts'
+import type { Config } from '../../config/index.ts'
 import {
   FindCommitsWithPathChangesQueryDocument,
   type FindCommitsWithPathChangesQueryQueryVariables,
-} from './graphql/find-commits-with-path-changes.graphql.generated'
+} from './graphql/find-commits-with-path-changes.graphql.generated.ts'
 
 /**
  * @see https://docs.github.com/en/graphql/reference/objects#commit

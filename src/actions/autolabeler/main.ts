@@ -2,8 +2,8 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import ignore from 'ignore'
-import { getOctokit } from 'src/common'
-import type { ParsedConfig } from './config'
+import { getOctokit } from '#src/common/index.ts'
+import type { ParsedConfig } from './config/index.ts'
 
 export const main = async (params: {
   config: ParsedConfig

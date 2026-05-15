@@ -1,5 +1,5 @@
-import type { ParsedConfig } from 'src/actions/drafter/config'
-import { parseReplaceString } from './util'
+import type { ParsedConfig } from '#src/actions/drafter/config/index.ts'
+import { parseReplaceString } from './util/index.ts'
 
 type TemplateReplacer = NonNullable<ParsedConfig['replacers']>[number]
 

@@ -1,7 +1,7 @@
 import type { graphql } from '@octokit/graphql'
 import type { RequestParameters } from '@octokit/graphql/types'
-import { paginateGraphql } from 'src/common/paginate-graphql'
 import { describe, expect, it, vi } from 'vitest'
+import { paginateGraphql } from '#src/common/paginate-graphql.ts'
 
 type GraphQLClient = typeof graphql
 

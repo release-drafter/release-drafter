@@ -1,10 +1,10 @@
-import type { ExclusiveInput, ParsedConfig } from './config'
+import type { ExclusiveInput, ParsedConfig } from './config/index.ts'
 import {
   buildReleasePayload,
   findPreviousReleases,
   findPullRequests,
   upsertRelease,
-} from './lib'
+} from './lib/index.ts'
 
 export const main = async (params: {
   config: ParsedConfig

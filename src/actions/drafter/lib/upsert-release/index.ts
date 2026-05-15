@@ -1,2 +1,2 @@
 /* node:coverage ignore file -- @preserve */
-export { upsertRelease } from './upsert-release'
+export { upsertRelease } from './upsert-release.ts'

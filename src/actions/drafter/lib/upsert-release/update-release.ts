@@ -1,8 +1,8 @@
 import { context } from '@actions/github'
 import type { Endpoints } from '@octokit/types'
-import { getOctokit } from 'src/common'
-import type { buildReleasePayload } from '../build-release-payload'
-import type { findPreviousReleases } from '../find-previous-releases'
+import { getOctokit } from '#src/common/index.ts'
+import type { buildReleasePayload } from '../build-release-payload/index.ts'
+import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 
 export const updateRelease = async (params: {
   draftRelease: Exclude<

@@ -1,6 +1,6 @@
 import { context } from '@actions/github'
-import { getOctokit } from 'src/common'
-import type { buildReleasePayload } from '../build-release-payload'
+import { getOctokit } from '#src/common/index.ts'
+import type { buildReleasePayload } from '../build-release-payload/index.ts'
 
 export const createRelease = async (params: {
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>

@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import validRange from 'semver/ranges/valid'
-import { stringToRegex } from 'src/common'
-import type { CommonConfig } from './schemas'
-import type { Config } from './schemas/config.schema'
+import validRange from 'semver/ranges/valid.js'
+import { stringToRegex } from '#src/common/index.ts'
+import type { Config } from './schemas/config.schema.ts'
+import type { CommonConfig } from './schemas/index.ts'
 
 type MutableConfig = ReturnType<typeof structuredClone<Config>>
 

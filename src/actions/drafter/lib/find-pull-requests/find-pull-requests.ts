@@ -1,10 +1,10 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import type { ParsedConfig } from '../../config'
-import type { findPreviousReleases } from '../find-previous-releases'
-import { findCommitsInComparison } from './find-commits-in-comparison'
-import { findCommitsWithPathChange } from './find-commits-with-path-change'
-import { findRecentMergedPullRequests } from './find-recent-merged-pull-requests'
+import type { ParsedConfig } from '../../config/index.ts'
+import type { findPreviousReleases } from '../find-previous-releases/index.ts'
+import { findCommitsInComparison } from './find-commits-in-comparison.ts'
+import { findCommitsWithPathChange } from './find-commits-with-path-change.ts'
+import { findRecentMergedPullRequests } from './find-recent-merged-pull-requests.ts'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']

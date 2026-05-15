@@ -4,8 +4,8 @@ import {
   getConfig,
   mergeInputAndConfig,
   setActionOutput,
-} from './config'
-import { main } from './main'
+} from './config/index.ts'
+import { main } from './main.ts'
 
 /**
  * The main function for the action.

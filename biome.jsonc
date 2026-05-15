@@ -34,9 +34,23 @@
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
         "noUnusedFunctionParameters": "error",
+        "useImportExtensions": "error",
       },
       "suspicious": {
         "noEvolvingTypes": "error",
+      },
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["src/**"],
+                "message": "Use the '#src/*' subpath import alias instead.",
+              },
+            ],
+          },
+        },
       },
     },
     "domains": {

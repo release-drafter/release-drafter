@@ -1,7 +1,7 @@
-import { configSchemaDefaults } from 'src/actions/drafter/config'
-import { getVersionInfo } from 'src/actions/drafter/lib/build-release-payload/get-version-info'
-import type { resolveVersionKeyIncrement } from 'src/actions/drafter/lib/build-release-payload/resolve-version-increment'
 import { describe, expect, it } from 'vitest'
+import { configSchemaDefaults } from '#src/actions/drafter/config/index.ts'
+import { getVersionInfo } from '#src/actions/drafter/lib/build-release-payload/get-version-info.ts'
+import type { resolveVersionKeyIncrement } from '#src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts'
 
 type SuiteParams = [
   string,
