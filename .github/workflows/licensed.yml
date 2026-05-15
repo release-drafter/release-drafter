@@ -27,9 +27,9 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version-file: .node-version
           cache: npm
@@ -42,7 +42,7 @@ jobs:
         with:
           ruby-version: ruby
 
-      - uses: licensee/setup-licensed@v1.3.2
+      - uses: licensee/setup-licensed@0d52e575b3258417672be0dff2f115d7db8771d8 # v1.3.2
         with:
           version: 4.x
           github_token: ${{ secrets.GITHUB_TOKEN }}
