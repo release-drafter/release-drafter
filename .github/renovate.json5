@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
   "customManagers": [
     {
       "customType": "regex",
@@ -19,6 +19,9 @@
   },
   "commitMessageExtra": "to {{newVersion}}",
   "schedule": ["every weekend"],
+  "rangeStrategy": "pin",
+  // Mirror .npmrc min-release-age.
+  "minimumReleaseAge": "7 days",
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
