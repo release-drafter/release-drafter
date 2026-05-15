@@ -69,7 +69,7 @@
     "@graphql-codegen/near-operation-file-preset": "^5.0.0",
     "@graphql-codegen/typed-document-node": "^6.1.7",
     "@octokit/webhooks-types": "^7.6.1",
-    "@types/node": "^24.12.2",
+    "@types/node": "^24.12.3",
     "@types/semver": "^7.7.1",
     "@vitest/coverage-v8": "^4.1.4",
     "nock": "^14.0.12",
