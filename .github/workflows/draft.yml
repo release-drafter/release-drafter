@@ -9,4 +9,5 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
-      - uses: release-drafter/release-drafter@master
+      - uses: actions/checkout@v6
+      - uses: ./
