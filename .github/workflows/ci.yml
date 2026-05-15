@@ -102,7 +102,7 @@ jobs:
 
       # Downloads the artifact named below from this workflow run; `needs: tests` ensures that upload finished first.
       - name: Download coverage summary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: coverage-summary
           path: coverage
