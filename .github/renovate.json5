@@ -19,7 +19,6 @@
   },
   "commitMessageExtra": "to {{newVersion}}",
   "schedule": ["every weekend"],
-  "rangeStrategy": "pin",
   // Mirror .npmrc min-release-age.
   "minimumReleaseAge": "7 days",
   "packageRules": [
