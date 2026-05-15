@@ -29,7 +29,12 @@ jobs:
         id: checkout
         uses: actions/checkout@v6
 
-      - uses: ./.github/actions/common-setup
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
 
       - name: Setup Ruby
         id: setup-ruby

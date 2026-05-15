@@ -18,7 +18,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./.github/actions/common-setup
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
 
       - name: Run all checks and rebuild artifacts
         run: npm run all

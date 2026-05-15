@@ -63,7 +63,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/common-setup
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
 
       - name: Run all checks and rebuild artifacts
         run: npm run all
@@ -88,7 +93,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/common-setup
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
 
       # Downloads the artifact named below from this workflow run; `needs: tests` ensures that upload finished first.
       - name: Download coverage summary
