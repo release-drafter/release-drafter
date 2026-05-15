@@ -15,7 +15,7 @@
   "labels": ["type: dependencies"],
   "rangeStrategy": "bump",
   "constraints": {
-    "npm": "^11",
+    "npm": "^11.14.1",
   },
   "commitMessageExtra": "to {{newVersion}}",
   "schedule": ["every weekend"],
