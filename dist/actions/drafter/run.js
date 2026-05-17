@@ -1611,7 +1611,7 @@ var VersionDescriptor = class VersionDescriptor {
 		return typeof input === "object" && input !== null && (typeof input?.tag_name === "string" || typeof input?.name === "string");
 	}
 	_stripTag(input) {
-		return !!this.tagPrefix && input?.startsWith(this.tagPrefix) ? input.slice(this.tagPrefix.length) : input;
+		return this.tagPrefix && input?.startsWith(this.tagPrefix) ? input.slice(this.tagPrefix.length) : input;
 	}
 	_toSemver(version) {
 		const result = (0, import_parse.default)(version);
