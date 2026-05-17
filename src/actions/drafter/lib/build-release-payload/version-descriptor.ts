@@ -90,7 +90,7 @@ export class VersionDescriptor {
   }
 
   private _stripTag(input?: string | null) {
-    return !!this.tagPrefix && input?.startsWith(this.tagPrefix)
+    return this.tagPrefix && input?.startsWith(this.tagPrefix)
       ? input.slice(this.tagPrefix.length)
       : input
   }
