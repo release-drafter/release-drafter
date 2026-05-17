@@ -32,7 +32,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           if [ -n "$(git status --porcelain)" ]; then
               git add dist/ \
-              badges/coverage.svg \
               schema.json \
               autolabeler/schema.json \
               drafter/schema.json
