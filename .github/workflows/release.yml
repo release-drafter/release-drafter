@@ -46,7 +46,7 @@ jobs:
           echo "major=${major}" >> $GITHUB_OUTPUT
 
       - name: Publish Release
-        uses: release-drafter/release-drafter@0c2e5e9262c9adee6ef5b8631aaa5e374e277d76 # master
+        uses: ./
         with:
           version: ${{ steps.version.outputs.version }}
           publish: true
