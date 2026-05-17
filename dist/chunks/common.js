@@ -22010,6 +22010,7 @@ var Alias = class extends NodeBase {
 	* instance of the `source` anchor before this node.
 	*/
 	resolve(doc, ctx) {
+		if (ctx?.maxAliasCount === 0) throw new ReferenceError("Alias resolution is disabled");
 		let nodes;
 		if (ctx?.aliasResolveCache) nodes = ctx.aliasResolveCache;
 		else {
@@ -22822,13 +22823,13 @@ var merge$1 = {
 };
 var isMergeKey = (ctx, key) => (merge$1.identify(key) || isScalar(key) && (!key.type || key.type === Scalar.PLAIN) && merge$1.identify(key.value)) && ctx?.doc.schema.tags.some((tag) => tag.tag === merge$1.tag && tag.default);
 function addMergeToJSMap(ctx, map, value) {
-	value = ctx && isAlias(value) ? value.resolve(ctx.doc) : value;
-	if (isSeq(value)) for (const it of value.items) mergeValue(ctx, map, it);
-	else if (Array.isArray(value)) for (const it of value) mergeValue(ctx, map, it);
-	else mergeValue(ctx, map, value);
+	const source = resolveAliasValue(ctx, value);
+	if (isSeq(source)) for (const it of source.items) mergeValue(ctx, map, it);
+	else if (Array.isArray(source)) for (const it of source) mergeValue(ctx, map, it);
+	else mergeValue(ctx, map, source);
 }
 function mergeValue(ctx, map, value) {
-	const source = ctx && isAlias(value) ? value.resolve(ctx.doc) : value;
+	const source = resolveAliasValue(ctx, value);
 	if (!isMap(source)) throw new Error("Merge sources must be maps or map aliases");
 	const srcMap = source.toJSON(null, ctx, Map);
 	for (const [key, value] of srcMap) if (map instanceof Map) {
@@ -22841,6 +22842,9 @@ function mergeValue(ctx, map, value) {
 		configurable: true
 	});
 	return map;
+}
+function resolveAliasValue(ctx, value) {
+	return ctx && isAlias(value) ? value.resolve(ctx.doc, ctx) : value;
 }
 //#endregion
 //#region node_modules/yaml/browser/dist/nodes/addPairToJSMap.js
@@ -23288,7 +23292,7 @@ function stringifyNumber({ format, minFractionDigits, tag, value }) {
 	const num = typeof value === "number" ? value : Number(value);
 	if (!isFinite(num)) return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
 	let n = Object.is(value, -0) ? "-0" : JSON.stringify(value);
-	if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^\d/.test(n)) {
+	if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
 		let i = n.indexOf(".");
 		if (i < 0) {
 			i = n.length;
@@ -25109,11 +25113,7 @@ function doubleQuotedValue(source, onError) {
 				next = source[++i + 1];
 				while (next === " " || next === "	") next = source[++i + 1];
 			} else if (next === "x" || next === "u" || next === "U") {
-				const length = {
-					x: 2,
-					u: 4,
-					U: 8
-				}[next];
+				const length = next === "x" ? 2 : next === "u" ? 4 : 8;
 				res += parseCharCode(source, i + 1, length, onError);
 				i += length;
 			} else {
@@ -25173,12 +25173,13 @@ var escapeCodes = {
 function parseCharCode(source, offset, length, onError) {
 	const cc = source.substr(offset, length);
 	const code = cc.length === length && /^[0-9a-fA-F]+$/.test(cc) ? parseInt(cc, 16) : NaN;
-	if (isNaN(code)) {
+	try {
+		return String.fromCodePoint(code);
+	} catch {
 		const raw = source.substr(offset - 2, length + 2);
 		onError(offset - 2, "BAD_DQ_ESCAPE", `Invalid escape sequence ${raw}`);
 		return raw;
 	}
-	return String.fromCodePoint(code);
 }
 //#endregion
 //#region node_modules/yaml/browser/dist/compose/compose-scalar.js
