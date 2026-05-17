@@ -35,6 +35,7 @@ export const findRecentMergedPullRequests = async (params: {
   )
 
   const prNodes = data.repository?.pullRequests.nodes ?? []
+  type PRNode = NonNullable<(typeof prNodes)[number]>
 
   const missingPRs = prNodes.filter((pr) => {
     if (!pr?.mergeCommit?.oid) return false
@@ -51,5 +52,5 @@ export const findRecentMergedPullRequests = async (params: {
     `Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(', ')}`,
   )
 
-  return missingPRs.filter((pr): pr is PullRequestFieldsFragment => pr != null)
+  return missingPRs.filter((pr): pr is PRNode => pr != null)
 }
