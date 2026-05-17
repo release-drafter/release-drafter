@@ -21,7 +21,7 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __commonJSMin = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
+var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
 var __exportAll = (all, no_symbols) => {
 	let target = {};
 	for (var name in all) __defProp(target, name, {
@@ -2246,9 +2246,26 @@ var require_timers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	* used as a drop-in replacement for the native functions.
 	*/
 	module.exports = {
+		/**
+		* The setTimeout() method sets a timer which executes a function once the
+		* timer expires.
+		* @param {Function} callback A function to be executed after the timer
+		* expires.
+		* @param {number} delay The time, in milliseconds that the timer should
+		* wait before the specified function or code is executed.
+		* @param {*} [arg] An optional argument to be passed to the callback function
+		* when the timer expires.
+		* @returns {NodeJS.Timeout|FastTimer}
+		*/
 		setTimeout(callback, delay, arg) {
 			return delay <= RESOLUTION_MS ? setTimeout(callback, delay, arg) : new FastTimer(callback, delay, arg);
 		},
+		/**
+		* The clearTimeout method cancels an instantiated Timer previously created
+		* by calling setTimeout.
+		*
+		* @param {NodeJS.Timeout|FastTimer} timeout
+		*/
 		clearTimeout(timeout) {
 			if (timeout[kFastTimer])
  /**
@@ -2257,26 +2274,66 @@ var require_timers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			timeout.clear();
 			else clearTimeout(timeout);
 		},
+		/**
+		* The setFastTimeout() method sets a fastTimer which executes a function once
+		* the timer expires.
+		* @param {Function} callback A function to be executed after the timer
+		* expires.
+		* @param {number} delay The time, in milliseconds that the timer should
+		* wait before the specified function or code is executed.
+		* @param {*} [arg] An optional argument to be passed to the callback function
+		* when the timer expires.
+		* @returns {FastTimer}
+		*/
 		setFastTimeout(callback, delay, arg) {
 			return new FastTimer(callback, delay, arg);
 		},
+		/**
+		* The clearTimeout method cancels an instantiated FastTimer previously
+		* created by calling setFastTimeout.
+		*
+		* @param {FastTimer} timeout
+		*/
 		clearFastTimeout(timeout) {
 			timeout.clear();
 		},
+		/**
+		* The now method returns the value of the internal fast timer clock.
+		*
+		* @returns {number}
+		*/
 		now() {
 			return fastNow;
 		},
+		/**
+		* Trigger the onTick function to process the fastTimers array.
+		* Exported for testing purposes only.
+		* Marking as deprecated to discourage any use outside of testing.
+		* @deprecated
+		* @param {number} [delay=0] The delay in milliseconds to add to the now value.
+		*/
 		tick(delay = 0) {
 			fastNow += delay - RESOLUTION_MS + 1;
 			onTick();
 			onTick();
 		},
+		/**
+		* Reset FastTimers.
+		* Exported for testing purposes only.
+		* Marking as deprecated to discourage any use outside of testing.
+		* @deprecated
+		*/
 		reset() {
 			fastNow = 0;
 			fastTimers.length = 0;
 			clearTimeout(fastNowTimeout);
 			fastNowTimeout = null;
 		},
+		/**
+		* Exporting for testing purposes only.
+		* Marking as deprecated to discourage any use outside of testing.
+		* @deprecated
+		*/
 		kFastTimer
 	};
 }));
@@ -3191,6 +3248,7 @@ var require_data_url = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		const mimeType = {
 			type: typeLowercase,
 			subtype: subtypeLowercase,
+			/** @type {Map<string, string>} */
 			parameters: /* @__PURE__ */ new Map(),
 			essence: `${typeLowercase}/${subtypeLowercase}`
 		};
@@ -3920,6 +3978,12 @@ var require_util$6 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				if (isURLPotentiallyTrustworthy(referrerURL) && !isURLPotentiallyTrustworthy(currentURL)) return "no-referrer";
 				return referrerOrigin;
 			}
+			/**
+			* 1. If referrerURL is a potentially trustworthy URL and
+			* request’s current URL is not a potentially trustworthy URL,
+			* then return no referrer.
+			* 2. Return referrerOrigin
+			*/
 			default: return isNonPotentiallyTrustWorthy ? "no-referrer" : referrerOrigin;
 		}
 	}
@@ -4535,11 +4599,14 @@ var require_file = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var { webidl } = require_webidl();
 	var FileLike = class FileLike {
 		constructor(blobLike, fileName, options = {}) {
+			const n = fileName;
+			const t = options.type;
+			const d = options.lastModified ?? Date.now();
 			this[kState] = {
 				blobLike,
-				name: fileName,
-				type: options.type,
-				lastModified: options.lastModified ?? Date.now()
+				name: n,
+				type: t,
+				lastModified: d
 			};
 		}
 		stream(...args) {
@@ -20675,7 +20742,6 @@ var booleanProcessor = (_schema, _ctx, json, _params) => {
 var neverProcessor = (_schema, _ctx, json, _params) => {
 	json.not = {};
 };
-var unknownProcessor = (_schema, _ctx, _json, _params) => {};
 var enumProcessor = (schema, _ctx, json, _params) => {
 	const def = schema._zod.def;
 	const values = getEnumValues(def.entries);
@@ -21158,7 +21224,7 @@ function boolean(params) {
 var ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
 	$ZodUnknown.init(inst, def);
 	ZodType.init(inst, def);
-	inst._zod.processJSONSchema = (ctx, json, params) => unknownProcessor(inst, ctx, json, params);
+	inst._zod.processJSONSchema = (ctx, json, params) => void 0;
 });
 function unknown() {
 	return /* @__PURE__ */ _unknown(ZodUnknown);
@@ -21883,6 +21949,11 @@ function createNodeAnchors(doc, prefix) {
 			prevAnchors.add(anchor);
 			return anchor;
 		},
+		/**
+		* With circular references, the source node is only resolved after all
+		* of its child nodes are. This is why anchors are set only after all of
+		* the nodes have been created.
+		*/
 		setAnchors: () => {
 			for (const source of aliasObjects) {
 				const ref = sourceObjects.get(source);
@@ -23447,6 +23518,14 @@ var binary = {
 	identify: (value) => value instanceof Uint8Array,
 	default: false,
 	tag: "tag:yaml.org,2002:binary",
+	/**
+	* Returns a Buffer in node and an Uint8Array in browsers
+	*
+	* To use the resulting buffer as an image, you'll want to do something like:
+	*
+	*   const blob = new Blob([buffer], { type: 'image/jpeg' })
+	*   document.querySelector('#photo').src = URL.createObjectURL(blob)
+	*/
 	resolve(src, onError) {
 		if (typeof atob === "function") {
 			const str = atob(src.replace(/[\n\r]/g, ""));
@@ -24955,6 +25034,7 @@ function parseBlockScalarHeader({ offset, props }, strict, onError) {
 				onError(token, "UNEXPECTED_TOKEN", token.message);
 				length += token.source.length;
 				break;
+			/* istanbul ignore next should not happen */
 			default: {
 				onError(token, "UNEXPECTED_TOKEN", `Unexpected token in block scalar header: ${token.type}`);
 				const ts = token.source;
@@ -24999,6 +25079,7 @@ function resolveFlowScalar(scalar, strict, onError) {
 			_type = Scalar.QUOTE_DOUBLE;
 			value = doubleQuotedValue(source, _onError);
 			break;
+		/* istanbul ignore next should not happen */
 		default:
 			onError(scalar, "UNEXPECTED_TOKEN", `Expected a flow scalar value, but found: ${type}`);
 			return {
@@ -25028,6 +25109,7 @@ function resolveFlowScalar(scalar, strict, onError) {
 function plainValue(source, onError) {
 	let badChar = "";
 	switch (source[0]) {
+		/* istanbul ignore next should not happen */
 		case "	":
 			badChar = "a tab character";
 			break;
@@ -26270,6 +26352,7 @@ function getPrevProps(parent) {
 			return it.sep ?? it.start;
 		}
 		case "block-seq": return parent.items[parent.items.length - 1].start;
+		/* istanbul ignore next should not happen */
 		default: return [];
 	}
 }
@@ -26521,6 +26604,7 @@ var Parser = class {
 					});
 					return;
 				}
+				/* istanbul ignore next should not happen */
 				default:
 					yield* this.pop();
 					yield* this.pop(token);
@@ -26638,6 +26722,7 @@ var Parser = class {
 				}
 				yield* this.pop();
 				break;
+			/* istanbul ignore next should not happen */
 			default:
 				yield* this.pop();
 				yield* this.step();
@@ -27982,13 +28067,12 @@ var before_after_hook_default = {
 };
 //#endregion
 //#region node_modules/@octokit/endpoint/dist-bundle/index.js
-var userAgent = `octokit-endpoint.js/0.0.0-development ${getUserAgent()}`;
 var DEFAULTS = {
 	method: "GET",
 	baseUrl: "https://api.github.com",
 	headers: {
 		accept: "application/vnd.github.v3+json",
-		"user-agent": userAgent
+		"user-agent": `octokit-endpoint.js/0.0.0-development ${getUserAgent()}`
 	},
 	mediaType: { format: "" }
 };
@@ -28202,8 +28286,8 @@ function withDefaults$2(oldDefaults, newDefaults) {
 }
 var endpoint = withDefaults$2(null, DEFAULTS);
 //#endregion
-//#region node_modules/fast-content-type-parse/index.js
-var require_fast_content_type_parse = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+//#region node_modules/@octokit/request-error/dist-src/index.js
+var import_fast_content_type_parse = (/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var NullObject = function NullObject() {};
 	NullObject.prototype = Object.create(null);
 	/**
@@ -28312,9 +28396,7 @@ var require_fast_content_type_parse = /* @__PURE__ */ __commonJSMin(((exports, m
 	module.exports.parse = parse;
 	module.exports.safeParse = safeParse;
 	module.exports.defaultContentType = defaultContentType;
-}));
-//#endregion
-//#region node_modules/@octokit/request-error/dist-src/index.js
+})))();
 var RequestError = class extends Error {
 	name;
 	/**
@@ -28344,9 +28426,7 @@ var RequestError = class extends Error {
 };
 //#endregion
 //#region node_modules/@octokit/request/dist-bundle/index.js
-var import_fast_content_type_parse = require_fast_content_type_parse();
-var VERSION$4 = "10.0.7";
-var defaults_default = { headers: { "user-agent": `octokit-request.js/${VERSION$4} ${getUserAgent()}` } };
+var defaults_default = { headers: { "user-agent": `octokit-request.js/10.0.7 ${getUserAgent()}` } };
 function isPlainObject(value) {
 	if (typeof value !== "object" || value === null) return false;
 	if (Object.prototype.toString.call(value) !== "[object Object]") return false;
@@ -30222,7 +30302,11 @@ var getOctokit = () => {
 			...core_exports,
 			warn: warning
 		},
-		request: { fetch: global.fetch }
+		request: { 
+		/**
+		* Allows nock to intercept requests in tests
+		*/
+fetch: global.fetch }
 	});
 };
 //#endregion
@@ -31449,7 +31533,16 @@ var parseCommitishForRelease = (commitish) => {
 * Inputs shared by release-drafter and autolabeler
 */
 var sharedInputSchema = object({
+	/**
+	* Access token used to make requests against the GitHub API.
+	*
+	* Defaults to ${{ github.token }}, or the GITHUB_TOKEN environment variable.
+	*/
 	token: string$1().min(1).default(() => process$1.env.GITHUB_TOKEN || ""),
+	/**
+	* When enabled, no write operations (creating/updating releases or adding
+	* labels) are performed. Instead, the action logs what it would have done.
+	*/
 	"dry-run": stringbool().or(boolean()).optional()
 }).superRefine((data, ctx) => {
 	if (data.token && !process$1.env.GITHUB_TOKEN) process$1.env.GITHUB_TOKEN = data.token;
