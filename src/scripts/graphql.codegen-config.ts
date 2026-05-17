@@ -18,6 +18,7 @@ const githubConfig: CodegenConfig = {
     scalars: {
       URI: 'string',
       DateTime: 'string',
+      GitObjectID: 'string',
     },
   },
   generates: {
