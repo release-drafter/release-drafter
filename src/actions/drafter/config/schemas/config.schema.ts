@@ -36,6 +36,8 @@ const changeConditionSchema = object({
   /**
    * Matching mode for the `labels` predicate.
    *
+   * Has no effect unless `label` or `labels` is configured in the same condition.
+   *
    * The comparison is set-based (label order is ignored).
    *
    * - `any`: Pull request and configured labels overlap (current behavior).

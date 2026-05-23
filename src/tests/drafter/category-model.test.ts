@@ -141,6 +141,84 @@ describe('category model', () => {
     ).toBe(true)
   })
 
+  it('ignores labels-mode when a when branch does not configure labels', () => {
+    const config = makeParsedConfig([
+      {
+        title: 'Source changes',
+        when: {
+          paths: ['src/**'],
+          'labels-mode': 'exactly',
+        },
+      },
+    ])
+    const condition = config.categories[0]?.when[0]
+
+    expect(condition).toBeDefined()
+    if (!condition) {
+      throw new Error('Expected a normalized category condition')
+    }
+
+    expect(
+      matchesCategoryCondition(condition, makePullRequest([], ['src/**'])),
+    ).toBe(true)
+    expect(
+      matchesCategoryCondition(
+        condition,
+        makePullRequest(['feature', 'bug'], ['src/**']),
+      ),
+    ).toBe(true)
+  })
+
+  it.each([
+    {
+      mode: 'any' as const,
+      matchingLabels: ['feature'],
+      nonMatchingLabels: ['chore'],
+    },
+    {
+      mode: 'all' as const,
+      matchingLabels: ['feature', 'enhancement', 'bug'],
+      nonMatchingLabels: ['feature'],
+    },
+    {
+      mode: 'only' as const,
+      matchingLabels: ['feature'],
+      nonMatchingLabels: ['feature', 'chore'],
+    },
+    {
+      mode: 'exactly' as const,
+      matchingLabels: ['feature', 'enhancement'],
+      nonMatchingLabels: ['feature'],
+    },
+  ])('applies labels-mode $mode within when conditions', ({
+    mode,
+    matchingLabels,
+    nonMatchingLabels,
+  }) => {
+    const config = makeParsedConfig([
+      {
+        title: 'Features',
+        when: {
+          labels: ['feature', 'enhancement'],
+          'labels-mode': mode,
+        },
+      },
+    ])
+    const condition = config.categories[0]?.when[0]
+
+    expect(condition).toBeDefined()
+    if (!condition) {
+      throw new Error('Expected a normalized category condition')
+    }
+
+    expect(
+      matchesCategoryCondition(condition, makePullRequest(matchingLabels)),
+    ).toBe(true)
+    expect(
+      matchesCategoryCondition(condition, makePullRequest(nonMatchingLabels)),
+    ).toBe(false)
+  })
+
   it('applies pre-include and pre-exclude categories before changelog categorization', () => {
     const config = makeParsedConfig([
       {

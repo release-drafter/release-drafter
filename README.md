@@ -340,6 +340,16 @@ Within a condition, `label` is shorthand for a single `labels` entry. If both
 applied. With the default `labels-mode: any`, `labels: ["feature",
 "enhancement"]` matches pull requests carrying either label.
 
+The available matching modes are:
+
+- `any`: at least one configured value matches
+- `all`: every configured value matches
+- `only`: every pull request value is included in the configured set
+- `exactly`: the pull request values and configured values are the same set
+
+If a condition does not configure any `label`/`labels` or `path`/`paths`, the
+corresponding `*-mode` setting has no effect.
+
 Changelog categories require a `title`, because that title is rendered with
 `category-template`.
 

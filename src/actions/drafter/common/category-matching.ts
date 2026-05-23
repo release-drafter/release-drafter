@@ -35,6 +35,10 @@ const matchesValues = (
   const actual = unique(actualValues)
   const expected = unique(expectedValues)
 
+  if (expected.length === 0) {
+    return true
+  }
+
   switch (mode) {
     case 'all':
       return expected.every((value) => actual.includes(value))

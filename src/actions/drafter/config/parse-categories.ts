@@ -108,10 +108,7 @@ export function parseCategories(
       // Filter-out empty conditions
       .filter(
         (condition) =>
-          condition.paths.length > 0 ||
-          condition.labels.length > 0 ||
-          condition['labels-mode'] !== 'any' ||
-          condition['paths-mode'] !== 'any',
+          condition.paths.length > 0 || condition.labels.length > 0,
       )
 
     const categoryType = _cat.type ?? categorySchemaDefaults.type

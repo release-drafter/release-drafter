@@ -982,7 +982,7 @@ function parseCategories(categories, deprecatedConfig) {
 					...label ? [label] : []
 				]
 			};
-		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0 || condition["labels-mode"] !== "any" || condition["paths-mode"] !== "any");
+		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0);
 		const categoryType = _cat.type ?? categorySchemaDefaults.type;
 		switch (categoryType) {
 			case "changelog": return {
@@ -1219,6 +1219,7 @@ var unique = (values) => [...new Set(values)];
 var matchesValues = (actualValues, expectedValues, mode) => {
 	const actual = unique(actualValues);
 	const expected = unique(expectedValues);
+	if (expected.length === 0) return true;
 	switch (mode) {
 		case "all": return expected.every((value) => actual.includes(value));
 		case "only": return actual.every((value) => expected.includes(value));

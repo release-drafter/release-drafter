@@ -332,4 +332,28 @@ describe('parseCategories', () => {
       },
     ])
   })
+
+  it('drops conditions that only set labels-mode without configuring labels or paths', () => {
+    const parsed = parseCategories(
+      {
+        categories: [
+          {
+            title: 'Everything else',
+            when: {
+              'labels-mode': 'exactly',
+            },
+          },
+        ],
+      },
+      {
+        'exclude-labels': [],
+        'exclude-paths': [],
+        'include-labels': [],
+        'include-paths': [],
+        'version-resolver': configSchemaDefaults['version-resolver'],
+      },
+    )
+
+    expect(parsed[0]?.when).toEqual([])
+  })
 })
