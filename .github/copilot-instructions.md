@@ -108,6 +108,9 @@ npm run build
   unexpected inputs or situations
 - Use the `@actions/core` package for logging over `console` to ensure
   compatibility with GitHub Actions logging features
+- Do not use Zod `refine` or `superRefine` on schemas that are converted to JSON
+  schema. Keep those schemas JSON-schema-compatible and implement semantic
+  validation in the runtime parsing or config validation layer instead
 
 ### Versioning
 

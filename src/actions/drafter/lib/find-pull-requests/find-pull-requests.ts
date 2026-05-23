@@ -1,5 +1,11 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
+import {
+  canUsePreIncludePathPrefilter,
+  getConfiguredPathPatterns,
+  getPreIncludePathPatterns,
+  getSafePreExcludePathPatterns,
+} from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import { findCommitsInComparison } from './find-commits-in-comparison.ts'
@@ -10,8 +16,19 @@ export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
 }) => {
-  const shouldFilterByIncludedPaths = params.config['include-paths'].length > 0
-  const shouldFilterByExcludedPaths = params.config['exclude-paths'].length > 0
+  const allConfiguredPathPatterns = getConfiguredPathPatterns(
+    params.config.categories,
+  )
+  const shouldFilterByIncludedPaths = canUsePreIncludePathPrefilter(
+    params.config.categories,
+  )
+  const includedPathPatterns = shouldFilterByIncludedPaths
+    ? getPreIncludePathPatterns(params.config.categories)
+    : []
+  const excludedPathPatterns = getSafePreExcludePathPatterns(
+    params.config.categories,
+  )
+  const shouldFilterByExcludedPaths = excludedPathPatterns.length > 0
 
   const sharedComparisonParams = {
     name: context.repo.repo,
@@ -45,33 +62,42 @@ export const findPullRequests = async (params: {
   core.info(`Found ${commits.length} commits.`)
 
   const comparisonCommitIds = new Set(commits.map((c) => c.id))
+  let commitIdsMatchingPaths: Record<string, Set<string>> = {}
 
   /**
-   * If include-paths are specified,
-   * find all commits that changed those paths to filter PRs later.
-   *
-   * If exclude-paths are specified,
-   * find all commits that changed those paths and remove them from results.
+   * Find commits that touched configured category path patterns so later steps can:
+   * - pre-filter commits when pre-include/pre-exclude categories make that safe
+   * - attach matched path patterns back to pull requests for category evaluation
    *
    * The underlying query does not bother fetching PRs along commits.
    */
-  const includedCommitIds = new Set<string>()
-  if (shouldFilterByIncludedPaths) {
-    core.info('Finding commits with included path changes...')
-    const { commitIdsMatchingPaths, hasFoundCommits } =
-      await findCommitsWithPathChange(params.config['include-paths'], {
+  if (allConfiguredPathPatterns.length > 0) {
+    const pathChangeResults = await findCommitsWithPathChange(
+      allConfiguredPathPatterns,
+      {
         name: context.repo.repo,
         owner: context.repo.owner,
         targetCommitish: params.config.commitish,
         comparisonCommitIds,
-      })
+      },
+    )
+    commitIdsMatchingPaths = pathChangeResults.commitIdsMatchingPaths
 
-    // Short circuit to avoid blowing GraphQL budget
-    if (!hasFoundCommits) {
+    if (
+      shouldFilterByIncludedPaths &&
+      includedPathPatterns.every(
+        (pathPattern) => commitIdsMatchingPaths[pathPattern]?.size === 0,
+      )
+    ) {
       return { commits: [], pullRequests: [] }
     }
+  }
 
-    Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+  const includedCommitIds = new Set<string>()
+  if (shouldFilterByIncludedPaths) {
+    core.info('Finding commits with included path changes...')
+    includedPathPatterns.forEach((path) => {
+      const ids = commitIdsMatchingPaths[path] ?? new Set<string>()
       core.info(
         `Found ${ids.size} commits with changes to included path "${path}"`,
       )
@@ -84,17 +110,8 @@ export const findPullRequests = async (params: {
   const excludedCommitIds = new Set<string>()
   if (shouldFilterByExcludedPaths) {
     core.info('Finding commits with excluded path changes...')
-    const { commitIdsMatchingPaths } = await findCommitsWithPathChange(
-      params.config['exclude-paths'],
-      {
-        name: context.repo.repo,
-        owner: context.repo.owner,
-        targetCommitish: params.config.commitish,
-        comparisonCommitIds,
-      },
-    )
-
-    Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+    excludedPathPatterns.forEach((path) => {
+      const ids = commitIdsMatchingPaths[path] ?? new Set<string>()
       core.info(
         `Found ${ids.size} commits with changes to excluded path "${path}"`,
       )
@@ -178,6 +195,37 @@ export const findPullRequests = async (params: {
       // Ensure PR is merged
       pr.merged,
   )
+  const commitIdToMatchedPaths = new Map<string, Set<string>>()
+  Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+    ids.forEach((id) => {
+      const matchedPaths = commitIdToMatchedPaths.get(id) ?? new Set<string>()
+      matchedPaths.add(path)
+      commitIdToMatchedPaths.set(id, matchedPaths)
+    })
+  })
+  const pullRequestMatchedPaths = new Map<string, Set<string>>()
+
+  commits.forEach((commit) => {
+    const matchedPaths = commitIdToMatchedPaths.get(commit.id)
+    if (!matchedPaths || matchedPaths.size === 0) {
+      return
+    }
+
+    ;(commit.associatedPullRequests?.nodes ?? [])
+      .filter((pullRequest): pullRequest is NonNullable<typeof pullRequest> =>
+        Boolean(pullRequest),
+      )
+      .forEach((pullRequest) => {
+        const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
+        const currentMatchedPaths =
+          pullRequestMatchedPaths.get(key) ?? new Set<string>()
+
+        for (const path of matchedPaths) {
+          currentMatchedPaths.add(path)
+        }
+        pullRequestMatchedPaths.set(key, currentMatchedPaths)
+      })
+  })
 
   core.info(
     `Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${
@@ -187,5 +235,23 @@ export const findPullRequests = async (params: {
     }`,
   )
 
-  return { commits, pullRequests }
+  return {
+    commits,
+    pullRequests: pullRequests.map((pullRequest) => {
+      const matchedPaths = [
+        ...(pullRequestMatchedPaths.get(
+          `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`,
+        ) ?? []),
+      ]
+
+      if (matchedPaths.length === 0) {
+        return pullRequest
+      }
+
+      return {
+        ...pullRequest,
+        matchedPaths,
+      }
+    }),
+  }
 }

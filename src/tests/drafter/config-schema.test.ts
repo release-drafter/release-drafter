@@ -206,6 +206,48 @@ const suites: SuiteParams[] = [
     },
     parseValid: true,
   },
+  {
+    parseInput: {
+      template,
+      categories: [
+        {
+          title: '🚀 Features',
+          exclusive: true,
+          'collapse-after': 0,
+          'semver-increment': 'minor',
+          when: [
+            {
+              labels: ['feature'],
+              'labels-mode': 'all',
+              paths: ['src/**'],
+              'paths-mode': 'any',
+            },
+          ],
+        },
+        {
+          type: 'version-resolver',
+          'semver-increment': 'major',
+          when: {
+            label: 'breaking',
+          },
+        },
+      ],
+    },
+    parseValid: true,
+  },
+  {
+    parseInput: {
+      template,
+      categories: [
+        {
+          title: '🚀 Features',
+          'collapse-after': -2,
+        },
+      ],
+    },
+    errorContains: 'Too small: expected number to be >=-1',
+    parseValid: false,
+  },
 ]
 
 describe('schema parsing', () => {

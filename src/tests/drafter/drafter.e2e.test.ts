@@ -2182,6 +2182,41 @@ describe('drafter e2e', () => {
           query: 'query findCommitsWithPathChangesQuery',
           payload: 'graphql-include-path-src-5.md-merge-commit',
         },
+      ])
+      await runDrafter()
+      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+        [
+          {
+            "body": "# What's Changed
+        * No changes
+        ",
+            "draft": true,
+            "make_latest": "true",
+            "name": "v2.0.1 (Code name: Placeholder)",
+            "prerelease": false,
+            "tag_name": "v2.0.1",
+            "target_commitish": "refs/heads/master",
+          },
+        ]
+      `)
+      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('with category-based pre-include path config', () => {
+    it('returns the modified paths', async () => {
+      await mockContext('push')
+      mocks.config.mockReturnValue('config-with-category-pre-include-paths')
+      const scope = nockGetAndPostReleases({
+        fetchedReleases: ['release'],
+      })
+      const gqlScope = mockGraphqlQuery([
+        {
+          query: 'query findCommitsInComparison',
+          payload: 'graphql-comparison-merge-commit',
+        },
         {
           query: 'query findCommitsWithPathChangesQuery',
           payload: 'graphql-include-path-src-5.md-merge-commit',
@@ -2192,7 +2227,7 @@ describe('drafter e2e', () => {
         [
           {
             "body": "# What's Changed
-        * No changes
+        * Add documentation (#5) @TimonVS
         ",
             "draft": true,
             "make_latest": "true",
@@ -3232,6 +3267,38 @@ describe('drafter e2e', () => {
         await mockContext('push')
         mocks.config.mockReturnValue(
           'config-with-custom-version-resolver-partial',
+        )
+        const scope = nockGetAndPostReleases({
+          fetchedReleases: ['release'],
+        })
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-comparison-forking',
+        })
+        await runDrafter()
+        expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+          [
+            {
+              "body": "dummy",
+              "draft": true,
+              "make_latest": "true",
+              "name": "v3.0.0",
+              "prerelease": false,
+              "tag_name": "v3.0.0",
+              "target_commitish": "refs/heads/master",
+            },
+          ]
+        `)
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('with category-based version resolver', () => {
+      it('major beats others', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue(
+          'config-with-category-version-resolver-major',
         )
         const scope = nockGetAndPostReleases({
           fetchedReleases: ['release'],

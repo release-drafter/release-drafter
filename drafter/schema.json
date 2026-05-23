@@ -119,11 +119,30 @@
             "type": "string",
             "minLength": 1
           },
+          "type": {
+            "default": "changelog",
+            "type": "string",
+            "enum": [
+              "changelog",
+              "pre-include",
+              "pre-exclude",
+              "version-resolver"
+            ]
+          },
+          "exclusive": {
+            "default": false,
+            "type": "boolean"
+          },
           "collapse-after": {
             "default": -1,
             "type": "integer",
             "minimum": -1,
             "maximum": 9007199254740991
+          },
+          "semver-increment": {
+            "default": "patch",
+            "type": "string",
+            "enum": ["major", "minor", "patch"]
           },
           "labels": {
             "default": [],
@@ -136,9 +155,94 @@
           "label": {
             "type": "string",
             "minLength": 1
+          },
+          "when": {
+            "default": [],
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "labels": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "labels-mode": {
+                    "default": "any",
+                    "type": "string",
+                    "enum": ["any", "all", "only", "exactly"]
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "paths": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "paths-mode": {
+                    "default": "any",
+                    "type": "string",
+                    "enum": ["any", "all", "only", "exactly"]
+                  }
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "labels": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "labels-mode": {
+                      "default": "any",
+                      "type": "string",
+                      "enum": ["any", "all", "only", "exactly"]
+                    },
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "paths": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "paths-mode": {
+                      "default": "any",
+                      "type": "string",
+                      "enum": ["any", "all", "only", "exactly"]
+                    }
+                  }
+                }
+              }
+            ]
           }
-        },
-        "required": ["title"]
+        }
       }
     },
     "version-resolver": {

@@ -1,21 +1,24 @@
 import * as core from '@actions/core'
 import {
+  type CategoryConfig,
   type Config,
+  categorySchemaDefaults,
+  changeConditionSchemaDefaults,
   configSchemaDefaults,
 } from './schemas/config.schema.ts'
 
-type Category = Pick<Config, 'categories'>['categories'][number]
-type Condition = Exclude<Category['when'], unknown[]>
+type RawCategory = CategoryConfig
 
 /**
  * Parses all categories from the config, normalizing conditions and
  * handling backward compatibility with deprecated fields.
  *
  * This function:
+ * - Normalizes a missing `type` to `changelog` to match schema defaults
  * - Normalizes the `when` field to always be an array of conditions
- * - Merges deprecated `label`/`labels` fields into both:
- *   - `labels` array (for backward compatibility)
- *   - `when` conditions (for new implementation)
+ * - Applies deprecated category-level `label`/`labels` shorthands to every
+ *   normalized `when` condition
+ * - Warns when deprecated compatibility fields are used
  * - Preserves all other category fields as-is
  *
  * Accepts both fully-typed and partial category objects for flexibility.
@@ -24,7 +27,7 @@ type Condition = Exclude<Category['when'], unknown[]>
  * @returns Array of fully parsed categories with normalized conditions
  */
 export function parseCategories(
-  categories: Pick<Config, 'categories'>,
+  categories: { categories: RawCategory[] },
   deprecatedConfig: Pick<
     Config,
     | 'exclude-labels'
@@ -45,53 +48,61 @@ export function parseCategories(
       when: _when,
 
       // Potentially removed, depends on type
-      'collapse-after': collapseAfter,
-      'semver-increment': semverIncrement,
-      exclusive,
+      'collapse-after': rawCollapseAfter,
+      'semver-increment': rawSemverIncrement,
+      exclusive: rawExclusive,
       title,
 
       // Rest
       ..._cat
     } = cat
 
-    const deprecatedMappedToConditions: Condition[] = []
+    const collapseAfter =
+      rawCollapseAfter ?? categorySchemaDefaults['collapse-after']
+    const semverIncrement =
+      rawSemverIncrement ?? categorySchemaDefaults['semver-increment']
+    const exclusive = rawExclusive ?? categorySchemaDefaults.exclusive
 
-    // Handle deprecated label/labels fields
-    // Merge label (singular) with labels (array)
-    if (label || (labels && labels.length > 0)) {
-      const mergedLabels = [
-        ...(labels || []),
-        ...(label ? [label] : []),
-      ].filter(Boolean) as string[]
+    const deprecatedLabels = [...(labels || []), ...(label ? [label] : [])]
 
-      if (mergedLabels.length > 0) {
-        deprecatedMappedToConditions.push({
-          labels: mergedLabels,
-          'labels-mode': 'any',
-          paths: [],
-          'paths-mode': 'any',
-        })
-      }
+    if (deprecatedLabels.length > 0) {
+      core.warning(
+        `Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ''}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`,
+      )
     }
 
-    // Handle `when` array
-    let whenConditions: Condition[] = []
-    if (_when && _when !== undefined) {
-      // when can be a single condition or array of conditions
-      whenConditions = Array.isArray(_when) ? _when : [_when]
-    }
+    const whenConditions =
+      _when !== undefined
+        ? Array.isArray(_when)
+          ? _when.length > 0 || deprecatedLabels.length === 0
+            ? _when
+            : [{}]
+          : [_when]
+        : deprecatedLabels.length > 0
+          ? [{}]
+          : []
 
-    const parsedWhenConditions = [
-      ...whenConditions,
-      ...deprecatedMappedToConditions,
-    ]
+    const parsedWhenConditions = whenConditions
       .map((condition) => {
         const { path, label, ..._cond } = condition
 
+        // Deprecated category-level labels are shorthand for adding the same
+        // label predicate to every `when` branch
         return {
+          ...changeConditionSchemaDefaults,
           ..._cond,
+          'labels-mode':
+            condition['labels-mode'] ??
+            changeConditionSchemaDefaults['labels-mode'],
+          'paths-mode':
+            condition['paths-mode'] ??
+            changeConditionSchemaDefaults['paths-mode'],
           paths: [...(condition.paths || []), ...(path ? [path] : [])],
-          labels: [...(condition.labels || []), ...(label ? [label] : [])],
+          labels: [
+            ...deprecatedLabels,
+            ...(condition.labels || []),
+            ...(label ? [label] : []),
+          ],
         }
       })
       // Filter-out empty conditions
@@ -103,7 +114,9 @@ export function parseCategories(
           condition['paths-mode'] !== 'any',
       )
 
-    switch (_cat.type) {
+    const categoryType = _cat.type ?? categorySchemaDefaults.type
+
+    switch (categoryType) {
       case 'changelog':
         return {
           type: 'changelog' as const,
@@ -116,12 +129,12 @@ export function parseCategories(
       case 'version-resolver':
         if (title) {
           core.warning(
-            `Title "${title}" ignored for category of type "${_cat.type}"`,
+            `Title "${title}" ignored for category of type "${categoryType}"`,
           )
         }
-        if (collapseAfter) {
+        if (collapseAfter !== -1) {
           core.warning(
-            `"collapse-after" "${collapseAfter}" ignored for category of type "${_cat.type}"`,
+            `"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`,
           )
         }
         return {
@@ -134,30 +147,30 @@ export function parseCategories(
       case 'pre-include':
         if (title) {
           core.warning(
-            `Title "${title}" ignored for category of type "${_cat.type}"`,
+            `Title "${title}" ignored for category of type "${categoryType}"`,
           )
         }
-        if (collapseAfter) {
+        if (collapseAfter !== -1) {
           core.warning(
-            `"collapse-after" "${collapseAfter}" ignored for category of type "${_cat.type}"`,
+            `"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`,
           )
         }
         if (exclusive) {
-          core.warning(
-            `"exclusive" "${exclusive}" ignored for category of type "${_cat.type}"`,
+          throw new Error(
+            `"exclusive" can only be set on categories of type "changelog" or "version-resolver"; it cannot be used on category of type "${categoryType}".`,
           )
         }
         if (semverIncrement !== 'patch') {
           core.warning(
-            `"semver-increment" "${semverIncrement}" ignored for category of type "${_cat.type}"`,
+            `"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`,
           )
         }
         return {
-          type: _cat.type,
+          type: categoryType,
           when: parsedWhenConditions,
         }
       default:
-        throw new Error(`Unsupported category type: ${_cat.type}`)
+        throw new Error(`Unsupported category type: ${categoryType}`)
     }
   })
 

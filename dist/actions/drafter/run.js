@@ -1,4 +1,4 @@
-import { C as setOutput, E as __toESM, S as setFailed, T as __commonJSMin, _ as stringbool, a as paginateGraphql, b as getInput, c as getOctokit, d as _enum, f as array, g as string, h as object, i as parseCommitishForRelease, l as context, m as number, n as escapeStringRegexp, o as executeGraphql, p as boolean, r as sharedInputSchema, s as composeConfigGet, t as stringToRegex, u as ZodDefault, v as debug, w as warning, x as info, y as error } from "../../chunks/common.js";
+import { C as setOutput, E as __toESM, S as setFailed, T as __commonJSMin, _ as context, a as _enum, b as getInput, c as number, d as stringbool, f as parseCommitishForRelease, g as getOctokit, h as composeConfigGet, i as ZodDefault, l as object, m as executeGraphql, n as escapeStringRegexp, o as array, p as paginateGraphql, r as sharedInputSchema, s as boolean, t as stringToRegex, u as string, v as debug, w as warning, x as info, y as error } from "../../chunks/common.js";
 //#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
@@ -10,64 +10,20 @@ import { C as setOutput, E as __toESM, S as setFailed, T as __commonJSMin, _ as 
 * @see merge-input-and-config.ts for how the merging of config and input is handled, including default values.
 */
 var commonConfigSchema = object({
-	/**
-	* A boolean indicating whether the release being created or updated should be marked as latest.
-	*/
 	latest: stringbool().or(boolean()).optional(),
-	/**
-	* Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
-	*/
 	prerelease: stringbool().or(boolean()).optional(),
-	/**
-	* A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` when both values come from the same config location; explicit action inputs still take precedence. Default `''`.
-	*/
 	"prerelease-identifier": string().optional(),
-	/**
-	* When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.
-	*/
 	"include-pre-releases": stringbool().or(boolean()).optional(),
-	/**
-	* The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.
-	*/
 	commitish: string().optional(),
-	/**
-	* A string that would be added before the template body.
-	*/
 	header: string().optional(),
-	/**
-	* A string that would be added after the template body.
-	*/
 	footer: string().optional(),
-	/**
-	* Filter releases that satisfies this semver range. Evaluates the tag name againts node's semver.satisfies().
-	*/
 	"filter-by-range": string().optional()
 });
 var actionInputSchema = object({
-	/**
-	* If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
-	* The config should still be located inside `.github` as that's where we are looking for config files.
-	* @default 'release-drafter.yml'
-	*/
 	"config-name": string().optional().default("release-drafter.yml"),
-	/**
-	* The name that will be used in the GitHub release that's created or updated.
-	* This will override any `name-template` specified in your `release-drafter.yml` if defined.
-	*/
 	name: string().optional(),
-	/**
-	* The tag name to be associated with the GitHub release that's created or updated.
-	* This will override any `tag-template` specified in your `release-drafter.yml` if defined.
-	*/
 	tag: string().optional(),
-	/**
-	* The version to be associated with the GitHub release that's created or updated.
-	* This will override any version calculated by the release-drafter.
-	*/
 	version: string().optional(),
-	/**
-	* A boolean indicating whether the release being created or updated should be immediately published.
-	*/
 	publish: stringbool().optional().default(false)
 }).and(sharedInputSchema).and(commonConfigSchema);
 //#endregion
@@ -95,95 +51,73 @@ var getActionInput = () => {
 };
 //#endregion
 //#region src/actions/drafter/config/schemas/config.schema.ts
+/**
+* A single set of predicates that are combined with AND logic.
+* All specified predicates must be satisfied for a change to match.
+*/
+var changeConditionSchema = object({
+	label: string().min(1).optional(),
+	labels: array(string().min(1)).optional().default([]),
+	"labels-mode": _enum([
+		"any",
+		"all",
+		"only",
+		"exactly"
+	]).optional().default("any"),
+	path: string().min(1).optional(),
+	paths: array(string().min(1)).optional().default([]),
+	"paths-mode": _enum([
+		"any",
+		"all",
+		"only",
+		"exactly"
+	]).optional().default("any")
+});
+var changeConditionSchemaDefaults = changeConditionSchema.parse({});
+var categorySchema = object({
+	title: string().min(1).optional(),
+	type: _enum([
+		"changelog",
+		"pre-include",
+		"pre-exclude",
+		"version-resolver"
+	]).optional().default("changelog"),
+	exclusive: boolean().optional().default(false),
+	"collapse-after": number().int().min(-1).optional().default(-1),
+	"semver-increment": _enum([
+		"major",
+		"minor",
+		"patch"
+	]).optional().default("patch"),
+	labels: array(string().min(1)).optional().default([]),
+	label: string().min(1).optional(),
+	when: changeConditionSchema.or(array(changeConditionSchema)).optional().default([])
+});
+var categorySchemaDefaults = categorySchema.parse({});
 var exclusiveConfigSchema = object({
-	/**
-	* The template to use for each merged pull request.
-	*/
 	"change-template": string().optional().default("* $TITLE (#$NUMBER) @$AUTHOR"),
-	/**
-	* Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters.
-	*/
 	"change-title-escapes": string().optional(),
-	/**
-	* The template to use for when there’s no changes.
-	*/
 	"no-changes-template": string().optional().default("* No changes"),
-	/**
-	* The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning.
-	*/
 	"version-template": string().optional().default("$MAJOR.$MINOR.$PATCH$PRERELEASE"),
-	/**
-	* The template for the name of the draft release.
-	*/
 	"name-template": string().optional(),
-	/**
-	* A known prefix used to filter release tags. For matching tags, this prefix is stripped before attempting to parse the version.
-	*/
 	"tag-prefix": string().optional(),
-	/**
-	* The template for the tag of the draft release.
-	*/
 	"tag-template": string().optional(),
-	/**
-	* Exclude pull requests using labels.
-	*/
 	"exclude-labels": array(string()).optional().default([]),
-	/**
-	* Include only the specified pull requests using labels.
-	*/
 	"include-labels": array(string()).optional().default([]),
-	/**
-	* Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories.
-	*/
 	"include-paths": array(string()).optional().default([]),
-	/**
-	* Exclude pull requests from the release notes if they modified any of the paths in this array. Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
-	*/
 	"exclude-paths": array(string()).optional().default([]),
-	/**
-	* Exclude specific usernames from the generated `$CONTRIBUTORS` variable.
-	*/
 	"exclude-contributors": array(string()).optional().default([]),
-	/**
-	* The template to use for `$CONTRIBUTORS` when there's no contributors to list.
-	*/
 	"no-contributors-template": string().optional().default("No contributors"),
-	/**
-	* Sort changelog by merged_at or title.
-	*/
 	"sort-by": _enum(["merged_at", "title"]).optional().default("merged_at"),
-	/**
-	* Sort changelog in ascending or descending order.
-	*/
 	"sort-direction": _enum(["ascending", "descending"]).optional().default("descending"),
-	/**
-	* Filter previous releases to consider only those with the target matching `commitish`.
-	*/
 	"filter-by-commitish": boolean().optional().default(false),
 	"pull-request-limit": number().int().positive().optional().default(5),
-	/**
-	* Size of the pagination window when walking the repo. Can avoid erratic 502s from Github. Default: `15`
-	*/
 	"history-limit": number().int().positive().optional().default(15),
-	/**
-	* Search and replace content in the generated changelog body.
-	*/
 	replacers: array(object({
 		search: string().min(1),
 		replace: string().min(0)
 	})).optional().default([]),
-	/**
-	* Categorize pull requests using labels.
-	*/
-	categories: array(object({
-		title: string().min(1),
-		"collapse-after": number().int().min(-1).optional().default(-1),
-		labels: array(string().min(1)).optional().default([]),
-		label: string().min(1).optional()
-	})).optional().default([]),
-	/**
-	* Adjust the `$RESOLVED_VERSION` variable using labels.
-	*/
+	categories: array(categorySchema).optional().default([]),
 	"version-resolver": object({
 		major: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
 		minor: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
@@ -199,21 +133,14 @@ var exclusiveConfigSchema = object({
 		patch: { labels: [] },
 		default: "patch"
 	}),
-	/**
-	* The template to use for each category.
-	*/
 	"category-template": string().optional().default("## $TITLE"),
-	/**
-	* The template for the body of the draft release.
-	* Optional as it may be inherited via `_extends`.
-	*/
 	template: string().optional().default("")
 }).meta({
 	title: "JSON schema for Release Drafter yaml files",
 	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
 });
 var configSchema = exclusiveConfigSchema.and(commonConfigSchema);
-Object.fromEntries(Object.entries({
+var configSchemaDefaults = Object.fromEntries(Object.entries({
 	...exclusiveConfigSchema.shape,
 	...commonConfigSchema.shape
 }).map(([key, value]) => {
@@ -1004,7 +931,7 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	};
 }));
 //#endregion
-//#region src/actions/drafter/config/merge-input-and-config.ts
+//#region src/actions/drafter/config/parse-categories.ts
 var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var Range = require_range();
 	var validRange = (range, options) => {
@@ -1017,6 +944,160 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 	module.exports = validRange;
 })))(), 1);
 /**
+* Parses all categories from the config, normalizing conditions and
+* handling backward compatibility with deprecated fields.
+*
+* This function:
+* - Normalizes a missing `type` to `changelog` to match schema defaults
+* - Normalizes the `when` field to always be an array of conditions
+* - Applies deprecated category-level `label`/`labels` shorthands to every
+*   normalized `when` condition
+* - Warns when deprecated compatibility fields are used
+* - Preserves all other category fields as-is
+*
+* Accepts both fully-typed and partial category objects for flexibility.
+*
+* @param categories - Categories from the raw config
+* @returns Array of fully parsed categories with normalized conditions
+*/
+function parseCategories(categories, deprecatedConfig) {
+	const parsedCategories = structuredClone(categories.categories).map((cat) => {
+		const { labels, label, when: _when, "collapse-after": rawCollapseAfter, "semver-increment": rawSemverIncrement, exclusive: rawExclusive, title, ..._cat } = cat;
+		const collapseAfter = rawCollapseAfter ?? categorySchemaDefaults["collapse-after"];
+		const semverIncrement = rawSemverIncrement ?? categorySchemaDefaults["semver-increment"];
+		const exclusive = rawExclusive ?? categorySchemaDefaults.exclusive;
+		const deprecatedLabels = [...labels || [], ...label ? [label] : []];
+		if (deprecatedLabels.length > 0) warning(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`);
+		const parsedWhenConditions = (_when !== void 0 ? Array.isArray(_when) ? _when.length > 0 || deprecatedLabels.length === 0 ? _when : [{}] : [_when] : deprecatedLabels.length > 0 ? [{}] : []).map((condition) => {
+			const { path, label, ..._cond } = condition;
+			return {
+				...changeConditionSchemaDefaults,
+				..._cond,
+				"labels-mode": condition["labels-mode"] ?? changeConditionSchemaDefaults["labels-mode"],
+				"paths-mode": condition["paths-mode"] ?? changeConditionSchemaDefaults["paths-mode"],
+				paths: [...condition.paths || [], ...path ? [path] : []],
+				labels: [
+					...deprecatedLabels,
+					...condition.labels || [],
+					...label ? [label] : []
+				]
+			};
+		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0 || condition["labels-mode"] !== "any" || condition["paths-mode"] !== "any");
+		const categoryType = _cat.type ?? categorySchemaDefaults.type;
+		switch (categoryType) {
+			case "changelog": return {
+				type: "changelog",
+				when: parsedWhenConditions,
+				"collapse-after": collapseAfter,
+				"semver-increment": semverIncrement,
+				exclusive,
+				title
+			};
+			case "version-resolver":
+				if (title) warning(`Title "${title}" ignored for category of type "${categoryType}"`);
+				if (collapseAfter !== -1) warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
+				return {
+					type: "version-resolver",
+					when: parsedWhenConditions,
+					"semver-increment": semverIncrement,
+					exclusive
+				};
+			case "pre-exclude":
+			case "pre-include":
+				if (title) warning(`Title "${title}" ignored for category of type "${categoryType}"`);
+				if (collapseAfter !== -1) warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
+				if (exclusive) throw new Error(`"exclusive" can only be set on categories of type "changelog" or "version-resolver"; it cannot be used on category of type "${categoryType}".`);
+				if (semverIncrement !== "patch") warning(`"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`);
+				return {
+					type: categoryType,
+					when: parsedWhenConditions
+				};
+			default: throw new Error(`Unsupported category type: ${categoryType}`);
+		}
+	});
+	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) {
+		warning(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`);
+		if (parsedCategories.findIndex((cat) => cat.type === "pre-exclude") !== -1) throw new Error("A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels or exclude-paths fields. Please either remove the deprecated fields or remove the existing 'pre-exclude' category to resolve this conflict.");
+		parsedCategories.push({
+			type: "pre-exclude",
+			when: [{
+				labels: deprecatedConfig["exclude-labels"] || [],
+				"labels-mode": "any",
+				paths: deprecatedConfig["exclude-paths"] || [],
+				"paths-mode": "any"
+			}]
+		});
+	}
+	if (deprecatedConfig["include-labels"] && deprecatedConfig["include-labels"].length > 0 || deprecatedConfig["include-paths"] && deprecatedConfig["include-paths"].length > 0) {
+		warning(`Use of deprecated 'include-labels' or 'include-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-include"' category.`);
+		if (parsedCategories.findIndex((cat) => cat.type === "pre-include") !== -1) throw new Error("A 'pre-include' category already exists. Cannot migrate deprecated include-labels or include-paths fields. Please either remove the deprecated fields or remove the existing 'pre-include' category to resolve this conflict.");
+		parsedCategories.push({
+			type: "pre-include",
+			when: [{
+				labels: deprecatedConfig["include-labels"] || [],
+				"labels-mode": "any",
+				paths: deprecatedConfig["include-paths"] || [],
+				"paths-mode": "any"
+			}]
+		});
+	}
+	if (deprecatedConfig["version-resolver"].default !== configSchemaDefaults["version-resolver"].default) {
+		warning(`Use of deprecated 'version-resolver.default' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "${deprecatedConfig["version-resolver"].default}"' to 'type: changelog' category with no 'when' condition (uncategorized changes), or move the default resolver to a new category with type 'version-resolver' and 'semver-increment' set to "${deprecatedConfig["version-resolver"].default}" - also without 'when' conditions. `);
+		if (parsedCategories.findIndex((cat) => cat.type === "version-resolver" && cat.when.length === 0) !== -1) throw new Error("A 'version-resolver' category with no 'when' condition already exists. Cannot migrate deprecated 'version-resolver.default' field. Please either remove the deprecated field or remove the existing 'version-resolver' category to resolve this conflict.");
+		parsedCategories.push({
+			type: "version-resolver",
+			"semver-increment": deprecatedConfig["version-resolver"].default,
+			when: [],
+			exclusive: false
+		});
+	}
+	if (deprecatedConfig["version-resolver"].major.labels !== configSchemaDefaults["version-resolver"].major.labels && deprecatedConfig["version-resolver"].major.labels.length > 0) {
+		warning(`Use of deprecated 'version-resolver.major.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "major"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.major.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'major'. `);
+		parsedCategories.push({
+			type: "version-resolver",
+			"semver-increment": "major",
+			when: [{
+				labels: deprecatedConfig["version-resolver"].major.labels || [],
+				"labels-mode": "any",
+				paths: [],
+				"paths-mode": "any"
+			}],
+			exclusive: false
+		});
+	}
+	if (deprecatedConfig["version-resolver"].minor.labels !== configSchemaDefaults["version-resolver"].minor.labels && deprecatedConfig["version-resolver"].minor.labels.length > 0) {
+		warning(`Use of deprecated 'version-resolver.minor.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "minor"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.minor.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'minor'. `);
+		parsedCategories.push({
+			type: "version-resolver",
+			"semver-increment": "minor",
+			when: [{
+				labels: deprecatedConfig["version-resolver"].minor.labels || [],
+				"labels-mode": "any",
+				paths: [],
+				"paths-mode": "any"
+			}],
+			exclusive: false
+		});
+	}
+	if (deprecatedConfig["version-resolver"].patch.labels !== configSchemaDefaults["version-resolver"].patch.labels && deprecatedConfig["version-resolver"].patch.labels.length > 0) {
+		warning(`Use of deprecated 'version-resolver.patch.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "patch"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.patch.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'patch'. `);
+		parsedCategories.push({
+			type: "version-resolver",
+			"semver-increment": "patch",
+			when: [{
+				labels: deprecatedConfig["version-resolver"].patch.labels || [],
+				"labels-mode": "any",
+				paths: [],
+				"paths-mode": "any"
+			}],
+			exclusive: false
+		});
+	}
+	return parsedCategories;
+}
+//#endregion
+//#region src/actions/drafter/config/merge-input-and-config.ts
+/**
 * Returns a copy of `config`, updated with values from `input`.
 *
 * Also performs some validation.
@@ -1025,11 +1106,18 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 */
 var mergeInputAndConfig = (params) => {
 	const { config: originalConfig, input } = params;
-	const config = structuredClone(originalConfig);
+	const { "exclude-labels": excludeLabels, "include-labels": includeLabels, "include-paths": includePaths, "exclude-paths": excludePaths, "version-resolver": versionResolver, ...config } = structuredClone(originalConfig);
+	const deprecatedCategoryConfig = {
+		"exclude-labels": excludeLabels,
+		"include-labels": includeLabels,
+		"include-paths": includePaths,
+		"exclude-paths": excludePaths,
+		"version-resolver": versionResolver
+	};
 	applyOverrides(config, input);
 	const { commitish, latest, prerelease } = getParsedDefaults(config);
 	const replacers = getTransformedReplacers(config);
-	const categories = getTransformedCategories(config);
+	const categories = getTransformedCategories(config, deprecatedCategoryConfig);
 	const parsedConfig = {
 		...config,
 		commitish,
@@ -1094,14 +1182,11 @@ var getTransformedReplacers = (config) => config.replacers.map((r) => {
 		return false;
 	}
 }).filter((r) => !!r);
-var getTransformedCategories = (config) => config.categories.map((cat) => {
-	const { label, ..._cat } = cat;
-	_cat.labels = [...cat.labels, label].filter(Boolean);
-	return _cat;
-});
+var getTransformedCategories = (config, deprecatedCategoryConfig) => parseCategories(config, deprecatedCategoryConfig);
 var validateParsedConfig = (parsedConfig) => {
 	if (!parsedConfig.commitish) throw new Error("'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)");
-	if (parsedConfig.categories.filter((category) => category.labels.length === 0).length > 1) throw new Error("Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.");
+	if (parsedConfig.categories.filter((category) => category.type === "changelog" && !category.title).length > 0) throw new Error("Every 'type: \"changelog\"' category must define a non-empty 'title'.");
+	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized pull requests.");
 	if (parsedConfig["filter-by-range"] && !(0, import_valid.default)(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
 };
 //#endregion
@@ -1128,43 +1213,66 @@ var setActionOutput = (params) => {
 	info("Outputs set!");
 };
 //#endregion
+//#region src/actions/drafter/common/category-matching.ts
+var getPullRequestLabels = (pullRequest) => (pullRequest.labels?.nodes ?? []).filter((label) => Boolean(label?.name)).map((label) => label.name);
+var unique = (values) => [...new Set(values)];
+var matchesValues = (actualValues, expectedValues, mode) => {
+	const actual = unique(actualValues);
+	const expected = unique(expectedValues);
+	switch (mode) {
+		case "all": return expected.every((value) => actual.includes(value));
+		case "only": return actual.every((value) => expected.includes(value));
+		case "exactly": return actual.length === expected.length && actual.every((value) => expected.includes(value));
+		default: return expected.length === 0 || expected.some((value) => actual.includes(value));
+	}
+};
+var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesValues(pullRequest.matchedPaths ?? [], condition.paths, condition["paths-mode"]);
+var matchesCategory = (category, pullRequest) => category.when.length === 0 || category.when.some((condition) => matchesCategoryCondition(condition, pullRequest));
+var filterPullRequestsByPreCategories = (pullRequests, categories) => {
+	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
+	const preExcludeCategories = categories.filter((category) => category.type === "pre-exclude");
+	return pullRequests.filter((pullRequest) => {
+		if (!(preIncludeCategories.length === 0 || preIncludeCategories.some((category) => matchesCategory(category, pullRequest)))) return false;
+		return !preExcludeCategories.some((category) => matchesCategory(category, pullRequest));
+	});
+};
+var getConfiguredPathPatterns = (categories) => unique(categories.flatMap((category) => category.when.flatMap((condition) => condition.paths)));
+var getPreIncludePathPatterns = (categories) => unique(categories.filter((category) => category.type === "pre-include").flatMap((category) => category.when.flatMap((condition) => condition.paths)));
+var canUsePreIncludePathPrefilter = (categories) => {
+	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
+	return preIncludeCategories.length > 0 && preIncludeCategories.every((category) => category.when.length > 0 && category.when.every((condition) => condition.paths.length > 0));
+};
+var getSafePreExcludePathPatterns = (categories) => unique(categories.filter((category) => category.type === "pre-exclude").flatMap((category) => category.when).filter((condition) => condition.paths.length > 0 && condition.labels.length === 0 && (condition["labels-mode"] === "any" || condition["labels-mode"] === "all")).flatMap((condition) => condition.paths));
+var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
+var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
+//#endregion
 //#region src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts
 var categorizePullRequests = (params) => {
 	const { pullRequests, config } = params;
-	const allCategoryLabels = new Set(config.categories.flatMap((category) => category.labels));
+	const changelogCategories = getChangelogCategories(config.categories);
 	const uncategorizedPullRequests = [];
-	const categorizedPullRequests = [...config.categories].map((category) => {
+	const categorizedPullRequests = changelogCategories.map((category) => {
 		return {
 			...category,
 			pullRequests: []
 		};
 	});
-	const uncategorizedCategoryIndex = config.categories.findIndex((category) => category.labels.length === 0);
-	const filterUncategorizedPullRequests = (pullRequest) => {
-		const labels = pullRequest.labels?.nodes || [];
-		if (labels.length === 0 || !labels.some((label) => !!label?.name && allCategoryLabels.has(label?.name))) {
-			if (uncategorizedCategoryIndex === -1) uncategorizedPullRequests.push(pullRequest);
-			else categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(pullRequest);
-			return false;
+	const uncategorizedCategoryIndex = changelogCategories.findIndex((category) => category.when.length === 0);
+	const filteredPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
+	for (const pullRequest of filteredPullRequests) {
+		let matchedAnyCategory = false;
+		for (const category of categorizedPullRequests) {
+			if (category.when.length === 0) continue;
+			if (matchesCategory(category, pullRequest)) {
+				category.pullRequests.push(pullRequest);
+				matchedAnyCategory = true;
+				if (category.exclusive) break;
+			}
 		}
-		return true;
-	};
-	const filteredPullRequests = pullRequests.filter(getFilterExcludedPullRequests(config["exclude-labels"])).filter(getFilterIncludedPullRequests(config["include-labels"])).filter((pullRequest) => filterUncategorizedPullRequests(pullRequest));
-	for (const category of categorizedPullRequests) for (const pullRequest of filteredPullRequests) if ((pullRequest.labels?.nodes || []).some((label) => !!label?.name && category.labels.includes(label.name))) category.pullRequests.push(pullRequest);
+		if (!matchedAnyCategory) if (uncategorizedCategoryIndex === -1) uncategorizedPullRequests.push(pullRequest);
+		else categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(pullRequest);
+	}
 	return [uncategorizedPullRequests, categorizedPullRequests];
-};
-var getFilterExcludedPullRequests = (excludeLabels) => {
-	return (pullRequest) => {
-		if ((pullRequest.labels?.nodes || []).some((label) => !!label?.name && excludeLabels.includes(label.name))) return false;
-		return true;
-	};
-};
-var getFilterIncludedPullRequests = (includeLabels) => {
-	return (pullRequest) => {
-		const labels = pullRequest.labels?.nodes || [];
-		if (includeLabels.length === 0 || labels.some((label) => !!label?.name && includeLabels.includes(label.name))) return true;
-		return false;
-	};
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/render-template/util/charCode.ts
@@ -1721,7 +1829,7 @@ var VersionDescriptor = class VersionDescriptor {
 		return typeof input === "object" && input !== null && (typeof input?.tag_name === "string" || typeof input?.name === "string");
 	}
 	_stripTag(input) {
-		return this.tagPrefix && input?.startsWith(this.tagPrefix) ? input.slice(this.tagPrefix.length) : input;
+		return !!this.tagPrefix && input?.startsWith(this.tagPrefix) ? input.slice(this.tagPrefix.length) : input;
 	}
 	_toSemver(version) {
 		const result = (0, import_parse.default)(version);
@@ -1782,12 +1890,6 @@ var getVersionInfo = (params) => {
 	} else if (versionFromLastRelease.version) {
 		_localIncrement = _localIncrement?.startsWith("pre") && versionFromLastRelease?.prerelease?.length ? "prerelease" : _localIncrement;
 		referenceVersion = versionFromLastRelease;
-	} else if (_versionKeyIncrement?.startsWith("pre") && config["prerelease-identifier"]) {
-		_localIncrement = "no_increment";
-		referenceVersion = new VersionDescriptor(`0.1.0-${config["prerelease-identifier"]}.0`, {
-			preReleaseIdentifier: config["prerelease-identifier"],
-			tagPrefix: config["tag-prefix"]
-		});
 	} else {
 		_localIncrement = "no_increment";
 		referenceVersion = new VersionDescriptor("0.1.0", {
@@ -1859,22 +1961,50 @@ var renderTagName = (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts
+var priorityMap = {
+	patch: 1,
+	minor: 2,
+	major: 3
+};
+var getHighestPriority = (params) => {
+	const { pullRequests, categories, emptyWhenBehavior } = params;
+	const emptyWhenCategory = categories.find((category) => category.when.length === 0);
+	const matchedPullRequests = /* @__PURE__ */ new Set();
+	let highestPriority;
+	let remainingPullRequests = [...pullRequests];
+	for (const category of categories) {
+		if (category.when.length === 0) continue;
+		const matchingPullRequests = remainingPullRequests.filter((pullRequest) => matchesCategory(category, pullRequest));
+		if (matchingPullRequests.length === 0) continue;
+		highestPriority = Math.max(highestPriority ?? 0, priorityMap[category["semver-increment"]]);
+		for (const pullRequest of matchingPullRequests) matchedPullRequests.add(pullRequest);
+		if (category.exclusive) {
+			const matchedPullRequestsSet = new Set(matchingPullRequests);
+			remainingPullRequests = remainingPullRequests.filter((pullRequest) => !matchedPullRequestsSet.has(pullRequest));
+		}
+	}
+	if (!emptyWhenCategory) return highestPriority;
+	if (emptyWhenBehavior === "fallback") return highestPriority ?? priorityMap[emptyWhenCategory["semver-increment"]];
+	if (!pullRequests.some((pullRequest) => !matchedPullRequests.has(pullRequest))) return highestPriority;
+	return Math.max(highestPriority ?? 0, priorityMap[emptyWhenCategory["semver-increment"]]);
+};
 var resolveVersionKeyIncrement = (params) => {
 	const { pullRequests, config } = params;
-	const priorityMap = {
-		patch: 1,
-		minor: 2,
-		major: 3
-	};
-	const labelToKeyMap = Object.fromEntries(Object.keys(priorityMap).flatMap((key) => [config["version-resolver"][key].labels.map((label) => [label, key])]).flat());
-	debug(`labelToKeyMap: ${JSON.stringify(labelToKeyMap)}`);
-	const keys = pullRequests.filter(getFilterExcludedPullRequests(config["exclude-labels"])).filter(getFilterIncludedPullRequests(config["include-labels"])).flatMap((pr) => pr.labels?.nodes?.filter((n) => !!n?.name).map((node) => labelToKeyMap[node.name])).filter(Boolean);
-	debug(`keys: ${JSON.stringify(keys)}`);
-	const keyPriorities = keys.map((key) => priorityMap[key]);
-	const priority = Math.max(...keyPriorities);
-	const versionKey = Object.keys(priorityMap).find((key) => priorityMap[key] === priority);
+	const filteredPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
+	const changelogPriority = getHighestPriority({
+		pullRequests: filteredPullRequests,
+		categories: getChangelogCategories(config.categories),
+		emptyWhenBehavior: "uncategorized"
+	});
+	const versionResolverPriority = getHighestPriority({
+		pullRequests: filteredPullRequests,
+		categories: getVersionResolverCategories(config.categories),
+		emptyWhenBehavior: "fallback"
+	}) ?? priorityMap.patch;
+	const resolvedPriority = Math.max(changelogPriority ?? 0, versionResolverPriority);
+	const versionKey = Object.entries(priorityMap).find(([, priority]) => priority === resolvedPriority)?.[0];
 	debug(`versionKey: ${versionKey}`);
-	let versionKeyIncrement = versionKey || config["version-resolver"].default;
+	let versionKeyIncrement = versionKey;
 	if (config.prerelease && config["prerelease-identifier"]) versionKeyIncrement = `pre${versionKeyIncrement}`;
 	info(`Version increment: ${versionKeyIncrement}${!versionKey ? " (default)" : ""}`);
 	return versionKeyIncrement;
@@ -2574,13 +2704,6 @@ var FindCommitsInComparisonDocument = {
 																"kind": "Field",
 																"name": {
 																	"kind": "Name",
-																	"value": "oid"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
 																	"value": "committedDate"
 																}
 															},
@@ -2676,13 +2799,268 @@ var FindCommitsInComparisonDocument = {
 																		},
 																		"selectionSet": {
 																			"kind": "SelectionSet",
-																			"selections": [{
-																				"kind": "FragmentSpread",
-																				"name": {
-																					"kind": "Name",
-																					"value": "PullRequestFields"
+																			"selections": [
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "__typename"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "title"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "number"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "url"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withPullRequestURL"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "body"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withPullRequestBody"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "author"
+																					},
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "__typename"
+																								}
+																							},
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "login"
+																								}
+																							},
+																							{
+																								"kind": "Field",
+																								"name": {
+																									"kind": "Name",
+																									"value": "url"
+																								}
+																							}
+																						]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "baseRepository"
+																					},
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [{
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "__typename"
+																							}
+																						}, {
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "nameWithOwner"
+																							}
+																						}]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "mergedAt"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "isCrossRepository"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "labels"
+																					},
+																					"arguments": [{
+																						"kind": "Argument",
+																						"name": {
+																							"kind": "Name",
+																							"value": "first"
+																						},
+																						"value": {
+																							"kind": "IntValue",
+																							"value": "100"
+																						}
+																					}],
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [{
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "__typename"
+																							}
+																						}, {
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "nodes"
+																							},
+																							"selectionSet": {
+																								"kind": "SelectionSet",
+																								"selections": [{
+																									"kind": "Field",
+																									"name": {
+																										"kind": "Name",
+																										"value": "__typename"
+																									}
+																								}, {
+																									"kind": "Field",
+																									"name": {
+																										"kind": "Name",
+																										"value": "name"
+																									}
+																								}]
+																							}
+																						}]
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "merged"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "baseRefName"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withBaseRefName"
+																								}
+																							}
+																						}]
+																					}]
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "headRefName"
+																					},
+																					"directives": [{
+																						"kind": "Directive",
+																						"name": {
+																							"kind": "Name",
+																							"value": "include"
+																						},
+																						"arguments": [{
+																							"kind": "Argument",
+																							"name": {
+																								"kind": "Name",
+																								"value": "if"
+																							},
+																							"value": {
+																								"kind": "Variable",
+																								"name": {
+																									"kind": "Name",
+																									"value": "withHeadRefName"
+																								}
+																							}
+																						}]
+																					}]
 																				}
-																			}]
+																			]
 																		}
 																	}]
 																}
@@ -2699,284 +3077,6 @@ var FindCommitsInComparisonDocument = {
 					}]
 				}
 			}]
-		}
-	}, {
-		"kind": "FragmentDefinition",
-		"name": {
-			"kind": "Name",
-			"value": "PullRequestFields"
-		},
-		"typeCondition": {
-			"kind": "NamedType",
-			"name": {
-				"kind": "Name",
-				"value": "PullRequest"
-			}
-		},
-		"selectionSet": {
-			"kind": "SelectionSet",
-			"selections": [
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "__typename"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "title"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "number"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "url"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withPullRequestURL"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "body"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withPullRequestBody"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "author"
-					},
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "__typename"
-								}
-							},
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "login"
-								}
-							},
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "url"
-								}
-							}
-						]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "baseRepository"
-					},
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [{
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "__typename"
-							}
-						}, {
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "nameWithOwner"
-							}
-						}]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "mergedAt"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "isCrossRepository"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "labels"
-					},
-					"arguments": [{
-						"kind": "Argument",
-						"name": {
-							"kind": "Name",
-							"value": "first"
-						},
-						"value": {
-							"kind": "IntValue",
-							"value": "100"
-						}
-					}],
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [{
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "__typename"
-							}
-						}, {
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "nodes"
-							},
-							"selectionSet": {
-								"kind": "SelectionSet",
-								"selections": [{
-									"kind": "Field",
-									"name": {
-										"kind": "Name",
-										"value": "__typename"
-									}
-								}, {
-									"kind": "Field",
-									"name": {
-										"kind": "Name",
-										"value": "name"
-									}
-								}]
-							}
-						}]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "merged"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "baseRefName"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withBaseRefName"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "headRefName"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withHeadRefName"
-								}
-							}
-						}]
-					}]
-				}
-			]
 		}
 	}]
 };
@@ -3324,651 +3424,13 @@ var findCommitsWithPathChange = async (paths, params) => {
 	};
 };
 //#endregion
-//#region src/actions/drafter/lib/find-pull-requests/graphql/find-recent-merged-pull-requests.graphql.generated.ts
-var FindRecentMergedPullRequestsDocument = {
-	"kind": "Document",
-	"definitions": [{
-		"kind": "OperationDefinition",
-		"operation": "query",
-		"name": {
-			"kind": "Name",
-			"value": "findRecentMergedPullRequests"
-		},
-		"variableDefinitions": [
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "name"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "owner"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "baseRefName"
-					}
-				},
-				"type": {
-					"kind": "NamedType",
-					"name": {
-						"kind": "Name",
-						"value": "String"
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "limit"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Int"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withPullRequestBody"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withPullRequestURL"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withBaseRefName"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withHeadRefName"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			}
-		],
-		"selectionSet": {
-			"kind": "SelectionSet",
-			"selections": [{
-				"kind": "Field",
-				"name": {
-					"kind": "Name",
-					"value": "repository"
-				},
-				"arguments": [{
-					"kind": "Argument",
-					"name": {
-						"kind": "Name",
-						"value": "name"
-					},
-					"value": {
-						"kind": "Variable",
-						"name": {
-							"kind": "Name",
-							"value": "name"
-						}
-					}
-				}, {
-					"kind": "Argument",
-					"name": {
-						"kind": "Name",
-						"value": "owner"
-					},
-					"value": {
-						"kind": "Variable",
-						"name": {
-							"kind": "Name",
-							"value": "owner"
-						}
-					}
-				}],
-				"selectionSet": {
-					"kind": "SelectionSet",
-					"selections": [{
-						"kind": "Field",
-						"name": {
-							"kind": "Name",
-							"value": "pullRequests"
-						},
-						"arguments": [
-							{
-								"kind": "Argument",
-								"name": {
-									"kind": "Name",
-									"value": "states"
-								},
-								"value": {
-									"kind": "ListValue",
-									"values": [{
-										"kind": "EnumValue",
-										"value": "MERGED"
-									}]
-								}
-							},
-							{
-								"kind": "Argument",
-								"name": {
-									"kind": "Name",
-									"value": "baseRefName"
-								},
-								"value": {
-									"kind": "Variable",
-									"name": {
-										"kind": "Name",
-										"value": "baseRefName"
-									}
-								}
-							},
-							{
-								"kind": "Argument",
-								"name": {
-									"kind": "Name",
-									"value": "orderBy"
-								},
-								"value": {
-									"kind": "ObjectValue",
-									"fields": [{
-										"kind": "ObjectField",
-										"name": {
-											"kind": "Name",
-											"value": "field"
-										},
-										"value": {
-											"kind": "EnumValue",
-											"value": "UPDATED_AT"
-										}
-									}, {
-										"kind": "ObjectField",
-										"name": {
-											"kind": "Name",
-											"value": "direction"
-										},
-										"value": {
-											"kind": "EnumValue",
-											"value": "DESC"
-										}
-									}]
-								}
-							},
-							{
-								"kind": "Argument",
-								"name": {
-									"kind": "Name",
-									"value": "first"
-								},
-								"value": {
-									"kind": "Variable",
-									"name": {
-										"kind": "Name",
-										"value": "limit"
-									}
-								}
-							}
-						],
-						"selectionSet": {
-							"kind": "SelectionSet",
-							"selections": [{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "__typename"
-								}
-							}, {
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "nodes"
-								},
-								"selectionSet": {
-									"kind": "SelectionSet",
-									"selections": [{
-										"kind": "FragmentSpread",
-										"name": {
-											"kind": "Name",
-											"value": "PullRequestFields"
-										}
-									}, {
-										"kind": "Field",
-										"name": {
-											"kind": "Name",
-											"value": "mergeCommit"
-										},
-										"selectionSet": {
-											"kind": "SelectionSet",
-											"selections": [{
-												"kind": "Field",
-												"name": {
-													"kind": "Name",
-													"value": "__typename"
-												}
-											}, {
-												"kind": "Field",
-												"name": {
-													"kind": "Name",
-													"value": "oid"
-												}
-											}]
-										}
-									}]
-								}
-							}]
-						}
-					}]
-				}
-			}]
-		}
-	}, {
-		"kind": "FragmentDefinition",
-		"name": {
-			"kind": "Name",
-			"value": "PullRequestFields"
-		},
-		"typeCondition": {
-			"kind": "NamedType",
-			"name": {
-				"kind": "Name",
-				"value": "PullRequest"
-			}
-		},
-		"selectionSet": {
-			"kind": "SelectionSet",
-			"selections": [
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "__typename"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "title"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "number"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "url"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withPullRequestURL"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "body"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withPullRequestBody"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "author"
-					},
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "__typename"
-								}
-							},
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "login"
-								}
-							},
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "url"
-								}
-							}
-						]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "baseRepository"
-					},
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [{
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "__typename"
-							}
-						}, {
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "nameWithOwner"
-							}
-						}]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "mergedAt"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "isCrossRepository"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "labels"
-					},
-					"arguments": [{
-						"kind": "Argument",
-						"name": {
-							"kind": "Name",
-							"value": "first"
-						},
-						"value": {
-							"kind": "IntValue",
-							"value": "100"
-						}
-					}],
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [{
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "__typename"
-							}
-						}, {
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "nodes"
-							},
-							"selectionSet": {
-								"kind": "SelectionSet",
-								"selections": [{
-									"kind": "Field",
-									"name": {
-										"kind": "Name",
-										"value": "__typename"
-									}
-								}, {
-									"kind": "Field",
-									"name": {
-										"kind": "Name",
-										"value": "name"
-									}
-								}]
-							}
-						}]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "merged"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "baseRefName"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withBaseRefName"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "headRefName"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withHeadRefName"
-								}
-							}
-						}]
-					}]
-				}
-			]
-		}
-	}]
-};
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts
-var RECENT_PR_LOOKBACK = 5;
-var findRecentMergedPullRequests = async (params) => {
-	const octokit = getOctokit();
-	const nameWithOwner = `${context.repo.owner}/${context.repo.repo}`;
-	const missingPRs = ((await executeGraphql(octokit.graphql, FindRecentMergedPullRequestsDocument, {
-		name: context.repo.repo,
-		owner: context.repo.owner,
-		baseRefName: params.baseRefName,
-		limit: RECENT_PR_LOOKBACK,
-		...params.fieldFlags
-	})).repository?.pullRequests.nodes ?? []).filter((pr) => {
-		if (!pr?.mergeCommit?.oid) return false;
-		const prKey = `${nameWithOwner}#${pr.number}`;
-		return params.commitOids.has(pr.mergeCommit.oid) && !params.foundPrKeys.has(prKey);
-	});
-	if (missingPRs.length === 0) return [];
-	info(`Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(", ")}`);
-	return missingPRs.filter((pr) => pr != null);
-};
-//#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
 var findPullRequests = async (params) => {
-	const shouldFilterByIncludedPaths = params.config["include-paths"].length > 0;
-	const shouldFilterByExcludedPaths = params.config["exclude-paths"].length > 0;
+	const allConfiguredPathPatterns = getConfiguredPathPatterns(params.config.categories);
+	const shouldFilterByIncludedPaths = canUsePreIncludePathPrefilter(params.config.categories);
+	const includedPathPatterns = shouldFilterByIncludedPaths ? getPreIncludePathPatterns(params.config.categories) : [];
+	const excludedPathPatterns = getSafePreExcludePathPatterns(params.config.categories);
+	const shouldFilterByExcludedPaths = excludedPathPatterns.length > 0;
 	const sharedComparisonParams = {
 		name: context.repo.repo,
 		owner: context.repo.owner,
@@ -3995,29 +3457,31 @@ var findPullRequests = async (params) => {
 	});
 	info(`Found ${commits.length} commits.`);
 	const comparisonCommitIds = new Set(commits.map((c) => c.id));
+	let commitIdsMatchingPaths = {};
 	/**
-	* If include-paths are specified,
-	* find all commits that changed those paths to filter PRs later.
-	*
-	* If exclude-paths are specified,
-	* find all commits that changed those paths and remove them from results.
+	* Find commits that touched configured category path patterns so later steps can:
+	* - pre-filter commits when pre-include/pre-exclude categories make that safe
+	* - attach matched path patterns back to pull requests for category evaluation
 	*
 	* The underlying query does not bother fetching PRs along commits.
 	*/
-	const includedCommitIds = /* @__PURE__ */ new Set();
-	if (shouldFilterByIncludedPaths) {
-		info("Finding commits with included path changes...");
-		const { commitIdsMatchingPaths, hasFoundCommits } = await findCommitsWithPathChange(params.config["include-paths"], {
+	if (allConfiguredPathPatterns.length > 0) {
+		commitIdsMatchingPaths = (await findCommitsWithPathChange(allConfiguredPathPatterns, {
 			name: context.repo.repo,
 			owner: context.repo.owner,
 			targetCommitish: params.config.commitish,
 			comparisonCommitIds
-		});
-		if (!hasFoundCommits) return {
+		})).commitIdsMatchingPaths;
+		if (shouldFilterByIncludedPaths && includedPathPatterns.every((pathPattern) => commitIdsMatchingPaths[pathPattern]?.size === 0)) return {
 			commits: [],
 			pullRequests: []
 		};
-		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+	}
+	const includedCommitIds = /* @__PURE__ */ new Set();
+	if (shouldFilterByIncludedPaths) {
+		info("Finding commits with included path changes...");
+		includedPathPatterns.forEach((path) => {
+			const ids = commitIdsMatchingPaths[path] ?? /* @__PURE__ */ new Set();
 			info(`Found ${ids.size} commits with changes to included path "${path}"`);
 			for (const id of ids) includedCommitIds.add(id);
 		});
@@ -4025,13 +3489,8 @@ var findPullRequests = async (params) => {
 	const excludedCommitIds = /* @__PURE__ */ new Set();
 	if (shouldFilterByExcludedPaths) {
 		info("Finding commits with excluded path changes...");
-		const { commitIdsMatchingPaths } = await findCommitsWithPathChange(params.config["exclude-paths"], {
-			name: context.repo.repo,
-			owner: context.repo.owner,
-			targetCommitish: params.config.commitish,
-			comparisonCommitIds
-		});
-		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+		excludedPathPatterns.forEach((path) => {
+			const ids = commitIdsMatchingPaths[path] ?? /* @__PURE__ */ new Set();
 			info(`Found ${ids.size} commits with changes to excluded path "${path}"`);
 			for (const id of ids) excludedCommitIds.add(id);
 		});
@@ -4042,28 +3501,38 @@ var findPullRequests = async (params) => {
 		return true;
 	});
 	if (shouldFilterByIncludedPaths || shouldFilterByExcludedPaths) info(`After filtering by path changes, ${commits.length} commits remain.`);
-	const pullRequestsByKey = new Map(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).map((pr) => [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr]));
-	const pullRequestsRaw = [...pullRequestsByKey.values()];
-	const comparisonCommitOids = new Set(commits.flatMap((c) => c.oid ? [c.oid] : []));
-	const { commitish } = params.config;
-	const isBranchRef = commitish.startsWith("refs/heads/");
-	const isUnsupportedRef = commitish.startsWith("refs/tags/") || commitish.startsWith("refs/pull/");
-	const recoveredPRs = comparisonCommitOids.size === 0 || isUnsupportedRef ? [] : await findRecentMergedPullRequests({
-		baseRefName: isBranchRef ? commitish.replace(/^refs\/heads\//, "") : null,
-		commitOids: comparisonCommitOids,
-		foundPrKeys: new Set(pullRequestsByKey.keys()),
-		fieldFlags: {
-			withPullRequestBody: sharedComparisonParams.withPullRequestBody,
-			withPullRequestURL: sharedComparisonParams.withPullRequestURL,
-			withBaseRefName: sharedComparisonParams.withBaseRefName,
-			withHeadRefName: sharedComparisonParams.withHeadRefName
-		}
+	const pullRequestsRaw = [...new Map(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).map((pr) => [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr])).values()];
+	const pullRequests = pullRequestsRaw.filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
+	const commitIdToMatchedPaths = /* @__PURE__ */ new Map();
+	Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+		ids.forEach((id) => {
+			const matchedPaths = commitIdToMatchedPaths.get(id) ?? /* @__PURE__ */ new Set();
+			matchedPaths.add(path);
+			commitIdToMatchedPaths.set(id, matchedPaths);
+		});
 	});
-	const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
-	info(`Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
+	const pullRequestMatchedPaths = /* @__PURE__ */ new Map();
+	commits.forEach((commit) => {
+		const matchedPaths = commitIdToMatchedPaths.get(commit.id);
+		if (!matchedPaths || matchedPaths.size === 0) return;
+		(commit.associatedPullRequests?.nodes ?? []).filter((pullRequest) => Boolean(pullRequest)).forEach((pullRequest) => {
+			const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+			const currentMatchedPaths = pullRequestMatchedPaths.get(key) ?? /* @__PURE__ */ new Set();
+			for (const path of matchedPaths) currentMatchedPaths.add(path);
+			pullRequestMatchedPaths.set(key, currentMatchedPaths);
+		});
+	});
+	info(`Found ${pullRequestsRaw.length} pull requests associated with those commits. ${pullRequests.length} of those are merged and target ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? ` : ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
 	return {
 		commits,
-		pullRequests
+		pullRequests: pullRequests.map((pullRequest) => {
+			const matchedPaths = [...pullRequestMatchedPaths.get(`${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`) ?? []];
+			if (matchedPaths.length === 0) return pullRequest;
+			return {
+				...pullRequest,
+				matchedPaths
+			};
+		})
 	};
 };
 //#endregion

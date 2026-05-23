@@ -435,7 +435,24 @@ describe('mergeInputAndConfig', () => {
       expect(() =>
         mergeInputAndConfig({ config, input }),
       ).toThrowErrorMatchingInlineSnapshot(
-        `[Error: Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.]`,
+        `[Error: Multiple 'type: "changelog"' categories detected with no 'when' condition. Only one such category is supported for uncategorized pull requests.]`,
+      )
+    })
+    it('should throw error when a changelog category does not define a title', async () => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        categories: [
+          {
+            label: 'bug',
+          },
+        ],
+      })
+      const input = commonConfigSchema.parse({})
+
+      expect(() =>
+        mergeInputAndConfig({ config, input }),
+      ).toThrowErrorMatchingInlineSnapshot(
+        `[Error: Every 'type: "changelog"' category must define a non-empty 'title'.]`,
       )
     })
     it('should throw error when filter-by-range is invalid', async () => {
