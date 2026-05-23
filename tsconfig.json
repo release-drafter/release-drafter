@@ -28,12 +28,6 @@
     "paths": { "#src/*": ["./src/*"] },
     "skipLibCheck": true
   },
-  "exclude": [
-    "coverage",
-    "dist",
-    "node_modules",
-    "**/*.generated.ts",
-    "src/tests"
-  ],
+  "exclude": ["coverage", "dist", "node_modules", "**/*.generated.ts"],
   "include": ["src"]
 }
