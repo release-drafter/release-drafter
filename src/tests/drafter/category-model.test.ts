@@ -93,6 +93,38 @@ describe('category model', () => {
     )
   })
 
+  it('treats when.path as shorthand for a single paths value', () => {
+    const pathConfig = makeParsedConfig([
+      {
+        title: 'Source changes',
+        when: { path: 'src/**' },
+      },
+    ])
+    const pathsConfig = makeParsedConfig([
+      {
+        title: 'Source changes',
+        when: { paths: ['src/**'] },
+      },
+    ])
+    const pullRequests = [makePullRequest([], ['src/**'])]
+
+    const [, pathCategories] = categorizePullRequests({
+      pullRequests,
+      config: pathConfig,
+    })
+    const [, pathsCategories] = categorizePullRequests({
+      pullRequests,
+      config: pathsConfig,
+    })
+
+    expect(pathConfig.categories[0]?.when).toEqual(
+      pathsConfig.categories[0]?.when,
+    )
+    expect(pathCategories[0]?.pullRequests).toEqual(
+      pathsCategories[0]?.pullRequests,
+    )
+  })
+
   it('uses labels-mode any by default for when.labels', () => {
     const config = makeParsedConfig([
       {
@@ -138,6 +170,35 @@ describe('category model', () => {
     )
     expect(
       matchesCategoryCondition(condition, makePullRequest(['bug', 'urgent'])),
+    ).toBe(true)
+  })
+
+  it('combines when.path and when.paths before applying paths-mode', () => {
+    const config = makeParsedConfig([
+      {
+        title: 'Source and docs changes',
+        when: {
+          path: 'src/**',
+          paths: ['docs/**'],
+          'paths-mode': 'all',
+        },
+      },
+    ])
+    const condition = config.categories[0]?.when[0]
+
+    expect(condition).toBeDefined()
+    if (!condition) {
+      throw new Error('Expected a normalized category condition')
+    }
+
+    expect(
+      matchesCategoryCondition(condition, makePullRequest([], ['src/**'])),
+    ).toBe(false)
+    expect(
+      matchesCategoryCondition(
+        condition,
+        makePullRequest([], ['src/**', 'docs/**']),
+      ),
     ).toBe(true)
   })
 

@@ -211,6 +211,20 @@ const suites: SuiteParams[] = [
       template,
       categories: [
         {
+          title: '📦 Source Changes',
+          when: {
+            path: 'src/**',
+          },
+        },
+      ],
+    },
+    parseValid: true,
+  },
+  {
+    parseInput: {
+      template,
+      categories: [
+        {
           title: '🚀 Features',
           exclusive: true,
           'collapse-after': 0,

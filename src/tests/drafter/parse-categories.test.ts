@@ -300,6 +300,37 @@ describe('parseCategories', () => {
     ])
   })
 
+  it('normalizes when.path as a single paths entry', () => {
+    const parsed = parseCategories(
+      {
+        categories: [
+          {
+            title: 'Source changes',
+            when: {
+              path: 'src/**',
+            },
+          },
+        ],
+      },
+      {
+        'exclude-labels': [],
+        'exclude-paths': [],
+        'include-labels': [],
+        'include-paths': [],
+        'version-resolver': configSchemaDefaults['version-resolver'],
+      },
+    )
+
+    expect(parsed[0]?.when).toEqual([
+      {
+        labels: [],
+        'labels-mode': 'any',
+        paths: ['src/**'],
+        'paths-mode': 'any',
+      },
+    ])
+  })
+
   it('combines when.label and when.labels into one label predicate set', () => {
     const parsed = parseCategories(
       {
@@ -329,6 +360,39 @@ describe('parseCategories', () => {
         'labels-mode': 'all',
         paths: [],
         'paths-mode': 'any',
+      },
+    ])
+  })
+
+  it('combines when.path and when.paths into one path predicate set', () => {
+    const parsed = parseCategories(
+      {
+        categories: [
+          {
+            title: 'Code and docs',
+            when: {
+              path: 'docs/**',
+              paths: ['src/**'],
+              'paths-mode': 'all',
+            },
+          },
+        ],
+      },
+      {
+        'exclude-labels': [],
+        'exclude-paths': [],
+        'include-labels': [],
+        'include-paths': [],
+        'version-resolver': configSchemaDefaults['version-resolver'],
+      },
+    )
+
+    expect(parsed[0]?.when).toEqual([
+      {
+        labels: [],
+        'labels-mode': 'any',
+        paths: ['src/**', 'docs/**'],
+        'paths-mode': 'all',
       },
     ])
   })

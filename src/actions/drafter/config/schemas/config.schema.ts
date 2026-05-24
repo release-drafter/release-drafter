@@ -52,6 +52,7 @@ const changeConditionSchema = object({
    * Path predicate: matches a change that touched this path pattern. Supports glob patterns.
    *
    * Same as specifying a single `paths` value.
+   * If `path` and `paths` are both specified, they are combined.
    *
    * Use `paths-mode` to configure how this path is matched against the matched
    * configured path patterns for a change.
@@ -61,12 +62,17 @@ const changeConditionSchema = object({
    * Paths predicate: matches a change that touched any of these path patterns.
    * Values support glob patterns.
    *
+   * If `path` and `paths` are both specified, they are combined before
+   * `paths-mode` is applied.
+   *
    * Use `paths-mode` to configure how these path patterns are compared to the
    * matched configured path patterns for a change.
    */
   paths: array(string().min(1)).optional().default([]),
   /**
    * Matching mode for the `paths` predicate.
+   *
+   * Has no effect unless `path` or `paths` is configured in the same condition.
    *
    * The comparison is set-based (path order is ignored).
    *

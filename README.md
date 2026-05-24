@@ -340,6 +340,9 @@ Within a condition, `label` is shorthand for a single `labels` entry. If both
 applied. With the default `labels-mode: any`, `labels: ["feature",
 "enhancement"]` matches pull requests carrying either label.
 
+Likewise, `path` is shorthand for a single `paths` entry. If both `path` and
+`paths` are present, they are combined before `paths-mode` is applied.
+
 The available matching modes are:
 
 - `any`: at least one configured value matches
