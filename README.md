@@ -125,7 +125,7 @@ You can configure Release Drafter using the following key in your
 | `change-title-escapes`     | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                     |
 | `no-changes-template`      | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                                                              |
 | `references`               | Optional | The references to listen for configuration updates to `.github/release-drafter.yml`. Refer to [References](#references) to learn more about this                                                                                                         |
-| `categories`               | Optional | Define how changes are filtered, grouped, and versioned. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. Refer to [Categorize Changes](#categorize-changes).                                                     |
+| `categories`               | Optional | Define how changes are filtered, grouped, and versioned. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. Refer to [Categorize Changes](#categorize-changes).                                                   |
 | `exclude-contributors`     | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.                                                                                          |
 | `no-contributors-template` | Optional | The template to use for `$CONTRIBUTORS` when there's no contributors to list. Default: `"No contributors"`.                                                                                                                                              |
 | `replacers`                | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                                                                                                            |
@@ -230,6 +230,18 @@ Any category with `semver-increment` contributes to `$RESOLVED_VERSION`.
 Use `type: version-resolver` categories when you want version resolution rules
 that do not also render a changelog section.
 
+Before version resolution runs, any `pre-include` and `pre-exclude` categories
+filter the candidate pull requests. After that:
+
+- `type: changelog` categories contribute only for pull requests that end up
+  assigned to that changelog category
+- `type: version-resolver` categories contribute from their own matches without
+  rendering a changelog section
+- the highest matching increment wins across both category types
+
+Category order matters when `exclusive: true` is used. Exclusivity is evaluated
+independently for changelog categories and version-resolver categories.
+
 ```yml
 categories:
   - type: "version-resolver"
@@ -297,12 +309,42 @@ pipeline:
 - `type: version-resolver` affects `$RESOLVED_VERSION` without rendering a
   changelog section
 
+`pre-include` always runs before `pre-exclude`, and both category types affect
+both changelog generation and version resolution.
+
+Categories are evaluated in the order they are defined. By default, a pull
+request can match multiple categories of the same type. Setting `exclusive:
+true` on a `changelog` or `version-resolver` category stops later categories of
+that same type from also matching the same pull request.
+
+Each category supports the following keys:
+
+| Key                | Applies to                      | Description                                                                                                                                               |
+| ------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`             | All categories                  | Category behavior. Defaults to `changelog`.                                                                                                               |
+| `title`            | `changelog`                     | Required for changelog categories because `category-template` renders it. Ignored for `pre-include`, `pre-exclude`, and `version-resolver`.               |
+| `when`             | All categories                  | Match conditions. Omit it or use an empty array to match all changes.                                                                                     |
+| `exclusive`        | `changelog`, `version-resolver` | Prevents later categories of the same type from also matching the same pull request. Defaults to `false`.                                                 |
+| `collapse-after`   | `changelog`                     | Collapses long changelog sections into `<details>`. `0` always collapses, `-1` disables collapsing. Defaults to `-1`.                                     |
+| `semver-increment` | `changelog`, `version-resolver` | Version increment contributed by matching changes. Can be `major`, `minor`, or `patch`. Defaults to `patch`. Ignored for `pre-include` and `pre-exclude`. |
+
 Each category can define a `when` condition as either:
 
 - a single condition object
 - an array of condition objects, where matching any one condition is enough
 
 Within one condition, label and path predicates are combined with AND logic.
+
+The condition keys are:
+
+| Key           | Description                                                                     |
+| ------------- | ------------------------------------------------------------------------------- |
+| `label`       | Shorthand for one `labels` entry.                                               |
+| `labels`      | Label predicates to compare against the pull request labels.                    |
+| `labels-mode` | How the configured labels are matched. Defaults to `any`.                       |
+| `path`        | Shorthand for one `paths` entry.                                                |
+| `paths`       | Glob patterns to compare against the path patterns matched by the pull request. |
+| `paths-mode`  | How the configured paths are matched. Defaults to `any`.                        |
 
 ```yml
 categories:
@@ -356,8 +398,14 @@ path patterns that matched the pull request, not against raw changed file paths.
 If a condition does not configure any `label`/`labels` or `path`/`paths`, the
 corresponding `*-mode` setting has no effect.
 
-Changelog categories require a `title`, because that title is rendered with
-`category-template`.
+An omitted or empty `when` matches all changes, but the meaning depends on the
+category type:
+
+- at most one `type: changelog` category may omit `when`; it becomes the bucket
+  for otherwise uncategorized changes
+- a `type: version-resolver` category with no `when` acts as the fallback when
+  no other version-resolver category matches
+- `pre-include` and `pre-exclude` categories with no `when` match every change
 
 Changes with matching labels or paths will now be grouped together:
 
