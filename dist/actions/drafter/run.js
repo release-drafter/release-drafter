@@ -1243,7 +1243,7 @@ var canUsePreIncludePathPrefilter = (categories) => {
 	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
 	return preIncludeCategories.length > 0 && preIncludeCategories.every((category) => category.when.length > 0 && category.when.every((condition) => condition.paths.length > 0));
 };
-var getSafePreExcludePathPatterns = (categories) => unique(categories.filter((category) => category.type === "pre-exclude").flatMap((category) => category.when).filter((condition) => condition.paths.length > 0 && condition.labels.length === 0 && (condition["labels-mode"] === "any" || condition["labels-mode"] === "all")).flatMap((condition) => condition.paths));
+var getSafePreExcludePathPatterns = (categories) => unique(categories.filter((category) => category.type === "pre-exclude").flatMap((category) => category.when).filter((condition) => condition.paths.length > 0 && condition["paths-mode"] === "any" && condition.labels.length === 0 && (condition["labels-mode"] === "any" || condition["labels-mode"] === "all")).flatMap((condition) => condition.paths));
 var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
 var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
 //#endregion
@@ -3496,7 +3496,8 @@ var findPullRequests = async (params) => {
 			for (const id of ids) excludedCommitIds.add(id);
 		});
 	}
-	commits = commits.filter((commit) => {
+	const comparisonCommits = commits;
+	commits = comparisonCommits.filter((commit) => {
 		if (excludedCommitIds.has(commit.id)) return false;
 		if (shouldFilterByIncludedPaths) return includedCommitIds.has(commit.id);
 		return true;
@@ -3513,7 +3514,7 @@ var findPullRequests = async (params) => {
 		});
 	});
 	const pullRequestMatchedPaths = /* @__PURE__ */ new Map();
-	commits.forEach((commit) => {
+	comparisonCommits.forEach((commit) => {
 		const matchedPaths = commitIdToMatchedPaths.get(commit.id);
 		if (!matchedPaths || matchedPaths.size === 0) return;
 		(commit.associatedPullRequests?.nodes ?? []).filter((pullRequest) => Boolean(pullRequest)).forEach((pullRequest) => {

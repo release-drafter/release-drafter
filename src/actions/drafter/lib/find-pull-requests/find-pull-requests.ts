@@ -16,15 +16,21 @@ export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
 }) => {
+  // Union of every configured path pattern so we can query path matches once and
+  // reuse them for both prefiltering and final category evaluation.
   const allConfiguredPathPatterns = getConfiguredPathPatterns(
     params.config.categories,
   )
+  // Pre-include can only be applied at commit time when every pre-include rule
+  // requires at least one path match.
   const shouldFilterByIncludedPaths = canUsePreIncludePathPrefilter(
     params.config.categories,
   )
   const includedPathPatterns = shouldFilterByIncludedPaths
     ? getPreIncludePathPatterns(params.config.categories)
     : []
+  // Pre-exclude only uses the early path shortcut for conditions where one
+  // matched path is enough to prove exclusion.
   const excludedPathPatterns = getSafePreExcludePathPatterns(
     params.config.categories,
   )
@@ -121,9 +127,11 @@ export const findPullRequests = async (params: {
     })
   }
 
+  const comparisonCommits = commits
+
   // Filter-out commits that did not change included paths.
   // Excluded paths take precedence over included paths when both are configured.
-  commits = commits.filter((commit) => {
+  commits = comparisonCommits.filter((commit) => {
     if (excludedCommitIds.has(commit.id)) {
       return false
     }
@@ -205,7 +213,9 @@ export const findPullRequests = async (params: {
   })
   const pullRequestMatchedPaths = new Map<string, Set<string>>()
 
-  commits.forEach((commit) => {
+  // Keep full PR-level path context from the entire comparison range, even when
+  // commit prefiltering drops some commits before PR extraction.
+  comparisonCommits.forEach((commit) => {
     const matchedPaths = commitIdToMatchedPaths.get(commit.id)
     if (!matchedPaths || matchedPaths.size === 0) {
       return

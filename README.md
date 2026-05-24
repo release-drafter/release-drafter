@@ -350,6 +350,9 @@ The available matching modes are:
 - `only`: every pull request value is included in the configured set
 - `exactly`: the pull request values and configured values are the same set
 
+For path conditions, `only` and `exactly` compare against the set of configured
+path patterns that matched the pull request, not against raw changed file paths.
+
 If a condition does not configure any `label`/`labels` or `path`/`paths`, the
 corresponding `*-mode` setting has no effect.
 

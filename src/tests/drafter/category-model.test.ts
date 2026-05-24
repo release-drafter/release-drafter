@@ -1,5 +1,6 @@
 import {
   filterPullRequestsByPreCategories,
+  getSafePreExcludePathPatterns,
   matchesCategoryCondition,
 } from 'src/actions/drafter/common/category-matching'
 import { mergeInputAndConfig } from 'src/actions/drafter/config'
@@ -278,6 +279,102 @@ describe('category model', () => {
     expect(
       matchesCategoryCondition(condition, makePullRequest(nonMatchingLabels)),
     ).toBe(false)
+  })
+
+  it.each([
+    {
+      mode: 'any' as const,
+      matchingPaths: ['src/**'],
+      nonMatchingPaths: ['tests/**'],
+    },
+    {
+      mode: 'all' as const,
+      matchingPaths: ['src/**', 'docs/**', 'tests/**'],
+      nonMatchingPaths: ['src/**'],
+    },
+    {
+      mode: 'only' as const,
+      matchingPaths: ['src/**'],
+      nonMatchingPaths: ['src/**', 'tests/**'],
+    },
+    {
+      mode: 'exactly' as const,
+      matchingPaths: ['src/**', 'docs/**'],
+      nonMatchingPaths: ['src/**'],
+    },
+  ])('applies paths-mode $mode within when conditions', ({
+    mode,
+    matchingPaths,
+    nonMatchingPaths,
+  }) => {
+    const config = makeParsedConfig([
+      {
+        title: 'Source and docs changes',
+        when: {
+          paths: ['src/**', 'docs/**'],
+          'paths-mode': mode,
+        },
+      },
+    ])
+    const condition = config.categories[0]?.when[0]
+
+    expect(condition).toBeDefined()
+    if (!condition) {
+      throw new Error('Expected a normalized category condition')
+    }
+
+    expect(
+      matchesCategoryCondition(condition, makePullRequest([], matchingPaths)),
+    ).toBe(true)
+    expect(
+      matchesCategoryCondition(
+        condition,
+        makePullRequest([], nonMatchingPaths),
+      ),
+    ).toBe(false)
+  })
+
+  it('only prefilters pre-exclude paths for paths-mode any', () => {
+    const config = makeParsedConfig([
+      {
+        type: 'pre-exclude',
+        when: {
+          paths: ['src/**'],
+          'paths-mode': 'any',
+        },
+      },
+      {
+        type: 'pre-exclude',
+        when: {
+          paths: ['docs/**', 'guides/**'],
+          'paths-mode': 'all',
+        },
+      },
+      {
+        type: 'pre-exclude',
+        when: {
+          paths: ['tests/**'],
+          'paths-mode': 'only',
+        },
+      },
+      {
+        type: 'pre-exclude',
+        when: {
+          paths: ['infra/**'],
+          'paths-mode': 'exactly',
+        },
+      },
+      {
+        type: 'pre-exclude',
+        when: {
+          labels: ['skip-release'],
+          paths: ['release/**'],
+          'paths-mode': 'any',
+        },
+      },
+    ])
+
+    expect(getSafePreExcludePathPatterns(config.categories)).toEqual(['src/**'])
   })
 
   it('applies pre-include and pre-exclude categories before changelog categorization', () => {

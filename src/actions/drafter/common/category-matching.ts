@@ -155,8 +155,16 @@ export const getSafePreExcludePathPatterns = (
       .flatMap((category) => category.when)
       .filter(
         (condition) =>
+          // Optimization: exclude commits before full PR/category evaluation, but
+          // only when one matched path is enough to prove the pre-exclude condition.
+          // That is true for path-only conditions with `paths-mode: any`.
+          // `all`/`only`/`exactly` need the full set of matched path patterns, so
+          // using this shortcut there could exclude commits too early.
           condition.paths.length > 0 &&
+          condition['paths-mode'] === 'any' &&
           condition.labels.length === 0 &&
+          // No labels are configured above, so labels-mode is inert here; keep the
+          // historically safe modes rather than broadening the shortcut's scope.
           (condition['labels-mode'] === 'any' ||
             condition['labels-mode'] === 'all'),
       )
