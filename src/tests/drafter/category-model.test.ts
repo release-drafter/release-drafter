@@ -1,15 +1,15 @@
+import { describe, expect, it } from 'vitest'
+import type * as z from 'zod'
 import {
   filterPullRequestsByPreCategories,
   getSafePreExcludePathPatterns,
   matchesCategoryCondition,
-} from 'src/actions/drafter/common/category-matching'
-import { mergeInputAndConfig } from 'src/actions/drafter/config'
-import { commonConfigSchema } from 'src/actions/drafter/config/schemas/common-config.schema'
-import { configSchema } from 'src/actions/drafter/config/schemas/config.schema'
-import { categorizePullRequests } from 'src/actions/drafter/lib/build-release-payload/categorize-pull-requests'
-import { resolveVersionKeyIncrement } from 'src/actions/drafter/lib/build-release-payload/resolve-version-increment'
-import { describe, expect, it } from 'vitest'
-import type * as z from 'zod'
+} from '#src/actions/drafter/common/category-matching.ts'
+import { mergeInputAndConfig } from '#src/actions/drafter/config/index.ts'
+import { commonConfigSchema } from '#src/actions/drafter/config/schemas/common-config.schema.ts'
+import { configSchema } from '#src/actions/drafter/config/schemas/config.schema.ts'
+import { categorizePullRequests } from '#src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts'
+import { resolveVersionKeyIncrement } from '#src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts'
 
 const makeParsedConfig = (
   categories: NonNullable<z.input<typeof configSchema>['categories']>,

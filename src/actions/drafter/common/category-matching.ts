@@ -1,4 +1,4 @@
-import type { ParsedConfig } from '../config'
+import type { ParsedConfig } from '../config/index.ts'
 
 type ParsedCategory = ParsedConfig['categories'][number]
 type ParsedCondition = ParsedCategory['when'][number]

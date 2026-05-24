@@ -1,11 +1,11 @@
-import { mergeInputAndConfig } from 'src/actions/drafter/config'
-import { commonConfigSchema } from 'src/actions/drafter/config/schemas/common-config.schema'
-import { configSchema } from 'src/actions/drafter/config/schemas/config.schema'
-import { categorizePullRequests } from 'src/actions/drafter/lib/build-release-payload/categorize-pull-requests'
-import { findPullRequests } from 'src/actions/drafter/lib/find-pull-requests'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as z from 'zod'
-import { mockContext } from '../mocks'
+import { mergeInputAndConfig } from '#src/actions/drafter/config/index.ts'
+import { commonConfigSchema } from '#src/actions/drafter/config/schemas/common-config.schema.ts'
+import { configSchema } from '#src/actions/drafter/config/schemas/config.schema.ts'
+import { categorizePullRequests } from '#src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts'
+import { findPullRequests } from '#src/actions/drafter/lib/find-pull-requests/index.ts'
+import { mockContext } from '../mocks/index.ts'
 
 const localMocks = vi.hoisted(() => ({
   findCommitsInComparison: vi.fn(),
@@ -14,7 +14,7 @@ const localMocks = vi.hoisted(() => ({
 
 vi.mock(
   import(
-    'src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison'
+    '#src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts'
   ),
   () => ({
     findCommitsInComparison: localMocks.findCommitsInComparison,
@@ -23,7 +23,7 @@ vi.mock(
 
 vi.mock(
   import(
-    'src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change'
+    '#src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts'
   ),
   () => ({
     findCommitsWithPathChange: localMocks.findCommitsWithPathChange,
@@ -106,7 +106,7 @@ describe('findPullRequests', () => {
         tag_name: 'v1.0.0',
       } as Awaited<
         ReturnType<
-          typeof import('src/actions/drafter/lib/find-previous-releases').findPreviousReleases
+          typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
         >
       >['lastRelease'],
       config: makeConfig([
@@ -154,7 +154,7 @@ describe('findPullRequests', () => {
         tag_name: 'v1.0.0',
       } as Awaited<
         ReturnType<
-          typeof import('src/actions/drafter/lib/find-previous-releases').findPreviousReleases
+          typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
         >
       >['lastRelease'],
       config: makeConfig([
@@ -211,7 +211,7 @@ describe('findPullRequests', () => {
           tag_name: 'v1.0.0',
         } as Awaited<
           ReturnType<
-            typeof import('src/actions/drafter/lib/find-previous-releases').findPreviousReleases
+            typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
           >
         >['lastRelease'],
         config,
@@ -257,7 +257,7 @@ describe('findPullRequests', () => {
           tag_name: 'v1.0.0',
         } as Awaited<
           ReturnType<
-            typeof import('src/actions/drafter/lib/find-previous-releases').findPreviousReleases
+            typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
           >
         >['lastRelease'],
         config,

@@ -1,12 +1,12 @@
-import { mergeInputAndConfig } from 'src/actions/drafter/config'
-import { commonConfigSchema } from 'src/actions/drafter/config/schemas/common-config.schema'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { mergeInputAndConfig } from '#src/actions/drafter/config/index.ts'
+import { parseCategories } from '#src/actions/drafter/config/parse-categories.ts'
+import { commonConfigSchema } from '#src/actions/drafter/config/schemas/common-config.schema.ts'
 import {
   configSchema,
   configSchemaDefaults,
-} from 'src/actions/drafter/config/schemas/config.schema'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { parseCategories } from '../../actions/drafter/config/parse-categories'
-import { mocks } from '../mocks'
+} from '#src/actions/drafter/config/schemas/config.schema.ts'
+import { mocks } from '#tests/mocks/index.ts'
 
 describe('parseCategories', () => {
   beforeEach(() => {

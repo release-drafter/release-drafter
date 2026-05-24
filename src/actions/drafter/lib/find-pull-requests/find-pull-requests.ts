@@ -204,7 +204,6 @@ export const findPullRequests = async (params: {
             withHeadRefName: sharedComparisonParams.withHeadRefName,
           },
         })
-
   const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter(
     (pr) =>
       // `baseRepository` is the repository the PR targets, not the head/fork repo.
@@ -216,6 +215,7 @@ export const findPullRequests = async (params: {
       pr.merged,
   )
   const commitIdToMatchedPaths = new Map<string, Set<string>>()
+  const commitOidToMatchedPaths = new Map<string, Set<string>>()
   Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
     ids.forEach((id) => {
       const matchedPaths = commitIdToMatchedPaths.get(id) ?? new Set<string>()
@@ -233,6 +233,16 @@ export const findPullRequests = async (params: {
       return
     }
 
+    if (commit.oid) {
+      const currentMatchedPaths =
+        commitOidToMatchedPaths.get(commit.oid) ?? new Set<string>()
+
+      for (const path of matchedPaths) {
+        currentMatchedPaths.add(path)
+      }
+      commitOidToMatchedPaths.set(commit.oid, currentMatchedPaths)
+    }
+
     ;(commit.associatedPullRequests?.nodes ?? [])
       .filter((pullRequest): pullRequest is NonNullable<typeof pullRequest> =>
         Boolean(pullRequest),
@@ -247,6 +257,24 @@ export const findPullRequests = async (params: {
         }
         pullRequestMatchedPaths.set(key, currentMatchedPaths)
       })
+  })
+
+  recoveredPRs.forEach((pullRequest) => {
+    const matchedPaths = pullRequest.mergeCommit?.oid
+      ? commitOidToMatchedPaths.get(pullRequest.mergeCommit.oid)
+      : undefined
+    if (!matchedPaths || matchedPaths.size === 0) {
+      return
+    }
+
+    const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
+    const currentMatchedPaths =
+      pullRequestMatchedPaths.get(key) ?? new Set<string>()
+
+    for (const path of matchedPaths) {
+      currentMatchedPaths.add(path)
+    }
+    pullRequestMatchedPaths.set(key, currentMatchedPaths)
   })
 
   core.info(

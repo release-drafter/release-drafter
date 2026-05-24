@@ -1,8 +1,10 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
 import { executeGraphql, getOctokit } from '#src/common/index.ts'
-import { FindRecentMergedPullRequestsDocument } from './graphql/find-recent-merged-pull-requests.graphql.generated.ts'
-import type { PullRequestFieldsFragment } from './graphql/pull-request-fields.fragment.graphql.generated.ts'
+import {
+  FindRecentMergedPullRequestsDocument,
+  type FindRecentMergedPullRequestsQuery,
+} from './graphql/find-recent-merged-pull-requests.graphql.generated.ts'
 
 export type PullRequestFieldFlags = {
   withPullRequestBody: boolean
@@ -13,12 +15,20 @@ export type PullRequestFieldFlags = {
 
 const RECENT_PR_LOOKBACK = 5
 
+type RecentMergedPullRequestNode = NonNullable<
+  NonNullable<
+    FindRecentMergedPullRequestsQuery['repository']
+  >['pullRequests']['nodes']
+>[number]
+
+export type RecentMergedPullRequest = NonNullable<RecentMergedPullRequestNode>
+
 export const findRecentMergedPullRequests = async (params: {
   baseRefName: string | null
   commitOids: Set<string>
   foundPrKeys: Set<string>
   fieldFlags: PullRequestFieldFlags
-}): Promise<PullRequestFieldsFragment[]> => {
+}): Promise<RecentMergedPullRequest[]> => {
   const octokit = getOctokit()
   const nameWithOwner = `${context.repo.owner}/${context.repo.repo}`
 
@@ -35,7 +45,6 @@ export const findRecentMergedPullRequests = async (params: {
   )
 
   const prNodes = data.repository?.pullRequests.nodes ?? []
-  type PRNode = NonNullable<(typeof prNodes)[number]>
 
   const missingPRs = prNodes.filter((pr) => {
     if (!pr?.mergeCommit?.oid) return false
@@ -52,5 +61,5 @@ export const findRecentMergedPullRequests = async (params: {
     `Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(', ')}`,
   )
 
-  return missingPRs.filter((pr): pr is PRNode => pr != null)
+  return missingPRs.filter((pr): pr is RecentMergedPullRequest => pr != null)
 }
