@@ -1188,7 +1188,7 @@ var getTransformedCategories = (config, deprecatedCategoryConfig) => parseCatego
 var validateParsedConfig = (parsedConfig) => {
 	if (!parsedConfig.commitish) throw new Error("'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)");
 	if (parsedConfig.categories.filter((category) => category.type === "changelog" && !category.title).length > 0) throw new Error("Every 'type: \"changelog\"' category must define a non-empty 'title'.");
-	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized pull requests.");
+	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.");
 	if (parsedConfig["filter-by-range"] && !(0, import_valid.default)(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
 };
 //#endregion

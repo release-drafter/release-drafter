@@ -125,7 +125,7 @@ You can configure Release Drafter using the following key in your
 | `change-title-escapes`     | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                     |
 | `no-changes-template`      | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                                                              |
 | `references`               | Optional | The references to listen for configuration updates to `.github/release-drafter.yml`. Refer to [References](#references) to learn more about this                                                                                                         |
-| `categories`               | Optional | Define how changes are filtered, grouped, and versioned. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. Refer to [Categorize Pull Requests](#categorize-pull-requests).                                       |
+| `categories`               | Optional | Define how changes are filtered, grouped, and versioned. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. Refer to [Categorize Changes](#categorize-changes).                                                     |
 | `exclude-contributors`     | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.                                                                                          |
 | `no-contributors-template` | Optional | The template to use for `$CONTRIBUTORS` when there's no contributors to list. Default: `"No contributors"`.                                                                                                                                              |
 | `replacers`                | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                                                                                                            |
@@ -286,7 +286,7 @@ references:
 Currently matching against any `ref/heads/` and `ref/tags/` references behind
 the scene
 
-## Categorize Pull Requests
+## Categorize Changes
 
 With the `categories` option you can describe the full change classification
 pipeline:
@@ -347,8 +347,8 @@ The available matching modes are:
 
 - `any`: at least one configured value matches
 - `all`: every configured value matches
-- `only`: every pull request value is included in the configured set
-- `exactly`: the pull request values and configured values are the same set
+- `only`: every change value is included in the configured set
+- `exactly`: the change values and configured values are the same set
 
 For path conditions, `only` and `exactly` compare against the set of configured
 path patterns that matched the pull request, not against raw changed file paths.
@@ -359,7 +359,7 @@ corresponding `*-mode` setting has no effect.
 Changelog categories require a `title`, because that title is rendered with
 `category-template`.
 
-Pull requests with matching labels or paths will now be grouped together:
+Changes with matching labels or paths will now be grouped together:
 
 <img src="docs/design/screenshot-2.png" alt="Screenshot of generated draft release with categories" width="586" />
 
@@ -381,9 +381,9 @@ categories:
       label: "dependencies"
 ```
 
-## Exclude Pull Requests
+## Exclude Changes
 
-The recommended way to exclude pull requests is a `type: pre-exclude` category.
+The recommended way to exclude changes is a `type: pre-exclude` category.
 For example, append the following to your
 `.github/release-drafter.yml` file:
 
@@ -394,13 +394,13 @@ categories:
       label: "skip-changelog"
 ```
 
-Pull requests with the label "skip-changelog" will now be excluded from the
+Changes with the label "skip-changelog" will now be excluded from the
 release draft.
 
-## Include Pull Requests
+## Include Changes
 
-The recommended way to include only a subset of pull requests is a
-`type: pre-include` category. Only pull requests that match at least one
+The recommended way to include only a subset of changes is a
+`type: pre-include` category. Only changes that match at least one
 `pre-include` category are kept for the rest of the pipeline. For example,
 append the following to your
 `.github/release-drafter.yml` file:
@@ -413,7 +413,7 @@ categories:
         - "app-foo"
 ```
 
-Pull requests with the label "app-foo" will be the only pull requests included
+Changes with the label "app-foo" will be the only changes included
 in the release draft.
 
 ## Exclude Contributors

@@ -435,7 +435,7 @@ describe('mergeInputAndConfig', () => {
       expect(() =>
         mergeInputAndConfig({ config, input }),
       ).toThrowErrorMatchingInlineSnapshot(
-        `[Error: Multiple 'type: "changelog"' categories detected with no 'when' condition. Only one such category is supported for uncategorized pull requests.]`,
+        `[Error: Multiple 'type: "changelog"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.]`,
       )
     })
     it('should throw error when a changelog category does not define a title', async () => {

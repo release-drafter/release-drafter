@@ -27,8 +27,8 @@ const changeConditionSchema = object({
   /**
    * Labels predicate: matches a change that carries these labels.
    *
-   * `labels-mode` defaults to `any`, so the condition matches when the pull
-   * request shares at least one configured label unless another mode is set.
+   * `labels-mode` defaults to `any`, so the condition matches when the change
+   * shares at least one configured label unless another mode is set.
    *
    * Use `labels-mode` to configure how these labels are compared to change labels.
    */
@@ -40,10 +40,10 @@ const changeConditionSchema = object({
    *
    * The comparison is set-based (label order is ignored).
    *
-   * - `any`: Pull request and configured labels overlap (current behavior).
-   * - `all`: Pull request contains every configured label. Pull request can have more labels.
-   * - `only`: Every pull request label is included in configured labels. Configured labels can specify more.
-   * - `exactly`: Pull request labels and configured labels are the same set.
+   * - `any`: Change and configured labels overlap (current behavior).
+   * - `all`: Change contains every configured label. Change can have more labels.
+   * - `only`: Every change label is included in configured labels. Configured labels can specify more.
+   * - `exactly`: Change labels and configured labels are the same set.
    */
   'labels-mode': zenum(['any', 'all', 'only', 'exactly'])
     .optional()
@@ -124,7 +124,7 @@ const categorySchema = object({
    * Default behavior allows changes to appear in multiple categories if they match multiple category criteria.
    *
    * Only applicable to categories of `type: changelog` or `type: version-resolver`.
-   * This only controls inclusion for a single category type at a time, so a pull request can still match
+   * This only controls inclusion for a single category type at a time, so a change can still match
    * one exclusive changelog category and one exclusive version-resolver category.
    *
    * @default false
@@ -146,9 +146,9 @@ const categorySchema = object({
   /**
    * Which version increment this category contributes to `$RESOLVED_VERSION`.
    *
-   * For `type: changelog` categories, this applies to pull requests that end up assigned
+   * For `type: changelog` categories, this applies to changes that end up assigned
    * to the category after changelog matching and `exclusive` handling.
-   * For `type: version-resolver` categories, this applies to pull requests the category
+   * For `type: version-resolver` categories, this applies to changes the category
    * matches directly, with a category that omits `when` acting as the fallback
    * when no other `type: version-resolver` category matches.
    *
@@ -249,29 +249,31 @@ export const exclusiveConfigSchema = object({
    */
   'tag-template': string().optional(),
   /**
-   * Exclude pull requests using labels.
+   * Exclude changes using labels.
    *
    * @deprecated Use a `type: pre-exclude` category with `when.labels` instead.
    */
   'exclude-labels': array(string()).optional().default([]),
   /**
-   * Include only the specified pull requests using labels.
+   * Include only the specified changes using labels.
    *
    * @deprecated Use a `type: pre-include` category with `when.labels` instead.
    */
   'include-labels': array(string()).optional().default([]),
   /**
-   * Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array.
+   * Restrict changes included in the release notes to only the changes that modified any of the paths in this array.
    * Supports files and directories.
    *
    * @deprecated Use a `type: pre-include` category with `when.paths` instead.
    */
   'include-paths': array(string()).optional().default([]),
   /**
-   * Exclude pull requests from the release notes if they modified any of the paths in this array.
+   * Exclude changes from the release notes if they modified any of the paths in this array.
    * Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
    *
-   * @deprecated Use a `type: pre-exclude` category with `when.paths` instead.
+   * @deprecated This field keeps legacy commit-level filtering semantics. A
+   * `type: pre-exclude` category with `when.paths` filters at the change level
+   * instead and is not fully equivalent.
    */
   'exclude-paths': array(string()).optional().default([]),
   /**
