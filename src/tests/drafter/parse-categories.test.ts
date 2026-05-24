@@ -8,6 +8,9 @@ import {
 } from '#src/actions/drafter/config/schemas/config.schema.ts'
 import { mocks } from '#tests/mocks/index.ts'
 
+const migrationDocumentationUrl =
+  'https://github.com/release-drafter/release-drafter/pull/1558'
+
 describe('parseCategories', () => {
   beforeEach(() => {
     mocks.core.warning.mockClear()
@@ -92,6 +95,9 @@ describe('parseCategories', () => {
     )
     expect(mocks.core.warning).toHaveBeenCalledWith(
       expect.stringContaining("deprecated 'version-resolver.major.labels'"),
+    )
+    expect(mocks.core.warning).toHaveBeenCalledWith(
+      expect.stringContaining(migrationDocumentationUrl),
     )
   })
 
@@ -203,6 +209,9 @@ describe('parseCategories', () => {
       expect.stringContaining(
         "deprecated 'categories[*].label' or 'categories[*].labels'",
       ),
+    )
+    expect(mocks.core.warning).toHaveBeenCalledWith(
+      expect.stringContaining(migrationDocumentationUrl),
     )
   })
 
