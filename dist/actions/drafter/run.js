@@ -1015,15 +1015,15 @@ function parseCategories(categories, deprecatedConfig) {
 			default: throw new Error(`Unsupported category type: ${categoryType}`);
 		}
 	});
-	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) {
-		warning(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`);
-		if (parsedCategories.findIndex((cat) => cat.type === "pre-exclude") !== -1) throw new Error("A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels or exclude-paths fields. Please either remove the deprecated fields or remove the existing 'pre-exclude' category to resolve this conflict.");
+	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) warning(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`);
+	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0) {
+		if (parsedCategories.findIndex((cat) => cat.type === "pre-exclude") !== -1) throw new Error("A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels field. Please either remove the deprecated field or remove the existing 'pre-exclude' category to resolve this conflict.");
 		parsedCategories.push({
 			type: "pre-exclude",
 			when: [{
 				labels: deprecatedConfig["exclude-labels"] || [],
 				"labels-mode": "any",
-				paths: deprecatedConfig["exclude-paths"] || [],
+				paths: [],
 				"paths-mode": "any"
 			}]
 		});
@@ -1114,6 +1114,7 @@ var mergeInputAndConfig = (params) => {
 		"exclude-paths": excludePaths,
 		"version-resolver": versionResolver
 	};
+	const compatibility = { "exclude-paths": excludePaths };
 	applyOverrides(config, input);
 	const { commitish, latest, prerelease } = getParsedDefaults(config);
 	const replacers = getTransformedReplacers(config);
@@ -1124,7 +1125,8 @@ var mergeInputAndConfig = (params) => {
 		latest,
 		prerelease,
 		replacers,
-		categories
+		categories,
+		compatibility
 	};
 	validateParsedConfig(parsedConfig);
 	return parsedConfig;
@@ -3427,11 +3429,13 @@ var findCommitsWithPathChange = async (paths, params) => {
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
 var findPullRequests = async (params) => {
-	const allConfiguredPathPatterns = getConfiguredPathPatterns(params.config.categories);
+	const legacyExcludedPathPatterns = [...new Set(params.config.compatibility["exclude-paths"])];
+	const allConfiguredPathPatterns = [...new Set([...getConfiguredPathPatterns(params.config.categories), ...legacyExcludedPathPatterns])];
 	const shouldFilterByIncludedPaths = canUsePreIncludePathPrefilter(params.config.categories);
 	const includedPathPatterns = shouldFilterByIncludedPaths ? getPreIncludePathPatterns(params.config.categories) : [];
 	const excludedPathPatterns = getSafePreExcludePathPatterns(params.config.categories);
-	const shouldFilterByExcludedPaths = excludedPathPatterns.length > 0;
+	const effectiveExcludedPathPatterns = [...new Set([...excludedPathPatterns, ...legacyExcludedPathPatterns])];
+	const shouldFilterByExcludedPaths = effectiveExcludedPathPatterns.length > 0;
 	const sharedComparisonParams = {
 		name: context.repo.repo,
 		owner: context.repo.owner,
@@ -3490,7 +3494,7 @@ var findPullRequests = async (params) => {
 	const excludedCommitIds = /* @__PURE__ */ new Set();
 	if (shouldFilterByExcludedPaths) {
 		info("Finding commits with excluded path changes...");
-		excludedPathPatterns.forEach((path) => {
+		effectiveExcludedPathPatterns.forEach((path) => {
 			const ids = commitIdsMatchingPaths[path] ?? /* @__PURE__ */ new Set();
 			info(`Found ${ids.size} commits with changes to excluded path "${path}"`);
 			for (const id of ids) excludedCommitIds.add(id);

@@ -16,11 +16,20 @@ export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
 }) => {
+  // Deprecated top-level exclude-paths historically filtered commits before PR
+  // extraction. Keep that commit-scoped behavior even though explicit
+  // pre-exclude categories now operate on the full change-level matched paths.
+  const legacyExcludedPathPatterns = [
+    ...new Set(params.config.compatibility['exclude-paths']),
+  ]
   // Union of every configured path pattern so we can query path matches once and
   // reuse them for both prefiltering and final category evaluation.
-  const allConfiguredPathPatterns = getConfiguredPathPatterns(
-    params.config.categories,
-  )
+  const allConfiguredPathPatterns = [
+    ...new Set([
+      ...getConfiguredPathPatterns(params.config.categories),
+      ...legacyExcludedPathPatterns,
+    ]),
+  ]
   // Pre-include can only be applied at commit time when every pre-include rule
   // requires at least one path match.
   const shouldFilterByIncludedPaths = canUsePreIncludePathPrefilter(
@@ -34,7 +43,10 @@ export const findPullRequests = async (params: {
   const excludedPathPatterns = getSafePreExcludePathPatterns(
     params.config.categories,
   )
-  const shouldFilterByExcludedPaths = excludedPathPatterns.length > 0
+  const effectiveExcludedPathPatterns = [
+    ...new Set([...excludedPathPatterns, ...legacyExcludedPathPatterns]),
+  ]
+  const shouldFilterByExcludedPaths = effectiveExcludedPathPatterns.length > 0
 
   const sharedComparisonParams = {
     name: context.repo.repo,
@@ -116,7 +128,7 @@ export const findPullRequests = async (params: {
   const excludedCommitIds = new Set<string>()
   if (shouldFilterByExcludedPaths) {
     core.info('Finding commits with excluded path changes...')
-    excludedPathPatterns.forEach((path) => {
+    effectiveExcludedPathPatterns.forEach((path) => {
       const ids = commitIdsMatchingPaths[path] ?? new Set<string>()
       core.info(
         `Found ${ids.size} commits with changes to excluded path "${path}"`,

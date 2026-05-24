@@ -1,6 +1,7 @@
 import { mergeInputAndConfig } from 'src/actions/drafter/config'
 import { commonConfigSchema } from 'src/actions/drafter/config/schemas/common-config.schema'
 import { configSchema } from 'src/actions/drafter/config/schemas/config.schema'
+import { categorizePullRequests } from 'src/actions/drafter/lib/build-release-payload/categorize-pull-requests'
 import { findPullRequests } from 'src/actions/drafter/lib/find-pull-requests'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as z from 'zod'
@@ -178,5 +179,99 @@ describe('findPullRequests', () => {
       (result.pullRequests[0] as PullRequestWithMatchedPaths | undefined)
         ?.matchedPaths,
     ).toEqual(['docs/**', 'src/**'])
+  })
+
+  describe('deprecated path filter compatibility', () => {
+    it('keeps a PR when deprecated exclude-paths only removes some of its commits', async () => {
+      const docsCommitId = 'docs-commit'
+      const srcCommitId = 'src-commit'
+
+      localMocks.findCommitsInComparison.mockResolvedValue([
+        makeCommit(docsCommitId, 1),
+        makeCommit(srcCommitId, 1),
+      ])
+      localMocks.findCommitsWithPathChange.mockResolvedValue({
+        commitIdsMatchingPaths: {
+          'docs/**': new Set([docsCommitId]),
+        },
+        hasFoundCommits: true,
+      })
+
+      const config = mergeInputAndConfig({
+        config: configSchema.parse({
+          template: '$CHANGES',
+          commitish: 'refs/heads/main',
+          'exclude-paths': ['docs/**'],
+        }),
+        input: commonConfigSchema.parse({}),
+      })
+
+      const result = await findPullRequests({
+        lastRelease: {
+          tag_name: 'v1.0.0',
+        } as Awaited<
+          ReturnType<
+            typeof import('src/actions/drafter/lib/find-previous-releases').findPreviousReleases
+          >
+        >['lastRelease'],
+        config,
+      })
+
+      expect(result.commits.map((commit) => commit.id)).toEqual([srcCommitId])
+      expect(result.pullRequests).toHaveLength(1)
+
+      const [uncategorizedPullRequests] = categorizePullRequests({
+        pullRequests: result.pullRequests,
+        config,
+      })
+
+      expect(uncategorizedPullRequests).toHaveLength(1)
+    })
+
+    it('still lets category-based pre-exclude remove a mixed-path PR entirely', async () => {
+      const docsCommitId = 'docs-commit'
+      const srcCommitId = 'src-commit'
+
+      localMocks.findCommitsInComparison.mockResolvedValue([
+        makeCommit(docsCommitId, 1),
+        makeCommit(srcCommitId, 1),
+      ])
+      localMocks.findCommitsWithPathChange.mockResolvedValue({
+        commitIdsMatchingPaths: {
+          'docs/**': new Set([docsCommitId]),
+        },
+        hasFoundCommits: true,
+      })
+
+      const config = makeConfig([
+        {
+          type: 'pre-exclude',
+          when: {
+            paths: ['docs/**'],
+          },
+        },
+      ])
+
+      const result = await findPullRequests({
+        lastRelease: {
+          tag_name: 'v1.0.0',
+        } as Awaited<
+          ReturnType<
+            typeof import('src/actions/drafter/lib/find-previous-releases').findPreviousReleases
+          >
+        >['lastRelease'],
+        config,
+      })
+
+      expect(result.commits.map((commit) => commit.id)).toEqual([srcCommitId])
+      expect(result.pullRequests).toHaveLength(1)
+
+      const [uncategorizedPullRequests] = categorizePullRequests({
+        pullRequests: result.pullRequests,
+        config,
+      })
+
+      expect(uncategorizedPullRequests).toHaveLength(0)
+    })
   })
 })

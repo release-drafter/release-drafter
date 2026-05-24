@@ -181,11 +181,16 @@ export function parseCategories(
     core.warning(
       `Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`,
     )
+  }
+  if (
+    deprecatedConfig['exclude-labels'] &&
+    deprecatedConfig['exclude-labels'].length > 0
+  ) {
     if (
       parsedCategories.findIndex((cat) => cat.type === 'pre-exclude') !== -1
     ) {
       throw new Error(
-        "A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels or exclude-paths fields. Please either remove the deprecated fields or remove the existing 'pre-exclude' category to resolve this conflict.",
+        "A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels field. Please either remove the deprecated field or remove the existing 'pre-exclude' category to resolve this conflict.",
       )
     }
     parsedCategories.push({
@@ -194,7 +199,7 @@ export function parseCategories(
         {
           labels: deprecatedConfig['exclude-labels'] || [],
           'labels-mode': 'any',
-          paths: deprecatedConfig['exclude-paths'] || [],
+          paths: [],
           'paths-mode': 'any',
         },
       ],
