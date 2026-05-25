@@ -3341,10 +3341,10 @@ describe('drafter e2e', () => {
 
   describe('dry-run', () => {
     describe('when no existing draft release exists (create)', () => {
-      it('does not perform any write operations and logs the payload', async () => {
+      it('does not perform any write operations, logs the payload, and sets computed outputs', async () => {
         await mockContext('push')
         await mockInput('dry-run', 'true')
-        mocks.config.mockReturnValue('config')
+        mocks.config.mockReturnValue('config-with-resolved-version-template')
 
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-comparison-no-prs',
@@ -3362,6 +3362,8 @@ describe('drafter e2e', () => {
         // Dry-run message should have been logged
         const infoMessages = mocks.core.info.mock.calls.flat()
         expect(infoMessages.some((msg) => msg.includes('[dry-run]'))).toBe(true)
+        expect(mocks.core.setOutput).toHaveBeenCalledWith('tag_name', 'v2.0.1')
+        expect(mocks.core.setOutput).toHaveBeenCalledWith('name', 'v2.0.1 🌈')
 
         expect(scope.isDone()).toBe(true) // GET releases was called
         expect(gqlScope.pendingMocks().length).toBe(0)
@@ -3370,13 +3372,13 @@ describe('drafter e2e', () => {
     })
 
     describe('when an existing draft release exists (update)', () => {
-      it('does not perform any write operations and logs the payload', async () => {
+      it('does not perform any write operations, logs the payload, and sets computed outputs', async () => {
         await mockContext('push')
         await mockInput('dry-run', 'true')
-        mocks.config.mockReturnValue('config')
+        mocks.config.mockReturnValue('config-with-resolved-version-template')
 
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-comparison-merge-commit',
+          payload: 'graphql-comparison-no-prs',
         })
 
         // Only a GET scope — no PATCH scope, so any attempt to update a release
@@ -3393,6 +3395,8 @@ describe('drafter e2e', () => {
         // Dry-run message should have been logged
         const infoMessages = mocks.core.info.mock.calls.flat()
         expect(infoMessages.some((msg) => msg.includes('[dry-run]'))).toBe(true)
+        expect(mocks.core.setOutput).toHaveBeenCalledWith('tag_name', 'v2.0.1')
+        expect(mocks.core.setOutput).toHaveBeenCalledWith('name', 'v2.0.1 🌈')
 
         expect(scope.isDone()).toBe(true) // GET releases was called
         expect(gqlScope.pendingMocks().length).toBe(0)

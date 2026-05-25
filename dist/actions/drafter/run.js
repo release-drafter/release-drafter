@@ -1109,15 +1109,17 @@ var validateParsedConfig = (parsedConfig) => {
 var setActionOutput = (params) => {
 	const { releasePayload, upsertedRelease } = params;
 	info("Set action outputs...");
-	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body } = releasePayload;
+	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body, name: releaseName, tag: releaseTagName } = releasePayload;
+	const outputName = upsertedRelease?.data.name ?? releaseName;
+	const outputTagName = upsertedRelease?.data.tag_name ?? releaseTagName;
 	if (upsertedRelease) {
-		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl, tag_name: tagName, name } } = upsertedRelease;
+		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl } } = upsertedRelease;
 		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
 		if (htmlUrl) setOutput("html_url", htmlUrl);
 		if (uploadUrl) setOutput("upload_url", uploadUrl);
-		if (tagName) setOutput("tag_name", tagName);
-		if (name) setOutput("name", name);
 	}
+	if (outputTagName) setOutput("tag_name", outputTagName);
+	if (outputName) setOutput("name", outputName);
 	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
 	if (majorVersion) setOutput("major_version", majorVersion);
 	if (minorVersion) setOutput("minor_version", minorVersion);
