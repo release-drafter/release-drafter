@@ -13,28 +13,31 @@ export const setActionOutput = (params: {
 
   core.info('Set action outputs...')
 
-  const { resolvedVersion, majorVersion, minorVersion, patchVersion, body } =
-    releasePayload
+  const {
+    resolvedVersion,
+    majorVersion,
+    minorVersion,
+    patchVersion,
+    body,
+    name: releaseName,
+    tag: releaseTagName,
+  } = releasePayload
+  const outputName = upsertedRelease?.data.name ?? releaseName
+  const outputTagName = upsertedRelease?.data.tag_name ?? releaseTagName
 
   if (upsertedRelease) {
     const {
-      data: {
-        id: releaseId,
-        html_url: htmlUrl,
-        upload_url: uploadUrl,
-        tag_name: tagName,
-        name,
-      },
+      data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl },
     } = upsertedRelease
 
     if (releaseId && Number.isInteger(releaseId))
       core.setOutput('id', releaseId.toString())
     if (htmlUrl) core.setOutput('html_url', htmlUrl)
     if (uploadUrl) core.setOutput('upload_url', uploadUrl)
-    if (tagName) core.setOutput('tag_name', tagName)
-    if (name) core.setOutput('name', name)
   }
 
+  if (outputTagName) core.setOutput('tag_name', outputTagName)
+  if (outputName) core.setOutput('name', outputName)
   if (resolvedVersion) core.setOutput('resolved_version', resolvedVersion)
   if (majorVersion) core.setOutput('major_version', majorVersion)
   if (minorVersion) core.setOutput('minor_version', minorVersion)
