@@ -1228,16 +1228,12 @@ function buildReplaceStringForSpecificSpecialCharacter(matches, pattern, special
 }
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/render-template/util/replacePattern.ts
-var ReplacePatternKind = /* @__PURE__ */ function(ReplacePatternKind) {
-	ReplacePatternKind[ReplacePatternKind["StaticValue"] = 0] = "StaticValue";
-	ReplacePatternKind[ReplacePatternKind["DynamicPieces"] = 1] = "DynamicPieces";
-	return ReplacePatternKind;
-}(ReplacePatternKind || {});
 /**
 * Assigned when the replace pattern is entirely static.
 */
 var StaticValueReplacePattern = class {
-	kind = ReplacePatternKind.StaticValue;
+	staticValue;
+	kind = 0;
 	constructor(staticValue) {
 		this.staticValue = staticValue;
 	}
@@ -1246,7 +1242,8 @@ var StaticValueReplacePattern = class {
 * Assigned when the replace pattern has replacement patterns.
 */
 var DynamicPiecesReplacePattern = class {
-	kind = ReplacePatternKind.DynamicPieces;
+	pieces;
+	kind = 1;
 	constructor(pieces) {
 		this.pieces = pieces;
 	}
@@ -1257,7 +1254,7 @@ var ReplacePattern = class ReplacePattern {
 	}
 	_state;
 	get hasReplacementPatterns() {
-		return this._state.kind === ReplacePatternKind.DynamicPieces;
+		return this._state.kind === 1;
 	}
 	constructor(pieces) {
 		if (!pieces || pieces.length === 0) this._state = new StaticValueReplacePattern("");
@@ -1265,7 +1262,7 @@ var ReplacePattern = class ReplacePattern {
 		else this._state = new DynamicPiecesReplacePattern(pieces);
 	}
 	buildReplaceString(matches, preserveCase) {
-		if (this._state.kind === ReplacePatternKind.StaticValue) if (preserveCase) return buildReplaceStringWithCasePreserved(matches, this._state.staticValue);
+		if (this._state.kind === 0) if (preserveCase) return buildReplaceStringWithCasePreserved(matches, this._state.staticValue);
 		else return this._state.staticValue;
 		let result = "";
 		for (let i = 0, len = this._state.pieces.length; i < len; i++) {
