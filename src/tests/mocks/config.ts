@@ -61,6 +61,8 @@ export type AvailableConfigs =
   | 'config-with-replacers'
   | 'config-with-resolved-version-template'
   | 'config-with-schema-error'
+  | 'config-with-smoke-test-categories-legacy'
+  | 'config-with-smoke-test-categories-migrated'
   | 'config-with-sort-by-title'
   | 'config-with-sort-direction-ascending'
   | 'config-with-tag-prefix'
