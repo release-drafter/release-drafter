@@ -95,9 +95,210 @@ var getActionInput = () => {
 };
 //#endregion
 //#region src/actions/drafter/config/schemas/config.schema.ts
+/**
+* A single set of predicates that are combined with AND logic.
+* All specified predicates must be satisfied for a change to match.
+*/
+var changeConditionSchema = object({
+	/**
+	* Label predicate: matches a change that carries this label.
+	*
+	* Shorthand for adding a single value to `labels`.
+	* If `label` and `labels` are both specified, they are combined.
+	*
+	* Use `labels-mode` to configure how this label is compared to change labels.
+	*/
+	label: string().min(1).optional(),
+	/**
+	* Labels predicate: matches a change that carries these labels.
+	*
+	* `labels-mode` defaults to `any`, so the condition matches when the change
+	* shares at least one configured label unless another mode is set.
+	*
+	* Use `labels-mode` to configure how these labels are compared to change labels.
+	*/
+	labels: array(string().min(1)).optional().default([]),
+	/**
+	* Matching mode for the `labels` predicate.
+	*
+	* Has no effect unless `label` or `labels` is configured in the same condition.
+	*
+	* The comparison is set-based (label order is ignored).
+	*
+	* - `any`: Change and configured labels overlap (current behavior).
+	* - `all`: Change contains every configured label. Change can have more labels.
+	* - `only`: Every change label is included in configured labels. Configured labels can specify more.
+	* - `exactly`: Change labels and configured labels are the same set.
+	*/
+	"labels-mode": _enum([
+		"any",
+		"all",
+		"only",
+		"exactly"
+	]).optional().default("any"),
+	/**
+	* Path predicate: matches a change that touched this path pattern. Supports glob patterns.
+	*
+	* Same as specifying a single `paths` value.
+	* If `path` and `paths` are both specified, they are combined.
+	*
+	* Use `paths-mode` to configure how this path is matched against the matched
+	* configured path patterns for a change.
+	*/
+	path: string().min(1).optional(),
+	/**
+	* Paths predicate: matches a change that touched any of these path patterns.
+	* Values support glob patterns.
+	*
+	* If `path` and `paths` are both specified, they are combined before
+	* `paths-mode` is applied.
+	*
+	* Use `paths-mode` to configure how these path patterns are compared to the
+	* matched configured path patterns for a change.
+	*/
+	paths: array(string().min(1)).optional().default([]),
+	/**
+	* Matching mode for the `paths` predicate.
+	*
+	* Has no effect unless `path` or `paths` is configured in the same condition.
+	*
+	* The comparison is set-based (path order is ignored).
+	*
+	* - `any`: At least one configured path pattern matched the change.
+	* - `all`: Every configured path pattern matched the change.
+	* - `only`: Every matched configured path pattern is included in the condition.
+	* - `exactly`: The set of matched configured path patterns equals the condition.
+	*/
+	"paths-mode": _enum([
+		"any",
+		"all",
+		"only",
+		"exactly"
+	]).optional().default("any")
+});
+var changeConditionSchemaDefaults = changeConditionSchema.parse({});
+var categorySchema = object({
+	/**
+	* Expanded in $TITLE in the category-template.
+	*
+	* Required when `type` is `changelog` (default).
+	* This is enforced during merged-config validation rather than by this schema alone.
+	*
+	* May be omitted for non-changelog categories because
+	* they are not rendered in the changelog output.
+	*/
+	title: string().min(1).optional(),
+	/**
+	* The type of the category.
+	*
+	* - `changelog`: Included in the generated changelog.
+	* - `pre-include`: Keep only matching changes for later changelog categorization.
+	* - `pre-exclude`: Exclude matching changes for later changelog categorization. Is run against changes that were included in category type `pre-include` if specified.
+	* - `version-resolver`: Used solely to determine `$RESOLVED_VERSION` from the changes this category matches, without rendering a changelog section. Use `type: 'changelog'` (default) and `categories[*].semver-increment` instead if you mean this category to also be included in the changelog.
+	*
+	* `pre-include` always runs before `pre-exclude` in the pipeline.
+	* Omitted values default to `changelog`.
+	*
+	* @default "changelog"
+	*/
+	type: _enum([
+		"changelog",
+		"pre-include",
+		"pre-exclude",
+		"version-resolver"
+	]).optional().default("changelog"),
+	/**
+	* Whether changes included in this category should be excluded from other categories.
+	*
+	* Default behavior allows changes to appear in multiple categories if they match multiple category criteria.
+	*
+	* Only applicable to categories of `type: changelog` or `type: version-resolver`.
+	* This only controls inclusion for a single category type at a time, so a change can still match
+	* one exclusive changelog category and one exclusive version-resolver category.
+	*
+	* @default false
+	*/
+	exclusive: boolean().optional().default(false),
+	/**
+	* Collapses the category's change list into a `<details>`/`<summary>` block
+	* when the number of changes is greater than this value.
+	*
+	* Only applicable to categories of `type: changelog`.
+	*
+	* Set to `0` to always collapse. Set to `-1` to disable collapsing.
+	*
+	* @default -1
+	*/
+	"collapse-after": number().int().min(-1).optional().default(-1),
+	/**
+	* Which version increment this category contributes to `$RESOLVED_VERSION`.
+	*
+	* For `type: changelog` categories, this applies to changes that end up assigned
+	* to the category after changelog matching and `exclusive` handling.
+	* For `type: version-resolver` categories, this applies to changes the category
+	* matches directly, with a category that omits `when` acting as the fallback
+	* when no other `type: version-resolver` category matches.
+	*
+	* If multiple categories contribute, the most severe increment wins.
+	* For example, if one contributing category has `semver-increment: 'minor'`
+	* and another has `semver-increment: 'patch'`, the resulting increment will
+	* be `minor`.
+	*
+	* Applicable to categories of `type: changelog` and `type: version-resolver`.
+	* Ignored for `type: pre-include` and `type: pre-exclude`.
+	*
+	* @default "patch"
+	*/
+	"semver-increment": _enum([
+		"major",
+		"minor",
+		"patch"
+	]).optional().default("patch"),
+	/**
+	* Compatibility shorthand for adding label matching to this category.
+	*
+	* Equivalent to adding the same `labels` predicate to every `when` condition.
+	*
+	* @deprecated Use `when.labels` instead.
+	*/
+	labels: array(string().min(1)).optional().default([]),
+	/**
+	* Compatibility shorthand for adding a single label match to this category.
+	*
+	* Equivalent to adding the same `label` predicate to every `when` condition.
+	*
+	* @deprecated Use `when.label` instead.
+	*/
+	label: string().min(1).optional(),
+	/**
+	* Conditions that determine whether a change belongs to this category.
+	*
+	* Can be specified as:
+	* - A **single condition** (object): the change must satisfy all predicates in that condition.
+	* - An **array of conditions**: the change must satisfy all predicates of **at least one**
+	*   condition (OR logic across conditions, AND logic within each condition).
+	*
+	* An empty array (default) matches all changes.
+	*
+	* @example
+	* # Shorthand: single condition (must have label "bug" AND touch "src/")
+	* when:
+	*   labels: [bug]
+	*   paths: [src/**]
+	*
+	* @example
+	* # Array: (label "bug" AND path "src/") OR (label "enhancement")
+	* when:
+	*   - labels: [bug]
+	*     paths: [src/**]
+	*   - labels: [enhancement]
+	*/
+	when: changeConditionSchema.or(array(changeConditionSchema)).optional().default([])
+});
+var categorySchemaDefaults = categorySchema.parse({});
 var exclusiveConfigSchema = object({
 	/**
-	* The template to use for each merged pull request.
+	* The template to use for each merged change.
 	*/
 	"change-template": string().optional().default("* $TITLE (#$NUMBER) @$AUTHOR"),
 	/**
@@ -125,19 +326,31 @@ var exclusiveConfigSchema = object({
 	*/
 	"tag-template": string().optional(),
 	/**
-	* Exclude pull requests using labels.
+	* Exclude changes using labels.
+	*
+	* @deprecated Use a `type: pre-exclude` category with `when.labels` instead.
 	*/
 	"exclude-labels": array(string()).optional().default([]),
 	/**
-	* Include only the specified pull requests using labels.
+	* Include only the specified changes using labels.
+	*
+	* @deprecated Use a `type: pre-include` category with `when.labels` instead.
 	*/
 	"include-labels": array(string()).optional().default([]),
 	/**
-	* Restrict pull requests included in the release notes to only the pull requests that modified any of the paths in this array. Supports files and directories.
+	* Restrict changes included in the release notes to only the changes that modified any of the paths in this array.
+	* Supports files and directories.
+	*
+	* @deprecated Use a `type: pre-include` category with `when.paths` instead.
 	*/
 	"include-paths": array(string()).optional().default([]),
 	/**
-	* Exclude pull requests from the release notes if they modified any of the paths in this array. Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
+	* Exclude changes from the release notes if they modified any of the paths in this array.
+	* Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
+	*
+	* @deprecated This field keeps legacy commit-level filtering semantics. A
+	* `type: pre-exclude` category with `when.paths` filters at the change level
+	* instead and is not fully equivalent.
 	*/
 	"exclude-paths": array(string()).optional().default([]),
 	/**
@@ -173,16 +386,13 @@ var exclusiveConfigSchema = object({
 		replace: string().min(0)
 	})).optional().default([]),
 	/**
-	* Categorize pull requests using labels.
+	* Categorize changes
 	*/
-	categories: array(object({
-		title: string().min(1),
-		"collapse-after": number().int().min(-1).optional().default(-1),
-		labels: array(string().min(1)).optional().default([]),
-		label: string().min(1).optional()
-	})).optional().default([]),
+	categories: array(categorySchema).optional().default([]),
 	/**
 	* Adjust the `$RESOLVED_VERSION` variable using labels.
+	*
+	* @deprecated Use a category with a `semver-increment` instead. Use category[ies] with `type: version-resolver` to separate version resolution from changelog inclusion concerns.
 	*/
 	"version-resolver": object({
 		major: object({ labels: array(string().min(1)) }).optional().default({ labels: [] }),
@@ -213,7 +423,7 @@ var exclusiveConfigSchema = object({
 	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
 });
 var configSchema = exclusiveConfigSchema.and(commonConfigSchema);
-Object.fromEntries(Object.entries({
+var configSchemaDefaults = Object.fromEntries(Object.entries({
 	...exclusiveConfigSchema.shape,
 	...commonConfigSchema.shape
 }).map(([key, value]) => {
@@ -1004,7 +1214,7 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	};
 }));
 //#endregion
-//#region src/actions/drafter/config/merge-input-and-config.ts
+//#region src/actions/drafter/config/parse-categories.ts
 var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var Range = require_range();
 	var validRange = (range, options) => {
@@ -1016,6 +1226,162 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 	};
 	module.exports = validRange;
 })))(), 1);
+var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
+var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
+/**
+* Parses all categories from the config, normalizing conditions and
+* handling backward compatibility with deprecated fields.
+*
+* This function:
+* - Normalizes a missing `type` to `changelog` to match schema defaults
+* - Normalizes the `when` field to always be an array of conditions
+* - Applies deprecated category-level `label`/`labels` shorthands to every
+*   normalized `when` condition
+* - Warns when deprecated compatibility fields are used
+* - Preserves all other category fields as-is
+*
+* Accepts both fully-typed and partial category objects for flexibility.
+*
+* @param categories - Categories from the raw config
+* @returns Array of fully parsed categories with normalized conditions
+*/
+function parseCategories(categories, deprecatedConfig) {
+	const parsedCategories = structuredClone(categories.categories).map((cat) => {
+		const { labels, label, when: _when, "collapse-after": rawCollapseAfter, "semver-increment": rawSemverIncrement, exclusive: rawExclusive, title, ..._cat } = cat;
+		const collapseAfter = rawCollapseAfter ?? categorySchemaDefaults["collapse-after"];
+		const semverIncrement = rawSemverIncrement ?? categorySchemaDefaults["semver-increment"];
+		const exclusive = rawExclusive ?? categorySchemaDefaults.exclusive;
+		const deprecatedLabels = [...labels || [], ...label ? [label] : []];
+		if (deprecatedLabels.length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
+		const parsedWhenConditions = (_when !== void 0 ? Array.isArray(_when) ? _when.length > 0 || deprecatedLabels.length === 0 ? _when : [{}] : [_when] : deprecatedLabels.length > 0 ? [{}] : []).map((condition) => {
+			const { path, label, ..._cond } = condition;
+			return {
+				...changeConditionSchemaDefaults,
+				..._cond,
+				"labels-mode": condition["labels-mode"] ?? changeConditionSchemaDefaults["labels-mode"],
+				"paths-mode": condition["paths-mode"] ?? changeConditionSchemaDefaults["paths-mode"],
+				paths: [...condition.paths || [], ...path ? [path] : []],
+				labels: [
+					...deprecatedLabels,
+					...condition.labels || [],
+					...label ? [label] : []
+				]
+			};
+		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0);
+		const categoryType = _cat.type ?? categorySchemaDefaults.type;
+		switch (categoryType) {
+			case "changelog": return {
+				type: "changelog",
+				when: parsedWhenConditions,
+				"collapse-after": collapseAfter,
+				"semver-increment": semverIncrement,
+				exclusive,
+				title
+			};
+			case "version-resolver":
+				if (title) warning(`Title "${title}" ignored for category of type "${categoryType}"`);
+				if (collapseAfter !== -1) warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
+				return {
+					type: "version-resolver",
+					when: parsedWhenConditions,
+					"semver-increment": semverIncrement,
+					exclusive
+				};
+			case "pre-exclude":
+			case "pre-include":
+				if (title) warning(`Title "${title}" ignored for category of type "${categoryType}"`);
+				if (collapseAfter !== -1) warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
+				if (exclusive) throw new Error(`"exclusive" can only be set on categories of type "changelog" or "version-resolver"; it cannot be used on category of type "${categoryType}".`);
+				if (semverIncrement !== "patch") warning(`"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`);
+				return {
+					type: categoryType,
+					when: parsedWhenConditions
+				};
+			default: throw new Error(`Unsupported category type: ${categoryType}`);
+		}
+	});
+	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`));
+	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0) {
+		if (parsedCategories.findIndex((cat) => cat.type === "pre-exclude") !== -1) throw new Error("A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels field. Please either remove the deprecated field or remove the existing 'pre-exclude' category to resolve this conflict.");
+		parsedCategories.push({
+			type: "pre-exclude",
+			when: [{
+				labels: deprecatedConfig["exclude-labels"] || [],
+				"labels-mode": "any",
+				paths: [],
+				"paths-mode": "any"
+			}]
+		});
+	}
+	if (deprecatedConfig["include-labels"] && deprecatedConfig["include-labels"].length > 0 || deprecatedConfig["include-paths"] && deprecatedConfig["include-paths"].length > 0) {
+		warning(withMigrationDocumentationLink(`Use of deprecated 'include-labels' or 'include-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-include"' category.`));
+		if (parsedCategories.findIndex((cat) => cat.type === "pre-include") !== -1) throw new Error("A 'pre-include' category already exists. Cannot migrate deprecated include-labels or include-paths fields. Please either remove the deprecated fields or remove the existing 'pre-include' category to resolve this conflict.");
+		parsedCategories.push({
+			type: "pre-include",
+			when: [{
+				labels: deprecatedConfig["include-labels"] || [],
+				"labels-mode": "any",
+				paths: deprecatedConfig["include-paths"] || [],
+				"paths-mode": "any"
+			}]
+		});
+	}
+	if (deprecatedConfig["version-resolver"].default !== configSchemaDefaults["version-resolver"].default) {
+		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.default' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "${deprecatedConfig["version-resolver"].default}"' to 'type: changelog' category with no 'when' condition (uncategorized changes), or move the default resolver to a new category with type 'version-resolver' and 'semver-increment' set to "${deprecatedConfig["version-resolver"].default}" - also without 'when' conditions.`));
+		if (parsedCategories.findIndex((cat) => cat.type === "version-resolver" && cat.when.length === 0) !== -1) throw new Error("A 'version-resolver' category with no 'when' condition already exists. Cannot migrate deprecated 'version-resolver.default' field. Please either remove the deprecated field or remove the existing 'version-resolver' category to resolve this conflict.");
+		parsedCategories.push({
+			type: "version-resolver",
+			"semver-increment": deprecatedConfig["version-resolver"].default,
+			when: [],
+			exclusive: false
+		});
+	}
+	if (deprecatedConfig["version-resolver"].major.labels !== configSchemaDefaults["version-resolver"].major.labels && deprecatedConfig["version-resolver"].major.labels.length > 0) {
+		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.major.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "major"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.major.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'major'.`));
+		parsedCategories.push({
+			type: "version-resolver",
+			"semver-increment": "major",
+			when: [{
+				labels: deprecatedConfig["version-resolver"].major.labels || [],
+				"labels-mode": "any",
+				paths: [],
+				"paths-mode": "any"
+			}],
+			exclusive: false
+		});
+	}
+	if (deprecatedConfig["version-resolver"].minor.labels !== configSchemaDefaults["version-resolver"].minor.labels && deprecatedConfig["version-resolver"].minor.labels.length > 0) {
+		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.minor.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "minor"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.minor.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'minor'.`));
+		parsedCategories.push({
+			type: "version-resolver",
+			"semver-increment": "minor",
+			when: [{
+				labels: deprecatedConfig["version-resolver"].minor.labels || [],
+				"labels-mode": "any",
+				paths: [],
+				"paths-mode": "any"
+			}],
+			exclusive: false
+		});
+	}
+	if (deprecatedConfig["version-resolver"].patch.labels !== configSchemaDefaults["version-resolver"].patch.labels && deprecatedConfig["version-resolver"].patch.labels.length > 0) {
+		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.patch.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "patch"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.patch.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'patch'.`));
+		parsedCategories.push({
+			type: "version-resolver",
+			"semver-increment": "patch",
+			when: [{
+				labels: deprecatedConfig["version-resolver"].patch.labels || [],
+				"labels-mode": "any",
+				paths: [],
+				"paths-mode": "any"
+			}],
+			exclusive: false
+		});
+	}
+	return parsedCategories;
+}
+//#endregion
+//#region src/actions/drafter/config/merge-input-and-config.ts
 /**
 * Returns a copy of `config`, updated with values from `input`.
 *
@@ -1025,18 +1391,27 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 */
 var mergeInputAndConfig = (params) => {
 	const { config: originalConfig, input } = params;
-	const config = structuredClone(originalConfig);
+	const { "exclude-labels": excludeLabels, "include-labels": includeLabels, "include-paths": includePaths, "exclude-paths": excludePaths, "version-resolver": versionResolver, ...config } = structuredClone(originalConfig);
+	const deprecatedCategoryConfig = {
+		"exclude-labels": excludeLabels,
+		"include-labels": includeLabels,
+		"include-paths": includePaths,
+		"exclude-paths": excludePaths,
+		"version-resolver": versionResolver
+	};
+	const compatibility = { "exclude-paths": excludePaths };
 	applyOverrides(config, input);
 	const { commitish, latest, prerelease } = getParsedDefaults(config);
 	const replacers = getTransformedReplacers(config);
-	const categories = getTransformedCategories(config);
+	const categories = getTransformedCategories(config, deprecatedCategoryConfig);
 	const parsedConfig = {
 		...config,
 		commitish,
 		latest,
 		prerelease,
 		replacers,
-		categories
+		categories,
+		compatibility
 	};
 	validateParsedConfig(parsedConfig);
 	return parsedConfig;
@@ -1094,14 +1469,11 @@ var getTransformedReplacers = (config) => config.replacers.map((r) => {
 		return false;
 	}
 }).filter((r) => !!r);
-var getTransformedCategories = (config) => config.categories.map((cat) => {
-	const { label, ..._cat } = cat;
-	_cat.labels = [...cat.labels, label].filter(Boolean);
-	return _cat;
-});
+var getTransformedCategories = (config, deprecatedCategoryConfig) => parseCategories(config, deprecatedCategoryConfig);
 var validateParsedConfig = (parsedConfig) => {
 	if (!parsedConfig.commitish) throw new Error("'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)");
-	if (parsedConfig.categories.filter((category) => category.labels.length === 0).length > 1) throw new Error("Multiple categories detected with no labels. Only one category with no labels is supported for uncategorized pull requests.");
+	if (parsedConfig.categories.filter((category) => category.type === "changelog" && !category.title).length > 0) throw new Error("Every 'type: \"changelog\"' category must define a non-empty 'title'.");
+	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.");
 	if (parsedConfig["filter-by-range"] && !(0, import_valid.default)(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
 };
 //#endregion
@@ -1128,43 +1500,67 @@ var setActionOutput = (params) => {
 	info("Outputs set!");
 };
 //#endregion
+//#region src/actions/drafter/common/category-matching.ts
+var getPullRequestLabels = (pullRequest) => (pullRequest.labels?.nodes ?? []).filter((label) => Boolean(label?.name)).map((label) => label.name);
+var unique = (values) => [...new Set(values)];
+var matchesValues = (actualValues, expectedValues, mode) => {
+	const actual = unique(actualValues);
+	const expected = unique(expectedValues);
+	if (expected.length === 0) return true;
+	switch (mode) {
+		case "all": return expected.every((value) => actual.includes(value));
+		case "only": return actual.every((value) => expected.includes(value));
+		case "exactly": return actual.length === expected.length && actual.every((value) => expected.includes(value));
+		default: return expected.length === 0 || expected.some((value) => actual.includes(value));
+	}
+};
+var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesValues(pullRequest.matchedPaths ?? [], condition.paths, condition["paths-mode"]);
+var matchesCategory = (category, pullRequest) => category.when.length === 0 || category.when.some((condition) => matchesCategoryCondition(condition, pullRequest));
+var filterPullRequestsByPreCategories = (pullRequests, categories) => {
+	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
+	const preExcludeCategories = categories.filter((category) => category.type === "pre-exclude");
+	return pullRequests.filter((pullRequest) => {
+		if (!(preIncludeCategories.length === 0 || preIncludeCategories.some((category) => matchesCategory(category, pullRequest)))) return false;
+		return !preExcludeCategories.some((category) => matchesCategory(category, pullRequest));
+	});
+};
+var getConfiguredPathPatterns = (categories) => unique(categories.flatMap((category) => category.when.flatMap((condition) => condition.paths)));
+var getPreIncludePathPatterns = (categories) => unique(categories.filter((category) => category.type === "pre-include").flatMap((category) => category.when.flatMap((condition) => condition.paths)));
+var canUsePreIncludePathPrefilter = (categories) => {
+	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
+	return preIncludeCategories.length > 0 && preIncludeCategories.every((category) => category.when.length > 0 && category.when.every((condition) => condition.paths.length > 0));
+};
+var getSafePreExcludePathPatterns = (categories) => unique(categories.filter((category) => category.type === "pre-exclude").flatMap((category) => category.when).filter((condition) => condition.paths.length > 0 && condition["paths-mode"] === "any" && condition.labels.length === 0 && (condition["labels-mode"] === "any" || condition["labels-mode"] === "all")).flatMap((condition) => condition.paths));
+var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
+var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
+//#endregion
 //#region src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts
 var categorizePullRequests = (params) => {
 	const { pullRequests, config } = params;
-	const allCategoryLabels = new Set(config.categories.flatMap((category) => category.labels));
+	const changelogCategories = getChangelogCategories(config.categories);
 	const uncategorizedPullRequests = [];
-	const categorizedPullRequests = [...config.categories].map((category) => {
+	const categorizedPullRequests = changelogCategories.map((category) => {
 		return {
 			...category,
 			pullRequests: []
 		};
 	});
-	const uncategorizedCategoryIndex = config.categories.findIndex((category) => category.labels.length === 0);
-	const filterUncategorizedPullRequests = (pullRequest) => {
-		const labels = pullRequest.labels?.nodes || [];
-		if (labels.length === 0 || !labels.some((label) => !!label?.name && allCategoryLabels.has(label?.name))) {
-			if (uncategorizedCategoryIndex === -1) uncategorizedPullRequests.push(pullRequest);
-			else categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(pullRequest);
-			return false;
+	const uncategorizedCategoryIndex = changelogCategories.findIndex((category) => category.when.length === 0);
+	const filteredPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
+	for (const pullRequest of filteredPullRequests) {
+		let matchedAnyCategory = false;
+		for (const category of categorizedPullRequests) {
+			if (category.when.length === 0) continue;
+			if (matchesCategory(category, pullRequest)) {
+				category.pullRequests.push(pullRequest);
+				matchedAnyCategory = true;
+				if (category.exclusive) break;
+			}
 		}
-		return true;
-	};
-	const filteredPullRequests = pullRequests.filter(getFilterExcludedPullRequests(config["exclude-labels"])).filter(getFilterIncludedPullRequests(config["include-labels"])).filter((pullRequest) => filterUncategorizedPullRequests(pullRequest));
-	for (const category of categorizedPullRequests) for (const pullRequest of filteredPullRequests) if ((pullRequest.labels?.nodes || []).some((label) => !!label?.name && category.labels.includes(label.name))) category.pullRequests.push(pullRequest);
+		if (!matchedAnyCategory) if (uncategorizedCategoryIndex === -1) uncategorizedPullRequests.push(pullRequest);
+		else categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(pullRequest);
+	}
 	return [uncategorizedPullRequests, categorizedPullRequests];
-};
-var getFilterExcludedPullRequests = (excludeLabels) => {
-	return (pullRequest) => {
-		if ((pullRequest.labels?.nodes || []).some((label) => !!label?.name && excludeLabels.includes(label.name))) return false;
-		return true;
-	};
-};
-var getFilterIncludedPullRequests = (includeLabels) => {
-	return (pullRequest) => {
-		const labels = pullRequest.labels?.nodes || [];
-		if (includeLabels.length === 0 || labels.some((label) => !!label?.name && includeLabels.includes(label.name))) return true;
-		return false;
-	};
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/render-template/util/charCode.ts
@@ -1859,22 +2255,50 @@ var renderTagName = (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts
+var priorityMap = {
+	patch: 1,
+	minor: 2,
+	major: 3
+};
+var getHighestPriority = (params) => {
+	const { pullRequests, categories, emptyWhenBehavior } = params;
+	const emptyWhenCategory = categories.find((category) => category.when.length === 0);
+	const matchedPullRequests = /* @__PURE__ */ new Set();
+	let highestPriority;
+	let remainingPullRequests = [...pullRequests];
+	for (const category of categories) {
+		if (category.when.length === 0) continue;
+		const matchingPullRequests = remainingPullRequests.filter((pullRequest) => matchesCategory(category, pullRequest));
+		if (matchingPullRequests.length === 0) continue;
+		highestPriority = Math.max(highestPriority ?? 0, priorityMap[category["semver-increment"]]);
+		for (const pullRequest of matchingPullRequests) matchedPullRequests.add(pullRequest);
+		if (category.exclusive) {
+			const matchedPullRequestsSet = new Set(matchingPullRequests);
+			remainingPullRequests = remainingPullRequests.filter((pullRequest) => !matchedPullRequestsSet.has(pullRequest));
+		}
+	}
+	if (!emptyWhenCategory) return highestPriority;
+	if (emptyWhenBehavior === "fallback") return highestPriority ?? priorityMap[emptyWhenCategory["semver-increment"]];
+	if (!pullRequests.some((pullRequest) => !matchedPullRequests.has(pullRequest))) return highestPriority;
+	return Math.max(highestPriority ?? 0, priorityMap[emptyWhenCategory["semver-increment"]]);
+};
 var resolveVersionKeyIncrement = (params) => {
 	const { pullRequests, config } = params;
-	const priorityMap = {
-		patch: 1,
-		minor: 2,
-		major: 3
-	};
-	const labelToKeyMap = Object.fromEntries(Object.keys(priorityMap).flatMap((key) => [config["version-resolver"][key].labels.map((label) => [label, key])]).flat());
-	debug(`labelToKeyMap: ${JSON.stringify(labelToKeyMap)}`);
-	const keys = pullRequests.filter(getFilterExcludedPullRequests(config["exclude-labels"])).filter(getFilterIncludedPullRequests(config["include-labels"])).flatMap((pr) => pr.labels?.nodes?.filter((n) => !!n?.name).map((node) => labelToKeyMap[node.name])).filter(Boolean);
-	debug(`keys: ${JSON.stringify(keys)}`);
-	const keyPriorities = keys.map((key) => priorityMap[key]);
-	const priority = Math.max(...keyPriorities);
-	const versionKey = Object.keys(priorityMap).find((key) => priorityMap[key] === priority);
+	const filteredPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
+	const changelogPriority = getHighestPriority({
+		pullRequests: filteredPullRequests,
+		categories: getChangelogCategories(config.categories),
+		emptyWhenBehavior: "uncategorized"
+	});
+	const versionResolverPriority = getHighestPriority({
+		pullRequests: filteredPullRequests,
+		categories: getVersionResolverCategories(config.categories),
+		emptyWhenBehavior: "fallback"
+	}) ?? priorityMap.patch;
+	const resolvedPriority = Math.max(changelogPriority ?? 0, versionResolverPriority);
+	const versionKey = Object.entries(priorityMap).find(([, priority]) => priority === resolvedPriority)?.[0];
 	debug(`versionKey: ${versionKey}`);
-	let versionKeyIncrement = versionKey || config["version-resolver"].default;
+	let versionKeyIncrement = versionKey;
 	if (config.prerelease && config["prerelease-identifier"]) versionKeyIncrement = `pre${versionKeyIncrement}`;
 	info(`Version increment: ${versionKeyIncrement}${!versionKey ? " (default)" : ""}`);
 	return versionKeyIncrement;
@@ -3967,8 +4391,13 @@ var findRecentMergedPullRequests = async (params) => {
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
 var findPullRequests = async (params) => {
-	const shouldFilterByIncludedPaths = params.config["include-paths"].length > 0;
-	const shouldFilterByExcludedPaths = params.config["exclude-paths"].length > 0;
+	const legacyExcludedPathPatterns = [...new Set(params.config.compatibility["exclude-paths"])];
+	const allConfiguredPathPatterns = [...new Set([...getConfiguredPathPatterns(params.config.categories), ...legacyExcludedPathPatterns])];
+	const shouldFilterByIncludedPaths = canUsePreIncludePathPrefilter(params.config.categories);
+	const includedPathPatterns = shouldFilterByIncludedPaths ? getPreIncludePathPatterns(params.config.categories) : [];
+	const excludedPathPatterns = getSafePreExcludePathPatterns(params.config.categories);
+	const effectiveExcludedPathPatterns = [...new Set([...excludedPathPatterns, ...legacyExcludedPathPatterns])];
+	const shouldFilterByExcludedPaths = effectiveExcludedPathPatterns.length > 0;
 	const sharedComparisonParams = {
 		name: context.repo.repo,
 		owner: context.repo.owner,
@@ -3995,29 +4424,31 @@ var findPullRequests = async (params) => {
 	});
 	info(`Found ${commits.length} commits.`);
 	const comparisonCommitIds = new Set(commits.map((c) => c.id));
+	let commitIdsMatchingPaths = {};
 	/**
-	* If include-paths are specified,
-	* find all commits that changed those paths to filter PRs later.
-	*
-	* If exclude-paths are specified,
-	* find all commits that changed those paths and remove them from results.
+	* Find commits that touched configured category path patterns so later steps can:
+	* - pre-filter commits when pre-include/pre-exclude categories make that safe
+	* - attach matched path patterns back to pull requests for category evaluation
 	*
 	* The underlying query does not bother fetching PRs along commits.
 	*/
-	const includedCommitIds = /* @__PURE__ */ new Set();
-	if (shouldFilterByIncludedPaths) {
-		info("Finding commits with included path changes...");
-		const { commitIdsMatchingPaths, hasFoundCommits } = await findCommitsWithPathChange(params.config["include-paths"], {
+	if (allConfiguredPathPatterns.length > 0) {
+		commitIdsMatchingPaths = (await findCommitsWithPathChange(allConfiguredPathPatterns, {
 			name: context.repo.repo,
 			owner: context.repo.owner,
 			targetCommitish: params.config.commitish,
 			comparisonCommitIds
-		});
-		if (!hasFoundCommits) return {
+		})).commitIdsMatchingPaths;
+		if (shouldFilterByIncludedPaths && includedPathPatterns.every((pathPattern) => commitIdsMatchingPaths[pathPattern]?.size === 0)) return {
 			commits: [],
 			pullRequests: []
 		};
-		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+	}
+	const includedCommitIds = /* @__PURE__ */ new Set();
+	if (shouldFilterByIncludedPaths) {
+		info("Finding commits with included path changes...");
+		includedPathPatterns.forEach((path) => {
+			const ids = commitIdsMatchingPaths[path] ?? /* @__PURE__ */ new Set();
 			info(`Found ${ids.size} commits with changes to included path "${path}"`);
 			for (const id of ids) includedCommitIds.add(id);
 		});
@@ -4025,18 +4456,14 @@ var findPullRequests = async (params) => {
 	const excludedCommitIds = /* @__PURE__ */ new Set();
 	if (shouldFilterByExcludedPaths) {
 		info("Finding commits with excluded path changes...");
-		const { commitIdsMatchingPaths } = await findCommitsWithPathChange(params.config["exclude-paths"], {
-			name: context.repo.repo,
-			owner: context.repo.owner,
-			targetCommitish: params.config.commitish,
-			comparisonCommitIds
-		});
-		Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+		effectiveExcludedPathPatterns.forEach((path) => {
+			const ids = commitIdsMatchingPaths[path] ?? /* @__PURE__ */ new Set();
 			info(`Found ${ids.size} commits with changes to excluded path "${path}"`);
 			for (const id of ids) excludedCommitIds.add(id);
 		});
 	}
-	commits = commits.filter((commit) => {
+	const comparisonCommits = commits;
+	commits = comparisonCommits.filter((commit) => {
 		if (excludedCommitIds.has(commit.id)) return false;
 		if (shouldFilterByIncludedPaths) return includedCommitIds.has(commit.id);
 		return true;
@@ -4060,10 +4487,50 @@ var findPullRequests = async (params) => {
 		}
 	});
 	const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
+	const commitIdToMatchedPaths = /* @__PURE__ */ new Map();
+	const commitOidToMatchedPaths = /* @__PURE__ */ new Map();
+	Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
+		ids.forEach((id) => {
+			const matchedPaths = commitIdToMatchedPaths.get(id) ?? /* @__PURE__ */ new Set();
+			matchedPaths.add(path);
+			commitIdToMatchedPaths.set(id, matchedPaths);
+		});
+	});
+	const pullRequestMatchedPaths = /* @__PURE__ */ new Map();
+	comparisonCommits.forEach((commit) => {
+		const matchedPaths = commitIdToMatchedPaths.get(commit.id);
+		if (!matchedPaths || matchedPaths.size === 0) return;
+		if (commit.oid) {
+			const currentMatchedPaths = commitOidToMatchedPaths.get(commit.oid) ?? /* @__PURE__ */ new Set();
+			for (const path of matchedPaths) currentMatchedPaths.add(path);
+			commitOidToMatchedPaths.set(commit.oid, currentMatchedPaths);
+		}
+		(commit.associatedPullRequests?.nodes ?? []).filter((pullRequest) => Boolean(pullRequest)).forEach((pullRequest) => {
+			const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+			const currentMatchedPaths = pullRequestMatchedPaths.get(key) ?? /* @__PURE__ */ new Set();
+			for (const path of matchedPaths) currentMatchedPaths.add(path);
+			pullRequestMatchedPaths.set(key, currentMatchedPaths);
+		});
+	});
+	recoveredPRs.forEach((pullRequest) => {
+		const matchedPaths = pullRequest.mergeCommit?.oid ? commitOidToMatchedPaths.get(pullRequest.mergeCommit.oid) : void 0;
+		if (!matchedPaths || matchedPaths.size === 0) return;
+		const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+		const currentMatchedPaths = pullRequestMatchedPaths.get(key) ?? /* @__PURE__ */ new Set();
+		for (const path of matchedPaths) currentMatchedPaths.add(path);
+		pullRequestMatchedPaths.set(key, currentMatchedPaths);
+	});
 	info(`Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
 	return {
 		commits,
-		pullRequests
+		pullRequests: pullRequests.map((pullRequest) => {
+			const matchedPaths = [...pullRequestMatchedPaths.get(`${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`) ?? []];
+			if (matchedPaths.length === 0) return pullRequest;
+			return {
+				...pullRequest,
+				matchedPaths
+			};
+		})
 	};
 };
 //#endregion

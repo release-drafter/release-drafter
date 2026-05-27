@@ -46,7 +46,7 @@ const escapeTitle = (params: {
   // If not, the entire backtick block is matched so that it will become a markdown code block without escaping any of its content
   params.title.replace(
     new RegExp(`[${regexEscape(params.escapes || '')}]|\`.*?\``, 'g'),
-    (match) => {
+    (match: string) => {
       if (match.length > 1) return match
       if (match === '@' || match === '#') return `${match}<!---->`
       return `\\${match}`

@@ -138,11 +138,20 @@ describe('generate changelog', () => {
   })
 
   it('adds proper details/summary markdown when collapse-after is set and more than 3 PRs', () => {
+    const categorizedConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        references: ['master'],
+        categories: [
+          { title: 'Bugs', 'collapse-after': 3, when: { labels: ['bug'] } },
+        ],
+      }),
+      input: actionInputSchema.parse({
+        token: 'test',
+      }),
+    })
     const changelog = generateChangeLog({
-      config: {
-        ...config,
-        categories: [{ title: 'Bugs', 'collapse-after': 3, labels: ['bug'] }],
-      },
+      config: categorizedConfig,
       pullRequests,
     })
     expect(changelog).toMatchInlineSnapshot(`
@@ -166,11 +175,20 @@ describe('generate changelog', () => {
   })
 
   it('adds proper details/summary markdown when collapse-after is set to 0 and has a PR', () => {
+    const categorizedConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        references: ['master'],
+        categories: [
+          { title: 'Bugs', 'collapse-after': 0, when: { labels: ['bug'] } },
+        ],
+      }),
+      input: actionInputSchema.parse({
+        token: 'test',
+      }),
+    })
     const changelog = generateChangeLog({
-      config: {
-        ...config,
-        categories: [{ title: 'Bugs', 'collapse-after': 0, labels: ['bug'] }],
-      },
+      config: categorizedConfig,
       pullRequests: pullRequests.slice(0, 1),
     })
     expect(changelog).toMatchInlineSnapshot(`
@@ -184,14 +202,73 @@ describe('generate changelog', () => {
     `)
   })
 
-  it('does not add proper details/summary markdown when collapse-after is set and less than 3 PRs', () => {
-    const changelog = generateChangeLog({
-      config: {
-        ...config,
+  it('does not collapse when the category has exactly collapse-after pull requests', () => {
+    const categorizedConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        references: ['master'],
         categories: [
-          { title: 'Feature', 'collapse-after': 3, labels: ['feature'] },
+          {
+            title: 'Feature',
+            'collapse-after': 2,
+            when: { labels: ['feature'] },
+          },
         ],
-      },
+      }),
+      input: actionInputSchema.parse({
+        token: 'test',
+      }),
+    })
+    const changelog = generateChangeLog({
+      config: categorizedConfig,
+      pullRequests,
+    })
+
+    expect(changelog).not.toContain('<details>')
+    expect(changelog).toContain('## Feature')
+  })
+
+  it('does not collapse when collapse-after is disabled with -1', () => {
+    const categorizedConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        references: ['master'],
+        categories: [
+          { title: 'Bugs', 'collapse-after': -1, when: { labels: ['bug'] } },
+        ],
+      }),
+      input: actionInputSchema.parse({
+        token: 'test',
+      }),
+    })
+    const changelog = generateChangeLog({
+      config: categorizedConfig,
+      pullRequests,
+    })
+
+    expect(changelog).not.toContain('<details>')
+    expect(changelog).toContain('## Bugs')
+  })
+
+  it('does not add proper details/summary markdown when collapse-after is set and less than 3 PRs', () => {
+    const categorizedConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        references: ['master'],
+        categories: [
+          {
+            title: 'Feature',
+            'collapse-after': 3,
+            when: { labels: ['feature'] },
+          },
+        ],
+      }),
+      input: actionInputSchema.parse({
+        token: 'test',
+      }),
+    })
+    const changelog = generateChangeLog({
+      config: categorizedConfig,
       pullRequests,
     })
 
@@ -221,11 +298,18 @@ describe('generate changelog', () => {
   })
 
   it('returns no-changes-template when all pull requests are excluded by exclude-labels', () => {
-    const changelog = generateChangeLog({
-      config: {
-        ...config,
+    const excludedConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        references: ['master'],
         'exclude-labels': ['bug', 'feature', 'bugfix', 'dependencies'],
-      },
+      }),
+      input: actionInputSchema.parse({
+        token: 'test',
+      }),
+    })
+    const changelog = generateChangeLog({
+      config: excludedConfig,
       pullRequests,
     })
 
@@ -233,11 +317,18 @@ describe('generate changelog', () => {
   })
 
   it('returns no-changes-template when no pull requests match include-labels', () => {
-    const changelog = generateChangeLog({
-      config: {
-        ...config,
+    const includedConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        references: ['master'],
         'include-labels': ['non-existent-label'],
-      },
+      }),
+      input: actionInputSchema.parse({
+        token: 'test',
+      }),
+    })
+    const changelog = generateChangeLog({
+      config: includedConfig,
       pullRequests,
     })
 
