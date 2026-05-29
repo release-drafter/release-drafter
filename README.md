@@ -670,6 +670,15 @@ inputs to other Actions in the workflow
 | `minor_version`    | Minor part of resolved version by [Version Resolver](#version-resolver). i.e. `3` for version `6.3.1`                                                                                                                         |
 | `patch_version`    | Patch part of resolved version by [Version Resolver](#version-resolver). i.e. `1` for version `6.3.1`                                                                                                                         |
 
+## GitHub Enterprise Server (GHES)
+
+Release Drafter creates its GitHub client with
+[`@actions/github.getOctokit()`](https://github.com/actions/toolkit/tree/main/packages/github#readme).
+In GitHub Actions, that client uses the runtime API base URL from
+`GITHUB_API_URL`, so the same workflow can target GHES without extra
+`github.com`-specific configuration, assuming the required REST and GraphQL
+APIs are available on the instance.
+
 ## Contributing
 
 Third-party contributions are welcome! 🙏🏼 See
