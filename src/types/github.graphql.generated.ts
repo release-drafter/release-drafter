@@ -1690,7 +1690,7 @@ export type BulkSponsorship = {
 };
 
 /** Types that can represent a repository ruleset bypass actor. */
-export type BypassActor = App | Team | User;
+export type BypassActor = App | EnterpriseTeam | Team | User;
 
 /** A user, team, or app who has the ability to bypass a force push requirement on a protected branch. */
 export type BypassForcePushAllowance = Node & {
@@ -3367,6 +3367,23 @@ export type ConnectedEvent = Node & {
   source: ReferencedSubject;
   /** Issue or pull request which was connected. */
   subject: ReferencedSubject;
+};
+
+/** The content warning for a repository */
+export type ContentWarning = {
+  __typename?: 'ContentWarning';
+  /** The content warning' category. E.g. 'mis_dis_information' */
+  category: Scalars['String']['output'];
+  /** The content warning's custom sub category text. E.g. 'dangerous stuff.' */
+  customSubCategory?: Maybe<Scalars['String']['output']>;
+  /** The content warning's sub category. E.g. 'medical_scientific' */
+  subCategory?: Maybe<Scalars['String']['output']>;
+  /** The content warning's sub title. E.g. 'The information contained in this page has not been verified.' */
+  subTitle?: Maybe<Scalars['String']['output']>;
+  /** The content warning's title. E.g. 'This page may contain false or misleading information.' */
+  title: Scalars['String']['output'];
+  /** The type of content warning. E.g. 'interstitial' */
+  type: Scalars['String']['output'];
 };
 
 /** The Contributing Guidelines for a repository. */
@@ -7151,6 +7168,10 @@ export type Enterprise = Node & {
   description?: Maybe<Scalars['String']['output']>;
   /** The description of the enterprise as HTML. */
   descriptionHTML: Scalars['HTML']['output'];
+  /** Find an enterprise team by its slug. */
+  enterpriseTeam?: Maybe<EnterpriseTeam>;
+  /** A list of enterprise teams in this enterprise. */
+  enterpriseTeams: EnterpriseTeamConnection;
   /** The Node ID of the Enterprise object */
   id: Scalars['ID']['output'];
   /** The location of the enterprise. */
@@ -7200,6 +7221,23 @@ export type Enterprise = Node & {
 /** An account to manage multiple organizations with consolidated policy and billing. */
 export type EnterpriseAvatarUrlArgs = {
   size?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/** An account to manage multiple organizations with consolidated policy and billing. */
+export type EnterpriseEnterpriseTeamArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+/** An account to manage multiple organizations with consolidated policy and billing. */
+export type EnterpriseEnterpriseTeamsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<EnterpriseTeamOrder>;
+  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -7392,7 +7430,10 @@ export type EnterpriseBillingInfo = {
   __typename?: 'EnterpriseBillingInfo';
   /** The number of licenseable users/emails across the enterprise. */
   allLicensableUsersCount: Scalars['Int']['output'];
-  /** The number of data packs used by all organizations owned by the enterprise. */
+  /**
+   * The number of data packs used by all organizations owned by the enterprise. Data packs are deprecated, always returns 0.
+   * @deprecated LFS data packs have been removed. Always returns 0.
+   */
   assetPacks: Scalars['Int']['output'];
   /** The bandwidth quota in GB for all organizations owned by the enterprise. */
   bandwidthQuota: Scalars['Float']['output'];
@@ -8582,6 +8623,188 @@ export type EnterpriseServerUserAccountsUploadSyncState =
   | 'PENDING'
   /** The synchronization of the upload succeeded. */
   | 'SUCCESS';
+
+/** A team that belongs to an enterprise and can be assigned to multiple organizations. */
+export type EnterpriseTeam = Node & TeamReviewRequestable & {
+  __typename?: 'EnterpriseTeam';
+  /** Organizations this team is assigned to. */
+  assignedOrganizations: EnterpriseTeamAssignedOrganizationConnection;
+  /** The human-readable, unique identifier for the enterprise and team. */
+  combinedSlug: Scalars['String']['output'];
+  /** Identifies the date and time when the object was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** The description of the team. */
+  description?: Maybe<Scalars['String']['output']>;
+  /** The enterprise this team belongs to. */
+  enterprise?: Maybe<Enterprise>;
+  /** A list of users who are members of this enterprise team. */
+  enterpriseTeamMembers: EnterpriseTeamMemberConnection;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
+  /** The Node ID of the EnterpriseTeam object */
+  id: Scalars['ID']['output'];
+  /** Whether the viewer is a member of this team. */
+  isViewerMember: Scalars['Boolean']['output'];
+  /** The name of the team. */
+  name: Scalars['String']['output'];
+  /** Whether the team will receive notifications when mentioned. */
+  notificationSetting: TeamNotificationSetting;
+  /** How this team selects its associated organizations. */
+  organizationSelectionType: EnterpriseTeamOrganizationSelectionType;
+  /** The level of privacy the team has. */
+  privacy: TeamPrivacy;
+  /** The slug corresponding to the team. */
+  slug: Scalars['String']['output'];
+  /** Identifies the date and time when the object was last updated. */
+  updatedAt: Scalars['DateTime']['output'];
+  /** Whether the viewer can administer this team. */
+  viewerCanAdminister: Scalars['Boolean']['output'];
+};
+
+
+/** A team that belongs to an enterprise and can be assigned to multiple organizations. */
+export type EnterpriseTeamAssignedOrganizationsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<EnterpriseTeamOrganizationOrder>;
+};
+
+
+/** A team that belongs to an enterprise and can be assigned to multiple organizations. */
+export type EnterpriseTeamEnterpriseTeamMembersArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<EnterpriseTeamMemberOrder>;
+  query?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The connection type for Organization. */
+export type EnterpriseTeamAssignedOrganizationConnection = {
+  __typename?: 'EnterpriseTeamAssignedOrganizationConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<EnterpriseTeamAssignedOrganizationEdge>>>;
+  /** A list of nodes. */
+  nodes?: Maybe<Array<Maybe<Organization>>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** Represents an organization that an enterprise team is assigned to. */
+export type EnterpriseTeamAssignedOrganizationEdge = {
+  __typename?: 'EnterpriseTeamAssignedOrganizationEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  node?: Maybe<Organization>;
+};
+
+/** A list of enterprise teams owned by the enterprise. */
+export type EnterpriseTeamConnection = {
+  __typename?: 'EnterpriseTeamConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<EnterpriseTeamEdge>>>;
+  /** A list of nodes. */
+  nodes?: Maybe<Array<Maybe<EnterpriseTeam>>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type EnterpriseTeamEdge = {
+  __typename?: 'EnterpriseTeamEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node?: Maybe<EnterpriseTeam>;
+};
+
+/** The connection type for User. */
+export type EnterpriseTeamMemberConnection = {
+  __typename?: 'EnterpriseTeamMemberConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<EnterpriseTeamMemberEdge>>>;
+  /** A list of nodes. */
+  nodes?: Maybe<Array<Maybe<User>>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** Represents a user who is a member of an enterprise team. */
+export type EnterpriseTeamMemberEdge = {
+  __typename?: 'EnterpriseTeamMemberEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  node?: Maybe<User>;
+};
+
+/** Ordering options for enterprise team member connections. */
+export type EnterpriseTeamMemberOrder = {
+  /** The ordering direction. */
+  direction: OrderDirection;
+  /** The field to order enterprise team members by. */
+  field: EnterpriseTeamMemberOrderField;
+};
+
+/** Properties by which enterprise team member connections can be ordered. */
+export type EnterpriseTeamMemberOrderField =
+  /** Order enterprise team members by creation time. */
+  | 'CREATED_AT'
+  /** Order enterprise team members by ID. */
+  | 'ID'
+  /** Order enterprise team members by login. */
+  | 'LOGIN';
+
+/** Ordering options for enterprise team connections. */
+export type EnterpriseTeamOrder = {
+  /** The ordering direction. */
+  direction: OrderDirection;
+  /** The field to order enterprise teams by. */
+  field: EnterpriseTeamOrderField;
+};
+
+/** Properties by which enterprise team connections can be ordered. */
+export type EnterpriseTeamOrderField =
+  /** Order enterprise teams by creation time. */
+  | 'CREATED_AT'
+  /** Order enterprise teams by ID. */
+  | 'ID'
+  /** Order enterprise teams by name. */
+  | 'NAME';
+
+/** Ordering options for enterprise team organization connections. */
+export type EnterpriseTeamOrganizationOrder = {
+  /** The ordering direction. */
+  direction: OrderDirection;
+  /** The field to order organizations by. */
+  field: EnterpriseTeamOrganizationOrderField;
+};
+
+/** Properties by which enterprise team organization connections can be ordered. */
+export type EnterpriseTeamOrganizationOrderField =
+  /** Order enterprise team organizations by creation time. */
+  | 'CREATED_AT'
+  /** Order enterprise team organizations by ID. */
+  | 'ID'
+  /** Order enterprise team organizations by login. */
+  | 'LOGIN';
+
+/** The possible organization selection types for an enterprise team. */
+export type EnterpriseTeamOrganizationSelectionType =
+  /** The team is associated with all organizations in the enterprise. */
+  | 'ALL'
+  /** The team is not associated with any organizations. */
+  | 'DISABLED'
+  /** The team is associated with selected organizations. */
+  | 'SELECTED';
 
 /** An account for a user who is an admin of an enterprise or a member of an enterprise through one or more organizations. */
 export type EnterpriseUserAccount = Actor & Node & {
@@ -10475,6 +10698,8 @@ export type IssueFieldCommon = {
   dataType: IssueFieldDataType;
   /** The issue field's description. */
   description?: Maybe<Scalars['String']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The issue field's name. */
   name: Scalars['String']['output'];
   /** The issue field's visibility. */
@@ -10501,6 +10726,8 @@ export type IssueFieldCreateOrUpdateInput = {
 export type IssueFieldDataType =
   /** Date */
   | 'DATE'
+  /** Multi Select */
+  | 'MULTI_SELECT'
   /** Number */
   | 'NUMBER'
   /** Single Select */
@@ -10517,6 +10744,8 @@ export type IssueFieldDate = IssueFieldCommon & Node & {
   dataType: IssueFieldDataType;
   /** The issue field's description. */
   description?: Maybe<Scalars['String']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The Node ID of the IssueFieldDate object */
   id: Scalars['ID']['output'];
   /** The issue field's name. */
@@ -10545,6 +10774,8 @@ export type IssueFieldNumber = IssueFieldCommon & Node & {
   dataType: IssueFieldDataType;
   /** The issue field's description. */
   description?: Maybe<Scalars['String']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The Node ID of the IssueFieldNumber object */
   id: Scalars['ID']['output'];
   /** The issue field's name. */
@@ -10601,6 +10832,8 @@ export type IssueFieldSingleSelect = IssueFieldCommon & Node & {
   dataType: IssueFieldDataType;
   /** The issue field's description. */
   description?: Maybe<Scalars['String']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The Node ID of the IssueFieldSingleSelect object */
   id: Scalars['ID']['output'];
   /** The issue field's name. */
@@ -10616,8 +10849,12 @@ export type IssueFieldSingleSelectOption = Node & {
   __typename?: 'IssueFieldSingleSelectOption';
   /** The option's display color. */
   color: IssueFieldSingleSelectOptionColor;
+  /** Identifies the primary key from the database. */
+  databaseId?: Maybe<Scalars['Int']['output']>;
   /** The option's plain-text description. */
   description?: Maybe<Scalars['String']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The Node ID of the IssueFieldSingleSelectOption object */
   id: Scalars['ID']['output'];
   /** The option's name. */
@@ -10685,6 +10922,8 @@ export type IssueFieldText = IssueFieldCommon & Node & {
   dataType: IssueFieldDataType;
   /** The issue field's description. */
   description?: Maybe<Scalars['String']['output']>;
+  /** Identifies the primary key from the database as a BigInt. */
+  fullDatabaseId?: Maybe<Scalars['BigInt']['output']>;
   /** The Node ID of the IssueFieldText object */
   id: Scalars['ID']['output'];
   /** The issue field's name. */
@@ -19800,7 +20039,7 @@ export type PatchStatus =
   | 'RENAMED';
 
 /** Types that can grant permissions on a repository to a user */
-export type PermissionGranter = Organization | Repository | Team;
+export type PermissionGranter = EnterpriseTeam | Organization | Repository | Team;
 
 /** A level of permission and source for a user's access to a repository. */
 export type PermissionSource = {
@@ -27359,6 +27598,8 @@ export type ReportedContentClassifiers =
   | 'ABUSE'
   /** A duplicated piece of content */
   | 'DUPLICATE'
+  /** A low quality piece of content */
+  | 'LOW_QUALITY'
   /** An irrelevant piece of content */
   | 'OFF_TOPIC'
   /** An outdated piece of content */
@@ -27482,6 +27723,8 @@ export type Repository = Node & PackageOwner & ProjectOwner & ProjectV2Recent & 
   isUserConfigurationRepository: Scalars['Boolean']['output'];
   /** Returns a single issue from the current repository by number. */
   issue?: Maybe<Issue>;
+  /** A list of the repository's issue fields, inherited from the organization */
+  issueFields?: Maybe<IssueFieldsConnection>;
   /** Returns a single issue-like object from the current repository by number. */
   issueOrPullRequest?: Maybe<IssueOrPullRequest>;
   /** Returns a list of issue templates associated to the repository */
@@ -27647,6 +27890,8 @@ export type Repository = Node & PackageOwner & ProjectOwner & ProjectV2Recent & 
   viewerCanSubscribe: Scalars['Boolean']['output'];
   /** Indicates whether the viewer can update the topics of this repository. */
   viewerCanUpdateTopics: Scalars['Boolean']['output'];
+  /** The content warning for this repository for the viewer. */
+  viewerContentWarning?: Maybe<ContentWarning>;
   /** The last commit email for the viewer. */
   viewerDefaultCommitEmail?: Maybe<Scalars['String']['output']>;
   /** The last used merge method by the viewer or the default for the repository. */
@@ -27822,6 +28067,16 @@ export type RepositoryForksArgs = {
 /** A repository contains the content for a project. */
 export type RepositoryIssueArgs = {
   number: Scalars['Int']['input'];
+};
+
+
+/** A repository contains the content for a project. */
+export type RepositoryIssueFieldsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<IssueFieldOrder>;
 };
 
 
@@ -29626,7 +29881,7 @@ export type RequestableCheckStatusState =
   | 'WAITING';
 
 /** Types that can be requested reviewers. */
-export type RequestedReviewer = Bot | Mannequin | Team | User;
+export type RequestedReviewer = Bot | EnterpriseTeam | Mannequin | Team | User;
 
 /** The connection type for RequestedReviewer. */
 export type RequestedReviewerConnection = {
