@@ -2184,7 +2184,11 @@ var getVersionInfo = (params) => {
 			preReleaseIdentifier: config["prerelease-identifier"],
 			tagPrefix: config["tag-prefix"]
 		});
-	} else {
+	} else if (_versionKeyIncrement === "major") referenceVersion = new VersionDescriptor("0.0.0", {
+		preReleaseIdentifier: config["prerelease-identifier"],
+		tagPrefix: config["tag-prefix"]
+	});
+	else {
 		_localIncrement = "no_increment";
 		referenceVersion = new VersionDescriptor("0.1.0", {
 			preReleaseIdentifier: config["prerelease-identifier"],

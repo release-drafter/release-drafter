@@ -285,6 +285,22 @@ describe('versions', () => {
     expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1.0')
   })
 
+  it('honors a major version-resolver increment on a first release (#1630)', () => {
+    // On a repo with no prior release or tag, a PR labeled to the `major`
+    // resolver should win and produce 1.0.0, not the 0.1.0 minor baseline.
+    const versionInfo = getVersionInfo({
+      lastRelease: undefined,
+      input: {},
+      config: { 'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE' },
+      versionKeyIncrement: 'major',
+    })
+
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('1.0.0')
+    expect(versionInfo.$RESOLVED_VERSION_MAJOR).toEqual('1')
+    expect(versionInfo.$RESOLVED_VERSION_MINOR).toEqual('0')
+    expect(versionInfo.$RESOLVED_VERSION_PATCH).toEqual('0')
+  })
+
   it('applies custom version template when no previous releases exist', () => {
     const versionInfo = getVersionInfo({
       lastRelease: undefined,

@@ -89,6 +89,14 @@ export const getVersionInfo = (params: {
           tagPrefix: config['tag-prefix'],
         },
       )
+    } else if (_versionKeyIncrement === 'major') {
+      // A major-labeled PR must win on a first release: seed from 0.0.0 and
+      // apply the major increment so $RESOLVED_VERSION = "1.0.0" rather than
+      // the 0.1.0 minor baseline (release-drafter#1630).
+      referenceVersion = new VersionDescriptor('0.0.0', {
+        preReleaseIdentifier: config['prerelease-identifier'],
+        tagPrefix: config['tag-prefix'],
+      })
     } else {
       _localIncrement = 'no_increment'
       referenceVersion = new VersionDescriptor('0.1.0', {
