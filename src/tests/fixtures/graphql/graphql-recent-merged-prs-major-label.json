@@ -1,0 +1,45 @@
+{
+  "data": {
+    "repository": {
+      "pullRequests": {
+        "__typename": "PullRequestConnection",
+        "nodes": [
+          {
+            "__typename": "PullRequest",
+            "title": "Drop legacy API",
+            "number": 7,
+            "url": "https://github.com/toolmantim/release-drafter-test-project/pull/7",
+            "body": "Removes the deprecated endpoints",
+            "author": {
+              "__typename": "User",
+              "login": "TimonVS",
+              "url": "https://github.com/TimonVS"
+            },
+            "baseRepository": {
+              "__typename": "Repository",
+              "nameWithOwner": "toolmantim/release-drafter-test-project"
+            },
+            "mergedAt": "2019-04-27T14:00:00Z",
+            "isCrossRepository": false,
+            "labels": {
+              "__typename": "LabelConnection",
+              "nodes": [
+                {
+                  "__typename": "Label",
+                  "name": "major"
+                }
+              ]
+            },
+            "merged": true,
+            "baseRefName": "master",
+            "headRefName": "drop-legacy-api",
+            "mergeCommit": {
+              "__typename": "Commit",
+              "oid": "f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

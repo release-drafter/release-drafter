@@ -4375,15 +4375,11 @@ var FindRecentMergedPullRequestsDocument = {
 //#region src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts
 var RECENT_PR_LOOKBACK = 5;
 var findRecentMergedPullRequests = async (params) => {
-	const octokit = getOctokit();
 	const nameWithOwner = `${context.repo.owner}/${context.repo.repo}`;
-	const missingPRs = ((await executeGraphql(octokit.graphql, FindRecentMergedPullRequestsDocument, {
-		name: context.repo.repo,
-		owner: context.repo.owner,
+	const missingPRs = (await queryRecentMergedPullRequests({
 		baseRefName: params.baseRefName,
-		limit: RECENT_PR_LOOKBACK,
-		...params.fieldFlags
-	})).repository?.pullRequests.nodes ?? []).filter((pr) => {
+		fieldFlags: params.fieldFlags
+	})).filter((pr) => {
 		if (!pr?.mergeCommit?.oid) return false;
 		const prKey = `${nameWithOwner}#${pr.number}`;
 		return params.commitOids.has(pr.mergeCommit.oid) && !params.foundPrKeys.has(prKey);
@@ -4391,6 +4387,33 @@ var findRecentMergedPullRequests = async (params) => {
 	if (missingPRs.length === 0) return [];
 	info(`Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(", ")}`);
 	return missingPRs.filter((pr) => pr != null);
+};
+/**
+* Collect the most recently merged pull requests targeting this repository.
+*
+* Used on a first release (no published release or tag) where there is no
+* comparison baseline to derive changes from. Without a baseline the draft
+* would otherwise carry no PRs and no labels, so its version always resolved
+* to the no-change default. Scanning the recent merged PRs lets their labels
+* drive categorisation and the version-resolver increment instead.
+*/
+var findRecentMergedPullRequestsWithoutBaseline = async (params) => {
+	const pullRequests = (await queryRecentMergedPullRequests({
+		baseRefName: params.baseRefName,
+		fieldFlags: params.fieldFlags
+	})).filter((pr) => pr != null);
+	if (pullRequests.length === 0) return [];
+	info(`No comparison baseline; scanning the ${pullRequests.length} most recently merged PR(s): ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}`);
+	return pullRequests;
+};
+var queryRecentMergedPullRequests = async (params) => {
+	return (await executeGraphql(getOctokit().graphql, FindRecentMergedPullRequestsDocument, {
+		name: context.repo.repo,
+		owner: context.repo.owner,
+		baseRefName: params.baseRefName,
+		limit: RECENT_PR_LOOKBACK,
+		...params.fieldFlags
+	})).repository?.pullRequests.nodes ?? [];
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
@@ -4416,9 +4439,18 @@ var findPullRequests = async (params) => {
 	let commits;
 	if (!params.lastRelease?.tag_name) {
 		warning("A previous (published) release is required to find changes");
+		const { commitish } = params.config;
 		return {
 			commits: [],
-			pullRequests: []
+			pullRequests: await findRecentMergedPullRequestsWithoutBaseline({
+				baseRefName: commitish.startsWith("refs/heads/") ? commitish.replace(/^refs\/heads\//, "") : null,
+				fieldFlags: {
+					withPullRequestBody: sharedComparisonParams.withPullRequestBody,
+					withPullRequestURL: sharedComparisonParams.withPullRequestURL,
+					withBaseRefName: sharedComparisonParams.withBaseRefName,
+					withHeadRefName: sharedComparisonParams.withHeadRefName
+				}
+			})
 		};
 	}
 	info(`Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`);

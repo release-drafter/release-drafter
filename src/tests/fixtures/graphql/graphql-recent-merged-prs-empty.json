@@ -1,0 +1,10 @@
+{
+  "data": {
+    "repository": {
+      "pullRequests": {
+        "__typename": "PullRequestConnection",
+        "nodes": []
+      }
+    }
+  }
+}

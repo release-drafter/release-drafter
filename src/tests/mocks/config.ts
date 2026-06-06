@@ -66,6 +66,7 @@ export type AvailableConfigs =
   | 'config-with-sort-by-title'
   | 'config-with-sort-direction-ascending'
   | 'config-with-tag-prefix'
+  | 'config-with-version-resolver-major-and-changes'
   | 'config-with-yaml-exception'
   | 'config'
   | 'config-filter-range'

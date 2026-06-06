@@ -36,6 +36,8 @@ type Payload =
   | 'graphql-include-path-missing-pr'
   | 'graphql-recent-merged-prs'
   | 'graphql-recent-merged-prs-with-paths'
+  | 'graphql-recent-merged-prs-major-label'
+  | 'graphql-recent-merged-prs-empty'
 
 export const getGqlPayload = (payload: Payload) =>
   JSON.parse(

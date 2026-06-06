@@ -127,12 +127,15 @@ describe('drafter e2e', () => {
     })
 
     describe('with no past releases', () => {
-      it('inserts no comparison baseline warning, and $PREVIOUS_TAG to blank', async () => {
+      it('scans recent merged PRs, inserts the no-baseline warning, and sets $PREVIOUS_TAG to blank', async () => {
         await mockContext('push')
         mocks.config.mockReturnValue('config-previous-tag')
 
+        // Without a published baseline the comparison scan cannot run, so the
+        // recently merged PRs are queried directly to recover their changes.
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-comparison-merge-commit',
+          query: 'query findRecentMergedPullRequests',
+          payload: 'graphql-recent-merged-prs',
         })
 
         const scope = nockGetAndPostReleases({ fetchedReleases: [] })
@@ -143,7 +146,7 @@ describe('drafter e2e', () => {
           [
             {
               "body": "Changes:
-          * No changes
+          * Add new feature (#6) @TimonVS
 
           Previous tag: ''
 
@@ -170,7 +173,35 @@ describe('drafter e2e', () => {
         `)
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(false) // gql not called
+        expect(gqlScope.isDone()).toBe(true) // recent merged PRs were scanned
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+
+      it('resolves a first release to 1.0.0 when a recent merged PR carries the major version-resolver label (#1630)', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue(
+          'config-with-version-resolver-major-and-changes',
+        )
+
+        const gqlScope = mockGraphqlQuery({
+          query: 'query findRecentMergedPullRequests',
+          payload: 'graphql-recent-merged-prs-major-label',
+        })
+
+        const scope = nockGetAndPostReleases({ fetchedReleases: [] })
+
+        await runDrafter()
+
+        const lastCall = mocks.postReleaseBody.mock.lastCall?.at(0) as
+          | { name: string; tag_name: string; body: string }
+          | undefined
+
+        expect(lastCall?.name).toBe('v1.0.0')
+        expect(lastCall?.tag_name).toBe('v1.0.0')
+        expect(lastCall?.body).toContain('Drop legacy API @TimonVS (#7)')
+
+        expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+        expect(gqlScope.isDone()).toBe(true) // recent merged PRs were scanned
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
@@ -2927,7 +2958,8 @@ describe('drafter e2e', () => {
           fetchedReleases: [],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-comparison-empty',
+          query: 'query findRecentMergedPullRequests',
+          payload: 'graphql-recent-merged-prs-empty',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -2967,7 +2999,7 @@ describe('drafter e2e', () => {
           ]
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(false) // gql not called
+        expect(gqlScope.isDone()).toBe(true) // recent merged PRs were scanned
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
@@ -3022,7 +3054,8 @@ describe('drafter e2e', () => {
           fetchedReleases: [],
         })
         const gqlScope = mockGraphqlQuery({
-          payload: 'graphql-comparison-empty',
+          query: 'query findRecentMergedPullRequests',
+          payload: 'graphql-recent-merged-prs-empty',
         })
         await runDrafter()
         expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3062,7 +3095,7 @@ describe('drafter e2e', () => {
           ]
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(false) // gql not called
+        expect(gqlScope.isDone()).toBe(true) // recent merged PRs were scanned
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })
@@ -3369,8 +3402,8 @@ describe('drafter e2e', () => {
           ],
         })
         const gqlScope = mockGraphqlQuery({
-          query: 'query findCommitsInComparison',
-          payload: 'graphql-comparison-empty',
+          query: 'query findRecentMergedPullRequests',
+          payload: 'graphql-recent-merged-prs-empty',
         })
         await runDrafter()
         expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
@@ -3400,7 +3433,7 @@ describe('drafter e2e', () => {
           ]
         `)
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-        expect(gqlScope.isDone()).toBe(false) // gql not called
+        expect(gqlScope.isDone()).toBe(true) // recent merged PRs were scanned
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
     })

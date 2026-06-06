@@ -10,7 +10,10 @@ import type { ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import { findCommitsInComparison } from './find-commits-in-comparison.ts'
 import { findCommitsWithPathChange } from './find-commits-with-path-change.ts'
-import { findRecentMergedPullRequests } from './find-recent-merged-pull-requests.ts'
+import {
+  findRecentMergedPullRequests,
+  findRecentMergedPullRequestsWithoutBaseline,
+} from './find-recent-merged-pull-requests.ts'
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
@@ -64,9 +67,28 @@ export const findPullRequests = async (params: {
 
   let commits: Awaited<ReturnType<typeof findCommitsInComparison>>
 
+  // Without a published release or tag there is no comparison baseline, so the
+  // commit-range scan cannot run. Fall back to scanning the most recently
+  // merged pull requests so their labels still drive categorisation and the
+  // version-resolver increment (e.g. a `breaking` PR can resolve to a major
+  // first release). There are no comparison commits in this mode, so the
+  // contributors list is derived solely from the recovered PRs.
   if (!params.lastRelease?.tag_name) {
     core.warning('A previous (published) release is required to find changes')
-    return { commits: [], pullRequests: [] }
+
+    const { commitish } = params.config
+    const isBranchRef = commitish.startsWith('refs/heads/')
+    const pullRequests = await findRecentMergedPullRequestsWithoutBaseline({
+      baseRefName: isBranchRef ? commitish.replace(/^refs\/heads\//, '') : null,
+      fieldFlags: {
+        withPullRequestBody: sharedComparisonParams.withPullRequestBody,
+        withPullRequestURL: sharedComparisonParams.withPullRequestURL,
+        withBaseRefName: sharedComparisonParams.withBaseRefName,
+        withHeadRefName: sharedComparisonParams.withHeadRefName,
+      },
+    })
+
+    return { commits: [], pullRequests }
   }
 
   core.info(

@@ -1,0 +1,30 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+branches:
+  - master
+categories:
+  - title: '🚀 Features'
+    when:
+      label: 'feature'
+  - title: '🐛 Bug fixes'
+    when:
+      label: 'bug'
+  - type: version-resolver
+    'semver-increment': major
+    when:
+      label: 'major'
+  - type: version-resolver
+    'semver-increment': minor
+    when:
+      label: 'minor'
+  - type: version-resolver
+    'semver-increment': patch
+    when:
+      label: 'patch'
+  - type: version-resolver
+    'semver-increment': minor
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+template: |
+  ## Changes
+
+  $CHANGES
