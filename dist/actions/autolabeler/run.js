@@ -138,7 +138,6 @@ var import_ignore = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exp
 	var REGEX_REPLACE_TRAILING_WILDCARD = /(^|\\\/)?\\\*$/;
 	var MODE_IGNORE = "regex";
 	var MODE_CHECK_IGNORE = "checkRegex";
-	var UNDERSCORE = "_";
 	var TRAILING_WILD_CARD_REPLACERS = {
 		[MODE_IGNORE](_, p1) {
 			return `${p1 ? `${p1}[^/]+` : "[^/]*"}(?=$|\\/$)`;
@@ -161,12 +160,12 @@ var import_ignore = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exp
 			define(this, "regexPrefix", prefix);
 		}
 		get regex() {
-			const key = UNDERSCORE + MODE_IGNORE;
+			const key = "_regex";
 			if (this[key]) return this[key];
 			return this._make(MODE_IGNORE, key);
 		}
 		get checkRegex() {
-			const key = UNDERSCORE + MODE_CHECK_IGNORE;
+			const key = "_checkRegex";
 			if (this[key]) return this[key];
 			return this._make(MODE_CHECK_IGNORE, key);
 		}
