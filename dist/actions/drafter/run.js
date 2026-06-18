@@ -2178,15 +2178,9 @@ var getVersionInfo = (params) => {
 	} else if (versionFromLastRelease.version) {
 		_localIncrement = _localIncrement?.startsWith("pre") && versionFromLastRelease?.prerelease?.length ? "prerelease" : _localIncrement;
 		referenceVersion = versionFromLastRelease;
-	} else if (_versionKeyIncrement?.startsWith("pre") && config["prerelease-identifier"]) {
-		_localIncrement = "no_increment";
-		referenceVersion = new VersionDescriptor(`0.1.0-${config["prerelease-identifier"]}.0`, {
-			preReleaseIdentifier: config["prerelease-identifier"],
-			tagPrefix: config["tag-prefix"]
-		});
 	} else {
-		_localIncrement = "no_increment";
-		referenceVersion = new VersionDescriptor("0.1.0", {
+		if (_localIncrement === "patch") _localIncrement = "minor";
+		referenceVersion = new VersionDescriptor("0.0.0", {
 			preReleaseIdentifier: config["prerelease-identifier"],
 			tagPrefix: config["tag-prefix"]
 		});

@@ -200,15 +200,15 @@ describe('versions', () => {
         "$NEXT_MAJOR_VERSION_MAJOR": "1",
         "$NEXT_MAJOR_VERSION_MINOR": "0",
         "$NEXT_MAJOR_VERSION_PATCH": "0",
-        "$NEXT_MINOR_VERSION": "0.2.0",
+        "$NEXT_MINOR_VERSION": "0.1.0",
         "$NEXT_MINOR_VERSION_MAJOR": "0",
-        "$NEXT_MINOR_VERSION_MINOR": "2",
+        "$NEXT_MINOR_VERSION_MINOR": "1",
         "$NEXT_MINOR_VERSION_PATCH": "0",
-        "$NEXT_PATCH_VERSION": "0.1.1",
+        "$NEXT_PATCH_VERSION": "0.0.1",
         "$NEXT_PATCH_VERSION_MAJOR": "0",
-        "$NEXT_PATCH_VERSION_MINOR": "1",
+        "$NEXT_PATCH_VERSION_MINOR": "0",
         "$NEXT_PATCH_VERSION_PATCH": "1",
-        "$NEXT_PRERELEASE_VERSION": "0.1.1-0",
+        "$NEXT_PRERELEASE_VERSION": "0.0.1-0",
         "$NEXT_PRERELEASE_VERSION_PRERELEASE": "-0",
         "$RESOLVED_VERSION": "0.1.0",
         "$RESOLVED_VERSION_MAJOR": "0",
@@ -223,10 +223,8 @@ describe('versions', () => {
   it('uses prerelease-identifier on first run when versionKeyIncrement is prerelease-based', () => {
     // Regression test: v7 broke v6 behaviour (PR #1303) where first-run with a
     // prerelease-identifier set produced a bare version (e.g. "0.1.0") instead
-    // of a prerelease of the initial version (e.g. "0.1.0-rc.0").
-    // semver's prepatch would normally give "0.1.1-rc.0" (increments patch
-    // before adding the prerelease suffix), but on first run there is no prior
-    // release to increment from, so the result should be "0.1.0-rc.0".
+    // of a prerelease. On a 0.0.0 baseline semver's prepatch yields
+    // "0.0.1-rc.0" — a patch-level prerelease of the first version.
     const versionInfo = getVersionInfo({
       lastRelease: undefined,
       input: {},
@@ -237,7 +235,7 @@ describe('versions', () => {
       versionKeyIncrement: 'prepatch',
     })
 
-    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1.0-rc.0')
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.0.1-rc.0')
     expect(versionInfo.$RESOLVED_VERSION_PRERELEASE).toEqual('-rc.0')
   })
 
@@ -256,6 +254,7 @@ describe('versions', () => {
     expect(versionInfo.$RESOLVED_VERSION_PRERELEASE).toEqual('-beta.0')
   })
 
+  // https://github.com/release-drafter/release-drafter/issues/1603
   it('uses premajor prerelease-identifier on first run', () => {
     const versionInfo = getVersionInfo({
       lastRelease: undefined,
@@ -267,8 +266,60 @@ describe('versions', () => {
       versionKeyIncrement: 'premajor',
     })
 
-    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1.0-rc.0')
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('1.0.0-rc.0')
+    expect(versionInfo.$RESOLVED_VERSION_MAJOR).toEqual('1')
+    expect(versionInfo.$RESOLVED_VERSION_MINOR).toEqual('0')
+    expect(versionInfo.$RESOLVED_VERSION_PATCH).toEqual('0')
     expect(versionInfo.$RESOLVED_VERSION_PRERELEASE).toEqual('-rc.0')
+  })
+
+  // https://github.com/release-drafter/release-drafter/issues/1603
+  it('uses premajor prerelease-identifier on first run with custom prerelease identifier', () => {
+    const versionInfo = getVersionInfo({
+      lastRelease: undefined,
+      input: {},
+      config: {
+        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE',
+        'prerelease-identifier': 'beta',
+      },
+      versionKeyIncrement: 'premajor',
+    })
+
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('1.0.0-beta.0')
+    expect(versionInfo.$RESOLVED_VERSION_MAJOR).toEqual('1')
+    expect(versionInfo.$RESOLVED_VERSION_PRERELEASE).toEqual('-beta.0')
+  })
+
+  // https://github.com/release-drafter/release-drafter/issues/1603
+  it('keeps preminor on first run anchored to 0.1.0', () => {
+    const versionInfo = getVersionInfo({
+      lastRelease: undefined,
+      input: {},
+      config: {
+        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE',
+        'prerelease-identifier': 'rc',
+      },
+      versionKeyIncrement: 'preminor',
+    })
+
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1.0-rc.0')
+    expect(versionInfo.$RESOLVED_VERSION_MAJOR).toEqual('0')
+  })
+
+  // https://github.com/release-drafter/release-drafter/issues/1603
+  it('yields 0.0.1-rc.0 for prepatch on first run', () => {
+    const versionInfo = getVersionInfo({
+      lastRelease: undefined,
+      input: {},
+      config: {
+        'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE',
+        'prerelease-identifier': 'rc',
+      },
+      versionKeyIncrement: 'prepatch',
+    })
+
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.0.1-rc.0')
+    expect(versionInfo.$RESOLVED_VERSION_MAJOR).toEqual('0')
   })
 
   it('still returns bare 0.1.0 on first run when versionKeyIncrement is not prerelease-based', () => {
@@ -294,8 +345,8 @@ describe('versions', () => {
     })
 
     expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1')
-    // $NEXT_MINOR_VERSION should increment from 0.1.0 to 0.2.0, so formatted as "0.2"
-    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual('0.2')
+    // $NEXT_MINOR_VERSION increments from the 0.0.0 baseline to 0.1.0, so formatted as "0.1"
+    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual('0.1')
   })
 
   it('supports version template with only MINOR.PATCH format', () => {
@@ -307,10 +358,10 @@ describe('versions', () => {
     })
 
     expect(versionInfo.$RESOLVED_VERSION).toEqual('1.0')
-    // $NEXT_PATCH_VERSION should increment from 0.1.0 to 0.1.1, so formatted as "1.1"
-    expect(versionInfo.$NEXT_PATCH_VERSION).toEqual('1.1')
-    // $NEXT_MINOR_VERSION should increment from 0.1.0 to 0.2.0, so formatted as "2.0"
-    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual('2.0')
+    // $NEXT_PATCH_VERSION increments from the 0.0.0 baseline to 0.0.1, so formatted as "0.1"
+    expect(versionInfo.$NEXT_PATCH_VERSION).toEqual('0.1')
+    // $NEXT_MINOR_VERSION increments from the 0.0.0 baseline to 0.1.0, so formatted as "1.0"
+    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual('1.0')
   })
 
   it('supports hardcoded major with 1.MINOR.PATCH format with existing releases', () => {
