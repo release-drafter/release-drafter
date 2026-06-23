@@ -59,15 +59,35 @@ export const getVersionInfo = (params: {
 
   let referenceVersion: VersionDescriptor
   if (versionFromInput.version) {
+    // Use version input
     _localIncrement = 'no_increment' // use that exact input version
     referenceVersion = versionFromInput
   } else if (versionFromLastRelease.version) {
-    _localIncrement =
-      _localIncrement?.startsWith('pre') &&
-      versionFromLastRelease?.prerelease?.length
-        ? 'prerelease'
-        : _localIncrement
+    // Use previous published release
     referenceVersion = versionFromLastRelease
+
+    // Handle prereleases
+    const incrementsToPrerelease = _localIncrement?.startsWith('pre')
+    const lastReleaseIsPrerelease = referenceVersion?.prerelease?.length
+    if (incrementsToPrerelease) {
+      if (lastReleaseIsPrerelease) {
+        // Set local increment to 'prerelease', so that we simply
+        // increment the prerelease number (e.g., 1.2.3-beta.6 -> 1.2.3-beta.7).
+        // When publishing prerelease releases, the first published prerelease is supposed to set
+        // the stage for the semver increment (e.g. 1.2.2 --(prepatch)--> 1.2.3-beta.0).
+        // Subsequent prerelease increments should only increment the prerelease number (e.g. 1.2.3-beta.0 --(prerelease)--> 1.2.3-beta.1).
+        // The following increments are considered invalid :
+        //    - 1.2.3-beta.1 --(prepatch)--> ??????
+        //    - 1.2.3-beta.1 --(preminor)--> ??????
+        //    - 1.2.3-beta.1 --(premajor)--> ??????
+        if (_localIncrement !== 'prerelease') {
+          core.info(
+            `versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || 'none'}). The version will be incremented as a prerelease instead.`,
+          )
+          _localIncrement = 'prerelease'
+        }
+      }
+    }
   } else {
     // No prior release and no input version: start from 0.1.0.
     // For prerelease-based increments (prepatch/preminor/premajor) with a
