@@ -2176,21 +2176,21 @@ var getVersionInfo = (params) => {
 		_localIncrement = "no_increment";
 		referenceVersion = versionFromInput;
 	} else if (versionFromLastRelease.version) {
-		_localIncrement = _localIncrement?.startsWith("pre") && versionFromLastRelease?.prerelease?.length ? "prerelease" : _localIncrement;
 		referenceVersion = versionFromLastRelease;
-	} else if (_versionKeyIncrement?.startsWith("pre") && config["prerelease-identifier"]) {
-		_localIncrement = "no_increment";
-		referenceVersion = new VersionDescriptor(`0.1.0-${config["prerelease-identifier"]}.0`, {
-			preReleaseIdentifier: config["prerelease-identifier"],
-			tagPrefix: config["tag-prefix"]
-		});
-	} else {
-		_localIncrement = "no_increment";
-		referenceVersion = new VersionDescriptor("0.1.0", {
-			preReleaseIdentifier: config["prerelease-identifier"],
-			tagPrefix: config["tag-prefix"]
-		});
-	}
+		const incrementsToPrerelease = _localIncrement?.startsWith("pre");
+		const lastReleaseIsPrerelease = referenceVersion?.prerelease?.length;
+		if (incrementsToPrerelease) {
+			if (lastReleaseIsPrerelease) {
+				if (_localIncrement !== "prerelease") {
+					info(`versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || "none"}). The version will be incremented as a prerelease instead.`);
+					_localIncrement = "prerelease";
+				}
+			}
+		}
+	} else referenceVersion = new VersionDescriptor("0.0.0", {
+		preReleaseIdentifier: config["prerelease-identifier"],
+		tagPrefix: config["tag-prefix"]
+	});
 	return {
 		$NEXT_MAJOR_VERSION: referenceVersion.incremented("major").rendered(config["version-template"]),
 		$NEXT_MAJOR_VERSION_MAJOR: referenceVersion.incremented("major").major,
