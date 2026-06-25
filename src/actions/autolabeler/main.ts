@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import ignore from 'ignore'
-import { getOctokit } from '#src/common/index.ts'
+import { getOctokit, getPullRequestChangedFiles } from '#src/common/index.ts'
 import type { ParsedConfig } from './config/index.ts'
 
 export const main = async (params: {
@@ -28,16 +28,10 @@ export const main = async (params: {
    */
   const payload = context.payload as PullRequestEvent
 
-  const changedFiles = await octokit.paginate(
-    octokit.rest.pulls.listFiles,
-    {
-      ...context.repo,
-      issue_number: payload.number,
-      pull_number: payload.number,
-      per_page: 100,
-    },
-    (response) => response.data.map((file) => file.filename),
-  )
+  const changedFiles = await getPullRequestChangedFiles(octokit, {
+    ...context.repo,
+    pull_number: payload.number,
+  })
   const labels = new Set<string>()
 
   for (const autolabel of params.config.autolabeler) {

@@ -5,11 +5,13 @@ import { commonConfigSchema } from '#src/actions/drafter/config/schemas/common-c
 import { configSchema } from '#src/actions/drafter/config/schemas/config.schema.ts'
 import { categorizePullRequests } from '#src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts'
 import { findPullRequests } from '#src/actions/drafter/lib/find-pull-requests/index.ts'
+import type { Octokit } from '#src/common/get-octokit.ts'
 import { mockContext } from '../mocks/index.ts'
 
 const localMocks = vi.hoisted(() => ({
   findCommitsInComparison: vi.fn(),
-  findCommitsWithPathChange: vi.fn(),
+  paginate: vi.fn(),
+  listFiles: vi.fn(),
 }))
 
 vi.mock(
@@ -21,14 +23,18 @@ vi.mock(
   }),
 )
 
-vi.mock(
-  import(
-    '#src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts'
-  ),
-  () => ({
-    findCommitsWithPathChange: localMocks.findCommitsWithPathChange,
-  }),
-)
+vi.mock('#src/common/get-octokit.ts', () => ({
+  getOctokit: () =>
+    ({
+      paginate: localMocks.paginate as unknown as Octokit['paginate'],
+      rest: {
+        pulls: {
+          listFiles:
+            localMocks.listFiles as unknown as Octokit['rest']['pulls']['listFiles'],
+        },
+      },
+    }) as unknown as Octokit,
+}))
 
 const makeConfig = (
   categories: NonNullable<z.input<typeof configSchema>['categories']>,
@@ -72,20 +78,21 @@ const makeCommit = (id: string, pullRequestNumber: number) => ({
   },
 })
 
-type PullRequestWithMatchedPaths = Awaited<
+type PullRequestWithChangedFiles = Awaited<
   ReturnType<typeof findPullRequests>
 >['pullRequests'][number] & {
-  matchedPaths?: string[]
+  changedFiles?: string[]
 }
 
 describe('findPullRequests', () => {
   beforeEach(async () => {
     await mockContext('push')
     localMocks.findCommitsInComparison.mockReset()
-    localMocks.findCommitsWithPathChange.mockReset()
+    localMocks.paginate.mockReset()
+    localMocks.listFiles.mockReset()
   })
 
-  it('keeps PR matched paths from comparison commits filtered out by pre-include', async () => {
+  it('loads changed files for path-based pre-include categories', async () => {
     const docsCommitId = 'docs-commit'
     const srcCommitId = 'src-commit'
 
@@ -93,13 +100,7 @@ describe('findPullRequests', () => {
       makeCommit(docsCommitId, 1),
       makeCommit(srcCommitId, 1),
     ])
-    localMocks.findCommitsWithPathChange.mockResolvedValue({
-      commitIdsMatchingPaths: {
-        'docs/**': new Set([docsCommitId]),
-        'src/**': new Set([srcCommitId]),
-      },
-      hasFoundCommits: true,
-    })
+    localMocks.paginate.mockResolvedValue(['docs/readme.md', 'src/index.ts'])
 
     const result = await findPullRequests({
       lastRelease: {
@@ -125,15 +126,24 @@ describe('findPullRequests', () => {
       ]),
     })
 
-    expect(result.commits.map((commit) => commit.id)).toEqual([srcCommitId])
+    expect(result.commits.map((commit) => commit.id)).toEqual([
+      docsCommitId,
+      srcCommitId,
+    ])
     expect(result.pullRequests).toHaveLength(1)
     expect(
-      (result.pullRequests[0] as PullRequestWithMatchedPaths | undefined)
-        ?.matchedPaths,
-    ).toEqual(['docs/**', 'src/**'])
+      (result.pullRequests[0] as PullRequestWithChangedFiles | undefined)
+        ?.changedFiles,
+    ).toEqual(['docs/readme.md', 'src/index.ts'])
+    expect(localMocks.paginate.mock.calls[0]?.[1]).toMatchObject({
+      owner: 'toolmantim',
+      repo: 'release-drafter-test-project',
+      pull_number: 1,
+      per_page: 50,
+    })
   })
 
-  it('keeps PR matched paths from comparison commits filtered out by pre-exclude', async () => {
+  it('loads changed files for path-based pre-exclude categories', async () => {
     const docsCommitId = 'docs-commit'
     const srcCommitId = 'src-commit'
 
@@ -141,13 +151,7 @@ describe('findPullRequests', () => {
       makeCommit(docsCommitId, 1),
       makeCommit(srcCommitId, 1),
     ])
-    localMocks.findCommitsWithPathChange.mockResolvedValue({
-      commitIdsMatchingPaths: {
-        'docs/**': new Set([docsCommitId]),
-        'src/**': new Set([srcCommitId]),
-      },
-      hasFoundCommits: true,
-    })
+    localMocks.paginate.mockResolvedValue(['docs/readme.md', 'src/index.ts'])
 
     const result = await findPullRequests({
       lastRelease: {
@@ -173,40 +177,114 @@ describe('findPullRequests', () => {
       ]),
     })
 
-    expect(result.commits.map((commit) => commit.id)).toEqual([srcCommitId])
+    expect(result.commits.map((commit) => commit.id)).toEqual([
+      docsCommitId,
+      srcCommitId,
+    ])
     expect(result.pullRequests).toHaveLength(1)
     expect(
-      (result.pullRequests[0] as PullRequestWithMatchedPaths | undefined)
-        ?.matchedPaths,
-    ).toEqual(['docs/**', 'src/**'])
+      (result.pullRequests[0] as PullRequestWithChangedFiles | undefined)
+        ?.changedFiles,
+    ).toEqual(['docs/readme.md', 'src/index.ts'])
   })
 
-  describe('deprecated path filter compatibility', () => {
-    it('keeps a PR when deprecated exclude-paths only removes some of its commits', async () => {
-      const docsCommitId = 'docs-commit'
-      const srcCommitId = 'src-commit'
+  it('treats deprecated exclude-paths as a pre-exclude alias', async () => {
+    const docsCommitId = 'docs-commit'
+    const srcCommitId = 'src-commit'
 
-      localMocks.findCommitsInComparison.mockResolvedValue([
-        makeCommit(docsCommitId, 1),
-        makeCommit(srcCommitId, 1),
-      ])
-      localMocks.findCommitsWithPathChange.mockResolvedValue({
-        commitIdsMatchingPaths: {
-          'docs/**': new Set([docsCommitId]),
+    localMocks.findCommitsInComparison.mockResolvedValue([
+      makeCommit(docsCommitId, 1),
+      makeCommit(srcCommitId, 1),
+    ])
+    localMocks.paginate.mockResolvedValue(['docs/readme.md', 'src/index.ts'])
+
+    const config = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        commitish: 'refs/heads/main',
+        'exclude-paths': ['docs/**'],
+      }),
+      input: commonConfigSchema.parse({}),
+    })
+
+    const result = await findPullRequests({
+      lastRelease: {
+        tag_name: 'v1.0.0',
+      } as Awaited<
+        ReturnType<
+          typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
+        >
+      >['lastRelease'],
+      config,
+    })
+
+    const [uncategorizedPullRequests] = categorizePullRequests({
+      pullRequests: result.pullRequests,
+      config,
+    })
+
+    expect(result.commits.map((commit) => commit.id)).toEqual([
+      docsCommitId,
+      srcCommitId,
+    ])
+    expect(result.pullRequests).toHaveLength(1)
+    expect(uncategorizedPullRequests).toHaveLength(0)
+  })
+
+  it('keeps mixed-path PRs when pre-exclude uses paths-mode only', async () => {
+    const docsCommitId = 'docs-commit'
+    const srcCommitId = 'src-commit'
+
+    localMocks.findCommitsInComparison.mockResolvedValue([
+      makeCommit(docsCommitId, 1),
+      makeCommit(srcCommitId, 1),
+    ])
+    localMocks.paginate.mockResolvedValue(['docs/readme.md', 'src/index.ts'])
+
+    const config = makeConfig([
+      {
+        type: 'pre-exclude',
+        when: {
+          paths: ['docs/**'],
+          'paths-mode': 'only',
         },
-        hasFoundCommits: true,
-      })
+      },
+      {
+        title: 'Source',
+        when: {
+          paths: ['src/**'],
+        },
+      },
+    ])
 
-      const config = mergeInputAndConfig({
-        config: configSchema.parse({
-          template: '$CHANGES',
-          commitish: 'refs/heads/main',
-          'exclude-paths': ['docs/**'],
-        }),
-        input: commonConfigSchema.parse({}),
-      })
+    const result = await findPullRequests({
+      lastRelease: {
+        tag_name: 'v1.0.0',
+      } as Awaited<
+        ReturnType<
+          typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
+        >
+      >['lastRelease'],
+      config,
+    })
 
-      const result = await findPullRequests({
+    const [uncategorizedPullRequests, categories] = categorizePullRequests({
+      pullRequests: result.pullRequests,
+      config,
+    })
+
+    expect(uncategorizedPullRequests).toHaveLength(0)
+    expect(categories[0]?.pullRequests).toHaveLength(1)
+  })
+
+  it('adds context when loading changed files fails', async () => {
+    localMocks.findCommitsInComparison.mockResolvedValue([
+      makeCommit('id-1', 7),
+    ])
+    localMocks.paginate.mockRejectedValue(new Error('boom'))
+
+    await expect(
+      findPullRequests({
         lastRelease: {
           tag_name: 'v1.0.0',
         } as Awaited<
@@ -214,64 +292,15 @@ describe('findPullRequests', () => {
             typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
           >
         >['lastRelease'],
-        config,
-      })
-
-      expect(result.commits.map((commit) => commit.id)).toEqual([srcCommitId])
-      expect(result.pullRequests).toHaveLength(1)
-
-      const [uncategorizedPullRequests] = categorizePullRequests({
-        pullRequests: result.pullRequests,
-        config,
-      })
-
-      expect(uncategorizedPullRequests).toHaveLength(1)
-    })
-
-    it('still lets category-based pre-exclude remove a mixed-path PR entirely', async () => {
-      const docsCommitId = 'docs-commit'
-      const srcCommitId = 'src-commit'
-
-      localMocks.findCommitsInComparison.mockResolvedValue([
-        makeCommit(docsCommitId, 1),
-        makeCommit(srcCommitId, 1),
-      ])
-      localMocks.findCommitsWithPathChange.mockResolvedValue({
-        commitIdsMatchingPaths: {
-          'docs/**': new Set([docsCommitId]),
-        },
-        hasFoundCommits: true,
-      })
-
-      const config = makeConfig([
-        {
-          type: 'pre-exclude',
-          when: {
-            paths: ['docs/**'],
+        config: makeConfig([
+          {
+            type: 'pre-include',
+            when: {
+              paths: ['src/**'],
+            },
           },
-        },
-      ])
-
-      const result = await findPullRequests({
-        lastRelease: {
-          tag_name: 'v1.0.0',
-        } as Awaited<
-          ReturnType<
-            typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
-          >
-        >['lastRelease'],
-        config,
-      })
-
-      expect(result.commits.map((commit) => commit.id)).toEqual([srcCommitId])
-      expect(result.pullRequests).toHaveLength(1)
-
-      const [uncategorizedPullRequests] = categorizePullRequests({
-        pullRequests: result.pullRequests,
-        config,
-      })
-
-      expect(uncategorizedPullRequests).toHaveLength(0)
-    })
+        ]),
+      }),
+    ).rejects.toThrow('Failed to list changed files for pull request #7.')
   })
 })

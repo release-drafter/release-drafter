@@ -14,7 +14,6 @@ type DeprecatedCategoryConfig = Pick<
   | 'exclude-paths'
   | 'version-resolver'
 >
-type CompatibilityConfig = Pick<Config, 'exclude-paths'>
 type MutableConfig = Omit<
   ReturnType<typeof structuredClone<Config>>,
   keyof DeprecatedCategoryConfig
@@ -66,9 +65,6 @@ export const mergeInputAndConfig = (params: {
     'exclude-paths': excludePaths,
     'version-resolver': versionResolver,
   }
-  const compatibility: CompatibilityConfig = {
-    'exclude-paths': excludePaths,
-  }
 
   applyOverrides(config, input)
 
@@ -84,7 +80,6 @@ export const mergeInputAndConfig = (params: {
     prerelease,
     replacers,
     categories,
-    compatibility,
   }
 
   validateParsedConfig(parsedConfig)

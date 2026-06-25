@@ -193,8 +193,10 @@ export function parseCategories(
     )
   }
   if (
-    deprecatedConfig['exclude-labels'] &&
-    deprecatedConfig['exclude-labels'].length > 0
+    (deprecatedConfig['exclude-labels'] &&
+      deprecatedConfig['exclude-labels'].length > 0) ||
+    (deprecatedConfig['exclude-paths'] &&
+      deprecatedConfig['exclude-paths'].length > 0)
   ) {
     if (
       parsedCategories.findIndex((cat) => cat.type === 'pre-exclude') !== -1
@@ -209,7 +211,7 @@ export function parseCategories(
         {
           labels: deprecatedConfig['exclude-labels'] || [],
           'labels-mode': 'any',
-          paths: [],
+          paths: deprecatedConfig['exclude-paths'] || [],
           'paths-mode': 'any',
         },
       ],

@@ -54,8 +54,8 @@ const changeConditionSchema = object({
    * Same as specifying a single `paths` value.
    * If `path` and `paths` are both specified, they are combined.
    *
-   * Use `paths-mode` to configure how this path is matched against the matched
-   * configured path patterns for a change.
+   * Use `paths-mode` to configure how this path is matched against the pull
+   * request's changed files.
    */
   path: string().min(1).optional(),
   /**
@@ -66,7 +66,7 @@ const changeConditionSchema = object({
    * `paths-mode` is applied.
    *
    * Use `paths-mode` to configure how these path patterns are compared to the
-   * matched configured path patterns for a change.
+   * pull request's changed files.
    */
   paths: array(string().min(1)).optional().default([]),
   /**
@@ -76,10 +76,11 @@ const changeConditionSchema = object({
    *
    * The comparison is set-based (path order is ignored).
    *
-   * - `any`: At least one configured path pattern matched the change.
-   * - `all`: Every configured path pattern matched the change.
-   * - `only`: Every matched configured path pattern is included in the condition.
-   * - `exactly`: The set of matched configured path patterns equals the condition.
+   * - `any`: At least one changed file matched a configured path pattern.
+   * - `all`: Every configured path pattern matched at least one changed file.
+   * - `only`: Every changed file matched a configured path pattern.
+   * - `exactly`: Every changed file matched a configured path pattern and every
+   *   configured path pattern matched at least one changed file.
    */
   'paths-mode': zenum(['any', 'all', 'only', 'exactly'])
     .optional()
@@ -271,9 +272,7 @@ export const exclusiveConfigSchema = object({
    * Exclude changes from the release notes if they modified any of the paths in this array.
    * Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
    *
-   * @deprecated This field keeps legacy commit-level filtering semantics. A
-   * `type: pre-exclude` category with `when.paths` filters at the change level
-   * instead and is not fully equivalent.
+   * @deprecated Use a `type: pre-exclude` category with `when.paths` instead.
    */
   'exclude-paths': array(string()).optional().default([]),
   /**
