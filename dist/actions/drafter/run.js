@@ -1,4 +1,4 @@
-import { C as setOutput, E as __toESM, S as setFailed, T as __commonJSMin, _ as stringbool, a as paginateGraphql, b as getInput, c as getOctokit, d as _enum, f as array, g as string, h as object, i as parseCommitishForRelease, l as context, m as number, n as escapeStringRegexp, o as executeGraphql, p as boolean, r as sharedInputSchema, s as composeConfigGet, t as stringToRegex, u as ZodDefault, v as debug, w as warning, x as info, y as error } from "../../chunks/common.js";
+import { C as getInput, D as warning, E as setOutput, O as __commonJSMin, S as error, T as setFailed, _ as number, a as parseCommitishForRelease, b as stringbool, c as getPullRequestsChangedFiles, d as getOctokit, f as context, g as boolean, h as array, i as sharedInputSchema, k as __toESM, l as executeGraphql, m as _enum, n as stringToRegex, o as paginateGraphql, p as ZodDefault, r as escapeStringRegexp, t as require_ignore, u as composeConfigGet, v as object, w as info, x as debug, y as string } from "../../chunks/ignore.js";
 //#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
@@ -142,8 +142,8 @@ var changeConditionSchema = object({
 	* Same as specifying a single `paths` value.
 	* If `path` and `paths` are both specified, they are combined.
 	*
-	* Use `paths-mode` to configure how this path is matched against the matched
-	* configured path patterns for a change.
+	* Use `paths-mode` to configure how this path is matched against the pull
+	* request's changed files.
 	*/
 	path: string().min(1).optional(),
 	/**
@@ -154,7 +154,7 @@ var changeConditionSchema = object({
 	* `paths-mode` is applied.
 	*
 	* Use `paths-mode` to configure how these path patterns are compared to the
-	* matched configured path patterns for a change.
+	* pull request's changed files.
 	*/
 	paths: array(string().min(1)).optional().default([]),
 	/**
@@ -164,10 +164,11 @@ var changeConditionSchema = object({
 	*
 	* The comparison is set-based (path order is ignored).
 	*
-	* - `any`: At least one configured path pattern matched the change.
-	* - `all`: Every configured path pattern matched the change.
-	* - `only`: Every matched configured path pattern is included in the condition.
-	* - `exactly`: The set of matched configured path patterns equals the condition.
+	* - `any`: At least one changed file matched a configured path pattern.
+	* - `all`: Every configured path pattern matched at least one changed file.
+	* - `only`: Every changed file matched a configured path pattern.
+	* - `exactly`: Every changed file matched a configured path pattern and every
+	*   configured path pattern matched at least one changed file.
 	*/
 	"paths-mode": _enum([
 		"any",
@@ -348,9 +349,7 @@ var exclusiveConfigSchema = object({
 	* Exclude changes from the release notes if they modified any of the paths in this array.
 	* Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
 	*
-	* @deprecated This field keeps legacy commit-level filtering semantics. A
-	* `type: pre-exclude` category with `when.paths` filters at the change level
-	* instead and is not fully equivalent.
+	* @deprecated Use a `type: pre-exclude` category with `when.paths` instead.
 	*/
 	"exclude-paths": array(string()).optional().default([]),
 	/**
@@ -1301,14 +1300,14 @@ function parseCategories(categories, deprecatedConfig) {
 		}
 	});
 	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`));
-	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0) {
+	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) {
 		if (parsedCategories.findIndex((cat) => cat.type === "pre-exclude") !== -1) throw new Error("A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels field. Please either remove the deprecated field or remove the existing 'pre-exclude' category to resolve this conflict.");
 		parsedCategories.push({
 			type: "pre-exclude",
 			when: [{
 				labels: deprecatedConfig["exclude-labels"] || [],
 				"labels-mode": "any",
-				paths: [],
+				paths: deprecatedConfig["exclude-paths"] || [],
 				"paths-mode": "any"
 			}]
 		});
@@ -1399,7 +1398,6 @@ var mergeInputAndConfig = (params) => {
 		"exclude-paths": excludePaths,
 		"version-resolver": versionResolver
 	};
-	const compatibility = { "exclude-paths": excludePaths };
 	applyOverrides(config, input);
 	const { commitish, latest, prerelease } = getParsedDefaults(config);
 	const replacers = getTransformedReplacers(config);
@@ -1410,8 +1408,7 @@ var mergeInputAndConfig = (params) => {
 		latest,
 		prerelease,
 		replacers,
-		categories,
-		compatibility
+		categories
 	};
 	validateParsedConfig(parsedConfig);
 	return parsedConfig;
@@ -1501,6 +1498,7 @@ var setActionOutput = (params) => {
 };
 //#endregion
 //#region src/actions/drafter/common/category-matching.ts
+var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
 var getPullRequestLabels = (pullRequest) => (pullRequest.labels?.nodes ?? []).filter((label) => Boolean(label?.name)).map((label) => label.name);
 var unique = (values) => [...new Set(values)];
 var matchesValues = (actualValues, expectedValues, mode) => {
@@ -1514,7 +1512,24 @@ var matchesValues = (actualValues, expectedValues, mode) => {
 		default: return expected.length === 0 || expected.some((value) => actual.includes(value));
 	}
 };
-var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesValues(pullRequest.matchedPaths ?? [], condition.paths, condition["paths-mode"]);
+var matchesPullRequestPaths = (condition, pullRequest) => {
+	if (condition.paths.length === 0) return true;
+	const changedFiles = unique(pullRequest.changedFiles ?? []);
+	if (changedFiles.length === 0) return false;
+	const expectedMatchers = unique(condition.paths).map((path) => ({
+		path,
+		matcher: (0, import_ignore.default)().add(path)
+	}));
+	const matchesAllConfiguredPaths = expectedMatchers.every(({ matcher }) => changedFiles.some((file) => matcher.ignores(file)));
+	const matchesOnlyConfiguredPaths = changedFiles.length > 0 && changedFiles.every((file) => expectedMatchers.some(({ matcher }) => matcher.ignores(file)));
+	switch (condition["paths-mode"]) {
+		case "all": return matchesAllConfiguredPaths;
+		case "only": return matchesOnlyConfiguredPaths;
+		case "exactly": return matchesAllConfiguredPaths && matchesOnlyConfiguredPaths;
+		default: return changedFiles.some((file) => expectedMatchers.some(({ matcher }) => matcher.ignores(file)));
+	}
+};
+var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesPullRequestPaths(condition, pullRequest);
 var matchesCategory = (category, pullRequest) => category.when.length === 0 || category.when.some((condition) => matchesCategoryCondition(condition, pullRequest));
 var filterPullRequestsByPreCategories = (pullRequests, categories) => {
 	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
@@ -1524,13 +1539,10 @@ var filterPullRequestsByPreCategories = (pullRequests, categories) => {
 		return !preExcludeCategories.some((category) => matchesCategory(category, pullRequest));
 	});
 };
-var getConfiguredPathPatterns = (categories) => unique(categories.flatMap((category) => category.when.flatMap((condition) => condition.paths)));
-var getPreIncludePathPatterns = (categories) => unique(categories.filter((category) => category.type === "pre-include").flatMap((category) => category.when.flatMap((condition) => condition.paths)));
-var canUsePreIncludePathPrefilter = (categories) => {
-	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
-	return preIncludeCategories.length > 0 && preIncludeCategories.every((category) => category.when.length > 0 && category.when.every((condition) => condition.paths.length > 0));
-};
-var getSafePreExcludePathPatterns = (categories) => unique(categories.filter((category) => category.type === "pre-exclude").flatMap((category) => category.when).filter((condition) => condition.paths.length > 0 && condition["paths-mode"] === "any" && condition.labels.length === 0 && (condition["labels-mode"] === "any" || condition["labels-mode"] === "all")).flatMap((condition) => condition.paths));
+/**
+* Determines if any of the categories require loading pull request changed files.
+*/
+var needsPullRequestChangedFiles = (categories) => categories.some((category) => category.when.some((condition) => condition.paths.length > 0));
 var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
 var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
 //#endregion
@@ -3417,337 +3429,6 @@ var findCommitsInComparison = async (params) => {
 	return (data.repository.ref.compare.commits.nodes || []).filter((commit) => commit != null);
 };
 //#endregion
-//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-with-path-changes.graphql.generated.ts
-var FindCommitsWithPathChangesQueryDocument = {
-	"kind": "Document",
-	"definitions": [{
-		"kind": "OperationDefinition",
-		"operation": "query",
-		"name": {
-			"kind": "Name",
-			"value": "findCommitsWithPathChangesQuery"
-		},
-		"variableDefinitions": [
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "name"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "owner"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "targetCommitish"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "after"
-					}
-				},
-				"type": {
-					"kind": "NamedType",
-					"name": {
-						"kind": "Name",
-						"value": "String"
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "path"
-					}
-				},
-				"type": {
-					"kind": "NamedType",
-					"name": {
-						"kind": "Name",
-						"value": "String"
-					}
-				}
-			}
-		],
-		"selectionSet": {
-			"kind": "SelectionSet",
-			"selections": [{
-				"kind": "Field",
-				"name": {
-					"kind": "Name",
-					"value": "repository"
-				},
-				"arguments": [{
-					"kind": "Argument",
-					"name": {
-						"kind": "Name",
-						"value": "name"
-					},
-					"value": {
-						"kind": "Variable",
-						"name": {
-							"kind": "Name",
-							"value": "name"
-						}
-					}
-				}, {
-					"kind": "Argument",
-					"name": {
-						"kind": "Name",
-						"value": "owner"
-					},
-					"value": {
-						"kind": "Variable",
-						"name": {
-							"kind": "Name",
-							"value": "owner"
-						}
-					}
-				}],
-				"selectionSet": {
-					"kind": "SelectionSet",
-					"selections": [{
-						"kind": "Field",
-						"name": {
-							"kind": "Name",
-							"value": "object"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "expression"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "targetCommitish"
-								}
-							}
-						}],
-						"selectionSet": {
-							"kind": "SelectionSet",
-							"selections": [{
-								"kind": "InlineFragment",
-								"typeCondition": {
-									"kind": "NamedType",
-									"name": {
-										"kind": "Name",
-										"value": "Commit"
-									}
-								},
-								"selectionSet": {
-									"kind": "SelectionSet",
-									"selections": [{
-										"kind": "Field",
-										"name": {
-											"kind": "Name",
-											"value": "__typename"
-										}
-									}, {
-										"kind": "Field",
-										"name": {
-											"kind": "Name",
-											"value": "history"
-										},
-										"arguments": [{
-											"kind": "Argument",
-											"name": {
-												"kind": "Name",
-												"value": "path"
-											},
-											"value": {
-												"kind": "Variable",
-												"name": {
-													"kind": "Name",
-													"value": "path"
-												}
-											}
-										}, {
-											"kind": "Argument",
-											"name": {
-												"kind": "Name",
-												"value": "after"
-											},
-											"value": {
-												"kind": "Variable",
-												"name": {
-													"kind": "Name",
-													"value": "after"
-												}
-											}
-										}],
-										"selectionSet": {
-											"kind": "SelectionSet",
-											"selections": [
-												{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "__typename"
-													}
-												},
-												{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "pageInfo"
-													},
-													"selectionSet": {
-														"kind": "SelectionSet",
-														"selections": [
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "__typename"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "hasNextPage"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "endCursor"
-																}
-															}
-														]
-													}
-												},
-												{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "nodes"
-													},
-													"selectionSet": {
-														"kind": "SelectionSet",
-														"selections": [{
-															"kind": "Field",
-															"name": {
-																"kind": "Name",
-																"value": "__typename"
-															}
-														}, {
-															"kind": "Field",
-															"name": {
-																"kind": "Name",
-																"value": "id"
-															}
-														}]
-													}
-												}
-											]
-										}
-									}]
-								}
-							}]
-						}
-					}]
-				}
-			}]
-		}
-	}]
-};
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/find-commits-with-path-change.ts
-/**
-* @see https://docs.github.com/en/graphql/reference/objects#commit
-*/
-var findCommitsWithPathChange = async (paths, params) => {
-	const octokit = getOctokit();
-	const commitIdsMatchingPaths = {};
-	let hasFoundCommits = false;
-	for (const path of paths) {
-		commitIdsMatchingPaths[path] = /* @__PURE__ */ new Set();
-		let after = null;
-		while (true) {
-			const variables = {
-				name: params.name,
-				owner: params.owner,
-				targetCommitish: params.targetCommitish,
-				path,
-				after
-			};
-			const data = await executeGraphql(octokit.graphql, FindCommitsWithPathChangesQueryDocument, variables);
-			if (data.repository?.object?.__typename !== "Commit") throw new Error("Query returned an unexpected result");
-			const matchingNodes = (data.repository.object.history.nodes ?? []).filter((c) => c != null).filter((c) => params.comparisonCommitIds.has(c.id));
-			for (const { id } of matchingNodes) {
-				hasFoundCommits = true;
-				commitIdsMatchingPaths[path].add(id);
-			}
-			const { hasNextPage, endCursor } = data.repository.object.history.pageInfo;
-			if (!hasNextPage || matchingNodes.length === 0) break;
-			after = endCursor ?? null;
-		}
-	}
-	return {
-		commitIdsMatchingPaths,
-		hasFoundCommits
-	};
-};
-//#endregion
 //#region src/actions/drafter/lib/find-pull-requests/graphql/find-recent-merged-pull-requests.graphql.generated.ts
 var FindRecentMergedPullRequestsDocument = {
 	"kind": "Document",
@@ -4391,13 +4072,6 @@ var findRecentMergedPullRequests = async (params) => {
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
 var findPullRequests = async (params) => {
-	const legacyExcludedPathPatterns = [...new Set(params.config.compatibility["exclude-paths"])];
-	const allConfiguredPathPatterns = [...new Set([...getConfiguredPathPatterns(params.config.categories), ...legacyExcludedPathPatterns])];
-	const shouldFilterByIncludedPaths = canUsePreIncludePathPrefilter(params.config.categories);
-	const includedPathPatterns = shouldFilterByIncludedPaths ? getPreIncludePathPatterns(params.config.categories) : [];
-	const excludedPathPatterns = getSafePreExcludePathPatterns(params.config.categories);
-	const effectiveExcludedPathPatterns = [...new Set([...excludedPathPatterns, ...legacyExcludedPathPatterns])];
-	const shouldFilterByExcludedPaths = effectiveExcludedPathPatterns.length > 0;
 	const sharedComparisonParams = {
 		name: context.repo.repo,
 		owner: context.repo.owner,
@@ -4409,7 +4083,6 @@ var findPullRequests = async (params) => {
 		pullRequestLimit: params.config["pull-request-limit"],
 		historyLimit: params.config["history-limit"]
 	};
-	let commits;
 	if (!params.lastRelease?.tag_name) {
 		warning("A previous (published) release is required to find changes");
 		return {
@@ -4418,57 +4091,11 @@ var findPullRequests = async (params) => {
 		};
 	}
 	info(`Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`);
-	commits = await findCommitsInComparison({
+	const commits = await findCommitsInComparison({
 		baseRef: `refs/tags/${params.lastRelease.tag_name}`,
 		...sharedComparisonParams
 	});
 	info(`Found ${commits.length} commits.`);
-	const comparisonCommitIds = new Set(commits.map((c) => c.id));
-	let commitIdsMatchingPaths = {};
-	/**
-	* Find commits that touched configured category path patterns so later steps can:
-	* - pre-filter commits when pre-include/pre-exclude categories make that safe
-	* - attach matched path patterns back to pull requests for category evaluation
-	*
-	* The underlying query does not bother fetching PRs along commits.
-	*/
-	if (allConfiguredPathPatterns.length > 0) {
-		commitIdsMatchingPaths = (await findCommitsWithPathChange(allConfiguredPathPatterns, {
-			name: context.repo.repo,
-			owner: context.repo.owner,
-			targetCommitish: params.config.commitish,
-			comparisonCommitIds
-		})).commitIdsMatchingPaths;
-		if (shouldFilterByIncludedPaths && includedPathPatterns.every((pathPattern) => commitIdsMatchingPaths[pathPattern]?.size === 0)) return {
-			commits: [],
-			pullRequests: []
-		};
-	}
-	const includedCommitIds = /* @__PURE__ */ new Set();
-	if (shouldFilterByIncludedPaths) {
-		info("Finding commits with included path changes...");
-		includedPathPatterns.forEach((path) => {
-			const ids = commitIdsMatchingPaths[path] ?? /* @__PURE__ */ new Set();
-			info(`Found ${ids.size} commits with changes to included path "${path}"`);
-			for (const id of ids) includedCommitIds.add(id);
-		});
-	}
-	const excludedCommitIds = /* @__PURE__ */ new Set();
-	if (shouldFilterByExcludedPaths) {
-		info("Finding commits with excluded path changes...");
-		effectiveExcludedPathPatterns.forEach((path) => {
-			const ids = commitIdsMatchingPaths[path] ?? /* @__PURE__ */ new Set();
-			info(`Found ${ids.size} commits with changes to excluded path "${path}"`);
-			for (const id of ids) excludedCommitIds.add(id);
-		});
-	}
-	const comparisonCommits = commits;
-	commits = comparisonCommits.filter((commit) => {
-		if (excludedCommitIds.has(commit.id)) return false;
-		if (shouldFilterByIncludedPaths) return includedCommitIds.has(commit.id);
-		return true;
-	});
-	if (shouldFilterByIncludedPaths || shouldFilterByExcludedPaths) info(`After filtering by path changes, ${commits.length} commits remain.`);
 	const pullRequestsByKey = new Map(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).map((pr) => [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr]));
 	const pullRequestsRaw = [...pullRequestsByKey.values()];
 	const comparisonCommitOids = new Set(commits.flatMap((c) => c.oid ? [c.oid] : []));
@@ -4487,50 +4114,19 @@ var findPullRequests = async (params) => {
 		}
 	});
 	const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
-	const commitIdToMatchedPaths = /* @__PURE__ */ new Map();
-	const commitOidToMatchedPaths = /* @__PURE__ */ new Map();
-	Object.entries(commitIdsMatchingPaths).forEach(([path, ids]) => {
-		ids.forEach((id) => {
-			const matchedPaths = commitIdToMatchedPaths.get(id) ?? /* @__PURE__ */ new Set();
-			matchedPaths.add(path);
-			commitIdToMatchedPaths.set(id, matchedPaths);
-		});
-	});
-	const pullRequestMatchedPaths = /* @__PURE__ */ new Map();
-	comparisonCommits.forEach((commit) => {
-		const matchedPaths = commitIdToMatchedPaths.get(commit.id);
-		if (!matchedPaths || matchedPaths.size === 0) return;
-		if (commit.oid) {
-			const currentMatchedPaths = commitOidToMatchedPaths.get(commit.oid) ?? /* @__PURE__ */ new Set();
-			for (const path of matchedPaths) currentMatchedPaths.add(path);
-			commitOidToMatchedPaths.set(commit.oid, currentMatchedPaths);
-		}
-		(commit.associatedPullRequests?.nodes ?? []).filter((pullRequest) => Boolean(pullRequest)).forEach((pullRequest) => {
-			const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
-			const currentMatchedPaths = pullRequestMatchedPaths.get(key) ?? /* @__PURE__ */ new Set();
-			for (const path of matchedPaths) currentMatchedPaths.add(path);
-			pullRequestMatchedPaths.set(key, currentMatchedPaths);
-		});
-	});
-	recoveredPRs.forEach((pullRequest) => {
-		const matchedPaths = pullRequest.mergeCommit?.oid ? commitOidToMatchedPaths.get(pullRequest.mergeCommit.oid) : void 0;
-		if (!matchedPaths || matchedPaths.size === 0) return;
-		const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
-		const currentMatchedPaths = pullRequestMatchedPaths.get(key) ?? /* @__PURE__ */ new Set();
-		for (const path of matchedPaths) currentMatchedPaths.add(path);
-		pullRequestMatchedPaths.set(key, currentMatchedPaths);
-	});
+	const shouldLoadPullRequestChangedFiles = needsPullRequestChangedFiles(params.config.categories);
+	const pullRequestChangedFiles = shouldLoadPullRequestChangedFiles ? await getPullRequestsChangedFiles({
+		owner: context.repo.owner,
+		repo: context.repo.repo,
+		pullRequests
+	}) : /* @__PURE__ */ new Map();
 	info(`Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
 	return {
 		commits,
-		pullRequests: pullRequests.map((pullRequest) => {
-			const matchedPaths = [...pullRequestMatchedPaths.get(`${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`) ?? []];
-			if (matchedPaths.length === 0) return pullRequest;
-			return {
-				...pullRequest,
-				matchedPaths
-			};
-		})
+		pullRequests: pullRequests.map((pullRequest) => shouldLoadPullRequestChangedFiles ? {
+			...pullRequest,
+			changedFiles: pullRequestChangedFiles.get(`${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`)
+		} : pullRequest)
 	};
 };
 //#endregion

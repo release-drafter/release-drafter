@@ -44,7 +44,7 @@ describe('parseCategories', () => {
           {
             labels: ['skip-release'],
             'labels-mode': 'any',
-            paths: [],
+            paths: ['docs/**'],
             'paths-mode': 'any',
           },
         ],
@@ -80,10 +80,6 @@ describe('parseCategories', () => {
         exclusive: false,
       },
     ])
-    expect(parsed.compatibility).toEqual({
-      'exclude-paths': ['docs/**'],
-    })
-
     expect(mocks.core.warning).toHaveBeenCalledWith(
       expect.stringContaining("deprecated 'exclude-labels' or 'exclude-paths'"),
     )

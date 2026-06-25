@@ -337,14 +337,14 @@ Within one condition, label and path predicates are combined with AND logic.
 
 The condition keys are:
 
-| Key           | Description                                                                     |
-| ------------- | ------------------------------------------------------------------------------- |
-| `label`       | Shorthand for one `labels` entry.                                               |
-| `labels`      | Label predicates to compare against the pull request labels.                    |
-| `labels-mode` | How the configured labels are matched. Defaults to `any`.                       |
-| `path`        | Shorthand for one `paths` entry.                                                |
-| `paths`       | Glob patterns to compare against the path patterns matched by the pull request. |
-| `paths-mode`  | How the configured paths are matched. Defaults to `any`.                        |
+| Key           | Description                                                             |
+| ------------- | ----------------------------------------------------------------------- |
+| `label`       | Shorthand for one `labels` entry.                                       |
+| `labels`      | Label predicates to compare against the pull request labels.            |
+| `labels-mode` | How the configured labels are matched. Defaults to `any`.               |
+| `path`        | Shorthand for one `paths` entry.                                        |
+| `paths`       | Glob patterns to compare against the files changed by the pull request. |
+| `paths-mode`  | How the configured paths are matched. Defaults to `any`.                |
 
 ```yml
 categories:
@@ -375,7 +375,7 @@ categories:
 
 The `labels-mode` and `paths-mode` options control how the configured labels or
 path patterns are compared. `any` is the default. Path matching operates on the
-set of configured path patterns that matched the pull request.
+pull request's changed files.
 
 Within a condition, `label` is shorthand for a single `labels` entry. If both
 `label` and `labels` are present, they are combined before `labels-mode` is
@@ -391,9 +391,6 @@ The available matching modes are:
 - `all`: every configured value matches
 - `only`: every change value is included in the configured set
 - `exactly`: the change values and configured values are the same set
-
-For path conditions, `only` and `exactly` compare against the set of configured
-path patterns that matched the pull request, not against raw changed file paths.
 
 If a condition does not configure any `label`/`labels` or `path`/`paths`, the
 corresponding `*-mode` setting has no effect.

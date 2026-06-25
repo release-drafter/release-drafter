@@ -3,7 +3,6 @@ import path from 'node:path'
 import nock from 'nock'
 
 type Query =
-  | 'query findCommitsWithPathChangesQuery'
   | 'query findCommitsInComparison'
   | 'query findRecentMergedPullRequests'
 
@@ -12,16 +11,13 @@ type Query =
  */
 type Payload =
   | 'graphql-include-path-src-5.md-forking'
-  | 'graphql-include-null-path-merge-commit'
   | 'graphql-include-path-src-5.md-rebase-merging'
   | 'graphql-include-null-path-overlapping-label'
   | 'graphql-include-null-path-forking'
   | 'graphql-include-null-path-rebase-merging'
   | 'graphql-include-null-path-squash-merging'
-  | 'graphql-include-path-src-5.md-merge-commit'
   | 'graphql-include-path-src-5.md-overlapping-label'
   | 'graphql-include-path-src-5.md-squash-merging'
-  | 'graphql-exclude-path-merge-commit'
   | 'graphql-comparison-merge-commit'
   | 'graphql-comparison-no-prs'
   | 'graphql-comparison-empty'
@@ -33,7 +29,6 @@ type Payload =
   | 'graphql-comparison-paginated-2'
   | 'graphql-comparison-missing-pr'
   | 'graphql-comparison-missing-pr-with-paths'
-  | 'graphql-include-path-missing-pr'
   | 'graphql-recent-merged-prs'
   | 'graphql-recent-merged-prs-with-paths'
 

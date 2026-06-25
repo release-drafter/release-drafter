@@ -9,6 +9,7 @@ import {
   mocks,
   nockGetAndPatchReleases,
   nockGetAndPostReleases,
+  nockGetPrFiles,
   nockGetReleases,
 } from '#tests/mocks/index.ts'
 
@@ -2050,61 +2051,29 @@ describe('drafter e2e', () => {
   })
 
   describe('with include-paths config', () => {
-    it('returns all PRs when not path filtered', async () => {
-      await mockContext('push')
-      mocks.config.mockReturnValue('config-with-include-paths')
-      const scope = nockGetAndPostReleases({
-        fetchedReleases: ['release'],
-      })
-      const gqlScope = mockGraphqlQuery([
-        {
-          query: 'query findCommitsInComparison',
-          payload: 'graphql-comparison-merge-commit',
-        },
-        {
-          query: 'query findCommitsWithPathChangesQuery',
-          payload: 'graphql-include-null-path-merge-commit',
-        },
-      ])
-      await runDrafter()
-      expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
-        [
-          {
-            "body": "# What's Changed
-        * Add documentation (#5) @TimonVS
-        * Update dependencies (#4) @TimonVS
-        * Bug fixes (#3) @TimonVS
-        * Add big feature (#2) @TimonVS
-        * 👽 Add alien technology (#1) @TimonVS
-        ",
-            "draft": true,
-            "make_latest": "true",
-            "name": "v2.0.1 (Code name: Placeholder)",
-            "prerelease": false,
-            "tag_name": "v2.0.1",
-            "target_commitish": "refs/heads/master",
-          },
-        ]
-      `)
-      expect(scope.isDone()).toBe(true) // should call the mocked endpoints
-      expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
-      expect(mocks.core.setFailed).not.toHaveBeenCalled()
-    })
-
     it('returns the modified paths', async () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-include-paths')
       const scope = nockGetAndPostReleases({
         fetchedReleases: ['release'],
       })
+      const fileScopes = nockGetPrFiles({
+        repo: {
+          owner: 'toolmantim',
+          repo: 'release-drafter-test-project',
+        },
+        entries: [
+          [1, ['src/1.md']],
+          [2, ['src/2.md']],
+          [3, ['src/3.md']],
+          [4, ['src/4.md', 'some/path']],
+          [5, ['src/5.md', 'some/path']],
+        ],
+      })
       const gqlScope = mockGraphqlQuery([
         {
           query: 'query findCommitsInComparison',
           payload: 'graphql-comparison-merge-commit',
-        },
-        {
-          query: 'query findCommitsWithPathChangesQuery',
-          payload: 'graphql-include-path-src-5.md-merge-commit',
         },
       ])
       await runDrafter()
@@ -2124,6 +2093,7 @@ describe('drafter e2e', () => {
         ]
       `)
       expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(fileScopes.every((fileScope) => fileScope.isDone())).toBe(true)
       expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
@@ -2134,14 +2104,23 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: ['release'],
       })
+      const fileScopes = nockGetPrFiles({
+        repo: {
+          owner: 'toolmantim',
+          repo: 'release-drafter-test-project',
+        },
+        entries: [
+          [1, ['src/1.md']],
+          [2, ['src/2.md']],
+          [3, ['src/3.md']],
+          [4, ['src/4.md', 'some/path']],
+          [5, ['src/5.md', 'some/path']],
+        ],
+      })
       const gqlScope = mockGraphqlQuery([
         {
           query: 'query findCommitsInComparison',
           payload: 'graphql-comparison-merge-commit',
-        },
-        {
-          query: 'query findCommitsWithPathChangesQuery',
-          payload: 'graphql-exclude-path-merge-commit',
         },
       ])
       await runDrafter()
@@ -2163,6 +2142,7 @@ describe('drafter e2e', () => {
         ]
       `)
       expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(fileScopes.every((fileScope) => fileScope.isDone())).toBe(true)
       expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
@@ -2173,14 +2153,23 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: ['release'],
       })
+      const fileScopes = nockGetPrFiles({
+        repo: {
+          owner: 'toolmantim',
+          repo: 'release-drafter-test-project',
+        },
+        entries: [
+          [1, ['src/1.md']],
+          [2, ['src/2.md']],
+          [3, ['src/3.md']],
+          [4, ['src/4.md', 'some/path']],
+          [5, ['src/5.md', 'some/path']],
+        ],
+      })
       const gqlScope = mockGraphqlQuery([
         {
           query: 'query findCommitsInComparison',
           payload: 'graphql-comparison-merge-commit',
-        },
-        {
-          query: 'query findCommitsWithPathChangesQuery',
-          payload: 'graphql-include-path-src-5.md-merge-commit',
         },
       ])
       await runDrafter()
@@ -2200,6 +2189,7 @@ describe('drafter e2e', () => {
         ]
       `)
       expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(fileScopes.every((fileScope) => fileScope.isDone())).toBe(true)
       expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
@@ -2212,14 +2202,23 @@ describe('drafter e2e', () => {
       const scope = nockGetAndPostReleases({
         fetchedReleases: ['release'],
       })
+      const fileScopes = nockGetPrFiles({
+        repo: {
+          owner: 'toolmantim',
+          repo: 'release-drafter-test-project',
+        },
+        entries: [
+          [1, ['src/1.md']],
+          [2, ['src/2.md']],
+          [3, ['src/3.md']],
+          [4, ['src/4.md', 'some/path']],
+          [5, ['src/5.md', 'some/path']],
+        ],
+      })
       const gqlScope = mockGraphqlQuery([
         {
           query: 'query findCommitsInComparison',
           payload: 'graphql-comparison-merge-commit',
-        },
-        {
-          query: 'query findCommitsWithPathChangesQuery',
-          payload: 'graphql-include-path-src-5.md-merge-commit',
         },
       ])
       await runDrafter()
@@ -2239,6 +2238,7 @@ describe('drafter e2e', () => {
         ]
       `)
       expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+      expect(fileScopes.every((fileScope) => fileScope.isDone())).toBe(true)
       expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
@@ -3511,9 +3511,6 @@ describe('drafter e2e', () => {
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
 
-    // the OID set used to gate recovery must be built AFTER path
-    // filtering, otherwise the safety net recovers PRs whose merge commit was
-    // excluded by include-paths/exclude-paths.
     it('respects include-paths when recovering missing PRs', async () => {
       await mockContext('push')
       mocks.config.mockReturnValue('config-with-include-paths')
@@ -3524,16 +3521,22 @@ describe('drafter e2e', () => {
           payload: 'graphql-comparison-missing-pr-with-paths',
         },
         {
-          query: 'query findCommitsWithPathChangesQuery',
-          payload: 'graphql-include-path-missing-pr',
-        },
-        {
           query: 'query findRecentMergedPullRequests',
           payload: 'graphql-recent-merged-prs-with-paths',
         },
       ])
 
       const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
+      const fileScopes = nockGetPrFiles({
+        repo: {
+          owner: 'toolmantim',
+          repo: 'release-drafter-test-project',
+        },
+        entries: [
+          [100, ['src/5.md']],
+          [101, ['other/file.md']],
+        ],
+      })
 
       await runDrafter()
 
@@ -3554,6 +3557,7 @@ describe('drafter e2e', () => {
       `)
 
       expect(scope.isDone()).toBe(true)
+      expect(fileScopes.every((fileScope) => fileScope.isDone())).toBe(true)
       expect(gqlScope.pendingMocks().length).toBe(0)
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
