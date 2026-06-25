@@ -37,7 +37,9 @@ categories:
   - title: 'Dependency Updates'
     semver-increment: 'patch'
     when:
-      label: 'type: dependencies'
+      labels: 
+        - 'type: dependencies'
+        - 'dependencies'
     collapse-after: 5
   - type: 'version-resolver'
     semver-increment: 'patch'

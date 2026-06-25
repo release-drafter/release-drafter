@@ -16,7 +16,7 @@ jobs:
     if: github.event_name == 'pull_request'
 
     steps:
-      - name: "Check for type: label"
+      - name: "Check for type: or dependencies label"
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -24,10 +24,10 @@ jobs:
           # Fetch at runtime so that re-running a failed workflow 
           # after adding a label will pick up the newly added label.
           LABELS=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/labels" --jq '.[].name')
-          if echo "$LABELS" | grep -qE '^type: '; then
-            echo "PR has a valid 'type: ' label."
+          if echo "$LABELS" | grep -qE '^type: |^dependencies$'; then
+            echo "PR has a valid label."
           else
-            echo "Error: PR must have at least one label starting with 'type: '."
+            echo "Error: PR must have a 'dependencies' label or at least one label starting with 'type: '."
             exit 1
           fi
 
