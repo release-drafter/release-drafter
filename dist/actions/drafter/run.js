@@ -1509,7 +1509,7 @@ var matchesValues = (actualValues, expectedValues, mode) => {
 	if (expected.length === 0) return true;
 	switch (mode) {
 		case "all": return expected.every((value) => actual.includes(value));
-		case "only": return actual.every((value) => expected.includes(value));
+		case "only": return actual.length > 0 && actual.every((value) => expected.includes(value));
 		case "exactly": return actual.length === expected.length && actual.every((value) => expected.includes(value));
 		default: return expected.length === 0 || expected.some((value) => actual.includes(value));
 	}
