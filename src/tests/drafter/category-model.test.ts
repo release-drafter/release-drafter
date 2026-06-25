@@ -334,6 +334,44 @@ describe('category model', () => {
     ).toBe(false)
   })
 
+  it('does not treat empty labels or paths as a match for mode only', () => {
+    const labelsOnlyConfig = makeParsedConfig([
+      {
+        title: 'Features',
+        when: {
+          labels: ['feature', 'enhancement'],
+          'labels-mode': 'only',
+        },
+      },
+    ])
+    const pathsOnlyConfig = makeParsedConfig([
+      {
+        title: 'Source and docs changes',
+        when: {
+          paths: ['src/**', 'docs/**'],
+          'paths-mode': 'only',
+        },
+      },
+    ])
+
+    const labelsOnlyCondition = labelsOnlyConfig.categories[0]?.when[0]
+    const pathsOnlyCondition = pathsOnlyConfig.categories[0]?.when[0]
+
+    expect(labelsOnlyCondition).toBeDefined()
+    expect(pathsOnlyCondition).toBeDefined()
+
+    if (!labelsOnlyCondition || !pathsOnlyCondition) {
+      throw new Error('Expected normalized category conditions')
+    }
+
+    expect(
+      matchesCategoryCondition(labelsOnlyCondition, makePullRequest([])),
+    ).toBe(false)
+    expect(
+      matchesCategoryCondition(pathsOnlyCondition, makePullRequest([], [])),
+    ).toBe(false)
+  })
+
   it('only prefilters pre-exclude paths for paths-mode any', () => {
     const config = makeParsedConfig([
       {

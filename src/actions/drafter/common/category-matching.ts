@@ -43,7 +43,11 @@ const matchesValues = (
     case 'all':
       return expected.every((value) => actual.includes(value))
     case 'only':
-      return actual.every((value) => expected.includes(value))
+      // An empty matched set vacuously passes `every`, but `only` should still
+      // require at least one configured match before the condition counts.
+      return (
+        actual.length > 0 && actual.every((value) => expected.includes(value))
+      )
     case 'exactly':
       return (
         actual.length === expected.length &&
