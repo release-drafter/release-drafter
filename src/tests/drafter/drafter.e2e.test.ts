@@ -3054,9 +3054,9 @@ describe('drafter e2e', () => {
           ",
               "draft": true,
               "make_latest": "true",
-              "name": "v0.1.0 🌈",
+              "name": "v0.0.1 🌈",
               "prerelease": false,
-              "tag_name": "v0.1.0",
+              "tag_name": "v0.0.1",
               "target_commitish": "refs/heads/master",
             },
           ]

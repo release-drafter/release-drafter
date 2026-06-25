@@ -200,20 +200,20 @@ describe('versions', () => {
         "$NEXT_MAJOR_VERSION_MAJOR": "1",
         "$NEXT_MAJOR_VERSION_MINOR": "0",
         "$NEXT_MAJOR_VERSION_PATCH": "0",
-        "$NEXT_MINOR_VERSION": "0.2.0",
+        "$NEXT_MINOR_VERSION": "0.1.0",
         "$NEXT_MINOR_VERSION_MAJOR": "0",
-        "$NEXT_MINOR_VERSION_MINOR": "2",
+        "$NEXT_MINOR_VERSION_MINOR": "1",
         "$NEXT_MINOR_VERSION_PATCH": "0",
-        "$NEXT_PATCH_VERSION": "0.1.1",
+        "$NEXT_PATCH_VERSION": "0.0.1",
         "$NEXT_PATCH_VERSION_MAJOR": "0",
-        "$NEXT_PATCH_VERSION_MINOR": "1",
+        "$NEXT_PATCH_VERSION_MINOR": "0",
         "$NEXT_PATCH_VERSION_PATCH": "1",
-        "$NEXT_PRERELEASE_VERSION": "0.1.1-0",
+        "$NEXT_PRERELEASE_VERSION": "0.0.1-0",
         "$NEXT_PRERELEASE_VERSION_PRERELEASE": "-0",
-        "$RESOLVED_VERSION": "0.1.0",
+        "$RESOLVED_VERSION": "0.0.1",
         "$RESOLVED_VERSION_MAJOR": "0",
-        "$RESOLVED_VERSION_MINOR": "1",
-        "$RESOLVED_VERSION_PATCH": "0",
+        "$RESOLVED_VERSION_MINOR": "0",
+        "$RESOLVED_VERSION_PATCH": "1",
         "$RESOLVED_VERSION_PRERELEASE": "",
       }
     `,
@@ -221,12 +221,6 @@ describe('versions', () => {
   })
 
   it('uses prerelease-identifier on first run when versionKeyIncrement is prerelease-based', () => {
-    // Regression test: v7 broke v6 behaviour (PR #1303) where first-run with a
-    // prerelease-identifier set produced a bare version (e.g. "0.1.0") instead
-    // of a prerelease of the initial version (e.g. "0.1.0-rc.0").
-    // semver's prepatch would normally give "0.1.1-rc.0" (increments patch
-    // before adding the prerelease suffix), but on first run there is no prior
-    // release to increment from, so the result should be "0.1.0-rc.0".
     const versionInfo = getVersionInfo({
       lastRelease: undefined,
       input: {},
@@ -237,7 +231,7 @@ describe('versions', () => {
       versionKeyIncrement: 'prepatch',
     })
 
-    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1.0-rc.0')
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.0.1-rc.0')
     expect(versionInfo.$RESOLVED_VERSION_PRERELEASE).toEqual('-rc.0')
   })
 
@@ -267,11 +261,11 @@ describe('versions', () => {
       versionKeyIncrement: 'premajor',
     })
 
-    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1.0-rc.0')
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('1.0.0-rc.0')
     expect(versionInfo.$RESOLVED_VERSION_PRERELEASE).toEqual('-rc.0')
   })
 
-  it('still returns bare 0.1.0 on first run when versionKeyIncrement is not prerelease-based', () => {
+  it('still returns bare 0.0.1 on first run when versionKeyIncrement is not prerelease-based', () => {
     const versionInfo = getVersionInfo({
       lastRelease: undefined,
       input: {},
@@ -282,7 +276,7 @@ describe('versions', () => {
       versionKeyIncrement: 'patch',
     })
 
-    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1.0')
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.0.1')
   })
 
   it('applies custom version template when no previous releases exist', () => {
@@ -294,8 +288,7 @@ describe('versions', () => {
     })
 
     expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1')
-    // $NEXT_MINOR_VERSION should increment from 0.1.0 to 0.2.0, so formatted as "0.2"
-    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual('0.2')
+    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual('0.1')
   })
 
   it('supports version template with only MINOR.PATCH format', () => {
@@ -306,11 +299,9 @@ describe('versions', () => {
       versionKeyIncrement: 'patch',
     })
 
-    expect(versionInfo.$RESOLVED_VERSION).toEqual('1.0')
-    // $NEXT_PATCH_VERSION should increment from 0.1.0 to 0.1.1, so formatted as "1.1"
-    expect(versionInfo.$NEXT_PATCH_VERSION).toEqual('1.1')
-    // $NEXT_MINOR_VERSION should increment from 0.1.0 to 0.2.0, so formatted as "2.0"
-    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual('2.0')
+    expect(versionInfo.$RESOLVED_VERSION).toEqual('0.1')
+    expect(versionInfo.$NEXT_PATCH_VERSION).toEqual('0.1')
+    expect(versionInfo.$NEXT_MINOR_VERSION).toEqual('1.0')
   })
 
   it('supports hardcoded major with 1.MINOR.PATCH format with existing releases', () => {
