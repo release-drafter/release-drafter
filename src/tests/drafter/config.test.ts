@@ -444,6 +444,64 @@ describe('get config file', () => {
             }
           `)
       })
+      it('should append inherited list keys when the extending config uses an _extends strategy', async () => {
+        vi.stubEnv('GITHUB_TOKEN', 'test')
+        const initialContext = {
+          repo: { owner: 'octocat', repo: 'hello-world' },
+          ref: 'main',
+        }
+        const configChain = [
+          {
+            inputConfigName: 'release-drafter.yml',
+            file: `_extends:\n  from: common.yml\n  strategy:\n    categories: append\ncategories:\n  - type: pre-exclude\n    when:\n      label: skip-changelog`,
+            endpointFilepath: '.github/release-drafter.yml',
+            endpoint: '',
+            context: initialContext,
+          },
+          {
+            file: `template: fake-template-content\ncategories:\n  - title: Features\n    when:\n      label: feature`,
+            endpointFilepath: '.github/common.yml',
+            endpoint: '',
+            context: {
+              repo: { owner: 'octocat', repo: 'hello-world' },
+              ref: 'main',
+            },
+          },
+        ].map((c) => ({
+          ...c,
+          endpoint: getContentEndpoint({
+            ...c.context,
+            path: c.endpointFilepath,
+          }),
+        }))
+
+        const scope = nock('https://api.github.com')
+          .get((uri) => configChain.map((c) => c.endpoint).includes(uri))
+          .times(configChain.length)
+          .reply(
+            200,
+            (uri) => configChain.find((c) => c.endpoint === uri)?.file,
+            {
+              'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
+            },
+          )
+
+        const res = await composeConfigGet(
+          configChain[0].inputConfigName as string,
+          initialContext,
+        )
+
+        expect(scope.isDone()).toBe(true)
+
+        // the extending config's categories are appended to the inherited
+        // list instead of replacing it
+        expect(res.config.categories).toEqual([
+          { title: 'Features', when: { label: 'feature' } },
+          { type: 'pre-exclude', when: { label: 'skip-changelog' } },
+        ])
+        expect(res.config.template).toBe('fake-template-content')
+        expect(res.config).not.toHaveProperty('_extends')
+      })
       it('should aggregate two configs when the second is in another repo and uses absolute paths', async () => {
         vi.stubEnv('GITHUB_TOKEN', 'test')
         const initialContext = {

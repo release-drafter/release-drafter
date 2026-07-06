@@ -51,7 +51,9 @@ export const getConfigFile = async (
     }
   }
 
-  const config: Record<string, unknown> & { _extends?: string } =
+  // `_extends` is either a target string or a mapping with `from` and an
+  // optional per-key `strategy`; it is validated in parseExtendsDeclaration.
+  const config: Record<string, unknown> =
     fileExtension === 'json' ? JSON.parse(configRaw) : parseYaml(configRaw)
 
   return { config, fetchedFrom: _configTarget }

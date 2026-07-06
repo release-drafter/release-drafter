@@ -5,6 +5,7 @@ import {
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
 } from '#src/actions/drafter/config/index.ts'
+import { extendsDeclarationSchema } from '#src/common/config/extends.schema.ts'
 
 /**
  * Mirrors the schema generation in src/scripts/json-schema.ts
@@ -13,6 +14,7 @@ import {
 function generateDrafterJSONSchema() {
   return toJSONSchema(
     object({
+      _extends: extendsDeclarationSchema.optional(),
       ...exclusiveConfigSchema.shape,
       ...commonConfigSchema.shape,
     }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
@@ -76,6 +78,55 @@ describe('JSON schema', () => {
       requiredWithDefaults,
       `Category item fields have defaults but are marked as required: ${requiredWithDefaults.join(', ')}`,
     ).toEqual([])
+  })
+
+  /**
+   * `_extends` never reaches the config schema, it is stripped while the
+   * config chain is composed. The JSON schema validates the raw YAML a user
+   * writes, so both of its forms have to be exposed there.
+   */
+  it('should expose both forms of the optional _extends key', () => {
+    const schema = generateDrafterJSONSchema()
+    const properties = schema.properties as Record<
+      string,
+      {
+        anyOf?: Array<{
+          type?: string
+          minLength?: number
+          required?: string[]
+          additionalProperties?: boolean
+          properties?: Record<
+            string,
+            {
+              type?: string
+              minLength?: number
+              additionalProperties?: { enum?: string[] }
+            }
+          >
+        }>
+      }
+    >
+    const required = (schema.required as string[]) ?? []
+
+    expect(required).not.toContain('_extends')
+
+    const forms = properties._extends?.anyOf
+    expect(forms, 'Expected _extends to allow more than one form').toBeDefined()
+
+    const stringForm = forms?.find((form) => form.type === 'string')
+    expect(stringForm).toMatchObject({ type: 'string', minLength: 1 })
+
+    const mappingForm = forms?.find((form) => form.type === 'object')
+    expect(mappingForm?.required).toEqual(['from'])
+    // composition errors on unknown keys, so editors should flag them too
+    expect(mappingForm?.additionalProperties).toBe(false)
+    expect(mappingForm?.properties?.from).toMatchObject({
+      type: 'string',
+      minLength: 1,
+    })
+    expect(
+      mappingForm?.properties?.strategy?.additionalProperties,
+    ).toMatchObject({ enum: ['override', 'append', 'prepend'] })
   })
 
   it('should expose when.path and when.paths in the category condition JSON schema', () => {

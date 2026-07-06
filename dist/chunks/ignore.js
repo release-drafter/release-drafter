@@ -30896,6 +30896,46 @@ function parseConfigTarget(target, context) {
 	};
 }
 //#endregion
+//#region src/common/config/parse-extends.ts
+var MERGE_STRATEGIES = [
+	"override",
+	"append",
+	"prepend"
+];
+var describeTarget = (target) => `${target.scheme}:${target.filepath}${target.repo ? ` (${target.repo.owner}/${target.repo.repo})` : ""}`;
+var isMergeStrategy = (value) => MERGE_STRATEGIES.includes(value);
+var parseStrategy = (value, fetchedFrom) => {
+	if (value === void 0 || value === null) return {};
+	if (typeof value !== "object" || Array.isArray(value)) throw new Error(`Invalid '_extends' strategy in ${describeTarget(fetchedFrom)}: expected a mapping of config keys to one of: ${MERGE_STRATEGIES.join(", ")}.`);
+	const strategies = {};
+	for (const [key, strategy] of Object.entries(value)) {
+		if (!isMergeStrategy(strategy)) throw new Error(`Invalid '_extends' strategy '${strategy}' for key '${key}' in ${describeTarget(fetchedFrom)}: expected one of: ${MERGE_STRATEGIES.join(", ")}.`);
+		strategies[key] = strategy;
+	}
+	return strategies;
+};
+/**
+* Parses and validates a file's `_extends` declaration. Both forms are
+* supported: the plain target string, and a mapping with `from` (same
+* target syntax) plus an optional per-key `strategy` selecting how the
+* file's keys are merged onto the configs it extends.
+*/
+var parseExtendsDeclaration = (value, fetchedFrom) => {
+	if (value === void 0 || value === null) return void 0;
+	if (typeof value === "string") return value.trim() === "" ? void 0 : {
+		from: value,
+		strategy: {}
+	};
+	if (typeof value !== "object" || Array.isArray(value)) throw new Error(`Invalid '_extends' in ${describeTarget(fetchedFrom)}: expected a target string or a mapping with 'from' and an optional 'strategy'.`);
+	const { from, strategy, ...unknownKeys } = value;
+	if (Object.keys(unknownKeys).length > 0) throw new Error(`Invalid '_extends' in ${describeTarget(fetchedFrom)}: unknown key(s) ${Object.keys(unknownKeys).map((key) => `'${key}'`).join(", ")}; expected 'from' and an optional 'strategy'.`);
+	if (typeof from !== "string" || from === "") throw new Error(`Invalid '_extends' in ${describeTarget(fetchedFrom)}: 'from' must be a target string.`);
+	return {
+		from,
+		strategy: parseStrategy(strategy, fetchedFrom)
+	};
+};
+//#endregion
 //#region src/common/config/get-config-files.ts
 var getConfigFiles = async (configFilename, currentContext) => {
 	debug(`getConfigFiles: Starting with filename: ${configFilename}`);
@@ -30921,23 +30961,23 @@ var getConfigFiles = async (configFilename, currentContext) => {
 	debug(`getConfigFiles: Fetched initial config from ${requestedRepoConfig.fetchedFrom.scheme}:${requestedRepoConfig.fetchedFrom.filepath}`);
 	const files = [requestedRepoConfig];
 	let lastFetchedFrom = requestedRepoConfig.fetchedFrom;
-	let lastExtends = requestedRepoConfig.config._extends;
+	let lastExtends = parseExtendsDeclaration(requestedRepoConfig.config._extends, requestedRepoConfig.fetchedFrom);
 	if (!lastExtends) {
 		debug(`getConfigFiles: No _extends found in config, returning single file`);
 		return files;
 	}
-	debug(`getConfigFiles: Found _extends directive: ${lastExtends}`);
+	debug(`getConfigFiles: Found _extends directive: ${lastExtends.from}`);
 	const MAX_EXTENDS_DEPTH = 33;
 	let extendsDepth = 0;
 	do {
 		extendsDepth++;
-		debug(`getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends}`);
+		debug(`getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends.from}`);
 		if (extendsDepth > MAX_EXTENDS_DEPTH) {
 			const error$1 = `Maximum extends depth (${MAX_EXTENDS_DEPTH}) exceeded. Check for circular dependencies or reduce the chain of extended configurations.`;
 			error(`getConfigFiles: ${error$1}`);
 			throw new Error(error$1);
 		}
-		configTarget = parseConfigTarget(lastExtends, lastFetchedFrom);
+		configTarget = parseConfigTarget(lastExtends.from, lastFetchedFrom);
 		if (!configTarget.filepath) configTarget.filepath = basename(lastFetchedFrom.filepath);
 		debug(`getConfigFiles: Parsed _extends target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`);
 		const normalizedFilepath = normalizeFilepath(configTarget, lastFetchedFrom);
@@ -30951,19 +30991,58 @@ var getConfigFiles = async (configFilename, currentContext) => {
 			const crossScheme = loadedFrom.scheme === "file" && preCheckTarget.scheme === "github";
 			return sameFilepath && sameRepo && (crossScheme || loadedFrom.ref === preCheckTarget.ref);
 		})) {
-			warning(`Recursion detected. Ignoring "_extends: ${lastExtends}".`);
+			warning(`Recursion detected. Ignoring "_extends: ${lastExtends.from}".`);
 			debug(`getConfigFiles: Recursion detected, stopping extends chain`);
 			return files;
 		}
 		const extendRepoConfig = await getConfigFile(configTarget, lastFetchedFrom);
 		debug(`getConfigFiles: Fetched extended config from ${extendRepoConfig.fetchedFrom.scheme}:${extendRepoConfig.fetchedFrom.filepath}`);
 		lastFetchedFrom = extendRepoConfig.fetchedFrom;
-		lastExtends = extendRepoConfig.config._extends;
+		lastExtends = parseExtendsDeclaration(extendRepoConfig.config._extends, extendRepoConfig.fetchedFrom);
 		files.push(extendRepoConfig);
-		debug(`getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends || "none"}`);
+		debug(`getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends?.from || "none"}`);
 	} while (lastExtends);
 	debug(`getConfigFiles: Extends chain complete with ${files.length} file(s)`);
 	return files;
+};
+//#endregion
+//#region src/common/config/merge-config-chain.ts
+var toMergeableList = (value, strategy, key, description) => {
+	if (value === void 0 || value === null) return [];
+	if (!Array.isArray(value)) throw new Error(`Cannot ${strategy} '${key}': ${description} is not a list (got ${typeof value}).`);
+	return value;
+};
+/**
+* Merges an `_extends` chain (ordered leaf-first, as returned by
+* `getConfigFiles`) into a single config object.
+*
+* Keys merge shallowly by default: the extending file's value replaces the
+* inherited one. A file can opt into appending or prepending a list key
+* to/onto the inherited list via the mapping form of `_extends`
+* (`_extends: {from: ..., strategy: {<key>: append|prepend}}`). A file's
+* strategy governs only the step where that file itself is merged onto the
+* configs it extends; it is not inherited by files extending it. The
+* `_extends` key is stripped from the result.
+*/
+var mergeConfigChain = (configResults) => {
+	const merged = {};
+	for (const { config, fetchedFrom } of [...configResults].reverse()) {
+		const { _extends: extendsValue, ...rest } = config;
+		const strategies = parseExtendsDeclaration(extendsValue, fetchedFrom)?.strategy ?? {};
+		for (const key of Object.keys(strategies)) if (!Object.hasOwn(rest, key)) warning(`_extends strategy declares '${key}' in ${describeTarget(fetchedFrom)}, but the file does not set '${key}'; the strategy has no effect.`);
+		for (const [key, value] of Object.entries(rest)) {
+			const strategy = (Object.hasOwn(strategies, key) ? strategies[key] : void 0) ?? "override";
+			if (strategy === "override") {
+				merged[key] = value;
+				continue;
+			}
+			const inherited = toMergeableList(Object.hasOwn(merged, key) ? merged[key] : void 0, strategy, key, `the value inherited by ${describeTarget(fetchedFrom)}`);
+			const own = toMergeableList(value, strategy, key, `the value in ${describeTarget(fetchedFrom)}`);
+			merged[key] = strategy === "append" ? [...inherited, ...own] : [...own, ...inherited];
+			info(`_extends strategy: ${strategy}ed ${own.length} '${key}' item(s) from ${describeTarget(fetchedFrom)} onto ${inherited.length} inherited item(s)`);
+		}
+	}
+	return merged;
 };
 //#endregion
 //#region src/common/config/index.ts
@@ -30977,7 +31056,6 @@ async function composeConfigGet(configFilename, currentContext) {
 	debug(`composeConfigGet: Current context - repo: ${currentContext.repo.owner}/${currentContext.repo.repo}, ref: ${currentContext.ref}`);
 	const configResults = await getConfigFiles(configFilename, currentContext);
 	debug(`composeConfigGet: Retrieved ${configResults.length} config file(s)`);
-	const configs = configResults.map(({ config: { _extends: _, ...rest } }) => rest).reverse().filter(Boolean);
 	const contexts = configResults.map((c) => c.fetchedFrom).filter(Boolean);
 	debug(`composeConfigGet: Resolved ${contexts.length} context(s)`);
 	contexts.forEach((ctx, idx) => {
@@ -30985,7 +31063,7 @@ async function composeConfigGet(configFilename, currentContext) {
 	});
 	const result = {
 		contexts,
-		config: Object.assign({}, ...configs)
+		config: mergeConfigChain(configResults)
 	};
 	debug(`composeConfigGet: Config composition complete with ${Object.keys(result.config).length} keys`);
 	return result;

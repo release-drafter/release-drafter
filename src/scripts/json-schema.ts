@@ -8,9 +8,14 @@ import {
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
 } from '#src/actions/drafter/config/index.ts'
+import { extendsDeclarationSchema } from '#src/common/config/extends.schema.ts'
 
+// `_extends` is stripped while the config chain is composed, so it is not part
+// of either action's config schema. It is still valid in the raw YAML the
+// editor-facing JSON schema validates, hence it is only added here.
 const drafterSchema = toJSONSchema(
   object({
+    _extends: extendsDeclarationSchema.optional(),
     ...exclusiveConfigSchema.shape,
     ...commonConfigSchema.shape,
   }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
@@ -18,6 +23,7 @@ const drafterSchema = toJSONSchema(
 )
 const autolabelerSchema = toJSONSchema(
   object({
+    _extends: extendsDeclarationSchema.optional(),
     ...autolabelerConfigSchema.shape,
   }).meta({ ...globalRegistry.get(autolabelerConfigSchema) }),
   { io: 'input' },

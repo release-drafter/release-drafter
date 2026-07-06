@@ -3,6 +3,7 @@ import * as core from '@actions/core'
 import { getConfigFile } from './get-config-file.ts'
 import { normalizeFilepath } from './normalize-filepath.ts'
 import { parseConfigTarget } from './parse-config-target.ts'
+import { parseExtendsDeclaration } from './parse-extends.ts'
 
 export const getConfigFiles = async (
   configFilename: string,
@@ -55,7 +56,10 @@ export const getConfigFiles = async (
 
   const files = [requestedRepoConfig]
   let lastFetchedFrom = requestedRepoConfig.fetchedFrom
-  let lastExtends = requestedRepoConfig.config._extends
+  let lastExtends = parseExtendsDeclaration(
+    requestedRepoConfig.config._extends,
+    requestedRepoConfig.fetchedFrom,
+  )
 
   // if the configuration has no `_extends` key, we are done here.
   if (!lastExtends) {
@@ -64,7 +68,7 @@ export const getConfigFiles = async (
     )
     return files
   }
-  core.debug(`getConfigFiles: Found _extends directive: ${lastExtends}`)
+  core.debug(`getConfigFiles: Found _extends directive: ${lastExtends.from}`)
 
   const MAX_EXTENDS_DEPTH = 33
   let extendsDepth = 0
@@ -72,7 +76,7 @@ export const getConfigFiles = async (
   do {
     extendsDepth++
     core.debug(
-      `getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends}`,
+      `getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends.from}`,
     )
 
     if (extendsDepth > MAX_EXTENDS_DEPTH) {
@@ -81,7 +85,7 @@ export const getConfigFiles = async (
       throw new Error(error)
     }
 
-    configTarget = parseConfigTarget(lastExtends, lastFetchedFrom)
+    configTarget = parseConfigTarget(lastExtends.from, lastFetchedFrom)
 
     // Support repo-only _extends (e.g., "org/repo" or "repo") by defaulting
     // to the parent config's filename when no filepath is specified.
@@ -115,7 +119,9 @@ export const getConfigFiles = async (
       )
     })
     if (alreadyLoaded) {
-      core.warning(`Recursion detected. Ignoring "_extends: ${lastExtends}".`)
+      core.warning(
+        `Recursion detected. Ignoring "_extends: ${lastExtends.from}".`,
+      )
       core.debug(`getConfigFiles: Recursion detected, stopping extends chain`)
       return files
     }
@@ -126,10 +132,13 @@ export const getConfigFiles = async (
     )
 
     lastFetchedFrom = extendRepoConfig.fetchedFrom
-    lastExtends = extendRepoConfig.config._extends
+    lastExtends = parseExtendsDeclaration(
+      extendRepoConfig.config._extends,
+      extendRepoConfig.fetchedFrom,
+    )
     files.push(extendRepoConfig)
     core.debug(
-      `getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends || 'none'}`,
+      `getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends?.from || 'none'}`,
     )
   } while (lastExtends)
   core.debug(

@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { getConfigFiles } from './get-config-files.ts'
+import { mergeConfigChain } from './merge-config-chain.ts'
 
 /**
  * Loads configuration from one or multiple files and resolves with
@@ -25,11 +26,6 @@ export async function composeConfigGet(
     `composeConfigGet: Retrieved ${configResults.length} config file(s)`,
   )
 
-  const configs = configResults
-    .map(({ config: { _extends: _, ...rest } }) => rest)
-    .reverse()
-    .filter(Boolean)
-
   const contexts = configResults.map((c) => c.fetchedFrom).filter(Boolean)
   core.debug(`composeConfigGet: Resolved ${contexts.length} context(s)`)
   contexts.forEach((ctx, idx) => {
@@ -40,7 +36,7 @@ export async function composeConfigGet(
 
   const result = {
     contexts,
-    config: Object.assign({}, ...configs),
+    config: mergeConfigChain(configResults),
   }
   core.debug(
     `composeConfigGet: Config composition complete with ${Object.keys(result.config).length} keys`,
