@@ -9,7 +9,6 @@ export type AvailableConfigs =
   | 'config-name-input'
   | 'config-non-master-branch'
   | 'config-previous-tag'
-  | 'config-tag-reference'
   | 'config-with-categories-2'
   | 'config-with-categories-3'
   | 'config-with-categories-4'
