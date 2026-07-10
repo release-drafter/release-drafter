@@ -1,10 +1,7 @@
 import * as core from '@actions/core'
+import type { MergeStrategy } from './extends.schema.ts'
 import type { getConfigFiles } from './get-config-files.ts'
-import {
-  describeTarget,
-  type MergeStrategy,
-  parseExtendsDeclaration,
-} from './parse-extends.ts'
+import { describeConfigTarget } from './parse-config-target.ts'
 
 const toMergeableList = (
   value: unknown,
@@ -41,14 +38,13 @@ export const mergeConfigChain = (
   const merged: Record<string, unknown> = {}
   // reverse to base-first so each file merges onto everything it extends
   for (const { config, fetchedFrom } of [...configResults].reverse()) {
-    const { _extends: extendsValue, ...rest } = config
-    const strategies =
-      parseExtendsDeclaration(extendsValue, fetchedFrom)?.strategy ?? {}
+    const { _extends, ...rest } = config
+    const strategies = _extends?.strategy ?? {}
     // A strategy for a key the file does not set is inert (likely a typo).
     for (const key of Object.keys(strategies)) {
       if (!Object.hasOwn(rest, key)) {
         core.warning(
-          `_extends strategy declares '${key}' in ${describeTarget(fetchedFrom)}, but the file does not set '${key}'; the strategy has no effect.`,
+          `_extends strategy declares '${key}' in ${describeConfigTarget(fetchedFrom)}, but the file does not set '${key}'; the strategy has no effect.`,
         )
       }
     }
@@ -67,18 +63,18 @@ export const mergeConfigChain = (
         Object.hasOwn(merged, key) ? merged[key] : undefined,
         strategy,
         key,
-        `the value inherited by ${describeTarget(fetchedFrom)}`,
+        `the value inherited by ${describeConfigTarget(fetchedFrom)}`,
       )
       const own = toMergeableList(
         value,
         strategy,
         key,
-        `the value in ${describeTarget(fetchedFrom)}`,
+        `the value in ${describeConfigTarget(fetchedFrom)}`,
       )
       merged[key] =
         strategy === 'append' ? [...inherited, ...own] : [...own, ...inherited]
       core.info(
-        `_extends strategy: ${strategy}ed ${own.length} '${key}' item(s) from ${describeTarget(fetchedFrom)} onto ${inherited.length} inherited item(s)`,
+        `_extends strategy: ${strategy}ed ${own.length} '${key}' item(s) from ${describeConfigTarget(fetchedFrom)} onto ${inherited.length} inherited item(s)`,
       )
     }
   }

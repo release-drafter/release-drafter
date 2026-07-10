@@ -5,25 +5,34 @@
     "_extends": {
       "anyOf": [
         {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
+        },
+        {
+          "type": "null"
         },
         {
           "type": "object",
           "properties": {
             "from": {
               "type": "string",
-              "minLength": 1
+              "pattern": "\\S"
             },
             "strategy": {
-              "type": "object",
-              "propertyNames": {
-                "type": "string"
-              },
-              "additionalProperties": {
-                "type": "string",
-                "enum": ["override", "append", "prepend"]
-              }
+              "anyOf": [
+                {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "enum": ["override", "append", "prepend"]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "required": ["from"],

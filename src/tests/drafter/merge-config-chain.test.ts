@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import {
+  configFileSchema,
+  extendsDeclarationSchema,
+} from '#src/common/config/extends.schema.ts'
 import { mergeConfigChain } from '#src/common/config/merge-config-chain.ts'
 import type { ConfigTarget } from '#src/common/config/parse-config-target.ts'
-import { parseExtendsDeclaration } from '#src/common/config/parse-extends.ts'
 
 const target = (filepath: string): ConfigTarget => ({
   scheme: 'github',
@@ -11,7 +14,7 @@ const target = (filepath: string): ConfigTarget => ({
 
 /** builds a chain entry; pass entries leaf-first, like getConfigFiles returns them */
 const entry = (filepath: string, config: Record<string, unknown>) => ({
-  config,
+  config: configFileSchema.parse(config),
   fetchedFrom: target(filepath),
 })
 
@@ -219,83 +222,81 @@ describe('mergeConfigChain', () => {
   })
 })
 
-describe('parseExtendsDeclaration', () => {
-  const fetchedFrom = target('.github/child.yml')
-
-  it('should parse the plain target string form', () => {
-    expect(parseExtendsDeclaration('base.yml', fetchedFrom)).toEqual({
+describe('extendsDeclarationSchema', () => {
+  it('should normalize the plain target string form', () => {
+    expect(extendsDeclarationSchema.parse('base.yml')).toEqual({
       from: 'base.yml',
       strategy: {},
     })
   })
 
-  it('should parse the mapping form with per-key strategies', () => {
+  it('should normalize the mapping form with per-key strategies', () => {
     expect(
-      parseExtendsDeclaration(
-        { from: 'base.yml', strategy: { categories: 'append' } },
-        fetchedFrom,
-      ),
+      extendsDeclarationSchema.parse({
+        from: 'base.yml',
+        strategy: { categories: 'append' },
+      }),
     ).toEqual({ from: 'base.yml', strategy: { categories: 'append' } })
   })
 
   it('should return undefined for absent or null values', () => {
-    expect(parseExtendsDeclaration(undefined, fetchedFrom)).toBeUndefined()
-    expect(parseExtendsDeclaration(null, fetchedFrom)).toBeUndefined()
+    expect(extendsDeclarationSchema.parse(undefined)).toBeUndefined()
+    expect(extendsDeclarationSchema.parse(null)).toBeUndefined()
   })
 
   it('should treat an empty or blank string as absent', () => {
-    expect(parseExtendsDeclaration('', fetchedFrom)).toBeUndefined()
-    expect(parseExtendsDeclaration('   ', fetchedFrom)).toBeUndefined()
+    expect(extendsDeclarationSchema.parse('')).toBeUndefined()
+    expect(extendsDeclarationSchema.parse('   ')).toBeUndefined()
   })
 
   it('should treat a null strategy (empty YAML key) as no strategies', () => {
     expect(
-      parseExtendsDeclaration(
-        { from: 'base.yml', strategy: null },
-        fetchedFrom,
-      ),
+      extendsDeclarationSchema.parse({ from: 'base.yml', strategy: null }),
     ).toEqual({ from: 'base.yml', strategy: {} })
   })
 
   it('should throw when the mapping form has no from', () => {
     expect(() =>
-      parseExtendsDeclaration(
-        { strategy: { categories: 'append' } },
-        fetchedFrom,
-      ),
-    ).toThrow(/'from' must be a target string/)
+      extendsDeclarationSchema.parse({
+        strategy: { categories: 'append' },
+      }),
+    ).toThrow(/from/)
+  })
+
+  it('should throw when the mapping form has a blank from target', () => {
+    expect(() => extendsDeclarationSchema.parse({ from: '   ' })).toThrow(
+      /from/,
+    )
   })
 
   it('should throw on unknown keys in the mapping form', () => {
     expect(() =>
-      parseExtendsDeclaration(
-        { from: 'base.yml', stratagy: { categories: 'append' } },
-        fetchedFrom,
-      ),
-    ).toThrow(/unknown key\(s\) 'stratagy'/)
+      extendsDeclarationSchema.parse({
+        from: 'base.yml',
+        stratagy: { categories: 'append' },
+      }),
+    ).toThrow(/stratagy/)
   })
 
   it('should throw on an unknown strategy value', () => {
     expect(() =>
-      parseExtendsDeclaration(
-        { from: 'base.yml', strategy: { categories: 'concat' } },
-        fetchedFrom,
-      ),
-    ).toThrow(/Invalid '_extends' strategy 'concat' for key 'categories'/)
+      extendsDeclarationSchema.parse({
+        from: 'base.yml',
+        strategy: { categories: 'concat' },
+      }),
+    ).toThrow(/categories/)
   })
 
   it('should throw when strategy is not a mapping', () => {
     expect(() =>
-      parseExtendsDeclaration(
-        { from: 'base.yml', strategy: 'append' },
-        fetchedFrom,
-      ),
-    ).toThrow(/Invalid '_extends' strategy in github:\.github\/child\.yml/)
+      extendsDeclarationSchema.parse({
+        from: 'base.yml',
+        strategy: 'append',
+      }),
+    ).toThrow(/strategy/)
   })
 
   it('should throw when _extends is neither a string nor a mapping', () => {
-    expect(() => parseExtendsDeclaration(['base.yml'], fetchedFrom)).toThrow(
-      /Invalid '_extends' in github:\.github\/child\.yml/,
-    )
+    expect(() => extendsDeclarationSchema.parse(['base.yml'])).toThrow()
   })
 })

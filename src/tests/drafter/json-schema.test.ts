@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { globalRegistry, object, toJSONSchema } from 'zod'
+import { configSchema as autolabelerConfigSchema } from '#src/actions/autolabeler/config/index.ts'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
@@ -14,7 +15,7 @@ import { extendsDeclarationSchema } from '#src/common/config/extends.schema.ts'
 function generateDrafterJSONSchema() {
   return toJSONSchema(
     object({
-      _extends: extendsDeclarationSchema.optional(),
+      _extends: extendsDeclarationSchema,
       ...exclusiveConfigSchema.shape,
       ...commonConfigSchema.shape,
     }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
@@ -22,7 +23,24 @@ function generateDrafterJSONSchema() {
   )
 }
 
+function generateAutolabelerJSONSchema() {
+  const { id: _autolabelerSchemaId, ...autolabelerSchemaMetadata } =
+    globalRegistry.get(autolabelerConfigSchema) ?? {}
+
+  return toJSONSchema(
+    object({
+      _extends: extendsDeclarationSchema,
+      ...autolabelerConfigSchema.shape,
+    }).meta(autolabelerSchemaMetadata),
+    { io: 'input' },
+  )
+}
+
 describe('JSON schema', () => {
+  it('should not emit the Zod registry id as a JSON Schema keyword', () => {
+    expect(generateAutolabelerJSONSchema()).not.toHaveProperty('id')
+  })
+
   /**
    * Fields with defaults should not be required in the JSON schema.
    * YAML LSPs use the JSON schema to validate config files, and marking
@@ -100,7 +118,12 @@ describe('JSON schema', () => {
             {
               type?: string
               minLength?: number
+              pattern?: string
               additionalProperties?: { enum?: string[] }
+              anyOf?: Array<{
+                type?: string
+                additionalProperties?: { enum?: string[] }
+              }>
             }
           >
         }>
@@ -114,7 +137,10 @@ describe('JSON schema', () => {
     expect(forms, 'Expected _extends to allow more than one form').toBeDefined()
 
     const stringForm = forms?.find((form) => form.type === 'string')
-    expect(stringForm).toMatchObject({ type: 'string', minLength: 1 })
+    // Empty strings are accepted as a backwards-compatible no-op.
+    expect(stringForm).toMatchObject({ type: 'string' })
+
+    expect(forms).toContainEqual({ type: 'null' })
 
     const mappingForm = forms?.find((form) => form.type === 'object')
     expect(mappingForm?.required).toEqual(['from'])
@@ -122,11 +148,16 @@ describe('JSON schema', () => {
     expect(mappingForm?.additionalProperties).toBe(false)
     expect(mappingForm?.properties?.from).toMatchObject({
       type: 'string',
-      minLength: 1,
+      pattern: '\\S',
     })
-    expect(
-      mappingForm?.properties?.strategy?.additionalProperties,
-    ).toMatchObject({ enum: ['override', 'append', 'prepend'] })
+    const strategyForms = mappingForm?.properties?.strategy?.anyOf
+    const strategyMapping = strategyForms?.find(
+      (form) => form.type === 'object',
+    )
+    expect(strategyMapping?.additionalProperties).toMatchObject({
+      enum: ['override', 'append', 'prepend'],
+    })
+    expect(strategyForms).toContainEqual({ type: 'null' })
   })
 
   it('should expose when.path and when.paths in the category condition JSON schema', () => {

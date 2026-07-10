@@ -3,7 +3,6 @@ import * as core from '@actions/core'
 import { getConfigFile } from './get-config-file.ts'
 import { normalizeFilepath } from './normalize-filepath.ts'
 import { parseConfigTarget } from './parse-config-target.ts'
-import { parseExtendsDeclaration } from './parse-extends.ts'
 
 export const getConfigFiles = async (
   configFilename: string,
@@ -56,10 +55,7 @@ export const getConfigFiles = async (
 
   const files = [requestedRepoConfig]
   let lastFetchedFrom = requestedRepoConfig.fetchedFrom
-  let lastExtends = parseExtendsDeclaration(
-    requestedRepoConfig.config._extends,
-    requestedRepoConfig.fetchedFrom,
-  )
+  let lastExtends = requestedRepoConfig.config._extends
 
   // if the configuration has no `_extends` key, we are done here.
   if (!lastExtends) {
@@ -132,10 +128,7 @@ export const getConfigFiles = async (
     )
 
     lastFetchedFrom = extendRepoConfig.fetchedFrom
-    lastExtends = parseExtendsDeclaration(
-      extendRepoConfig.config._extends,
-      extendRepoConfig.fetchedFrom,
-    )
+    lastExtends = extendRepoConfig.config._extends
     files.push(extendRepoConfig)
     core.debug(
       `getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends?.from || 'none'}`,
