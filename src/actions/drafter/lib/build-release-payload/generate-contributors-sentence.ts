@@ -1,44 +1,92 @@
-import type { Config } from '../../config/index.ts'
+import { filterPullRequestsByPreCategories } from '../../common/category-matching.ts'
+import type { ParsedConfig } from '../../config/index.ts'
 import type { findPullRequests } from '../find-pull-requests/index.ts'
+
+type PullRequest = Awaited<
+  ReturnType<typeof findPullRequests>
+>['pullRequests'][number]
+
+type Contributor = { login: string; botUrl?: string } | { name: string }
+
+const botSuffix = '[bot]'
+const pullRequestKey = (pullRequest: PullRequest) =>
+  `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
+const normalizeLogin = (login: string, isBot = false) =>
+  isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login
 
 export const generateContributorsSentence = (params: {
   commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
-  config: Pick<Config, 'exclude-contributors' | 'no-contributors-template'>
+  config: Pick<
+    ParsedConfig,
+    'categories' | 'exclude-contributors' | 'no-contributors-template'
+  >
 }) => {
   const { commits, pullRequests, config } = params
 
-  const contributors = new Set<string>()
+  const includedPullRequests = filterPullRequestsByPreCategories(
+    pullRequests,
+    config.categories,
+  )
+  const includedPullRequestKeys = new Set(
+    includedPullRequests.map(pullRequestKey),
+  )
+  const contributors = new Map<string, Contributor>()
 
   // Add from commits that have associated pull requests
   for (const commit of commits) {
-    if ((commit.associatedPullRequests?.nodes?.length ?? 0) === 0) continue
+    if (
+      !commit.associatedPullRequests?.nodes?.some(
+        (pullRequest) =>
+          pullRequest &&
+          includedPullRequestKeys.has(pullRequestKey(pullRequest)),
+      )
+    ) {
+      continue
+    }
+
     if (commit.author?.user) {
-      if (!config['exclude-contributors'].includes(commit.author.user.login)) {
-        contributors.add(`@${commit.author.user.login}`)
-      }
+      const login = normalizeLogin(commit.author.user.login)
+      contributors.set(`login:${login}`, { login })
     } else if (commit.author?.name) {
-      contributors.add(commit.author.name)
+      contributors.set(`name:${commit.author.name}`, {
+        name: commit.author.name,
+      })
     }
   }
 
   // Add from pull requests
-  for (const pullRequest of pullRequests) {
-    if (
-      pullRequest.author &&
-      !config['exclude-contributors'].includes(pullRequest.author.login)
-    ) {
-      if (pullRequest.author.__typename === 'Bot') {
-        contributors.add(
-          `[${pullRequest.author.login}[bot]](${pullRequest.author.url})`,
-        )
-      } else {
-        contributors.add(`@${pullRequest.author.login}`)
-      }
+  for (const pullRequest of includedPullRequests) {
+    if (pullRequest.author) {
+      const isBot = pullRequest.author.__typename === 'Bot'
+      const login = normalizeLogin(pullRequest.author.login, isBot)
+      contributors.set(`login:${login}`, {
+        login,
+        botUrl: isBot ? pullRequest.author.url : undefined,
+      })
     }
   }
 
-  const sortedContributors = [...contributors].sort()
+  const sortedContributors = [...contributors.values()]
+    .filter(
+      (contributor) =>
+        'name' in contributor ||
+        !config['exclude-contributors'].some(
+          (excluded) =>
+            excluded === contributor.login ||
+            `${excluded}${botSuffix}` === contributor.login,
+        ),
+    )
+    .map((contributor) => {
+      if ('name' in contributor) return contributor.name
+      if (contributor.botUrl) {
+        return `[@${contributor.login}](${contributor.botUrl})`
+      }
+      return contributor.login.endsWith(botSuffix)
+        ? contributor.login
+        : `@${contributor.login}`
+    })
+    .sort()
   if (sortedContributors.length > 1) {
     return (
       sortedContributors.slice(0, -1).join(', ') +
