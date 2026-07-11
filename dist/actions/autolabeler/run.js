@@ -1,9 +1,21 @@
 import { C as getInput, D as warning, E as setOutput, T as setFailed, d as getOctokit, f as context, h as array, i as sharedInputSchema, k as __toESM, n as stringToRegex, s as getPullRequestChangedFiles, t as require_ignore, u as composeConfigGet, v as object, w as info, y as string } from "../../chunks/ignore.js";
 //#region src/actions/autolabeler/config/action-input.schema.ts
-var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
+var actionInputSchema = object({ 
+/**
+* If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
+* The config should still be located inside `.github` as that's where we are looking for config files.
+* @default 'release-drafter.yml'
+*/
+"config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
 //#endregion
 //#region src/actions/autolabeler/config/config.schema.ts
-var configSchema = object({ autolabeler: array(object({
+var configSchema = object({ 
+/**
+* You can add automatically a label into a pull request.
+* Available matchers are `files` (glob), `branch` (regex), `title` (regex) and `body` (regex).
+* Matchers are evaluated independently; the label will be set if at least one of the matchers meets the criteria.
+*/
+autolabeler: array(object({
 	label: string().min(1),
 	files: array(string().min(1)).optional().default([]),
 	branch: array(string().min(1)).optional().default([]),
