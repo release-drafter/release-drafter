@@ -77,6 +77,11 @@ export const generateContributorsSentence = (params: {
             `${excluded}${botSuffix}` === contributor.login,
         ),
     )
+    .sort((a, b) => {
+      const aName = 'name' in a ? a.name : a.login
+      const bName = 'name' in b ? b.name : b.login
+      return aName.localeCompare(bName)
+    })
     .map((contributor) => {
       if ('name' in contributor) return contributor.name
       if (contributor.botUrl) {
@@ -86,7 +91,6 @@ export const generateContributorsSentence = (params: {
         ? contributor.login
         : `@${contributor.login}`
     })
-    .sort()
   if (sortedContributors.length > 1) {
     return (
       sortedContributors.slice(0, -1).join(', ') +

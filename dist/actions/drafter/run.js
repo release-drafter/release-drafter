@@ -2001,11 +2001,15 @@ var generateContributorsSentence = (params) => {
 			botUrl: isBot ? pullRequest.author.url : void 0
 		});
 	}
-	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !config["exclude-contributors"].some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).map((contributor) => {
+	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !config["exclude-contributors"].some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
+		const aName = "name" in a ? a.name : a.login;
+		const bName = "name" in b ? b.name : b.login;
+		return aName.localeCompare(bName);
+	}).map((contributor) => {
 		if ("name" in contributor) return contributor.name;
 		if (contributor.botUrl) return `[@${contributor.login}](${contributor.botUrl})`;
 		return contributor.login.endsWith(botSuffix) ? contributor.login : `@${contributor.login}`;
-	}).sort();
+	});
 	if (sortedContributors.length > 1) return sortedContributors.slice(0, -1).join(", ") + " and " + sortedContributors.slice(-1);
 	else if (sortedContributors.length === 1) return sortedContributors[0];
 	else return config["no-contributors-template"];

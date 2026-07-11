@@ -631,6 +631,8 @@ describe('generate contributors sentence', () => {
 
   const botPullRequest = pullRequests.at(-1)
   if (!botPullRequest) throw new Error('Missing bot pull request fixture')
+  const userPullRequest = pullRequests.at(0)
+  if (!userPullRequest) throw new Error('Missing user pull request fixture')
   const botCommit = {
     __typename: 'Commit',
     id: 'commit-id',
@@ -652,10 +654,10 @@ describe('generate contributors sentence', () => {
     expect(
       generateContributorsSentence({
         commits: [botCommit],
-        pullRequests: [botPullRequest],
+        pullRequests: [userPullRequest, botPullRequest],
         config,
       }),
-    ).toBe('[@dependabot[bot]](https://github.com/apps/dependabot)')
+    ).toBe('[@dependabot[bot]](https://github.com/apps/dependabot) and @ghost')
   })
 
   it('excludes contributors whose pull requests are excluded', () => {
