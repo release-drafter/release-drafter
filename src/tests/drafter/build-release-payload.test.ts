@@ -631,7 +631,11 @@ describe('generate contributors sentence', () => {
 
   const botPullRequest = pullRequests.at(-1)
   if (!botPullRequest) throw new Error('Missing bot pull request fixture')
-  const userPullRequest = pullRequests.at(0)
+  const ghostPullRequest = pullRequests.at(0)
+  if (!ghostPullRequest) throw new Error('Missing ghost pull request fixture')
+  const userPullRequest = pullRequests.find(
+    (pullRequest) => pullRequest.author?.login === 'jetersen',
+  )
   if (!userPullRequest) throw new Error('Missing user pull request fixture')
   const botCommit = {
     __typename: 'Commit',
@@ -657,7 +661,19 @@ describe('generate contributors sentence', () => {
         pullRequests: [userPullRequest, botPullRequest],
         config,
       }),
-    ).toBe('[@dependabot[bot]](https://github.com/apps/dependabot) and @ghost')
+    ).toBe(
+      '[@dependabot[bot]](https://github.com/apps/dependabot) and @jetersen',
+    )
+  })
+
+  it('renders deleted users as @ghost', () => {
+    expect(
+      generateContributorsSentence({
+        commits: [],
+        pullRequests: [ghostPullRequest],
+        config,
+      }),
+    ).toBe('@ghost')
   })
 
   it('excludes contributors whose pull requests are excluded', () => {
