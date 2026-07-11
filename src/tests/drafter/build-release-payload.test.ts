@@ -666,6 +666,42 @@ describe('generate contributors sentence', () => {
     )
   })
 
+  it('sorts users before bots regardless of pull request order', () => {
+    const renovatePullRequest = {
+      ...botPullRequest,
+      number: 10,
+      author: {
+        __typename: 'Bot' as const,
+        login: 'renovate',
+        url: 'https://github.com/apps/renovate',
+      },
+    }
+    const cchanchePullRequest = {
+      ...userPullRequest,
+      number: 11,
+      author: {
+        __typename: 'User' as const,
+        login: 'cchanche',
+        url: 'https://github.com/cchanche',
+      },
+    }
+
+    expect(
+      generateContributorsSentence({
+        commits: [],
+        pullRequests: [
+          renovatePullRequest,
+          userPullRequest,
+          botPullRequest,
+          cchanchePullRequest,
+        ],
+        config,
+      }),
+    ).toBe(
+      '@cchanche, @jetersen, [@dependabot[bot]](https://github.com/apps/dependabot) and [@renovate[bot]](https://github.com/apps/renovate)',
+    )
+  })
+
   it('renders deleted users as @ghost', () => {
     expect(
       generateContributorsSentence({
