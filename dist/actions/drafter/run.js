@@ -1978,18 +1978,40 @@ var generateChangeLog = (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts
+var botSuffix = "[bot]";
+var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
 var generateContributorsSentence = (params) => {
 	const { commits, pullRequests, config } = params;
-	const contributors = /* @__PURE__ */ new Set();
+	const includedPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
+	const includedPullRequestKeys = new Set(includedPullRequests.map(pullRequestKey));
+	const contributors = /* @__PURE__ */ new Map();
 	for (const commit of commits) {
-		if ((commit.associatedPullRequests?.nodes?.length ?? 0) === 0) continue;
+		if (!commit.associatedPullRequests?.nodes?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
 		if (commit.author?.user) {
-			if (!config["exclude-contributors"].includes(commit.author.user.login)) contributors.add(`@${commit.author.user.login}`);
-		} else if (commit.author?.name) contributors.add(commit.author.name);
+			const login = normalizeLogin(commit.author.user.login);
+			contributors.set(`login:${login}`, { login });
+		} else if (commit.author?.name) contributors.set(`name:${commit.author.name}`, { name: commit.author.name });
 	}
-	for (const pullRequest of pullRequests) if (pullRequest.author && !config["exclude-contributors"].includes(pullRequest.author.login)) if (pullRequest.author.__typename === "Bot") contributors.add(`[${pullRequest.author.login}[bot]](${pullRequest.author.url})`);
-	else contributors.add(`@${pullRequest.author.login}`);
-	const sortedContributors = [...contributors].sort();
+	for (const pullRequest of includedPullRequests) if (pullRequest.author) {
+		const isBot = pullRequest.author.__typename === "Bot";
+		const login = normalizeLogin(pullRequest.author.login, isBot);
+		contributors.set(`login:${login}`, {
+			login,
+			botUrl: isBot ? pullRequest.author.url : void 0
+		});
+	}
+	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !config["exclude-contributors"].some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
+		const aIsBot = "login" in a && a.botUrl !== void 0;
+		if (aIsBot !== ("login" in b && b.botUrl !== void 0)) return aIsBot ? 1 : -1;
+		const aName = "name" in a ? a.name : a.login;
+		const bName = "name" in b ? b.name : b.login;
+		return aName.localeCompare(bName);
+	}).map((contributor) => {
+		if ("name" in contributor) return contributor.name;
+		if (contributor.botUrl) return `[@${contributor.login}](${contributor.botUrl})`;
+		return contributor.login.endsWith(botSuffix) ? contributor.login : `@${contributor.login}`;
+	});
 	if (sortedContributors.length > 1) return sortedContributors.slice(0, -1).join(", ") + " and " + sortedContributors.slice(-1);
 	else if (sortedContributors.length === 1) return sortedContributors[0];
 	else return config["no-contributors-template"];
