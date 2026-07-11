@@ -2,6 +2,44 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "_extends": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "strategy": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "enum": ["override", "append", "prepend"]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": ["from"],
+          "additionalProperties": false
+        }
+      ]
+    },
     "change-template": {
       "default": "* $TITLE (#$NUMBER) @$AUTHOR",
       "type": "string"

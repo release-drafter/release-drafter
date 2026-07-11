@@ -5,6 +5,9 @@ export type ConfigTarget = {
   filepath: string
 }
 
+export const describeConfigTarget = (target: ConfigTarget) =>
+  `${target.scheme}:${target.filepath}${target.repo ? ` (${target.repo.owner}/${target.repo.repo})` : ''}`
+
 /**
  * Parses a config target string into its components
  * @param target - Target string in format `[github:][[owner/]repo]:filepath[@ref]` or `file:filepath`

@@ -64,7 +64,7 @@ export const getConfigFiles = async (
     )
     return files
   }
-  core.debug(`getConfigFiles: Found _extends directive: ${lastExtends}`)
+  core.debug(`getConfigFiles: Found _extends directive: ${lastExtends.from}`)
 
   const MAX_EXTENDS_DEPTH = 33
   let extendsDepth = 0
@@ -72,7 +72,7 @@ export const getConfigFiles = async (
   do {
     extendsDepth++
     core.debug(
-      `getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends}`,
+      `getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends.from}`,
     )
 
     if (extendsDepth > MAX_EXTENDS_DEPTH) {
@@ -81,7 +81,7 @@ export const getConfigFiles = async (
       throw new Error(error)
     }
 
-    configTarget = parseConfigTarget(lastExtends, lastFetchedFrom)
+    configTarget = parseConfigTarget(lastExtends.from, lastFetchedFrom)
 
     // Support repo-only _extends (e.g., "org/repo" or "repo") by defaulting
     // to the parent config's filename when no filepath is specified.
@@ -115,7 +115,9 @@ export const getConfigFiles = async (
       )
     })
     if (alreadyLoaded) {
-      core.warning(`Recursion detected. Ignoring "_extends: ${lastExtends}".`)
+      core.warning(
+        `Recursion detected. Ignoring "_extends: ${lastExtends.from}".`,
+      )
       core.debug(`getConfigFiles: Recursion detected, stopping extends chain`)
       return files
     }
@@ -129,7 +131,7 @@ export const getConfigFiles = async (
     lastExtends = extendRepoConfig.config._extends
     files.push(extendRepoConfig)
     core.debug(
-      `getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends || 'none'}`,
+      `getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends?.from || 'none'}`,
     )
   } while (lastExtends)
   core.debug(

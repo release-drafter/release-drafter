@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { globalRegistry, object, toJSONSchema } from 'zod'
+import { configSchema as autolabelerConfigSchema } from '#src/actions/autolabeler/config/index.ts'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
 } from '#src/actions/drafter/config/index.ts'
+import { extendsDeclarationSchema } from '#src/common/config/extends.schema.ts'
 
 /**
  * Mirrors the schema generation in src/scripts/json-schema.ts
@@ -13,6 +15,7 @@ import {
 function generateDrafterJSONSchema() {
   return toJSONSchema(
     object({
+      _extends: extendsDeclarationSchema,
       ...exclusiveConfigSchema.shape,
       ...commonConfigSchema.shape,
     }).meta({ ...globalRegistry.get(drafterConfigSchema) }),
@@ -20,7 +23,24 @@ function generateDrafterJSONSchema() {
   )
 }
 
+function generateAutolabelerJSONSchema() {
+  const { id: _autolabelerSchemaId, ...autolabelerSchemaMetadata } =
+    globalRegistry.get(autolabelerConfigSchema) ?? {}
+
+  return toJSONSchema(
+    object({
+      _extends: extendsDeclarationSchema,
+      ...autolabelerConfigSchema.shape,
+    }).meta(autolabelerSchemaMetadata),
+    { io: 'input' },
+  )
+}
+
 describe('JSON schema', () => {
+  it('should not emit the Zod registry id as a JSON Schema keyword', () => {
+    expect(generateAutolabelerJSONSchema()).not.toHaveProperty('id')
+  })
+
   /**
    * Fields with defaults should not be required in the JSON schema.
    * YAML LSPs use the JSON schema to validate config files, and marking
@@ -76,6 +96,68 @@ describe('JSON schema', () => {
       requiredWithDefaults,
       `Category item fields have defaults but are marked as required: ${requiredWithDefaults.join(', ')}`,
     ).toEqual([])
+  })
+
+  /**
+   * `_extends` never reaches the config schema, it is stripped while the
+   * config chain is composed. The JSON schema validates the raw YAML a user
+   * writes, so both of its forms have to be exposed there.
+   */
+  it('should expose both forms of the optional _extends key', () => {
+    const schema = generateDrafterJSONSchema()
+    const properties = schema.properties as Record<
+      string,
+      {
+        anyOf?: Array<{
+          type?: string
+          minLength?: number
+          required?: string[]
+          additionalProperties?: boolean
+          properties?: Record<
+            string,
+            {
+              type?: string
+              minLength?: number
+              pattern?: string
+              additionalProperties?: { enum?: string[] }
+              anyOf?: Array<{
+                type?: string
+                additionalProperties?: { enum?: string[] }
+              }>
+            }
+          >
+        }>
+      }
+    >
+    const required = (schema.required as string[]) ?? []
+
+    expect(required).not.toContain('_extends')
+
+    const forms = properties._extends?.anyOf
+    expect(forms, 'Expected _extends to allow more than one form').toBeDefined()
+
+    const stringForm = forms?.find((form) => form.type === 'string')
+    // Empty strings are accepted as a backwards-compatible no-op.
+    expect(stringForm).toMatchObject({ type: 'string' })
+
+    expect(forms).toContainEqual({ type: 'null' })
+
+    const mappingForm = forms?.find((form) => form.type === 'object')
+    expect(mappingForm?.required).toEqual(['from'])
+    // composition errors on unknown keys, so editors should flag them too
+    expect(mappingForm?.additionalProperties).toBe(false)
+    expect(mappingForm?.properties?.from).toMatchObject({
+      type: 'string',
+      pattern: '\\S',
+    })
+    const strategyForms = mappingForm?.properties?.strategy?.anyOf
+    const strategyMapping = strategyForms?.find(
+      (form) => form.type === 'object',
+    )
+    expect(strategyMapping?.additionalProperties).toMatchObject({
+      enum: ['override', 'append', 'prepend'],
+    })
+    expect(strategyForms).toContainEqual({ type: 'null' })
   })
 
   it('should expose when.path and when.paths in the category condition JSON schema', () => {

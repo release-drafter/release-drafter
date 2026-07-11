@@ -18298,6 +18298,59 @@ function formatError(error, mapper = (issue) => issue.message) {
 	processError(error);
 	return fieldErrors;
 }
+/** Format a ZodError as a human-readable string in the following form.
+*
+* From
+*
+* ```ts
+* ZodError {
+*   issues: [
+*     {
+*       expected: 'string',
+*       code: 'invalid_type',
+*       path: [ 'username' ],
+*       message: 'Invalid input: expected string'
+*     },
+*     {
+*       expected: 'number',
+*       code: 'invalid_type',
+*       path: [ 'favoriteNumbers', 1 ],
+*       message: 'Invalid input: expected number'
+*     }
+*   ];
+* }
+* ```
+*
+* to
+*
+* ```
+* username
+*   ✖ Expected number, received string at "username
+* favoriteNumbers[0]
+*   ✖ Invalid input: expected number
+* ```
+*/
+function toDotPath(_path) {
+	const segs = [];
+	const path = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+	for (const seg of path) if (typeof seg === "number") segs.push(`[${seg}]`);
+	else if (typeof seg === "symbol") segs.push(`[${JSON.stringify(String(seg))}]`);
+	else if (/[^\w$]/.test(seg)) segs.push(`[${JSON.stringify(seg)}]`);
+	else {
+		if (segs.length) segs.push(".");
+		segs.push(seg);
+	}
+	return segs.join("");
+}
+function prettifyError$1(error) {
+	const lines = [];
+	const issues = [...error.issues].sort((a, b) => (a.path ?? []).length - (b.path ?? []).length);
+	for (const issue of issues) {
+		lines.push(`✖ ${issue.message}`);
+		if (issue.path?.length) lines.push(`  → at ${toDotPath(issue.path)}`);
+	}
+	return lines.join("\n");
+}
 //#endregion
 //#region node_modules/zod/v4/core/parse.js
 var _parse = (_Err) => (schema, value, _ctx, _params) => {
@@ -18474,6 +18527,7 @@ var string$2 = (params) => {
 var integer = /^-?\d+$/;
 var number$1 = /^-?\d+(?:\.\d+)?$/;
 var boolean$1 = /^(?:true|false)$/i;
+var _null$2 = /^null$/i;
 var lowercase = /^[^A-Z]*$/;
 var uppercase = /^[^a-z]*$/;
 //#endregion
@@ -19286,6 +19340,22 @@ var $ZodBoolean = /*@__PURE__*/ $constructor("$ZodBoolean", (inst, def) => {
 		return payload;
 	};
 });
+var $ZodNull = /*@__PURE__*/ $constructor("$ZodNull", (inst, def) => {
+	$ZodType.init(inst, def);
+	inst._zod.pattern = _null$2;
+	inst._zod.values = new Set([null]);
+	inst._zod.parse = (payload, _ctx) => {
+		const input = payload.value;
+		if (input === null) return payload;
+		payload.issues.push({
+			expected: "null",
+			code: "invalid_type",
+			input,
+			inst
+		});
+		return payload;
+	};
+});
 var $ZodUnknown = /*@__PURE__*/ $constructor("$ZodUnknown", (inst, def) => {
 	$ZodType.init(inst, def);
 	inst._zod.parse = (payload) => payload;
@@ -19729,6 +19799,115 @@ function handleIntersectionResults(result, left, right) {
 	result.value = merged.data;
 	return result;
 }
+var $ZodRecord = /*@__PURE__*/ $constructor("$ZodRecord", (inst, def) => {
+	$ZodType.init(inst, def);
+	inst._zod.parse = (payload, ctx) => {
+		const input = payload.value;
+		if (!isPlainObject$2(input)) {
+			payload.issues.push({
+				expected: "record",
+				code: "invalid_type",
+				input,
+				inst
+			});
+			return payload;
+		}
+		const proms = [];
+		const values = def.keyType._zod.values;
+		if (values) {
+			payload.value = {};
+			const recordKeys = /* @__PURE__ */ new Set();
+			for (const key of values) if (typeof key === "string" || typeof key === "number" || typeof key === "symbol") {
+				recordKeys.add(typeof key === "number" ? key.toString() : key);
+				const keyResult = def.keyType._zod.run({
+					value: key,
+					issues: []
+				}, ctx);
+				if (keyResult instanceof Promise) throw new Error("Async schemas not supported in object keys currently");
+				if (keyResult.issues.length) {
+					payload.issues.push({
+						code: "invalid_key",
+						origin: "record",
+						issues: keyResult.issues.map((iss) => finalizeIssue(iss, ctx, config())),
+						input: key,
+						path: [key],
+						inst
+					});
+					continue;
+				}
+				const outKey = keyResult.value;
+				const result = def.valueType._zod.run({
+					value: input[key],
+					issues: []
+				}, ctx);
+				if (result instanceof Promise) proms.push(result.then((result) => {
+					if (result.issues.length) payload.issues.push(...prefixIssues(key, result.issues));
+					payload.value[outKey] = result.value;
+				}));
+				else {
+					if (result.issues.length) payload.issues.push(...prefixIssues(key, result.issues));
+					payload.value[outKey] = result.value;
+				}
+			}
+			let unrecognized;
+			for (const key in input) if (!recordKeys.has(key)) {
+				unrecognized = unrecognized ?? [];
+				unrecognized.push(key);
+			}
+			if (unrecognized && unrecognized.length > 0) payload.issues.push({
+				code: "unrecognized_keys",
+				input,
+				inst,
+				keys: unrecognized
+			});
+		} else {
+			payload.value = {};
+			for (const key of Reflect.ownKeys(input)) {
+				if (key === "__proto__") continue;
+				if (!Object.prototype.propertyIsEnumerable.call(input, key)) continue;
+				let keyResult = def.keyType._zod.run({
+					value: key,
+					issues: []
+				}, ctx);
+				if (keyResult instanceof Promise) throw new Error("Async schemas not supported in object keys currently");
+				if (typeof key === "string" && number$1.test(key) && keyResult.issues.length) {
+					const retryResult = def.keyType._zod.run({
+						value: Number(key),
+						issues: []
+					}, ctx);
+					if (retryResult instanceof Promise) throw new Error("Async schemas not supported in object keys currently");
+					if (retryResult.issues.length === 0) keyResult = retryResult;
+				}
+				if (keyResult.issues.length) {
+					if (def.mode === "loose") payload.value[key] = input[key];
+					else payload.issues.push({
+						code: "invalid_key",
+						origin: "record",
+						issues: keyResult.issues.map((iss) => finalizeIssue(iss, ctx, config())),
+						input: key,
+						path: [key],
+						inst
+					});
+					continue;
+				}
+				const result = def.valueType._zod.run({
+					value: input[key],
+					issues: []
+				}, ctx);
+				if (result instanceof Promise) proms.push(result.then((result) => {
+					if (result.issues.length) payload.issues.push(...prefixIssues(key, result.issues));
+					payload.value[keyResult.value] = result.value;
+				}));
+				else {
+					if (result.issues.length) payload.issues.push(...prefixIssues(key, result.issues));
+					payload.value[keyResult.value] = result.value;
+				}
+			}
+		}
+		if (proms.length) return Promise.all(proms).then(() => payload);
+		return payload;
+	};
+});
 var $ZodEnum = /*@__PURE__*/ $constructor("$ZodEnum", (inst, def) => {
 	$ZodType.init(inst, def);
 	const values = getEnumValues(def.entries);
@@ -20368,6 +20547,13 @@ function _boolean(Class, params) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
+function _null$1(Class, params) {
+	return new Class({
+		type: "null",
+		...normalizeParams(params)
+	});
+}
+// @__NO_SIDE_EFFECTS__
 function _unknown(Class) {
 	return new Class({ type: "unknown" });
 }
@@ -20978,6 +21164,13 @@ var numberProcessor = (schema, ctx, _json, _params) => {
 var booleanProcessor = (_schema, _ctx, json, _params) => {
 	json.type = "boolean";
 };
+var nullProcessor = (_schema, ctx, json, _params) => {
+	if (ctx.target === "openapi-3.0") {
+		json.type = "string";
+		json.nullable = true;
+		json.enum = [null];
+	} else json.type = "null";
+};
 var neverProcessor = (_schema, _ctx, json, _params) => {
 	json.not = {};
 };
@@ -21069,6 +21262,39 @@ var intersectionProcessor = (schema, ctx, json, params) => {
 	});
 	const isSimpleIntersection = (val) => "allOf" in val && Object.keys(val).length === 1;
 	json.allOf = [...isSimpleIntersection(a) ? a.allOf : [a], ...isSimpleIntersection(b) ? b.allOf : [b]];
+};
+var recordProcessor = (schema, ctx, _json, params) => {
+	const json = _json;
+	const def = schema._zod.def;
+	json.type = "object";
+	const keyType = def.keyType;
+	const patterns = keyType._zod.bag?.patterns;
+	if (def.mode === "loose" && patterns && patterns.size > 0) {
+		const valueSchema = process$2(def.valueType, ctx, {
+			...params,
+			path: [
+				...params.path,
+				"patternProperties",
+				"*"
+			]
+		});
+		json.patternProperties = {};
+		for (const pattern of patterns) json.patternProperties[pattern.source] = valueSchema;
+	} else {
+		if (ctx.target === "draft-07" || ctx.target === "draft-2020-12") json.propertyNames = process$2(def.keyType, ctx, {
+			...params,
+			path: [...params.path, "propertyNames"]
+		});
+		json.additionalProperties = process$2(def.valueType, ctx, {
+			...params,
+			path: [...params.path, "additionalProperties"]
+		});
+	}
+	const keyValues = keyType._zod.values;
+	if (keyValues) {
+		const validKeyValues = [...keyValues].filter((v) => typeof v === "string" || typeof v === "number");
+		if (validKeyValues.length > 0) json.required = validKeyValues;
+	}
 };
 var nullableProcessor = (schema, ctx, json, params) => {
 	const def = schema._zod.def;
@@ -21184,6 +21410,7 @@ var initializer = (inst, issues) => {
 		} }
 	});
 };
+var ZodError = /*@__PURE__*/ $constructor("ZodError", initializer);
 var ZodRealError = /*@__PURE__*/ $constructor("ZodError", initializer, { Parent: Error });
 //#endregion
 //#region node_modules/zod/v4/classic/parse.js
@@ -21614,6 +21841,14 @@ var ZodBoolean = /*@__PURE__*/ $constructor("ZodBoolean", (inst, def) => {
 function boolean(params) {
 	return /* @__PURE__ */ _boolean(ZodBoolean, params);
 }
+var ZodNull = /*@__PURE__*/ $constructor("ZodNull", (inst, def) => {
+	$ZodNull.init(inst, def);
+	ZodType.init(inst, def);
+	inst._zod.processJSONSchema = (ctx, json, params) => nullProcessor(inst, ctx, json, params);
+});
+function _null(params) {
+	return /* @__PURE__ */ _null$1(ZodNull, params);
+}
 var ZodUnknown = /*@__PURE__*/ $constructor("ZodUnknown", (inst, def) => {
 	$ZodUnknown.init(inst, def);
 	ZodType.init(inst, def);
@@ -21727,6 +21962,22 @@ function object(shape, params) {
 		...normalizeParams(params)
 	});
 }
+function strictObject(shape, params) {
+	return new ZodObject({
+		type: "object",
+		shape,
+		catchall: never(),
+		...normalizeParams(params)
+	});
+}
+function looseObject(shape, params) {
+	return new ZodObject({
+		type: "object",
+		shape,
+		catchall: unknown(),
+		...normalizeParams(params)
+	});
+}
 var ZodUnion = /*@__PURE__*/ $constructor("ZodUnion", (inst, def) => {
 	$ZodUnion.init(inst, def);
 	ZodType.init(inst, def);
@@ -21750,6 +22001,27 @@ function intersection(left, right) {
 		type: "intersection",
 		left,
 		right
+	});
+}
+var ZodRecord = /*@__PURE__*/ $constructor("ZodRecord", (inst, def) => {
+	$ZodRecord.init(inst, def);
+	ZodType.init(inst, def);
+	inst._zod.processJSONSchema = (ctx, json, params) => recordProcessor(inst, ctx, json, params);
+	inst.keyType = def.keyType;
+	inst.valueType = def.valueType;
+});
+function record(keyType, valueType, params) {
+	if (!valueType || !valueType._zod) return new ZodRecord({
+		type: "record",
+		keyType: string$1(),
+		valueType: keyType,
+		...normalizeParams(valueType)
+	});
+	return new ZodRecord({
+		type: "record",
+		keyType,
+		valueType,
+		...normalizeParams(params)
 	});
 }
 var ZodEnum = /*@__PURE__*/ $constructor("ZodEnum", (inst, def) => {
@@ -27640,6 +27912,34 @@ function parse$1(src, reviver, options) {
 	else doc.errors = [];
 	return doc.toJS(Object.assign({ reviver: _reviver }, options));
 }
+var mergeStrategySchema = _enum([
+	"override",
+	"append",
+	"prepend"
+]);
+var mergeStrategiesSchema = record(string$1(), mergeStrategySchema);
+/**
+* Parses the common envelope of a raw config file while retaining all
+* action-specific keys for composition and later validation.
+*/
+var configFileSchema = looseObject({ _extends: union([
+	string$1(),
+	_null(),
+	strictObject({
+		from: string$1().regex(/\S/, "'from' must not be blank"),
+		strategy: mergeStrategiesSchema.nullish()
+	})
+]).optional().transform((value) => {
+	if (value == null || typeof value === "string" && value.trim() === "") return;
+	if (typeof value === "string") return {
+		from: value.trim(),
+		strategy: {}
+	};
+	return {
+		from: value.from.trim(),
+		strategy: value.strategy ?? {}
+	};
+}) });
 //#endregion
 //#region src/common/config/get-config-file-from-fs.ts
 var getConfigFileFromFs = (normalizedFilepath) => {
@@ -30796,39 +31096,8 @@ var normalizeFilepath = (config, parentConfig) => {
 	}
 };
 //#endregion
-//#region src/common/config/get-config-file.ts
-var SUPPORTED_FILE_EXTENSIONS = [
-	"json",
-	"yml",
-	"yaml"
-];
-var getConfigFile = async (configTarget, parentTarget) => {
-	const _configTarget = structuredClone(configTarget);
-	const fileExtension = _configTarget.filepath.split(".").pop().toLowerCase();
-	if (!SUPPORTED_FILE_EXTENSIONS.includes(fileExtension)) throw new Error(`Unsupported file extension: .${fileExtension}. Supported extensions are: ${SUPPORTED_FILE_EXTENSIONS.join(", ")}`);
-	if (parentTarget?.scheme) {
-		if (parentTarget?.scheme === "github" && _configTarget.scheme === "file") throw new Error(`The '_extends' import-chain cannot contain github: to file: scheme transitions. Please change '_extends: ${configTarget.scheme}:${configTarget.filepath}' to use the github: scheme. ex: '_extends: ${parentTarget.repo.owner}/${parentTarget.repo.repo}:${configTarget.filepath}'`);
-	}
-	_configTarget.filepath = normalizeFilepath(_configTarget, parentTarget);
-	const loadFromFs = _configTarget.scheme === "file";
-	let configRaw;
-	if (loadFromFs) try {
-		configRaw = getConfigFileFromFs(_configTarget.filepath);
-	} catch (error) {
-		throw new Error(`Local load failed. ${error.message}`);
-	}
-	else try {
-		configRaw = await getConfigFileFromRepo(_configTarget);
-	} catch (error) {
-		throw new Error(`Repo load failed. ${error.message}`);
-	}
-	return {
-		config: fileExtension === "json" ? JSON.parse(configRaw) : parse$1(configRaw),
-		fetchedFrom: _configTarget
-	};
-};
-//#endregion
 //#region src/common/config/parse-config-target.ts
+var describeConfigTarget = (target) => `${target.scheme}:${target.filepath}${target.repo ? ` (${target.repo.owner}/${target.repo.repo})` : ""}`;
 /**
 * Parses a config target string into its components
 * @param target - Target string in format `[github:][[owner/]repo]:filepath[@ref]` or `file:filepath`
@@ -30896,6 +31165,46 @@ function parseConfigTarget(target, context) {
 	};
 }
 //#endregion
+//#region src/common/config/get-config-file.ts
+var SUPPORTED_FILE_EXTENSIONS = [
+	"json",
+	"yml",
+	"yaml"
+];
+var getConfigFile = async (configTarget, parentTarget) => {
+	const _configTarget = structuredClone(configTarget);
+	const fileExtension = _configTarget.filepath.split(".").pop().toLowerCase();
+	if (!SUPPORTED_FILE_EXTENSIONS.includes(fileExtension)) throw new Error(`Unsupported file extension: .${fileExtension}. Supported extensions are: ${SUPPORTED_FILE_EXTENSIONS.join(", ")}`);
+	if (parentTarget?.scheme) {
+		if (parentTarget?.scheme === "github" && _configTarget.scheme === "file") throw new Error(`The '_extends' import-chain cannot contain github: to file: scheme transitions. Please change '_extends: ${configTarget.scheme}:${configTarget.filepath}' to use the github: scheme. ex: '_extends: ${parentTarget.repo.owner}/${parentTarget.repo.repo}:${configTarget.filepath}'`);
+	}
+	_configTarget.filepath = normalizeFilepath(_configTarget, parentTarget);
+	const loadFromFs = _configTarget.scheme === "file";
+	let configRaw;
+	if (loadFromFs) try {
+		configRaw = getConfigFileFromFs(_configTarget.filepath);
+	} catch (error) {
+		throw new Error(`Local load failed. ${error.message}`);
+	}
+	else try {
+		configRaw = await getConfigFileFromRepo(_configTarget);
+	} catch (error) {
+		throw new Error(`Repo load failed. ${error.message}`);
+	}
+	const rawConfig = fileExtension === "json" ? JSON.parse(configRaw) : parse$1(configRaw);
+	let config;
+	try {
+		config = configFileSchema.parse(rawConfig);
+	} catch (error) {
+		if (error instanceof ZodError) throw new Error(`Invalid config in ${describeConfigTarget(_configTarget)}:\n${prettifyError$1(error)}`, { cause: error });
+		throw error;
+	}
+	return {
+		config,
+		fetchedFrom: _configTarget
+	};
+};
+//#endregion
 //#region src/common/config/get-config-files.ts
 var getConfigFiles = async (configFilename, currentContext) => {
 	debug(`getConfigFiles: Starting with filename: ${configFilename}`);
@@ -30926,18 +31235,18 @@ var getConfigFiles = async (configFilename, currentContext) => {
 		debug(`getConfigFiles: No _extends found in config, returning single file`);
 		return files;
 	}
-	debug(`getConfigFiles: Found _extends directive: ${lastExtends}`);
+	debug(`getConfigFiles: Found _extends directive: ${lastExtends.from}`);
 	const MAX_EXTENDS_DEPTH = 33;
 	let extendsDepth = 0;
 	do {
 		extendsDepth++;
-		debug(`getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends}`);
+		debug(`getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends.from}`);
 		if (extendsDepth > MAX_EXTENDS_DEPTH) {
 			const error$1 = `Maximum extends depth (${MAX_EXTENDS_DEPTH}) exceeded. Check for circular dependencies or reduce the chain of extended configurations.`;
 			error(`getConfigFiles: ${error$1}`);
 			throw new Error(error$1);
 		}
-		configTarget = parseConfigTarget(lastExtends, lastFetchedFrom);
+		configTarget = parseConfigTarget(lastExtends.from, lastFetchedFrom);
 		if (!configTarget.filepath) configTarget.filepath = basename(lastFetchedFrom.filepath);
 		debug(`getConfigFiles: Parsed _extends target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`);
 		const normalizedFilepath = normalizeFilepath(configTarget, lastFetchedFrom);
@@ -30951,7 +31260,7 @@ var getConfigFiles = async (configFilename, currentContext) => {
 			const crossScheme = loadedFrom.scheme === "file" && preCheckTarget.scheme === "github";
 			return sameFilepath && sameRepo && (crossScheme || loadedFrom.ref === preCheckTarget.ref);
 		})) {
-			warning(`Recursion detected. Ignoring "_extends: ${lastExtends}".`);
+			warning(`Recursion detected. Ignoring "_extends: ${lastExtends.from}".`);
 			debug(`getConfigFiles: Recursion detected, stopping extends chain`);
 			return files;
 		}
@@ -30960,10 +31269,49 @@ var getConfigFiles = async (configFilename, currentContext) => {
 		lastFetchedFrom = extendRepoConfig.fetchedFrom;
 		lastExtends = extendRepoConfig.config._extends;
 		files.push(extendRepoConfig);
-		debug(`getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends || "none"}`);
+		debug(`getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends?.from || "none"}`);
 	} while (lastExtends);
 	debug(`getConfigFiles: Extends chain complete with ${files.length} file(s)`);
 	return files;
+};
+//#endregion
+//#region src/common/config/merge-config-chain.ts
+var toMergeableList = (value, strategy, key, description) => {
+	if (value === void 0 || value === null) return [];
+	if (!Array.isArray(value)) throw new Error(`Cannot ${strategy} '${key}': ${description} is not a list (got ${typeof value}).`);
+	return value;
+};
+/**
+* Merges an `_extends` chain (ordered leaf-first, as returned by
+* `getConfigFiles`) into a single config object.
+*
+* Keys merge shallowly by default: the extending file's value replaces the
+* inherited one. A file can opt into appending or prepending a list key
+* to/onto the inherited list via the mapping form of `_extends`
+* (`_extends: {from: ..., strategy: {<key>: append|prepend}}`). A file's
+* strategy governs only the step where that file itself is merged onto the
+* configs it extends; it is not inherited by files extending it. The
+* `_extends` key is stripped from the result.
+*/
+var mergeConfigChain = (configResults) => {
+	const merged = {};
+	for (const { config, fetchedFrom } of [...configResults].reverse()) {
+		const { _extends, ...rest } = config;
+		const strategies = _extends?.strategy ?? {};
+		for (const key of Object.keys(strategies)) if (!Object.hasOwn(rest, key)) warning(`_extends strategy declares '${key}' in ${describeConfigTarget(fetchedFrom)}, but the file does not set '${key}'; the strategy has no effect.`);
+		for (const [key, value] of Object.entries(rest)) {
+			const strategy = (Object.hasOwn(strategies, key) ? strategies[key] : void 0) ?? "override";
+			if (strategy === "override") {
+				merged[key] = value;
+				continue;
+			}
+			const inherited = toMergeableList(Object.hasOwn(merged, key) ? merged[key] : void 0, strategy, key, `the value inherited by ${describeConfigTarget(fetchedFrom)}`);
+			const own = toMergeableList(value, strategy, key, `the value in ${describeConfigTarget(fetchedFrom)}`);
+			merged[key] = strategy === "append" ? [...inherited, ...own] : [...own, ...inherited];
+			info(`_extends strategy: ${strategy}ed ${own.length} '${key}' item(s) from ${describeConfigTarget(fetchedFrom)} onto ${inherited.length} inherited item(s)`);
+		}
+	}
+	return merged;
 };
 //#endregion
 //#region src/common/config/index.ts
@@ -30977,7 +31325,6 @@ async function composeConfigGet(configFilename, currentContext) {
 	debug(`composeConfigGet: Current context - repo: ${currentContext.repo.owner}/${currentContext.repo.repo}, ref: ${currentContext.ref}`);
 	const configResults = await getConfigFiles(configFilename, currentContext);
 	debug(`composeConfigGet: Retrieved ${configResults.length} config file(s)`);
-	const configs = configResults.map(({ config: { _extends: _, ...rest } }) => rest).reverse().filter(Boolean);
 	const contexts = configResults.map((c) => c.fetchedFrom).filter(Boolean);
 	debug(`composeConfigGet: Resolved ${contexts.length} context(s)`);
 	contexts.forEach((ctx, idx) => {
@@ -30985,7 +31332,7 @@ async function composeConfigGet(configFilename, currentContext) {
 	});
 	const result = {
 		contexts,
-		config: Object.assign({}, ...configs)
+		config: mergeConfigChain(configResults)
 	};
 	debug(`composeConfigGet: Config composition complete with ${Object.keys(result.config).length} keys`);
 	return result;
