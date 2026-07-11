@@ -16,7 +16,6 @@ describe('generate changelog', () => {
     config = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
       }),
       input: actionInputSchema.parse({
         token: 'test',
@@ -141,7 +140,6 @@ describe('generate changelog', () => {
     const categorizedConfig = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
         categories: [
           { title: 'Bugs', 'collapse-after': 3, when: { labels: ['bug'] } },
         ],
@@ -178,7 +176,6 @@ describe('generate changelog', () => {
     const categorizedConfig = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
         categories: [
           { title: 'Bugs', 'collapse-after': 0, when: { labels: ['bug'] } },
         ],
@@ -206,7 +203,6 @@ describe('generate changelog', () => {
     const categorizedConfig = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
         categories: [
           {
             title: 'Feature',
@@ -232,7 +228,6 @@ describe('generate changelog', () => {
     const categorizedConfig = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
         categories: [
           { title: 'Bugs', 'collapse-after': -1, when: { labels: ['bug'] } },
         ],
@@ -254,7 +249,6 @@ describe('generate changelog', () => {
     const categorizedConfig = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
         categories: [
           {
             title: 'Feature',
@@ -301,7 +295,6 @@ describe('generate changelog', () => {
     const excludedConfig = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
         'exclude-labels': ['bug', 'feature', 'bugfix', 'dependencies'],
       }),
       input: actionInputSchema.parse({
@@ -320,7 +313,6 @@ describe('generate changelog', () => {
     const includedConfig = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
         'include-labels': ['non-existent-label'],
       }),
       input: actionInputSchema.parse({
@@ -344,7 +336,6 @@ describe('build release payload', () => {
     config = mergeInputAndConfig({
       config: configSchema.parse({
         template: '$CHANGES',
-        references: ['master'],
       }),
       input: actionInputSchema.parse({
         token: 'test',

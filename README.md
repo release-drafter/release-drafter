@@ -124,7 +124,6 @@ You can configure Release Drafter using the following key in your
 | `change-template`          | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`.                                                                               |
 | `change-title-escapes`     | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                     |
 | `no-changes-template`      | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                                                              |
-| `references`               | Optional | The references to listen for configuration updates to `.github/release-drafter.yml`. Refer to [References](#references) to learn more about this                                                                                                         |
 | `categories`               | Optional | Define how changes are filtered, grouped, and versioned. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. Refer to [Categorize Changes](#categorize-changes).                                                   |
 | `exclude-contributors`     | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.                                                                                          |
 | `no-contributors-template` | Optional | The template to use for `$CONTRIBUTORS` when there's no contributors to list. Default: `"No contributors"`.                                                                                                                                              |
@@ -279,24 +278,6 @@ You can use any of the following variables in `change-template`:
 | `$URL`           | The URL of the pull request e.g. `https://github.com/octocat/repo/pull/42`.                                                                                                                                                                                                                                                                                                            |
 | `$BASE_REF_NAME` | The base name of of the base Ref associated with the pull request e.g. `master`.                                                                                                                                                                                                                                                                                                       |
 | `$HEAD_REF_NAME` | The head name of the head Ref associated with the pull request e.g. `my-bug-fix`.                                                                                                                                                                                                                                                                                                      |
-
-## References
-
-**Note**: This is only relevant for GitHub app users as `references` is ignored
-when running as GitHub action due to GitHub workflows more powerful
-[`on` conditions](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#on)
-
-References takes an list and accepts strings and regex. If none are specified,
-we default to the repository’s default branch usually master.
-
-```yaml
-references:
-  - master
-  - v.+
-```
-
-Currently matching against any `ref/heads/` and `ref/tags/` references behind
-the scene
 
 ## Categorize Changes
 
