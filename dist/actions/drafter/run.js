@@ -2002,6 +2002,8 @@ var generateContributorsSentence = (params) => {
 		});
 	}
 	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !config["exclude-contributors"].some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
+		const aIsBot = "login" in a && a.botUrl !== void 0;
+		if (aIsBot !== ("login" in b && b.botUrl !== void 0)) return aIsBot ? 1 : -1;
 		const aName = "name" in a ? a.name : a.login;
 		const bName = "name" in b ? b.name : b.login;
 		return aName.localeCompare(bName);

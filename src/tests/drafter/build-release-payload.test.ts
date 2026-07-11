@@ -662,7 +662,7 @@ describe('generate contributors sentence', () => {
         config,
       }),
     ).toBe(
-      '[@dependabot[bot]](https://github.com/apps/dependabot) and @jetersen',
+      '@jetersen and [@dependabot[bot]](https://github.com/apps/dependabot)',
     )
   })
 

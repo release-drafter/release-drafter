@@ -78,6 +78,10 @@ export const generateContributorsSentence = (params: {
         ),
     )
     .sort((a, b) => {
+      const aIsBot = 'login' in a && a.botUrl !== undefined
+      const bIsBot = 'login' in b && b.botUrl !== undefined
+      if (aIsBot !== bIsBot) return aIsBot ? 1 : -1
+
       const aName = 'name' in a ? a.name : a.login
       const bName = 'name' in b ? b.name : b.login
       return aName.localeCompare(bName)
