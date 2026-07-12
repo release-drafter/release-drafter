@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { parse } from 'yaml'
 import {
   actionInputSchema,
   configSchema,
@@ -633,6 +634,8 @@ describe('generate contributors sentence', () => {
   if (!botPullRequest) throw new Error('Missing bot pull request fixture')
   const ghostPullRequest = pullRequests.at(0)
   if (!ghostPullRequest) throw new Error('Missing ghost pull request fixture')
+  const todoPullRequest = pullRequests.at(1)
+  if (!todoPullRequest) throw new Error('Missing todo pull request fixture')
   const userPullRequest = pullRequests.find(
     (pullRequest) => pullRequest.author?.login === 'jetersen',
   )
@@ -663,6 +666,44 @@ describe('generate contributors sentence', () => {
       nodes: [botPullRequest],
     },
   } as Parameters<typeof generateContributorsSentence>[0]['commits'][number]
+  const pullRequest = {
+    ...userPullRequest,
+    author: {
+      __typename: 'User' as const,
+      login: 'octocat',
+      url: 'https://github.com/octocat',
+    },
+  }
+  const commit = {
+    ...botCommit,
+    authors: {
+      __typename: 'GitActorConnection' as const,
+      nodes: [
+        {
+          __typename: 'GitActor' as const,
+          name: 'The Octocat',
+          user: {
+            __typename: 'User' as const,
+            login: 'octocat',
+          },
+        },
+        {
+          __typename: 'GitActor' as const,
+          name: 'Joseph Petersen',
+          user: { __typename: 'User' as const, login: 'jetersen' },
+        },
+        {
+          __typename: 'GitActor' as const,
+          name: 'Clément Chanchevrier',
+          user: { __typename: 'User' as const, login: 'cchanche' },
+        },
+      ],
+    },
+    associatedPullRequests: {
+      __typename: 'PullRequestConnection' as const,
+      nodes: [pullRequest],
+    },
+  }
 
   it('normalizes and deduplicates bot contributors before rendering', () => {
     expect(
@@ -677,45 +718,6 @@ describe('generate contributors sentence', () => {
   })
 
   it('includes co-authors after the pull request author', () => {
-    const pullRequest = {
-      ...userPullRequest,
-      author: {
-        __typename: 'User' as const,
-        login: 'octocat',
-        url: 'https://github.com/octocat',
-      },
-    }
-    const commit = {
-      ...botCommit,
-      authors: {
-        __typename: 'GitActorConnection' as const,
-        nodes: [
-          {
-            __typename: 'GitActor' as const,
-            name: 'The Octocat',
-            user: {
-              __typename: 'User' as const,
-              login: 'octocat',
-            },
-          },
-          {
-            __typename: 'GitActor' as const,
-            name: 'Joseph Petersen',
-            user: { __typename: 'User' as const, login: 'jetersen' },
-          },
-          {
-            __typename: 'GitActor' as const,
-            name: 'Clément Chanchevrier',
-            user: { __typename: 'User' as const, login: 'cchanche' },
-          },
-        ],
-      },
-      associatedPullRequests: {
-        __typename: 'PullRequestConnection' as const,
-        nodes: [pullRequest],
-      },
-    }
-
     expect(
       generateContributorsSentence({
         commits: [commit],
@@ -743,19 +745,70 @@ describe('generate contributors sentence', () => {
         },
       }),
     ).toBe('@octocat, @cchanche and @jetersen')
+  })
 
-    expect(
-      generateChangeLog({
-        commits: [commit],
-        pullRequests: [pullRequest],
-        config: {
-          ...config,
-          'change-template': 'authors:\n$AUTHORS',
-          'change-author-template': '  - $AUTHOR',
-          'change-authors-separator': '\n',
-        },
-      }),
-    ).toBe('authors:\n  - octocat\n  - cchanche\n  - jetersen')
+  it('renders the README multiline author configuration as valid YAML', () => {
+    const readmeConfig = mergeInputAndConfig({
+      config: configSchema.parse(
+        parse(`
+          template: "$CHANGES"
+          categories:
+            - title: bug
+              when:
+                label: bug
+            - title: todo
+          category-template: ""
+          change-template: |-
+            - type: $CATEGORY
+              message: |-
+                $TITLE
+              pull: $NUMBER
+              authors:
+                $AUTHORS
+          change-author-template: "- $AUTHOR"
+          change-authors-separator: "\\n    "
+        `),
+      ),
+      input: actionInputSchema.parse({ token: 'test' }),
+    })
+
+    const changelog = generateChangeLog({
+      commits: [commit],
+      pullRequests: [pullRequest, todoPullRequest],
+      config: readmeConfig,
+    })
+
+    expect(parse(changelog)).toEqual([
+      {
+        type: 'bug',
+        message: 'Adds missing <example>',
+        pull: 3,
+        authors: ['octocat', 'cchanche', 'jetersen'],
+      },
+      {
+        type: 'todo',
+        message: 'B2',
+        pull: 2,
+        authors: ['ghost'],
+      },
+    ])
+    expect(changelog).toMatchInlineSnapshot(`
+      "- type: bug
+        message: |-
+          Adds missing <example>
+        pull: 3
+        authors:
+          - octocat
+          - cchanche
+          - jetersen
+
+      - type: todo
+        message: |-
+          B2
+        pull: 2
+        authors:
+          - ghost"
+    `)
   })
 
   it('sorts users before bots regardless of pull request order', () => {

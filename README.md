@@ -275,6 +275,7 @@ You can use any of the following variables in `change-template`:
 | Variable         | Description                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `$NUMBER`        | The number of the pull request, e.g. `42`.                                                                                                                                                                                                                                                                                                                                             |
+| `$CATEGORY`      | The title of the category that matched the pull request, preserving its configured case. Empty for uncategorized pull requests.                                                                                                                                                                                                                                                       |
 | `$TITLE`         | The title of the pull request, e.g. `Add alien technology`. Any characters excluding @ and # matching `change-title-escapes` will be prepended with a backslash so that they will appear verbatim instead of being interpreted as markdown format characters. @s and #s if present in `change-title-escapes` will be appended with an HTML comment so that they don't become mentions. |
 | `$AUTHOR`        | The pull request author’s username, e.g. `gracehopper`.                                                                                                                                                                                                                                                                                                                                |
 | `$AUTHORS`       | All pull request commit authors rendered with `change-author-template` and joined with `change-authors-separator`, with the pull request author first.                                                                                                                                                                                                                                 |
@@ -287,19 +288,26 @@ For a multiline author list, render each author with `$AUTHOR` and join them
 with a newline:
 
 ```yaml
+categories:
+  - title: bug
+    when:
+      label: bug
+  - title: todo
+category-template: ""
 change-template: |-
-  - type: todo
+  - type: $CATEGORY
     message: |-
       $TITLE
     pull: $NUMBER
     authors:
-$AUTHORS
-change-author-template: "      - $AUTHOR"
-change-authors-separator: "\n"
+      $AUTHORS
+change-author-template: "- $AUTHOR"
+change-authors-separator: "\n    "
 ```
 
 Use `$MENTION` instead of `$AUTHOR` in `change-author-template` when GitHub
-mentions are desired.
+mentions are desired. `$CATEGORY` preserves `categories[].title`; configure the
+title with the casing required by the output.
 
 ## Categorize Changes
 

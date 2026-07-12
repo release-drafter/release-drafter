@@ -2009,6 +2009,7 @@ var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 	return renderTemplate({
 		template: params.config["change-template"],
 		object: {
+			$CATEGORY: params.category ?? "",
 			$TITLE: escapeTitle({
 				title: pullRequest.title,
 				escapes: params.config["change-title-escapes"]
@@ -2052,11 +2053,13 @@ var generateChangeLog = (params) => {
 	}), "\n\n");
 	for (const [index, category] of categorizedPullRequests.entries()) {
 		if (category.pullRequests.length === 0) continue;
-		changeLog.push(renderTemplate({
+		const categoryTitle = renderTemplate({
 			template: config["category-template"],
 			object: { $TITLE: category.title }
-		}), "\n\n");
+		});
+		if (categoryTitle) changeLog.push(categoryTitle, "\n\n");
 		const pullRequestString = pullRequestToString({
+			category: category.title,
 			commits,
 			pullRequests: category.pullRequests,
 			config

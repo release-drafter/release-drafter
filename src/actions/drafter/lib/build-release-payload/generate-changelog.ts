@@ -55,16 +55,15 @@ export const generateChangeLog = (params: {
     }
 
     // Add the category title to the changelog.
-    changeLog.push(
-      renderTemplate({
-        template: config['category-template'],
-        object: { $TITLE: category.title },
-      }),
-      '\n\n',
-    )
+    const categoryTitle = renderTemplate({
+      template: config['category-template'],
+      object: { $TITLE: category.title },
+    })
+    if (categoryTitle) changeLog.push(categoryTitle, '\n\n')
 
     // Define the pull requests into a single string.
     const pullRequestString = pullRequestToString({
+      category: category.title,
       commits,
       pullRequests: category.pullRequests,
       config,

@@ -7,6 +7,7 @@ import { renderTemplate } from './render-template/index.ts'
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
 
 export const pullRequestToString = (params: {
+  category?: string
   commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
   pullRequests: Pr[]
   config: Pick<
@@ -32,6 +33,7 @@ export const pullRequestToString = (params: {
       return renderTemplate({
         template: params.config['change-template'],
         object: {
+          $CATEGORY: params.category ?? '',
           $TITLE: escapeTitle({
             title: pullRequest.title,
             escapes: params.config['change-title-escapes'],
