@@ -98,7 +98,7 @@ categories:
       label: "major"
   - type: "version-resolver"
     semver-increment: "patch"
-change-template: "- $TITLE $AUTHORS (#$NUMBER)"
+change-template: "- $TITLE (#$NUMBER) $AUTHORS"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 template: |
   ## Changes
