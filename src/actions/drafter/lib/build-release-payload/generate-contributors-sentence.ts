@@ -114,8 +114,10 @@ export const generateAuthorsSentence = (params: {
         return aIsPullRequestAuthor ? -1 : 1
       }
 
-      const aIsBot = 'login' in a && a.botUrl !== undefined
-      const bIsBot = 'login' in b && b.botUrl !== undefined
+      const aIsBot =
+        'login' in a && (a.botUrl !== undefined || a.login.endsWith(botSuffix))
+      const bIsBot =
+        'login' in b && (b.botUrl !== undefined || b.login.endsWith(botSuffix))
       if (aIsBot !== bIsBot) return aIsBot ? 1 : -1
 
       const aName = 'name' in a ? a.name : a.login

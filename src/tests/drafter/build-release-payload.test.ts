@@ -747,6 +747,34 @@ describe('generate contributors sentence', () => {
     ).toBe('@octocat, @cchanche and @jetersen')
   })
 
+  it('sorts commit-only bots after human co-authors', () => {
+    expect(
+      generateContributorsSentence({
+        commits: [
+          {
+            ...commit,
+            authors: {
+              ...commit.authors,
+              nodes: [
+                ...commit.authors.nodes,
+                {
+                  __typename: 'GitActor' as const,
+                  name: 'Automation',
+                  user: {
+                    __typename: 'User' as const,
+                    login: 'aaron[bot]',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        pullRequests: [pullRequest],
+        config,
+      }),
+    ).toBe('@octocat, @cchanche, @jetersen and aaron[bot]')
+  })
+
   it('includes co-authors for a pull request recovered by merge commit', () => {
     expect(
       generateChangeLog({

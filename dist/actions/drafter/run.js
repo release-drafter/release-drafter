@@ -1971,8 +1971,8 @@ var generateAuthorsSentence = (params) => {
 	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !(params.excludeContributors ?? []).some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
 		const aIsPullRequestAuthor = "login" in a && pullRequestAuthorLogins.has(a.login);
 		if (aIsPullRequestAuthor !== ("login" in b && pullRequestAuthorLogins.has(b.login))) return aIsPullRequestAuthor ? -1 : 1;
-		const aIsBot = "login" in a && a.botUrl !== void 0;
-		if (aIsBot !== ("login" in b && b.botUrl !== void 0)) return aIsBot ? 1 : -1;
+		const aIsBot = "login" in a && (a.botUrl !== void 0 || a.login.endsWith(botSuffix));
+		if (aIsBot !== ("login" in b && (b.botUrl !== void 0 || b.login.endsWith(botSuffix)))) return aIsBot ? 1 : -1;
 		const aName = "name" in a ? a.name : a.login;
 		const bName = "name" in b ? b.name : b.login;
 		return aName.localeCompare(bName);
