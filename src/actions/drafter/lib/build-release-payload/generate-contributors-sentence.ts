@@ -114,12 +114,10 @@ export const generateNewContributorsSection = (params: {
   config: Pick<ParsedConfig, 'categories' | 'exclude-contributors'>
 }) => {
   const { pullRequests, newContributorLogins, config } = params
-  const firstPullRequestByLogin = new Map<string, PullRequest>()
 
-  for (const pullRequest of filterPullRequestsByPreCategories(
-    pullRequests,
-    config.categories,
-  )) {
+  // Step 1: Find each new contributor's actual first PR from ALL PRs
+  const actualFirstPRByLogin = new Map<string, PullRequest>()
+  for (const pullRequest of pullRequests) {
     if (
       !pullRequest.author ||
       !newContributorLogins.has(pullRequest.author.login) ||
@@ -128,9 +126,22 @@ export const generateNewContributorsSection = (params: {
       continue
     }
 
-    const previous = firstPullRequestByLogin.get(pullRequest.author.login)
+    const previous = actualFirstPRByLogin.get(pullRequest.author.login)
     if (!previous || (pullRequest.mergedAt ?? '') < (previous.mergedAt ?? '')) {
-      firstPullRequestByLogin.set(pullRequest.author.login, pullRequest)
+      actualFirstPRByLogin.set(pullRequest.author.login, pullRequest)
+    }
+  }
+
+  // Step 2: Only include contributors whose actual first PR passes pre-category filters
+  const includedFirstPRs = filterPullRequestsByPreCategories(
+    [...actualFirstPRByLogin.values()],
+    config.categories,
+  )
+
+  const firstPullRequestByLogin = new Map<string, PullRequest>()
+  for (const pr of includedFirstPRs) {
+    if (pr.author) {
+      firstPullRequestByLogin.set(pr.author.login, pr)
     }
   }
 
