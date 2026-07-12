@@ -997,6 +997,47 @@ describe('generate contributors sentence', () => {
     )
   })
 
+  it('omits a contributor whose actual first pull request is excluded', () => {
+    const author = {
+      __typename: 'User' as const,
+      login: 'first-timer',
+      url: 'https://github.com/first-timer',
+    }
+    const firstPullRequest = {
+      ...userPullRequest,
+      number: 41,
+      mergedAt: '2024-01-01T00:00:00Z',
+      author,
+      labels: {
+        __typename: 'LabelConnection' as const,
+        nodes: [{ __typename: 'Label' as const, name: 'skip-changelog' }],
+      },
+    }
+    const laterPullRequest = {
+      ...userPullRequest,
+      number: 42,
+      mergedAt: '2024-01-02T00:00:00Z',
+      author,
+    }
+    const skipConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$NEW_CONTRIBUTORS',
+        categories: [
+          { type: 'pre-exclude', when: { label: 'skip-changelog' } },
+        ],
+      }),
+      input: actionInputSchema.parse({ token: 'test' }),
+    })
+
+    expect(
+      generateNewContributorsSection({
+        pullRequests: [laterPullRequest, firstPullRequest],
+        newContributorLogins: new Set(['first-timer']),
+        config: skipConfig,
+      }),
+    ).toBe('')
+  })
+
   it('excludes contributors whose pull requests are excluded', () => {
     const skippedPullRequest = {
       ...botPullRequest,
