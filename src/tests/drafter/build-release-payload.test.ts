@@ -747,6 +747,32 @@ describe('generate contributors sentence', () => {
     ).toBe('@octocat, @cchanche and @jetersen')
   })
 
+  it('includes co-authors for a pull request recovered by merge commit', () => {
+    expect(
+      generateChangeLog({
+        commits: [
+          {
+            ...commit,
+            associatedPullRequests: {
+              __typename: 'PullRequestConnection' as const,
+              nodes: [],
+            },
+          },
+        ],
+        pullRequests: [
+          {
+            ...pullRequest,
+            mergeCommit: {
+              __typename: 'Commit' as const,
+              oid: commit.oid,
+            },
+          },
+        ],
+        config: { ...config, 'change-template': '$AUTHORS' },
+      }),
+    ).toBe('@octocat, @cchanche, @jetersen')
+  })
+
   it('renders the README multiline author configuration as valid YAML', () => {
     const readmeConfig = mergeInputAndConfig({
       config: configSchema.parse(

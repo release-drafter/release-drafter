@@ -48,12 +48,20 @@ export const generateAuthorsSentence = (params: {
 }) => {
   const { commits, pullRequests } = params
   const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey))
+  const includedMergeCommitOids = new Set(
+    pullRequests.flatMap((pullRequest) =>
+      'mergeCommit' in pullRequest && pullRequest.mergeCommit?.oid
+        ? [pullRequest.mergeCommit.oid]
+        : [],
+    ),
+  )
   const contributors = new Map<string, Contributor>()
   const pullRequestAuthorLogins = new Set<string>()
 
-  // Add from commits that have associated pull requests
+  // Add from commits belonging to included pull requests
   for (const commit of commits) {
     if (
+      !includedMergeCommitOids.has(commit.oid) &&
       !commit.associatedPullRequests?.nodes?.some(
         (pullRequest) =>
           pullRequest &&

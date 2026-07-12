@@ -1949,10 +1949,11 @@ var generateContributorsSentence = (params) => {
 var generateAuthorsSentence = (params) => {
 	const { commits, pullRequests } = params;
 	const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey));
+	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => "mergeCommit" in pullRequest && pullRequest.mergeCommit?.oid ? [pullRequest.mergeCommit.oid] : []));
 	const contributors = /* @__PURE__ */ new Map();
 	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
 	for (const commit of commits) {
-		if (!commit.associatedPullRequests?.nodes?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
+		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.nodes?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
 		for (const author of commit.authors?.nodes ?? (commit.author ? [commit.author] : [])) if (author?.user) {
 			const login = normalizeLogin(author.user.login);
 			contributors.set(`login:${login}`, { login });
