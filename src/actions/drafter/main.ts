@@ -22,16 +22,18 @@ export const main = async (params: {
 
   const { draftRelease, lastRelease } = await findPreviousReleases(config)
 
-  const { commits, pullRequests } = await findPullRequests({
-    lastRelease,
-    config,
-  })
+  const { commits, newContributorLogins, pullRequests } =
+    await findPullRequests({
+      lastRelease,
+      config,
+    })
 
   const releasePayload = buildReleasePayload({
     commits,
     config,
     input,
     lastRelease,
+    newContributorLogins,
     pullRequests,
   })
 
