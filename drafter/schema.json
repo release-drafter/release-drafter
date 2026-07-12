@@ -41,7 +41,18 @@
       ]
     },
     "change-template": {
-      "default": "* $TITLE (#$NUMBER) @$AUTHOR",
+      "default": "* $TITLE (#$NUMBER) $AUTHORS",
+      "type": "string"
+    },
+    "change-author-template": {
+      "default": "$MENTION",
+      "type": "string"
+    },
+    "change-authors-separator": {
+      "default": ", ",
+      "type": "string"
+    },
+    "change-authors-final-separator": {
       "type": "string"
     },
     "change-title-escapes": {

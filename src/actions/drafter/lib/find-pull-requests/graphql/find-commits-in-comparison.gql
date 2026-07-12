@@ -35,6 +35,16 @@ query findCommitsInComparison(
                 login
               }
             }
+            authors(first: 10) {
+              nodes {
+                __typename
+                name
+                user {
+                  __typename
+                  login
+                }
+              }
+            }
             associatedPullRequests(first: $pullRequestLimit) {
               __typename
               nodes {

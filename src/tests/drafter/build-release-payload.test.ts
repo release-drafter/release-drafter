@@ -39,7 +39,7 @@ describe('generate changelog', () => {
       * 2*2 should equal to 4*1 (#6) @jetersen
       * Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost
       * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) [@dependabot[bot]](https://github.com/apps/dependabot)"
     `)
   })
 
@@ -58,7 +58,7 @@ describe('generate changelog', () => {
       * 2*2 should equal to 4*1 (#6) @jetersen
       * Rename __confgs\\\\confg.yml to __configs\\\\config.yml (#7) @ghost
       * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) [@dependabot[bot]](https://github.com/apps/dependabot)"
     `)
   })
 
@@ -77,7 +77,7 @@ describe('generate changelog', () => {
       * 2\\*2 should equal to 4\\*1 (#6) @jetersen
       * Rename \\_\\_confgs\\\\confg.yml to \\_\\_configs\\\\config.yml (#7) @ghost
       * Adds @nullable annotations to the 1\\*1+2\\*4 test in \`tests.java\` (#0) @Happypig375
-      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) [@dependabot[bot]](https://github.com/apps/dependabot)"
     `)
   })
 
@@ -95,7 +95,7 @@ describe('generate changelog', () => {
       * 2*2 should equal to 4*1 (#6) @jetersen
       * Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost
       * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) [@dependabot[bot]](https://github.com/apps/dependabot)"
     `)
   })
 
@@ -114,7 +114,7 @@ describe('generate changelog', () => {
       * 2*2 should equal to 4*1 (#6) @jetersen
       * Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost
       * Adds @<!---->nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) [@dependabot[bot]](https://github.com/apps/dependabot)"
     `)
   })
 
@@ -133,7 +133,7 @@ describe('generate changelog', () => {
       * 2\\*2 should equal to 4\\*1 (#6) @jetersen
       * Rename \\_\\_confgs\\\\confg.yml to \\_\\_configs\\\\config.yml (#7) @ghost
       * Adds @<!---->nullable annotations to the 1\\*1+2\\*4 test in \\\`tests.java\\\` (#0) @Happypig375
-      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)"
+      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) [@dependabot[bot]](https://github.com/apps/dependabot)"
     `)
   })
 
@@ -157,7 +157,7 @@ describe('generate changelog', () => {
       "* B2 (#2) @ghost
       * Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost
       * Adds @nullable annotations to the 1*1+2*4 test in \`tests.java\` (#0) @Happypig375
-      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)
+      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) [@dependabot[bot]](https://github.com/apps/dependabot)
 
       ## Bugs
 
@@ -274,7 +274,7 @@ describe('generate changelog', () => {
       * Fixes #4 (#5) @Happypig375
       * 2*2 should equal to 4*1 (#6) @jetersen
       * Rename __confgs\\confg.yml to __configs\\config.yml (#7) @ghost
-      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) @[dependabot[bot]](https://github.com/apps/dependabot)
+      * Bump golang.org/x/crypto from 0.14.0 to 0.17.0 in /examples (#0) [@dependabot[bot]](https://github.com/apps/dependabot)
 
       ## Feature
 
@@ -648,6 +648,16 @@ describe('generate contributors sentence', () => {
       name: 'dependabot[bot]',
       user: { __typename: 'User', login: 'dependabot[bot]' },
     },
+    authors: {
+      __typename: 'GitActorConnection',
+      nodes: [
+        {
+          __typename: 'GitActor',
+          name: 'dependabot[bot]',
+          user: { __typename: 'User', login: 'dependabot[bot]' },
+        },
+      ],
+    },
     associatedPullRequests: {
       __typename: 'PullRequestConnection',
       nodes: [botPullRequest],
@@ -664,6 +674,88 @@ describe('generate contributors sentence', () => {
     ).toBe(
       '@jetersen and [@dependabot[bot]](https://github.com/apps/dependabot)',
     )
+  })
+
+  it('includes co-authors after the pull request author', () => {
+    const pullRequest = {
+      ...userPullRequest,
+      author: {
+        __typename: 'User' as const,
+        login: 'octocat',
+        url: 'https://github.com/octocat',
+      },
+    }
+    const commit = {
+      ...botCommit,
+      authors: {
+        __typename: 'GitActorConnection' as const,
+        nodes: [
+          {
+            __typename: 'GitActor' as const,
+            name: 'The Octocat',
+            user: {
+              __typename: 'User' as const,
+              login: 'octocat',
+            },
+          },
+          {
+            __typename: 'GitActor' as const,
+            name: 'Joseph Petersen',
+            user: { __typename: 'User' as const, login: 'jetersen' },
+          },
+          {
+            __typename: 'GitActor' as const,
+            name: 'Clément Chanchevrier',
+            user: { __typename: 'User' as const, login: 'cchanche' },
+          },
+        ],
+      },
+      associatedPullRequests: {
+        __typename: 'PullRequestConnection' as const,
+        nodes: [pullRequest],
+      },
+    }
+
+    expect(
+      generateContributorsSentence({
+        commits: [commit],
+        pullRequests: [pullRequest],
+        config,
+      }),
+    ).toBe('@octocat, @cchanche and @jetersen')
+
+    expect(
+      generateChangeLog({
+        commits: [commit],
+        pullRequests: [pullRequest],
+        config: { ...config, 'change-template': '$AUTHORS' },
+      }),
+    ).toBe('@octocat, @cchanche, @jetersen')
+
+    expect(
+      generateChangeLog({
+        commits: [commit],
+        pullRequests: [pullRequest],
+        config: {
+          ...config,
+          'change-template': '$AUTHORS',
+          'change-authors-final-separator': ' and ',
+        },
+      }),
+    ).toBe('@octocat, @cchanche and @jetersen')
+
+    expect(
+      generateChangeLog({
+        commits: [commit],
+        pullRequests: [pullRequest],
+        config: {
+          ...config,
+          'change-template': 'authors:\n$AUTHORS',
+          'change-author-template': '  - $AUTHOR',
+          'change-authors-separator': '\n',
+        },
+      }),
+    ).toBe('authors:\n  - octocat\n  - cchanche\n  - jetersen')
   })
 
   it('sorts users before bots regardless of pull request order', () => {

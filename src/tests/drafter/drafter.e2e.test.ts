@@ -1831,7 +1831,7 @@ describe('drafter e2e', () => {
 
             * Add documentation (#28) @jetersen
             * Update dependencies (#27) @jetersen
-            * Bug fixes (#25) @jetersen
+            * Bug fixes (#25) @jetersen, @TimonVS
             * Add big feature (#24) @jetersen
             * Add alien technology (#23) @jetersen
             * Add documentation (#5) @TimonVS

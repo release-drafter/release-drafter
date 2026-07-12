@@ -5,6 +5,7 @@ import { pullRequestToString } from './pull-request-to-string.ts'
 import { renderTemplate } from './render-template/index.ts'
 
 export const generateChangeLog = (params: {
+  commits?: Awaited<ReturnType<typeof findPullRequests>>['commits']
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
   config: Pick<
     ParsedConfig,
@@ -12,10 +13,13 @@ export const generateChangeLog = (params: {
     | 'no-changes-template'
     | 'categories'
     | 'change-template'
+    | 'change-author-template'
+    | 'change-authors-separator'
+    | 'change-authors-final-separator'
     | 'category-template'
   >
 }) => {
-  const { pullRequests, config } = params
+  const { commits = [], pullRequests, config } = params
 
   const [uncategorizedPullRequests, categorizedPullRequests] =
     categorizePullRequests({ pullRequests, config })
@@ -36,7 +40,11 @@ export const generateChangeLog = (params: {
 
   if (uncategorizedPullRequests.length > 0) {
     changeLog.push(
-      pullRequestToString({ pullRequests: uncategorizedPullRequests, config }),
+      pullRequestToString({
+        commits,
+        pullRequests: uncategorizedPullRequests,
+        config,
+      }),
       '\n\n',
     )
   }
@@ -57,6 +65,7 @@ export const generateChangeLog = (params: {
 
     // Define the pull requests into a single string.
     const pullRequestString = pullRequestToString({
+      commits,
       pullRequests: category.pullRequests,
       config,
     })

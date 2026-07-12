@@ -98,7 +98,7 @@ categories:
       label: "major"
   - type: "version-resolver"
     semver-increment: "patch"
-change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+change-template: "- $TITLE $AUTHORS (#$NUMBER)"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 template: |
   ## Changes
@@ -121,7 +121,10 @@ You can configure Release Drafter using the following key in your
 | `tag-template`             | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                                                                    |
 | `tag-prefix`               | Optional | A known prefix used to filter release tags. For matching tags, this prefix is stripped before attempting to parse the version. Default: `""`                                                                                                             |
 | `version-template`         | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH$PRERELEASE"`                                                                       |
-| `change-template`          | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) @$AUTHOR"`.                                                                               |
+| `change-template`          | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) $AUTHORS"`.                                                                                |
+| `change-author-template`   | Optional | The template to use for each author in `$AUTHORS`. Supports `$AUTHOR` for the raw login/name and `$MENTION` for a GitHub-formatted mention. Default: `"$MENTION"`.                                                                                       |
+| `change-authors-separator` | Optional | The separator between authors in `$AUTHORS`. Default: `", "`. Use `"\n"` with a list-style `change-author-template` for multiline output.                                                                                                             |
+| `change-authors-final-separator` | Optional | A different separator before the final author in `$AUTHORS`, e.g. `" and "` produces `@octocat, @cchanche and @jetersen`. Defaults to `change-authors-separator`.                                                                                 |
 | `change-title-escapes`     | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                     |
 | `no-changes-template`      | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                                                              |
 | `categories`               | Optional | Define how changes are filtered, grouped, and versioned. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. Refer to [Categorize Changes](#categorize-changes).                                                   |
@@ -274,10 +277,29 @@ You can use any of the following variables in `change-template`:
 | `$NUMBER`        | The number of the pull request, e.g. `42`.                                                                                                                                                                                                                                                                                                                                             |
 | `$TITLE`         | The title of the pull request, e.g. `Add alien technology`. Any characters excluding @ and # matching `change-title-escapes` will be prepended with a backslash so that they will appear verbatim instead of being interpreted as markdown format characters. @s and #s if present in `change-title-escapes` will be appended with an HTML comment so that they don't become mentions. |
 | `$AUTHOR`        | The pull request author’s username, e.g. `gracehopper`.                                                                                                                                                                                                                                                                                                                                |
+| `$AUTHORS`       | All pull request commit authors rendered with `change-author-template` and joined with `change-authors-separator`, with the pull request author first.                                                                                                                                                                                                                                 |
 | `$BODY`          | The body of the pull request e.g. `Fixed spelling mistake`.                                                                                                                                                                                                                                                                                                                            |
 | `$URL`           | The URL of the pull request e.g. `https://github.com/octocat/repo/pull/42`.                                                                                                                                                                                                                                                                                                            |
 | `$BASE_REF_NAME` | The base name of of the base Ref associated with the pull request e.g. `master`.                                                                                                                                                                                                                                                                                                       |
 | `$HEAD_REF_NAME` | The head name of the head Ref associated with the pull request e.g. `my-bug-fix`.                                                                                                                                                                                                                                                                                                      |
+
+For a multiline author list, render each author with `$AUTHOR` and join them
+with a newline:
+
+```yaml
+change-template: |-
+  - type: todo
+    message: |-
+      $TITLE
+    pull: $NUMBER
+    authors:
+$AUTHORS
+change-author-template: "      - $AUTHOR"
+change-authors-separator: "\n"
+```
+
+Use `$MENTION` instead of `$AUTHOR` in `change-author-template` when GitHub
+mentions are desired.
 
 ## Categorize Changes
 
