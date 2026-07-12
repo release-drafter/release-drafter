@@ -7,7 +7,10 @@ import {
   mergeInputAndConfig,
 } from '#src/actions/drafter/config/index.ts'
 import { generateChangeLog } from '#src/actions/drafter/lib/build-release-payload/generate-changelog.ts'
-import { generateContributorsSentence } from '#src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts'
+import {
+  generateContributorsSentence,
+  generateNewContributorsSection,
+} from '#src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts'
 import { buildReleasePayload } from '#src/actions/drafter/lib/index.ts'
 import { mockContext, mocks as sharedMocks } from '#tests/mocks/index.ts'
 
@@ -970,6 +973,28 @@ describe('generate contributors sentence', () => {
         config,
       }),
     ).toBe('@ghost')
+  })
+
+  it('renders the GitHub-style new contributors section', () => {
+    const newContributorPullRequest = {
+      ...userPullRequest,
+      number: 42,
+      author: {
+        __typename: 'User' as const,
+        login: 'first-timer',
+        url: 'https://github.com/first-timer',
+      },
+    }
+
+    expect(
+      generateNewContributorsSection({
+        pullRequests: [userPullRequest, newContributorPullRequest],
+        newContributorLogins: new Set(['first-timer']),
+        config,
+      }),
+    ).toBe(
+      '## New Contributors\n\n* @first-timer made their first contribution in #42',
+    )
   })
 
   it('excludes contributors whose pull requests are excluded', () => {

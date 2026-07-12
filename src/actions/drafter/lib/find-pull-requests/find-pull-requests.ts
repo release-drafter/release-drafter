@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { getPullRequestsChangedFiles } from '#src/common/index.ts'
+import { getOctokit, getPullRequestsChangedFiles } from '#src/common/index.ts'
 import { needsPullRequestChangedFiles } from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
@@ -9,6 +9,49 @@ import {
   findRecentMergedPullRequests,
   type RecentMergedPullRequest,
 } from './find-recent-merged-pull-requests.ts'
+
+const findNewContributorLogins = async (
+  pullRequests: Array<{
+    author?: { __typename?: string; login: string } | null
+    mergedAt?: string | null
+  }>,
+) => {
+  const firstMergedAtByLogin = new Map<string, string>()
+
+  for (const pullRequest of pullRequests) {
+    if (pullRequest.author?.__typename !== 'User' || !pullRequest.mergedAt)
+      continue
+
+    const previous = firstMergedAtByLogin.get(pullRequest.author.login)
+    if (!previous || pullRequest.mergedAt < previous) {
+      firstMergedAtByLogin.set(pullRequest.author.login, pullRequest.mergedAt)
+    }
+  }
+
+  const candidates = [...firstMergedAtByLogin]
+  if (candidates.length === 0) return new Set<string>()
+
+  const variables = Object.fromEntries(
+    candidates.map(([login, mergedAt], index) => [
+      `query${index}`,
+      `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged author:${login} merged:<${mergedAt}`,
+    ]),
+  )
+  const data = await getOctokit().graphql<
+    Record<string, { issueCount: number }>
+  >(
+    `query findPreviousContributions(${candidates.map((_, index) => `$query${index}: String!`).join(', ')}) {
+      ${candidates.map((_, index) => `author${index}: search(query: $query${index}, type: ISSUE, first: 1) { issueCount }`).join('\n')}
+    }`,
+    variables,
+  )
+
+  return new Set(
+    candidates.flatMap(([login], index) =>
+      data[`author${index}`]?.issueCount === 0 ? [login] : [],
+    ),
+  )
+}
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
@@ -30,7 +73,11 @@ export const findPullRequests = async (params: {
 
   if (!params.lastRelease?.tag_name) {
     core.warning('A previous (published) release is required to find changes')
-    return { commits: [], pullRequests: [] }
+    return {
+      commits: [],
+      newContributorLogins: new Set<string>(),
+      pullRequests: [],
+    }
   }
 
   core.info(
@@ -107,6 +154,14 @@ export const findPullRequests = async (params: {
         pullRequests,
       })
     : new Map<string, string[]>()
+  const usesNewContributors = [
+    params.config.header,
+    params.config.template,
+    params.config.footer,
+  ].some((template) => template?.includes('$NEW_CONTRIBUTORS'))
+  const newContributorLogins = usesNewContributors
+    ? await findNewContributorLogins(pullRequests)
+    : new Set<string>()
 
   core.info(
     `Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${
@@ -118,6 +173,7 @@ export const findPullRequests = async (params: {
 
   return {
     commits,
+    newContributorLogins,
     pullRequests: pullRequests.map((pullRequest) =>
       shouldLoadPullRequestChangedFiles
         ? {
