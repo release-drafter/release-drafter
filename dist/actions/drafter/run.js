@@ -2018,12 +2018,15 @@ var generateContributorsSentence = (params) => {
 };
 var generateNewContributorsSection = (params) => {
 	const { pullRequests, newContributorLogins, config } = params;
-	const firstPullRequestByLogin = /* @__PURE__ */ new Map();
-	for (const pullRequest of filterPullRequestsByPreCategories(pullRequests, config.categories)) {
+	const actualFirstPRByLogin = /* @__PURE__ */ new Map();
+	for (const pullRequest of pullRequests) {
 		if (!pullRequest.author || !newContributorLogins.has(pullRequest.author.login) || config["exclude-contributors"].includes(pullRequest.author.login)) continue;
-		const previous = firstPullRequestByLogin.get(pullRequest.author.login);
-		if (!previous || (pullRequest.mergedAt ?? "") < (previous.mergedAt ?? "")) firstPullRequestByLogin.set(pullRequest.author.login, pullRequest);
+		const previous = actualFirstPRByLogin.get(pullRequest.author.login);
+		if (!previous || (pullRequest.mergedAt ?? "") < (previous.mergedAt ?? "")) actualFirstPRByLogin.set(pullRequest.author.login, pullRequest);
 	}
+	const includedFirstPRs = filterPullRequestsByPreCategories([...actualFirstPRByLogin.values()], config.categories);
+	const firstPullRequestByLogin = /* @__PURE__ */ new Map();
+	for (const pr of includedFirstPRs) if (pr.author) firstPullRequestByLogin.set(pr.author.login, pr);
 	const entries = [...firstPullRequestByLogin.entries()].sort(([, a], [, b]) => (a.mergedAt ?? "").localeCompare(b.mergedAt ?? "") || a.number - b.number);
 	if (entries.length === 0) return "";
 	return `## New Contributors\n\n${entries.map(([login, pullRequest]) => `* @${login} made their first contribution in #${pullRequest.number}`).join("\n")}`;
