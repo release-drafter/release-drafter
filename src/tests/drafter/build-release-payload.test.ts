@@ -705,6 +705,23 @@ describe('generate contributors sentence', () => {
       nodes: [pullRequest],
     },
   }
+  const commitWithBotCoAuthor = {
+    ...commit,
+    authors: {
+      ...commit.authors,
+      nodes: [
+        ...commit.authors.nodes,
+        {
+          __typename: 'GitActor' as const,
+          name: 'Automation',
+          user: {
+            __typename: 'User' as const,
+            login: 'github-actions[bot]',
+          },
+        },
+      ],
+    },
+  }
 
   it('normalizes and deduplicates bot contributors before rendering', () => {
     expect(
@@ -750,25 +767,7 @@ describe('generate contributors sentence', () => {
 
   it('sorts and links commit-only bots after human co-authors', () => {
     const params = {
-      commits: [
-        {
-          ...commit,
-          authors: {
-            ...commit.authors,
-            nodes: [
-              ...commit.authors.nodes,
-              {
-                __typename: 'GitActor' as const,
-                name: 'Automation',
-                user: {
-                  __typename: 'User' as const,
-                  login: 'github-actions[bot]',
-                },
-              },
-            ],
-          },
-        },
-      ],
+      commits: [commitWithBotCoAuthor],
       pullRequests: [pullRequest],
       config,
     }
@@ -786,6 +785,22 @@ describe('generate contributors sentence', () => {
     } finally {
       context.serverUrl = serverUrl
     }
+  })
+
+  it('renders author placeholders in pull request changelogs', () => {
+    expect(
+      generateChangeLog({
+        commits: [commitWithBotCoAuthor],
+        pullRequests: [pullRequest],
+        config: {
+          ...config,
+          'change-template': '$AUTHOR | $AUTHORS',
+          'change-author-template': '$AUTHOR: $AUTHOR_MENTION',
+        },
+      }),
+    ).toBe(
+      'octocat | octocat: @octocat, cchanche: @cchanche, jetersen: @jetersen, github-actions[bot]: [@github-actions[bot]](https://github.com/apps/github-actions)',
+    )
   })
 
   it('includes co-authors for a pull request recovered by merge commit', () => {
