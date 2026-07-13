@@ -2008,6 +2008,7 @@ var generateAuthorsSentence = (params) => {
 var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 	let pullAuthor = "ghost";
 	if (pullRequest.author) pullAuthor = pullRequest.author.__typename && pullRequest.author.__typename === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
+	const authorTemplate = params.config["change-author-template"];
 	return renderTemplate({
 		template: params.config["change-template"],
 		object: {
@@ -2020,8 +2021,14 @@ var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 			$AUTHORS: generateAuthorsSentence({
 				commits: params.commits,
 				pullRequests: [pullRequest],
-				noAuthorsTemplate: "@ghost",
-				authorTemplate: params.config["change-author-template"],
+				noAuthorsTemplate: renderTemplate({
+					template: authorTemplate,
+					object: {
+						$AUTHOR: "ghost",
+						$AUTHOR_MENTION: "@ghost"
+					}
+				}),
+				authorTemplate,
 				authorsSeparator: params.config["change-authors-separator"],
 				authorsFinalSeparator: params.config["change-authors-final-separator"]
 			}),
@@ -3169,7 +3176,7 @@ var FindCommitsInComparisonDocument = {
 																	},
 																	"value": {
 																		"kind": "IntValue",
-																		"value": "10"
+																		"value": "100"
 																	}
 																}],
 																"selectionSet": {

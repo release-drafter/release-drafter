@@ -35,7 +35,7 @@ query findCommitsInComparison(
                 login
               }
             }
-            authors(first: 10) {
+            authors(first: 100) {
               nodes {
                 __typename
                 name

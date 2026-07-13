@@ -803,6 +803,19 @@ describe('generate contributors sentence', () => {
     )
   })
 
+  it('renders deleted pull request authors with the author template', () => {
+    expect(
+      generateChangeLog({
+        pullRequests: [{ ...pullRequest, author: null }],
+        config: {
+          ...config,
+          'change-template': '$AUTHORS',
+          'change-author-template': '$AUTHOR: $AUTHOR_MENTION',
+        },
+      }),
+    ).toBe('ghost: @ghost')
+  })
+
   it('includes co-authors for a pull request recovered by merge commit', () => {
     expect(
       generateChangeLog({
