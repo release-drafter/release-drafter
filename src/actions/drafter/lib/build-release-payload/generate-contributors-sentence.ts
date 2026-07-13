@@ -1,3 +1,4 @@
+import { context } from '@actions/github'
 import { filterPullRequestsByPreCategories } from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPullRequests } from '../find-pull-requests/index.ts'
@@ -14,6 +15,17 @@ const pullRequestKey = (pullRequest: PullRequest) =>
   `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
 const normalizeLogin = (login: string, isBot = false) =>
   isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login
+const renderAuthorMention = (contributor: Contributor) => {
+  if ('name' in contributor) return contributor.name
+  const botUrl = contributor.login.endsWith(botSuffix)
+    ? (contributor.botUrl ??
+      `${context.serverUrl.replace(/\/$/, '')}/apps/${contributor.login.slice(0, -botSuffix.length)}`)
+    : undefined
+  if (botUrl) {
+    return `[@${contributor.login}](${botUrl})`
+  }
+  return `@${contributor.login}`
+}
 
 export const generateContributorsSentence = (params: {
   commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
@@ -129,18 +141,16 @@ export const generateAuthorsSentence = (params: {
   }
 
   if (params.authorTemplate !== undefined) {
+    const authorTemplate = params.authorTemplate
     const authors = sortedContributors.map((contributor) => {
       const author =
         'name' in contributor ? contributor.name : contributor.login
-      const mention =
-        'name' in contributor
-          ? contributor.name
-          : contributor.botUrl
-            ? `[@${contributor.login}](${contributor.botUrl})`
-            : `@${contributor.login}`
       return renderTemplate({
-        template: params.authorTemplate ?? '$MENTION',
-        object: { $AUTHOR: author, $MENTION: mention },
+        template: authorTemplate,
+        object: {
+          $AUTHOR: author,
+          $AUTHOR_MENTION: renderAuthorMention(contributor),
+        },
       })
     })
     const separator = params.authorsSeparator ?? ', '
@@ -150,17 +160,9 @@ export const generateAuthorsSentence = (params: {
     return authors.join(separator)
   }
 
-  const mentions = sortedContributors.map((contributor) => {
-    if ('name' in contributor) return contributor.name
-    if (contributor.botUrl) {
-      return `[@${contributor.login}](${contributor.botUrl})`
-    }
-    return contributor.login.endsWith(botSuffix)
-      ? contributor.login
-      : `@${contributor.login}`
-  })
+  const mentions = sortedContributors.map(renderAuthorMention)
   if (mentions.length > 1) {
-    return mentions.slice(0, -1).join(', ') + ' and ' + mentions.slice(-1)
+    return `${mentions.slice(0, -1).join(', ')} and ${mentions.slice(-1)}`
   }
   return mentions[0]
 }

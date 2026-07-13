@@ -1,3 +1,4 @@
+import { context } from '@actions/github'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { parse } from 'yaml'
 import {
@@ -747,32 +748,44 @@ describe('generate contributors sentence', () => {
     ).toBe('@octocat, @cchanche and @jetersen')
   })
 
-  it('sorts commit-only bots after human co-authors', () => {
-    expect(
-      generateContributorsSentence({
-        commits: [
-          {
-            ...commit,
-            authors: {
-              ...commit.authors,
-              nodes: [
-                ...commit.authors.nodes,
-                {
-                  __typename: 'GitActor' as const,
-                  name: 'Automation',
-                  user: {
-                    __typename: 'User' as const,
-                    login: 'aaron[bot]',
-                  },
+  it('sorts and links commit-only bots after human co-authors', () => {
+    const params = {
+      commits: [
+        {
+          ...commit,
+          authors: {
+            ...commit.authors,
+            nodes: [
+              ...commit.authors.nodes,
+              {
+                __typename: 'GitActor' as const,
+                name: 'Automation',
+                user: {
+                  __typename: 'User' as const,
+                  login: 'github-actions[bot]',
                 },
-              ],
-            },
+              },
+            ],
           },
-        ],
-        pullRequests: [pullRequest],
-        config,
-      }),
-    ).toBe('@octocat, @cchanche, @jetersen and aaron[bot]')
+        },
+      ],
+      pullRequests: [pullRequest],
+      config,
+    }
+
+    expect(generateContributorsSentence(params)).toBe(
+      '@octocat, @cchanche, @jetersen and [@github-actions[bot]](https://github.com/apps/github-actions)',
+    )
+
+    const serverUrl = context.serverUrl
+    try {
+      context.serverUrl = 'https://github.example.com/'
+      expect(generateContributorsSentence(params)).toBe(
+        '@octocat, @cchanche, @jetersen and [@github-actions[bot]](https://github.example.com/apps/github-actions)',
+      )
+    } finally {
+      context.serverUrl = serverUrl
+    }
   })
 
   it('includes co-authors for a pull request recovered by merge commit', () => {

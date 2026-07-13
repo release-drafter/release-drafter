@@ -226,7 +226,7 @@ export const exclusiveConfigSchema = object({
   /**
    * The template to use for each author in `$AUTHORS`.
    */
-  'change-author-template': string().optional().default('$MENTION'),
+  'change-author-template': string().optional().default('$AUTHOR_MENTION'),
   /**
    * The separator to use between authors in `$AUTHORS`.
    */

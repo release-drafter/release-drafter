@@ -45,7 +45,7 @@
       "type": "string"
     },
     "change-author-template": {
-      "default": "$MENTION",
+      "default": "$AUTHOR_MENTION",
       "type": "string"
     },
     "change-authors-separator": {

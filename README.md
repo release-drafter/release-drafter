@@ -122,7 +122,7 @@ You can configure Release Drafter using the following key in your
 | `tag-prefix`               | Optional | A known prefix used to filter release tags. For matching tags, this prefix is stripped before attempting to parse the version. Default: `""`                                                                                                             |
 | `version-template`         | Optional | The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning. Default: `"$MAJOR.$MINOR.$PATCH$PRERELEASE"`                                                                       |
 | `change-template`          | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) $AUTHORS"`.                                                                                |
-| `change-author-template`   | Optional | The template to use for each author in `$AUTHORS`. Supports `$AUTHOR` for the raw login/name and `$MENTION` for a GitHub-formatted mention. Default: `"$MENTION"`.                                                                                       |
+| `change-author-template`   | Optional | The template to use for each author in `$AUTHORS`. Supports `$AUTHOR` for the raw login/name and `$AUTHOR_MENTION` for a GitHub-formatted mention. Default: `"$AUTHOR_MENTION"`.                                                                       |
 | `change-authors-separator` | Optional | The separator between authors in `$AUTHORS`. Default: `", "`. Use `"\n"` with a list-style `change-author-template` for multiline output.                                                                                                             |
 | `change-authors-final-separator` | Optional | A different separator before the final author in `$AUTHORS`, e.g. `" and "` produces `@octocat, @cchanche and @jetersen`. Defaults to `change-authors-separator`.                                                                                 |
 | `change-title-escapes`     | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                     |
@@ -305,9 +305,11 @@ change-author-template: "- $AUTHOR"
 change-authors-separator: "\n    "
 ```
 
-Use `$MENTION` instead of `$AUTHOR` in `change-author-template` when GitHub
-mentions are desired. `$CATEGORY` preserves `categories[].title`; configure the
-title with the casing required by the output.
+Use `$AUTHOR_MENTION` instead of `$AUTHOR` in `change-author-template` when
+GitHub mentions are desired. GitHub App bots are rendered as linked mentions,
+for example `[@dependabot[bot]](https://github.com/apps/dependabot)`.
+`$CATEGORY` preserves `categories[].title`; configure the title with the casing
+required by the output.
 
 ## Categorize Changes
 

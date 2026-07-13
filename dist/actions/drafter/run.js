@@ -305,7 +305,7 @@ var exclusiveConfigSchema = object({
 	/**
 	* The template to use for each author in `$AUTHORS`.
 	*/
-	"change-author-template": string().optional().default("$MENTION"),
+	"change-author-template": string().optional().default("$AUTHOR_MENTION"),
 	/**
 	* The separator to use between authors in `$AUTHORS`.
 	*/
@@ -1937,6 +1937,12 @@ var renderTemplate = (params) => {
 var botSuffix = "[bot]";
 var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
 var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
+var renderAuthorMention = (contributor) => {
+	if ("name" in contributor) return contributor.name;
+	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.botUrl ?? `${context.serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
+	if (botUrl) return `[@${contributor.login}](${botUrl})`;
+	return `@${contributor.login}`;
+};
 var generateContributorsSentence = (params) => {
 	const { commits, pullRequests, config } = params;
 	return generateAuthorsSentence({
@@ -1979,14 +1985,13 @@ var generateAuthorsSentence = (params) => {
 	});
 	if (sortedContributors.length === 0) return params.noAuthorsTemplate ?? "";
 	if (params.authorTemplate !== void 0) {
+		const authorTemplate = params.authorTemplate;
 		const authors = sortedContributors.map((contributor) => {
-			const author = "name" in contributor ? contributor.name : contributor.login;
-			const mention = "name" in contributor ? contributor.name : contributor.botUrl ? `[@${contributor.login}](${contributor.botUrl})` : `@${contributor.login}`;
 			return renderTemplate({
-				template: params.authorTemplate ?? "$MENTION",
+				template: authorTemplate,
 				object: {
-					$AUTHOR: author,
-					$MENTION: mention
+					$AUTHOR: "name" in contributor ? contributor.name : contributor.login,
+					$AUTHOR_MENTION: renderAuthorMention(contributor)
 				}
 			});
 		});
@@ -1994,12 +1999,8 @@ var generateAuthorsSentence = (params) => {
 		if (params.authorsFinalSeparator !== void 0 && authors.length > 1) return `${authors.slice(0, -1).join(separator)}${params.authorsFinalSeparator}${authors.at(-1)}`;
 		return authors.join(separator);
 	}
-	const mentions = sortedContributors.map((contributor) => {
-		if ("name" in contributor) return contributor.name;
-		if (contributor.botUrl) return `[@${contributor.login}](${contributor.botUrl})`;
-		return contributor.login.endsWith(botSuffix) ? contributor.login : `@${contributor.login}`;
-	});
-	if (mentions.length > 1) return mentions.slice(0, -1).join(", ") + " and " + mentions.slice(-1);
+	const mentions = sortedContributors.map(renderAuthorMention);
+	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
 	return mentions[0];
 };
 //#endregion
