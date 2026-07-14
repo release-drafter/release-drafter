@@ -33,6 +33,9 @@ export const buildReleasePayload = (params: {
     | 'no-changes-template'
     | 'categories'
     | 'change-template'
+    | 'change-author-template'
+    | 'change-authors-separator'
+    | 'change-authors-final-separator'
     | 'category-template'
     | 'exclude-contributors'
     | 'no-contributors-template'
@@ -70,7 +73,11 @@ export const buildReleasePayload = (params: {
     template: body,
     object: {
       $PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : '',
-      $CHANGES: generateChangeLog({ pullRequests: sortedPullRequests, config }),
+      $CHANGES: generateChangeLog({
+        commits,
+        pullRequests: sortedPullRequests,
+        config,
+      }),
       $CONTRIBUTORS: generateContributorsSentence({
         commits,
         pullRequests: sortedPullRequests,

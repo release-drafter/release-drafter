@@ -301,7 +301,19 @@ var exclusiveConfigSchema = object({
 	/**
 	* The template to use for each merged change.
 	*/
-	"change-template": string().optional().default("* $TITLE (#$NUMBER) @$AUTHOR"),
+	"change-template": string().optional().default("* $TITLE (#$NUMBER) $AUTHORS"),
+	/**
+	* The template to use for each author in `$AUTHORS`.
+	*/
+	"change-author-template": string().optional().default("$AUTHOR_MENTION"),
+	/**
+	* The separator to use between authors in `$AUTHORS`.
+	*/
+	"change-authors-separator": string().optional().default(", "),
+	/**
+	* An optional separator to use before the final author in `$AUTHORS`.
+	*/
+	"change-authors-final-separator": string().optional(),
 	/**
 	* Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters.
 	*/
@@ -1921,18 +1933,105 @@ var renderTemplate = (params) => {
 	return input;
 };
 //#endregion
+//#region src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts
+var botSuffix = "[bot]";
+var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
+var renderAuthorMention = (contributor) => {
+	if ("name" in contributor) return contributor.name;
+	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.botUrl ?? `${context.serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
+	if (botUrl) return `[@${contributor.login}](${botUrl})`;
+	return `@${contributor.login}`;
+};
+var generateContributorsSentence = (params) => {
+	const { commits, pullRequests, config } = params;
+	return generateAuthorsSentence({
+		commits,
+		pullRequests: filterPullRequestsByPreCategories(pullRequests, config.categories),
+		excludeContributors: config["exclude-contributors"],
+		noAuthorsTemplate: config["no-contributors-template"]
+	});
+};
+var generateAuthorsSentence = (params) => {
+	const { commits, pullRequests } = params;
+	const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey));
+	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => "mergeCommit" in pullRequest && pullRequest.mergeCommit?.oid ? [pullRequest.mergeCommit.oid] : []));
+	const contributors = /* @__PURE__ */ new Map();
+	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
+	for (const commit of commits) {
+		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.nodes?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
+		for (const author of commit.authors?.nodes ?? (commit.author ? [commit.author] : [])) if (author?.user) {
+			const login = normalizeLogin(author.user.login);
+			contributors.set(`login:${login}`, { login });
+		} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
+	}
+	for (const pullRequest of pullRequests) if (pullRequest.author) {
+		const isBot = pullRequest.author.__typename === "Bot";
+		const login = normalizeLogin(pullRequest.author.login, isBot);
+		pullRequestAuthorLogins.add(login);
+		contributors.set(`login:${login}`, {
+			login,
+			botUrl: isBot ? pullRequest.author.url : void 0
+		});
+	}
+	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !(params.excludeContributors ?? []).some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
+		const aIsPullRequestAuthor = "login" in a && pullRequestAuthorLogins.has(a.login);
+		if (aIsPullRequestAuthor !== ("login" in b && pullRequestAuthorLogins.has(b.login))) return aIsPullRequestAuthor ? -1 : 1;
+		const aIsBot = "login" in a && (a.botUrl !== void 0 || a.login.endsWith(botSuffix));
+		if (aIsBot !== ("login" in b && (b.botUrl !== void 0 || b.login.endsWith(botSuffix)))) return aIsBot ? 1 : -1;
+		const aName = "name" in a ? a.name : a.login;
+		const bName = "name" in b ? b.name : b.login;
+		return aName.localeCompare(bName);
+	});
+	if (sortedContributors.length === 0) return params.noAuthorsTemplate ?? "";
+	if (params.authorTemplate !== void 0) {
+		const authorTemplate = params.authorTemplate;
+		const authors = sortedContributors.map((contributor) => {
+			return renderTemplate({
+				template: authorTemplate,
+				object: {
+					$AUTHOR: "name" in contributor ? contributor.name : contributor.login,
+					$AUTHOR_MENTION: renderAuthorMention(contributor)
+				}
+			});
+		});
+		const separator = params.authorsSeparator ?? ", ";
+		if (params.authorsFinalSeparator !== void 0 && authors.length > 1) return `${authors.slice(0, -1).join(separator)}${params.authorsFinalSeparator}${authors.at(-1)}`;
+		return authors.join(separator);
+	}
+	const mentions = sortedContributors.map(renderAuthorMention);
+	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
+	return mentions[0];
+};
+//#endregion
 //#region src/actions/drafter/lib/build-release-payload/pull-request-to-string.ts
 var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 	let pullAuthor = "ghost";
 	if (pullRequest.author) pullAuthor = pullRequest.author.__typename && pullRequest.author.__typename === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
+	const authorTemplate = params.config["change-author-template"];
 	return renderTemplate({
 		template: params.config["change-template"],
 		object: {
+			$CATEGORY: params.category ?? "",
 			$TITLE: escapeTitle({
 				title: pullRequest.title,
 				escapes: params.config["change-title-escapes"]
 			}),
 			$NUMBER: pullRequest.number.toString(),
+			$AUTHORS: generateAuthorsSentence({
+				commits: params.commits,
+				pullRequests: [pullRequest],
+				noAuthorsTemplate: renderTemplate({
+					template: authorTemplate,
+					object: {
+						$AUTHOR: "ghost",
+						$AUTHOR_MENTION: "@ghost"
+					}
+				}),
+				authorTemplate,
+				authorsSeparator: params.config["change-authors-separator"],
+				authorsFinalSeparator: params.config["change-authors-final-separator"]
+			}),
 			$AUTHOR: pullAuthor,
 			$BODY: pullRequest.body,
 			$URL: pullRequest.url,
@@ -1949,7 +2048,7 @@ var escapeTitle = (params) => params.title.replace(new RegExp(`[${escapeStringRe
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/generate-changelog.ts
 var generateChangeLog = (params) => {
-	const { pullRequests, config } = params;
+	const { commits = [], pullRequests, config } = params;
 	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
 		pullRequests,
 		config
@@ -1957,16 +2056,20 @@ var generateChangeLog = (params) => {
 	if (categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) + uncategorizedPullRequests.length === 0) return config["no-changes-template"];
 	const changeLog = [];
 	if (uncategorizedPullRequests.length > 0) changeLog.push(pullRequestToString({
+		commits,
 		pullRequests: uncategorizedPullRequests,
 		config
 	}), "\n\n");
 	for (const [index, category] of categorizedPullRequests.entries()) {
 		if (category.pullRequests.length === 0) continue;
-		changeLog.push(renderTemplate({
+		const categoryTitle = renderTemplate({
 			template: config["category-template"],
 			object: { $TITLE: category.title }
-		}), "\n\n");
+		});
+		if (categoryTitle) changeLog.push(categoryTitle, "\n\n");
 		const pullRequestString = pullRequestToString({
+			category: category.title,
+			commits,
 			pullRequests: category.pullRequests,
 			config
 		});
@@ -1975,46 +2078,6 @@ var generateChangeLog = (params) => {
 		if (index + 1 !== categorizedPullRequests.length) changeLog.push("\n\n");
 	}
 	return changeLog.join("").trim();
-};
-//#endregion
-//#region src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts
-var botSuffix = "[bot]";
-var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
-var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
-var generateContributorsSentence = (params) => {
-	const { commits, pullRequests, config } = params;
-	const includedPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
-	const includedPullRequestKeys = new Set(includedPullRequests.map(pullRequestKey));
-	const contributors = /* @__PURE__ */ new Map();
-	for (const commit of commits) {
-		if (!commit.associatedPullRequests?.nodes?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
-		if (commit.author?.user) {
-			const login = normalizeLogin(commit.author.user.login);
-			contributors.set(`login:${login}`, { login });
-		} else if (commit.author?.name) contributors.set(`name:${commit.author.name}`, { name: commit.author.name });
-	}
-	for (const pullRequest of includedPullRequests) if (pullRequest.author) {
-		const isBot = pullRequest.author.__typename === "Bot";
-		const login = normalizeLogin(pullRequest.author.login, isBot);
-		contributors.set(`login:${login}`, {
-			login,
-			botUrl: isBot ? pullRequest.author.url : void 0
-		});
-	}
-	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !config["exclude-contributors"].some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
-		const aIsBot = "login" in a && a.botUrl !== void 0;
-		if (aIsBot !== ("login" in b && b.botUrl !== void 0)) return aIsBot ? 1 : -1;
-		const aName = "name" in a ? a.name : a.login;
-		const bName = "name" in b ? b.name : b.login;
-		return aName.localeCompare(bName);
-	}).map((contributor) => {
-		if ("name" in contributor) return contributor.name;
-		if (contributor.botUrl) return `[@${contributor.login}](${contributor.botUrl})`;
-		return contributor.login.endsWith(botSuffix) ? contributor.login : `@${contributor.login}`;
-	});
-	if (sortedContributors.length > 1) return sortedContributors.slice(0, -1).join(", ") + " and " + sortedContributors.slice(-1);
-	else if (sortedContributors.length === 1) return sortedContributors[0];
-	else return config["no-contributors-template"];
 };
 //#endregion
 //#region node_modules/semver/functions/parse.js
@@ -2400,6 +2463,7 @@ var buildReleasePayload = (params) => {
 		object: {
 			$PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : "",
 			$CHANGES: generateChangeLog({
+				commits,
 				pullRequests: sortedPullRequests,
 				config
 			}),
@@ -3096,6 +3160,76 @@ var FindCommitsInComparisonDocument = {
 																			}
 																		}
 																	]
+																}
+															},
+															{
+																"kind": "Field",
+																"name": {
+																	"kind": "Name",
+																	"value": "authors"
+																},
+																"arguments": [{
+																	"kind": "Argument",
+																	"name": {
+																		"kind": "Name",
+																		"value": "first"
+																	},
+																	"value": {
+																		"kind": "IntValue",
+																		"value": "100"
+																	}
+																}],
+																"selectionSet": {
+																	"kind": "SelectionSet",
+																	"selections": [{
+																		"kind": "Field",
+																		"name": {
+																			"kind": "Name",
+																			"value": "nodes"
+																		},
+																		"selectionSet": {
+																			"kind": "SelectionSet",
+																			"selections": [
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "__typename"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "name"
+																					}
+																				},
+																				{
+																					"kind": "Field",
+																					"name": {
+																						"kind": "Name",
+																						"value": "user"
+																					},
+																					"selectionSet": {
+																						"kind": "SelectionSet",
+																						"selections": [{
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "__typename"
+																							}
+																						}, {
+																							"kind": "Field",
+																							"name": {
+																								"kind": "Name",
+																								"value": "login"
+																							}
+																						}]
+																					}
+																				}
+																			]
+																		}
+																	}]
 																}
 															},
 															{

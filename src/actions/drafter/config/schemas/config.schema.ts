@@ -222,7 +222,19 @@ export const exclusiveConfigSchema = object({
    */
   'change-template': string()
     .optional()
-    .default('* $TITLE (#$NUMBER) @$AUTHOR'),
+    .default('* $TITLE (#$NUMBER) $AUTHORS'),
+  /**
+   * The template to use for each author in `$AUTHORS`.
+   */
+  'change-author-template': string().optional().default('$AUTHOR_MENTION'),
+  /**
+   * The separator to use between authors in `$AUTHORS`.
+   */
+  'change-authors-separator': string().optional().default(', '),
+  /**
+   * An optional separator to use before the final author in `$AUTHORS`.
+   */
+  'change-authors-final-separator': string().optional(),
   /**
    * Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters.
    */

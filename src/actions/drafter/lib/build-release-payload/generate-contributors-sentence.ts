@@ -1,6 +1,8 @@
+import { context } from '@actions/github'
 import { filterPullRequestsByPreCategories } from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPullRequests } from '../find-pull-requests/index.ts'
+import { renderTemplate } from './render-template/index.ts'
 
 type PullRequest = Awaited<
   ReturnType<typeof findPullRequests>
@@ -13,6 +15,17 @@ const pullRequestKey = (pullRequest: PullRequest) =>
   `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
 const normalizeLogin = (login: string, isBot = false) =>
   isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login
+const renderAuthorMention = (contributor: Contributor) => {
+  if ('name' in contributor) return contributor.name
+  const botUrl = contributor.login.endsWith(botSuffix)
+    ? (contributor.botUrl ??
+      `${context.serverUrl.replace(/\/$/, '')}/apps/${contributor.login.slice(0, -botSuffix.length)}`)
+    : undefined
+  if (botUrl) {
+    return `[@${contributor.login}](${botUrl})`
+  }
+  return `@${contributor.login}`
+}
 
 export const generateContributorsSentence = (params: {
   commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
@@ -28,14 +41,39 @@ export const generateContributorsSentence = (params: {
     pullRequests,
     config.categories,
   )
-  const includedPullRequestKeys = new Set(
-    includedPullRequests.map(pullRequestKey),
+  return generateAuthorsSentence({
+    commits,
+    pullRequests: includedPullRequests,
+    excludeContributors: config['exclude-contributors'],
+    noAuthorsTemplate: config['no-contributors-template'],
+  })
+}
+
+export const generateAuthorsSentence = (params: {
+  commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
+  pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
+  excludeContributors?: string[]
+  noAuthorsTemplate?: string
+  authorTemplate?: string
+  authorsSeparator?: string
+  authorsFinalSeparator?: string
+}) => {
+  const { commits, pullRequests } = params
+  const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey))
+  const includedMergeCommitOids = new Set(
+    pullRequests.flatMap((pullRequest) =>
+      'mergeCommit' in pullRequest && pullRequest.mergeCommit?.oid
+        ? [pullRequest.mergeCommit.oid]
+        : [],
+    ),
   )
   const contributors = new Map<string, Contributor>()
+  const pullRequestAuthorLogins = new Set<string>()
 
-  // Add from commits that have associated pull requests
+  // Add from commits belonging to included pull requests
   for (const commit of commits) {
     if (
+      !includedMergeCommitOids.has(commit.oid) &&
       !commit.associatedPullRequests?.nodes?.some(
         (pullRequest) =>
           pullRequest &&
@@ -45,21 +83,23 @@ export const generateContributorsSentence = (params: {
       continue
     }
 
-    if (commit.author?.user) {
-      const login = normalizeLogin(commit.author.user.login)
-      contributors.set(`login:${login}`, { login })
-    } else if (commit.author?.name) {
-      contributors.set(`name:${commit.author.name}`, {
-        name: commit.author.name,
-      })
+    for (const author of commit.authors?.nodes ??
+      (commit.author ? [commit.author] : [])) {
+      if (author?.user) {
+        const login = normalizeLogin(author.user.login)
+        contributors.set(`login:${login}`, { login })
+      } else if (author?.name) {
+        contributors.set(`name:${author.name}`, { name: author.name })
+      }
     }
   }
 
   // Add from pull requests
-  for (const pullRequest of includedPullRequests) {
+  for (const pullRequest of pullRequests) {
     if (pullRequest.author) {
       const isBot = pullRequest.author.__typename === 'Bot'
       const login = normalizeLogin(pullRequest.author.login, isBot)
+      pullRequestAuthorLogins.add(login)
       contributors.set(`login:${login}`, {
         login,
         botUrl: isBot ? pullRequest.author.url : undefined,
@@ -71,39 +111,58 @@ export const generateContributorsSentence = (params: {
     .filter(
       (contributor) =>
         'name' in contributor ||
-        !config['exclude-contributors'].some(
+        !(params.excludeContributors ?? []).some(
           (excluded) =>
             excluded === contributor.login ||
             `${excluded}${botSuffix}` === contributor.login,
         ),
     )
     .sort((a, b) => {
-      const aIsBot = 'login' in a && a.botUrl !== undefined
-      const bIsBot = 'login' in b && b.botUrl !== undefined
+      const aIsPullRequestAuthor =
+        'login' in a && pullRequestAuthorLogins.has(a.login)
+      const bIsPullRequestAuthor =
+        'login' in b && pullRequestAuthorLogins.has(b.login)
+      if (aIsPullRequestAuthor !== bIsPullRequestAuthor) {
+        return aIsPullRequestAuthor ? -1 : 1
+      }
+
+      const aIsBot =
+        'login' in a && (a.botUrl !== undefined || a.login.endsWith(botSuffix))
+      const bIsBot =
+        'login' in b && (b.botUrl !== undefined || b.login.endsWith(botSuffix))
       if (aIsBot !== bIsBot) return aIsBot ? 1 : -1
 
       const aName = 'name' in a ? a.name : a.login
       const bName = 'name' in b ? b.name : b.login
       return aName.localeCompare(bName)
     })
-    .map((contributor) => {
-      if ('name' in contributor) return contributor.name
-      if (contributor.botUrl) {
-        return `[@${contributor.login}](${contributor.botUrl})`
-      }
-      return contributor.login.endsWith(botSuffix)
-        ? contributor.login
-        : `@${contributor.login}`
-    })
-  if (sortedContributors.length > 1) {
-    return (
-      sortedContributors.slice(0, -1).join(', ') +
-      ' and ' +
-      sortedContributors.slice(-1)
-    )
-  } else if (sortedContributors.length === 1) {
-    return sortedContributors[0]
-  } else {
-    return config['no-contributors-template']
+  if (sortedContributors.length === 0) {
+    return params.noAuthorsTemplate ?? ''
   }
+
+  if (params.authorTemplate !== undefined) {
+    const authorTemplate = params.authorTemplate
+    const authors = sortedContributors.map((contributor) => {
+      const author =
+        'name' in contributor ? contributor.name : contributor.login
+      return renderTemplate({
+        template: authorTemplate,
+        object: {
+          $AUTHOR: author,
+          $AUTHOR_MENTION: renderAuthorMention(contributor),
+        },
+      })
+    })
+    const separator = params.authorsSeparator ?? ', '
+    if (params.authorsFinalSeparator !== undefined && authors.length > 1) {
+      return `${authors.slice(0, -1).join(separator)}${params.authorsFinalSeparator}${authors.at(-1)}`
+    }
+    return authors.join(separator)
+  }
+
+  const mentions = sortedContributors.map(renderAuthorMention)
+  if (mentions.length > 1) {
+    return `${mentions.slice(0, -1).join(', ')} and ${mentions.slice(-1)}`
+  }
+  return mentions[0]
 }
