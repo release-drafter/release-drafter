@@ -2,9 +2,9 @@ import * as core from '@actions/core'
 import type { ParsedConfig } from '#src/actions/drafter/config/index.ts'
 
 /**
- * Tags and PRs are not supported as `target_commitish` by Github API.
- * If GITHUB_REF or the ref from webhook start with `refs/[tags|pull]/`, we handle
- * those here.
+ * GitHub's Releases API accepts a branch name or commit SHA as
+ * `target_commitish`. Normalize fully qualified branch refs and reject tag and
+ * pull request refs before building the API payload.
  *
  * If it doesn't but is still a tag (e.g. "v1.2.3") - it must have been set
  * explicitly by the user, so it's fair to just let the API respond with an error.
@@ -15,19 +15,21 @@ import type { ParsedConfig } from '#src/actions/drafter/config/index.ts'
 export const parseCommitishForRelease = (
   commitish: ParsedConfig['commitish'],
 ) => {
-  let mutableCommitish = structuredClone(commitish)
+  if (commitish.startsWith('refs/heads/')) {
+    return commitish.replace(/^refs\/heads\//, '')
+  }
 
   if (
-    mutableCommitish.startsWith('refs/tags/') ||
-    mutableCommitish.startsWith('refs/pull/')
+    commitish.startsWith('refs/tags/') ||
+    commitish.startsWith('refs/pull/')
   ) {
     // TODO retrieve the commitish that the tag/the pr points to, and use it as target_commitish instead of default branch
     core.warning(
-      `${mutableCommitish} is not supported as release target (commitish), falling back to default branch`,
+      `${commitish} is not supported as release target (commitish), falling back to default branch`,
     )
 
-    mutableCommitish = ''
+    return ''
   }
 
-  return mutableCommitish
+  return commitish
 }

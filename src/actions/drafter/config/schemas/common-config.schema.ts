@@ -28,7 +28,7 @@ export const commonConfigSchema = object({
    */
   'include-pre-releases': stringbool().or(boolean()).optional(),
   /**
-   * The release target, i.e. branch or commit it should point to. Default: the ref that release-drafter runs for, e.g. `refs/heads/master` if configured to run on pushes to `master`.
+   * The release target, i.e. branch or commit SHA it should point to. Defaults to the branch that release-drafter runs for, e.g. `master` when configured to run on pushes to `master`.
    */
   commitish: string().optional(),
   /**
