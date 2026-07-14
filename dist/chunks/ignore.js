@@ -32311,9 +32311,9 @@ async function paginateGraphql(client, query, requestParameters, paginatePath) {
 //#endregion
 //#region src/common/parse-commitish.ts
 /**
-* Tags and PRs are not supported as `target_commitish` by Github API.
-* If GITHUB_REF or the ref from webhook start with `refs/[tags|pull]/`, we handle
-* those here.
+* GitHub's Releases API accepts a branch name or commit SHA as
+* `target_commitish`. Normalize fully qualified branch refs and reject tag and
+* pull request refs before building the API payload.
 *
 * If it doesn't but is still a tag (e.g. "v1.2.3") - it must have been set
 * explicitly by the user, so it's fair to just let the API respond with an error.
@@ -32322,12 +32322,12 @@ async function paginateGraphql(client, query, requestParameters, paginatePath) {
 * fetching branch refs from the remote. (TODO ? Overkill ?)
 */
 var parseCommitishForRelease = (commitish) => {
-	let mutableCommitish = structuredClone(commitish);
-	if (mutableCommitish.startsWith("refs/tags/") || mutableCommitish.startsWith("refs/pull/")) {
-		warning(`${mutableCommitish} is not supported as release target (commitish), falling back to default branch`);
-		mutableCommitish = "";
+	if (commitish.startsWith("refs/heads/")) return commitish.replace(/^refs\/heads\//, "");
+	if (commitish.startsWith("refs/tags/") || commitish.startsWith("refs/pull/")) {
+		warning(`${commitish} is not supported as release target (commitish), falling back to default branch`);
+		return "";
 	}
-	return mutableCommitish;
+	return commitish;
 };
 //#endregion
 //#region src/common/shared-input.schema.ts

@@ -40,7 +40,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -76,7 +76,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/some-branch",
+              "target_commitish": "some-branch",
             },
           ]
         `)
@@ -165,7 +165,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -206,7 +206,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -245,7 +245,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/some-branch",
+              "target_commitish": "some-branch",
             },
           ]
         `)
@@ -277,7 +277,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1 (Code name: Placeholder)",
               "prerelease": false,
               "tag_name": "v2.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -314,7 +314,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -352,7 +352,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -390,7 +390,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -424,7 +424,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -456,7 +456,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -490,7 +490,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -527,7 +527,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -560,7 +560,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -602,7 +602,7 @@ describe('drafter e2e', () => {
               "name": "v3.0.0-beta",
               "prerelease": false,
               "tag_name": "v3.0.0-beta",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -651,7 +651,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -698,7 +698,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -747,7 +747,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -792,7 +792,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -837,7 +837,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -886,7 +886,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -934,7 +934,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -975,7 +975,7 @@ describe('drafter e2e', () => {
               "name": "v1.5.0",
               "prerelease": false,
               "tag_name": "v1.5.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1017,7 +1017,7 @@ describe('drafter e2e', () => {
               "name": "v1.5.0",
               "prerelease": false,
               "tag_name": "v1.5.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1085,7 +1085,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1121,7 +1121,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1153,7 +1153,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1 (Code name: Placeholder)",
               "prerelease": false,
               "tag_name": "v2.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1181,7 +1181,7 @@ describe('drafter e2e', () => {
               "name": "v2.1 (Code name: Placeholder)",
               "prerelease": false,
               "tag_name": "v2.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1209,7 +1209,7 @@ describe('drafter e2e', () => {
               "name": "v3 (Code name: Placeholder)",
               "prerelease": false,
               "tag_name": "v3",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1258,7 +1258,7 @@ describe('drafter e2e', () => {
                 "name": "Release Drafter v2.0.1",
                 "prerelease": false,
                 "tag_name": "v2.0.1",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1308,7 +1308,7 @@ describe('drafter e2e', () => {
                 "name": "Release Drafter v2.0",
                 "prerelease": false,
                 "tag_name": "v2.0",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1356,7 +1356,7 @@ describe('drafter e2e', () => {
                 "name": "Release Drafter v3",
                 "prerelease": false,
                 "tag_name": "v3",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1403,7 +1403,7 @@ describe('drafter e2e', () => {
                 "name": "Release Drafter vMajor: 2, Minor: 0, Patch: 1, Prerelease: ",
                 "prerelease": false,
                 "tag_name": "vMajor: 2, Minor: 0, Patch: 1, Prerelease: ",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1453,7 +1453,7 @@ describe('drafter e2e', () => {
                 "name": "Release Drafter v2.0.1",
                 "prerelease": true,
                 "tag_name": "v2.0.1",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1503,7 +1503,7 @@ describe('drafter e2e', () => {
                 "name": "Release Drafter v2.0.1-beta.0",
                 "prerelease": true,
                 "tag_name": "v2.0.1-beta.0",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1536,7 +1536,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1565,7 +1565,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1595,7 +1595,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1624,7 +1624,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1656,7 +1656,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1694,7 +1694,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1731,7 +1731,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1768,7 +1768,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1803,7 +1803,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1843,7 +1843,7 @@ describe('drafter e2e', () => {
                 "name": "",
                 "prerelease": false,
                 "tag_name": "",
-                "target_commitish": "refs/heads/master",
+                "target_commitish": "master",
               },
             ]
           `)
@@ -1898,7 +1898,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1936,7 +1936,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -1988,7 +1988,7 @@ describe('drafter e2e', () => {
             "name": "",
             "prerelease": false,
             "tag_name": "",
-            "target_commitish": "refs/heads/master",
+            "target_commitish": "master",
           },
         ]
       `)
@@ -2040,7 +2040,7 @@ describe('drafter e2e', () => {
             "name": "",
             "prerelease": false,
             "tag_name": "",
-            "target_commitish": "refs/heads/master",
+            "target_commitish": "master",
           },
         ]
       `)
@@ -2088,7 +2088,7 @@ describe('drafter e2e', () => {
             "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
             "tag_name": "v2.0.1",
-            "target_commitish": "refs/heads/master",
+            "target_commitish": "master",
           },
         ]
       `)
@@ -2137,7 +2137,7 @@ describe('drafter e2e', () => {
             "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
             "tag_name": "v2.0.1",
-            "target_commitish": "refs/heads/master",
+            "target_commitish": "master",
           },
         ]
       `)
@@ -2184,7 +2184,7 @@ describe('drafter e2e', () => {
             "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
             "tag_name": "v2.0.1",
-            "target_commitish": "refs/heads/master",
+            "target_commitish": "master",
           },
         ]
       `)
@@ -2233,7 +2233,7 @@ describe('drafter e2e', () => {
             "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
             "tag_name": "v2.0.1",
-            "target_commitish": "refs/heads/master",
+            "target_commitish": "master",
           },
         ]
       `)
@@ -2409,7 +2409,7 @@ describe('drafter e2e', () => {
               "name": "v2.1.1 (Code name: Placeholder)",
               "prerelease": false,
               "tag_name": "v2.1.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2440,7 +2440,7 @@ describe('drafter e2e', () => {
               "name": "v2.1.1 (Code name: Placeholder)",
               "prerelease": false,
               "tag_name": "v2.1.1-alpha",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2471,7 +2471,7 @@ describe('drafter e2e', () => {
               "name": "v1.0.0-beta (Code name: Hello World)",
               "prerelease": false,
               "tag_name": "v1.0.0-RC1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2502,7 +2502,7 @@ describe('drafter e2e', () => {
               "name": "v2.1.1-alpha (Code name: Foxtrot Unicorn)",
               "prerelease": false,
               "tag_name": "v2.1.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2536,7 +2536,7 @@ describe('drafter e2e', () => {
               "name": "v1.0.0-RC1 (Code name: Hello World)",
               "prerelease": false,
               "tag_name": "v1.0.0-beta",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2568,7 +2568,7 @@ describe('drafter e2e', () => {
               "name": "v2.1.1 (Code name: Placeholder)",
               "prerelease": false,
               "tag_name": "v2.1.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2599,7 +2599,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1 (Code name: Placeholder)",
               "prerelease": true,
               "tag_name": "v2.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2628,7 +2628,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1-alpha.0",
               "prerelease": true,
               "tag_name": "v2.0.1-alpha.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2660,7 +2660,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1-beta.0",
               "prerelease": true,
               "tag_name": "v2.0.1-beta.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2691,7 +2691,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1 (Code name: Placeholder)",
               "prerelease": false,
               "tag_name": "v2.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2720,7 +2720,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1",
               "prerelease": false,
               "tag_name": "v2.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2752,7 +2752,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1 (Code name: Placeholder)",
               "prerelease": true,
               "tag_name": "v2.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2783,7 +2783,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": true,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2814,7 +2814,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2844,7 +2844,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": true,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2874,7 +2874,7 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2906,7 +2906,7 @@ describe('drafter e2e', () => {
               "name": "Foxtrot Unicorn",
               "prerelease": false,
               "tag_name": "v2.1.1-foxtrot-unicorn-alpha",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -2962,7 +2962,7 @@ describe('drafter e2e', () => {
               "name": "v1.0.2 🌈",
               "prerelease": false,
               "tag_name": "v1.0.2",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3004,7 +3004,7 @@ describe('drafter e2e', () => {
               "name": "v1.0.2 🌈",
               "prerelease": false,
               "tag_name": "v1.0.2",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3057,7 +3057,7 @@ describe('drafter e2e', () => {
               "name": "v0.0.1 🌈",
               "prerelease": false,
               "tag_name": "v0.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3098,7 +3098,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1 🌈",
               "prerelease": false,
               "tag_name": "v2.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3134,7 +3134,7 @@ describe('drafter e2e', () => {
               "name": "static-tag-prefix-v2.1.4 🌈",
               "prerelease": false,
               "tag_name": "static-tag-prefix-v2.1.4",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3164,7 +3164,7 @@ describe('drafter e2e', () => {
               "name": "v2.1.0",
               "prerelease": false,
               "tag_name": "v2.1.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3194,7 +3194,7 @@ describe('drafter e2e', () => {
               "name": "v2.0.1",
               "prerelease": false,
               "tag_name": "v2.0.1",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3224,7 +3224,7 @@ describe('drafter e2e', () => {
               "name": "v2.1.0",
               "prerelease": false,
               "tag_name": "v2.1.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3254,7 +3254,7 @@ describe('drafter e2e', () => {
               "name": "v3.0.0",
               "prerelease": false,
               "tag_name": "v3.0.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3284,7 +3284,7 @@ describe('drafter e2e', () => {
               "name": "v3.0.0",
               "prerelease": false,
               "tag_name": "v3.0.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3316,7 +3316,7 @@ describe('drafter e2e', () => {
               "name": "v3.0.0",
               "prerelease": false,
               "tag_name": "v3.0.0",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3395,7 +3395,7 @@ describe('drafter e2e', () => {
               "name": "v3.0.0-beta",
               "prerelease": false,
               "tag_name": "v3.0.0-beta",
-              "target_commitish": "refs/heads/master",
+              "target_commitish": "master",
             },
           ]
         `)
@@ -3501,7 +3501,7 @@ describe('drafter e2e', () => {
             "name": "",
             "prerelease": false,
             "tag_name": "",
-            "target_commitish": "refs/heads/master",
+            "target_commitish": "master",
           },
         ]
       `)
@@ -3551,7 +3551,7 @@ describe('drafter e2e', () => {
             "name": "v2.0.1 (Code name: Placeholder)",
             "prerelease": false,
             "tag_name": "v2.0.1",
-            "target_commitish": "refs/heads/master",
+            "target_commitish": "master",
           },
         ]
       `)

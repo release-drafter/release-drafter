@@ -374,7 +374,7 @@ describe('build release payload', () => {
     )
   })
 
-  it('keeps branch refs unchanged', () => {
+  it('normalizes fully qualified branch refs', () => {
     const releasePayload = buildReleasePayload({
       commits: [],
       config,
@@ -383,7 +383,27 @@ describe('build release payload', () => {
       pullRequests: [],
     })
 
-    expect(releasePayload.targetCommitish).toBe('refs/heads/master')
+    expect(releasePayload.targetCommitish).toBe('master')
+    expect(sharedMocks.core.warning).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['refs/heads/release/next', 'release/next'],
+    ['main', 'main'],
+    [
+      '0123456789abcdef0123456789abcdef01234567',
+      '0123456789abcdef0123456789abcdef01234567',
+    ],
+  ])('maps commitish %s to %s', (commitish, expectedTargetCommitish) => {
+    const releasePayload = buildReleasePayload({
+      commits: [],
+      config: { ...config, commitish },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease: undefined,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.targetCommitish).toBe(expectedTargetCommitish)
     expect(sharedMocks.core.warning).not.toHaveBeenCalled()
   })
 })
