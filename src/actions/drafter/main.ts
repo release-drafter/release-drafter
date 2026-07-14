@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import type { ExclusiveInput, ParsedConfig } from './config/index.ts'
 import {
   buildReleasePayload,
@@ -19,6 +20,18 @@ export const main = async (params: {
    * 6. set action outputs
    */
   const { config, input } = params
+  const isPullRequestMergeRef = /^refs\/pull\/\d+\/merge$/.test(
+    config.commitish,
+  )
+  const effectiveInput = isPullRequestMergeRef
+    ? { ...input, 'dry-run': true, publish: false }
+    : input
+
+  if (isPullRequestMergeRef && !input['dry-run']) {
+    core.warning(
+      `${config.commitish} points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.`,
+    )
+  }
 
   const { draftRelease, lastRelease } = await findPreviousReleases(config)
 
@@ -28,10 +41,10 @@ export const main = async (params: {
       config,
     })
 
-  const releasePayload = buildReleasePayload({
+  const releasePayload = await buildReleasePayload({
     commits,
     config,
-    input,
+    input: effectiveInput,
     lastRelease,
     newContributorLogins,
     pullRequests,
@@ -40,7 +53,7 @@ export const main = async (params: {
   const upsertedRelease = await upsertRelease({
     draftRelease,
     releasePayload,
-    dryRun: input['dry-run'],
+    dryRun: effectiveInput['dry-run'],
   })
 
   return {

@@ -15,6 +15,7 @@ const githubConfig: CodegenConfig = {
   documents: 'src/**/*.gql',
   config: {
     enumsAsTypes: true,
+    useTypeImports: true,
     scalars: {
       URI: 'string',
       DateTime: 'string',
