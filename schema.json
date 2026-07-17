@@ -110,6 +110,10 @@
         "type": "string"
       }
     },
+    "new-contributor-template": {
+      "default": "* $AUTHOR_MENTION made their first contribution in #$NUMBER",
+      "type": "string"
+    },
     "no-contributors-template": {
       "default": "No contributors",
       "type": "string"

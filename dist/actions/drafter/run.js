@@ -369,6 +369,10 @@ var exclusiveConfigSchema = object({
 	*/
 	"exclude-contributors": array(string()).optional().default([]),
 	/**
+	* The template to use for each new contributor in `$NEW_CONTRIBUTORS`.
+	*/
+	"new-contributor-template": string().optional().default("* $AUTHOR_MENTION made their first contribution in #$NUMBER"),
+	/**
 	* The template to use for `$CONTRIBUTORS` when there's no contributors to list.
 	*/
 	"no-contributors-template": string().optional().default("No contributors"),
@@ -2003,6 +2007,28 @@ var generateAuthorsSentence = (params) => {
 	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
 	return mentions[0];
 };
+var generateNewContributorsList = (params) => {
+	const { pullRequests, newContributorLogins, config } = params;
+	const firstPullRequestByLogin = /* @__PURE__ */ new Map();
+	const includedPullRequestKeys = new Set(filterPullRequestsByPreCategories(pullRequests, config.categories).map(pullRequestKey));
+	for (const pullRequest of pullRequests) {
+		if (!pullRequest.author || !newContributorLogins.has(pullRequest.author.login) || config["exclude-contributors"].includes(pullRequest.author.login)) continue;
+		const previous = firstPullRequestByLogin.get(pullRequest.author.login);
+		if (!previous || (pullRequest.mergedAt ?? "") < (previous.mergedAt ?? "")) firstPullRequestByLogin.set(pullRequest.author.login, pullRequest);
+	}
+	const entries = [...firstPullRequestByLogin.entries()].filter(([, pullRequest]) => includedPullRequestKeys.has(pullRequestKey(pullRequest))).sort(([, a], [, b]) => (a.mergedAt ?? "").localeCompare(b.mergedAt ?? "") || a.number - b.number);
+	if (entries.length === 0) return "";
+	return entries.map(([login, pullRequest]) => renderTemplate({
+		template: config["new-contributor-template"],
+		object: {
+			$AUTHOR: login,
+			$AUTHOR_MENTION: `@${login}`,
+			$AUTHOR_URL: pullRequest.author?.url,
+			$NUMBER: pullRequest.number,
+			$URL: pullRequest.url
+		}
+	})).join("\n");
+};
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/pull-request-to-string.ts
 var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
@@ -2033,6 +2059,7 @@ var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 				authorsFinalSeparator: params.config["change-authors-final-separator"]
 			}),
 			$AUTHOR: pullAuthor,
+			$AUTHOR_URL: pullRequest.author?.url ?? "",
 			$BODY: pullRequest.body,
 			$URL: pullRequest.url,
 			$BASE_REF_NAME: pullRequest.baseRefName,
@@ -2445,7 +2472,7 @@ var last_not_found_default = "> [!WARNING]\n> Release Drafter could not find a p
 * Previously known as `generateReleaseInfo`.
 */
 var buildReleasePayload = (params) => {
-	const { commits, config, input, lastRelease, pullRequests } = params;
+	const { commits, config, input, lastRelease, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests } = params;
 	info(`Building release payload and body...`);
 	const sortedPullRequests = sortPullRequests({
 		pullRequests,
@@ -2470,6 +2497,11 @@ var buildReleasePayload = (params) => {
 			$CONTRIBUTORS: generateContributorsSentence({
 				commits,
 				pullRequests: sortedPullRequests,
+				config
+			}),
+			$NEW_CONTRIBUTORS: generateNewContributorsList({
+				pullRequests: sortedPullRequests,
+				newContributorLogins,
 				config
 			}),
 			$OWNER: context.repo.owner,
@@ -4227,6 +4259,21 @@ var findRecentMergedPullRequests = async (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
+var findNewContributorLogins = async (pullRequests) => {
+	const firstMergedAtByLogin = /* @__PURE__ */ new Map();
+	for (const pullRequest of pullRequests) {
+		if (pullRequest.author?.__typename !== "User" || !pullRequest.mergedAt) continue;
+		const previous = firstMergedAtByLogin.get(pullRequest.author.login);
+		if (!previous || pullRequest.mergedAt < previous) firstMergedAtByLogin.set(pullRequest.author.login, pullRequest.mergedAt);
+	}
+	const candidates = [...firstMergedAtByLogin];
+	if (candidates.length === 0) return /* @__PURE__ */ new Set();
+	const variables = Object.fromEntries(candidates.map(([login, mergedAt], index) => [`query${index}`, `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged author:${login} merged:<${mergedAt}`]));
+	const data = await getOctokit().graphql(`query findPreviousContributions(${candidates.map((_, index) => `$query${index}: String!`).join(", ")}) {
+      ${candidates.map((_, index) => `author${index}: search(query: $query${index}, type: ISSUE, first: 1) { issueCount }`).join("\n")}
+    }`, variables);
+	return new Set(candidates.flatMap(([login], index) => data[`author${index}`]?.issueCount === 0 ? [login] : []));
+};
 var findPullRequests = async (params) => {
 	const sharedComparisonParams = {
 		name: context.repo.repo,
@@ -4243,6 +4290,7 @@ var findPullRequests = async (params) => {
 		warning("A previous (published) release is required to find changes");
 		return {
 			commits: [],
+			newContributorLogins: /* @__PURE__ */ new Set(),
 			pullRequests: []
 		};
 	}
@@ -4276,9 +4324,15 @@ var findPullRequests = async (params) => {
 		repo: context.repo.repo,
 		pullRequests
 	}) : /* @__PURE__ */ new Map();
+	const newContributorLogins = [
+		params.config.header,
+		params.config.template,
+		params.config.footer
+	].some((template) => template?.includes("$NEW_CONTRIBUTORS")) ? await findNewContributorLogins(pullRequests) : /* @__PURE__ */ new Set();
 	info(`Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
 	return {
 		commits,
+		newContributorLogins,
 		pullRequests: pullRequests.map((pullRequest) => shouldLoadPullRequestChangedFiles ? {
 			...pullRequest,
 			changedFiles: pullRequestChangedFiles.get(`${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`)
@@ -4363,7 +4417,7 @@ var main = async (params) => {
 	*/
 	const { config, input } = params;
 	const { draftRelease, lastRelease } = await findPreviousReleases(config);
-	const { commits, pullRequests } = await findPullRequests({
+	const { commits, newContributorLogins, pullRequests } = await findPullRequests({
 		lastRelease,
 		config
 	});
@@ -4372,6 +4426,7 @@ var main = async (params) => {
 		config,
 		input,
 		lastRelease,
+		newContributorLogins,
 		pullRequests
 	});
 	return {

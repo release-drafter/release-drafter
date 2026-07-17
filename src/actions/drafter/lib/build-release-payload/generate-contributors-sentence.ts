@@ -166,3 +166,61 @@ export const generateAuthorsSentence = (params: {
   }
   return mentions[0]
 }
+
+export const generateNewContributorsList = (params: {
+  pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
+  newContributorLogins: ReadonlySet<string>
+  config: Pick<
+    ParsedConfig,
+    'categories' | 'exclude-contributors' | 'new-contributor-template'
+  >
+}) => {
+  const { pullRequests, newContributorLogins, config } = params
+  const firstPullRequestByLogin = new Map<string, PullRequest>()
+  const includedPullRequestKeys = new Set(
+    filterPullRequestsByPreCategories(pullRequests, config.categories).map(
+      pullRequestKey,
+    ),
+  )
+
+  for (const pullRequest of pullRequests) {
+    if (
+      !pullRequest.author ||
+      !newContributorLogins.has(pullRequest.author.login) ||
+      config['exclude-contributors'].includes(pullRequest.author.login)
+    ) {
+      continue
+    }
+
+    const previous = firstPullRequestByLogin.get(pullRequest.author.login)
+    if (!previous || (pullRequest.mergedAt ?? '') < (previous.mergedAt ?? '')) {
+      firstPullRequestByLogin.set(pullRequest.author.login, pullRequest)
+    }
+  }
+
+  const entries = [...firstPullRequestByLogin.entries()]
+    .filter(([, pullRequest]) =>
+      includedPullRequestKeys.has(pullRequestKey(pullRequest)),
+    )
+    .sort(
+      ([, a], [, b]) =>
+        (a.mergedAt ?? '').localeCompare(b.mergedAt ?? '') ||
+        a.number - b.number,
+    )
+  if (entries.length === 0) return ''
+
+  return entries
+    .map(([login, pullRequest]) =>
+      renderTemplate({
+        template: config['new-contributor-template'],
+        object: {
+          $AUTHOR: login,
+          $AUTHOR_MENTION: `@${login}`,
+          $AUTHOR_URL: pullRequest.author?.url,
+          $NUMBER: pullRequest.number,
+          $URL: pullRequest.url,
+        },
+      }),
+    )
+    .join('\n')
+}

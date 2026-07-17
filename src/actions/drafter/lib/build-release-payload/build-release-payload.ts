@@ -5,7 +5,10 @@ import type { ExclusiveInput, ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import type { findPullRequests } from '../find-pull-requests/index.ts'
 import { generateChangeLog } from './generate-changelog.ts'
-import { generateContributorsSentence } from './generate-contributors-sentence.ts'
+import {
+  generateContributorsSentence,
+  generateNewContributorsList,
+} from './generate-contributors-sentence.ts'
 import { getVersionInfo } from './get-version-info.ts'
 import { renderReleaseName } from './render-release-name.ts'
 import { renderTagName } from './render-tag-name.ts'
@@ -38,6 +41,7 @@ export const buildReleasePayload = (params: {
     | 'change-authors-final-separator'
     | 'category-template'
     | 'exclude-contributors'
+    | 'new-contributor-template'
     | 'no-contributors-template'
     | 'prerelease'
     | 'version-template'
@@ -50,9 +54,17 @@ export const buildReleasePayload = (params: {
   >
   input: ExclusiveInput
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
+  newContributorLogins?: ReadonlySet<string>
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
 }) => {
-  const { commits, config, input, lastRelease, pullRequests } = params
+  const {
+    commits,
+    config,
+    input,
+    lastRelease,
+    newContributorLogins = new Set<string>(),
+    pullRequests,
+  } = params
 
   core.info(`Building release payload and body...`)
 
@@ -81,6 +93,11 @@ export const buildReleasePayload = (params: {
       $CONTRIBUTORS: generateContributorsSentence({
         commits,
         pullRequests: sortedPullRequests,
+        config,
+      }),
+      $NEW_CONTRIBUTORS: generateNewContributorsList({
+        pullRequests: sortedPullRequests,
+        newContributorLogins,
         config,
       }),
       $OWNER: context.repo.owner,

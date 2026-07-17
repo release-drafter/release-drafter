@@ -56,6 +56,7 @@ export const pullRequestToString = (params: {
               params.config['change-authors-final-separator'],
           }),
           $AUTHOR: pullAuthor,
+          $AUTHOR_URL: pullRequest.author?.url ?? '',
           $BODY: pullRequest.body,
           $URL: pullRequest.url,
           $BASE_REF_NAME: pullRequest.baseRefName,

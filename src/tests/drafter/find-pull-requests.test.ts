@@ -10,6 +10,7 @@ import { mockContext } from '../mocks/index.ts'
 
 const localMocks = vi.hoisted(() => ({
   findCommitsInComparison: vi.fn(),
+  graphql: vi.fn(),
   paginate: vi.fn(),
   listFiles: vi.fn(),
 }))
@@ -26,6 +27,7 @@ vi.mock(
 vi.mock('#src/common/get-octokit.ts', () => ({
   getOctokit: () =>
     ({
+      graphql: localMocks.graphql as unknown as Octokit['graphql'],
       paginate: localMocks.paginate as unknown as Octokit['paginate'],
       rest: {
         pulls: {
@@ -88,8 +90,52 @@ describe('findPullRequests', () => {
   beforeEach(async () => {
     await mockContext('push')
     localMocks.findCommitsInComparison.mockReset()
+    localMocks.graphql.mockReset()
     localMocks.paginate.mockReset()
     localMocks.listFiles.mockReset()
+  })
+
+  it('identifies a first-time contribution from merge history', async () => {
+    const commit = makeCommit('first-contribution', 42)
+    const pullRequest = commit.associatedPullRequests.nodes[0]
+    pullRequest.author.login = 'first-timer'
+    pullRequest.mergedAt = '2026-07-11T15:17:17Z'
+    localMocks.findCommitsInComparison.mockResolvedValue([
+      commit,
+      makeCommit('earlier-contributor', 1),
+    ])
+    localMocks.graphql.mockResolvedValue({
+      author0: { issueCount: 0 },
+      author1: { issueCount: 1 },
+    })
+
+    const config = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$NEW_CONTRIBUTORS',
+        commitish: 'refs/heads/main',
+      }),
+      input: commonConfigSchema.parse({}),
+    })
+
+    const result = await findPullRequests({
+      lastRelease: { tag_name: 'v1.0.0' } as Awaited<
+        ReturnType<
+          typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
+        >
+      >['lastRelease'],
+      config,
+    })
+
+    expect(result.newContributorLogins).toEqual(new Set(['first-timer']))
+    expect(localMocks.graphql).toHaveBeenCalledWith(
+      expect.stringContaining('query findPreviousContributions'),
+      {
+        query0:
+          'repo:toolmantim/release-drafter-test-project is:pr is:merged author:first-timer merged:<2026-07-11T15:17:17Z',
+        query1:
+          'repo:toolmantim/release-drafter-test-project is:pr is:merged author:octocat merged:<2026-01-01T00:00:00Z',
+      },
+    )
   })
 
   it('loads changed files for path-based pre-include categories', async () => {

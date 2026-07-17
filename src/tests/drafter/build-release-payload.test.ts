@@ -7,7 +7,10 @@ import {
   mergeInputAndConfig,
 } from '#src/actions/drafter/config/index.ts'
 import { generateChangeLog } from '#src/actions/drafter/lib/build-release-payload/generate-changelog.ts'
-import { generateContributorsSentence } from '#src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts'
+import {
+  generateContributorsSentence,
+  generateNewContributorsList,
+} from '#src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts'
 import { buildReleasePayload } from '#src/actions/drafter/lib/index.ts'
 import { mockContext, mocks as sharedMocks } from '#tests/mocks/index.ts'
 
@@ -823,6 +826,21 @@ describe('generate contributors sentence', () => {
     )
   })
 
+  it('renders pull request authors as markdown links', () => {
+    expect(
+      generateChangeLog({
+        pullRequests: [pullRequest],
+        config: {
+          ...config,
+          'change-template':
+            '* $TITLE ([#$NUMBER]($URL)) [$AUTHOR]($AUTHOR_URL)',
+        },
+      }),
+    ).toMatchInlineSnapshot(
+      `"* Adds missing <example> ([#3](https://github.com)) [octocat](https://github.com/octocat)"`,
+    )
+  })
+
   it('renders deleted pull request authors with the author template', () => {
     expect(
       generateChangeLog({
@@ -970,6 +988,94 @@ describe('generate contributors sentence', () => {
         config,
       }),
     ).toBe('@ghost')
+  })
+
+  it('renders the GitHub-style new contributors list', () => {
+    const newContributorPullRequest = {
+      ...userPullRequest,
+      number: 42,
+      author: {
+        __typename: 'User' as const,
+        login: 'first-timer',
+        url: 'https://github.com/first-timer',
+      },
+    }
+
+    expect(
+      generateNewContributorsList({
+        pullRequests: [userPullRequest, newContributorPullRequest],
+        newContributorLogins: new Set(['first-timer']),
+        config,
+      }),
+    ).toBe('* @first-timer made their first contribution in #42')
+  })
+
+  it('renders new contributors with a custom template', () => {
+    const newContributorPullRequest = {
+      ...userPullRequest,
+      number: 42,
+      url: 'https://github.com/release-drafter/release-drafter/pull/42',
+      author: {
+        __typename: 'User' as const,
+        login: 'first-timer',
+        url: 'https://github.com/first-timer',
+      },
+    }
+
+    expect(
+      generateNewContributorsList({
+        pullRequests: [newContributorPullRequest],
+        newContributorLogins: new Set(['first-timer']),
+        config: {
+          ...config,
+          'new-contributor-template':
+            '* [$AUTHOR]($AUTHOR_URL) made their first contribution in [#$NUMBER]($URL)',
+        },
+      }),
+    ).toMatchInlineSnapshot(
+      `"* [first-timer](https://github.com/first-timer) made their first contribution in [#42](https://github.com/release-drafter/release-drafter/pull/42)"`,
+    )
+  })
+
+  it('omits a contributor whose actual first pull request is excluded', () => {
+    const author = {
+      __typename: 'User' as const,
+      login: 'first-timer',
+      url: 'https://github.com/first-timer',
+    }
+    const firstPullRequest = {
+      ...userPullRequest,
+      number: 41,
+      mergedAt: '2024-01-01T00:00:00Z',
+      author,
+      labels: {
+        __typename: 'LabelConnection' as const,
+        nodes: [{ __typename: 'Label' as const, name: 'skip-changelog' }],
+      },
+    }
+    const laterPullRequest = {
+      ...userPullRequest,
+      number: 42,
+      mergedAt: '2024-01-02T00:00:00Z',
+      author,
+    }
+    const skipConfig = mergeInputAndConfig({
+      config: configSchema.parse({
+        template: '$NEW_CONTRIBUTORS',
+        categories: [
+          { type: 'pre-exclude', when: { label: 'skip-changelog' } },
+        ],
+      }),
+      input: actionInputSchema.parse({ token: 'test' }),
+    })
+
+    expect(
+      generateNewContributorsList({
+        pullRequests: [laterPullRequest, firstPullRequest],
+        newContributorLogins: new Set(['first-timer']),
+        config: skipConfig,
+      }),
+    ).toBe('')
   })
 
   it('excludes contributors whose pull requests are excluded', () => {
