@@ -31119,7 +31119,8 @@ function parseConfigTarget(target, context) {
 	}
 	if (!hasRepoSpecifier && scheme !== "file") {
 		const targetWithoutRef = hasRefSpecifier ? _target.slice(0, _target.indexOf("@")) : _target;
-		if (!targetWithoutRef.includes(".")) {
+		const repoName = targetWithoutRef.split("/").at(-1) || "";
+		if (!repoName.includes(".") || repoName === ".github") {
 			if (hasRefSpecifier) _target = `${targetWithoutRef}:${_target.slice(_target.indexOf("@"))}`;
 			else _target = `${_target}:`;
 			hasRepoSpecifier = true;
