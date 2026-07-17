@@ -47,14 +47,15 @@ export function parseConfigTarget(
       throw getErr('Local file targets cannot have "@" github specifiers.')
   }
 
-  // Detect repo-only references without ":" (e.g., "org/repo" or "org/repo@ref").
-  // Config filepaths always have a file extension, so if there is no ":" and the
-  // target (minus any @ref suffix) has no ".", treat it as a repo-only reference.
+  // Detect legacy repo-only references without ":" (e.g., "org/repo",
+  // "org/.github", or "org/repo@ref"). Config filepaths have extensions;
+  // extensionless targets are repo-only. ".github" is the legacy exception.
   if (!hasRepoSpecifier && scheme !== 'file') {
     const targetWithoutRef = hasRefSpecifier
       ? _target.slice(0, _target.indexOf('@'))
       : _target
-    if (!targetWithoutRef.includes('.')) {
+    const repoName = targetWithoutRef.split('/').at(-1) || ''
+    if (!repoName.includes('.') || repoName === '.github') {
       // Treat as repo-only: rewrite to "repo:@ref" or "repo:" so normal parsing handles it
       if (hasRefSpecifier) {
         _target = `${targetWithoutRef}:${_target.slice(_target.indexOf('@'))}`

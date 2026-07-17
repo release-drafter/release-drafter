@@ -253,6 +253,35 @@ const testSuites: Array<{
     },
   },
   {
+    suiteName: 'repo-only .github special repo',
+    input: [
+      '.github',
+      {
+        repo: { owner: 'jenkinsci', repo: 'azure-credentials-plugin' },
+        ref: 'main',
+      },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: undefined,
+      repo: { owner: 'jenkinsci', repo: '.github' },
+    },
+  },
+  {
+    suiteName: 'repo-only owner/.github special repo',
+    input: [
+      'jenkinsci/.github',
+      { repo: { owner: 'octocat', repo: 'hello-world' }, ref: 'main' },
+    ],
+    expected: {
+      scheme: 'github',
+      filepath: '',
+      ref: undefined,
+      repo: { owner: 'jenkinsci', repo: '.github' },
+    },
+  },
+  {
     suiteName: 'repo-only with colon, ref, and no filepath',
     input: [
       'ansible/team-devtools:@main',

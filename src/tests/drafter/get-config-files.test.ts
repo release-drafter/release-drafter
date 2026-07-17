@@ -345,6 +345,45 @@ describe('getConfigFiles', () => {
       })
     })
 
+    it('should default filepath when _extends is .github', async () => {
+      vi.stubEnv('GITHUB_TOKEN', 'test')
+
+      const parentEndpoint = getContentEndpoint(
+        'jenkinsci',
+        'azure-credentials-plugin',
+        '.github/release-drafter.yml',
+        'master',
+      )
+      const extendsEndpoint = getContentEndpoint(
+        'jenkinsci',
+        '.github',
+        '.github/release-drafter.yml',
+      )
+
+      const scope = nock('https://api.github.com')
+        .get(parentEndpoint)
+        .reply(200, `_extends: .github\ntemplate: child-template`, {
+          'content-type': RAW_CONTENT_TYPE,
+        })
+        .get(extendsEndpoint)
+        .reply(200, `template: parent-template`, {
+          'content-type': RAW_CONTENT_TYPE,
+        })
+
+      const files = await getConfigFiles('release-drafter.yml', {
+        repo: { owner: 'jenkinsci', repo: 'azure-credentials-plugin' },
+        ref: 'master',
+      })
+
+      expect(scope.isDone()).toBe(true)
+      expect(files).toHaveLength(2)
+      expect(files[1].fetchedFrom.filepath).toBe('.github/release-drafter.yml')
+      expect(files[1].fetchedFrom.repo).toEqual({
+        owner: 'jenkinsci',
+        repo: '.github',
+      })
+    })
+
     it('should default filepath with custom config name', async () => {
       vi.stubEnv('GITHUB_TOKEN', 'test')
 
