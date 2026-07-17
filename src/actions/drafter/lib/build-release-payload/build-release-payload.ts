@@ -7,7 +7,7 @@ import type { findPullRequests } from '../find-pull-requests/index.ts'
 import { generateChangeLog } from './generate-changelog.ts'
 import {
   generateContributorsSentence,
-  generateNewContributorsSection,
+  generateNewContributorsList,
 } from './generate-contributors-sentence.ts'
 import { getVersionInfo } from './get-version-info.ts'
 import { renderReleaseName } from './render-release-name.ts'
@@ -41,6 +41,7 @@ export const buildReleasePayload = (params: {
     | 'change-authors-final-separator'
     | 'category-template'
     | 'exclude-contributors'
+    | 'new-contributor-template'
     | 'no-contributors-template'
     | 'prerelease'
     | 'version-template'
@@ -94,7 +95,7 @@ export const buildReleasePayload = (params: {
         pullRequests: sortedPullRequests,
         config,
       }),
-      $NEW_CONTRIBUTORS: generateNewContributorsSection({
+      $NEW_CONTRIBUTORS: generateNewContributorsList({
         pullRequests: sortedPullRequests,
         newContributorLogins,
         config,

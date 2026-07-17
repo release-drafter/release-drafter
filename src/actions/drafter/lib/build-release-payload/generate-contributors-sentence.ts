@@ -167,10 +167,13 @@ export const generateAuthorsSentence = (params: {
   return mentions[0]
 }
 
-export const generateNewContributorsSection = (params: {
+export const generateNewContributorsList = (params: {
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
   newContributorLogins: ReadonlySet<string>
-  config: Pick<ParsedConfig, 'categories' | 'exclude-contributors'>
+  config: Pick<
+    ParsedConfig,
+    'categories' | 'exclude-contributors' | 'new-contributor-template'
+  >
 }) => {
   const { pullRequests, newContributorLogins, config } = params
   const firstPullRequestByLogin = new Map<string, PullRequest>()
@@ -206,10 +209,18 @@ export const generateNewContributorsSection = (params: {
     )
   if (entries.length === 0) return ''
 
-  return `## New Contributors\n\n${entries
-    .map(
-      ([login, pullRequest]) =>
-        `* @${login} made their first contribution in #${pullRequest.number}`,
+  return entries
+    .map(([login, pullRequest]) =>
+      renderTemplate({
+        template: config['new-contributor-template'],
+        object: {
+          $AUTHOR: login,
+          $AUTHOR_MENTION: `@${login}`,
+          $AUTHOR_URL: pullRequest.author?.url,
+          $NUMBER: pullRequest.number,
+          $URL: pullRequest.url,
+        },
+      }),
     )
-    .join('\n')}`
+    .join('\n')
 }

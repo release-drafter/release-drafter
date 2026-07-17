@@ -292,6 +292,12 @@ export const exclusiveConfigSchema = object({
    */
   'exclude-contributors': array(string()).optional().default([]),
   /**
+   * The template to use for each new contributor in `$NEW_CONTRIBUTORS`.
+   */
+  'new-contributor-template': string()
+    .optional()
+    .default('* $AUTHOR_MENTION made their first contribution in #$NUMBER'),
+  /**
    * The template to use for `$CONTRIBUTORS` when there's no contributors to list.
    */
   'no-contributors-template': string().optional().default('No contributors'),

@@ -129,6 +129,7 @@ You can configure Release Drafter using the following key in your
 | `no-changes-template`      | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                                                              |
 | `categories`               | Optional | Define how changes are filtered, grouped, and versioned. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. Refer to [Categorize Changes](#categorize-changes).                                                   |
 | `exclude-contributors`     | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.                                                                                          |
+| `new-contributor-template` | Optional | The template to use for each new contributor in `$NEW_CONTRIBUTORS`. Use [new contributor template variables](#new-contributor-template-variables) to insert values. Default: `"* $AUTHOR_MENTION made their first contribution in #$NUMBER"`.                   |
 | `no-contributors-template` | Optional | The template to use for `$CONTRIBUTORS` when there's no contributors to list. Default: `"No contributors"`.                                                                                                                                              |
 | `replacers`                | Optional | Search and replace content in the generated changelog body. Refer to [Replacers](#replacers) to learn more about this option.                                                                                                                            |
 | `sort-by`                  | Optional | Sort changelog by merged_at or title. Can be one of: `merged_at`, `title`. Default: `merged_at`.                                                                                                                                                         |
@@ -152,7 +153,7 @@ You can use any of the following variables in your `template`, `header` and
 | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `$CHANGES`          | The markdown list of pull requests that have been merged.                                                             |
 | `$CONTRIBUTORS`     | A comma separated list of contributors to this release (pull request authors, commit authors, and commit committers). |
-| `$NEW_CONTRIBUTORS` | A Markdown section listing pull request authors making their first contribution and the corresponding pull request.  |
+| `$NEW_CONTRIBUTORS` | A Markdown list of pull request authors making their first contribution and the corresponding pull request.                       |
 | `$PREVIOUS_TAG`     | The previous releases’s tag.                                                                                          |
 | `$REPOSITORY`       | Current Repository                                                                                                    |
 | `$OWNER`            | Current Repository Owner                                                                                              |
@@ -269,6 +270,18 @@ The example above:
 - uses the category with no `when` as the fallback when nothing else matches
 - picks the highest semver increment across matching categories
 
+## New Contributor Template Variables
+
+You can use any of the following variables in `new-contributor-template`:
+
+| Variable          | Description                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| `$AUTHOR`         | The new contributor’s username, e.g. `gracehopper`.                         |
+| `$AUTHOR_MENTION` | The new contributor’s GitHub mention, e.g. `@gracehopper`.                  |
+| `$AUTHOR_URL`     | The URL of the new contributor’s GitHub profile, e.g. `https://github.com/gracehopper`. |
+| `$NUMBER`         | The number of the contributor’s first pull request, e.g. `42`.              |
+| `$URL`            | The URL of the contributor’s first pull request, e.g. `https://github.com/octocat/repo/pull/42`. |
+
 ## Change Template Variables
 
 You can use any of the following variables in `change-template`:
@@ -279,6 +292,7 @@ You can use any of the following variables in `change-template`:
 | `$CATEGORY`      | The title of the category that matched the pull request, preserving its configured case. Empty for uncategorized pull requests.                                                                                                                                                                                                                                                       |
 | `$TITLE`         | The title of the pull request, e.g. `Add alien technology`. Any characters excluding @ and # matching `change-title-escapes` will be prepended with a backslash so that they will appear verbatim instead of being interpreted as markdown format characters. @s and #s if present in `change-title-escapes` will be appended with an HTML comment so that they don't become mentions. |
 | `$AUTHOR`        | The pull request author’s username, e.g. `gracehopper`.                                                                                                                                                                                                                                                                                                                                |
+| `$AUTHOR_URL`    | The pull request author’s GitHub profile URL, e.g. `https://github.com/gracehopper`.                                                                                                                                                                                                                                                                                                   |
 | `$AUTHORS`       | The pull request author and its associated commit authors rendered with `change-author-template` and joined with `change-authors-separator`, with the pull request author first.                                                                                                                                                                                                       |
 | `$BODY`          | The body of the pull request e.g. `Fixed spelling mistake`.                                                                                                                                                                                                                                                                                                                            |
 | `$URL`           | The URL of the pull request e.g. `https://github.com/octocat/repo/pull/42`.                                                                                                                                                                                                                                                                                                            |

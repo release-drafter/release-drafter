@@ -369,6 +369,10 @@ var exclusiveConfigSchema = object({
 	*/
 	"exclude-contributors": array(string()).optional().default([]),
 	/**
+	* The template to use for each new contributor in `$NEW_CONTRIBUTORS`.
+	*/
+	"new-contributor-template": string().optional().default("* $AUTHOR_MENTION made their first contribution in #$NUMBER"),
+	/**
 	* The template to use for `$CONTRIBUTORS` when there's no contributors to list.
 	*/
 	"no-contributors-template": string().optional().default("No contributors"),
@@ -2003,7 +2007,7 @@ var generateAuthorsSentence = (params) => {
 	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
 	return mentions[0];
 };
-var generateNewContributorsSection = (params) => {
+var generateNewContributorsList = (params) => {
 	const { pullRequests, newContributorLogins, config } = params;
 	const firstPullRequestByLogin = /* @__PURE__ */ new Map();
 	const includedPullRequestKeys = new Set(filterPullRequestsByPreCategories(pullRequests, config.categories).map(pullRequestKey));
@@ -2014,7 +2018,16 @@ var generateNewContributorsSection = (params) => {
 	}
 	const entries = [...firstPullRequestByLogin.entries()].filter(([, pullRequest]) => includedPullRequestKeys.has(pullRequestKey(pullRequest))).sort(([, a], [, b]) => (a.mergedAt ?? "").localeCompare(b.mergedAt ?? "") || a.number - b.number);
 	if (entries.length === 0) return "";
-	return `## New Contributors\n\n${entries.map(([login, pullRequest]) => `* @${login} made their first contribution in #${pullRequest.number}`).join("\n")}`;
+	return entries.map(([login, pullRequest]) => renderTemplate({
+		template: config["new-contributor-template"],
+		object: {
+			$AUTHOR: login,
+			$AUTHOR_MENTION: `@${login}`,
+			$AUTHOR_URL: pullRequest.author?.url,
+			$NUMBER: pullRequest.number,
+			$URL: pullRequest.url
+		}
+	})).join("\n");
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/pull-request-to-string.ts
@@ -2046,6 +2059,7 @@ var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 				authorsFinalSeparator: params.config["change-authors-final-separator"]
 			}),
 			$AUTHOR: pullAuthor,
+			$AUTHOR_URL: pullRequest.author?.url ?? "",
 			$BODY: pullRequest.body,
 			$URL: pullRequest.url,
 			$BASE_REF_NAME: pullRequest.baseRefName,
@@ -2485,7 +2499,7 @@ var buildReleasePayload = (params) => {
 				pullRequests: sortedPullRequests,
 				config
 			}),
-			$NEW_CONTRIBUTORS: generateNewContributorsSection({
+			$NEW_CONTRIBUTORS: generateNewContributorsList({
 				pullRequests: sortedPullRequests,
 				newContributorLogins,
 				config
