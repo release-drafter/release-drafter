@@ -1,4 +1,5 @@
 import { context } from '@actions/github'
+import nock from 'nock'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { parse } from 'yaml'
 import {
@@ -349,8 +350,24 @@ describe('build release payload', () => {
     })
   })
 
-  it('falls back to the default branch for tag refs', () => {
-    const releasePayload = buildReleasePayload({
+  it('resolves tag refs recursively to commit SHAs', async () => {
+    const commitSha = '0123456789abcdef0123456789abcdef01234567'
+    const scope = nock('https://api.github.com')
+      .post(
+        '/graphql',
+        (body) =>
+          body.query.includes('query resolveCommitish') &&
+          body.variables.expression === 'refs/tags/v1.2.3^{commit}',
+      )
+      .reply(200, {
+        data: {
+          repository: {
+            object: { __typename: 'Commit', oid: commitSha },
+          },
+        },
+      })
+
+    const releasePayload = await buildReleasePayload({
       commits: [],
       config: { ...config, commitish: 'refs/tags/v1.2.3' },
       input: actionInputSchema.parse({ token: 'test' }),
@@ -358,14 +375,104 @@ describe('build release payload', () => {
       pullRequests: [],
     })
 
-    expect(releasePayload.targetCommitish).toBe('')
-    expect(sharedMocks.core.warning).toHaveBeenCalledWith(
-      'refs/tags/v1.2.3 is not supported as release target (commitish), falling back to default branch',
-    )
+    expect(releasePayload.targetCommitish).toBe(commitSha)
+    expect(sharedMocks.core.warning).not.toHaveBeenCalled()
+    expect(scope.pendingMocks()).toHaveLength(0)
   })
 
-  it('falls back to the default branch for pull request refs', () => {
-    const releasePayload = buildReleasePayload({
+  it('falls back to the default branch when a tag cannot be resolved', async () => {
+    const scope = nock('https://api.github.com')
+      .post(
+        '/graphql',
+        (body) =>
+          body.query.includes('query resolveCommitish') &&
+          body.variables.expression === 'refs/tags/missing^{commit}',
+      )
+      .reply(200, { data: { repository: { object: null } } })
+
+    const releasePayload = await buildReleasePayload({
+      commits: [],
+      config: { ...config, commitish: 'refs/tags/missing' },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease: undefined,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.targetCommitish).toBe('')
+    expect(sharedMocks.core.warning).toHaveBeenCalledWith(
+      'refs/tags/missing could not be resolved to a commit SHA, falling back to default branch',
+    )
+    expect(scope.pendingMocks()).toHaveLength(0)
+  })
+
+  it.each([
+    {
+      commitish: 'refs/pull/123/head',
+      expectedCommitSha: '1111111111111111111111111111111111111111',
+      pullRequest: {
+        headRefOid: '1111111111111111111111111111111111111111',
+        mergeCommit: null,
+        potentialMergeCommit: null,
+      },
+    },
+    {
+      commitish: 'refs/pull/123/merge',
+      expectedCommitSha: '2222222222222222222222222222222222222222',
+      pullRequest: {
+        headRefOid: '1111111111111111111111111111111111111111',
+        mergeCommit: null,
+        potentialMergeCommit: {
+          oid: '2222222222222222222222222222222222222222',
+        },
+      },
+    },
+    {
+      commitish: 'refs/pull/123/merge',
+      expectedCommitSha: '3333333333333333333333333333333333333333',
+      pullRequest: {
+        headRefOid: '1111111111111111111111111111111111111111',
+        mergeCommit: { oid: '3333333333333333333333333333333333333333' },
+        potentialMergeCommit: null,
+      },
+    },
+  ])('resolves $commitish to its commit SHA', async ({
+    commitish,
+    expectedCommitSha,
+    pullRequest,
+  }) => {
+    const scope = nock('https://api.github.com')
+      .post(
+        '/graphql',
+        (body) =>
+          body.query.includes('query resolvePullRequestCommitish') &&
+          body.variables.number === 123,
+      )
+      .reply(200, { data: { repository: { pullRequest } } })
+
+    const releasePayload = await buildReleasePayload({
+      commits: [],
+      config: { ...config, commitish },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease: undefined,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.targetCommitish).toBe(expectedCommitSha)
+    expect(sharedMocks.core.warning).not.toHaveBeenCalled()
+    expect(scope.pendingMocks()).toHaveLength(0)
+  })
+
+  it('falls back to the default branch when a pull request ref cannot be resolved', async () => {
+    const scope = nock('https://api.github.com')
+      .post(
+        '/graphql',
+        (body) =>
+          body.query.includes('query resolvePullRequestCommitish') &&
+          body.variables.number === 123,
+      )
+      .reply(200, { data: { repository: { pullRequest: null } } })
+
+    const releasePayload = await buildReleasePayload({
       commits: [],
       config: { ...config, commitish: 'refs/pull/123/merge' },
       input: actionInputSchema.parse({ token: 'test' }),
@@ -375,12 +482,13 @@ describe('build release payload', () => {
 
     expect(releasePayload.targetCommitish).toBe('')
     expect(sharedMocks.core.warning).toHaveBeenCalledWith(
-      'refs/pull/123/merge is not supported as release target (commitish), falling back to default branch',
+      'refs/pull/123/merge could not be resolved to a commit SHA, falling back to default branch',
     )
+    expect(scope.pendingMocks()).toHaveLength(0)
   })
 
-  it('normalizes fully qualified branch refs', () => {
-    const releasePayload = buildReleasePayload({
+  it('normalizes fully qualified branch refs', async () => {
+    const releasePayload = await buildReleasePayload({
       commits: [],
       config,
       input: actionInputSchema.parse({ token: 'test' }),
@@ -399,8 +507,8 @@ describe('build release payload', () => {
       '0123456789abcdef0123456789abcdef01234567',
       '0123456789abcdef0123456789abcdef01234567',
     ],
-  ])('maps commitish %s to %s', (commitish, expectedTargetCommitish) => {
-    const releasePayload = buildReleasePayload({
+  ])('maps commitish %s to %s', async (commitish, expectedTargetCommitish) => {
+    const releasePayload = await buildReleasePayload({
       commits: [],
       config: { ...config, commitish },
       input: actionInputSchema.parse({ token: 'test' }),

@@ -22,7 +22,7 @@ import lastNotFoundTemplate from './static/last-not-found.md?raw'
  *
  * Previously known as `generateReleaseInfo`.
  */
-export const buildReleasePayload = (params: {
+export const buildReleasePayload = async (params: {
   commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
   config: Pick<
     ParsedConfig,
@@ -128,7 +128,7 @@ export const buildReleasePayload = (params: {
     name: renderReleaseName({ inputName: input.name, config, versionInfo }),
     tag: renderTagName({ inputTagName: input.tag, config, versionInfo }),
     body,
-    targetCommitish: parseCommitishForRelease(config.commitish),
+    targetCommitish: await parseCommitishForRelease(config.commitish),
     prerelease: config.prerelease,
     make_latest: config.latest,
     draft: !input.publish,

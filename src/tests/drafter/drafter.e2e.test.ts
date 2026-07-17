@@ -97,6 +97,23 @@ describe('drafter e2e', () => {
         })
 
         const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
+        const tagScope = nock('https://api.github.com')
+          .post(
+            '/graphql',
+            (body) =>
+              body.query.includes('query resolveCommitish') &&
+              body.variables.expression === 'refs/tags/v1.0.0^{commit}',
+          )
+          .reply(200, {
+            data: {
+              repository: {
+                object: {
+                  __typename: 'Commit',
+                  oid: '1496a1f82f32f240f7cbe1a42eb0b0c7a06a5093',
+                },
+              },
+            },
+          })
 
         await runDrafter()
 
@@ -116,12 +133,13 @@ describe('drafter e2e', () => {
               "name": "",
               "prerelease": false,
               "tag_name": "",
-              "target_commitish": "",
+              "target_commitish": "1496a1f82f32f240f7cbe1a42eb0b0c7a06a5093",
             },
           ]
         `)
 
         expect(scope.pendingMocks().length).toBe(0) // should call the mocked endpoints
+        expect(tagScope.pendingMocks().length).toBe(0)
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
@@ -3407,6 +3425,98 @@ describe('drafter e2e', () => {
   })
 
   describe('dry-run', () => {
+    describe('with a pull request merge ref', () => {
+      it('forces output-only mode, disables publishing, and warns when dry-run is not enabled', async () => {
+        await mockContext('push')
+        await mockInput('commitish', 'refs/pull/123/merge')
+        await mockInput('publish', 'true')
+        mocks.config.mockReturnValue('config')
+
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-comparison-no-prs',
+        })
+        const pullRequestScope = nock('https://api.github.com')
+          .post(
+            '/graphql',
+            (body) =>
+              body.query.includes('query resolvePullRequestCommitish') &&
+              body.variables.number === 123,
+          )
+          .reply(200, {
+            data: {
+              repository: {
+                pullRequest: {
+                  headRefOid: '1111111111111111111111111111111111111111',
+                  mergeCommit: null,
+                  potentialMergeCommit: {
+                    oid: '2222222222222222222222222222222222222222',
+                  },
+                },
+              },
+            },
+          })
+        const scope = nockGetReleases({ releaseFiles: ['release'] })
+
+        await runDrafter()
+
+        expect(mocks.postReleaseBody).not.toHaveBeenCalled()
+        expect(mocks.core.warning).toHaveBeenCalledWith(
+          'refs/pull/123/merge points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.',
+        )
+        expect(
+          mocks.core.info.mock.calls
+            .flat()
+            .some(
+              (message) =>
+                message.includes('[dry-run]') &&
+                message.includes('"draft": true'),
+            ),
+        ).toBe(true)
+        expect(scope.isDone()).toBe(true)
+        expect(gqlScope.pendingMocks()).toHaveLength(0)
+        expect(pullRequestScope.pendingMocks()).toHaveLength(0)
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+
+      it('does not warn when dry-run is explicitly enabled', async () => {
+        await mockContext('push')
+        await mockInput('commitish', 'refs/pull/123/merge')
+        await mockInput('dry-run', 'true')
+        mocks.config.mockReturnValue('config')
+
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-comparison-no-prs',
+        })
+        const pullRequestScope = nock('https://api.github.com')
+          .post('/graphql', (body) =>
+            body.query.includes('query resolvePullRequestCommitish'),
+          )
+          .reply(200, {
+            data: {
+              repository: {
+                pullRequest: {
+                  headRefOid: '1111111111111111111111111111111111111111',
+                  mergeCommit: null,
+                  potentialMergeCommit: {
+                    oid: '2222222222222222222222222222222222222222',
+                  },
+                },
+              },
+            },
+          })
+        const scope = nockGetReleases({ releaseFiles: ['release'] })
+
+        await runDrafter()
+
+        expect(mocks.postReleaseBody).not.toHaveBeenCalled()
+        expect(mocks.core.warning).not.toHaveBeenCalled()
+        expect(scope.isDone()).toBe(true)
+        expect(gqlScope.pendingMocks()).toHaveLength(0)
+        expect(pullRequestScope.pendingMocks()).toHaveLength(0)
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+    })
+
     describe('when no existing draft release exists (create)', () => {
       it('does not perform any write operations, logs the payload, and sets computed outputs', async () => {
         await mockContext('push')

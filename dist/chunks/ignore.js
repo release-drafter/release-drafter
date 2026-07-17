@@ -32310,22 +32310,395 @@ async function paginateGraphql(client, query, requestParameters, paginatePath) {
 	return data;
 }
 //#endregion
+//#region src/common/graphql/resolve-commitish.graphql.generated.ts
+var ResolveCommitishDocument = {
+	"kind": "Document",
+	"definitions": [{
+		"kind": "OperationDefinition",
+		"operation": "query",
+		"name": {
+			"kind": "Name",
+			"value": "resolveCommitish"
+		},
+		"variableDefinitions": [
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "expression"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			}
+		],
+		"selectionSet": {
+			"kind": "SelectionSet",
+			"selections": [{
+				"kind": "Field",
+				"name": {
+					"kind": "Name",
+					"value": "repository"
+				},
+				"arguments": [{
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "name"
+						}
+					}
+				}, {
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "owner"
+						}
+					}
+				}],
+				"selectionSet": {
+					"kind": "SelectionSet",
+					"selections": [{
+						"kind": "Field",
+						"name": {
+							"kind": "Name",
+							"value": "object"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "expression"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "expression"
+								}
+							}
+						}],
+						"selectionSet": {
+							"kind": "SelectionSet",
+							"selections": [{
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "__typename"
+								}
+							}, {
+								"kind": "Field",
+								"name": {
+									"kind": "Name",
+									"value": "oid"
+								}
+							}]
+						}
+					}]
+				}
+			}]
+		}
+	}]
+};
+var ResolvePullRequestCommitishDocument = {
+	"kind": "Document",
+	"definitions": [{
+		"kind": "OperationDefinition",
+		"operation": "query",
+		"name": {
+			"kind": "Name",
+			"value": "resolvePullRequestCommitish"
+		},
+		"variableDefinitions": [
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "String"
+						}
+					}
+				}
+			},
+			{
+				"kind": "VariableDefinition",
+				"variable": {
+					"kind": "Variable",
+					"name": {
+						"kind": "Name",
+						"value": "number"
+					}
+				},
+				"type": {
+					"kind": "NonNullType",
+					"type": {
+						"kind": "NamedType",
+						"name": {
+							"kind": "Name",
+							"value": "Int"
+						}
+					}
+				}
+			}
+		],
+		"selectionSet": {
+			"kind": "SelectionSet",
+			"selections": [{
+				"kind": "Field",
+				"name": {
+					"kind": "Name",
+					"value": "repository"
+				},
+				"arguments": [{
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "name"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "name"
+						}
+					}
+				}, {
+					"kind": "Argument",
+					"name": {
+						"kind": "Name",
+						"value": "owner"
+					},
+					"value": {
+						"kind": "Variable",
+						"name": {
+							"kind": "Name",
+							"value": "owner"
+						}
+					}
+				}],
+				"selectionSet": {
+					"kind": "SelectionSet",
+					"selections": [{
+						"kind": "Field",
+						"name": {
+							"kind": "Name",
+							"value": "pullRequest"
+						},
+						"arguments": [{
+							"kind": "Argument",
+							"name": {
+								"kind": "Name",
+								"value": "number"
+							},
+							"value": {
+								"kind": "Variable",
+								"name": {
+									"kind": "Name",
+									"value": "number"
+								}
+							}
+						}],
+						"selectionSet": {
+							"kind": "SelectionSet",
+							"selections": [
+								{
+									"kind": "Field",
+									"name": {
+										"kind": "Name",
+										"value": "headRefOid"
+									}
+								},
+								{
+									"kind": "Field",
+									"name": {
+										"kind": "Name",
+										"value": "mergeCommit"
+									},
+									"selectionSet": {
+										"kind": "SelectionSet",
+										"selections": [{
+											"kind": "Field",
+											"name": {
+												"kind": "Name",
+												"value": "oid"
+											}
+										}]
+									}
+								},
+								{
+									"kind": "Field",
+									"name": {
+										"kind": "Name",
+										"value": "potentialMergeCommit"
+									},
+									"selectionSet": {
+										"kind": "SelectionSet",
+										"selections": [{
+											"kind": "Field",
+											"name": {
+												"kind": "Name",
+												"value": "oid"
+											}
+										}]
+									}
+								}
+							]
+						}
+					}]
+				}
+			}]
+		}
+	}]
+};
+//#endregion
 //#region src/common/parse-commitish.ts
+var resolveTagToCommitSha = async (params) => {
+	const { octokit, tagRef } = params;
+	const target = (await executeGraphql(octokit.graphql, ResolveCommitishDocument, {
+		name: context.repo.repo,
+		owner: context.repo.owner,
+		expression: `${tagRef}^{commit}`
+	})).repository?.object;
+	if (target?.__typename !== "Commit") throw new Error(`Tag ${tagRef} does not point to a commit`);
+	return target.oid;
+};
+var resolvePullRequestToCommitSha = async (params) => {
+	const { octokit, pullRequestNumber, refType } = params;
+	const pullRequest = (await executeGraphql(octokit.graphql, ResolvePullRequestCommitishDocument, {
+		name: context.repo.repo,
+		owner: context.repo.owner,
+		number: pullRequestNumber
+	})).repository?.pullRequest;
+	const commitSha = refType === "head" ? pullRequest?.headRefOid : pullRequest?.potentialMergeCommit?.oid ?? pullRequest?.mergeCommit?.oid;
+	if (!commitSha) throw new Error(`Pull request #${pullRequestNumber} does not have a ${refType} commit`);
+	return commitSha;
+};
 /**
 * GitHub's Releases API accepts a branch name or commit SHA as
-* `target_commitish`. Normalize fully qualified branch refs and reject tag and
-* pull request refs before building the API payload.
+* `target_commitish`. Normalize fully qualified branch refs, resolve fully
+* qualified tag and pull request refs to commit SHAs before building the API
+* payload.
 *
-* If it doesn't but is still a tag (e.g. "v1.2.3") - it must have been set
-* explicitly by the user, so it's fair to just let the API respond with an error.
+* A tag without the `refs/tags/` prefix cannot be distinguished reliably from
+* a branch with the same name, so it is passed through unchanged.
 *
-* Note that this cannot be distinguished from a branch name accurately without manually
-* fetching branch refs from the remote. (TODO ? Overkill ?)
+* If ref resolution fails, preserve the existing fallback to the repository's
+* default branch.
 */
-var parseCommitishForRelease = (commitish) => {
+var parseCommitishForRelease = async (commitish, octokit) => {
 	if (commitish.startsWith("refs/heads/")) return commitish.replace(/^refs\/heads\//, "");
-	if (commitish.startsWith("refs/tags/") || commitish.startsWith("refs/pull/")) {
-		warning(`${commitish} is not supported as release target (commitish), falling back to default branch`);
+	if (commitish.startsWith("refs/tags/")) return resolveTagToCommitSha({
+		octokit: octokit ?? getOctokit(),
+		tagRef: commitish
+	}).catch(() => {
+		warning(`${commitish} could not be resolved to a commit SHA, falling back to default branch`);
+		return "";
+	});
+	if (commitish.startsWith("refs/pull/")) {
+		const pullRequestRef = /^refs\/pull\/(\d+)\/(head|merge)$/.exec(commitish);
+		if (pullRequestRef) {
+			const [, pullRequestNumber, refType] = pullRequestRef;
+			return resolvePullRequestToCommitSha({
+				octokit: octokit ?? getOctokit(),
+				pullRequestNumber: Number(pullRequestNumber),
+				refType
+			}).catch(() => {
+				warning(`${commitish} could not be resolved to a commit SHA, falling back to default branch`);
+				return "";
+			});
+		}
+		warning(`${commitish} is not a supported pull request ref, falling back to default branch`);
 		return "";
 	}
 	return commitish;

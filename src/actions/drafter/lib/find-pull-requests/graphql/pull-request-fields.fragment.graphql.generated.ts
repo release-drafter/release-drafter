@@ -2,9 +2,9 @@
 // @ts-nocheck
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-import * as Types from '../../../../../types/github.graphql.generated';
+import type * as Types from '../../../../../types/github.graphql.generated';
 
-import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type PullRequestFieldsFragment = { __typename: 'PullRequest', title: string, number: number, url?: string, body?: string, mergedAt: string | null, isCrossRepository: boolean, merged: boolean, baseRefName?: string, headRefName?: string, author:
     | { __typename: 'Bot', login: string, url: string }
     | { __typename: 'EnterpriseUserAccount', login: string, url: string }
