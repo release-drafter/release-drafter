@@ -31326,17 +31326,14 @@ async function composeConfigGet(configFilename, currentContext) {
 }
 //#endregion
 //#region node_modules/graphql/jsutils/devAssert.mjs
+/** @internal */
 function devAssert(condition, message) {
 	if (!Boolean(condition)) throw new Error(message);
 }
 //#endregion
 //#region node_modules/graphql/language/ast.mjs
-/**
-* The list of all possible AST node types.
-*/
-/**
-* @internal
-*/
+/** The list of all possible AST node types. */
+/** @internal */
 var QueryDocumentKeys = {
 	Name: [],
 	Document: ["definitions"],
@@ -31501,25 +31498,27 @@ var QueryDocumentKeys = {
 	DirectiveArgumentCoordinate: ["name", "argumentName"]
 };
 var kindValues = new Set(Object.keys(QueryDocumentKeys));
-/**
-* @internal
-*/
+/** @internal */
 function isNode(maybeNode) {
 	const maybeKind = maybeNode === null || maybeNode === void 0 ? void 0 : maybeNode.kind;
 	return typeof maybeKind === "string" && kindValues.has(maybeKind);
 }
-/** Name */
+/** An identifier in a GraphQL document. */
+/**
+* The operation types supported by GraphQL executable definitions.
+* @category Kinds
+*/
 var OperationTypeNode;
 (function(OperationTypeNode) {
 	OperationTypeNode["QUERY"] = "query";
 	OperationTypeNode["MUTATION"] = "mutation";
 	OperationTypeNode["SUBSCRIPTION"] = "subscription";
 })(OperationTypeNode || (OperationTypeNode = {}));
+/** A variable declaration in an operation or legacy fragment definition. */
 //#endregion
 //#region node_modules/graphql/language/kinds.mjs
-/**
-* The set of allowed kind values for AST nodes.
-*/
+/** @category Kinds */
+/** The set of allowed kind values for AST nodes. */
 var Kind;
 (function(Kind) {
 	Kind["NAME"] = "Name";
@@ -31573,9 +31572,12 @@ var Kind;
 	Kind["DIRECTIVE_ARGUMENT_COORDINATE"] = "DirectiveArgumentCoordinate";
 })(Kind || (Kind = {}));
 /**
-* The enum type representing the possible kind values of AST nodes.
-*
-* @deprecated Please use `Kind`. Will be remove in v17.
+* Deprecated legacy alias for the enum type representing the possible kind
+* values of AST nodes. This alias will be removed in v17. In v17, `Kind` is
+* exported as the single public symbol for both the runtime object and the
+* corresponding TypeScript type.
+* @deprecated Will be removed in v17. In v17, use `Kind` as both the runtime
+* value and the type.
 */
 //#endregion
 //#region node_modules/graphql/language/characterClasses.mjs
@@ -31622,6 +31624,8 @@ var MAX_ARRAY_LENGTH = 10;
 var MAX_RECURSIVE_DEPTH = 2;
 /**
 * Used to print values in error messages.
+*
+* @internal
 */
 function inspect(value) {
 	return formatValue(value, []);
@@ -31677,10 +31681,13 @@ function getObjectTag(object) {
 /**
 * Prints a string as a GraphQL StringValue literal. Replaces control characters
 * and excluded characters (" U+0022 and \\ U+005C) with escape sequences.
+*
+* @internal
 */
 function printString(str) {
 	return `"${str.replace(escapedRegExp, escapedReplacer)}"`;
 }
+/** @internal */
 var escapedRegExp = /[\x00-\x1f\x22\x5c\x7f-\x9f]/g;
 function escapedReplacer(str) {
 	return escapeSequences[str.charCodeAt(0)];
@@ -31849,10 +31856,9 @@ var escapeSequences = [
 ];
 //#endregion
 //#region node_modules/graphql/language/visitor.mjs
-/**
-* A visitor is provided to visit, it contains the collection of
-* relevant functions to be called during the visitor's traversal.
-*/
+/** @category Visiting */
+/** A visitor defines the callbacks called during AST traversal. */
+/** A value that can be returned from a visitor function to stop traversal. */
 var BREAK = Object.freeze({});
 /**
 * visit() will walk through an AST using a depth-first traversal, calling
@@ -31867,71 +31873,93 @@ var BREAK = Object.freeze({});
 * When using visit() to edit an AST, the original AST will not be modified, and
 * a new version of the AST with the changes applied will be returned from the
 * visit function.
-*
+* @param root - The AST node at which to start traversal.
+* @param visitor - The visitor or reducer functions to call while traversing.
+* @param visitorKeys - Optional map of child keys to visit for each AST node kind.
+* @returns The original AST, an edited AST, or a reduced value depending on the visitor.
+* @typeParam N - The root AST node type returned when visiting without reducing.
+* @example
 * ```ts
-* const editedAST = visit(ast, {
-*   enter(node, key, parent, path, ancestors) {
-*     // @return
-*     //   undefined: no action
-*     //   false: skip visiting this node
-*     //   visitor.BREAK: stop visiting altogether
-*     //   null: delete this node
-*     //   any value: replace this node with the returned value
+* // Return values control traversal: undefined makes no change, false skips
+* // a subtree, BREAK stops traversal, null removes a node, and any other
+* // value replaces the current node.
+* import { Kind, parse, print, visit } from 'graphql/language';
+*
+* const document = parse('{ hero { name } }');
+* const editedAST = visit(document, {
+*   Field: (node) => {
+*     if (node.name.value === 'hero') {
+*       return {
+*         ...node,
+*         name: { kind: Kind.NAME, value: 'human' },
+*       };
+*     }
 *   },
-*   leave(node, key, parent, path, ancestors) {
-*     // @return
-*     //   undefined: no action
-*     //   false: no action
-*     //   visitor.BREAK: stop visiting altogether
-*     //   null: delete this node
-*     //   any value: replace this node with the returned value
-*   }
 * });
+*
+* print(editedAST); // => '{\n  human {\n    name\n  }\n}'
 * ```
-*
-* Alternatively to providing enter() and leave() functions, a visitor can
-* instead provide functions named the same as the kinds of AST nodes, or
-* enter/leave visitors at a named key, leading to three permutations of the
-* visitor API:
-*
-* 1) Named visitors triggered when entering a node of a specific kind.
-*
+* @example
 * ```ts
-* visit(ast, {
-*   Kind(node) {
-*     // enter the "Kind" node
-*   }
-* })
-* ```
+* // A named visitor function runs when entering nodes of that kind.
+* import { parse, visit } from 'graphql/language';
 *
-* 2) Named visitors that trigger upon entering and leaving a node of a specific kind.
+* const document = parse('{ hero { name } }');
+* const fieldNames = [];
 *
-* ```ts
-* visit(ast, {
-*   Kind: {
-*     enter(node) {
-*       // enter the "Kind" node
-*     }
-*     leave(node) {
-*       // leave the "Kind" node
-*     }
-*   }
-* })
-* ```
-*
-* 3) Generic visitors that trigger upon entering and leaving any node.
-*
-* ```ts
-* visit(ast, {
-*   enter(node) {
-*     // enter any node
+* visit(document, {
+*   Field: (node) => {
+*     fieldNames.push(node.name.value);
 *   },
-*   leave(node) {
-*     // leave any node
-*   }
-* })
+* });
+*
+* fieldNames; // => ['hero', 'name']
+* ```
+* @example
+* ```ts
+* // A named visitor object can provide separate enter and leave handlers for
+* // nodes of that kind.
+* import { parse, visit } from 'graphql/language';
+*
+* const document = parse('{ hero { name } }');
+* const events = [];
+*
+* visit(document, {
+*   Field: {
+*     enter: (node) => {
+*       events.push(`enter:${node.name.value}`);
+*     },
+*     leave: (node) => {
+*       events.push(`leave:${node.name.value}`);
+*     },
+*   },
+* });
+*
+* events; // => ['enter:hero', 'enter:name', 'leave:name', 'leave:hero']
+* ```
+* @example
+* ```ts
+* // Generic enter and leave handlers run for every node.
+* import { parse, visit } from 'graphql/language';
+*
+* const document = parse('{ hero { name } }');
+* let enterCount = 0;
+* let leaveCount = 0;
+*
+* visit(document, {
+*   enter: (node) => {
+*     enterCount += 1;
+*   },
+*   leave: (node) => {
+*     leaveCount += 1;
+*   },
+* });
+*
+* enterCount; // => leaveCount
+* enterCount > 0; // => true
 * ```
 */
+/** @internal */
 function visit(root, visitor, visitorKeys = QueryDocumentKeys) {
 	const enterLeaveMap = /* @__PURE__ */ new Map();
 	for (const kind of Object.values(Kind)) enterLeaveMap.set(kind, getEnterLeaveForKind(visitor, kind));
@@ -32023,6 +32051,18 @@ function visit(root, visitor, visitorKeys = QueryDocumentKeys) {
 }
 /**
 * Given a visitor instance and a node kind, return EnterLeaveVisitor for that kind.
+* @param visitor - The visitor object to inspect.
+* @param kind - The AST node kind to resolve handlers for.
+* @returns The enter and leave handlers that apply for the given node kind.
+* @example
+* ```ts
+* import { Kind, getEnterLeaveForKind } from 'graphql/language';
+*
+* const handlers = getEnterLeaveForKind({ Field: () => {} }, Kind.FIELD);
+*
+* typeof handlers.enter; // => 'function'
+* handlers.leave; // => undefined
+* ```
 */
 function getEnterLeaveForKind(visitor, kind) {
 	const kindVisitor = visitor[kind];
@@ -32038,9 +32078,21 @@ function getEnterLeaveForKind(visitor, kind) {
 }
 //#endregion
 //#region node_modules/graphql/language/printer.mjs
+/** @category Printing */
 /**
 * Converts an AST into a string, using one set of reasonable
 * formatting rules.
+* @param ast - The GraphQL AST node to print.
+* @returns A stable string representation of the AST.
+* @example
+* ```ts
+* import { parse, print } from 'graphql';
+*
+* const ast = parse('{ hero { name } }');
+* const text = print(ast);
+*
+* text; // => '{\n  hero {\n    name\n  }\n}'
+* ```
 */
 function print(ast) {
 	return visit(ast, printDocASTReducer);
@@ -32204,6 +32256,8 @@ var printDocASTReducer = {
 /**
 * Given maybeArray, print an empty string if it is null or empty, otherwise
 * print all items together separated by separator if provided
+*
+* @internal
 */
 function join$1(maybeArray, separator = "") {
 	var _maybeArray$filter$jo;
@@ -32211,12 +32265,16 @@ function join$1(maybeArray, separator = "") {
 }
 /**
 * Given array, print each item on its own line, wrapped in an indented `{ }` block.
+*
+* @internal
 */
 function block(array) {
 	return wrap("{\n", indent(join$1(array, "\n")), "\n}");
 }
 /**
 * If maybeString is not null or empty, then wrap with start and end, otherwise print an empty string.
+*
+* @internal
 */
 function wrap(start, maybeString, end = "") {
 	return maybeString != null && maybeString !== "" ? start + maybeString + end : "";
