@@ -32779,6 +32779,7 @@ var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var REGEX_REGEXP_RANGE = /([0-z])-([0-z])/g;
 	var RETURN_FALSE = () => false;
 	var sanitizeRange = (range) => range.replace(REGEX_REGEXP_RANGE, (match, from, to) => from.charCodeAt(0) <= to.charCodeAt(0) ? match : EMPTY);
+	var negateRange = (range) => range.startsWith("!") || range.startsWith("\\^") ? `^${range.slice(range[0] === "!" ? 1 : 2)}` : range;
 	var cleanRangeBackSlash = (slashes) => {
 		const { length } = slashes;
 		return slashes.slice(0, length - length % 2);
@@ -32794,7 +32795,7 @@ var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		[/(?!\\)\?/g, () => "[^/]"],
 		[/^\//, () => "^"],
 		[/\//g, () => "\\/"],
-		[/^\^*\\\*\\\*\\\//, () => "^(?:.*\\/)?"],
+		[/^\^*(?:\\\*\\\*\\\/)+/, () => "^(?:.*\\/)?"],
 		[/^(?=[^^])/, function startingReplacer() {
 			return !/\/(?!$)/.test(this) ? "(?:^|\\/)" : "^";
 		}],
@@ -32804,7 +32805,7 @@ var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		}],
 		[/\\\\\\(?=[$.|*+(){^])/g, () => ESCAPE],
 		[/\\\\/g, () => ESCAPE],
-		[/(\\)?\[([^\]/]*?)(\\*)($|\])/g, (match, leadEscape, range, endEscape, close) => leadEscape === ESCAPE ? `\\[${range}${cleanRangeBackSlash(endEscape)}${close}` : close === "]" ? endEscape.length % 2 === 0 ? `[${sanitizeRange(range)}${endEscape}]` : "[]" : "[]"],
+		[/(\\)?\[([^\]/]*?)(\\*)($|\])/g, (match, leadEscape, range, endEscape, close) => leadEscape === ESCAPE ? `\\[${range}${cleanRangeBackSlash(endEscape)}${close}` : close === "]" ? endEscape.length % 2 === 0 ? `[${negateRange(sanitizeRange(range))}${endEscape}]` : "[]" : "[]"],
 		[/(?:[^*])$/, (match) => /\/$/.test(match) ? `${match}$` : `${match}(?=$|\\/$)`]
 	];
 	var REGEX_REPLACE_TRAILING_WILDCARD = /(^|\\\/)?\\\*$/;
