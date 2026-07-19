@@ -24,7 +24,7 @@ jobs:
 
       - name: Initialize CodeQL
         id: initialize
-        uses: github/codeql-action/init@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4
+        uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4
         with:
           config-file: .github/.codeql-config.yml
           languages: typescript
@@ -32,10 +32,10 @@ jobs:
 
       - name: Autobuild
         id: autobuild
-        uses: github/codeql-action/autobuild@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4
+        uses: github/codeql-action/autobuild@7188fc363630916deb702c7fdcf4e481b751f97a # v4
 
       - name: Perform CodeQL Analysis
         id: analyze
-        uses: github/codeql-action/analyze@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4
+        uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4
         with:
           category: '/language:typescript'
