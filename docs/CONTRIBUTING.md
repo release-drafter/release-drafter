@@ -71,7 +71,7 @@ Run the following command:
 ```bash
 git checkout master
 git pull
-npm version [major | minor | patch] --ignore-scripts=false -m "chore: release v%s"
+npm version [major | minor | patch] --ignore-scripts=false
 ```
 
 > [!IMPORTANT]
