@@ -71,10 +71,10 @@
     "@octokit/webhooks-types": "^7.6.1",
     "@types/node": "^24.12.3",
     "@types/semver": "^7.7.1",
-    "@vitest/coverage-v8": "^4.1.6",
+    "@vitest/coverage-v8": "^4.1.10",
     "nock": "^14.0.16",
     "typescript": "^6.0.3",
     "vite": "^8.1.4",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.10"
   }
 }
