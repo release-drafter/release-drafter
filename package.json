@@ -57,7 +57,7 @@
     "compare-versions": "^6.1.1",
     "escape-string-regexp": "^5.0.0",
     "graphql": "^16.14.0",
-    "ignore": "^7.0.5",
+    "ignore": "^7.0.6",
     "regex-parser": "^2.3.1",
     "semver": "^7.8.0",
     "yaml": "^2.8.4",
