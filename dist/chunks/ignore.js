@@ -1,4 +1,4 @@
-import { createRequire } from "node:module";
+import { i as __toESM, n as __exportAll, r as __require, t as __commonJSMin } from "./rolldown-runtime.js";
 import * as os$1 from "node:os";
 import os, { EOL } from "node:os";
 import * as crypto from "node:crypto";
@@ -14,39 +14,6 @@ import { setTimeout as setTimeout$1 } from "node:timers";
 import path, { basename, dirname, isAbsolute, join, normalize } from "node:path";
 import { existsSync as existsSync$1, readFileSync as readFileSync$1 } from "node:fs";
 import process$1 from "node:process";
-//#region \0rolldown/runtime.js
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
-var __exportAll = (all, no_symbols) => {
-	let target = {};
-	for (var name in all) __defProp(target, name, {
-		get: all[name],
-		enumerable: true
-	});
-	if (!no_symbols) __defProp(target, Symbol.toStringTag, { value: "Module" });
-	return target;
-};
-var __copyProps = (to, from, except, desc) => {
-	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
-		key = keys[i];
-		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
-			get: ((k) => from[k]).bind(null, key),
-			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-		});
-	}
-	return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
-	value: mod,
-	enumerable: true
-}) : target, mod));
-var __require = /* @__PURE__ */ createRequire(import.meta.url);
-//#endregion
 //#region node_modules/@actions/core/lib/utils.js
 /**
 * Sanitizes an input into a string so it can be passed into issueCommand safely
@@ -8177,7 +8144,7 @@ var require_readable = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	* @returns {Uint8Array}
 	*/
 	function chunksConcat(chunks, length) {
-		if (chunks.length === 0 || length === 0) return new Uint8Array(0);
+		if (chunks.length === 0 || length === 0) return /* @__PURE__ */ new Uint8Array(0);
 		if (chunks.length === 1) return new Uint8Array(chunks[0]);
 		const buffer = new Uint8Array(Buffer.allocUnsafeSlow(length).buffer);
 		let offset = 0;
@@ -17989,7 +17956,10 @@ function assignProp(target, prop, value) {
 }
 function mergeDefs(...defs) {
 	const mergedDescriptors = {};
-	for (const def of defs) Object.assign(mergedDescriptors, Object.getOwnPropertyDescriptors(def));
+	for (const def of defs) {
+		const descriptors = Object.getOwnPropertyDescriptors(def);
+		Object.assign(mergedDescriptors, descriptors);
+	}
 	return Object.defineProperties({}, mergedDescriptors);
 }
 function esc(str) {
@@ -18364,7 +18334,7 @@ var _parse = (_Err) => (schema, value, _ctx, _params) => {
 	}, ctx);
 	if (result instanceof Promise) throw new $ZodAsyncError();
 	if (result.issues.length) {
-		const e = new (_params?.Err ?? _Err)(result.issues.map((iss) => finalizeIssue(iss, ctx, config())));
+		const e = new ((_params?.Err) ?? _Err)(result.issues.map((iss) => finalizeIssue(iss, ctx, config())));
 		captureStackTrace(e, _params?.callee);
 		throw e;
 	}
@@ -18381,7 +18351,7 @@ var _parseAsync = (_Err) => async (schema, value, _ctx, params) => {
 	}, ctx);
 	if (result instanceof Promise) result = await result;
 	if (result.issues.length) {
-		const e = new (params?.Err ?? _Err)(result.issues.map((iss) => finalizeIssue(iss, ctx, config())));
+		const e = new ((params?.Err) ?? _Err)(result.issues.map((iss) => finalizeIssue(iss, ctx, config())));
 		captureStackTrace(e, params?.callee);
 		throw e;
 	}
@@ -19343,7 +19313,7 @@ var $ZodBoolean = /*@__PURE__*/ $constructor("$ZodBoolean", (inst, def) => {
 var $ZodNull = /*@__PURE__*/ $constructor("$ZodNull", (inst, def) => {
 	$ZodType.init(inst, def);
 	inst._zod.pattern = _null$2;
-	inst._zod.values = new Set([null]);
+	inst._zod.values = /* @__PURE__ */ new Set([null]);
 	inst._zod.parse = (payload, _ctx) => {
 		const input = payload.value;
 		if (input === null) return payload;
@@ -19490,13 +19460,13 @@ var $ZodObject = /*@__PURE__*/ $constructor("$ZodObject", (inst, def) => {
 		}
 		return propValues;
 	});
-	const isObject$1 = isObject;
+	const isObject$2 = isObject;
 	const catchall = def.catchall;
 	let value;
 	inst._zod.parse = (payload, ctx) => {
 		value ?? (value = _normalized.value);
 		const input = payload.value;
-		if (!isObject$1(input)) {
+		if (!isObject$2(input)) {
 			payload.issues.push({
 				expected: "object",
 				code: "invalid_type",
@@ -19619,7 +19589,7 @@ var $ZodObjectJIT = /*@__PURE__*/ $constructor("$ZodObjectJIT", (inst, def) => {
 		return (payload, ctx) => fn(shape, payload, ctx);
 	};
 	let fastpass;
-	const isObject$2 = isObject;
+	const isObject$1 = isObject;
 	const jit = !globalConfig.jitless;
 	const fastEnabled = jit && allowsEval.value;
 	const catchall = def.catchall;
@@ -19627,7 +19597,7 @@ var $ZodObjectJIT = /*@__PURE__*/ $constructor("$ZodObjectJIT", (inst, def) => {
 	inst._zod.parse = (payload, ctx) => {
 		value ?? (value = _normalized.value);
 		const input = payload.value;
-		if (!isObject$2(input)) {
+		if (!isObject$1(input)) {
 			payload.issues.push({
 				expected: "object",
 				code: "invalid_type",
@@ -19955,7 +19925,7 @@ var $ZodOptional = /*@__PURE__*/ $constructor("$ZodOptional", (inst, def) => {
 	inst._zod.optin = "optional";
 	inst._zod.optout = "optional";
 	defineLazy(inst._zod, "values", () => {
-		return def.innerType._zod.values ? new Set([...def.innerType._zod.values, void 0]) : void 0;
+		return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, void 0]) : void 0;
 	});
 	defineLazy(inst._zod, "pattern", () => {
 		const pattern = def.innerType._zod.pattern;
@@ -19989,7 +19959,7 @@ var $ZodNullable = /*@__PURE__*/ $constructor("$ZodNullable", (inst, def) => {
 		return pattern ? new RegExp(`^(${cleanRegex(pattern.source)}|null)$`) : void 0;
 	});
 	defineLazy(inst._zod, "values", () => {
-		return def.innerType._zod.values ? new Set([...def.innerType._zod.values, null]) : void 0;
+		return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, null]) : void 0;
 	});
 	inst._zod.parse = (payload, ctx) => {
 		if (payload.value === null) return payload;
@@ -22942,7 +22912,7 @@ function collectionFromPath(schema, path, value) {
 			const a = [];
 			a[k] = v;
 			v = a;
-		} else v = new Map([[k, v]]);
+		} else v = /* @__PURE__ */ new Map([[k, v]]);
 	}
 	return createNode(v, void 0, {
 		aliasDuplicateObjects: false,
@@ -23476,7 +23446,7 @@ function stringify(item, ctx, onComment, onChompKeep) {
 		if (ctx.resolvedAliases?.has(item)) throw new TypeError(`Cannot stringify circular structure without alias nodes`);
 		else {
 			if (ctx.resolvedAliases) ctx.resolvedAliases.add(item);
-			else ctx.resolvedAliases = new Set([item]);
+			else ctx.resolvedAliases = /* @__PURE__ */ new Set([item]);
 			item = item.resolve(ctx.doc);
 		}
 	}
@@ -24666,7 +24636,7 @@ var schema = [
 ];
 //#endregion
 //#region node_modules/yaml/browser/dist/schema/tags.js
-var schemas = new Map([
+var schemas = /* @__PURE__ */ new Map([
 	["core", schema$2],
 	["failsafe", [
 		map,
@@ -25266,7 +25236,7 @@ function mapIncludes(ctx, items, search) {
 //#region node_modules/yaml/browser/dist/compose/resolve-block-map.js
 var startColMsg = "All mapping items must start at the same column";
 function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError, tag) {
-	const map = new (tag?.nodeClass ?? YAMLMap)(ctx.schema);
+	const map = new ((tag?.nodeClass) ?? YAMLMap)(ctx.schema);
 	if (ctx.atRoot) ctx.atRoot = false;
 	let offset = bm.offset;
 	let commentEnd = null;
@@ -25340,7 +25310,7 @@ function resolveBlockMap({ composeNode, composeEmptyNode }, ctx, bm, onError, ta
 //#endregion
 //#region node_modules/yaml/browser/dist/compose/resolve-block-seq.js
 function resolveBlockSeq({ composeNode, composeEmptyNode }, ctx, bs, onError, tag) {
-	const seq = new (tag?.nodeClass ?? YAMLSeq)(ctx.schema);
+	const seq = new ((tag?.nodeClass) ?? YAMLSeq)(ctx.schema);
 	if (ctx.atRoot) ctx.atRoot = false;
 	if (ctx.atKey) ctx.atKey = false;
 	let offset = bs.offset;
@@ -25415,7 +25385,7 @@ var isBlock = (token) => token && (token.type === "block-map" || token.type === 
 function resolveFlowCollection({ composeNode, composeEmptyNode }, ctx, fc, onError, tag) {
 	const isMap = fc.start.source === "{";
 	const fcName = isMap ? "flow map" : "flow sequence";
-	const coll = new (tag?.nodeClass ?? (isMap ? YAMLMap : YAMLSeq))(ctx.schema);
+	const coll = new ((tag?.nodeClass) ?? (isMap ? YAMLMap : YAMLSeq))(ctx.schema);
 	coll.flow = true;
 	const atRoot = ctx.atRoot;
 	if (atRoot) ctx.atRoot = false;
@@ -32270,46 +32240,6 @@ var getPullRequestsChangedFiles = async (params) => {
 	return new Map(changedFileEntries);
 };
 //#endregion
-//#region src/common/paginate-graphql.ts
-var getPath = (obj, path) => path.reduce((acc, key) => acc?.[key], obj);
-var hasPath = (obj, path) => getPath(obj, path) !== void 0;
-var setPath = (obj, path, value) => {
-	const lastKey = path[path.length - 1];
-	if (lastKey === void 0) return;
-	const parent = getPath(obj, path.slice(0, -1));
-	if (parent == null) return;
-	parent[lastKey] = value;
-};
-/**
-* Utility function to paginate a GraphQL function using Relay-style cursor pagination.
-*
-* @param {Function} queryFn - function used to query the GraphQL API
-* @param {TypedDocumentNode} query - GraphQL query, must include `nodes` and `pageInfo` fields for the field that will be paginated
-* @param {Object} variables
-* @param {string[]} paginatePath - path to field to paginate
-*/
-async function paginateGraphql(client, query, requestParameters, paginatePath) {
-	const queryString = typeof query === "string" ? query : print(query);
-	const nodesPath = [...paginatePath, "nodes"];
-	const pageInfoPath = [...paginatePath, "pageInfo"];
-	const endCursorPath = [...pageInfoPath, "endCursor"];
-	const hasNextPagePath = [...pageInfoPath, "hasNextPage"];
-	const hasNextPage = (data) => getPath(data, hasNextPagePath);
-	const data = await client(queryString, requestParameters);
-	if (!hasPath(data, nodesPath)) throw new Error("Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field.");
-	if (!hasPath(data, pageInfoPath) || !hasPath(data, endCursorPath) || !hasPath(data, hasNextPagePath)) throw new Error("Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field.");
-	while (hasNextPage(data)) {
-		const newData = await client(queryString, {
-			...requestParameters,
-			after: getPath(data, [...pageInfoPath, "endCursor"])
-		});
-		const newNodes = getPath(newData, nodesPath);
-		setPath(data, pageInfoPath, getPath(newData, pageInfoPath));
-		setPath(data, nodesPath, [...getPath(data, nodesPath), ...newNodes]);
-	}
-	return data;
-}
-//#endregion
 //#region src/common/graphql/resolve-commitish.graphql.generated.ts
 var ResolveCommitishDocument = {
 	"kind": "Document",
@@ -32985,4 +32915,4 @@ var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	define(module.exports, Symbol.for("setupWindows"), setupWindows);
 }));
 //#endregion
-export { getInput as C, warning as D, setOutput as E, __commonJSMin as O, error as S, setFailed as T, number as _, parseCommitishForRelease as a, stringbool as b, getPullRequestsChangedFiles as c, getOctokit as d, context as f, boolean as g, array as h, sharedInputSchema as i, __toESM as k, executeGraphql as l, _enum as m, stringToRegex as n, paginateGraphql as o, ZodDefault as p, escapeStringRegexp as r, getPullRequestChangedFiles as s, require_ignore as t, composeConfigGet as u, object as v, info as w, debug as x, string$1 as y };
+export { getInput as C, warning as D, setOutput as E, error as S, setFailed as T, number as _, parseCommitishForRelease as a, stringbool as b, executeGraphql as c, getOctokit as d, context as f, boolean as g, array as h, sharedInputSchema as i, print as l, _enum as m, stringToRegex as n, getPullRequestChangedFiles as o, ZodDefault as p, escapeStringRegexp as r, getPullRequestsChangedFiles as s, require_ignore as t, composeConfigGet as u, object as v, info as w, debug as x, string$1 as y };
