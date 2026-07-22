@@ -11,7 +11,6 @@ export const findCommitsInComparison = async (
     octokit.graphql,
     FindCommitsInComparisonDocument,
     params,
-    ['repository', 'ref', 'compare', 'commits'],
   )
 
   if (!data.repository?.ref?.compare) {

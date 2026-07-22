@@ -1,4 +1,4 @@
-import { i as __toESM, n as __exportAll, r as __require, t as __commonJSMin } from "./rolldown-runtime.js";
+import { createRequire } from "node:module";
 import * as os$1 from "node:os";
 import os, { EOL } from "node:os";
 import * as crypto from "node:crypto";
@@ -14,6 +14,39 @@ import { setTimeout as setTimeout$1 } from "node:timers";
 import path, { basename, dirname, isAbsolute, join, normalize } from "node:path";
 import { existsSync as existsSync$1, readFileSync as readFileSync$1 } from "node:fs";
 import process$1 from "node:process";
+//#region \0rolldown/runtime.js
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
+var __exportAll = (all, no_symbols) => {
+	let target = {};
+	for (var name in all) __defProp(target, name, {
+		get: all[name],
+		enumerable: true
+	});
+	if (!no_symbols) __defProp(target, Symbol.toStringTag, { value: "Module" });
+	return target;
+};
+var __copyProps = (to, from, except, desc) => {
+	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+		key = keys[i];
+		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
+			get: ((k) => from[k]).bind(null, key),
+			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+		});
+	}
+	return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
+	value: mod,
+	enumerable: true
+}) : target, mod));
+var __require = /* #__PURE__ */ (() => createRequire(import.meta.url))();
+//#endregion
 //#region node_modules/@actions/core/lib/utils.js
 /**
 * Sanitizes an input into a string so it can be passed into issueCommand safely
@@ -17969,7 +18002,7 @@ function slugify(input) {
 	return input.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
 }
 var captureStackTrace = "captureStackTrace" in Error ? Error.captureStackTrace : (..._args) => {};
-function isObject(data) {
+function isObject$1(data) {
 	return typeof data === "object" && data !== null && !Array.isArray(data);
 }
 var allowsEval = /* @__PURE__*/ cached(() => {
@@ -17983,12 +18016,12 @@ var allowsEval = /* @__PURE__*/ cached(() => {
 	}
 });
 function isPlainObject$2(o) {
-	if (isObject(o) === false) return false;
+	if (isObject$1(o) === false) return false;
 	const ctor = o.constructor;
 	if (ctor === void 0) return true;
 	if (typeof ctor !== "function") return true;
 	const prot = ctor.prototype;
-	if (isObject(prot) === false) return false;
+	if (isObject$1(prot) === false) return false;
 	if (Object.prototype.hasOwnProperty.call(prot, "isPrototypeOf") === false) return false;
 	return true;
 }
@@ -19460,13 +19493,13 @@ var $ZodObject = /*@__PURE__*/ $constructor("$ZodObject", (inst, def) => {
 		}
 		return propValues;
 	});
-	const isObject$2 = isObject;
+	const isObject = isObject$1;
 	const catchall = def.catchall;
 	let value;
 	inst._zod.parse = (payload, ctx) => {
 		value ?? (value = _normalized.value);
 		const input = payload.value;
-		if (!isObject$2(input)) {
+		if (!isObject(input)) {
 			payload.issues.push({
 				expected: "object",
 				code: "invalid_type",
@@ -19589,7 +19622,7 @@ var $ZodObjectJIT = /*@__PURE__*/ $constructor("$ZodObjectJIT", (inst, def) => {
 		return (payload, ctx) => fn(shape, payload, ctx);
 	};
 	let fastpass;
-	const isObject$1 = isObject;
+	const isObject = isObject$1;
 	const jit = !globalConfig.jitless;
 	const fastEnabled = jit && allowsEval.value;
 	const catchall = def.catchall;
@@ -19597,7 +19630,7 @@ var $ZodObjectJIT = /*@__PURE__*/ $constructor("$ZodObjectJIT", (inst, def) => {
 	inst._zod.parse = (payload, ctx) => {
 		value ?? (value = _normalized.value);
 		const input = payload.value;
-		if (!isObject$1(input)) {
+		if (!isObject(input)) {
 			payload.issues.push({
 				expected: "object",
 				code: "invalid_type",
@@ -24518,7 +24551,7 @@ var YAMLSet = class YAMLSet extends YAMLMap {
 	}
 };
 YAMLSet.tag = "tag:yaml.org,2002:set";
-var set = {
+var set$1 = {
 	collection: "map",
 	identify: (value) => value instanceof Set,
 	nodeClass: YAMLSet,
@@ -24629,7 +24662,7 @@ var schema = [
 	merge$1,
 	omap,
 	pairs,
-	set,
+	set$1,
 	intTime,
 	floatTime,
 	timestamp
@@ -24664,7 +24697,7 @@ var tagsByName = {
 	omap,
 	pairs,
 	seq,
-	set,
+	set: set$1,
 	timestamp
 };
 var coreKnownTags = {
@@ -24672,7 +24705,7 @@ var coreKnownTags = {
 	"tag:yaml.org,2002:merge": merge$1,
 	"tag:yaml.org,2002:omap": omap,
 	"tag:yaml.org,2002:pairs": pairs,
-	"tag:yaml.org,2002:set": set,
+	"tag:yaml.org,2002:set": set$1,
 	"tag:yaml.org,2002:timestamp": timestamp
 };
 function getTags(customTags, schemaName, addMergeTag) {
@@ -31013,6 +31046,118 @@ function getOctokit$1(token, options, ...additionalPlugins) {
 	return new (GitHub.plugin(...additionalPlugins))(getOctokitOptions(token, options));
 }
 //#endregion
+//#region node_modules/@octokit/plugin-paginate-graphql/dist-bundle/index.js
+var generateMessage = (path, cursorValue) => `The cursor at "${path.join(",")}" did not change its value "${cursorValue}" after a page transition. Please make sure your that your query is set up correctly.`;
+var MissingCursorChange = class extends Error {
+	constructor(pageInfo, cursorValue) {
+		super(generateMessage(pageInfo.pathInQuery, cursorValue));
+		this.pageInfo = pageInfo;
+		this.cursorValue = cursorValue;
+		if (Error.captureStackTrace) Error.captureStackTrace(this, this.constructor);
+	}
+	name = "MissingCursorChangeError";
+};
+var MissingPageInfo = class extends Error {
+	constructor(response) {
+		super(`No pageInfo property found in response. Please make sure to specify the pageInfo in your query. Response-Data: ${JSON.stringify(response, null, 2)}`);
+		this.response = response;
+		if (Error.captureStackTrace) Error.captureStackTrace(this, this.constructor);
+	}
+	name = "MissingPageInfo";
+};
+var isObject = (value) => Object.prototype.toString.call(value) === "[object Object]";
+function findPaginatedResourcePath(responseData) {
+	const paginatedResourcePath = deepFindPathToProperty(responseData, "pageInfo");
+	if (paginatedResourcePath.length === 0) throw new MissingPageInfo(responseData);
+	return paginatedResourcePath;
+}
+var deepFindPathToProperty = (object, searchProp, path = []) => {
+	for (const key of Object.keys(object)) {
+		const currentPath = [...path, key];
+		const currentValue = object[key];
+		if (isObject(currentValue)) {
+			if (currentValue.hasOwnProperty(searchProp)) return currentPath;
+			const result = deepFindPathToProperty(currentValue, searchProp, currentPath);
+			if (result.length > 0) return result;
+		}
+	}
+	return [];
+};
+var get = (object, path) => {
+	return path.reduce((current, nextProperty) => current[nextProperty], object);
+};
+var set = (object, path, mutator) => {
+	const lastProperty = path[path.length - 1];
+	const parent = get(object, [...path].slice(0, -1));
+	if (typeof mutator === "function") parent[lastProperty] = mutator(parent[lastProperty]);
+	else parent[lastProperty] = mutator;
+};
+var extractPageInfos = (responseData) => {
+	const pageInfoPath = findPaginatedResourcePath(responseData);
+	return {
+		pathInQuery: pageInfoPath,
+		pageInfo: get(responseData, [...pageInfoPath, "pageInfo"])
+	};
+};
+var isForwardSearch = (givenPageInfo) => {
+	return givenPageInfo.hasOwnProperty("hasNextPage");
+};
+var getCursorFrom = (pageInfo) => isForwardSearch(pageInfo) ? pageInfo.endCursor : pageInfo.startCursor;
+var hasAnotherPage = (pageInfo) => isForwardSearch(pageInfo) ? pageInfo.hasNextPage : pageInfo.hasPreviousPage;
+var createIterator = (octokit) => {
+	return (query, initialParameters = {}) => {
+		let nextPageExists = true;
+		let parameters = { ...initialParameters };
+		return { [Symbol.asyncIterator]: () => ({ async next() {
+			if (!nextPageExists) return {
+				done: true,
+				value: {}
+			};
+			const response = await octokit.graphql(query, parameters);
+			const pageInfoContext = extractPageInfos(response);
+			const nextCursorValue = getCursorFrom(pageInfoContext.pageInfo);
+			nextPageExists = hasAnotherPage(pageInfoContext.pageInfo);
+			if (nextPageExists && nextCursorValue === parameters.cursor) throw new MissingCursorChange(pageInfoContext, nextCursorValue);
+			parameters = {
+				...parameters,
+				cursor: nextCursorValue
+			};
+			return {
+				done: false,
+				value: response
+			};
+		} }) };
+	};
+};
+var mergeResponses = (response1, response2) => {
+	if (Object.keys(response1).length === 0) return Object.assign(response1, response2);
+	const path = findPaginatedResourcePath(response1);
+	const nodesPath = [...path, "nodes"];
+	const newNodes = get(response2, nodesPath);
+	if (newNodes) set(response1, nodesPath, (values) => {
+		return [...values, ...newNodes];
+	});
+	const edgesPath = [...path, "edges"];
+	const newEdges = get(response2, edgesPath);
+	if (newEdges) set(response1, edgesPath, (values) => {
+		return [...values, ...newEdges];
+	});
+	const pageInfoPath = [...path, "pageInfo"];
+	set(response1, pageInfoPath, get(response2, pageInfoPath));
+	return response1;
+};
+var createPaginate = (octokit) => {
+	const iterator = createIterator(octokit);
+	return async (query, initialParameters = {}) => {
+		let mergedResponse = {};
+		for await (const response of iterator(query, initialParameters)) mergedResponse = mergeResponses(mergedResponse, response);
+		return mergedResponse;
+	};
+};
+function paginateGraphQL(octokit) {
+	return { graphql: Object.assign(octokit.graphql, { paginate: Object.assign(createPaginate(octokit), { iterator: createIterator(octokit) }) }) };
+}
+//#endregion
 //#region src/common/get-octokit.ts
 var getOctokit = () => {
 	return getOctokit$1(process$1.env.GITHUB_TOKEN || "", {
@@ -31025,7 +31170,7 @@ var getOctokit = () => {
 		* Allows nock to intercept requests in tests
 		*/
 fetch: global.fetch }
-	});
+	}, paginateGraphQL);
 };
 //#endregion
 //#region src/common/config/get-config-file-from-repo.ts
@@ -31325,9 +31470,6 @@ async function composeConfigGet(configFilename, currentContext) {
 	return result;
 }
 //#endregion
-//#region src/common/execute-graphql.ts
-var executeGraphql = (client, document, variables) => client(document.toString(), variables);
-//#endregion
 //#region src/common/get-pull-request-changed-files.ts
 var PULL_REQUEST_FILES_PER_PAGE = 50;
 var getPullRequestChangedFiles = async (octokit, params) => octokit.paginate(octokit.rest.pulls.listFiles, {
@@ -31350,6 +31492,16 @@ var getPullRequestsChangedFiles = async (params) => {
 	}));
 	return new Map(changedFileEntries);
 };
+//#endregion
+//#region src/common/graphql.ts
+var executeGraphql = (client, document, variables) => client(document.toString(), variables);
+/**
+* Execute a generated GraphQL document and merge its paginated connection.
+*
+* The document must follow the plugin's conventions: a single `$cursor`
+* variable and a connection containing `pageInfo` plus `nodes` or `edges`.
+*/
+var paginateGraphql = (client, document, variables) => client.paginate(document.toString(), variables);
 //#endregion
 //#region src/types/github.graphql.generated.ts
 var TypedDocumentString = class extends String {
@@ -31396,11 +31548,11 @@ new TypedDocumentString(`
 }
     `, { "fragmentName": "PullRequestFields" });
 var FindCommitsInComparisonDocument = new TypedDocumentString(`
-    query findCommitsInComparison($name: String!, $owner: String!, $baseRef: String!, $headRef: String!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $after: String, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!, $pullRequestLimit: Int!, $historyLimit: Int!) {
+    query findCommitsInComparison($name: String!, $owner: String!, $baseRef: String!, $headRef: String!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $cursor: String, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!, $pullRequestLimit: Int!, $historyLimit: Int!) {
   repository(name: $name, owner: $owner) {
     ref(qualifiedName: $baseRef) {
       compare(headRef: $headRef) {
-        commits(first: $historyLimit, after: $after) {
+        commits(first: $historyLimit, after: $cursor) {
           __typename
           pageInfo {
             __typename
@@ -31912,4 +32064,4 @@ var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	define(module.exports, Symbol.for("setupWindows"), setupWindows);
 }));
 //#endregion
-export { error as C, setOutput as D, setFailed as E, warning as O, debug as S, info as T, boolean as _, parseCommitishForRelease as a, string$1 as b, getPullRequestChangedFiles as c, composeConfigGet as d, getOctokit as f, array as g, _enum as h, sharedInputSchema as i, getPullRequestsChangedFiles as l, ZodDefault as m, stringToRegex as n, FindCommitsInComparisonDocument as o, context as p, escapeStringRegexp as r, FindRecentMergedPullRequestsDocument as s, require_ignore as t, executeGraphql as u, number as v, getInput as w, stringbool as x, object as y };
+export { __commonJSMin as A, debug as C, setFailed as D, info as E, setOutput as O, stringbool as S, getInput as T, array as _, parseCommitishForRelease as a, object as b, executeGraphql as c, getPullRequestsChangedFiles as d, composeConfigGet as f, _enum as g, ZodDefault as h, sharedInputSchema as i, __toESM as j, warning as k, paginateGraphql as l, context as m, stringToRegex as n, FindCommitsInComparisonDocument as o, getOctokit as p, escapeStringRegexp as r, FindRecentMergedPullRequestsDocument as s, require_ignore as t, getPullRequestChangedFiles as u, boolean as v, error as w, string$1 as x, number as y };

@@ -1,45 +1,4 @@
-import { i as __toESM, t as __commonJSMin } from "../../chunks/rolldown-runtime.js";
-import { C as error, D as setOutput, E as setFailed, O as warning, S as debug, T as info, _ as boolean, a as parseCommitishForRelease, b as string, d as composeConfigGet, f as getOctokit, g as array, h as _enum, i as sharedInputSchema, l as getPullRequestsChangedFiles, m as ZodDefault, n as stringToRegex, o as FindCommitsInComparisonDocument, p as context, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, u as executeGraphql, v as number, w as getInput, x as stringbool, y as object } from "../../chunks/ignore.js";
-//#region src/common/paginate-graphql.ts
-var getPath = (obj, path) => path.reduce((acc, key) => acc?.[key], obj);
-var hasPath = (obj, path) => getPath(obj, path) !== void 0;
-var setPath = (obj, path, value) => {
-	const lastKey = path[path.length - 1];
-	if (lastKey === void 0) return;
-	const parent = getPath(obj, path.slice(0, -1));
-	if (parent == null) return;
-	parent[lastKey] = value;
-};
-/**
-* Utility function to paginate a GraphQL function using Relay-style cursor pagination.
-*
-* @param {Function} queryFn - function used to query the GraphQL API
-* @param {TypedDocumentString} query - GraphQL query, must include `nodes` and `pageInfo` fields for the field that will be paginated
-* @param {Object} variables
-* @param {string[]} paginatePath - path to field to paginate
-*/
-async function paginateGraphql(client, query, requestParameters, paginatePath) {
-	const queryString = query.toString();
-	const nodesPath = [...paginatePath, "nodes"];
-	const pageInfoPath = [...paginatePath, "pageInfo"];
-	const endCursorPath = [...pageInfoPath, "endCursor"];
-	const hasNextPagePath = [...pageInfoPath, "hasNextPage"];
-	const hasNextPage = (data) => getPath(data, hasNextPagePath);
-	const data = await client(queryString, requestParameters);
-	if (!hasPath(data, nodesPath)) throw new Error("Data doesn't contain `nodes` field. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `nodes` field.");
-	if (!hasPath(data, pageInfoPath) || !hasPath(data, endCursorPath) || !hasPath(data, hasNextPagePath)) throw new Error("Data doesn't contain `pageInfo` field with `endCursor` and `hasNextPage` fields. Make sure the `paginatePath` is set to the field you wish to paginate and that the query includes the `pageInfo` field.");
-	while (hasNextPage(data)) {
-		const newData = await client(queryString, {
-			...requestParameters,
-			after: getPath(data, [...pageInfoPath, "endCursor"])
-		});
-		const newNodes = getPath(newData, nodesPath);
-		setPath(data, pageInfoPath, getPath(newData, pageInfoPath));
-		setPath(data, nodesPath, [...getPath(data, nodesPath), ...newNodes]);
-	}
-	return data;
-}
-//#endregion
+import { A as __commonJSMin, C as debug, D as setFailed, E as info, O as setOutput, S as stringbool, T as getInput, _ as array, a as parseCommitishForRelease, b as object, c as executeGraphql, d as getPullRequestsChangedFiles, f as composeConfigGet, g as _enum, h as ZodDefault, i as sharedInputSchema, j as __toESM, k as warning, l as paginateGraphql, m as context, n as stringToRegex, o as FindCommitsInComparisonDocument, p as getOctokit, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, v as boolean, w as error, x as string, y as number } from "../../chunks/ignore.js";
 //#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
@@ -2773,12 +2732,7 @@ var findPreviousReleases = async (params) => {
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts
 var findCommitsInComparison = async (params) => {
-	const data = await paginateGraphql(getOctokit().graphql, FindCommitsInComparisonDocument, params, [
-		"repository",
-		"ref",
-		"compare",
-		"commits"
-	]);
+	const data = await paginateGraphql(getOctokit().graphql, FindCommitsInComparisonDocument, params);
 	if (!data.repository?.ref?.compare) throw new Error("Query returned an unexpected result: ref or comparison not found");
 	return (data.repository.ref.compare.commits.nodes || []).filter((commit) => commit != null);
 };
