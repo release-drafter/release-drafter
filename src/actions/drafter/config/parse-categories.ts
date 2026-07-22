@@ -92,7 +92,22 @@ export function parseCategories(
 
     const parsedWhenConditions = whenConditions
       .map((condition) => {
-        const { path, label, ..._cond } = condition
+        const { path, label, conventional, ..._cond } = condition
+        const conventionalTypes = [
+          ...(conventional?.types || []),
+          ...(conventional?.type ? [conventional.type] : []),
+        ]
+        const conventionalScopes = [
+          ...(conventional?.scopes || []),
+          ...(conventional?.scope ? [conventional.scope] : []),
+        ]
+        const normalizedConventional = conventional
+          ? {
+              types: conventionalTypes,
+              scopes: conventionalScopes,
+              breaking: conventional.breaking,
+            }
+          : undefined
 
         // Deprecated category-level labels are shorthand for adding the same
         // label predicate to every `when` branch
@@ -111,12 +126,20 @@ export function parseCategories(
             ...(condition.labels || []),
             ...(label ? [label] : []),
           ],
+          ...(normalizedConventional &&
+          (normalizedConventional.types.length > 0 ||
+            normalizedConventional.scopes.length > 0 ||
+            normalizedConventional.breaking !== undefined)
+            ? { conventional: normalizedConventional }
+            : {}),
         }
       })
       // Filter-out empty conditions
       .filter(
         (condition) =>
-          condition.paths.length > 0 || condition.labels.length > 0,
+          condition.paths.length > 0 ||
+          condition.labels.length > 0 ||
+          !!condition.conventional,
       )
 
     const categoryType = _cat.type ?? categorySchemaDefaults.type

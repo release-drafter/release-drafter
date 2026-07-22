@@ -142,6 +142,22 @@ var getActionInput = () => {
 */
 var changeConditionSchema = object({
 	/**
+	* Conventional commit predicate: matches a change whose pull request title
+	* follows the conventional commit shape, e.g. `feat(api)!: add endpoint`.
+	*/
+	conventional: object({
+		/** Shorthand for one `types` entry. */
+		type: string().min(1).optional(),
+		/** Conventional commit types to match, e.g. `feat` or `fix`. */
+		types: array(string().min(1)).optional().default([]),
+		/** Shorthand for one `scopes` entry. */
+		scope: string().min(1).optional(),
+		/** Conventional commit scopes to match, e.g. `api` or `ui`. */
+		scopes: array(string().min(1)).optional().default([]),
+		/** Match titles with (`true`) or without (`false`) a breaking `!`. */
+		breaking: boolean().optional()
+	}).optional(),
+	/**
 	* Label predicate: matches a change that carries this label.
 	*
 	* Shorthand for adding a single value to `labels`.
@@ -1298,6 +1314,32 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 })))(), 1);
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
 var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
+var normalizeConventionalList = (params) => {
+	const { conventional, single, array } = params;
+	const singleValue = conventional[single];
+	if (typeof singleValue === "string") return [singleValue];
+	const arrayValue = conventional[array];
+	if (Array.isArray(arrayValue) && arrayValue.length > 0) return [...new Set(arrayValue)];
+	return [];
+};
+var normalizeConventionalConfig = (params) => {
+	const { conventional } = params;
+	if (!conventional) return void 0;
+	const normalized = {
+		types: normalizeConventionalList({
+			conventional,
+			single: "type",
+			array: "types"
+		}),
+		scopes: normalizeConventionalList({
+			conventional,
+			single: "scope",
+			array: "scopes"
+		}),
+		breaking: conventional.breaking
+	};
+	return normalized.types.length > 0 || normalized.scopes.length > 0 || normalized.breaking !== void 0 ? normalized : void 0;
+};
 /**
 * Parses all categories from the config, normalizing conditions and
 * handling backward compatibility with deprecated fields.
@@ -1324,7 +1366,8 @@ function parseCategories(categories, deprecatedConfig) {
 		const deprecatedLabels = [...labels || [], ...label ? [label] : []];
 		if (deprecatedLabels.length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
 		const parsedWhenConditions = (_when !== void 0 ? Array.isArray(_when) ? _when.length > 0 || deprecatedLabels.length === 0 ? _when : [{}] : [_when] : deprecatedLabels.length > 0 ? [{}] : []).map((condition) => {
-			const { path, label, ..._cond } = condition;
+			const { path, label, conventional, ..._cond } = condition;
+			const normalizedConventional = normalizeConventionalConfig({ conventional });
 			return {
 				...changeConditionSchemaDefaults,
 				..._cond,
@@ -1335,9 +1378,10 @@ function parseCategories(categories, deprecatedConfig) {
 					...deprecatedLabels,
 					...condition.labels || [],
 					...label ? [label] : []
-				]
+				],
+				...normalizedConventional ? { conventional: normalizedConventional } : {}
 			};
-		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0);
+		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0 || !!condition.conventional);
 		const categoryType = _cat.type ?? categorySchemaDefaults.type;
 		switch (categoryType) {
 			case "changelog": return {
@@ -1570,6 +1614,7 @@ var setActionOutput = (params) => {
 //#endregion
 //#region src/actions/drafter/common/category-matching.ts
 var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
+var conventionalTitlePattern = /^(?<type>[^\s!:()]+)(?:\((?<scope>[^()]+)\))?(?<breaking>!)?: .+$/;
 var getPullRequestLabels = (pullRequest) => (pullRequest.labels?.nodes ?? []).filter((label) => Boolean(label?.name)).map((label) => label.name);
 var unique = (values) => [...new Set(values)];
 var matchesValues = (actualValues, expectedValues, mode) => {
@@ -1600,7 +1645,23 @@ var matchesPullRequestPaths = (condition, pullRequest) => {
 		default: return changedFiles.some((file) => expectedMatchers.some(({ matcher }) => matcher.ignores(file)));
 	}
 };
-var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesPullRequestPaths(condition, pullRequest);
+var parseConventionalTitle = (title) => {
+	const match = title?.match(conventionalTitlePattern);
+	if (!match?.groups?.type) return void 0;
+	return {
+		type: match.groups.type,
+		scope: match.groups.scope,
+		breaking: match.groups.breaking === "!"
+	};
+};
+var matchesConventionalTitle = (condition, pullRequest) => {
+	if (!condition.conventional) return true;
+	const parsed = parseConventionalTitle(pullRequest.title);
+	if (!parsed) return false;
+	const { types, scopes, breaking } = condition.conventional;
+	return (types.length === 0 || types.includes(parsed.type)) && (scopes.length === 0 || parsed.scope !== void 0 && scopes.includes(parsed.scope)) && (breaking === void 0 || breaking === parsed.breaking);
+};
+var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesPullRequestPaths(condition, pullRequest) && matchesConventionalTitle(condition, pullRequest);
 var matchesCategory = (category, pullRequest) => category.when.length === 0 || category.when.some((condition) => matchesCategoryCondition(condition, pullRequest));
 var filterPullRequestsByPreCategories = (pullRequests, categories) => {
 	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");

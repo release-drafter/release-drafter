@@ -242,7 +242,11 @@ const suites: SuiteParams[] = [
           type: 'version-resolver',
           'semver-increment': 'major',
           when: {
-            label: 'breaking',
+            conventional: {
+              type: 'feat',
+              scope: 'api',
+              breaking: true,
+            },
           },
         },
       ],

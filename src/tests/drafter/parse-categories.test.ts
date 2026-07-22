@@ -405,6 +405,46 @@ describe('parseCategories', () => {
     ])
   })
 
+  it('normalizes conventional matcher shorthands inside when conditions', () => {
+    const parsed = parseCategories(
+      {
+        categories: [
+          {
+            title: 'Features',
+            when: {
+              conventional: {
+                type: 'feat',
+                scope: 'ui',
+                breaking: true,
+              },
+            },
+          },
+        ],
+      },
+      {
+        'exclude-labels': [],
+        'exclude-paths': [],
+        'include-labels': [],
+        'include-paths': [],
+        'version-resolver': configSchemaDefaults['version-resolver'],
+      },
+    )
+
+    expect(parsed[0]?.when).toEqual([
+      {
+        labels: [],
+        'labels-mode': 'any',
+        paths: [],
+        'paths-mode': 'any',
+        conventional: {
+          types: ['feat'],
+          scopes: ['ui'],
+          breaking: true,
+        },
+      },
+    ])
+  })
+
   it('drops conditions that only set labels-mode without configuring labels or paths', () => {
     const parsed = parseCategories(
       {
