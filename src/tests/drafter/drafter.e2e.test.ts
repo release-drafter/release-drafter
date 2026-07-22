@@ -19,6 +19,20 @@ describe('drafter e2e', () => {
       it('creates a release draft targeting that branch', async () => {
         await mockContext('push')
         mocks.config.mockReturnValue('config')
+        mocks.getContextsConfigWasFetchedFrom.mockReturnValue([
+          {
+            filepath: '.github/release-drafter.yml',
+            scheme: 'github',
+            ref: 'master',
+            repo: { owner: 'toolmantim', repo: 'release-drafter' },
+          },
+          {
+            filepath: '.github/release-drafter-base.yml',
+            scheme: 'github',
+            ref: undefined,
+            repo: { owner: 'toolmantim', repo: '.github' },
+          },
+        ])
 
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-comparison-no-prs',
@@ -44,6 +58,14 @@ describe('drafter e2e', () => {
             },
           ]
         `)
+        expect(
+          mocks.core.info.mock.calls
+            .flat()
+            .filter((message) => message.startsWith('Config fetched')),
+        ).toEqual([
+          'Config fetched from "toolmantim/release-drafter/.github/release-drafter.yml@master".',
+          'Config fetched from "toolmantim/.github/.github/release-drafter-base.yml" on the default branch.',
+        ])
 
         expect(scope.isDone()).toBe(true) // should call the mocked endpoints
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
