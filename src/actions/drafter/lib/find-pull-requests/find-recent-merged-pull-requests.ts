@@ -4,7 +4,7 @@ import { executeGraphql, getOctokit } from '#src/common/index.ts'
 import {
   FindRecentMergedPullRequestsDocument,
   type FindRecentMergedPullRequestsQuery,
-} from './graphql/find-recent-merged-pull-requests.graphql.generated.ts'
+} from '#src/types/github.graphql.generated.ts'
 
 export type PullRequestFieldFlags = {
   withPullRequestBody: boolean

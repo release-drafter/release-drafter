@@ -1,7 +1,6 @@
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import type { graphql } from '@octokit/graphql'
 import type { RequestParameters } from '@octokit/graphql/types'
-import { print } from 'graphql'
+import type { TypedDocumentString } from '#src/types/github.graphql.generated.ts'
 
 const getPath = <T = unknown>(obj: unknown, path: string[]): T =>
   path.reduce((acc, key) => (acc as Record<string, unknown>)?.[key], obj) as T
@@ -24,7 +23,7 @@ const setPath = (obj: unknown, path: string[], value: unknown) => {
  * Utility function to paginate a GraphQL function using Relay-style cursor pagination.
  *
  * @param {Function} queryFn - function used to query the GraphQL API
- * @param {TypedDocumentNode} query - GraphQL query, must include `nodes` and `pageInfo` fields for the field that will be paginated
+ * @param {TypedDocumentString} query - GraphQL query, must include `nodes` and `pageInfo` fields for the field that will be paginated
  * @param {Object} variables
  * @param {string[]} paginatePath - path to field to paginate
  */
@@ -33,11 +32,11 @@ export async function paginateGraphql<
   TVariables extends Record<string, unknown> = Record<string, unknown>,
 >(
   client: typeof graphql,
-  query: TypedDocumentNode<T, TVariables> | string,
+  query: TypedDocumentString<T, TVariables> | string,
   requestParameters: RequestParameters,
   paginatePath: string[],
 ): Promise<T> {
-  const queryString = typeof query === 'string' ? query : print(query)
+  const queryString = query.toString()
   const nodesPath = [...paginatePath, 'nodes']
   const pageInfoPath = [...paginatePath, 'pageInfo']
   const endCursorPath = [...pageInfoPath, 'endCursor']

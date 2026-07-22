@@ -1,12 +1,12 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
 import type { ParsedConfig } from '#src/actions/drafter/config/index.ts'
-import { executeGraphql } from './execute-graphql.ts'
-import { getOctokit, type Octokit } from './get-octokit.ts'
 import {
   ResolveCommitishDocument,
   ResolvePullRequestCommitishDocument,
-} from './graphql/resolve-commitish.graphql.generated.ts'
+} from '#src/types/github.graphql.generated.ts'
+import { executeGraphql } from './execute-graphql.ts'
+import { getOctokit, type Octokit } from './get-octokit.ts'
 
 const resolveTagToCommitSha = async (params: {
   octokit: Octokit
