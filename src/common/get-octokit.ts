@@ -5,6 +5,7 @@ import {
   paginateGraphQL,
   type paginateGraphQLInterface,
 } from '@octokit/plugin-paginate-graphql'
+import { type RetryPlugin, retry } from '@octokit/plugin-retry'
 
 export const getOctokit = () => {
   return createOctokit(
@@ -19,7 +20,8 @@ export const getOctokit = () => {
       },
     },
     paginateGraphQL,
-  ) as ReturnType<typeof createOctokit> & paginateGraphQLInterface
+    retry,
+  ) as ReturnType<typeof createOctokit> & paginateGraphQLInterface & RetryPlugin
 }
 
 export type Octokit = ReturnType<typeof getOctokit>
