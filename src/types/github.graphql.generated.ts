@@ -37835,7 +37835,7 @@ export type FindCommitsInComparisonQueryVariables = Exact<{
   headRef: string;
   withPullRequestBody: boolean;
   withPullRequestURL: boolean;
-  after?: string | null | undefined;
+  cursor?: string | null | undefined;
   withBaseRefName: boolean;
   withHeadRefName: boolean;
   pullRequestLimit: number;
@@ -37965,11 +37965,11 @@ export const PullRequestFieldsFragmentDoc = new TypedDocumentString(`
 }
     `, {"fragmentName":"PullRequestFields"}) as unknown as TypedDocumentString<PullRequestFieldsFragment, unknown>;
 export const FindCommitsInComparisonDocument = new TypedDocumentString(`
-    query findCommitsInComparison($name: String!, $owner: String!, $baseRef: String!, $headRef: String!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $after: String, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!, $pullRequestLimit: Int!, $historyLimit: Int!) {
+    query findCommitsInComparison($name: String!, $owner: String!, $baseRef: String!, $headRef: String!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $cursor: String, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!, $pullRequestLimit: Int!, $historyLimit: Int!) {
   repository(name: $name, owner: $owner) {
     ref(qualifiedName: $baseRef) {
       compare(headRef: $headRef) {
-        commits(first: $historyLimit, after: $after) {
+        commits(first: $historyLimit, after: $cursor) {
           __typename
           pageInfo {
             __typename

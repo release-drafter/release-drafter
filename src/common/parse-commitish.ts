@@ -5,8 +5,8 @@ import {
   ResolveCommitishDocument,
   ResolvePullRequestCommitishDocument,
 } from '#src/types/github.graphql.generated.ts'
-import { executeGraphql } from './execute-graphql.ts'
 import { getOctokit, type Octokit } from './get-octokit.ts'
+import { executeGraphql } from './graphql.ts'
 
 const resolveTagToCommitSha = async (params: {
   octokit: Octokit
