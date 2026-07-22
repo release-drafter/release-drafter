@@ -490,8 +490,10 @@ var configSchemaDefaults = Object.fromEntries(Object.entries({
 //#region src/actions/drafter/config/get-config.ts
 var getConfig = async (configName) => {
 	const { config, contexts } = await composeConfigGet(configName, context);
-	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
-	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally" : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
+	contexts.forEach(({ filepath, ref, repo, scheme }) => {
+		const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ""}`;
+		info(`Config fetched ${scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`}.`);
+	});
 	return configSchema.parse(config);
 };
 //#endregion
