@@ -1,4 +1,4 @@
-import { A as __commonJSMin, C as debug, D as setFailed, E as info, O as setOutput, S as stringbool, T as getInput, _ as array, a as parseCommitishForRelease, b as object, c as executeGraphql, d as getPullRequestsChangedFiles, f as composeConfigGet, g as _enum, h as ZodDefault, i as sharedInputSchema, j as __toESM, k as warning, l as paginateGraphql, m as context, n as stringToRegex, o as FindCommitsInComparisonDocument, p as getOctokit, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, v as boolean, w as error, x as string, y as number } from "../../chunks/ignore.js";
+import { A as setOutput, C as stringbool, D as getInput, E as error, M as __commonJSMin, N as __toESM, O as info, S as string, T as debug, _ as array, a as parseCommitishForRelease, b as number, c as executeGraphql, d as getPullRequestsChangedFiles, f as composeConfigGet, g as _enum, h as ZodDefault, i as sharedInputSchema, j as warning, k as setFailed, l as paginateGraphql, m as context, n as stringToRegex, o as FindCommitsInComparisonDocument, p as getOctokit, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, v as boolean, w as union, x as object, y as literal } from "../../chunks/ignore.js";
 //#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
@@ -104,7 +104,7 @@ var changeConditionSchema = object({
 	* Conventional commit predicate: matches a change whose title or message
 	* follows the conventional commit shape, e.g. `feat(api)!: add endpoint`.
 	*/
-	conventional: object({
+	conventional: union([literal(true), object({
 		/** Shorthand for one `types` entry. */
 		type: string().min(1).optional(),
 		/** Conventional commit types to match, e.g. `feat` or `fix`. */
@@ -115,7 +115,7 @@ var changeConditionSchema = object({
 		scopes: array(string().min(1)).optional().default([]),
 		/** Match titles with (`true`) or without (`false`) a breaking `!`. */
 		breaking: boolean().optional()
-	}).optional(),
+	})]).optional(),
 	/**
 	* Label predicate: matches a change that carries this label.
 	*
@@ -1273,6 +1273,20 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 })))(), 1);
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
 var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
+var normalizeConventional = (conventional) => {
+	if (!conventional) return;
+	if (conventional === true) return {
+		types: [],
+		scopes: [],
+		breaking: void 0
+	};
+	if (Object.keys(conventional).length === 0) warning("Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.");
+	return {
+		types: [...conventional.types || [], ...conventional.type ? [conventional.type] : []],
+		scopes: [...conventional.scopes || [], ...conventional.scope ? [conventional.scope] : []],
+		breaking: conventional.breaking
+	};
+};
 /**
 * Parses all categories from the config, normalizing conditions and
 * handling backward compatibility with deprecated fields.
@@ -1300,15 +1314,8 @@ function parseCategories(categories, deprecatedConfig) {
 		if (deprecatedLabels.length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
 		const parsedWhenConditions = (_when !== void 0 ? Array.isArray(_when) ? _when.length > 0 || deprecatedLabels.length === 0 ? _when : [{}] : [_when] : deprecatedLabels.length > 0 ? [{}] : []).map((condition) => {
 			const { path, label, conventional, ..._cond } = condition;
-			const conventionalTypes = [...conventional?.types || [], ...conventional?.type ? [conventional.type] : []];
-			const conventionalScopes = [...conventional?.scopes || [], ...conventional?.scope ? [conventional.scope] : []];
-			const normalizedConventional = conventional ? {
-				types: conventionalTypes,
-				scopes: conventionalScopes,
-				breaking: conventional.breaking
-			} : void 0;
+			const normalizedConventional = normalizeConventional(conventional);
 			return {
-				...changeConditionSchemaDefaults,
 				..._cond,
 				"labels-mode": condition["labels-mode"] ?? changeConditionSchemaDefaults["labels-mode"],
 				"paths-mode": condition["paths-mode"] ?? changeConditionSchemaDefaults["paths-mode"],
@@ -1318,7 +1325,7 @@ function parseCategories(categories, deprecatedConfig) {
 					...condition.labels || [],
 					...label ? [label] : []
 				],
-				...normalizedConventional && (normalizedConventional.types.length > 0 || normalizedConventional.scopes.length > 0 || normalizedConventional.breaking !== void 0) ? { conventional: normalizedConventional } : {}
+				...normalizedConventional ? { conventional: normalizedConventional } : {}
 			};
 		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0 || !!condition.conventional);
 		const categoryType = _cat.type ?? categorySchemaDefaults.type;

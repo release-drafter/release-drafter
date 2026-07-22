@@ -216,36 +216,44 @@
                 "type": "object",
                 "properties": {
                   "conventional": {
-                    "type": "object",
-                    "properties": {
-                      "type": {
-                        "type": "string",
-                        "minLength": 1
+                    "anyOf": [
+                      {
+                        "type": "boolean",
+                        "const": true
                       },
-                      "types": {
-                        "default": [],
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "minLength": 1
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "types": {
+                            "default": [],
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "scope": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "scopes": {
+                            "default": [],
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "breaking": {
+                            "type": "boolean"
+                          }
                         }
-                      },
-                      "scope": {
-                        "type": "string",
-                        "minLength": 1
-                      },
-                      "scopes": {
-                        "default": [],
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "minLength": 1
-                        }
-                      },
-                      "breaking": {
-                        "type": "boolean"
                       }
-                    }
+                    ]
                   },
                   "label": {
                     "type": "string",
@@ -289,36 +297,44 @@
                   "type": "object",
                   "properties": {
                     "conventional": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "minLength": 1
+                      "anyOf": [
+                        {
+                          "type": "boolean",
+                          "const": true
                         },
-                        "types": {
-                          "default": [],
-                          "type": "array",
-                          "items": {
-                            "type": "string",
-                            "minLength": 1
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "types": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "scope": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "scopes": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "breaking": {
+                              "type": "boolean"
+                            }
                           }
-                        },
-                        "scope": {
-                          "type": "string",
-                          "minLength": 1
-                        },
-                        "scopes": {
-                          "default": [],
-                          "type": "array",
-                          "items": {
-                            "type": "string",
-                            "minLength": 1
-                          }
-                        },
-                        "breaking": {
-                          "type": "boolean"
                         }
-                      }
+                      ]
                     },
                     "label": {
                       "type": "string",

@@ -410,10 +410,14 @@ path patterns are compared. `any` is the default. Path matching operates on the
 pull request's changed files.
 
 The `conventional` option parses the pull request title as a conventional
-commit header. It supports `type`/`types`, `scope`/`scopes`, and `breaking`:
+commit header. Set it to `true` to match any conventional title, or configure
+`type`/`types`, `scope`/`scopes`, and `breaking`:
 
 ```yml
 categories:
+  - title: "Conventional Changes"
+    when:
+      conventional: true
   - title: "🚀 Features"
     semver-increment: "minor"
     when:

@@ -267,6 +267,27 @@ describe('category model', () => {
     expect(uncategorized).toEqual([pullRequests[1]])
   })
 
+  it('matches any valid conventional title with conventional true', () => {
+    const config = makeParsedConfig([
+      {
+        title: 'Conventional',
+        when: { conventional: true },
+      },
+    ])
+    const pullRequests = [
+      makePullRequest([], [], 'feat: add thing'),
+      makePullRequest([], [], 'plain title'),
+    ]
+
+    const [uncategorized, categories] = categorizePullRequests({
+      pullRequests,
+      config,
+    })
+
+    expect(categories[0]?.pullRequests).toEqual([pullRequests[0]])
+    expect(uncategorized).toEqual([pullRequests[1]])
+  })
+
   it('combines label, path, and conventional predicates in one condition', () => {
     const config = makeParsedConfig([
       {

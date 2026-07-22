@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import {
   type CategoryConfig,
+  type ChangeConditionConfig,
   type Config,
   categorySchemaDefaults,
   changeConditionSchemaDefaults,
@@ -14,6 +15,36 @@ const categoryMigrationDocumentationUrl =
 
 const withMigrationDocumentationLink = (message: string) =>
   `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`
+
+const normalizeConventional = (
+  conventional: ChangeConditionConfig['conventional'],
+) => {
+  if (!conventional) {
+    return undefined
+  }
+
+  if (conventional === true) {
+    return { types: [], scopes: [], breaking: undefined }
+  }
+
+  if (Object.keys(conventional).length === 0) {
+    core.warning(
+      "Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.",
+    )
+  }
+
+  return {
+    types: [
+      ...(conventional.types || []),
+      ...(conventional.type ? [conventional.type] : []),
+    ],
+    scopes: [
+      ...(conventional.scopes || []),
+      ...(conventional.scope ? [conventional.scope] : []),
+    ],
+    breaking: conventional.breaking,
+  }
+}
 
 /**
  * Parses all categories from the config, normalizing conditions and
@@ -93,26 +124,11 @@ export function parseCategories(
     const parsedWhenConditions = whenConditions
       .map((condition) => {
         const { path, label, conventional, ..._cond } = condition
-        const conventionalTypes = [
-          ...(conventional?.types || []),
-          ...(conventional?.type ? [conventional.type] : []),
-        ]
-        const conventionalScopes = [
-          ...(conventional?.scopes || []),
-          ...(conventional?.scope ? [conventional.scope] : []),
-        ]
-        const normalizedConventional = conventional
-          ? {
-              types: conventionalTypes,
-              scopes: conventionalScopes,
-              breaking: conventional.breaking,
-            }
-          : undefined
+        const normalizedConventional = normalizeConventional(conventional)
 
         // Deprecated category-level labels are shorthand for adding the same
         // label predicate to every `when` branch
         return {
-          ...changeConditionSchemaDefaults,
           ..._cond,
           'labels-mode':
             condition['labels-mode'] ??
@@ -126,10 +142,7 @@ export function parseCategories(
             ...(condition.labels || []),
             ...(label ? [label] : []),
           ],
-          ...(normalizedConventional &&
-          (normalizedConventional.types.length > 0 ||
-            normalizedConventional.scopes.length > 0 ||
-            normalizedConventional.breaking !== undefined)
+          ...(normalizedConventional
             ? { conventional: normalizedConventional }
             : {}),
         }

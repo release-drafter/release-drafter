@@ -2,9 +2,11 @@ import type * as z from 'zod'
 import {
   array,
   boolean,
+  literal,
   number,
   object,
   string,
+  union,
   ZodDefault,
   enum as zenum,
 } from 'zod'
@@ -19,18 +21,21 @@ const changeConditionSchema = object({
    * Conventional commit predicate: matches a change whose title or message
    * follows the conventional commit shape, e.g. `feat(api)!: add endpoint`.
    */
-  conventional: object({
-    /** Shorthand for one `types` entry. */
-    type: string().min(1).optional(),
-    /** Conventional commit types to match, e.g. `feat` or `fix`. */
-    types: array(string().min(1)).optional().default([]),
-    /** Shorthand for one `scopes` entry. */
-    scope: string().min(1).optional(),
-    /** Conventional commit scopes to match, e.g. `api` or `ui`. */
-    scopes: array(string().min(1)).optional().default([]),
-    /** Match titles with (`true`) or without (`false`) a breaking `!`. */
-    breaking: boolean().optional(),
-  }).optional(),
+  conventional: union([
+    literal(true),
+    object({
+      /** Shorthand for one `types` entry. */
+      type: string().min(1).optional(),
+      /** Conventional commit types to match, e.g. `feat` or `fix`. */
+      types: array(string().min(1)).optional().default([]),
+      /** Shorthand for one `scopes` entry. */
+      scope: string().min(1).optional(),
+      /** Conventional commit scopes to match, e.g. `api` or `ui`. */
+      scopes: array(string().min(1)).optional().default([]),
+      /** Match titles with (`true`) or without (`false`) a breaking `!`. */
+      breaking: boolean().optional(),
+    }),
+  ]).optional(),
   /**
    * Label predicate: matches a change that carries this label.
    *
