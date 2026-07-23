@@ -1,3 +1,4 @@
+import { CommitParser } from 'conventional-commits-parser'
 import ignore from 'ignore'
 import type { ParsedConfig } from '../config/index.ts'
 
@@ -7,11 +8,20 @@ type LabelsMode = ParsedCondition['labels-mode']
 type PathsMode = ParsedCondition['paths-mode']
 
 type PullRequestLike = {
+  title?: string
   labels?: {
     nodes?: ({ name?: string | null } | null)[] | null
   } | null
   changedFiles?: string[]
 }
+
+// Matches conventional-changelog's conventionalcommits preset so `!` breaking
+// markers are parsed into notes instead of rejected by the default parser.
+// https://github.com/conventional-changelog/conventional-changelog/blob/74a977a970f0eb5cdf317538baec8290eb909a05/packages/conventional-changelog-conventionalcommits/src/parser.js#L4
+const conventionalParser = new CommitParser({
+  headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
+  breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/,
+})
 
 export type ChangelogCategory = Extract<ParsedCategory, { type: 'changelog' }>
 export type VersionResolverCategory = Extract<
@@ -102,6 +112,44 @@ const matchesPullRequestPaths = (
   }
 }
 
+const parseConventionalTitle = (title?: string) => {
+  if (!title) return undefined
+
+  const parsed = conventionalParser.parse(title)
+  if (typeof parsed.type !== 'string') return undefined
+
+  return {
+    type: parsed.type,
+    scope: typeof parsed.scope === 'string' ? parsed.scope : undefined,
+    // By default, only breaking changes are added to notes
+    // see https://conventional-changelog.js.org/commits-parser/#breaking-changes-and-notes
+    breaking: parsed.notes.length > 0,
+  }
+}
+
+const matchesConventionalTitle = (
+  condition: ParsedCondition,
+  pullRequest: PullRequestLike,
+) => {
+  if (!condition.conventional) {
+    return true
+  }
+
+  const parsed = parseConventionalTitle(pullRequest.title)
+  if (!parsed) {
+    return false
+  }
+
+  const { types, scopes, breaking } = condition.conventional
+
+  return (
+    (types.length === 0 || types.includes(parsed.type)) &&
+    (scopes.length === 0 ||
+      (parsed.scope !== undefined && scopes.includes(parsed.scope))) &&
+    (breaking === undefined || breaking === parsed.breaking)
+  )
+}
+
 export const matchesCategoryCondition = (
   condition: ParsedCondition,
   pullRequest: PullRequestLike,
@@ -110,7 +158,9 @@ export const matchesCategoryCondition = (
     getPullRequestLabels(pullRequest),
     condition.labels,
     condition['labels-mode'],
-  ) && matchesPullRequestPaths(condition, pullRequest)
+  ) &&
+  matchesPullRequestPaths(condition, pullRequest) &&
+  matchesConventionalTitle(condition, pullRequest)
 
 export const matchesCategory = (
   category: ParsedCategory,

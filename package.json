@@ -57,6 +57,7 @@
     "@octokit/request-error": "^7.1.0",
     "@octokit/types": "^16.0.0",
     "compare-versions": "^6.1.1",
+    "conventional-commits-parser": "^6.4.0",
     "escape-string-regexp": "^5.0.0",
     "graphql": "^17.0.2",
     "ignore": "^7.0.6",

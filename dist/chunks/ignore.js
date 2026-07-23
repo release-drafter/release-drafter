@@ -19929,6 +19929,24 @@ var $ZodEnum = /*@__PURE__*/ $constructor("$ZodEnum", (inst, def) => {
 		return payload;
 	};
 });
+var $ZodLiteral = /*@__PURE__*/ $constructor("$ZodLiteral", (inst, def) => {
+	$ZodType.init(inst, def);
+	if (def.values.length === 0) throw new Error("Cannot create literal schema with no valid values");
+	const values = new Set(def.values);
+	inst._zod.values = values;
+	inst._zod.pattern = new RegExp(`^(${def.values.map((o) => typeof o === "string" ? escapeRegex(o) : o ? escapeRegex(o.toString()) : String(o)).join("|")})$`);
+	inst._zod.parse = (payload, _ctx) => {
+		const input = payload.value;
+		if (values.has(input)) return payload;
+		payload.issues.push({
+			code: "invalid_value",
+			values: def.values,
+			input,
+			inst
+		});
+		return payload;
+	};
+});
 var $ZodTransform = /*@__PURE__*/ $constructor("$ZodTransform", (inst, def) => {
 	$ZodType.init(inst, def);
 	inst._zod.optin = "optional";
@@ -21184,6 +21202,27 @@ var enumProcessor = (schema, _ctx, json, _params) => {
 	if (values.every((v) => typeof v === "string")) json.type = "string";
 	json.enum = values;
 };
+var literalProcessor = (schema, ctx, json, _params) => {
+	const def = schema._zod.def;
+	const vals = [];
+	for (const val of def.values) if (val === void 0) {
+		if (ctx.unrepresentable === "throw") throw new Error("Literal `undefined` cannot be represented in JSON Schema");
+	} else if (typeof val === "bigint") if (ctx.unrepresentable === "throw") throw new Error("BigInt literals cannot be represented in JSON Schema");
+	else vals.push(Number(val));
+	else vals.push(val);
+	if (vals.length === 0) {} else if (vals.length === 1) {
+		const val = vals[0];
+		json.type = val === null ? "null" : typeof val;
+		if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") json.enum = [val];
+		else json.const = val;
+	} else {
+		if (vals.every((v) => typeof v === "number")) json.type = "number";
+		if (vals.every((v) => typeof v === "string")) json.type = "string";
+		if (vals.every((v) => typeof v === "boolean")) json.type = "boolean";
+		if (vals.every((v) => v === null)) json.type = "null";
+		json.enum = vals;
+	}
+};
 var customProcessor = (_schema, ctx, _json, _params) => {
 	if (ctx.unrepresentable === "throw") throw new Error("Custom types cannot be represented in JSON Schema");
 };
@@ -22061,6 +22100,23 @@ function _enum(values, params) {
 	return new ZodEnum({
 		type: "enum",
 		entries: Array.isArray(values) ? Object.fromEntries(values.map((v) => [v, v])) : values,
+		...normalizeParams(params)
+	});
+}
+var ZodLiteral = /*@__PURE__*/ $constructor("ZodLiteral", (inst, def) => {
+	$ZodLiteral.init(inst, def);
+	ZodType.init(inst, def);
+	inst._zod.processJSONSchema = (ctx, json, params) => literalProcessor(inst, ctx, json, params);
+	inst.values = new Set(def.values);
+	Object.defineProperty(inst, "value", { get() {
+		if (def.values.length > 1) throw new Error("This schema contains multiple valid literal values. Use `.values` instead.");
+		return def.values[0];
+	} });
+});
+function literal(value, params) {
+	return new ZodLiteral({
+		type: "literal",
+		values: Array.isArray(value) ? value : [value],
 		...normalizeParams(params)
 	});
 }
@@ -33295,4 +33351,4 @@ var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	define(module.exports, Symbol.for("setupWindows"), setupWindows);
 }));
 //#endregion
-export { __commonJSMin as A, debug as C, setFailed as D, info as E, setOutput as O, stringbool as S, getInput as T, array as _, parseCommitishForRelease as a, object as b, executeGraphql as c, getPullRequestsChangedFiles as d, composeConfigGet as f, _enum as g, ZodDefault as h, sharedInputSchema as i, __toESM as j, warning as k, paginateGraphql as l, context as m, stringToRegex as n, FindCommitsInComparisonDocument as o, getOctokit as p, escapeStringRegexp as r, FindRecentMergedPullRequestsDocument as s, require_ignore as t, getPullRequestChangedFiles as u, boolean as v, error as w, string$1 as x, number as y };
+export { setOutput as A, stringbool as C, getInput as D, error as E, __commonJSMin as M, __toESM as N, info as O, string$1 as S, debug as T, array as _, parseCommitishForRelease as a, number as b, executeGraphql as c, getPullRequestsChangedFiles as d, composeConfigGet as f, _enum as g, ZodDefault as h, sharedInputSchema as i, warning as j, setFailed as k, paginateGraphql as l, context as m, stringToRegex as n, FindCommitsInComparisonDocument as o, getOctokit as p, escapeStringRegexp as r, FindRecentMergedPullRequestsDocument as s, require_ignore as t, getPullRequestChangedFiles as u, boolean as v, union as w, object as x, literal as y };

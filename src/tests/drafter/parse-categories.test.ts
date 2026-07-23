@@ -405,6 +405,117 @@ describe('parseCategories', () => {
     ])
   })
 
+  it('normalizes conventional matcher shorthands inside when conditions', () => {
+    const parsed = parseCategories(
+      {
+        categories: [
+          {
+            title: 'Features',
+            when: {
+              conventional: {
+                type: 'feat',
+                scope: 'ui',
+                breaking: true,
+              },
+            },
+          },
+        ],
+      },
+      {
+        'exclude-labels': [],
+        'exclude-paths': [],
+        'include-labels': [],
+        'include-paths': [],
+        'version-resolver': configSchemaDefaults['version-resolver'],
+      },
+    )
+
+    expect(parsed[0]?.when).toEqual([
+      {
+        labels: [],
+        'labels-mode': 'any',
+        paths: [],
+        'paths-mode': 'any',
+        conventional: {
+          types: ['feat'],
+          scopes: ['ui'],
+          breaking: true,
+        },
+      },
+    ])
+  })
+
+  it('normalizes conventional true to any conventional title matcher', () => {
+    const parsed = parseCategories(
+      {
+        categories: [
+          {
+            title: 'Conventional',
+            when: { conventional: true },
+          },
+        ],
+      },
+      {
+        'exclude-labels': [],
+        'exclude-paths': [],
+        'include-labels': [],
+        'include-paths': [],
+        'version-resolver': configSchemaDefaults['version-resolver'],
+      },
+    )
+
+    expect(parsed[0]?.when).toEqual([
+      {
+        labels: [],
+        'labels-mode': 'any',
+        paths: [],
+        'paths-mode': 'any',
+        conventional: {
+          types: [],
+          scopes: [],
+          breaking: undefined,
+        },
+      },
+    ])
+  })
+
+  it('normalizes conventional empty object to any conventional title matcher with warning', () => {
+    const parsed = parseCategories(
+      {
+        categories: [
+          {
+            title: 'Conventional',
+            when: { conventional: {} },
+          },
+        ],
+      },
+      {
+        'exclude-labels': [],
+        'exclude-paths': [],
+        'include-labels': [],
+        'include-paths': [],
+        'version-resolver': configSchemaDefaults['version-resolver'],
+      },
+    )
+
+    expect(parsed[0]?.when).toEqual([
+      {
+        labels: [],
+        'labels-mode': 'any',
+        paths: [],
+        'paths-mode': 'any',
+        conventional: {
+          types: [],
+          scopes: [],
+          breaking: undefined,
+        },
+      },
+    ])
+    expect(mocks.core.warning).toHaveBeenCalledWith(
+      "Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.",
+    )
+  })
+
   it('drops conditions that only set labels-mode without configuring labels or paths', () => {
     const parsed = parseCategories(
       {
