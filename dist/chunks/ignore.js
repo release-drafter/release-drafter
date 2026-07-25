@@ -32447,17 +32447,10 @@ retry.VERSION = VERSION;
 //#endregion
 //#region src/common/get-octokit.ts
 var getOctokit = () => {
-	return getOctokit$1(process$1.env.GITHUB_TOKEN || "", {
-		log: {
-			...core_exports,
-			warn: warning
-		},
-		request: { 
-		/**
-		* Allows nock to intercept requests in tests
-		*/
-fetch: global.fetch }
-	}, paginateGraphQL, retry);
+	return getOctokit$1(process$1.env.GITHUB_TOKEN || "", { log: {
+		...core_exports,
+		warn: warning
+	} }, paginateGraphQL, retry);
 };
 //#endregion
 //#region src/common/config/get-config-file-from-repo.ts
