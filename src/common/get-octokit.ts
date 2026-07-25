@@ -8,13 +8,6 @@ import {
 import { type RetryPlugin, retry } from '@octokit/plugin-retry'
 
 export const getOctokit = () => {
-  // Deliberately no `request` option: `@octokit/core` shallow-merges it, so
-  // supplying one replaces the proxy-aware `fetch` and agent that
-  // `@actions/github` builds from `http_proxy`/`https_proxy`. That silently
-  // disables proxy support, which GitHub Enterprise Server and corporate-proxy
-  // setups depend on.
-  //
-  // @see src/tests/get-octokit-proxy.test.ts
   return createOctokit(
     process.env.GITHUB_TOKEN || '',
     {

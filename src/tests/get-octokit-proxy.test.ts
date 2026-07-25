@@ -8,12 +8,8 @@ vi.unmock('@actions/github')
 /**
  * `@octokit/core` shallow-merges the `request` option, so passing it at all
  * replaces the proxy-aware `fetch` and agent that `@actions/github` installs
- * from `http_proxy`/`https_proxy`. That breaks GitHub Enterprise Server and
- * corporate-proxy setups, and it fails silently — nothing errors, requests just
- * bypass the proxy.
- *
- * These tests pin the production configuration so a `request: { fetch }`
- * override cannot be reintroduced unnoticed.
+ * from `http_proxy`/`https_proxy`. That silently breaks GitHub Enterprise
+ * Server and corporate proxies, so pin the production configuration here.
  */
 const requestDefaults = (octokit: ReturnType<typeof getOctokit>) =>
   (

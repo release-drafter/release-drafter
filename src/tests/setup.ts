@@ -21,17 +21,11 @@ vi.mock(
   (await import('#tests/mocks/index.ts')).mockedConfigModule,
 )
 /**
- * `@actions/github` hands octokit a `fetch` backed by the `undici` package.
- * nock cannot intercept that — the requests escape to the real network, and
- * `nock.disableNetConnect()` does not catch them either. Swap in Node's global
- * `fetch`, which nock does understand.
+ * `@actions/github` hands octokit an `undici`-backed `fetch` that nock cannot
+ * intercept. Swap in Node's global `fetch`, which nock understands.
  *
- * Confined to tests on purpose: production must keep `@actions/github`'s own
- * `fetch` so the proxy dispatcher it builds from `http_proxy`/`https_proxy`
- * survives, which is what GitHub Enterprise Server and corporate proxies rely
- * on. `src/tests/get-octokit-proxy.test.ts` unmocks this to assert that.
- *
- * @see src/common/get-octokit.ts
+ * Tests only — production keeps `@actions/github`'s `fetch` so its
+ * `http_proxy`/`https_proxy` dispatcher survives.
  */
 vi.mock(import('@actions/github'), async (iom) => {
   const om = await iom()
