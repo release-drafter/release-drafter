@@ -1057,7 +1057,7 @@ var consola = createConsola();
 var package_default = {
 	name: "release-drafter",
 	description: "Drafts your next release notes as pull requests are merged into your branch(es).",
-	version: "7.6.0",
+	version: "7.6.0-next.0",
 	author: "",
 	type: "module",
 	sideEffects: false,
