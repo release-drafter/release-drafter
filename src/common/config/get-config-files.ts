@@ -1,5 +1,6 @@
 import { basename } from 'node:path'
 import * as core from '@actions/core'
+import type { Octokit } from '../get-octokit.ts'
 import { getConfigFile } from './get-config-file.ts'
 import { normalizeFilepath } from './normalize-filepath.ts'
 import { parseConfigTarget } from './parse-config-target.ts'
@@ -10,6 +11,7 @@ export const getConfigFiles = async (
     repo: { owner: string; repo: string }
     ref: string
   },
+  octokit?: Octokit,
 ) => {
   core.debug(`getConfigFiles: Starting with filename: ${configFilename}`)
   let configTarget = parseConfigTarget(configFilename, currentContext)
@@ -28,7 +30,7 @@ export const getConfigFiles = async (
 
   let requestedRepoConfig: Awaited<ReturnType<typeof getConfigFile>>
   try {
-    requestedRepoConfig = await getConfigFile(configTarget)
+    requestedRepoConfig = await getConfigFile(configTarget, undefined, octokit)
   } catch (error) {
     if (
       canFallBackToOrgRepo &&
@@ -44,7 +46,11 @@ export const getConfigFiles = async (
         repo: { owner: currentContext.repo.owner, repo: '.github' },
         ref: undefined,
       }
-      requestedRepoConfig = await getConfigFile(orgFallbackTarget)
+      requestedRepoConfig = await getConfigFile(
+        orgFallbackTarget,
+        undefined,
+        octokit,
+      )
     } else {
       throw error
     }
@@ -122,7 +128,11 @@ export const getConfigFiles = async (
       return files
     }
 
-    const extendRepoConfig = await getConfigFile(configTarget, lastFetchedFrom)
+    const extendRepoConfig = await getConfigFile(
+      configTarget,
+      lastFetchedFrom,
+      octokit,
+    )
     core.debug(
       `getConfigFiles: Fetched extended config from ${extendRepoConfig.fetchedFrom.scheme}:${extendRepoConfig.fetchedFrom.filepath}`,
     )

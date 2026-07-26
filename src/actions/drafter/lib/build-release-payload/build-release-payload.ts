@@ -1,6 +1,9 @@
 import * as core from '@actions/core'
-import { context } from '@actions/github'
-import { parseCommitishForRelease } from '#src/common/parse-commitish.ts'
+import {
+  type GitHubContext,
+  getGitHubContext,
+  parseCommitishForRelease,
+} from '#src/common/index.ts'
 import type { ExclusiveInput, ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import type { findPullRequests } from '../find-pull-requests/index.ts'
@@ -55,17 +58,21 @@ export const buildReleasePayload = async (params: {
   >
   input: ExclusiveInput
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
+  previousCommitish?: string
   newContributorLogins?: ReadonlySet<string>
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
+  github?: GitHubContext
 }) => {
   const {
     commits,
     config,
     input,
     lastRelease,
+    previousCommitish,
     newContributorLogins = new Set<string>(),
     pullRequests,
   } = params
+  const { octokit, repo, serverUrl } = params.github ?? getGitHubContext()
 
   core.info(`Building release payload and body...`)
 
@@ -77,15 +84,15 @@ export const buildReleasePayload = async (params: {
   let body =
     (config.header || '') +
     config.template +
-    (!lastRelease
-      ? `\n---\n${renderTemplate({ template: lastNotFoundTemplate, object: { $OWNER: context.repo.owner, $REPOSITORY: context.repo.repo } })}\n---\n`
+    (!lastRelease && !previousCommitish
+      ? `\n---\n${renderTemplate({ template: lastNotFoundTemplate, object: { $OWNER: repo.owner, $REPOSITORY: repo.repo } })}\n---\n`
       : '') +
     (config.footer || '')
 
   body = renderTemplate({
     template: body,
     object: {
-      $PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : '',
+      $PREVIOUS_TAG: previousCommitish ?? lastRelease?.tag_name ?? '',
       $CHANGES: generateChangeLog({
         commits,
         pullRequests: sortedPullRequests,
@@ -95,14 +102,15 @@ export const buildReleasePayload = async (params: {
         commits,
         pullRequests: sortedPullRequests,
         config,
+        serverUrl,
       }),
       $NEW_CONTRIBUTORS: generateNewContributorsList({
         pullRequests: sortedPullRequests,
         newContributorLogins,
         config,
       }),
-      $OWNER: context.repo.owner,
-      $REPOSITORY: context.repo.repo,
+      $OWNER: repo.owner,
+      $REPOSITORY: repo.repo,
     },
     replacers: config.replacers,
   })
@@ -129,7 +137,10 @@ export const buildReleasePayload = async (params: {
     name: renderReleaseName({ inputName: input.name, config, versionInfo }),
     tag: renderTagName({ inputTagName: input.tag, config, versionInfo }),
     body,
-    targetCommitish: await parseCommitishForRelease(config.commitish),
+    targetCommitish: await parseCommitishForRelease(config.commitish, {
+      octokit,
+      repo,
+    }),
     prerelease: config.prerelease,
     make_latest: config.latest,
     draft: !input.publish,

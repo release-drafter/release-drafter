@@ -1,6 +1,5 @@
-import { context } from '@actions/github'
 import type { Endpoints } from '@octokit/types'
-import { getOctokit } from '#src/common/index.ts'
+import type { GitHubContext } from '#src/common/index.ts'
 import type { buildReleasePayload } from '../build-release-payload/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 
@@ -10,8 +9,9 @@ export const updateRelease = async (params: {
     undefined
   >
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
+  github: Pick<GitHubContext, 'octokit' | 'repo'>
 }) => {
-  const octokit = getOctokit()
+  const { octokit, repo } = params.github
   const { draftRelease, releasePayload } = params
 
   type UpdateParams =
@@ -41,8 +41,8 @@ export const updateRelease = async (params: {
   }
 
   return octokit.rest.repos.updateRelease({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
+    owner: repo.owner,
+    repo: repo.repo,
     release_id: draftRelease.id,
     body: releasePayload.body,
     draft: releasePayload.draft,

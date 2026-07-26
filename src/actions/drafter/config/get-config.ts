@@ -1,10 +1,19 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { composeConfigGet } from '#src/common/index.ts'
+import { composeConfigGet, type GitHubContext } from '#src/common/index.ts'
 import { configSchema } from './schemas/config.schema.ts'
 
-export const getConfig = async (configName: string) => {
-  const { config, contexts } = await composeConfigGet(configName, context)
+export const getConfig = async (
+  configName: string,
+  github?: Pick<GitHubContext, 'repo' | 'ref' | 'octokit'>,
+) => {
+  const { config, contexts } = github
+    ? await composeConfigGet(
+        configName,
+        { repo: github.repo, ref: github.ref ?? '' },
+        github.octokit,
+      )
+    : await composeConfigGet(configName, context)
 
   contexts.forEach(({ filepath, ref, repo, scheme }) => {
     const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ''}`

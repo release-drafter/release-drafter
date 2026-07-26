@@ -95,6 +95,27 @@ describe('findPullRequests', () => {
     localMocks.listFiles.mockReset()
   })
 
+  it('uses an explicit previous commitish without a published release', async () => {
+    localMocks.findCommitsInComparison.mockResolvedValue([
+      makeCommit('id-1', 42),
+    ])
+
+    const result = await findPullRequests({
+      lastRelease: undefined,
+      config: makeConfig([]),
+      previousCommitish: '47ba33fd8c30c8764e8bc98517c6a902f0f43d26',
+    })
+
+    expect(result.pullRequests.map(({ number }) => number)).toEqual([42])
+    expect(localMocks.findCommitsInComparison).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseCommitish: '47ba33fd8c30c8764e8bc98517c6a902f0f43d26',
+        headCommitish: 'refs/heads/main',
+        useCommitishes: true,
+      }),
+    )
+  })
+
   it('identifies a first-time contribution from merge history', async () => {
     const commit = makeCommit('first-contribution', 42)
     const pullRequest = commit.associatedPullRequests.nodes[0]

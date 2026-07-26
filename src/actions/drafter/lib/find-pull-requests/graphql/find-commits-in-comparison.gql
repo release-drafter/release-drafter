@@ -1,8 +1,9 @@
 query findCommitsInComparison(
   $name: String!
   $owner: String!
-  $baseRef: String!
-  $headRef: String!
+  $baseCommitish: String!
+  $headCommitish: String!
+  $useCommitishes: Boolean!
   $withPullRequestBody: Boolean!
   $withPullRequestURL: Boolean!
   $cursor: String
@@ -12,8 +13,8 @@ query findCommitsInComparison(
   $historyLimit: Int!
 ) {
   repository(name: $name, owner: $owner) {
-    ref(qualifiedName: $baseRef) {
-      compare(headRef: $headRef) {
+    ref(qualifiedName: $baseCommitish) @skip(if: $useCommitishes) {
+      compare(headRef: $headCommitish) {
         commits(first: $historyLimit, after: $cursor) {
           __typename
           pageInfo {
@@ -22,38 +23,64 @@ query findCommitsInComparison(
             endCursor
           }
           nodes {
-            __typename
-            id
-            oid
-            committedDate
-            message
-            author {
-              __typename
-              name
-              user {
-                __typename
-                login
-              }
-            }
-            authors(first: 100) {
-              nodes {
-                __typename
-                name
-                user {
-                  __typename
-                  login
-                }
-              }
-            }
-            associatedPullRequests(first: $pullRequestLimit) {
-              __typename
-              nodes {
-                ...PullRequestFields
-              }
-            }
+            ...ComparisonCommitFields
           }
         }
       }
+    }
+    base: object(expression: $baseCommitish) @include(if: $useCommitishes) {
+      __typename
+      ... on Commit {
+        oid
+      }
+    }
+    head: object(expression: $headCommitish) @include(if: $useCommitishes) {
+      __typename
+      ... on Commit {
+        history(first: $historyLimit, after: $cursor) {
+          __typename
+          pageInfo {
+            __typename
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            ...ComparisonCommitFields
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment ComparisonCommitFields on Commit {
+  __typename
+  id
+  oid
+  committedDate
+  message
+  author {
+    __typename
+    name
+    user {
+      __typename
+      login
+    }
+  }
+  authors(first: 100) {
+    nodes {
+      __typename
+      name
+      user {
+        __typename
+        login
+      }
+    }
+  }
+  associatedPullRequests(first: $pullRequestLimit) {
+    __typename
+    nodes {
+      ...PullRequestFields
     }
   }
 }

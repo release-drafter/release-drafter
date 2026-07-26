@@ -1,6 +1,9 @@
 import * as core from '@actions/core'
-import { context } from '@actions/github'
-import { executeGraphql, getOctokit } from '#src/common/index.ts'
+import {
+  executeGraphql,
+  type GitHubContext,
+  getGitHubContext,
+} from '#src/common/index.ts'
 import {
   FindRecentMergedPullRequestsDocument,
   type FindRecentMergedPullRequestsQuery,
@@ -28,16 +31,17 @@ export const findRecentMergedPullRequests = async (params: {
   commitOids: Set<string>
   foundPrKeys: Set<string>
   fieldFlags: PullRequestFieldFlags
+  github?: Pick<GitHubContext, 'octokit' | 'repo'>
 }): Promise<RecentMergedPullRequest[]> => {
-  const octokit = getOctokit()
-  const nameWithOwner = `${context.repo.owner}/${context.repo.repo}`
+  const { octokit, repo } = params.github ?? getGitHubContext()
+  const nameWithOwner = `${repo.owner}/${repo.repo}`
 
   const data = await executeGraphql(
     octokit.graphql,
     FindRecentMergedPullRequestsDocument,
     {
-      name: context.repo.repo,
-      owner: context.repo.owner,
+      name: repo.repo,
+      owner: repo.owner,
       baseRefName: params.baseRefName,
       limit: RECENT_PR_LOOKBACK,
       ...params.fieldFlags,

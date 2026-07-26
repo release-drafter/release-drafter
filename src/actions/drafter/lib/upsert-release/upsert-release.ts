@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import type { GitHubContext } from '#src/common/index.ts'
 import type { buildReleasePayload } from '../build-release-payload/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import { createRelease } from './create-release.ts'
@@ -8,6 +9,7 @@ export const upsertRelease = async (params: {
   draftRelease: Awaited<ReturnType<typeof findPreviousReleases>>['draftRelease']
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
   dryRun?: boolean
+  github: Pick<GitHubContext, 'octokit' | 'repo'>
 }) => {
   const { draftRelease, releasePayload, dryRun } = params
 
@@ -28,6 +30,7 @@ export const upsertRelease = async (params: {
     core.info('Creating new release...')
     const res = await createRelease({
       releasePayload,
+      github: params.github,
     })
     core.info('Release created!')
     return res
@@ -36,6 +39,7 @@ export const upsertRelease = async (params: {
     const res = await updateRelease({
       draftRelease,
       releasePayload,
+      github: params.github,
     })
     core.info('Release updated!')
     return res

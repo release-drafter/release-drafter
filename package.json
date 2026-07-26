@@ -5,6 +5,9 @@
   "author": "",
   "type": "module",
   "private": true,
+  "bin": {
+    "release-drafter": "dist/cli.js"
+  },
   "homepage": "https://github.com/release-drafter/release-drafter",
   "repository": {
     "type": "git",
@@ -29,6 +32,7 @@
   },
   "scripts": {
     "build": "vite build",
+    "cli": "npm run build --silent && node dist/cli.js",
     "test": "vitest",
     "test:run": "vitest run",
     "coverage": "node src/scripts/coverage-summary.ts",
@@ -58,7 +62,9 @@
     "@octokit/plugin-retry": "^8.1.0",
     "@octokit/request-error": "^7.1.0",
     "@octokit/types": "^16.0.0",
+    "cac": "^7.0.0",
     "compare-versions": "^6.1.1",
+    "consola": "^3.4.2",
     "conventional-commits-parser": "^6.4.0",
     "escape-string-regexp": "^5.0.0",
     "graphql": "^17.0.2",

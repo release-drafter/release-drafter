@@ -5,6 +5,7 @@ export {
   getPullRequestChangedFiles,
   getPullRequestsChangedFiles,
 } from './get-pull-request-changed-files.ts'
+export { type GitHubContext, getGitHubContext } from './github-context.ts'
 export { executeGraphql, paginateGraphql } from './graphql.ts'
 export { parseCommitishForRelease } from './parse-commitish.ts'
 export { sharedInputSchema } from './shared-input.schema.ts'

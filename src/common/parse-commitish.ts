@@ -5,18 +5,24 @@ import {
   ResolveCommitishDocument,
   ResolvePullRequestCommitishDocument,
 } from '#src/types/github.graphql.generated.ts'
-import { getOctokit, type Octokit } from './get-octokit.ts'
+import type { Octokit } from './get-octokit.ts'
+import { getOctokit } from './get-octokit.ts'
+import type { GitHubContext } from './github-context.ts'
 import { executeGraphql } from './graphql.ts'
+
+export const commitishToCommitExpression = (commitish: string) =>
+  `${commitish}^{commit}`
 
 const resolveTagToCommitSha = async (params: {
   octokit: Octokit
   tagRef: string
+  repo: GitHubContext['repo']
 }) => {
-  const { octokit, tagRef } = params
+  const { octokit, tagRef, repo } = params
   const data = await executeGraphql(octokit.graphql, ResolveCommitishDocument, {
-    name: context.repo.repo,
-    owner: context.repo.owner,
-    expression: `${tagRef}^{commit}`,
+    name: repo.repo,
+    owner: repo.owner,
+    expression: commitishToCommitExpression(tagRef),
   })
   const target = data.repository?.object
 
@@ -31,14 +37,15 @@ const resolvePullRequestToCommitSha = async (params: {
   octokit: Octokit
   pullRequestNumber: number
   refType: 'head' | 'merge'
+  repo: GitHubContext['repo']
 }) => {
-  const { octokit, pullRequestNumber, refType } = params
+  const { octokit, pullRequestNumber, refType, repo } = params
   const data = await executeGraphql(
     octokit.graphql,
     ResolvePullRequestCommitishDocument,
     {
-      name: context.repo.repo,
-      owner: context.repo.owner,
+      name: repo.repo,
+      owner: repo.owner,
       number: pullRequestNumber,
     },
   )
@@ -72,15 +79,18 @@ const resolvePullRequestToCommitSha = async (params: {
  */
 export const parseCommitishForRelease = async (
   commitish: ParsedConfig['commitish'],
-  octokit?: Octokit,
+  github?: Pick<GitHubContext, 'octokit' | 'repo'>,
 ) => {
+  const octokit = github?.octokit ?? getOctokit()
+  const repo = github?.repo ?? context.repo
   if (commitish.startsWith('refs/heads/')) {
     return commitish.replace(/^refs\/heads\//, '')
   }
 
   if (commitish.startsWith('refs/tags/')) {
     return resolveTagToCommitSha({
-      octokit: octokit ?? getOctokit(),
+      octokit,
+      repo,
       tagRef: commitish,
     }).catch(() => {
       core.warning(
@@ -98,7 +108,8 @@ export const parseCommitishForRelease = async (
       const [, pullRequestNumber, refType] = pullRequestRef
 
       return resolvePullRequestToCommitSha({
-        octokit: octokit ?? getOctokit(),
+        octokit,
+        repo,
         pullRequestNumber: Number(pullRequestNumber),
         refType: refType as 'head' | 'merge',
       }).catch(() => {

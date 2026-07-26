@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import type { Octokit } from '../get-octokit.ts'
 import { getConfigFiles } from './get-config-files.ts'
 import { mergeConfigChain } from './merge-config-chain.ts'
 
@@ -13,6 +14,7 @@ export async function composeConfigGet(
     repo: { owner: string; repo: string }
     ref: string
   },
+  octokit?: Octokit,
 ) {
   core.debug(
     `composeConfigGet: Starting config composition with filename: ${configFilename}`,
@@ -21,7 +23,11 @@ export async function composeConfigGet(
     `composeConfigGet: Current context - repo: ${currentContext.repo.owner}/${currentContext.repo.repo}, ref: ${currentContext.ref}`,
   )
 
-  const configResults = await getConfigFiles(configFilename, currentContext)
+  const configResults = await getConfigFiles(
+    configFilename,
+    currentContext,
+    octokit,
+  )
   core.debug(
     `composeConfigGet: Retrieved ${configResults.length} config file(s)`,
   )

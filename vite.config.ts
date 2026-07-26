@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { chmod, readFile, writeFile } from 'node:fs/promises'
 import { builtinModules } from 'node:module'
 import { defineConfig, type Plugin } from 'vitest/config'
 
@@ -17,6 +17,7 @@ function syncDrafterActionYml(): Plugin {
       if (dest !== expected) {
         await writeFile('drafter/action.yml', expected)
       }
+      await chmod('dist/cli.js', 0o755)
     },
   }
 }
@@ -44,6 +45,7 @@ export default defineConfig({
       platform: 'node',
       external: (id) => id.startsWith('node:') || builtinModules.includes(id),
       input: {
+        cli: 'src/cli/run.ts',
         'actions/drafter/run': 'src/actions/drafter/run.ts',
         'actions/autolabeler/run': 'src/actions/autolabeler/run.ts',
       },

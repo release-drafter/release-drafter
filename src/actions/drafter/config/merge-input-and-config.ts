@@ -48,6 +48,7 @@ export type ParsedConfig = ReturnType<typeof mergeInputAndConfig>
 export const mergeInputAndConfig = (params: {
   config: Config
   input: CommonConfig
+  ref?: string
 }) => {
   const { config: originalConfig, input } = params
   const {
@@ -68,7 +69,10 @@ export const mergeInputAndConfig = (params: {
 
   applyOverrides(config, input)
 
-  const { commitish, latest, prerelease } = getParsedDefaults(config)
+  const { commitish, latest, prerelease } = getParsedDefaults(
+    config,
+    params.ref ?? context.ref,
+  )
   const replacers = getTransformedReplacers(config)
   const categories = getTransformedCategories(config, deprecatedCategoryConfig)
 
@@ -168,8 +172,8 @@ const applyStringOverride = (
   config[key] = inputValue
 }
 
-const getParsedDefaults = (config: MutableConfig) => ({
-  commitish: config.commitish || context.ref || (context.payload.ref as string),
+const getParsedDefaults = (config: MutableConfig, ref?: string) => ({
+  commitish: config.commitish || ref || '',
   latest: typeof config.latest !== 'boolean' ? true : config.latest,
   prerelease:
     typeof config.prerelease !== 'boolean' ? false : config.prerelease,
