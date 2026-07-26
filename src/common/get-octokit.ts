@@ -12,12 +12,6 @@ export const getOctokit = () => {
     process.env.GITHUB_TOKEN || '',
     {
       log: { ...core, warn: core.warning },
-      request: {
-        /**
-         * Allows nock to intercept requests in tests
-         */
-        fetch: global.fetch,
-      },
     },
     paginateGraphQL,
     retry,
