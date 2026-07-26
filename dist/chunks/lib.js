@@ -3178,14 +3178,33 @@ var findPreviousReleases = async (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts
+var findComparisonCommitOids = async (octokit, params) => {
+	const commits = [];
+	let page = 1;
+	while (true) {
+		const response = await octokit.rest.repos.compareCommitsWithBasehead({
+			owner: params.owner,
+			repo: params.name,
+			basehead: `${params.baseCommitish}...${params.headCommitish}`,
+			per_page: 100,
+			page
+		});
+		commits.push(...response.data.commits);
+		if (!response.headers.link?.includes("rel=\"next\"")) break;
+		page++;
+	}
+	return new Set(commits.map((commit) => commit.sha));
+};
 var findCommitsInComparison = async (params) => {
 	const { octokit } = params.github ?? { octokit: getOctokit() };
+	const { github: _github, ...comparisonParams } = params;
 	const commits = [];
 	const useCommitishes = params.useCommitishes ?? false;
+	const remainingComparisonOids = useCommitishes ? await findComparisonCommitOids(octokit, params) : void 0;
+	if (remainingComparisonOids?.size === 0) return commits;
 	const queryParams = {
-		...params,
+		...comparisonParams,
 		useCommitishes,
-		baseCommitish: useCommitishes ? commitishToCommitExpression(params.baseCommitish) : params.baseCommitish,
 		headCommitish: useCommitishes ? commitishToCommitExpression(params.headCommitish) : params.headCommitish
 	};
 	let cursor;
@@ -3194,16 +3213,12 @@ var findCommitsInComparison = async (params) => {
 			...queryParams,
 			cursor
 		})).repository;
-		if (useCommitishes) {
-			const baseOid = repository?.base?.__typename === "Commit" ? repository.base.oid : void 0;
+		if (remainingComparisonOids) {
 			const history = repository?.head?.__typename === "Commit" ? repository.head.history : void 0;
-			if (!baseOid || !history) throw new Error("Base or head commitish could not be resolved to a commit");
-			for (const commit of history.nodes ?? []) {
-				if (!commit) continue;
-				if (commit.oid === baseOid) return commits;
-				commits.push(commit);
-			}
-			if (!history.pageInfo.hasNextPage) throw new Error(`Base commitish ${params.baseCommitish} is not an ancestor of ${params.headCommitish}`);
+			if (!history) throw new Error("Head commitish could not be resolved to a commit");
+			for (const commit of history.nodes ?? []) if (commit && remainingComparisonOids.delete(commit.oid)) commits.push(commit);
+			if (remainingComparisonOids.size === 0) return commits;
+			if (!history.pageInfo.hasNextPage) throw new Error(`Comparison commits were not found in the history of ${params.headCommitish}: ${[...remainingComparisonOids].join(", ")}`);
 			cursor = history.pageInfo.endCursor;
 		} else {
 			const comparison = repository?.ref?.compare?.commits;

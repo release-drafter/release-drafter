@@ -27,18 +27,46 @@ type HeadCommit = Extract<
 type HistoryCommits = NonNullable<HeadCommit['history']['nodes']>
 type ComparisonCommit = NonNullable<RefCommits[number] | HistoryCommits[number]>
 
+const findComparisonCommitOids = async (
+  octokit: GitHubContext['octokit'],
+  params: Pick<Params, 'owner' | 'name' | 'baseCommitish' | 'headCommitish'>,
+) => {
+  const commits: Array<{ sha: string }> = []
+  let page = 1
+
+  while (true) {
+    const response = await octokit.rest.repos.compareCommitsWithBasehead({
+      owner: params.owner,
+      repo: params.name,
+      basehead: `${params.baseCommitish}...${params.headCommitish}`,
+      per_page: 100,
+      page,
+    })
+    commits.push(...response.data.commits)
+
+    if (!response.headers.link?.includes('rel="next"')) break
+    page++
+  }
+
+  return new Set(commits.map((commit) => commit.sha))
+}
+
 export const findCommitsInComparison = async (
   params: Params & { github?: Pick<GitHubContext, 'octokit'> },
 ) => {
   const { octokit } = params.github ?? { octokit: getOctokit() }
+  const { github: _github, ...comparisonParams } = params
   const commits: ComparisonCommit[] = []
   const useCommitishes = params.useCommitishes ?? false
+  const remainingComparisonOids = useCommitishes
+    ? await findComparisonCommitOids(octokit, params)
+    : undefined
+
+  if (remainingComparisonOids?.size === 0) return commits
+
   const queryParams = {
-    ...params,
+    ...comparisonParams,
     useCommitishes,
-    baseCommitish: useCommitishes
-      ? commitishToCommitExpression(params.baseCommitish)
-      : params.baseCommitish,
     headCommitish: useCommitishes
       ? commitishToCommitExpression(params.headCommitish)
       : params.headCommitish,
@@ -53,31 +81,26 @@ export const findCommitsInComparison = async (
     )
     const repository = data.repository
 
-    if (useCommitishes) {
-      const baseOid =
-        repository?.base?.__typename === 'Commit'
-          ? repository.base.oid
-          : undefined
+    if (remainingComparisonOids) {
       const history =
         repository?.head?.__typename === 'Commit'
           ? repository.head.history
           : undefined
 
-      if (!baseOid || !history) {
-        throw new Error(
-          'Base or head commitish could not be resolved to a commit',
-        )
+      if (!history) {
+        throw new Error('Head commitish could not be resolved to a commit')
       }
 
       for (const commit of history.nodes ?? []) {
-        if (!commit) continue
-        if (commit.oid === baseOid) return commits
-        commits.push(commit)
+        if (commit && remainingComparisonOids.delete(commit.oid)) {
+          commits.push(commit)
+        }
       }
 
+      if (remainingComparisonOids.size === 0) return commits
       if (!history.pageInfo.hasNextPage) {
         throw new Error(
-          `Base commitish ${params.baseCommitish} is not an ancestor of ${params.headCommitish}`,
+          `Comparison commits were not found in the history of ${params.headCommitish}: ${[...remainingComparisonOids].join(', ')}`,
         )
       }
       cursor = history.pageInfo.endCursor

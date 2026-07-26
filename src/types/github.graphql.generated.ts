@@ -38190,12 +38190,7 @@ export type FindCommitsInComparisonQuery = { repository: { ref?: { compare: { co
                   | { __typename: 'Mannequin', login: string, url: string }
                   | { __typename: 'Organization', login: string, url: string }
                   | { __typename: 'User', login: string, url: string }
-                 | null, baseRepository: { __typename: 'Repository', nameWithOwner: string } | null, labels: { __typename: 'LabelConnection', nodes: Array<{ __typename: 'Label', name: string } | null> | null } | null } | null> | null } | null } | null> | null } } | null } | null, base?:
-      | { __typename: 'Blob' }
-      | { __typename: 'Commit', oid: string }
-      | { __typename: 'Tag' }
-      | { __typename: 'Tree' }
-     | null, head?:
+                 | null, baseRepository: { __typename: 'Repository', nameWithOwner: string } | null, labels: { __typename: 'LabelConnection', nodes: Array<{ __typename: 'Label', name: string } | null> | null } | null } | null> | null } | null } | null> | null } } | null } | null, head?:
       | { __typename: 'Blob' }
       | { __typename: 'Commit', history: { __typename: 'CommitHistoryConnection', pageInfo: { __typename: 'PageInfo', hasNextPage: boolean, endCursor: string | null }, nodes: Array<{ __typename: 'Commit', id: string, oid: string, committedDate: string, message: string, author: { __typename: 'GitActor', name: string | null, user: { __typename: 'User', login: string } | null } | null, authors: { nodes: Array<{ __typename: 'GitActor', name: string | null, user: { __typename: 'User', login: string } | null } | null> | null }, associatedPullRequests: { __typename: 'PullRequestConnection', nodes: Array<{ __typename: 'PullRequest', title: string, number: number, url?: string, body?: string, mergedAt: string | null, isCrossRepository: boolean, merged: boolean, baseRefName?: string, headRefName?: string, author:
                   | { __typename: 'Bot', login: string, url: string }
@@ -38405,12 +38400,6 @@ export const FindCommitsInComparisonDocument = new TypedDocumentString(`
             ...ComparisonCommitFields
           }
         }
-      }
-    }
-    base: object(expression: $baseCommitish) @include(if: $useCommitishes) {
-      __typename
-      ... on Commit {
-        oid
       }
     }
     head: object(expression: $headCommitish) @include(if: $useCommitishes) {
