@@ -3,12 +3,7 @@ import {
   mergeInputAndConfig,
 } from '#src/actions/drafter/config/index.ts'
 import { actionInputSchema } from '#src/actions/drafter/config/schemas/action-input.schema.ts'
-import {
-  buildReleasePayload,
-  findPreviousReleases,
-  findPullRequests,
-  upsertRelease,
-} from '#src/actions/drafter/lib/index.ts'
+import { main } from '#src/actions/drafter/main.ts'
 import { getOctokit, type Octokit } from '#src/common/get-octokit.ts'
 
 export type DraftReleaseOptions = {
@@ -56,36 +51,11 @@ export const draftRelease = async (options: DraftReleaseOptions) => {
     input,
     ref: github.ref,
   })
-  const { draftRelease: existingDraft, lastRelease } =
-    await findPreviousReleases({ ...config, github })
-  const { commits, newContributorLogins, pullRequests } =
-    await findPullRequests({
-      lastRelease,
-      config,
-      previousCommitish: options.previousCommitish,
-      github,
-    })
-  const releasePayload = await buildReleasePayload({
-    commits,
+
+  return main({
     config,
     input,
-    lastRelease,
     previousCommitish: options.previousCommitish,
-    newContributorLogins,
-    pullRequests,
     github,
   })
-  const upsertedRelease = await upsertRelease({
-    draftRelease: existingDraft,
-    releasePayload,
-    dryRun: options.dryRun,
-    github,
-  })
-
-  return {
-    commits,
-    pullRequests,
-    releasePayload,
-    upsertedRelease,
-  }
 }

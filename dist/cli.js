@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { w as getOctokit } from "./chunks/ignore.js";
-import { i as buildReleasePayload, l as actionInputSchema, n as findPullRequests, o as mergeInputAndConfig, r as findPreviousReleases, s as getConfig, t as upsertRelease } from "./chunks/lib.js";
+import { i as getConfig, o as actionInputSchema, r as mergeInputAndConfig, t as main } from "./chunks/main.js";
 import process$1 from "node:process";
 import { promisify } from "node:util";
 import { execFile } from "node:child_process";
@@ -1164,42 +1164,16 @@ var draftRelease$1 = async (options) => {
 		"dry-run": options.dryRun,
 		commitish
 	});
-	const config = mergeInputAndConfig({
-		config: await getConfig(input["config-name"], github),
+	return main({
+		config: mergeInputAndConfig({
+			config: await getConfig(input["config-name"], github),
+			input,
+			ref: github.ref
+		}),
 		input,
-		ref: github.ref
-	});
-	const { draftRelease: existingDraft, lastRelease } = await findPreviousReleases({
-		...config,
-		github
-	});
-	const { commits, newContributorLogins, pullRequests } = await findPullRequests({
-		lastRelease,
-		config,
 		previousCommitish: options.previousCommitish,
 		github
 	});
-	const releasePayload = await buildReleasePayload({
-		commits,
-		config,
-		input,
-		lastRelease,
-		previousCommitish: options.previousCommitish,
-		newContributorLogins,
-		pullRequests,
-		github
-	});
-	return {
-		commits,
-		pullRequests,
-		releasePayload,
-		upsertedRelease: await upsertRelease({
-			draftRelease: existingDraft,
-			releasePayload,
-			dryRun: options.dryRun,
-			github
-		})
-	};
 };
 //#endregion
 //#region src/cli/auth.ts
@@ -1278,7 +1252,7 @@ var draftRelease = async (args) => {
 		latest: args.latest
 	});
 	consola.info(`📝 Found ${result.pullRequests.length} pull requests across ${result.commits.length} commits`);
-	if (args.dryRun) consola.success(`🧪 Dry run complete for ${result.releasePayload.name}`);
+	if (result.dryRun) consola.success(`🧪 Dry run complete for ${result.releasePayload.name}`);
 	else {
 		const release = result.upsertedRelease?.data.html_url || result.releasePayload.name;
 		if (result.releasePayload.draft) consola.success(`✨ Draft ready: ${release}`);

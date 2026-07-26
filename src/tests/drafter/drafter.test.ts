@@ -1,23 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  buildReleasePayload: vi.fn(),
-  findPreviousReleases: vi.fn(),
-  findPullRequests: vi.fn(),
   getConfig: vi.fn(),
+  main: vi.fn(),
   mergeInputAndConfig: vi.fn(),
-  upsertRelease: vi.fn(),
 }))
 
 vi.mock('#src/actions/drafter/config/index.ts', () => ({
   getConfig: mocks.getConfig,
   mergeInputAndConfig: mocks.mergeInputAndConfig,
 }))
-vi.mock('#src/actions/drafter/lib/index.ts', () => ({
-  buildReleasePayload: mocks.buildReleasePayload,
-  findPreviousReleases: mocks.findPreviousReleases,
-  findPullRequests: mocks.findPullRequests,
-  upsertRelease: mocks.upsertRelease,
+vi.mock('#src/actions/drafter/main.ts', () => ({
+  main: mocks.main,
 }))
 
 const { draftRelease } = await import('#src/drafter.ts')
@@ -28,17 +22,13 @@ describe('programmatic draftRelease', () => {
   beforeEach(() => {
     mocks.getConfig.mockResolvedValue({})
     mocks.mergeInputAndConfig.mockReturnValue({ commitish: 'main' })
-    mocks.findPreviousReleases.mockResolvedValue({
-      draftRelease: undefined,
-      lastRelease: undefined,
-    })
-    mocks.findPullRequests.mockResolvedValue({
+    mocks.main.mockResolvedValue({
       commits: [],
-      newContributorLogins: [],
       pullRequests: [],
+      releasePayload: { name: 'v1.0.0' },
+      upsertedRelease: undefined,
+      dryRun: false,
     })
-    mocks.buildReleasePayload.mockResolvedValue({ name: 'v1.0.0' })
-    mocks.upsertRelease.mockResolvedValue(undefined)
   })
 
   it('passes release publication overrides through the action input schema', async () => {
@@ -47,13 +37,15 @@ describe('programmatic draftRelease', () => {
       token: 'token',
       octokit,
       commitish: 'main',
+      previousCommitish: 'v1.0.0',
       publish: true,
       prerelease: true,
       latest: false,
     })
 
-    expect(mocks.mergeInputAndConfig).toHaveBeenCalledWith(
+    expect(mocks.main).toHaveBeenCalledWith(
       expect.objectContaining({
+        previousCommitish: 'v1.0.0',
         input: expect.objectContaining({
           publish: true,
           prerelease: true,
