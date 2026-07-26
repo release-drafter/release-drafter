@@ -65,7 +65,7 @@ export const draftRelease = async (args: CliArguments) => {
     `📝 Found ${result.pullRequests.length} pull requests across ${result.commits.length} commits`,
   )
 
-  if (args.dryRun) {
+  if (result.dryRun) {
     consola.success(`🧪 Dry run complete for ${result.releasePayload.name}`)
   } else {
     const release =

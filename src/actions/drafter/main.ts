@@ -11,6 +11,7 @@ import {
 export const main = async (params: {
   config: ParsedConfig
   input: ExclusiveInput
+  previousCommitish?: string
   github: GitHubContext
 }) => {
   /**
@@ -44,6 +45,7 @@ export const main = async (params: {
     await findPullRequests({
       lastRelease,
       config,
+      previousCommitish: params.previousCommitish,
       github: params.github,
     })
 
@@ -52,6 +54,7 @@ export const main = async (params: {
     config,
     input: effectiveInput,
     lastRelease,
+    previousCommitish: params.previousCommitish,
     newContributorLogins,
     pullRequests,
     github: params.github,
@@ -65,7 +68,10 @@ export const main = async (params: {
   })
 
   return {
-    upsertedRelease,
+    commits,
+    pullRequests,
     releasePayload,
+    upsertedRelease,
+    dryRun: effectiveInput['dry-run'],
   }
 }

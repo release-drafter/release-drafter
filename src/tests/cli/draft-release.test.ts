@@ -56,6 +56,7 @@ describe('CLI draftRelease', () => {
         make_latest: true,
       },
       upsertedRelease: undefined,
+      dryRun: true,
     })
   })
 
@@ -88,6 +89,29 @@ describe('CLI draftRelease', () => {
     expect(mocks.success).toHaveBeenCalledWith('🧪 Dry run complete for v1.0.0')
   })
 
+  it('reports an effective dry run forced by the drafter', async () => {
+    mocks.runReleaseDrafter.mockResolvedValueOnce({
+      commits: [],
+      pullRequests: [],
+      releasePayload: {
+        name: 'v1.0.0',
+        draft: true,
+        prerelease: false,
+        make_latest: true,
+      },
+      upsertedRelease: undefined,
+      dryRun: true,
+    })
+
+    await draftRelease({
+      repository: 'owner/repository',
+      config: 'release-drafter.yml',
+      dryRun: false,
+    })
+
+    expect(mocks.success).toHaveBeenCalledWith('🧪 Dry run complete for v1.0.0')
+  })
+
   it('passes explicit range, version, and config URL overrides', async () => {
     mocks.getContent
       .mockRejectedValueOnce({ status: 404 })
@@ -104,6 +128,7 @@ describe('CLI draftRelease', () => {
       upsertedRelease: {
         data: { html_url: 'https://github.com/owner/repository/releases/1' },
       },
+      dryRun: false,
     })
 
     await draftRelease({
@@ -162,6 +187,7 @@ describe('CLI draftRelease', () => {
       upsertedRelease: {
         data: { html_url: 'https://github.com/owner/repository/releases/2' },
       },
+      dryRun: false,
     })
 
     await draftRelease({

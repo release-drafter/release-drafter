@@ -1,52 +1,5 @@
-import { A as setFailed, M as warning, T as context, k as info, w as getOctokit } from "../../chunks/ignore.js";
-import { a as setActionOutput, c as getActionInput, i as buildReleasePayload, n as findPullRequests, o as mergeInputAndConfig, r as findPreviousReleases, s as getConfig, t as upsertRelease } from "../../chunks/lib.js";
-//#region src/actions/drafter/main.ts
-var main = async (params) => {
-	/**
-	* 1. find previous releases - returns latest release
-	* 2. find commits since latest release, with their associated pull-requests
-	* 3. sort those pull-requests according to the desired config (for release-body)
-	* 4. generate release info
-	* 5. create a release (may be a draft) or update previous draft
-	* 6. set action outputs
-	*/
-	const { config, input } = params;
-	const isPullRequestMergeRef = /^refs\/pull\/\d+\/merge$/.test(config.commitish);
-	const effectiveInput = isPullRequestMergeRef ? {
-		...input,
-		"dry-run": true,
-		publish: false
-	} : input;
-	if (isPullRequestMergeRef && !input["dry-run"]) warning(`${config.commitish} points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.`);
-	const { draftRelease, lastRelease } = await findPreviousReleases({
-		...config,
-		github: params.github
-	});
-	const { commits, newContributorLogins, pullRequests } = await findPullRequests({
-		lastRelease,
-		config,
-		github: params.github
-	});
-	const releasePayload = await buildReleasePayload({
-		commits,
-		config,
-		input: effectiveInput,
-		lastRelease,
-		newContributorLogins,
-		pullRequests,
-		github: params.github
-	});
-	return {
-		upsertedRelease: await upsertRelease({
-			draftRelease,
-			releasePayload,
-			dryRun: effectiveInput["dry-run"],
-			github: params.github
-		}),
-		releasePayload
-	};
-};
-//#endregion
+import { A as setFailed, T as context, k as info, w as getOctokit } from "../../chunks/ignore.js";
+import { a as getActionInput, i as getConfig, n as setActionOutput, r as mergeInputAndConfig, t as main } from "../../chunks/main.js";
 //#region src/actions/drafter/runner.ts
 /**
 * The main function for the action.
