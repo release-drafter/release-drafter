@@ -1,4 +1,4 @@
-import { C as getInput, D as warning, E as setOutput, O as __commonJSMin, S as error, T as setFailed, _ as number, a as parseCommitishForRelease, b as stringbool, c as getPullRequestsChangedFiles, d as getOctokit, f as context, g as boolean, h as array, i as sharedInputSchema, k as __toESM, l as executeGraphql, m as _enum, n as stringToRegex, o as paginateGraphql, p as ZodDefault, r as escapeStringRegexp, t as require_ignore, u as composeConfigGet, v as object, w as info, x as debug, y as string } from "../../chunks/ignore.js";
+import { A as setOutput, C as stringbool, D as getInput, E as error, M as __commonJSMin, N as __toESM, O as info, S as string, T as debug, _ as array, a as parseCommitishForRelease, b as number, c as executeGraphql, d as getPullRequestsChangedFiles, f as composeConfigGet, g as _enum, h as ZodDefault, i as sharedInputSchema, j as warning, k as setFailed, l as paginateGraphql, m as context, n as stringToRegex, o as FindCommitsInComparisonDocument, p as getOctokit, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, v as boolean, w as union, x as object, y as literal } from "../../chunks/ignore.js";
 //#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
@@ -100,6 +100,22 @@ var getActionInput = () => {
 * All specified predicates must be satisfied for a change to match.
 */
 var changeConditionSchema = object({
+	/**
+	* Conventional commit predicate: matches a change whose title or message
+	* follows the conventional commit shape, e.g. `feat(api)!: add endpoint`.
+	*/
+	conventional: union([literal(true), object({
+		/** Shorthand for one `types` entry. */
+		type: string().min(1).optional(),
+		/** Conventional commit types to match, e.g. `feat` or `fix`. */
+		types: array(string().min(1)).optional().default([]),
+		/** Shorthand for one `scopes` entry. */
+		scope: string().min(1).optional(),
+		/** Conventional commit scopes to match, e.g. `api` or `ui`. */
+		scopes: array(string().min(1)).optional().default([]),
+		/** Match titles with (`true`) or without (`false`) a breaking `!`. */
+		breaking: boolean().optional()
+	})]).optional(),
 	/**
 	* Label predicate: matches a change that carries this label.
 	*
@@ -449,8 +465,10 @@ var configSchemaDefaults = Object.fromEntries(Object.entries({
 //#region src/actions/drafter/config/get-config.ts
 var getConfig = async (configName) => {
 	const { config, contexts } = await composeConfigGet(configName, context);
-	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
-	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally" : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
+	contexts.forEach(({ filepath, ref, repo, scheme }) => {
+		const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ""}`;
+		info(`Config fetched ${scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`}.`);
+	});
 	return configSchema.parse(config);
 };
 //#endregion
@@ -635,6 +653,12 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var { safeRe: re, t } = require_re();
 	var parseOptions = require_parse_options();
 	var { compareIdentifiers } = require_identifiers();
+	var isPrereleaseIdentifier = (prerelease, identifier) => {
+		const identifiers = identifier.split(".");
+		if (identifiers.length > prerelease.length) return false;
+		for (let i = 0; i < identifiers.length; i++) if (compareIdentifiers(prerelease[i], identifiers[i]) !== 0) return false;
+		return true;
+	};
 	module.exports = class SemVer {
 		constructor(version, options) {
 			options = parseOptions(options);
@@ -791,8 +815,9 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 					if (identifier) {
 						let prerelease = [identifier, base];
 						if (identifierBase === false) prerelease = [identifier];
-						if (compareIdentifiers(this.prerelease[0], identifier) === 0) {
-							if (isNaN(this.prerelease[1])) this.prerelease = prerelease;
+						if (isPrereleaseIdentifier(this.prerelease, identifier)) {
+							const prereleaseBase = this.prerelease[identifier.split(".").length];
+							if (isNaN(prereleaseBase)) this.prerelease = prerelease;
 						} else this.prerelease = prerelease;
 					}
 					break;
@@ -1011,6 +1036,7 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			return this.range;
 		}
 		parseRange(range) {
+			range = range.replace(BUILDSTRIPRE, "");
 			const memoKey = ((this.options.includePrerelease && FLAG_INCLUDE_PRERELEASE) | (this.options.loose && FLAG_LOOSE)) + ":" + range;
 			const cached = cache.get(memoKey);
 			if (cached) return cached;
@@ -1069,8 +1095,9 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var Comparator = require_comparator();
 	var debug = require_debug();
 	var SemVer = require_semver();
-	var { safeRe: re, t, comparatorTrimReplace, tildeTrimReplace, caretTrimReplace } = require_re();
+	var { safeRe: re, src, t, comparatorTrimReplace, tildeTrimReplace, caretTrimReplace } = require_re();
 	var { FLAG_INCLUDE_PRERELEASE, FLAG_LOOSE } = require_constants();
+	var BUILDSTRIPRE = new RegExp(src[t.BUILD], "g");
 	var isNullSet = (c) => c.value === "<0.0.0-0";
 	var isAny = (c) => c.value === "";
 	var isSatisfiable = (comparators, options) => {
@@ -1099,17 +1126,19 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		return comp;
 	};
 	var isX = (id) => !id || id.toLowerCase() === "x" || id === "*";
+	var invalidXRangeOrder = (M, m, p) => isX(M) && !isX(m) || isX(m) && p && !isX(p);
 	var replaceTildes = (comp, options) => {
 		return comp.trim().split(/\s+/).map((c) => replaceTilde(c, options)).join(" ");
 	};
 	var replaceTilde = (comp, options) => {
 		const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
+		const z = options.includePrerelease ? "-0" : "";
 		return comp.replace(r, (_, M, m, p, pr) => {
 			debug("tilde", comp, _, M, m, p, pr);
 			let ret;
 			if (isX(M)) ret = "";
-			else if (isX(m)) ret = `>=${M}.0.0 <${+M + 1}.0.0-0`;
-			else if (isX(p)) ret = `>=${M}.${m}.0 <${M}.${+m + 1}.0-0`;
+			else if (isX(m)) ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
+			else if (isX(p)) ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
 			else if (pr) {
 				debug("replaceTilde pr", pr);
 				ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
@@ -1139,8 +1168,8 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				else ret = `>=${M}.${m}.${p}-${pr} <${+M + 1}.0.0-0`;
 			} else {
 				debug("no pr");
-				if (M === "0") if (m === "0") ret = `>=${M}.${m}.${p}${z} <${M}.${m}.${+p + 1}-0`;
-				else ret = `>=${M}.${m}.${p}${z} <${M}.${+m + 1}.0-0`;
+				if (M === "0") if (m === "0") ret = `>=${M}.${m}.${p} <${M}.${m}.${+p + 1}-0`;
+				else ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
 				else ret = `>=${M}.${m}.${p} <${+M + 1}.0.0-0`;
 			}
 			debug("caret return", ret);
@@ -1156,6 +1185,7 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		const r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
 		return comp.replace(r, (ret, gtlt, M, m, p, pr) => {
 			debug("xRange", comp, ret, gtlt, M, m, p, pr);
+			if (invalidXRangeOrder(M, m, p)) return comp;
 			const xM = isX(M);
 			const xm = xM || isX(m);
 			const xp = xm || isX(p);
@@ -1243,6 +1273,20 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 })))(), 1);
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
 var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
+var normalizeConventional = (conventional) => {
+	if (!conventional) return;
+	if (conventional === true) return {
+		types: [],
+		scopes: [],
+		breaking: void 0
+	};
+	if (Object.keys(conventional).length === 0) warning("Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.");
+	return {
+		types: [...conventional.types || [], ...conventional.type ? [conventional.type] : []],
+		scopes: [...conventional.scopes || [], ...conventional.scope ? [conventional.scope] : []],
+		breaking: conventional.breaking
+	};
+};
 /**
 * Parses all categories from the config, normalizing conditions and
 * handling backward compatibility with deprecated fields.
@@ -1269,9 +1313,9 @@ function parseCategories(categories, deprecatedConfig) {
 		const deprecatedLabels = [...labels || [], ...label ? [label] : []];
 		if (deprecatedLabels.length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
 		const parsedWhenConditions = (_when !== void 0 ? Array.isArray(_when) ? _when.length > 0 || deprecatedLabels.length === 0 ? _when : [{}] : [_when] : deprecatedLabels.length > 0 ? [{}] : []).map((condition) => {
-			const { path, label, ..._cond } = condition;
+			const { path, label, conventional, ..._cond } = condition;
+			const normalizedConventional = normalizeConventional(conventional);
 			return {
-				...changeConditionSchemaDefaults,
 				..._cond,
 				"labels-mode": condition["labels-mode"] ?? changeConditionSchemaDefaults["labels-mode"],
 				"paths-mode": condition["paths-mode"] ?? changeConditionSchemaDefaults["paths-mode"],
@@ -1280,9 +1324,10 @@ function parseCategories(categories, deprecatedConfig) {
 					...deprecatedLabels,
 					...condition.labels || [],
 					...label ? [label] : []
-				]
+				],
+				...normalizedConventional ? { conventional: normalizedConventional } : {}
 			};
-		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0);
+		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0 || !!condition.conventional);
 		const categoryType = _cat.type ?? categorySchemaDefaults.type;
 		switch (categoryType) {
 			case "changelog": return {
@@ -1513,8 +1558,397 @@ var setActionOutput = (params) => {
 	info("Outputs set!");
 };
 //#endregion
+//#region node_modules/conventional-commits-parser/dist/regex.js
+var nomatchRegex = /(?!.*)/;
+function escape(string) {
+	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function joinOr(parts) {
+	return parts.map((val) => typeof val === "string" ? escape(val.trim()) : val.source).filter(Boolean).join("|");
+}
+function getNotesRegex(noteKeywords, notesPattern) {
+	if (!noteKeywords) return nomatchRegex;
+	const noteKeywordsSelection = joinOr(noteKeywords);
+	if (!notesPattern) return new RegExp(`^[\\s|*]*(${noteKeywordsSelection})[:\\s]+(.*)`, "i");
+	return notesPattern(noteKeywordsSelection);
+}
+function getReferencePartsRegex(issuePrefixes, issuePrefixesCaseSensitive) {
+	if (!issuePrefixes) return nomatchRegex;
+	const flags = issuePrefixesCaseSensitive ? "g" : "gi";
+	return new RegExp(`(?:.*?)??\\s*([\\w-\\.\\/]*?)??(${joinOr(issuePrefixes)})([\\w-]+)(?=\\s|$|[,;)\\]])`, flags);
+}
+function getReferencesRegex(referenceActions) {
+	if (!referenceActions) return /()(.+)/gi;
+	const joinedKeywords = joinOr(referenceActions);
+	return new RegExp(`(${joinedKeywords})(?:\\s+(.*?))(?=(?:${joinedKeywords})|$)`, "gi");
+}
+/**
+* Make the regexes used to parse a commit.
+* @param options
+* @returns Regexes.
+*/
+function getParserRegexes(options = {}) {
+	return {
+		notes: getNotesRegex(options.noteKeywords, options.notesPattern),
+		referenceParts: getReferencePartsRegex(options.issuePrefixes, options.issuePrefixesCaseSensitive),
+		references: getReferencesRegex(options.referenceActions),
+		mentions: /@([\w-]+)/g,
+		url: /\b(?:https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%_+.~#?&//=])+\b/
+	};
+}
+//#endregion
+//#region node_modules/conventional-commits-parser/dist/utils.js
+var SCISSOR = "------------------------ >8 ------------------------";
+/**
+* Remove leading and trailing newlines.
+* @param input
+* @returns String without leading and trailing newlines.
+*/
+function trimNewLines(input) {
+	const matches = input.match(/[^\r\n]/);
+	if (typeof matches?.index !== "number") return "";
+	const firstIndex = matches.index;
+	let lastIndex = input.length - 1;
+	while (input[lastIndex] === "\r" || input[lastIndex] === "\n") lastIndex--;
+	return input.substring(firstIndex, lastIndex + 1);
+}
+/**
+* Append a newline to a string.
+* @param src
+* @param line
+* @returns String with appended newline.
+*/
+function appendLine(src, line) {
+	return src ? `${src}\n${line || ""}` : line || "";
+}
+/**
+* Creates a function that filters out comments lines.
+* @param char
+* @returns Comment filter function.
+*/
+function getCommentFilter(char) {
+	return char ? (line) => !line.startsWith(char) : () => true;
+}
+/**
+* Select lines before the scissor.
+* @param lines
+* @param commentChar
+* @returns Lines before the scissor.
+*/
+function truncateToScissor(lines, commentChar) {
+	const scissorIndex = lines.indexOf(`${commentChar} ${SCISSOR}`);
+	if (scissorIndex === -1) return lines;
+	return lines.slice(0, scissorIndex);
+}
+/**
+* Filter out GPG sign lines.
+* @param line
+* @returns True if the line is not a GPG sign line.
+*/
+function gpgFilter(line) {
+	return !line.match(/^\s*gpg:/);
+}
+/**
+* Assign matched correspondence to the target object.
+* @param target - The target object to assign values to.
+* @param matches - The RegExp match array containing the matched groups.
+* @param correspondence - An array of keys that correspond to the matched groups.
+* @returns The target object with assigned values.
+*/
+function assignMatchedCorrespondence(target, matches, correspondence) {
+	const { groups } = matches;
+	for (let i = 0, len = correspondence.length, key; i < len; i++) {
+		key = correspondence[i];
+		target[key] = (groups ? groups[key] : matches[i + 1]) || null;
+	}
+	return target;
+}
+//#endregion
+//#region node_modules/conventional-commits-parser/dist/options.js
+var defaultOptions = {
+	noteKeywords: ["BREAKING CHANGE", "BREAKING-CHANGE"],
+	issuePrefixes: ["#"],
+	referenceActions: [
+		"close",
+		"closes",
+		"closed",
+		"fix",
+		"fixes",
+		"fixed",
+		"resolve",
+		"resolves",
+		"resolved"
+	],
+	headerPattern: /^(\w*)(?:\(([\w$@.\-*/ ]*)\))?: (.*)$/,
+	headerCorrespondence: [
+		"type",
+		"scope",
+		"subject"
+	],
+	revertPattern: /^Revert\s"([\s\S]*)"\s*This reverts commit (\w*)\.?/,
+	revertCorrespondence: ["header", "hash"],
+	fieldPattern: /^-(.*?)-$/
+};
+//#endregion
+//#region node_modules/conventional-commits-parser/dist/CommitParser.js
+/**
+* Helper to create commit object.
+* @param initialData - Initial commit data.
+* @returns Commit object with empty data.
+*/
+function createCommitObject(initialData = {}) {
+	return {
+		merge: null,
+		revert: null,
+		header: null,
+		body: null,
+		footer: null,
+		notes: [],
+		mentions: [],
+		references: [],
+		...initialData
+	};
+}
+/**
+* Commit message parser.
+*/
+var CommitParser = class {
+	options;
+	regexes;
+	lines = [];
+	lineIndex = 0;
+	commit = createCommitObject();
+	constructor(options = {}) {
+		this.options = {
+			...defaultOptions,
+			...options
+		};
+		this.regexes = getParserRegexes(this.options);
+	}
+	currentLine() {
+		return this.lines[this.lineIndex];
+	}
+	nextLine() {
+		return this.lines[this.lineIndex++];
+	}
+	isLineAvailable() {
+		return this.lineIndex < this.lines.length;
+	}
+	parseReference(input, action) {
+		const { regexes } = this;
+		if (regexes.url.test(input)) return null;
+		const matches = regexes.referenceParts.exec(input);
+		if (!matches) return null;
+		let [raw, repository = null, prefix, issue] = matches;
+		let owner = null;
+		if (repository) {
+			const slashIndex = repository.indexOf("/");
+			if (slashIndex !== -1) {
+				owner = repository.slice(0, slashIndex);
+				repository = repository.slice(slashIndex + 1);
+			}
+		}
+		return {
+			raw,
+			action,
+			owner,
+			repository,
+			prefix,
+			issue
+		};
+	}
+	parseReferences(input) {
+		const { regexes } = this;
+		const regex = input.match(regexes.references) ? regexes.references : /()(.+)/gi;
+		const references = [];
+		let matches;
+		let action;
+		let sentence;
+		let reference;
+		while (true) {
+			matches = regex.exec(input);
+			if (!matches) break;
+			action = matches[1] || null;
+			sentence = matches[2] || "";
+			while (true) {
+				reference = this.parseReference(sentence, action);
+				if (!reference) break;
+				references.push(reference);
+			}
+		}
+		return references;
+	}
+	skipEmptyLines() {
+		let line = this.currentLine();
+		while (line !== void 0 && !line.trim()) {
+			this.nextLine();
+			line = this.currentLine();
+		}
+	}
+	parseMerge() {
+		const { commit, options } = this;
+		const correspondence = options.mergeCorrespondence || [];
+		const merge = this.currentLine();
+		const matches = merge && options.mergePattern ? merge.match(options.mergePattern) : null;
+		if (matches) {
+			this.nextLine();
+			commit.merge = matches[0] || null;
+			assignMatchedCorrespondence(commit, matches, correspondence);
+			return true;
+		}
+		return false;
+	}
+	parseHeader(isMergeCommit) {
+		if (isMergeCommit) this.skipEmptyLines();
+		const { commit, options } = this;
+		const correspondence = options.headerCorrespondence || [];
+		const header = commit.header ?? this.nextLine();
+		let matches = null;
+		if (header) {
+			if (options.breakingHeaderPattern) matches = header.match(options.breakingHeaderPattern);
+			if (!matches && options.headerPattern) matches = header.match(options.headerPattern);
+		}
+		if (header) commit.header = header;
+		if (matches) assignMatchedCorrespondence(commit, matches, correspondence);
+	}
+	parseMeta() {
+		const { options, commit } = this;
+		if (!options.fieldPattern || !this.isLineAvailable()) return false;
+		let matches;
+		let field = null;
+		let parsed = false;
+		while (this.isLineAvailable()) {
+			matches = this.currentLine().match(options.fieldPattern);
+			if (matches) {
+				field = matches[1] || null;
+				this.nextLine();
+				continue;
+			}
+			if (field) {
+				parsed = true;
+				commit[field] = appendLine(commit[field], this.currentLine());
+				this.nextLine();
+			} else break;
+		}
+		return parsed;
+	}
+	parseNotes() {
+		const { regexes, commit } = this;
+		if (!this.isLineAvailable()) return false;
+		const matches = this.currentLine().match(regexes.notes);
+		let references = [];
+		if (matches) {
+			const note = {
+				title: matches[1],
+				text: matches[2]
+			};
+			commit.notes.push(note);
+			commit.footer = appendLine(commit.footer, this.currentLine());
+			this.nextLine();
+			while (this.isLineAvailable()) {
+				if (this.parseMeta()) return true;
+				if (this.parseNotes()) return true;
+				references = this.parseReferences(this.currentLine());
+				if (references.length) commit.references.push(...references);
+				else note.text = appendLine(note.text, this.currentLine());
+				commit.footer = appendLine(commit.footer, this.currentLine());
+				this.nextLine();
+				if (references.length) break;
+			}
+			return true;
+		}
+		return false;
+	}
+	parseBodyAndFooter(isBody) {
+		const { commit } = this;
+		if (!this.isLineAvailable()) return isBody;
+		const references = this.parseReferences(this.currentLine());
+		const isStillBody = !references.length && isBody;
+		if (isStillBody) commit.body = appendLine(commit.body, this.currentLine());
+		else {
+			commit.references.push(...references);
+			commit.footer = appendLine(commit.footer, this.currentLine());
+		}
+		this.nextLine();
+		return isStillBody;
+	}
+	parseBreakingHeader() {
+		const { commit, options } = this;
+		if (!options.breakingHeaderPattern || commit.notes.length || !commit.header) return;
+		const matches = commit.header.match(options.breakingHeaderPattern);
+		if (matches) commit.notes.push({
+			title: "BREAKING CHANGE",
+			text: matches[3]
+		});
+	}
+	parseMentions(input) {
+		const { commit, regexes } = this;
+		let matches;
+		for (;;) {
+			matches = regexes.mentions.exec(input);
+			if (!matches) break;
+			commit.mentions.push(matches[1]);
+		}
+	}
+	parseRevert(input) {
+		const { commit, options } = this;
+		const correspondence = options.revertCorrespondence || [];
+		const matches = options.revertPattern ? input.match(options.revertPattern) : null;
+		if (matches) commit.revert = assignMatchedCorrespondence({}, matches, correspondence);
+	}
+	cleanupCommit() {
+		const { commit } = this;
+		if (commit.body) commit.body = trimNewLines(commit.body);
+		if (commit.footer) commit.footer = trimNewLines(commit.footer);
+		commit.notes.forEach((note) => {
+			note.text = trimNewLines(note.text);
+		});
+		const referencesSet = /* @__PURE__ */ new Set();
+		commit.references = commit.references.filter((reference) => {
+			const uid = `${reference.action} ${reference.raw}`.toLocaleLowerCase();
+			const ok = !referencesSet.has(uid);
+			if (ok) referencesSet.add(uid);
+			return ok;
+		});
+	}
+	/**
+	* Parse commit message string into an object.
+	* @param input - Commit message string.
+	* @returns Commit object.
+	*/
+	parse(input) {
+		if (!input.trim()) throw new TypeError("Expected a raw commit");
+		const { commentChar } = this.options;
+		const commentFilter = getCommentFilter(commentChar);
+		const rawLines = trimNewLines(input).split(/\r?\n/);
+		const lines = commentChar ? truncateToScissor(rawLines, commentChar).filter((line) => commentFilter(line) && gpgFilter(line)) : rawLines.filter((line) => gpgFilter(line));
+		const commit = createCommitObject();
+		this.lines = lines;
+		this.lineIndex = 0;
+		this.commit = commit;
+		const isMergeCommit = this.parseMerge();
+		this.parseHeader(isMergeCommit);
+		if (commit.header) commit.references = this.parseReferences(commit.header);
+		let isBody = true;
+		while (this.isLineAvailable()) {
+			this.parseMeta();
+			if (this.parseNotes()) isBody = false;
+			if (!this.parseBodyAndFooter(isBody)) isBody = false;
+		}
+		this.parseBreakingHeader();
+		this.parseMentions(input);
+		this.parseRevert(input);
+		this.cleanupCommit();
+		return commit;
+	}
+};
+//#endregion
 //#region src/actions/drafter/common/category-matching.ts
 var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
+var conventionalParser = new CommitParser({
+	headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
+	breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/
+});
 var getPullRequestLabels = (pullRequest) => (pullRequest.labels?.nodes ?? []).filter((label) => Boolean(label?.name)).map((label) => label.name);
 var unique = (values) => [...new Set(values)];
 var matchesValues = (actualValues, expectedValues, mode) => {
@@ -1545,7 +1979,24 @@ var matchesPullRequestPaths = (condition, pullRequest) => {
 		default: return changedFiles.some((file) => expectedMatchers.some(({ matcher }) => matcher.ignores(file)));
 	}
 };
-var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesPullRequestPaths(condition, pullRequest);
+var parseConventionalTitle = (title) => {
+	if (!title) return void 0;
+	const parsed = conventionalParser.parse(title);
+	if (typeof parsed.type !== "string") return void 0;
+	return {
+		type: parsed.type,
+		scope: typeof parsed.scope === "string" ? parsed.scope : void 0,
+		breaking: parsed.notes.length > 0
+	};
+};
+var matchesConventionalTitle = (condition, pullRequest) => {
+	if (!condition.conventional) return true;
+	const parsed = parseConventionalTitle(pullRequest.title);
+	if (!parsed) return false;
+	const { types, scopes, breaking } = condition.conventional;
+	return (types.length === 0 || types.includes(parsed.type)) && (scopes.length === 0 || parsed.scope !== void 0 && scopes.includes(parsed.scope)) && (breaking === void 0 || breaking === parsed.breaking);
+};
+var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesPullRequestPaths(condition, pullRequest) && matchesConventionalTitle(condition, pullRequest);
 var matchesCategory = (category, pullRequest) => category.when.length === 0 || category.when.some((condition) => matchesCategoryCondition(condition, pullRequest));
 var filterPullRequestsByPreCategories = (pullRequests, categories) => {
 	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
@@ -1991,10 +2442,11 @@ var generateAuthorsSentence = (params) => {
 	if (params.authorTemplate !== void 0) {
 		const authorTemplate = params.authorTemplate;
 		const authors = sortedContributors.map((contributor) => {
+			const author = "name" in contributor ? contributor.name : contributor.login;
 			return renderTemplate({
 				template: authorTemplate,
 				object: {
-					$AUTHOR: "name" in contributor ? contributor.name : contributor.login,
+					$AUTHOR: author,
 					$AUTHOR_MENTION: renderAuthorMention(contributor)
 				}
 			});
@@ -2715,1526 +3167,11 @@ var findPreviousReleases = async (params) => {
 	};
 };
 //#endregion
-//#region src/actions/drafter/lib/find-pull-requests/graphql/find-commits-in-comparison.graphql.generated.ts
-var FindCommitsInComparisonDocument = {
-	"kind": "Document",
-	"definitions": [{
-		"kind": "OperationDefinition",
-		"operation": "query",
-		"name": {
-			"kind": "Name",
-			"value": "findCommitsInComparison"
-		},
-		"variableDefinitions": [
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "name"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "owner"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "baseRef"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "headRef"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withPullRequestBody"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withPullRequestURL"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "after"
-					}
-				},
-				"type": {
-					"kind": "NamedType",
-					"name": {
-						"kind": "Name",
-						"value": "String"
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withBaseRefName"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withHeadRefName"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "pullRequestLimit"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Int"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "historyLimit"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Int"
-						}
-					}
-				}
-			}
-		],
-		"selectionSet": {
-			"kind": "SelectionSet",
-			"selections": [{
-				"kind": "Field",
-				"name": {
-					"kind": "Name",
-					"value": "repository"
-				},
-				"arguments": [{
-					"kind": "Argument",
-					"name": {
-						"kind": "Name",
-						"value": "name"
-					},
-					"value": {
-						"kind": "Variable",
-						"name": {
-							"kind": "Name",
-							"value": "name"
-						}
-					}
-				}, {
-					"kind": "Argument",
-					"name": {
-						"kind": "Name",
-						"value": "owner"
-					},
-					"value": {
-						"kind": "Variable",
-						"name": {
-							"kind": "Name",
-							"value": "owner"
-						}
-					}
-				}],
-				"selectionSet": {
-					"kind": "SelectionSet",
-					"selections": [{
-						"kind": "Field",
-						"name": {
-							"kind": "Name",
-							"value": "ref"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "qualifiedName"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "baseRef"
-								}
-							}
-						}],
-						"selectionSet": {
-							"kind": "SelectionSet",
-							"selections": [{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "compare"
-								},
-								"arguments": [{
-									"kind": "Argument",
-									"name": {
-										"kind": "Name",
-										"value": "headRef"
-									},
-									"value": {
-										"kind": "Variable",
-										"name": {
-											"kind": "Name",
-											"value": "headRef"
-										}
-									}
-								}],
-								"selectionSet": {
-									"kind": "SelectionSet",
-									"selections": [{
-										"kind": "Field",
-										"name": {
-											"kind": "Name",
-											"value": "commits"
-										},
-										"arguments": [{
-											"kind": "Argument",
-											"name": {
-												"kind": "Name",
-												"value": "first"
-											},
-											"value": {
-												"kind": "Variable",
-												"name": {
-													"kind": "Name",
-													"value": "historyLimit"
-												}
-											}
-										}, {
-											"kind": "Argument",
-											"name": {
-												"kind": "Name",
-												"value": "after"
-											},
-											"value": {
-												"kind": "Variable",
-												"name": {
-													"kind": "Name",
-													"value": "after"
-												}
-											}
-										}],
-										"selectionSet": {
-											"kind": "SelectionSet",
-											"selections": [
-												{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "__typename"
-													}
-												},
-												{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "pageInfo"
-													},
-													"selectionSet": {
-														"kind": "SelectionSet",
-														"selections": [
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "__typename"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "hasNextPage"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "endCursor"
-																}
-															}
-														]
-													}
-												},
-												{
-													"kind": "Field",
-													"name": {
-														"kind": "Name",
-														"value": "nodes"
-													},
-													"selectionSet": {
-														"kind": "SelectionSet",
-														"selections": [
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "__typename"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "id"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "oid"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "committedDate"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "message"
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "author"
-																},
-																"selectionSet": {
-																	"kind": "SelectionSet",
-																	"selections": [
-																		{
-																			"kind": "Field",
-																			"name": {
-																				"kind": "Name",
-																				"value": "__typename"
-																			}
-																		},
-																		{
-																			"kind": "Field",
-																			"name": {
-																				"kind": "Name",
-																				"value": "name"
-																			}
-																		},
-																		{
-																			"kind": "Field",
-																			"name": {
-																				"kind": "Name",
-																				"value": "user"
-																			},
-																			"selectionSet": {
-																				"kind": "SelectionSet",
-																				"selections": [{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "__typename"
-																					}
-																				}, {
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "login"
-																					}
-																				}]
-																			}
-																		}
-																	]
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "authors"
-																},
-																"arguments": [{
-																	"kind": "Argument",
-																	"name": {
-																		"kind": "Name",
-																		"value": "first"
-																	},
-																	"value": {
-																		"kind": "IntValue",
-																		"value": "100"
-																	}
-																}],
-																"selectionSet": {
-																	"kind": "SelectionSet",
-																	"selections": [{
-																		"kind": "Field",
-																		"name": {
-																			"kind": "Name",
-																			"value": "nodes"
-																		},
-																		"selectionSet": {
-																			"kind": "SelectionSet",
-																			"selections": [
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "__typename"
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "name"
-																					}
-																				},
-																				{
-																					"kind": "Field",
-																					"name": {
-																						"kind": "Name",
-																						"value": "user"
-																					},
-																					"selectionSet": {
-																						"kind": "SelectionSet",
-																						"selections": [{
-																							"kind": "Field",
-																							"name": {
-																								"kind": "Name",
-																								"value": "__typename"
-																							}
-																						}, {
-																							"kind": "Field",
-																							"name": {
-																								"kind": "Name",
-																								"value": "login"
-																							}
-																						}]
-																					}
-																				}
-																			]
-																		}
-																	}]
-																}
-															},
-															{
-																"kind": "Field",
-																"name": {
-																	"kind": "Name",
-																	"value": "associatedPullRequests"
-																},
-																"arguments": [{
-																	"kind": "Argument",
-																	"name": {
-																		"kind": "Name",
-																		"value": "first"
-																	},
-																	"value": {
-																		"kind": "Variable",
-																		"name": {
-																			"kind": "Name",
-																			"value": "pullRequestLimit"
-																		}
-																	}
-																}],
-																"selectionSet": {
-																	"kind": "SelectionSet",
-																	"selections": [{
-																		"kind": "Field",
-																		"name": {
-																			"kind": "Name",
-																			"value": "__typename"
-																		}
-																	}, {
-																		"kind": "Field",
-																		"name": {
-																			"kind": "Name",
-																			"value": "nodes"
-																		},
-																		"selectionSet": {
-																			"kind": "SelectionSet",
-																			"selections": [{
-																				"kind": "FragmentSpread",
-																				"name": {
-																					"kind": "Name",
-																					"value": "PullRequestFields"
-																				}
-																			}]
-																		}
-																	}]
-																}
-															}
-														]
-													}
-												}
-											]
-										}
-									}]
-								}
-							}]
-						}
-					}]
-				}
-			}]
-		}
-	}, {
-		"kind": "FragmentDefinition",
-		"name": {
-			"kind": "Name",
-			"value": "PullRequestFields"
-		},
-		"typeCondition": {
-			"kind": "NamedType",
-			"name": {
-				"kind": "Name",
-				"value": "PullRequest"
-			}
-		},
-		"selectionSet": {
-			"kind": "SelectionSet",
-			"selections": [
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "__typename"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "title"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "number"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "url"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withPullRequestURL"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "body"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withPullRequestBody"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "author"
-					},
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "__typename"
-								}
-							},
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "login"
-								}
-							},
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "url"
-								}
-							}
-						]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "baseRepository"
-					},
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [{
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "__typename"
-							}
-						}, {
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "nameWithOwner"
-							}
-						}]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "mergedAt"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "isCrossRepository"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "labels"
-					},
-					"arguments": [{
-						"kind": "Argument",
-						"name": {
-							"kind": "Name",
-							"value": "first"
-						},
-						"value": {
-							"kind": "IntValue",
-							"value": "100"
-						}
-					}],
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [{
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "__typename"
-							}
-						}, {
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "nodes"
-							},
-							"selectionSet": {
-								"kind": "SelectionSet",
-								"selections": [{
-									"kind": "Field",
-									"name": {
-										"kind": "Name",
-										"value": "__typename"
-									}
-								}, {
-									"kind": "Field",
-									"name": {
-										"kind": "Name",
-										"value": "name"
-									}
-								}]
-							}
-						}]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "merged"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "baseRefName"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withBaseRefName"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "headRefName"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withHeadRefName"
-								}
-							}
-						}]
-					}]
-				}
-			]
-		}
-	}]
-};
-//#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts
 var findCommitsInComparison = async (params) => {
-	const data = await paginateGraphql(getOctokit().graphql, FindCommitsInComparisonDocument, params, [
-		"repository",
-		"ref",
-		"compare",
-		"commits"
-	]);
+	const data = await paginateGraphql(getOctokit().graphql, FindCommitsInComparisonDocument, params);
 	if (!data.repository?.ref?.compare) throw new Error("Query returned an unexpected result: ref or comparison not found");
 	return (data.repository.ref.compare.commits.nodes || []).filter((commit) => commit != null);
-};
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/graphql/find-recent-merged-pull-requests.graphql.generated.ts
-var FindRecentMergedPullRequestsDocument = {
-	"kind": "Document",
-	"definitions": [{
-		"kind": "OperationDefinition",
-		"operation": "query",
-		"name": {
-			"kind": "Name",
-			"value": "findRecentMergedPullRequests"
-		},
-		"variableDefinitions": [
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "name"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "owner"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "String"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "baseRefName"
-					}
-				},
-				"type": {
-					"kind": "NamedType",
-					"name": {
-						"kind": "Name",
-						"value": "String"
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "limit"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Int"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withPullRequestBody"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withPullRequestURL"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withBaseRefName"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			},
-			{
-				"kind": "VariableDefinition",
-				"variable": {
-					"kind": "Variable",
-					"name": {
-						"kind": "Name",
-						"value": "withHeadRefName"
-					}
-				},
-				"type": {
-					"kind": "NonNullType",
-					"type": {
-						"kind": "NamedType",
-						"name": {
-							"kind": "Name",
-							"value": "Boolean"
-						}
-					}
-				}
-			}
-		],
-		"selectionSet": {
-			"kind": "SelectionSet",
-			"selections": [{
-				"kind": "Field",
-				"name": {
-					"kind": "Name",
-					"value": "repository"
-				},
-				"arguments": [{
-					"kind": "Argument",
-					"name": {
-						"kind": "Name",
-						"value": "name"
-					},
-					"value": {
-						"kind": "Variable",
-						"name": {
-							"kind": "Name",
-							"value": "name"
-						}
-					}
-				}, {
-					"kind": "Argument",
-					"name": {
-						"kind": "Name",
-						"value": "owner"
-					},
-					"value": {
-						"kind": "Variable",
-						"name": {
-							"kind": "Name",
-							"value": "owner"
-						}
-					}
-				}],
-				"selectionSet": {
-					"kind": "SelectionSet",
-					"selections": [{
-						"kind": "Field",
-						"name": {
-							"kind": "Name",
-							"value": "pullRequests"
-						},
-						"arguments": [
-							{
-								"kind": "Argument",
-								"name": {
-									"kind": "Name",
-									"value": "states"
-								},
-								"value": {
-									"kind": "ListValue",
-									"values": [{
-										"kind": "EnumValue",
-										"value": "MERGED"
-									}]
-								}
-							},
-							{
-								"kind": "Argument",
-								"name": {
-									"kind": "Name",
-									"value": "baseRefName"
-								},
-								"value": {
-									"kind": "Variable",
-									"name": {
-										"kind": "Name",
-										"value": "baseRefName"
-									}
-								}
-							},
-							{
-								"kind": "Argument",
-								"name": {
-									"kind": "Name",
-									"value": "orderBy"
-								},
-								"value": {
-									"kind": "ObjectValue",
-									"fields": [{
-										"kind": "ObjectField",
-										"name": {
-											"kind": "Name",
-											"value": "field"
-										},
-										"value": {
-											"kind": "EnumValue",
-											"value": "UPDATED_AT"
-										}
-									}, {
-										"kind": "ObjectField",
-										"name": {
-											"kind": "Name",
-											"value": "direction"
-										},
-										"value": {
-											"kind": "EnumValue",
-											"value": "DESC"
-										}
-									}]
-								}
-							},
-							{
-								"kind": "Argument",
-								"name": {
-									"kind": "Name",
-									"value": "first"
-								},
-								"value": {
-									"kind": "Variable",
-									"name": {
-										"kind": "Name",
-										"value": "limit"
-									}
-								}
-							}
-						],
-						"selectionSet": {
-							"kind": "SelectionSet",
-							"selections": [{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "__typename"
-								}
-							}, {
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "nodes"
-								},
-								"selectionSet": {
-									"kind": "SelectionSet",
-									"selections": [{
-										"kind": "FragmentSpread",
-										"name": {
-											"kind": "Name",
-											"value": "PullRequestFields"
-										}
-									}, {
-										"kind": "Field",
-										"name": {
-											"kind": "Name",
-											"value": "mergeCommit"
-										},
-										"selectionSet": {
-											"kind": "SelectionSet",
-											"selections": [{
-												"kind": "Field",
-												"name": {
-													"kind": "Name",
-													"value": "__typename"
-												}
-											}, {
-												"kind": "Field",
-												"name": {
-													"kind": "Name",
-													"value": "oid"
-												}
-											}]
-										}
-									}]
-								}
-							}]
-						}
-					}]
-				}
-			}]
-		}
-	}, {
-		"kind": "FragmentDefinition",
-		"name": {
-			"kind": "Name",
-			"value": "PullRequestFields"
-		},
-		"typeCondition": {
-			"kind": "NamedType",
-			"name": {
-				"kind": "Name",
-				"value": "PullRequest"
-			}
-		},
-		"selectionSet": {
-			"kind": "SelectionSet",
-			"selections": [
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "__typename"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "title"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "number"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "url"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withPullRequestURL"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "body"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withPullRequestBody"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "author"
-					},
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "__typename"
-								}
-							},
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "login"
-								}
-							},
-							{
-								"kind": "Field",
-								"name": {
-									"kind": "Name",
-									"value": "url"
-								}
-							}
-						]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "baseRepository"
-					},
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [{
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "__typename"
-							}
-						}, {
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "nameWithOwner"
-							}
-						}]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "mergedAt"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "isCrossRepository"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "labels"
-					},
-					"arguments": [{
-						"kind": "Argument",
-						"name": {
-							"kind": "Name",
-							"value": "first"
-						},
-						"value": {
-							"kind": "IntValue",
-							"value": "100"
-						}
-					}],
-					"selectionSet": {
-						"kind": "SelectionSet",
-						"selections": [{
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "__typename"
-							}
-						}, {
-							"kind": "Field",
-							"name": {
-								"kind": "Name",
-								"value": "nodes"
-							},
-							"selectionSet": {
-								"kind": "SelectionSet",
-								"selections": [{
-									"kind": "Field",
-									"name": {
-										"kind": "Name",
-										"value": "__typename"
-									}
-								}, {
-									"kind": "Field",
-									"name": {
-										"kind": "Name",
-										"value": "name"
-									}
-								}]
-							}
-						}]
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "merged"
-					}
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "baseRefName"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withBaseRefName"
-								}
-							}
-						}]
-					}]
-				},
-				{
-					"kind": "Field",
-					"name": {
-						"kind": "Name",
-						"value": "headRefName"
-					},
-					"directives": [{
-						"kind": "Directive",
-						"name": {
-							"kind": "Name",
-							"value": "include"
-						},
-						"arguments": [{
-							"kind": "Argument",
-							"name": {
-								"kind": "Name",
-								"value": "if"
-							},
-							"value": {
-								"kind": "Variable",
-								"name": {
-									"kind": "Name",
-									"value": "withHeadRefName"
-								}
-							}
-						}]
-					}]
-				}
-			]
-		}
-	}]
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts

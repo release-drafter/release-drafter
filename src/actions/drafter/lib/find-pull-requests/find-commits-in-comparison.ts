@@ -1,6 +1,6 @@
 import { getOctokit, paginateGraphql } from '#src/common/index.ts'
-import type { FindCommitsInComparisonQueryVariables } from './graphql/find-commits-in-comparison.graphql.generated.ts'
-import { FindCommitsInComparisonDocument } from './graphql/find-commits-in-comparison.graphql.generated.ts'
+import type { FindCommitsInComparisonQueryVariables } from '#src/types/github.graphql.generated.ts'
+import { FindCommitsInComparisonDocument } from '#src/types/github.graphql.generated.ts'
 
 export const findCommitsInComparison = async (
   params: FindCommitsInComparisonQueryVariables,
@@ -11,7 +11,6 @@ export const findCommitsInComparison = async (
     octokit.graphql,
     FindCommitsInComparisonDocument,
     params,
-    ['repository', 'ref', 'compare', 'commits'],
   )
 
   if (!data.repository?.ref?.compare) {

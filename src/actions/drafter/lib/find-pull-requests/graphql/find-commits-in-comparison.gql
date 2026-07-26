@@ -5,7 +5,7 @@ query findCommitsInComparison(
   $headRef: String!
   $withPullRequestBody: Boolean!
   $withPullRequestURL: Boolean!
-  $after: String
+  $cursor: String
   $withBaseRefName: Boolean!
   $withHeadRefName: Boolean!
   $pullRequestLimit: Int!
@@ -14,7 +14,7 @@ query findCommitsInComparison(
   repository(name: $name, owner: $owner) {
     ref(qualifiedName: $baseRef) {
       compare(headRef: $headRef) {
-        commits(first: $historyLimit, after: $after) {
+        commits(first: $historyLimit, after: $cursor) {
           __typename
           pageInfo {
             __typename

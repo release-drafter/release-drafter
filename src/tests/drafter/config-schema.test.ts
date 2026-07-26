@@ -242,12 +242,62 @@ const suites: SuiteParams[] = [
           type: 'version-resolver',
           'semver-increment': 'major',
           when: {
-            label: 'breaking',
+            conventional: {
+              type: 'feat',
+              scope: 'api',
+              breaking: true,
+            },
           },
         },
       ],
     },
     parseValid: true,
+  },
+  {
+    parseInput: {
+      template,
+      categories: [{ title: 'Conventional', when: { conventional: true } }],
+    },
+    parseValid: true,
+  },
+  {
+    parseInput: {
+      template,
+      categories: [{ title: 'Conventional', when: { conventional: {} } }],
+    },
+    parseValid: true,
+  },
+  {
+    parseInput: {
+      template,
+      categories: [{ title: 'Conventional', when: { conventional: false } }],
+    },
+    errorContains: 'Invalid input',
+    parseValid: false,
+  },
+  {
+    parseInput: {
+      template,
+      categories: [{ title: 'Conventional', when: { conventional: null } }],
+    },
+    errorContains: 'Invalid input',
+    parseValid: false,
+  },
+  {
+    parseInput: {
+      template,
+      categories: [{ title: 'Conventional', when: { conventional: 'true' } }],
+    },
+    errorContains: 'Invalid input',
+    parseValid: false,
+  },
+  {
+    parseInput: {
+      template,
+      categories: [{ title: 'Conventional', when: { conventional: [] } }],
+    },
+    errorContains: 'Invalid input',
+    parseValid: false,
   },
   {
     parseInput: {

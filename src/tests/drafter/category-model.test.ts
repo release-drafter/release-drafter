@@ -26,8 +26,13 @@ type PullRequest = Parameters<
   typeof categorizePullRequests
 >[0]['pullRequests'][number]
 
-const makePullRequest = (labels: string[], changedFiles: string[] = []) =>
+const makePullRequest = (
+  labels: string[],
+  changedFiles: string[] = [],
+  title = 'Change',
+) =>
   ({
+    title,
     labels: {
       nodes: labels.map((name) => ({ name })),
     },
@@ -200,6 +205,113 @@ describe('category model', () => {
         makePullRequest([], ['src/**', 'docs/**']),
       ),
     ).toBe(true)
+  })
+
+  it('matches conventional commit type, scope, and breaking marker from PR titles', () => {
+    const config = makeParsedConfig([
+      {
+        title: 'Breaking API features',
+        when: {
+          conventional: {
+            type: 'feat',
+            scope: 'api',
+            breaking: true,
+          },
+        },
+      },
+    ])
+    const pullRequests = [
+      makePullRequest([], [], 'feat(api)!: add v2 endpoint'),
+      makePullRequest([], [], 'feat(ui)!: add button'),
+      makePullRequest([], [], 'fix(api)!: patch endpoint'),
+    ]
+
+    const [uncategorized, categories] = categorizePullRequests({
+      pullRequests,
+      config,
+    })
+
+    expect(categories[0]?.pullRequests).toEqual([pullRequests[0]])
+    expect(uncategorized).toEqual([pullRequests[1], pullRequests[2]])
+  })
+
+  it('matches conventional breaking notes when the title contains a full commit message', () => {
+    const config = makeParsedConfig([
+      {
+        title: 'Breaking fixes',
+        when: {
+          conventional: {
+            type: 'fix',
+            breaking: true,
+          },
+        },
+      },
+    ])
+    const pullRequests = [
+      makePullRequest(
+        [],
+        [],
+        // Unrealistic : PR titles dont contain bodies like commit messages do.
+        // This is simply future-proofing parsing actual commit messages
+        'fix(api): cap retries\n\nBREAKING CHANGE: retries are now capped',
+      ),
+      makePullRequest([], [], 'fix(api): cap retries'),
+    ]
+
+    const [uncategorized, categories] = categorizePullRequests({
+      pullRequests,
+      config,
+    })
+
+    expect(categories[0]?.pullRequests).toEqual([pullRequests[0]])
+    expect(uncategorized).toEqual([pullRequests[1]])
+  })
+
+  it('matches any valid conventional title with conventional true', () => {
+    const config = makeParsedConfig([
+      {
+        title: 'Conventional',
+        when: { conventional: true },
+      },
+    ])
+    const pullRequests = [
+      makePullRequest([], [], 'feat: add thing'),
+      makePullRequest([], [], 'plain title'),
+    ]
+
+    const [uncategorized, categories] = categorizePullRequests({
+      pullRequests,
+      config,
+    })
+
+    expect(categories[0]?.pullRequests).toEqual([pullRequests[0]])
+    expect(uncategorized).toEqual([pullRequests[1]])
+  })
+
+  it('combines label, path, and conventional predicates in one condition', () => {
+    const config = makeParsedConfig([
+      {
+        title: 'UI fixes',
+        when: {
+          label: 'bug',
+          paths: ['src/ui/**'],
+          conventional: { type: 'fix', scope: 'ui' },
+        },
+      },
+    ])
+    const pullRequests = [
+      makePullRequest(['bug'], ['src/ui/button.ts'], 'fix(ui): repair button'),
+      makePullRequest(['bug'], ['src/api/index.ts'], 'fix(ui): repair button'),
+      makePullRequest(['bug'], ['src/ui/button.ts'], 'feat(ui): add button'),
+    ]
+
+    const [uncategorized, categories] = categorizePullRequests({
+      pullRequests,
+      config,
+    })
+
+    expect(categories[0]?.pullRequests).toEqual([pullRequests[0]])
+    expect(uncategorized).toEqual([pullRequests[1], pullRequests[2]])
   })
 
   it('ignores labels-mode when a when branch does not configure labels', () => {

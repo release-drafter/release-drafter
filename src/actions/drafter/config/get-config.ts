@@ -6,13 +6,15 @@ import { configSchema } from './schemas/config.schema.ts'
 export const getConfig = async (configName: string) => {
   const { config, contexts } = await composeConfigGet(configName, context)
 
-  if (contexts.length > 1) {
-    core.info(`Config was fetched from ${contexts.length} different contexts.`)
-  } else if (contexts.length === 1) {
-    core.info(
-      `Config fetched ${contexts[0].scheme === 'file' ? 'locally' : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ''}"${!contexts[0].ref ? ' on the default branch' : ''}`}.`,
-    )
-  }
+  contexts.forEach(({ filepath, ref, repo, scheme }) => {
+    const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ''}`
+    const location =
+      scheme === 'file'
+        ? `locally from "${filepath}"`
+        : `from "${remotePath}"${ref ? '' : ' on the default branch'}`
+
+    core.info(`Config fetched ${location}.`)
+  })
 
   return configSchema.parse(config)
 }

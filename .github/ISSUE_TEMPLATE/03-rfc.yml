@@ -1,0 +1,61 @@
+name: RFC
+description: Propose and discuss a larger change before implementation.
+title: "RFC: "
+labels: [rfc]
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing RFC or issue for this?
+      description: Please search to see if this proposal has already been discussed. (see [Issues](https://github.com/release-drafter/release-drafter/issues))
+      options:
+        - label: I have searched the existing issues
+          required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this RFC, you agree to follow our [Code of Conduct](https://github.com/release-drafter/release-drafter/blob/master/docs/CODE_OF_CONDUCT.md).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the proposed change in one or two paragraphs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What problem does this solve, and who does it help?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Explain the expected user-facing behavior and any important implementation details.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and drawbacks
+      description: What other approaches were considered, and why should this change not be made?
+    validations:
+      required: false
+
+  - type: textarea
+    id: unresolved
+    attributes:
+      label: Unresolved questions
+      description: What still needs a decision before this can be implemented?
+    validations:
+      required: false

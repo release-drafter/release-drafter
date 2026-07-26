@@ -14,6 +14,10 @@ const githubConfig: CodegenConfig = {
   },
   documents: 'src/**/*.gql',
   config: {
+    // GitHub's published schema has deprecation mismatches between interfaces
+    // and their implementations that GraphQL 17 rejects during schema validation.
+    assumeValid: true,
+    documentMode: 'string',
     enumsAsTypes: true,
     useTypeImports: true,
     scalars: {
@@ -24,19 +28,7 @@ const githubConfig: CodegenConfig = {
   },
   generates: {
     'src/types/github.graphql.generated.ts': {
-      plugins: ['typescript'],
-    },
-    'src/': {
-      preset: 'near-operation-file',
-      presetConfig: {
-        extension: '.graphql.generated.ts',
-        baseTypesPath: 'types/github.graphql.generated.ts',
-      },
-      plugins: [
-        { add: { content: '/* eslint-disable */\n// @ts-nocheck' } },
-        'typescript-operations',
-        'typed-document-node',
-      ],
+      plugins: ['typescript', 'typescript-operations', 'typed-document-node'],
     },
   },
 }
