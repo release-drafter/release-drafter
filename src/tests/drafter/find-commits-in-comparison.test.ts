@@ -1,34 +1,32 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findCommitsInComparison } from '#src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts'
+import type { Octokit } from '#src/common/get-octokit.ts'
 import { testGitHubContext } from '#tests/mocks/index.ts'
 
 const localMocks = vi.hoisted(() => ({
-  compareCommitsWithBasehead: vi.fn(),
-  graphql: vi.fn(),
+  paginate: vi.fn(),
+  graphqlIterator: vi.fn(),
 }))
 
-vi.mock('#src/common/get-octokit.ts', () => ({
-  getOctokit: () => ({
-    graphql: localMocks.graphql,
-    rest: {
-      repos: {
-        compareCommitsWithBasehead: localMocks.compareCommitsWithBasehead,
-      },
-    },
-  }),
-}))
+/**
+ * Pagination itself belongs to Octokit's plugins, so only the entry points they
+ * provide are stubbed; the assertions stay on which pages this module consumes
+ * and what it selects out of them.
+ */
+const github = () => {
+  const octokit = testGitHubContext().octokit
+  const graphql = Object.assign(vi.fn(), {
+    paginate: Object.assign(vi.fn(), { iterator: localMocks.graphqlIterator }),
+  })
 
-const github = () =>
-  testGitHubContext({
+  return testGitHubContext({
     octokit: {
-      graphql: localMocks.graphql,
-      rest: {
-        repos: {
-          compareCommitsWithBasehead: localMocks.compareCommitsWithBasehead,
-        },
-      },
+      ...octokit,
+      paginate: localMocks.paginate as unknown as Octokit['paginate'],
+      graphql,
     } as never,
   })
+}
 
 const commit = (oid: string) => ({
   __typename: 'Commit',
@@ -41,17 +39,50 @@ const commit = (oid: string) => ({
   associatedPullRequests: { nodes: [] },
 })
 
-const response = (
-  nodes: ReturnType<typeof commit>[],
-  pageInfo: { hasNextPage: boolean; endCursor: string | null },
-) => ({
+const historyPage = (oids: string[], hasNextPage = false) => ({
   repository: {
     head: {
       __typename: 'Commit',
-      history: { nodes, pageInfo },
+      history: {
+        nodes: oids.map(commit),
+        pageInfo: { hasNextPage, endCursor: hasNextPage ? 'next' : null },
+      },
     },
   },
 })
+
+const comparePage = (oids: string[]) => ({
+  repository: {
+    ref: {
+      compare: {
+        commits: {
+          nodes: oids.map(commit),
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      },
+    },
+  },
+})
+
+/**
+ * Yields the given pages and records how many were actually pulled, so early
+ * termination can be asserted rather than inferred.
+ */
+const pagesOf = <T>(...values: T[]) => {
+  const consumed: T[] = []
+  localMocks.graphqlIterator.mockReturnValue({
+    async *[Symbol.asyncIterator]() {
+      for (const value of values) {
+        consumed.push(value)
+        yield value
+      }
+    },
+  })
+  return consumed
+}
+
+/** `findComparisonCommitOids` maps each page by `.sha`. */
+const compared = (...shas: string[]) => shas.map((sha) => ({ sha }))
 
 const params = {
   name: 'example',
@@ -69,33 +100,18 @@ const params = {
 
 describe('findCommitsInComparison', () => {
   beforeEach(() => {
-    localMocks.compareCommitsWithBasehead.mockReset()
-    localMocks.graphql.mockReset()
+    localMocks.paginate.mockReset()
+    localMocks.graphqlIterator.mockReset()
   })
 
-  it('hydrates the exact REST comparison set regardless of history order', async () => {
-    localMocks.compareCommitsWithBasehead
-      .mockResolvedValueOnce({
-        data: { commits: [{ sha: 'head' }, { sha: 'side-branch' }] },
-        headers: { link: '<next>; rel="next"' },
-      })
-      .mockResolvedValueOnce({
-        data: { commits: [{ sha: 'middle' }] },
-        headers: {},
-      })
-    localMocks.graphql
-      .mockResolvedValueOnce(
-        response([commit('head'), commit('base')], {
-          hasNextPage: true,
-          endCursor: 'next',
-        }),
-      )
-      .mockResolvedValueOnce(
-        response([commit('side-branch'), commit('middle')], {
-          hasNextPage: false,
-          endCursor: null,
-        }),
-      )
+  it('hydrates the exact comparison set regardless of history order', async () => {
+    localMocks.paginate.mockResolvedValue(
+      compared('head', 'side-branch', 'middle'),
+    )
+    pagesOf(
+      historyPage(['head', 'base'], true),
+      historyPage(['side-branch', 'middle']),
+    )
 
     const result = await findCommitsInComparison({
       ...params,
@@ -107,58 +123,72 @@ describe('findCommitsInComparison', () => {
       'side-branch',
       'middle',
     ])
-    expect(localMocks.compareCommitsWithBasehead).toHaveBeenNthCalledWith(1, {
-      owner: 'octocat',
-      repo: 'example',
-      basehead: 'base...main',
-      per_page: 100,
-      page: 1,
-    })
-    expect(localMocks.compareCommitsWithBasehead).toHaveBeenNthCalledWith(2, {
-      owner: 'octocat',
-      repo: 'example',
-      basehead: 'base...main',
-      per_page: 100,
-      page: 2,
-    })
-    expect(localMocks.graphql).toHaveBeenNthCalledWith(
-      1,
+    expect(localMocks.graphqlIterator).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         baseCommitish: 'base',
         headCommitish: 'main^{commit}',
       }),
     )
-    expect(localMocks.graphql).toHaveBeenNthCalledWith(
-      2,
-      expect.any(String),
-      expect.objectContaining({ cursor: 'next' }),
+  })
+
+  it('resolves the comparison range through REST pagination', async () => {
+    localMocks.paginate.mockResolvedValue(compared('head'))
+    pagesOf(historyPage(['head']))
+
+    await findCommitsInComparison({ ...params, github: github() })
+
+    expect(localMocks.paginate).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        owner: 'octocat',
+        repo: 'example',
+        basehead: 'base...main',
+        per_page: 100,
+      },
+      expect.any(Function),
     )
   })
 
-  it('keeps ref comparison semantics for normal release ranges', async () => {
-    localMocks.graphql.mockResolvedValue({
-      repository: {
-        ref: {
-          compare: {
-            commits: {
-              nodes: [commit('ahead-of-merge-base')],
-              pageInfo: { hasNextPage: false, endCursor: null },
-            },
-          },
-        },
-      },
-    })
+  it('selects the commits out of each comparison page', async () => {
+    localMocks.paginate.mockResolvedValue([])
+
+    await findCommitsInComparison({ ...params, github: github() })
+
+    const selectCommits = localMocks.paginate.mock.calls[0][2]
+    expect(
+      selectCommits({ data: { commits: [{ sha: 'a' }, { sha: 'b' }] } }),
+    ).toEqual([{ sha: 'a' }, { sha: 'b' }])
+  })
+
+  it('stops paginating history once the comparison set is hydrated', async () => {
+    localMocks.paginate.mockResolvedValue(compared('head'))
+    const consumed = pagesOf(
+      historyPage(['head'], true),
+      historyPage(['older-commit']),
+    )
 
     const result = await findCommitsInComparison({
-      github: github(),
       ...params,
+      github: github(),
+    })
+
+    expect(result.map(({ oid }) => oid)).toEqual(['head'])
+    expect(consumed).toHaveLength(1)
+  })
+
+  it('keeps ref comparison semantics for normal release ranges', async () => {
+    pagesOf(comparePage(['ahead-of-merge-base']))
+
+    const result = await findCommitsInComparison({
+      ...params,
+      github: github(),
       useCommitishes: false,
     })
 
     expect(result.map(({ oid }) => oid)).toEqual(['ahead-of-merge-base'])
-    expect(localMocks.compareCommitsWithBasehead).not.toHaveBeenCalled()
-    expect(localMocks.graphql).toHaveBeenCalledWith(
+    expect(localMocks.paginate).not.toHaveBeenCalled()
+    expect(localMocks.graphqlIterator).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         baseCommitish: 'base',
@@ -168,34 +198,32 @@ describe('findCommitsInComparison', () => {
     )
   })
 
-  it('returns no commits when the REST comparison is empty', async () => {
-    localMocks.compareCommitsWithBasehead.mockResolvedValue({
-      data: { commits: [] },
-      headers: {},
-    })
+  it('returns no commits when the comparison is empty', async () => {
+    localMocks.paginate.mockResolvedValue([])
 
     await expect(
       findCommitsInComparison({ ...params, github: github() }),
     ).resolves.toEqual([])
-    expect(localMocks.graphql).not.toHaveBeenCalled()
+    expect(localMocks.graphqlIterator).not.toHaveBeenCalled()
   })
 
   it('rejects comparison commits missing from the target history', async () => {
-    localMocks.compareCommitsWithBasehead.mockResolvedValue({
-      data: { commits: [{ sha: 'head' }, { sha: 'missing' }] },
-      headers: {},
-    })
-    localMocks.graphql.mockResolvedValue(
-      response([commit('head')], {
-        hasNextPage: false,
-        endCursor: null,
-      }),
-    )
+    localMocks.paginate.mockResolvedValue(compared('head', 'missing'))
+    pagesOf(historyPage(['head']))
 
     await expect(
       findCommitsInComparison({ ...params, github: github() }),
     ).rejects.toThrow(
       'Comparison commits were not found in the history of main: missing',
     )
+  })
+
+  it('rejects a head commitish that does not resolve to a commit', async () => {
+    localMocks.paginate.mockResolvedValue(compared('head'))
+    pagesOf({ repository: { head: { __typename: 'Tree' } } })
+
+    await expect(
+      findCommitsInComparison({ ...params, github: github() }),
+    ).rejects.toThrow('Head commitish could not be resolved to a commit')
   })
 })

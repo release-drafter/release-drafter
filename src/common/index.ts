@@ -6,7 +6,11 @@ export {
   getPullRequestsChangedFiles,
 } from './get-pull-request-changed-files.ts'
 export type { GitHubContext } from './github-context.ts'
-export { executeGraphql, paginateGraphql } from './graphql.ts'
+export {
+  executeGraphql,
+  paginateGraphql,
+  paginateGraphqlIterator,
+} from './graphql.ts'
 export { type Logger, noopLogger } from './logger.ts'
 export { parseCommitishForRelease } from './parse-commitish.ts'
 export { sharedInputSchema } from './shared-input.schema.ts'

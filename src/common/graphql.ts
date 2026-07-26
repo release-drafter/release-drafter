@@ -25,3 +25,20 @@ export const paginateGraphql = <
   document: TypedDocumentString<TData, TVariables>,
   variables: TVariables,
 ): Promise<TData> => client.paginate<TData>(document.toString(), variables)
+
+/**
+ * Iterate a generated GraphQL document's paginated connection one page at a
+ * time, following the same plugin conventions as {@link paginateGraphql}.
+ *
+ * Prefer {@link paginateGraphql}; reach for this only when a caller has to stop
+ * before the connection is exhausted, which merging every page cannot express.
+ */
+export const paginateGraphqlIterator = <
+  TData extends object,
+  TVariables extends Record<string, unknown>,
+>(
+  client: Octokit['graphql'],
+  document: TypedDocumentString<TData, TVariables>,
+  variables: TVariables,
+): AsyncIterable<TData> =>
+  client.paginate.iterator<TData>(document.toString(), variables)

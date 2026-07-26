@@ -10,6 +10,14 @@ var noopLogger = {
 //#endregion
 //#region src/common/graphql.ts
 var executeGraphql = (client, document, variables) => client(document.toString(), variables);
+/**
+* Iterate a generated GraphQL document's paginated connection one page at a
+* time, following the same plugin conventions as {@link paginateGraphql}.
+*
+* Prefer {@link paginateGraphql}; reach for this only when a caller has to stop
+* before the connection is exhausted, which merging every page cannot express.
+*/
+var paginateGraphqlIterator = (client, document, variables) => client.paginate.iterator(document.toString(), variables);
 //#endregion
 //#region src/types/github.graphql.generated.ts
 var TypedDocumentString = class extends String {
@@ -3590,21 +3598,20 @@ var findPreviousReleases = async (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts
+/**
+* Resolves the exact `base...head` commit set. This is the only GitHub API that
+* applies merge-base comparison semantics to *arbitrary* commitishes; GraphQL's
+* `Ref.compare` needs a qualified ref name and cannot walk an annotated tag or a
+* bare SHA. The oids only select commits out of the GraphQL history below, which
+* is what supplies the pull request and author fields REST lacks.
+*/
 var findComparisonCommitOids = async (octokit, params) => {
-	const commits = [];
-	let page = 1;
-	while (true) {
-		const response = await octokit.rest.repos.compareCommitsWithBasehead({
-			owner: params.owner,
-			repo: params.name,
-			basehead: `${params.baseCommitish}...${params.headCommitish}`,
-			per_page: 100,
-			page
-		});
-		commits.push(...response.data.commits);
-		if (!response.headers.link?.includes("rel=\"next\"")) break;
-		page++;
-	}
+	const commits = await octokit.paginate(octokit.rest.repos.compareCommitsWithBasehead, {
+		owner: params.owner,
+		repo: params.name,
+		basehead: `${params.baseCommitish}...${params.headCommitish}`,
+		per_page: 100
+	}, (response) => response.data.commits);
 	return new Set(commits.map((commit) => commit.sha));
 };
 var findCommitsInComparison = async (params) => {
@@ -3614,33 +3621,26 @@ var findCommitsInComparison = async (params) => {
 	const useCommitishes = params.useCommitishes ?? false;
 	const remainingComparisonOids = useCommitishes ? await findComparisonCommitOids(octokit, params) : void 0;
 	if (remainingComparisonOids?.size === 0) return commits;
-	const queryParams = {
+	const pages = paginateGraphqlIterator(octokit.graphql, FindCommitsInComparisonDocument, {
 		...comparisonParams,
 		useCommitishes,
 		headCommitish: useCommitishes ? commitishToCommitExpression(params.headCommitish) : params.headCommitish
-	};
-	let cursor;
-	while (true) {
-		const repository = (await executeGraphql(octokit.graphql, FindCommitsInComparisonDocument, {
-			...queryParams,
-			cursor
-		})).repository;
+	});
+	for await (const data of pages) {
+		const repository = data.repository;
 		if (remainingComparisonOids) {
 			const history = repository?.head?.__typename === "Commit" ? repository.head.history : void 0;
 			if (!history) throw new Error("Head commitish could not be resolved to a commit");
 			for (const commit of history.nodes ?? []) if (commit && remainingComparisonOids.delete(commit.oid)) commits.push(commit);
 			if (remainingComparisonOids.size === 0) return commits;
-			if (!history.pageInfo.hasNextPage) throw new Error(`Comparison commits were not found in the history of ${params.headCommitish}: ${[...remainingComparisonOids].join(", ")}`);
-			cursor = history.pageInfo.endCursor;
 		} else {
 			const comparison = repository?.ref?.compare?.commits;
 			if (!comparison) throw new Error("Query returned an unexpected result: ref or comparison not found");
 			commits.push(...(comparison.nodes ?? []).filter((commit) => commit != null));
-			if (!comparison.pageInfo.hasNextPage) return commits;
-			cursor = comparison.pageInfo.endCursor;
 		}
-		if (!cursor) throw new Error("Commit comparison pagination returned no cursor");
 	}
+	if (remainingComparisonOids?.size) throw new Error(`Comparison commits were not found in the history of ${params.headCommitish}: ${[...remainingComparisonOids].join(", ")}`);
+	return commits;
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts

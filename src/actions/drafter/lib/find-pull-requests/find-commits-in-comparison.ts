@@ -1,4 +1,7 @@
-import { executeGraphql, type GitHubContext } from '#src/common/index.ts'
+import {
+  type GitHubContext,
+  paginateGraphqlIterator,
+} from '#src/common/index.ts'
 import { commitishToCommitExpression } from '#src/common/parse-commitish.ts'
 import {
   FindCommitsInComparisonDocument,
@@ -22,27 +25,33 @@ type HeadCommit = Extract<
 >
 type HistoryCommits = NonNullable<HeadCommit['history']['nodes']>
 type ComparisonCommit = NonNullable<RefCommits[number] | HistoryCommits[number]>
+type ComparisonPage = { commits: Array<{ sha: string }> }
 
+/**
+ * Resolves the exact `base...head` commit set. This is the only GitHub API that
+ * applies merge-base comparison semantics to *arbitrary* commitishes; GraphQL's
+ * `Ref.compare` needs a qualified ref name and cannot walk an annotated tag or a
+ * bare SHA. The oids only select commits out of the GraphQL history below, which
+ * is what supplies the pull request and author fields REST lacks.
+ */
 const findComparisonCommitOids = async (
   octokit: GitHubContext['octokit'],
   params: Pick<Params, 'owner' | 'name' | 'baseCommitish' | 'headCommitish'>,
 ) => {
-  const commits: Array<{ sha: string }> = []
-  let page = 1
-
-  while (true) {
-    const response = await octokit.rest.repos.compareCommitsWithBasehead({
+  const commits = await octokit.paginate(
+    octokit.rest.repos.compareCommitsWithBasehead,
+    {
       owner: params.owner,
       repo: params.name,
       basehead: `${params.baseCommitish}...${params.headCommitish}`,
       per_page: 100,
-      page,
-    })
-    commits.push(...response.data.commits)
-
-    if (!response.headers.link?.includes('rel="next"')) break
-    page++
-  }
+    },
+    // Octokit types comparison pages as though the plugin reshaped them into a
+    // bare commit list, but it skips that normalization for this route because
+    // the payload carries a `url` key, so each page is still the whole
+    // comparison object. The cast follows the runtime rather than the types.
+    (response) => (response.data as unknown as ComparisonPage).commits,
+  )
 
   return new Set(commits.map((commit) => commit.sha))
 }
@@ -60,21 +69,22 @@ export const findCommitsInComparison = async (
 
   if (remainingComparisonOids?.size === 0) return commits
 
-  const queryParams = {
-    ...comparisonParams,
-    useCommitishes,
-    headCommitish: useCommitishes
-      ? commitishToCommitExpression(params.headCommitish)
-      : params.headCommitish,
-  }
-  let cursor: string | null | undefined
+  // `@skip`/`@include` leaves exactly one paginated connection in the response,
+  // so the plugin locates whichever of `ref.compare.commits` or `head.history`
+  // is present and drives the cursor for it.
+  const pages = paginateGraphqlIterator(
+    octokit.graphql,
+    FindCommitsInComparisonDocument,
+    {
+      ...comparisonParams,
+      useCommitishes,
+      headCommitish: useCommitishes
+        ? commitishToCommitExpression(params.headCommitish)
+        : params.headCommitish,
+    },
+  )
 
-  while (true) {
-    const data = await executeGraphql(
-      octokit.graphql,
-      FindCommitsInComparisonDocument,
-      { ...queryParams, cursor },
-    )
+  for await (const data of pages) {
     const repository = data.repository
 
     if (remainingComparisonOids) {
@@ -93,13 +103,9 @@ export const findCommitsInComparison = async (
         }
       }
 
+      // Stop as soon as the comparison set is hydrated rather than walking the
+      // rest of the branch history.
       if (remainingComparisonOids.size === 0) return commits
-      if (!history.pageInfo.hasNextPage) {
-        throw new Error(
-          `Comparison commits were not found in the history of ${params.headCommitish}: ${[...remainingComparisonOids].join(', ')}`,
-        )
-      }
-      cursor = history.pageInfo.endCursor
     } else {
       const comparison = repository?.ref?.compare?.commits
       if (!comparison) {
@@ -111,12 +117,14 @@ export const findCommitsInComparison = async (
       commits.push(
         ...(comparison.nodes ?? []).filter((commit) => commit != null),
       )
-      if (!comparison.pageInfo.hasNextPage) return commits
-      cursor = comparison.pageInfo.endCursor
-    }
-
-    if (!cursor) {
-      throw new Error('Commit comparison pagination returned no cursor')
     }
   }
+
+  if (remainingComparisonOids?.size) {
+    throw new Error(
+      `Comparison commits were not found in the history of ${params.headCommitish}: ${[...remainingComparisonOids].join(', ')}`,
+    )
+  }
+
+  return commits
 }
