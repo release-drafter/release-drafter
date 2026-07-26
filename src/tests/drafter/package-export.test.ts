@@ -1,4 +1,4 @@
-import { type DraftReleaseOptions, draftRelease } from 'release-drafter/drafter'
+import { type DraftReleaseOptions, draftRelease } from 'release-drafter'
 import { describe, expect, it } from 'vitest'
 
 describe('package drafter export', () => {

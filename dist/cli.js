@@ -1060,6 +1060,7 @@ var package_default = {
 	version: "7.6.0",
 	author: "",
 	type: "module",
+	types: "./dist/types/drafter.d.ts",
 	sideEffects: false,
 	files: [
 		"dist/cli.js",
@@ -1068,7 +1069,7 @@ var package_default = {
 		"dist/types"
 	],
 	bin: { "release-drafter": "dist/cli.js" },
-	exports: { "./drafter": {
+	exports: { ".": {
 		"types": "./dist/types/drafter.d.ts",
 		"default": "./dist/drafter.js"
 	} },

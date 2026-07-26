@@ -4,6 +4,7 @@
   "version": "7.7.0",
   "author": "",
   "type": "module",
+  "types": "./dist/types/drafter.d.ts",
   "sideEffects": false,
   "files": [
     "dist/cli.js",
@@ -15,7 +16,7 @@
     "release-drafter": "dist/cli.js"
   },
   "exports": {
-    "./drafter": {
+    ".": {
       "types": "./dist/types/drafter.d.ts",
       "default": "./dist/drafter.js"
     }
