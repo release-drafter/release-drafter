@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-import { w as getOctokit } from "./chunks/ignore.js";
-import { t as draftRelease$1 } from "./chunks/drafter.js";
+import { n as getOctokit, t as draftRelease$1 } from "./chunks/public/drafter.js";
 import process$1 from "node:process";
-import { promisify } from "node:util";
 import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 //#region node_modules/cac/dist/index.js
 function toArr(any) {
 	return any == null ? [] : Array.isArray(any) ? any : [any];
@@ -1061,10 +1060,16 @@ var package_default = {
 	version: "7.6.0",
 	author: "",
 	type: "module",
-	"private": true,
+	sideEffects: false,
+	files: [
+		"dist/cli.js",
+		"dist/drafter.js",
+		"dist/chunks/public",
+		"dist/types"
+	],
 	bin: { "release-drafter": "dist/cli.js" },
 	exports: { "./drafter": {
-		"types": "./src/drafter.ts",
+		"types": "./dist/types/drafter.d.ts",
 		"default": "./dist/drafter.js"
 	} },
 	homepage: "https://github.com/release-drafter/release-drafter",
@@ -1111,8 +1116,10 @@ var package_default = {
 		"@actions/core": "^3.0.1",
 		"@actions/github": "^9.1.1",
 		"@graphql-typed-document-node/core": "^3.2.0",
+		"@octokit/core": "^7.0.6",
 		"@octokit/graphql": "^9.0.3",
 		"@octokit/plugin-paginate-graphql": "^6.0.0",
+		"@octokit/plugin-paginate-rest": "^14.0.0",
 		"@octokit/plugin-rest-endpoint-methods": "^17.0.0",
 		"@octokit/plugin-retry": "^8.1.0",
 		"@octokit/request-error": "^7.1.0",
@@ -1124,7 +1131,6 @@ var package_default = {
 		"escape-string-regexp": "^5.0.0",
 		"graphql": "^17.0.2",
 		"ignore": "^7.0.6",
-		"regex-parser": "^2.3.1",
 		"semver": "^7.8.5",
 		"yaml": "^2.9.0",
 		"zod": "^4.4.3"
@@ -1186,10 +1192,16 @@ var normalizeConfigTarget = async (value, targetExists) => {
 };
 //#endregion
 //#region src/cli/draft-release.ts
+var logger = {
+	debug: (message) => consola.debug(message),
+	error: (message) => consola.error(message),
+	info: (message) => consola.info(message),
+	warning: (message) => consola.warn(message)
+};
 var draftRelease = async (args) => {
 	const repo = parseRepository(args.repository);
 	const token = await resolveToken();
-	const octokit = getOctokit(token);
+	const octokit = getOctokit(token, { logger });
 	const repository = await octokit.rest.repos.get(repo);
 	const targetCommitish = args.to || repository.data.default_branch;
 	const configName = await normalizeConfigTarget(args.config, async (target) => {
@@ -1207,8 +1219,7 @@ var draftRelease = async (args) => {
 		}
 	});
 	consola.box(`✍️ Release Drafter\n${args.repository}`);
-	consola.start(args.from ? `🔎 Comparing ${args.from} → ${targetCommitish}` : `🔎 Finding changes since the last release → ${targetCommitish}`);
-	const result = await draftRelease$1({
+	return await draftRelease$1({
 		repo,
 		token,
 		octokit,
@@ -1219,18 +1230,9 @@ var draftRelease = async (args) => {
 		dryRun: args.dryRun,
 		publish: args.publish,
 		prerelease: args.prerelease,
-		latest: args.latest
+		latest: args.latest,
+		logger
 	});
-	consola.info(`📝 Found ${result.pullRequests.length} pull requests across ${result.commits.length} commits`);
-	if (result.dryRun) consola.success(`🧪 Dry run complete for ${result.releasePayload.name}`);
-	else {
-		const release = result.upsertedRelease?.data.html_url || result.releasePayload.name;
-		if (result.releasePayload.draft) consola.success(`✨ Draft ready: ${release}`);
-		else if (result.releasePayload.prerelease) consola.success(`🚀 Prerelease published: ${release}`);
-		else if (result.releasePayload.make_latest) consola.success(`🚀 Latest release published: ${release}`);
-		else consola.success(`🚀 Release published: ${release}`);
-	}
-	return result;
 };
 //#endregion
 //#region src/cli/run.ts
@@ -1264,4 +1266,3 @@ try {
 	process.exitCode = 1;
 }
 //#endregion
-export {};

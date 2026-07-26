@@ -2,7 +2,10 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import * as github from '@actions/github'
 import { expect, vi } from 'vitest'
+import { getOctokit } from '#src/common/get-octokit.ts'
+import type { GitHubContext } from '#src/common/github-context.ts'
 import type { GithubActionEnvironment } from '#src/types/index.ts'
+import { mocks } from './hoisted.ts'
 
 type WebhookPayload = typeof github.context.payload
 
@@ -11,6 +14,17 @@ type AllowedPayload =
   | 'push-non-master-branch'
   | 'push-tag'
   | 'pull_request-synchronize'
+
+export const testGitHubContext = (
+  overrides: Partial<GitHubContext> = {},
+): GitHubContext => ({
+  repo: { owner: 'toolmantim', repo: 'release-drafter-test-project' },
+  ref: 'refs/heads/master',
+  serverUrl: 'https://github.com',
+  octokit: getOctokit('test', { logger: mocks.core }),
+  logger: mocks.core,
+  ...overrides,
+})
 
 const getEventPayloadPath = (type: AllowedPayload) => {
   const baseDir = path.join(

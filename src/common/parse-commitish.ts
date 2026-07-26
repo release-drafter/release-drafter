@@ -1,12 +1,9 @@
-import * as core from '@actions/core'
-import { context } from '@actions/github'
 import type { ParsedConfig } from '#src/actions/drafter/config/index.ts'
 import {
   ResolveCommitishDocument,
   ResolvePullRequestCommitishDocument,
 } from '#src/types/github.graphql.generated.ts'
 import type { Octokit } from './get-octokit.ts'
-import { getOctokit } from './get-octokit.ts'
 import type { GitHubContext } from './github-context.ts'
 import { executeGraphql } from './graphql.ts'
 
@@ -79,10 +76,9 @@ const resolvePullRequestToCommitSha = async (params: {
  */
 export const parseCommitishForRelease = async (
   commitish: ParsedConfig['commitish'],
-  github?: Pick<GitHubContext, 'octokit' | 'repo'>,
+  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo'>,
 ) => {
-  const octokit = github?.octokit ?? getOctokit()
-  const repo = github?.repo ?? context.repo
+  const { logger, octokit, repo } = github
   if (commitish.startsWith('refs/heads/')) {
     return commitish.replace(/^refs\/heads\//, '')
   }
@@ -93,7 +89,7 @@ export const parseCommitishForRelease = async (
       repo,
       tagRef: commitish,
     }).catch(() => {
-      core.warning(
+      logger.warning(
         `${commitish} could not be resolved to a commit SHA, falling back to default branch`,
       )
 
@@ -113,7 +109,7 @@ export const parseCommitishForRelease = async (
         pullRequestNumber: Number(pullRequestNumber),
         refType: refType as 'head' | 'merge',
       }).catch(() => {
-        core.warning(
+        logger.warning(
           `${commitish} could not be resolved to a commit SHA, falling back to default branch`,
         )
 
@@ -121,7 +117,7 @@ export const parseCommitishForRelease = async (
       })
     }
 
-    core.warning(
+    logger.warning(
       `${commitish} is not a supported pull request ref, falling back to default branch`,
     )
     return ''

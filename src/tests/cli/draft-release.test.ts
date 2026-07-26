@@ -2,22 +2,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   box: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
   getContent: vi.fn(),
   getOctokit: vi.fn(),
   info: vi.fn(),
   repositoryGet: vi.fn(),
   resolveToken: vi.fn(),
   runReleaseDrafter: vi.fn(),
-  start: vi.fn(),
-  success: vi.fn(),
+  warning: vi.fn(),
 }))
 
 vi.mock('consola', () => ({
   consola: {
     box: mocks.box,
+    debug: mocks.debug,
+    error: mocks.error,
     info: mocks.info,
-    start: mocks.start,
-    success: mocks.success,
+    warn: mocks.warning,
   },
 }))
 vi.mock('#src/common/get-octokit.ts', () => ({
@@ -60,7 +62,7 @@ describe('CLI draftRelease', () => {
     })
   })
 
-  it('uses repository defaults and reports a dry run', async () => {
+  it('uses repository defaults and injects the CLI logger', async () => {
     await draftRelease({
       repository: 'owner/repository',
       config: 'release-drafter.yml',
@@ -79,17 +81,16 @@ describe('CLI draftRelease', () => {
       publish: undefined,
       prerelease: undefined,
       latest: undefined,
+      logger: {
+        debug: expect.any(Function),
+        error: expect.any(Function),
+        info: expect.any(Function),
+        warning: expect.any(Function),
+      },
     })
-    expect(mocks.start).toHaveBeenCalledWith(
-      '🔎 Finding changes since the last release → master',
-    )
-    expect(mocks.info).toHaveBeenCalledWith(
-      '📝 Found 2 pull requests across 1 commits',
-    )
-    expect(mocks.success).toHaveBeenCalledWith('🧪 Dry run complete for v1.0.0')
   })
 
-  it('reports an effective dry run forced by the drafter', async () => {
+  it('returns the effective dry-run result from shared code', async () => {
     mocks.runReleaseDrafter.mockResolvedValueOnce({
       commits: [],
       pullRequests: [],
@@ -103,13 +104,13 @@ describe('CLI draftRelease', () => {
       dryRun: true,
     })
 
-    await draftRelease({
+    const result = await draftRelease({
       repository: 'owner/repository',
       config: 'release-drafter.yml',
       dryRun: false,
     })
 
-    expect(mocks.success).toHaveBeenCalledWith('🧪 Dry run complete for v1.0.0')
+    expect(result.dryRun).toBe(true)
   })
 
   it('passes explicit range, version, and config URL overrides', async () => {
@@ -150,31 +151,22 @@ describe('CLI draftRelease', () => {
         dryRun: false,
       }),
     )
-    expect(mocks.start).toHaveBeenCalledWith(
-      '🔎 Comparing v1.0.0 → release/next',
-    )
-    expect(mocks.success).toHaveBeenCalledWith(
-      '✨ Draft ready: https://github.com/owner/repository/releases/1',
-    )
   })
 
   it.each([
     {
       prerelease: true,
       latest: false,
-      message: '🚀 Prerelease published',
     },
     {
       prerelease: false,
       latest: true,
-      message: '🚀 Latest release published',
     },
     {
       prerelease: false,
       latest: false,
-      message: '🚀 Release published',
     },
-  ])('reports a published release as $message', async (releaseOptions) => {
+  ])('passes publication options: $prerelease, $latest', async (releaseOptions) => {
     mocks.runReleaseDrafter.mockResolvedValueOnce({
       commits: [],
       pullRequests: [],
@@ -205,9 +197,6 @@ describe('CLI draftRelease', () => {
         prerelease: releaseOptions.prerelease,
         latest: releaseOptions.latest,
       }),
-    )
-    expect(mocks.success).toHaveBeenCalledWith(
-      `${releaseOptions.message}: https://github.com/owner/repository/releases/2`,
     )
   })
 })

@@ -3,7 +3,13 @@ import {
   configFileSchema,
   extendsDeclarationSchema,
 } from '#src/common/config/extends.schema.ts'
-import { mergeConfigChain } from '#src/common/config/merge-config-chain.ts'
+import { mergeConfigChain as mergeConfigChainBase } from '#src/common/config/merge-config-chain.ts'
+import { noopLogger } from '#src/common/logger.ts'
+
+const mergeConfigChain = (
+  configResults: Parameters<typeof mergeConfigChainBase>[0],
+) => mergeConfigChainBase(configResults, noopLogger)
+
 import type { ConfigTarget } from '#src/common/config/parse-config-target.ts'
 
 const target = (filepath: string): ConfigTarget => ({

@@ -6,8 +6,10 @@ const mocks = vi.hoisted(() => ({
   mergeInputAndConfig: vi.fn(),
 }))
 
-vi.mock('#src/actions/drafter/config/index.ts', () => ({
+vi.mock('#src/actions/drafter/config/get-config.ts', () => ({
   getConfig: mocks.getConfig,
+}))
+vi.mock('#src/actions/drafter/config/merge-input-and-config.ts', () => ({
   mergeInputAndConfig: mocks.mergeInputAndConfig,
 }))
 vi.mock('#src/actions/drafter/main.ts', () => ({

@@ -1,7 +1,5 @@
-import * as core from '@actions/core'
 import {
   type GitHubContext,
-  getGitHubContext,
   getPullRequestsChangedFiles,
 } from '#src/common/index.ts'
 import { needsPullRequestChangedFiles } from '../../common/category-matching.ts'
@@ -18,9 +16,9 @@ const findNewContributorLogins = async (
     author?: { __typename?: string; login: string } | null
     mergedAt?: string | null
   }>,
-  github?: Pick<GitHubContext, 'octokit' | 'repo'>,
+  github: Pick<GitHubContext, 'octokit' | 'repo'>,
 ) => {
-  const { octokit, repo } = github ?? getGitHubContext()
+  const { octokit, repo } = github
   const firstMergedAtByLogin = new Map<string, string>()
 
   for (const pullRequest of pullRequests) {
@@ -60,9 +58,9 @@ export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
   previousCommitish?: string
-  github?: Pick<GitHubContext, 'octokit' | 'repo'>
+  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo'>
 }) => {
-  const { octokit, repo } = params.github ?? getGitHubContext()
+  const { logger, octokit, repo } = params.github
   const sharedComparisonParams = {
     name: repo.repo,
     owner: repo.owner,
@@ -82,7 +80,7 @@ export const findPullRequests = async (params: {
       ? `refs/tags/${params.lastRelease.tag_name}`
       : undefined)
   if (!previousCommitish) {
-    core.warning('A previous (published) release is required to find changes')
+    logger.warning('A previous (published) release is required to find changes')
     return {
       commits: [],
       newContributorLogins: new Set<string>(),
@@ -90,18 +88,18 @@ export const findPullRequests = async (params: {
     }
   }
 
-  core.info(
-    `Finding commits between ${previousCommitish} and ${params.config.commitish}...`,
+  logger.info(
+    `🔎 Discovering commits between ${previousCommitish} and ${params.config.commitish}...`,
   )
   const commits = await findCommitsInComparison({
     baseCommitish: previousCommitish,
     headCommitish: params.config.commitish,
     useCommitishes: !!params.previousCommitish,
-    github: params.github ?? getGitHubContext(),
+    github: params.github,
     ...sharedComparisonParams,
   })
 
-  core.info(`Found ${commits.length} commits.`)
+  logger.info(`  Found ${commits.length} commits.`)
 
   // Extract unique PRs from commits, deduplicated by repo + PR number
   const pullRequestsByKey = new Map(
@@ -138,7 +136,7 @@ export const findPullRequests = async (params: {
             : null,
           commitOids: comparisonCommitOids,
           foundPrKeys: new Set(pullRequestsByKey.keys()),
-          github: params.github ?? getGitHubContext(),
+          github: params.github,
           fieldFlags: {
             withPullRequestBody: sharedComparisonParams.withPullRequestBody,
             withPullRequestURL: sharedComparisonParams.withPullRequestURL,
@@ -174,14 +172,11 @@ export const findPullRequests = async (params: {
     params.config.footer,
   ].some((template) => template?.includes('$NEW_CONTRIBUTORS'))
   const newContributorLogins = usesNewContributors
-    ? await findNewContributorLogins(
-        pullRequests,
-        params.github ?? getGitHubContext(),
-      )
+    ? await findNewContributorLogins(pullRequests, params.github)
     : new Set<string>()
 
-  core.info(
-    `Found ${pullRequests.length} merged pull requests targeting ${repo.owner}/${repo.repo}${
+  logger.info(
+    `  Found ${pullRequests.length} merged pull requests targeting ${repo.owner}/${repo.repo}${
       pullRequests.length > 0
         ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(', ')}`
         : '.'

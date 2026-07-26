@@ -1,8 +1,16 @@
 import { consola } from 'consola'
 import { getOctokit } from '#src/common/get-octokit.ts'
+import type { Logger } from '#src/common/logger.ts'
 import { draftRelease as runReleaseDrafter } from '#src/drafter.ts'
 import { resolveToken } from './auth.ts'
 import { normalizeConfigTarget, parseRepository } from './options.ts'
+
+const logger: Logger = {
+  debug: (message) => consola.debug(message),
+  error: (message) => consola.error(message),
+  info: (message) => consola.info(message),
+  warning: (message) => consola.warn(message),
+}
 
 export type CliArguments = {
   repository: string
@@ -19,7 +27,7 @@ export type CliArguments = {
 export const draftRelease = async (args: CliArguments) => {
   const repo = parseRepository(args.repository)
   const token = await resolveToken()
-  const octokit = getOctokit(token)
+  const octokit = getOctokit(token, { logger })
   const repository = await octokit.rest.repos.get(repo)
   const targetCommitish = args.to || repository.data.default_branch
   const configName = await normalizeConfigTarget(
@@ -41,11 +49,6 @@ export const draftRelease = async (args: CliArguments) => {
   )
 
   consola.box(`✍️ Release Drafter\n${args.repository}`)
-  consola.start(
-    args.from
-      ? `🔎 Comparing ${args.from} → ${targetCommitish}`
-      : `🔎 Finding changes since the last release → ${targetCommitish}`,
-  )
 
   const result = await runReleaseDrafter({
     repo,
@@ -59,27 +62,8 @@ export const draftRelease = async (args: CliArguments) => {
     publish: args.publish,
     prerelease: args.prerelease,
     latest: args.latest,
+    logger,
   })
-
-  consola.info(
-    `📝 Found ${result.pullRequests.length} pull requests across ${result.commits.length} commits`,
-  )
-
-  if (result.dryRun) {
-    consola.success(`🧪 Dry run complete for ${result.releasePayload.name}`)
-  } else {
-    const release =
-      result.upsertedRelease?.data.html_url || result.releasePayload.name
-    if (result.releasePayload.draft) {
-      consola.success(`✨ Draft ready: ${release}`)
-    } else if (result.releasePayload.prerelease) {
-      consola.success(`🚀 Prerelease published: ${release}`)
-    } else if (result.releasePayload.make_latest) {
-      consola.success(`🚀 Latest release published: ${release}`)
-    } else {
-      consola.success(`🚀 Release published: ${release}`)
-    }
-  }
 
   return result
 }

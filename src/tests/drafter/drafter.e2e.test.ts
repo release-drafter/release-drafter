@@ -1888,7 +1888,7 @@ describe('drafter e2e', () => {
             ]
           `)
           expect(mocks.core.info).toHaveBeenCalledWith(
-            'Found 8 merged pull requests targeting toolmantim/release-drafter-test-project: #28, #27, #25, #24, #23, #5, #4, #1',
+            '  Found 8 merged pull requests targeting toolmantim/release-drafter-test-project: #28, #27, #25, #24, #23, #5, #4, #1',
           )
           expect(scope.isDone()).toBe(true) // should call the mocked endpoints
           expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints

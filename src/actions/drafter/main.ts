@@ -1,4 +1,3 @@
-import * as core from '@actions/core'
 import type { GitHubContext } from '#src/common/index.ts'
 import type { ExclusiveInput, ParsedConfig } from './config/index.ts'
 import {
@@ -23,6 +22,7 @@ export const main = async (params: {
    * 6. set action outputs
    */
   const { config, input } = params
+  const { logger } = params.github
   const isPullRequestMergeRef = /^refs\/pull\/\d+\/merge$/.test(
     config.commitish,
   )
@@ -31,7 +31,7 @@ export const main = async (params: {
     : input
 
   if (isPullRequestMergeRef && !input['dry-run']) {
-    core.warning(
+    logger.warning(
       `${config.commitish} points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.`,
     )
   }

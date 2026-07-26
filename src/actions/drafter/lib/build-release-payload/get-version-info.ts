@@ -1,5 +1,5 @@
-import * as core from '@actions/core'
 import type { ReleaseType } from 'semver'
+import { type Logger, noopLogger } from '#src/common/index.ts'
 import type { Config, ExclusiveInput } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import type { resolveVersionKeyIncrement } from './resolve-version-increment.ts'
@@ -11,6 +11,7 @@ type Release = Exclude<
 >
 
 export const getVersionInfo = (params: {
+  logger?: Logger
   lastRelease: Pick<Release, 'tag_name' | 'name'> | undefined
   config: Pick<
     Config,
@@ -19,6 +20,7 @@ export const getVersionInfo = (params: {
   input: Pick<ExclusiveInput, 'version' | 'tag' | 'name'>
   versionKeyIncrement: ReturnType<typeof resolveVersionKeyIncrement>
 }) => {
+  const logger = params.logger ?? noopLogger
   const {
     lastRelease,
     config,
@@ -26,35 +28,37 @@ export const getVersionInfo = (params: {
     versionKeyIncrement: _versionKeyIncrement,
   } = params
 
-  core.info(`Resolving version info based on:`)
-  core.info(`   - last release: ${lastRelease?.tag_name || 'none'}`)
-  core.info(
-    `   - version input: ${input.version || input.tag || input.name || 'none'}`,
+  logger.info(`🏷️ Resolving version information...`)
+  logger.info(`  last release: ${lastRelease?.tag_name || 'none'}`)
+  logger.info(
+    `  version input: ${input.version || input.tag || input.name || 'none'}`,
   )
-  core.info(`   - version key increment: ${_versionKeyIncrement}`)
+  logger.info(`  version key increment: ${_versionKeyIncrement}`)
 
   let _localIncrement: ReleaseType | 'no_increment' =
     structuredClone(_versionKeyIncrement) // local mutable copy
 
-  core.info(`Coerce and parse versions from last release...`)
+  logger.info(`  Coercing and parsing version from last release...`)
   const versionFromLastRelease = new VersionDescriptor(lastRelease, {
     tagPrefix: config['tag-prefix'],
     preReleaseIdentifier: config['prerelease-identifier'],
+    logger,
   })
-  core.info(
-    `Parsed version from last release: ${versionFromLastRelease.version?.format() || 'none'}.`,
+  logger.info(
+    `  Parsed version from last release: ${versionFromLastRelease.version?.format() || 'none'}.`,
   )
 
-  core.info(`Coerce and parse versions from input...`)
+  logger.info(`  Coercing and parsing version from input...`)
   const versionFromInput = new VersionDescriptor(
     input.version || input.tag || input.name,
     {
       tagPrefix: config['tag-prefix'],
       preReleaseIdentifier: config['prerelease-identifier'],
+      logger,
     },
   )
-  core.info(
-    `Parsed version from input: ${versionFromInput.version?.format() || 'none'}.`,
+  logger.info(
+    `  Parsed version from input: ${versionFromInput.version?.format() || 'none'}.`,
   )
 
   let referenceVersion: VersionDescriptor
@@ -81,8 +85,8 @@ export const getVersionInfo = (params: {
         //    - 1.2.3-beta.1 --(preminor)--> ??????
         //    - 1.2.3-beta.1 --(premajor)--> ??????
         if (_localIncrement !== 'prerelease') {
-          core.info(
-            `versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || 'none'}). The version will be incremented as a prerelease instead.`,
+          logger.info(
+            `  versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || 'none'}). The version will be incremented as a prerelease instead.`,
           )
           _localIncrement = 'prerelease'
         }
@@ -92,6 +96,7 @@ export const getVersionInfo = (params: {
     // No previous release and no input version
     referenceVersion = new VersionDescriptor('0.0.0', {
       preReleaseIdentifier: config['prerelease-identifier'],
+      logger,
       tagPrefix: config['tag-prefix'],
     })
   }

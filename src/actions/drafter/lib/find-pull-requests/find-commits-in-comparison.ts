@@ -1,8 +1,4 @@
-import {
-  executeGraphql,
-  type GitHubContext,
-  getOctokit,
-} from '#src/common/index.ts'
+import { executeGraphql, type GitHubContext } from '#src/common/index.ts'
 import { commitishToCommitExpression } from '#src/common/parse-commitish.ts'
 import {
   FindCommitsInComparisonDocument,
@@ -52,9 +48,9 @@ const findComparisonCommitOids = async (
 }
 
 export const findCommitsInComparison = async (
-  params: Params & { github?: Pick<GitHubContext, 'octokit'> },
+  params: Params & { github: Pick<GitHubContext, 'octokit'> },
 ) => {
-  const { octokit } = params.github ?? { octokit: getOctokit() }
+  const { octokit } = params.github
   const { github: _github, ...comparisonParams } = params
   const commits: ComparisonCommit[] = []
   const useCommitishes = params.useCommitishes ?? false

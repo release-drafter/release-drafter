@@ -1,4 +1,4 @@
-import * as core from '@actions/core'
+import { type Logger, noopLogger } from '#src/common/index.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { getVersionInfo } from './get-version-info.ts'
 import { renderTemplate } from './render-template/index.ts'
@@ -8,10 +8,12 @@ import { renderTemplate } from './render-template/index.ts'
  * based on the input and config.
  */
 export const renderReleaseName = (params: {
+  logger?: Logger
   inputName: string | undefined
   config: Pick<ParsedConfig, 'name-template'>
   versionInfo: ReturnType<typeof getVersionInfo>
 }) => {
+  const logger = params.logger ?? noopLogger
   let name = structuredClone(params.inputName)
   const { config, versionInfo } = params
 
@@ -29,6 +31,6 @@ export const renderReleaseName = (params: {
     })
   }
 
-  core.debug(`name: ${name}`)
+  logger.debug(`name: ${name}`)
   return name
 }

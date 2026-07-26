@@ -1,10 +1,9 @@
-import {
-  getConfig,
-  mergeInputAndConfig,
-} from '#src/actions/drafter/config/index.ts'
+import { getConfig } from '#src/actions/drafter/config/get-config.ts'
+import { mergeInputAndConfig } from '#src/actions/drafter/config/merge-input-and-config.ts'
 import { actionInputSchema } from '#src/actions/drafter/config/schemas/action-input.schema.ts'
 import { main } from '#src/actions/drafter/main.ts'
 import { getOctokit, type Octokit } from '#src/common/get-octokit.ts'
+import { type Logger, noopLogger } from '#src/common/logger.ts'
 
 export type DraftReleaseOptions = {
   repo: { owner: string; repo: string }
@@ -18,11 +17,16 @@ export type DraftReleaseOptions = {
   publish?: boolean
   prerelease?: boolean
   latest?: boolean
+  apiUrl?: string
   serverUrl?: string
+  logger?: Logger
 }
 
 export const draftRelease = async (options: DraftReleaseOptions) => {
-  const octokit = options.octokit ?? getOctokit(options.token)
+  const logger = options.logger ?? noopLogger
+  const octokit =
+    options.octokit ??
+    getOctokit(options.token, { baseUrl: options.apiUrl, logger })
   const repository = options.commitish
     ? undefined
     : await octokit.rest.repos.get(options.repo)
@@ -34,7 +38,12 @@ export const draftRelease = async (options: DraftReleaseOptions) => {
     ref: commitish,
     serverUrl: options.serverUrl ?? 'https://github.com',
     octokit,
+    logger,
   }
+
+  logger.info(
+    `⚙️ Loading configuration from ${options.configName ?? 'release-drafter.yml'}...`,
+  )
 
   const input = actionInputSchema.parse({
     'config-name': options.configName,
@@ -49,6 +58,7 @@ export const draftRelease = async (options: DraftReleaseOptions) => {
   const config = mergeInputAndConfig({
     config: await getConfig(input['config-name'], github),
     input,
+    logger,
     ref: github.ref,
   })
 

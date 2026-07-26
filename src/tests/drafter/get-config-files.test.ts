@@ -2,8 +2,36 @@
 import { readFileSyncOriginal } from 'node:fs'
 import nock from 'nock'
 import { describe, expect, it, vi } from 'vitest'
-import { getConfigFile } from '#src/common/config/get-config-file.ts'
-import { getConfigFiles } from '#src/common/config/get-config-files.ts'
+import { getConfigFile as getConfigFileBase } from '#src/common/config/get-config-file.ts'
+import { getConfigFiles as getConfigFilesBase } from '#src/common/config/get-config-files.ts'
+import type { ConfigTarget } from '#src/common/config/parse-config-target.ts'
+import { testGitHubContext } from '#tests/mocks/index.ts'
+
+const getConfigFile = (
+  target: ConfigTarget,
+  lastFetchedFrom?: ConfigTarget,
+) => {
+  const github = testGitHubContext()
+  return getConfigFileBase(
+    target,
+    lastFetchedFrom,
+    github.octokit,
+    github.logger,
+  )
+}
+
+const getConfigFiles = (
+  configFilename: string,
+  currentContext: { repo: { owner: string; repo: string }; ref: string },
+) => {
+  const github = testGitHubContext()
+  return getConfigFilesBase(
+    configFilename,
+    currentContext,
+    github.octokit,
+    github.logger,
+  )
+}
 
 const mocks = vi.hoisted(() => ({
   existsSync: vi.fn(),

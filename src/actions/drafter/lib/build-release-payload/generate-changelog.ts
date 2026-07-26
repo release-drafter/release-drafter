@@ -5,6 +5,7 @@ import { pullRequestToString } from './pull-request-to-string.ts'
 import { renderTemplate } from './render-template/index.ts'
 
 export const generateChangeLog = (params: {
+  serverUrl?: string
   commits?: Awaited<ReturnType<typeof findPullRequests>>['commits']
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
   config: Pick<
@@ -41,6 +42,7 @@ export const generateChangeLog = (params: {
   if (uncategorizedPullRequests.length > 0) {
     changeLog.push(
       pullRequestToString({
+        serverUrl: params.serverUrl,
         commits,
         pullRequests: uncategorizedPullRequests,
         config,
@@ -63,6 +65,7 @@ export const generateChangeLog = (params: {
 
     // Define the pull requests into a single string.
     const pullRequestString = pullRequestToString({
+      serverUrl: params.serverUrl,
       category: category.title,
       commits,
       pullRequests: category.pullRequests,

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getOctokit } from '#src/common/get-octokit.ts'
+import { getActionOctokit } from '#src/actions/get-octokit.ts'
 
 // The suite-wide setup swaps in Node's global fetch so nock can intercept.
 // These tests assert the real production wiring, so opt out of that.
@@ -11,7 +11,7 @@ vi.unmock('@actions/github')
  * from `http_proxy`/`https_proxy`. That silently breaks GitHub Enterprise
  * Server and corporate proxies, so pin the production configuration here.
  */
-const requestDefaults = (octokit: ReturnType<typeof getOctokit>) =>
+const requestDefaults = (octokit: ReturnType<typeof getActionOctokit>) =>
   (
     octokit.request as unknown as {
       endpoint: {
@@ -26,7 +26,7 @@ describe('getOctokit proxy support', () => {
   })
 
   it("keeps @actions/github's proxy-aware fetch rather than replacing it", () => {
-    const { fetch } = requestDefaults(getOctokit())
+    const { fetch } = requestDefaults(getActionOctokit('test'))
 
     expect(fetch).toBeTypeOf('function')
     // The proxy-aware wrapper, not a bare fetch handed straight through.
@@ -36,6 +36,6 @@ describe('getOctokit proxy support', () => {
   it('keeps the proxy agent when a proxy is configured', () => {
     vi.stubEnv('https_proxy', 'http://proxy.invalid:8080')
 
-    expect(requestDefaults(getOctokit()).agent).toBeDefined()
+    expect(requestDefaults(getActionOctokit('test')).agent).toBeDefined()
   })
 })

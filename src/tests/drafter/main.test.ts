@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { actionInputSchema } from '#src/actions/drafter/config/index.ts'
-import { mocks as sharedMocks } from '#tests/mocks/index.ts'
+import { mocks as sharedMocks, testGitHubContext } from '#tests/mocks/index.ts'
 
 const mocks = vi.hoisted(() => ({
   buildReleasePayload: vi.fn(),
@@ -18,7 +18,7 @@ vi.mock('#src/actions/drafter/lib/index.ts', () => ({
 
 const { main } = await import('#src/actions/drafter/main.ts')
 
-const github = {} as never
+const github = testGitHubContext()
 
 describe('drafter main', () => {
   beforeEach(() => {

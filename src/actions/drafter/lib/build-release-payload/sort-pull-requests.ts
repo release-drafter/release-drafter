@@ -1,13 +1,15 @@
-import * as core from '@actions/core'
+import { type Logger, noopLogger } from '#src/common/index.ts'
 import type { Config } from '../../config/index.ts'
 import type { findPullRequests } from '../find-pull-requests/index.ts'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
 
 export const sortPullRequests = (params: {
+  logger?: Logger
   pullRequests: Pr[]
   config: Pick<Config, 'sort-by' | 'sort-direction'>
 }) => {
+  const logger = params.logger ?? noopLogger
   const {
     pullRequests,
     config: { 'sort-by': sortBy, 'sort-direction': sortDirection },
@@ -21,10 +23,10 @@ export const sortPullRequests = (params: {
     try {
       return sort(getSortField(a), getSortField(b))
     } catch (error) {
-      core.warning(
+      logger.warning(
         `Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`,
       )
-      core.error(error as Error)
+      logger.error(error as Error)
       return 0
     }
   })

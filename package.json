@@ -4,13 +4,19 @@
   "version": "7.6.0",
   "author": "",
   "type": "module",
-  "private": true,
+  "sideEffects": false,
+  "files": [
+    "dist/cli.js",
+    "dist/drafter.js",
+    "dist/chunks/public",
+    "dist/types"
+  ],
   "bin": {
     "release-drafter": "dist/cli.js"
   },
   "exports": {
     "./drafter": {
-      "types": "./src/drafter.ts",
+      "types": "./dist/types/drafter.d.ts",
       "default": "./dist/drafter.js"
     }
   },
@@ -60,8 +66,10 @@
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
     "@graphql-typed-document-node/core": "^3.2.0",
+    "@octokit/core": "^7.0.6",
     "@octokit/graphql": "^9.0.3",
     "@octokit/plugin-paginate-graphql": "^6.0.0",
+    "@octokit/plugin-paginate-rest": "^14.0.0",
     "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
     "@octokit/plugin-retry": "^8.1.0",
     "@octokit/request-error": "^7.1.0",
@@ -73,7 +81,6 @@
     "escape-string-regexp": "^5.0.0",
     "graphql": "^17.0.2",
     "ignore": "^7.0.6",
-    "regex-parser": "^2.3.1",
     "semver": "^7.8.5",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"

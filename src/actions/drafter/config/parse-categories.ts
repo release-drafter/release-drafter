@@ -1,4 +1,4 @@
-import * as core from '@actions/core'
+import type { Logger } from '#src/common/index.ts'
 import {
   type CategoryConfig,
   type ChangeConditionConfig,
@@ -18,6 +18,7 @@ const withMigrationDocumentationLink = (message: string) =>
 
 const normalizeConventional = (
   conventional: ChangeConditionConfig['conventional'],
+  logger: Logger,
 ) => {
   if (!conventional) {
     return undefined
@@ -28,7 +29,7 @@ const normalizeConventional = (
   }
 
   if (Object.keys(conventional).length === 0) {
-    core.warning(
+    logger.warning(
       "Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.",
     )
   }
@@ -73,6 +74,7 @@ export function parseCategories(
     | 'exclude-paths'
     | 'version-resolver'
   >,
+  logger: Logger,
 ) {
   const _categories = structuredClone(categories.categories)
 
@@ -103,7 +105,7 @@ export function parseCategories(
     const deprecatedLabels = [...(labels || []), ...(label ? [label] : [])]
 
     if (deprecatedLabels.length > 0) {
-      core.warning(
+      logger.warning(
         withMigrationDocumentationLink(
           `Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ''}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`,
         ),
@@ -124,7 +126,10 @@ export function parseCategories(
     const parsedWhenConditions = whenConditions
       .map((condition) => {
         const { path, label, conventional, ..._cond } = condition
-        const normalizedConventional = normalizeConventional(conventional)
+        const normalizedConventional = normalizeConventional(
+          conventional,
+          logger,
+        )
 
         // Deprecated category-level labels are shorthand for adding the same
         // label predicate to every `when` branch
@@ -169,12 +174,12 @@ export function parseCategories(
         }
       case 'version-resolver':
         if (title) {
-          core.warning(
+          logger.warning(
             `Title "${title}" ignored for category of type "${categoryType}"`,
           )
         }
         if (collapseAfter !== -1) {
-          core.warning(
+          logger.warning(
             `"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`,
           )
         }
@@ -187,12 +192,12 @@ export function parseCategories(
       case 'pre-exclude':
       case 'pre-include':
         if (title) {
-          core.warning(
+          logger.warning(
             `Title "${title}" ignored for category of type "${categoryType}"`,
           )
         }
         if (collapseAfter !== -1) {
-          core.warning(
+          logger.warning(
             `"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`,
           )
         }
@@ -202,7 +207,7 @@ export function parseCategories(
           )
         }
         if (semverIncrement !== 'patch') {
-          core.warning(
+          logger.warning(
             `"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`,
           )
         }
@@ -222,7 +227,7 @@ export function parseCategories(
     (deprecatedConfig['exclude-paths'] &&
       deprecatedConfig['exclude-paths'].length > 0)
   ) {
-    core.warning(
+    logger.warning(
       withMigrationDocumentationLink(
         `Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`,
       ),
@@ -259,7 +264,7 @@ export function parseCategories(
     (deprecatedConfig['include-paths'] &&
       deprecatedConfig['include-paths'].length > 0)
   ) {
-    core.warning(
+    logger.warning(
       withMigrationDocumentationLink(
         `Use of deprecated 'include-labels' or 'include-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-include"' category.`,
       ),
@@ -287,7 +292,7 @@ export function parseCategories(
     deprecatedConfig['version-resolver'].default !==
     configSchemaDefaults['version-resolver'].default
   ) {
-    core.warning(
+    logger.warning(
       withMigrationDocumentationLink(
         `Use of deprecated 'version-resolver.default' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "${deprecatedConfig['version-resolver'].default}"' to 'type: changelog' category with no 'when' condition (uncategorized changes), or move the default resolver to a new category with type 'version-resolver' and 'semver-increment' set to "${deprecatedConfig['version-resolver'].default}" - also without 'when' conditions.`,
       ),
@@ -313,7 +318,7 @@ export function parseCategories(
       configSchemaDefaults['version-resolver'].major.labels &&
     deprecatedConfig['version-resolver'].major.labels.length > 0
   ) {
-    core.warning(
+    logger.warning(
       withMigrationDocumentationLink(
         `Use of deprecated 'version-resolver.major.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "major"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.major.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'major'.`,
       ),
@@ -337,7 +342,7 @@ export function parseCategories(
       configSchemaDefaults['version-resolver'].minor.labels &&
     deprecatedConfig['version-resolver'].minor.labels.length > 0
   ) {
-    core.warning(
+    logger.warning(
       withMigrationDocumentationLink(
         `Use of deprecated 'version-resolver.minor.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "minor"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.minor.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'minor'.`,
       ),
@@ -361,7 +366,7 @@ export function parseCategories(
       configSchemaDefaults['version-resolver'].patch.labels &&
     deprecatedConfig['version-resolver'].patch.labels.length > 0
   ) {
-    core.warning(
+    logger.warning(
       withMigrationDocumentationLink(
         `Use of deprecated 'version-resolver.patch.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "patch"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.patch.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'patch'.`,
       ),
