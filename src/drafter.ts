@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { getConfig } from '#src/actions/drafter/config/get-config.ts'
 import { mergeInputAndConfig } from '#src/actions/drafter/config/merge-input-and-config.ts'
 import { actionInputSchema } from '#src/actions/drafter/config/schemas/action-input.schema.ts'
@@ -7,11 +8,14 @@ import { type Logger, noopLogger } from '#src/common/logger.ts'
 
 export type DraftReleaseOptions = {
   repo: { owner: string; repo: string }
-  token: string
+  /** Required unless a preconfigured {@link octokit} is supplied. */
+  token?: string
   octokit?: Octokit
   configName?: string
   commitish?: string
   previousCommitish?: string
+  name?: string
+  tag?: string
   version?: string
   dryRun?: boolean
   publish?: boolean
@@ -36,7 +40,10 @@ export const draftRelease = async (options: DraftReleaseOptions) => {
   const github = {
     repo: options.repo,
     ref: commitish,
-    serverUrl: options.serverUrl ?? 'https://github.com',
+    serverUrl:
+      options.serverUrl ??
+      process.env.GITHUB_SERVER_URL ??
+      'https://github.com',
     octokit,
     logger,
   }
@@ -47,6 +54,8 @@ export const draftRelease = async (options: DraftReleaseOptions) => {
 
   const input = actionInputSchema.parse({
     'config-name': options.configName,
+    name: options.name,
+    tag: options.tag,
     version: options.version,
     publish: options.publish?.toString(),
     prerelease: options.prerelease?.toString(),

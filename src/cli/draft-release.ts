@@ -16,6 +16,8 @@ const createLogger = (output: typeof consola): Logger => ({
 export type CliArguments = {
   repository: string
   from?: string
+  name?: string
+  tag?: string
   version?: string
   to?: string
   config: string
@@ -63,6 +65,8 @@ export const draftRelease = async (args: CliArguments) => {
     configName,
     commitish: targetCommitish,
     previousCommitish: args.from,
+    name: args.name,
+    tag: args.tag,
     version: args.version,
     dryRun: args.dryRun,
     publish: args.publish,

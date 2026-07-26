@@ -7,6 +7,14 @@ describe('getOctokit', () => {
     vi.stubEnv('GITHUB_TOKEN', 'test')
   })
 
+  it('rejects a missing token where the client is built', async () => {
+    vi.stubEnv('GITHUB_TOKEN', '')
+
+    expect(() => getOctokit()).toThrow(
+      "Unable to find a token. Please see input 'token'.",
+    )
+  })
+
   it('retries a transient server failure', async () => {
     const scope = nock('https://api.github.com')
       .get('/repos/release-drafter/release-drafter')

@@ -9,6 +9,8 @@ type BooleanOption = boolean | string | undefined
 
 type CliOptions = {
   from?: string
+  name?: string
+  tag?: string
   releaseVersion?: string
   to?: string
   config: string
@@ -31,6 +33,8 @@ const cli = cac('release-drafter')
 cli
   .command('<repository>', '✍️ Create, update, or publish a GitHub release')
   .option('-f, --from <commitish>', 'Override the previous release')
+  .option('-n, --name <name>', 'Override the resolved release name')
+  .option('--tag <tag>', 'Override the resolved release tag')
   .option(
     '-r, --release-version <version>',
     'Override the resolved release version',
@@ -60,6 +64,8 @@ cli
     await draftRelease({
       repository,
       from: options.from,
+      name: options.name,
+      tag: options.tag,
       version: options.releaseVersion,
       to: options.to,
       config: options.config,

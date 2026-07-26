@@ -1,3 +1,5 @@
+import process from 'node:process'
+
 export const parseRepository = (value: string) => {
   const match = /^([^/\s]+)\/([^/\s]+)$/.exec(value)
   if (!match) throw new Error('Repository must use the owner/name format')
@@ -15,14 +17,16 @@ type ConfigTargetExists = (target: {
 export const normalizeConfigTarget = async (
   value: string,
   targetExists?: ConfigTargetExists,
+  serverUrl = process.env.GITHUB_SERVER_URL || 'https://github.com',
 ) => {
-  if (!value.startsWith('https://github.com/')) return value
+  const blobPrefix = `${serverUrl.replace(/\/$/, '')}/`
+  if (!value.startsWith(blobPrefix)) return value
 
   const url = new URL(value)
   const [owner, repo, blob, ...parts] = url.pathname.split('/').filter(Boolean)
 
   if (!owner || !repo || blob !== 'blob' || parts.length < 2) {
-    throw new Error('Config URL must point to a file on github.com')
+    throw new Error(`Config URL must point to a file on ${url.host}`)
   }
 
   for (let refLength = 1; refLength < parts.length; refLength++) {

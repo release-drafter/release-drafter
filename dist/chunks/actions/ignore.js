@@ -1,4 +1,4 @@
-import { createRequire } from "node:module";
+import { i as __toESM, n as __exportAll, r as __require, t as __commonJSMin } from "./rolldown-runtime.js";
 import * as os$1 from "node:os";
 import os, { EOL } from "node:os";
 import * as crypto from "node:crypto";
@@ -11,42 +11,9 @@ import * as events from "node:events";
 import { StringDecoder } from "node:string_decoder";
 import * as child from "node:child_process";
 import { setTimeout as setTimeout$1 } from "node:timers";
+import process$1 from "node:process";
 import path, { basename, dirname, isAbsolute, join, normalize } from "node:path";
 import { existsSync as existsSync$1, readFileSync as readFileSync$1 } from "node:fs";
-import process$1 from "node:process";
-//#region \0rolldown/runtime.js
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
-var __exportAll = (all, no_symbols) => {
-	let target = {};
-	for (var name in all) __defProp(target, name, {
-		get: all[name],
-		enumerable: true
-	});
-	if (!no_symbols) __defProp(target, Symbol.toStringTag, { value: "Module" });
-	return target;
-};
-var __copyProps = (to, from, except, desc) => {
-	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
-		key = keys[i];
-		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
-			get: ((k) => from[k]).bind(null, key),
-			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-		});
-	}
-	return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
-	value: mod,
-	enumerable: true
-}) : target, mod));
-var __require = /* #__PURE__ */ (() => createRequire(import.meta.url))();
-//#endregion
 //#region node_modules/@actions/core/lib/utils.js
 /**
 * Sanitizes an input into a string so it can be passed into issueCommand safely
@@ -20913,7 +20880,7 @@ var defaults = {
 		fetch: getProxyFetch(baseUrl)
 	}
 };
-var GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults);
+var GitHub$1 = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults);
 /**
 * Convience function to correctly format Octokit Options to pass into the constructor.
 *
@@ -20938,7 +20905,7 @@ var context = new Context();
 * @param     options  other options to set
 */
 function getOctokit(token, options, ...additionalPlugins) {
-	return new (GitHub.plugin(...additionalPlugins))(getOctokitOptions(token, options));
+	return new (GitHub$1.plugin(...additionalPlugins))(getOctokitOptions(token, options));
 }
 //#endregion
 //#region node_modules/@octokit/plugin-paginate-graphql/dist-bundle/index.js
@@ -22284,11 +22251,24 @@ function retry(octokit, octokitOptions) {
 }
 retry.VERSION = VERSION;
 //#endregion
+//#region src/common/get-octokit.ts
+var MISSING_TOKEN_MESSAGE = "Unable to find a token. Please see input 'token'.";
+Octokit.plugin(restEndpointMethods, paginateRest, paginateGraphQL, retry);
+//#endregion
 //#region src/actions/get-octokit.ts
-var getActionOctokit = (token) => getOctokit(token, { log: {
-	...core_exports,
-	warn: warning
-} }, paginateGraphQL, retry);
+/**
+* Builds the client through the Actions Toolkit so its proxy handling and
+* `GITHUB_API_URL` default are preserved. The Toolkit returns its own class, so
+* the result is structurally distinct from {@link Octokit} despite being
+* assembled from the same plugins, hence the cast.
+*/
+var getActionOctokit = (token) => {
+	if (!token) throw new Error(MISSING_TOKEN_MESSAGE);
+	return getOctokit(token, { log: {
+		...core_exports,
+		warn: warning
+	} }, paginateGraphQL, retry);
+};
 //#endregion
 //#region node_modules/zod/v4/core/core.js
 var _a$1;
@@ -33693,6 +33673,13 @@ var getPullRequestsChangedFiles = async (params) => {
 //#region src/common/shared-input.schema.ts
 /**
 * Inputs shared by release-drafter and autolabeler
+*
+* A token is not required here. It is validated where a client is actually built
+* (`getOctokit` / `getActionOctokit`), so that a library caller injecting its own
+* `octokit` does not have to supply a token it will never use. The token is also
+* never written back into `process.env`: parsing happens inside the library
+* entrypoint too, where leaking a caller's token into the ambient environment
+* (and into every child process spawned afterwards) would be a side effect.
 */
 var sharedInputSchema = object({
 	/**
@@ -33706,12 +33693,6 @@ var sharedInputSchema = object({
 	* labels) are performed. Instead, the action logs what it would have done.
 	*/
 	"dry-run": stringbool().or(boolean()).optional()
-}).superRefine((data, ctx) => {
-	if (!data.token) ctx.addIssue({
-		code: "custom",
-		message: "Unable to find a token. Please see input 'token'.",
-		path: ["token"]
-	});
 });
 //#endregion
 //#region node_modules/escape-string-regexp/index.js
@@ -33721,8 +33702,13 @@ function escapeStringRegexp(string) {
 }
 //#endregion
 //#region src/common/string-to-regex.ts
+/**
+* Flags accepted after the closing delimiter. `A`, `J`, `U`, `X` and `x` are
+* PCRE flags that regex-parser also matched here; they are not valid in
+* JavaScript, so only the subset below reaches the RegExp constructor.
+*/
 var regexLiteral = /^\/(.+)\/([AJUXgimsux]*)$/;
-var supportedFlags = "gimsuy";
+var supportedFlags = "gimsu";
 var stringToRegex = (search) => {
 	const match = regexLiteral.exec(search);
 	if (!match) return new RegExp(escapeStringRegexp(search), "g");
@@ -33965,4 +33951,4 @@ var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	define(module.exports, Symbol.for("setupWindows"), setupWindows);
 }));
 //#endregion
-export { setFailed as C, __toESM as E, info as S, __commonJSMin as T, union as _, getPullRequestChangedFiles as a, core_exports as b, ZodDefault as c, boolean as d, literal as f, stringbool as g, string as h, sharedInputSchema as i, _enum as l, object as m, stringToRegex as n, getPullRequestsChangedFiles as o, number as p, escapeStringRegexp as r, composeConfigGet as s, require_ignore as t, array as u, getActionOctokit as v, setOutput as w, getInput as x, context as y };
+export { setFailed as C, info as S, union as _, getPullRequestChangedFiles as a, core_exports as b, ZodDefault as c, boolean as d, literal as f, stringbool as g, string as h, sharedInputSchema as i, _enum as l, object as m, stringToRegex as n, getPullRequestsChangedFiles as o, number as p, escapeStringRegexp as r, composeConfigGet as s, require_ignore as t, array as u, getActionOctokit as v, setOutput as w, getInput as x, context as y };

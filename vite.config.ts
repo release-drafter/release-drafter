@@ -22,6 +22,16 @@ function syncDrafterActionYml(): Plugin {
       if (dest !== expected) {
         await writeFile('drafter/action.yml', expected)
       }
+    },
+  }
+}
+
+/** The published `bin` entry has to stay executable outside of npm's install. */
+function makeCliExecutable(): Plugin {
+  return {
+    name: 'make-cli-executable',
+    applyToEnvironment: (environment) => environment.name === 'client',
+    async closeBundle() {
       await chmod('dist/cli.js', 0o755)
     },
   }
@@ -138,7 +148,7 @@ const build = (actionBuild: boolean) => ({
 })
 
 export default defineConfig({
-  plugins: [syncDrafterActionYml(), assertPublicBundles()],
+  plugins: [syncDrafterActionYml(), assertPublicBundles(), makeCliExecutable()],
   builder: {
     async buildApp(builder) {
       await builder.build(builder.environments.client)
