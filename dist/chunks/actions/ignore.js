@@ -33700,15 +33700,14 @@ var sharedInputSchema = object({
 	*
 	* Defaults to ${{ github.token }}, or the GITHUB_TOKEN environment variable.
 	*/
-	token: string().min(1).default(() => process$1.env.GITHUB_TOKEN || ""),
+	token: string().default(() => process$1.env.GITHUB_TOKEN || ""),
 	/**
 	* When enabled, no write operations (creating/updating releases or adding
 	* labels) are performed. Instead, the action logs what it would have done.
 	*/
 	"dry-run": stringbool().or(boolean()).optional()
 }).superRefine((data, ctx) => {
-	if (data.token && !process$1.env.GITHUB_TOKEN) process$1.env.GITHUB_TOKEN = data.token;
-	if (!process$1.env.GITHUB_TOKEN) ctx.addIssue({
+	if (!data.token) ctx.addIssue({
 		code: "custom",
 		message: "Unable to find a token. Please see input 'token'.",
 		path: ["token"]
