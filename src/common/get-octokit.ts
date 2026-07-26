@@ -1,17 +1,20 @@
 import process from 'node:process'
 import { Octokit as OctokitCore } from '@octokit/core'
-import {
-  paginateGraphQL,
-  type paginateGraphQLInterface,
-} from '@octokit/plugin-paginate-graphql'
+import { paginateGraphQL } from '@octokit/plugin-paginate-graphql'
 import { paginateRest } from '@octokit/plugin-paginate-rest'
 import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
-import { type RetryPlugin, retry } from '@octokit/plugin-retry'
+import { retry } from '@octokit/plugin-retry'
 import { type Logger, noopLogger } from './logger.ts'
 
 export const MISSING_TOKEN_MESSAGE =
   "Unable to find a token. Please see input 'token'."
 
+/**
+ * `Octokit.plugin` carries each plugin's type through to the instance, so
+ * {@link Octokit} is inferred rather than asserted. Keep it that way: an
+ * intersection cast here would let a plugin be dropped from the list without the
+ * call sites that rely on it failing to compile.
+ */
 const GitHub = OctokitCore.plugin(
   restEndpointMethods,
   paginateRest,
@@ -35,7 +38,7 @@ export const getOctokit = (
       info: logger.info,
       warn: logger.warning,
     },
-  }) as InstanceType<typeof GitHub> & paginateGraphQLInterface & RetryPlugin
+  })
 }
 
 export type Octokit = ReturnType<typeof getOctokit>
