@@ -758,6 +758,26 @@ inputs to other Actions in the workflow
 | `minor_version`    | Minor part of resolved version by [Version Resolver](#version-resolver). i.e. `3` for version `6.3.1`                                                                                                                         |
 | `patch_version`    | Patch part of resolved version by [Version Resolver](#version-resolver). i.e. `1` for version `6.3.1`                                                                                                                         |
 
+## Programmatic API
+
+The drafter flow is also available as a library export:
+
+```js
+import { draftRelease } from 'release-drafter/drafter'
+
+const result = await draftRelease({
+  repo: { owner: 'owner', repo: 'repository' },
+  token: process.env.GITHUB_TOKEN,
+  previousCommitish: 'v1.0.0',
+  publish: false,
+})
+
+console.log(result.releasePayload)
+```
+
+It uses the same configuration loading, release generation, publication controls,
+and pull request merge-ref safeguards as the action and CLI.
+
 ## GitHub Enterprise Server (GHES)
 
 Release Drafter creates its GitHub client with

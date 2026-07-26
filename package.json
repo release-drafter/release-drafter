@@ -8,6 +8,12 @@
   "bin": {
     "release-drafter": "dist/cli.js"
   },
+  "exports": {
+    "./drafter": {
+      "types": "./src/drafter.ts",
+      "default": "./dist/drafter.js"
+    }
+  },
   "homepage": "https://github.com/release-drafter/release-drafter",
   "repository": {
     "type": "git",

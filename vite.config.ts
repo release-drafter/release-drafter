@@ -39,6 +39,8 @@ export default defineConfig({
     modulePreload: false,
     target: 'node24',
     rollupOptions: {
+      // Keep exports from programmatic entries while still sharing their chunks.
+      preserveEntrySignatures: 'exports-only',
       // platform: 'node' makes rolldown generate a createRequire-based __require
       // for CJS modules (e.g. undici via @actions/github) instead of the default
       // stub that throws in ESM environments without a global `require`.
@@ -47,6 +49,7 @@ export default defineConfig({
       external: (id) => id.startsWith('node:') || builtinModules.includes(id),
       input: {
         cli: 'src/cli/run.ts',
+        drafter: 'src/drafter.ts',
         'actions/drafter/run': 'src/actions/drafter/run.ts',
         'actions/autolabeler/run': 'src/actions/autolabeler/run.ts',
       },
