@@ -2999,7 +2999,7 @@ var buildReleasePayload = async (params) => {
 			repo
 		}),
 		prerelease: config.prerelease,
-		make_latest: config.latest,
+		make_latest: config.prerelease ? false : config.latest,
 		draft: !input.publish,
 		resolvedVersion: versionInfo?.$RESOLVED_VERSION,
 		majorVersion: versionInfo?.$RESOLVED_VERSION_MAJOR,

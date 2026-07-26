@@ -20,6 +20,9 @@ export type DraftReleaseOptions = {
   previousCommitish?: string
   version?: string
   dryRun?: boolean
+  publish?: boolean
+  prerelease?: boolean
+  latest?: boolean
   serverUrl?: string
 }
 
@@ -41,7 +44,9 @@ export const draftRelease = async (options: DraftReleaseOptions) => {
   const input = actionInputSchema.parse({
     'config-name': options.configName,
     version: options.version,
-    publish: 'false',
+    publish: options.publish?.toString(),
+    prerelease: options.prerelease?.toString(),
+    latest: options.latest?.toString(),
     token: options.token,
     'dry-run': options.dryRun,
     commitish,

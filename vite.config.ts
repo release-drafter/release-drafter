@@ -36,6 +36,7 @@ export default defineConfig({
     },
   },
   build: {
+    modulePreload: false,
     target: 'node24',
     rollupOptions: {
       // platform: 'node' makes rolldown generate a createRequire-based __require

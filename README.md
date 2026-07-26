@@ -63,6 +63,18 @@ to the organization's `.github` repository. Use `--config` to select another
 config or `--dry-run` to print the generated release without creating or updating
 it.
 
+By default, the CLI creates or updates a draft. Use `--publish` to publish it,
+optionally with `--prerelease` or `--latest`:
+
+```sh
+npm run cli -- owner/repository --publish --prerelease
+npm run cli -- owner/repository --publish --latest
+```
+
+Each release-mode flag accepts an optional `true` or `false` value, so
+`--latest false` can override a config that marks stable releases as latest.
+Prereleases are never marked as latest, matching the action's behavior.
+
 ## Configuration
 
 The action requires a configuration file. Default location is

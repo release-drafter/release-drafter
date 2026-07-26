@@ -350,6 +350,19 @@ describe('build release payload', () => {
     })
   })
 
+  it('does not mark prereleases as latest in the release payload', async () => {
+    const releasePayload = await buildReleasePayload({
+      commits: [],
+      config: { ...config, prerelease: true, latest: true },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease: undefined,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.prerelease).toBe(true)
+    expect(releasePayload.make_latest).toBe(false)
+  })
+
   it('keeps the comparison base separate from the version baseline', async () => {
     const previousCommitish = '47ba33fd8c30c8764e8bc98517c6a902f0f43d26'
     const lastRelease = {

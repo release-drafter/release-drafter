@@ -49,7 +49,12 @@ describe('CLI draftRelease', () => {
     mocks.runReleaseDrafter.mockResolvedValue({
       commits: [{}],
       pullRequests: [{}, {}],
-      releasePayload: { name: 'v1.0.0' },
+      releasePayload: {
+        name: 'v1.0.0',
+        draft: true,
+        prerelease: false,
+        make_latest: true,
+      },
       upsertedRelease: undefined,
     })
   })
@@ -70,6 +75,9 @@ describe('CLI draftRelease', () => {
       previousCommitish: undefined,
       version: undefined,
       dryRun: true,
+      publish: undefined,
+      prerelease: undefined,
+      latest: undefined,
     })
     expect(mocks.start).toHaveBeenCalledWith(
       '🔎 Finding changes since the last release → master',
@@ -87,7 +95,12 @@ describe('CLI draftRelease', () => {
     mocks.runReleaseDrafter.mockResolvedValueOnce({
       commits: [],
       pullRequests: [],
-      releasePayload: { name: 'v2.0.0' },
+      releasePayload: {
+        name: 'v2.0.0',
+        draft: true,
+        prerelease: false,
+        make_latest: true,
+      },
       upsertedRelease: {
         data: { html_url: 'https://github.com/owner/repository/releases/1' },
       },
@@ -117,6 +130,58 @@ describe('CLI draftRelease', () => {
     )
     expect(mocks.success).toHaveBeenCalledWith(
       '✨ Draft ready: https://github.com/owner/repository/releases/1',
+    )
+  })
+
+  it.each([
+    {
+      prerelease: true,
+      latest: false,
+      message: '🚀 Prerelease published',
+    },
+    {
+      prerelease: false,
+      latest: true,
+      message: '🚀 Latest release published',
+    },
+    {
+      prerelease: false,
+      latest: false,
+      message: '🚀 Release published',
+    },
+  ])('reports a published release as $message', async (releaseOptions) => {
+    mocks.runReleaseDrafter.mockResolvedValueOnce({
+      commits: [],
+      pullRequests: [],
+      releasePayload: {
+        name: 'v2.0.0',
+        draft: false,
+        prerelease: releaseOptions.prerelease,
+        make_latest: releaseOptions.latest,
+      },
+      upsertedRelease: {
+        data: { html_url: 'https://github.com/owner/repository/releases/2' },
+      },
+    })
+
+    await draftRelease({
+      repository: 'owner/repository',
+      config: 'release-drafter.yml',
+      dryRun: false,
+      publish: true,
+      prerelease: releaseOptions.prerelease,
+      latest: releaseOptions.latest,
+    })
+
+    expect(mocks.runReleaseDrafter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        publish: true,
+        prerelease: releaseOptions.prerelease,
+        latest: releaseOptions.latest,
+      }),
+    )
+    expect(mocks.success).toHaveBeenCalledWith(
+      `${releaseOptions.message}: https://github.com/owner/repository/releases/2`,
     )
   })
 })

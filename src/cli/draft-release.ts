@@ -11,6 +11,9 @@ export type CliArguments = {
   to?: string
   config: string
   dryRun: boolean
+  publish?: boolean
+  prerelease?: boolean
+  latest?: boolean
 }
 
 export const draftRelease = async (args: CliArguments) => {
@@ -53,6 +56,9 @@ export const draftRelease = async (args: CliArguments) => {
     previousCommitish: args.from,
     version: args.version,
     dryRun: args.dryRun,
+    publish: args.publish,
+    prerelease: args.prerelease,
+    latest: args.latest,
   })
 
   consola.info(
@@ -62,9 +68,17 @@ export const draftRelease = async (args: CliArguments) => {
   if (args.dryRun) {
     consola.success(`🧪 Dry run complete for ${result.releasePayload.name}`)
   } else {
-    consola.success(
-      `✨ Draft ready: ${result.upsertedRelease?.data.html_url || result.releasePayload.name}`,
-    )
+    const release =
+      result.upsertedRelease?.data.html_url || result.releasePayload.name
+    if (result.releasePayload.draft) {
+      consola.success(`✨ Draft ready: ${release}`)
+    } else if (result.releasePayload.prerelease) {
+      consola.success(`🚀 Prerelease published: ${release}`)
+    } else if (result.releasePayload.make_latest) {
+      consola.success(`🚀 Latest release published: ${release}`)
+    } else {
+      consola.success(`🚀 Release published: ${release}`)
+    }
   }
 
   return result
