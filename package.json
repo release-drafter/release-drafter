@@ -58,7 +58,7 @@
     "check": "biome check --write .",
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "schemas": "node src/scripts/json-schema.ts",
-    "all": "npm run check && npm run format:md:write && npm run tsc:check && npm run test:run && npm run schemas && npm run build",
+    "all": "npm run check && npm run format:md:write && npm run build && npm run tsc:check && npm run test:run && npm run schemas",
     "check:clean": "node src/scripts/check-clean.ts",
     "preversion": "npm run all && npm run check:clean",
     "version": "git add package.json package-lock.json",
