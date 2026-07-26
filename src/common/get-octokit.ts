@@ -7,9 +7,9 @@ import {
 } from '@octokit/plugin-paginate-graphql'
 import { type RetryPlugin, retry } from '@octokit/plugin-retry'
 
-export const getOctokit = () => {
+export const getOctokit = (token = process.env.GITHUB_TOKEN || '') => {
   return createOctokit(
-    process.env.GITHUB_TOKEN || '',
+    token,
     {
       log: { ...core, warn: core.warning },
     },

@@ -39,6 +39,30 @@ jobs:
           config-name: release-drafter.yml # the default, loads '.github/release-drafter.yml'
 ```
 
+### ✍️ Local CLI
+
+The local CLI creates or updates a draft using the last published release as its
+starting point. It reads authentication from `GITHUB_TOKEN`, `GH_TOKEN`, or the
+GitHub CLI.
+
+```sh
+npm install
+npm run cli -- owner/repository
+```
+
+Use `--from` to override the starting commitish and `--release-version` to
+override the resolved version:
+
+```sh
+npm run cli -- owner/repository --from v8.0.0 --release-version 9.0.0
+```
+
+The target commitish defaults to the repository's default branch; override it with
+`--to`. The CLI uses the same config loading as the action, including the fallback
+to the organization's `.github` repository. Use `--config` to select another
+config or `--dry-run` to print the generated release without creating or updating
+it.
+
 ## Configuration
 
 The action requires a configuration file. Default location is

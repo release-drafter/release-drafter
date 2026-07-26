@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import type { GitHubContext } from '#src/common/index.ts'
 import type { ExclusiveInput, ParsedConfig } from './config/index.ts'
 import {
   buildReleasePayload,
@@ -10,6 +11,7 @@ import {
 export const main = async (params: {
   config: ParsedConfig
   input: ExclusiveInput
+  github: GitHubContext
 }) => {
   /**
    * 1. find previous releases - returns latest release
@@ -33,12 +35,16 @@ export const main = async (params: {
     )
   }
 
-  const { draftRelease, lastRelease } = await findPreviousReleases(config)
+  const { draftRelease, lastRelease } = await findPreviousReleases({
+    ...config,
+    github: params.github,
+  })
 
   const { commits, newContributorLogins, pullRequests } =
     await findPullRequests({
       lastRelease,
       config,
+      github: params.github,
     })
 
   const releasePayload = await buildReleasePayload({
@@ -48,12 +54,14 @@ export const main = async (params: {
     lastRelease,
     newContributorLogins,
     pullRequests,
+    github: params.github,
   })
 
   const upsertedRelease = await upsertRelease({
     draftRelease,
     releasePayload,
     dryRun: effectiveInput['dry-run'],
+    github: params.github,
   })
 
   return {

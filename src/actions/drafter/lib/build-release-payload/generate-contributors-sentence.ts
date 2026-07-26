@@ -15,11 +15,11 @@ const pullRequestKey = (pullRequest: PullRequest) =>
   `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
 const normalizeLogin = (login: string, isBot = false) =>
   isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login
-const renderAuthorMention = (contributor: Contributor) => {
+const renderAuthorMention = (contributor: Contributor, serverUrl: string) => {
   if ('name' in contributor) return contributor.name
   const botUrl = contributor.login.endsWith(botSuffix)
     ? (contributor.botUrl ??
-      `${context.serverUrl.replace(/\/$/, '')}/apps/${contributor.login.slice(0, -botSuffix.length)}`)
+      `${serverUrl.replace(/\/$/, '')}/apps/${contributor.login.slice(0, -botSuffix.length)}`)
     : undefined
   if (botUrl) {
     return `[@${contributor.login}](${botUrl})`
@@ -34,6 +34,7 @@ export const generateContributorsSentence = (params: {
     ParsedConfig,
     'categories' | 'exclude-contributors' | 'no-contributors-template'
   >
+  serverUrl?: string
 }) => {
   const { commits, pullRequests, config } = params
 
@@ -46,6 +47,7 @@ export const generateContributorsSentence = (params: {
     pullRequests: includedPullRequests,
     excludeContributors: config['exclude-contributors'],
     noAuthorsTemplate: config['no-contributors-template'],
+    serverUrl: params.serverUrl,
   })
 }
 
@@ -57,8 +59,10 @@ export const generateAuthorsSentence = (params: {
   authorTemplate?: string
   authorsSeparator?: string
   authorsFinalSeparator?: string
+  serverUrl?: string
 }) => {
   const { commits, pullRequests } = params
+  const serverUrl = params.serverUrl ?? context.serverUrl
   const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey))
   const includedMergeCommitOids = new Set(
     pullRequests.flatMap((pullRequest) =>
@@ -149,7 +153,7 @@ export const generateAuthorsSentence = (params: {
         template: authorTemplate,
         object: {
           $AUTHOR: author,
-          $AUTHOR_MENTION: renderAuthorMention(contributor),
+          $AUTHOR_MENTION: renderAuthorMention(contributor, serverUrl),
         },
       })
     })
@@ -160,7 +164,9 @@ export const generateAuthorsSentence = (params: {
     return authors.join(separator)
   }
 
-  const mentions = sortedContributors.map(renderAuthorMention)
+  const mentions = sortedContributors.map((contributor) =>
+    renderAuthorMention(contributor, serverUrl),
+  )
   if (mentions.length > 1) {
     return `${mentions.slice(0, -1).join(', ')} and ${mentions.slice(-1)}`
   }

@@ -1,9 +1,8 @@
 import * as core from '@actions/core'
-import { context } from '@actions/github'
 import coerce from 'semver/functions/coerce.js'
 import satisfies from 'semver/functions/satisfies.js'
 import validRange from 'semver/ranges/valid.js'
-import { getOctokit } from '#src/common/index.ts'
+import { type GitHubContext, getGitHubContext } from '#src/common/index.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import { sortReleases } from './sort-releases.ts'
 
@@ -33,7 +32,7 @@ export const findPreviousReleases = async (
     | 'prerelease'
     | 'include-pre-releases'
     | 'filter-by-range'
-  >,
+  > & { github?: Pick<GitHubContext, 'octokit' | 'repo'> },
 ) => {
   const {
     commitish,
@@ -43,7 +42,7 @@ export const findPreviousReleases = async (
     'include-pre-releases': includePreReleases,
     'filter-by-range': filterByRange,
   } = params
-  const octokit = getOctokit()
+  const { octokit, repo } = params.github ?? getGitHubContext()
 
   core.info('Fetching releases from GitHub...')
 
@@ -51,7 +50,7 @@ export const findPreviousReleases = async (
   const releases = await octokit.paginate(
     octokit.rest.repos.listReleases,
     {
-      ...context.repo,
+      ...repo,
       per_page: 100,
     },
     (response, done) => {

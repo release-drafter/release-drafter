@@ -350,6 +350,26 @@ describe('build release payload', () => {
     })
   })
 
+  it('keeps the comparison base separate from the version baseline', async () => {
+    const previousCommitish = '47ba33fd8c30c8764e8bc98517c6a902f0f43d26'
+    const lastRelease = {
+      tag_name: 'v7.6.0',
+      name: 'v7.6.0',
+    } as Parameters<typeof buildReleasePayload>[0]['lastRelease']
+
+    const releasePayload = await buildReleasePayload({
+      commits: [],
+      config: { ...config, template: '$PREVIOUS_TAG' },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease,
+      previousCommitish,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.body).toBe(previousCommitish)
+    expect(releasePayload.resolvedVersion).toBe('7.6.1')
+  })
+
   it('resolves tag refs recursively to commit SHAs', async () => {
     const commitSha = '0123456789abcdef0123456789abcdef01234567'
     const scope = nock('https://api.github.com')

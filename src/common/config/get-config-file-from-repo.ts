@@ -1,12 +1,11 @@
 import type { RequestError } from '@octokit/request-error'
-import { getOctokit } from '../get-octokit.ts'
+import { getOctokit, type Octokit } from '../get-octokit.ts'
 import type { ConfigTarget } from './parse-config-target.ts'
 
 export const getConfigFileFromRepo = async (
   configTarget: ConfigTarget,
+  octokit: Octokit = getOctokit(),
 ): Promise<string> => {
-  const octokit = getOctokit()
-
   let res: Awaited<ReturnType<typeof octokit.rest.repos.getContent>>
   try {
     // see: https://docs.github.com/en/rest/repos/contents
