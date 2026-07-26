@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { w as getOctokit } from "./chunks/ignore.js";
-import { i as getConfig, o as actionInputSchema, r as mergeInputAndConfig, t as main } from "./chunks/main.js";
+import { t as draftRelease$1 } from "./chunks/drafter.js";
 import process$1 from "node:process";
 import { promisify } from "node:util";
 import { execFile } from "node:child_process";
@@ -1063,6 +1063,10 @@ var package_default = {
 	type: "module",
 	"private": true,
 	bin: { "release-drafter": "dist/cli.js" },
+	exports: { "./drafter": {
+		"types": "./src/drafter.ts",
+		"default": "./dist/drafter.js"
+	} },
 	homepage: "https://github.com/release-drafter/release-drafter",
 	repository: {
 		"type": "git",
@@ -1140,40 +1144,6 @@ var package_default = {
 		"vite": "^8.1.4",
 		"vitest": "^4.1.10"
 	}
-};
-//#endregion
-//#region src/drafter.ts
-var draftRelease$1 = async (options) => {
-	const octokit = options.octokit ?? getOctokit(options.token);
-	const repository = options.commitish ? void 0 : await octokit.rest.repos.get(options.repo);
-	const commitish = options.commitish || repository?.data.default_branch;
-	if (!commitish) throw new Error("Unable to resolve the target commitish");
-	const github = {
-		repo: options.repo,
-		ref: commitish,
-		serverUrl: options.serverUrl ?? "https://github.com",
-		octokit
-	};
-	const input = actionInputSchema.parse({
-		"config-name": options.configName,
-		version: options.version,
-		publish: options.publish?.toString(),
-		prerelease: options.prerelease?.toString(),
-		latest: options.latest?.toString(),
-		token: options.token,
-		"dry-run": options.dryRun,
-		commitish
-	});
-	return main({
-		config: mergeInputAndConfig({
-			config: await getConfig(input["config-name"], github),
-			input,
-			ref: github.ref
-		}),
-		input,
-		previousCommitish: options.previousCommitish,
-		github
-	});
 };
 //#endregion
 //#region src/cli/auth.ts
