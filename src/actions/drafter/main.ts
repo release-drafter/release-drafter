@@ -72,6 +72,7 @@ export const main = async (params: {
     pullRequests,
     releasePayload,
     upsertedRelease,
-    dryRun: effectiveInput['dry-run'],
+    dryRun: !!effectiveInput['dry-run'],
+    previousCommitish: params.previousCommitish ?? lastRelease?.tag_name,
   }
 }

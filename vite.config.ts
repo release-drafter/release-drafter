@@ -104,12 +104,18 @@ const build = (actionBuild: boolean) => ({
   rollupOptions: {
     // Keep exports from programmatic entries while still sharing their chunks.
     preserveEntrySignatures: 'exports-only',
-    // The action build contains CJS transitive dependencies from the Actions
-    // runtime. Public CLI and library bundles must remain native ESM.
+    // All entry points run on Node.js and must resolve package exports through
+    // their Node variants. The action build additionally contains CommonJS
+    // transitive dependencies from the Actions runtime, while public CLI and
+    // library bundles remain native ESM.
     // @ts-expect-error remove this when Vite support for Rolldown is stable
-    platform: actionBuild ? 'node' : undefined,
+    platform: 'node',
+    // Resolve Consola at runtime so Node selects its terminal reporter instead
+    // of Vite's client conditions selecting its browser reporter.
     external: (id: string) =>
-      id.startsWith('node:') || builtinModules.includes(id),
+      id.startsWith('node:') ||
+      builtinModules.includes(id) ||
+      (!actionBuild && id === 'consola'),
     input: actionBuild
       ? {
           'actions/drafter/run': 'src/actions/drafter/run.ts',

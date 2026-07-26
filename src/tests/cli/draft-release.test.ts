@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   box: vi.fn(),
+  createConsola: vi.fn(),
   debug: vi.fn(),
   error: vi.fn(),
   getContent: vi.fn(),
@@ -13,15 +14,21 @@ const mocks = vi.hoisted(() => ({
   warning: vi.fn(),
 }))
 
-vi.mock('consola', () => ({
-  consola: {
+vi.mock('consola', () => {
+  const consola = {
     box: mocks.box,
     debug: mocks.debug,
     error: mocks.error,
     info: mocks.info,
     warn: mocks.warning,
-  },
-}))
+  }
+  mocks.createConsola.mockReturnValue(consola)
+
+  return {
+    consola,
+    createConsola: mocks.createConsola,
+  }
+})
 vi.mock('#src/common/get-octokit.ts', () => ({
   getOctokit: mocks.getOctokit,
 }))
@@ -43,6 +50,14 @@ describe('CLI draftRelease', () => {
   }
 
   beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.createConsola.mockReturnValue({
+      box: mocks.box,
+      debug: mocks.debug,
+      error: mocks.error,
+      info: mocks.info,
+      warn: mocks.warning,
+    })
     mocks.resolveToken.mockResolvedValue('token')
     mocks.getOctokit.mockReturnValue(octokit)
     mocks.repositoryGet.mockResolvedValue({
@@ -53,12 +68,20 @@ describe('CLI draftRelease', () => {
       pullRequests: [{}, {}],
       releasePayload: {
         name: 'v1.0.0',
+        tag: 'v1.0.0',
+        body: 'Release notes',
         draft: true,
         prerelease: false,
         make_latest: true,
+        targetCommitish: 'abc123',
+        resolvedVersion: '1.0.0',
+        majorVersion: '1',
+        minorVersion: '0',
+        patchVersion: '0',
       },
       upsertedRelease: undefined,
       dryRun: true,
+      previousCommitish: 'v0.9.0',
     })
   })
 
@@ -88,6 +111,56 @@ describe('CLI draftRelease', () => {
         warning: expect.any(Function),
       },
     })
+  })
+
+  it('writes action-compatible JSON while preserving logs on stderr', async () => {
+    const stdout = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true)
+
+    try {
+      await draftRelease({
+        repository: 'owner/repository',
+        config: 'release-drafter.yml',
+        dryRun: true,
+        json: true,
+      })
+
+      const { logger } = mocks.runReleaseDrafter.mock.calls[0][0]
+      logger.info('hidden')
+
+      expect(mocks.createConsola).toHaveBeenCalledWith({
+        stdout: process.stderr,
+        stderr: process.stderr,
+      })
+      expect(mocks.box).toHaveBeenCalledWith(
+        '✍️ Release Drafter\nowner/repository',
+      )
+      expect(mocks.info).toHaveBeenCalledWith('hidden')
+      expect(stdout).toHaveBeenCalledWith(
+        `${JSON.stringify(
+          {
+            tag_name: 'v1.0.0',
+            target_commitish: 'abc123',
+            previous_commitish: 'v0.9.0',
+            draft: true,
+            prerelease: false,
+            latest: true,
+            dry_run: true,
+            name: 'v1.0.0',
+            resolved_version: '1.0.0',
+            major_version: '1',
+            minor_version: '0',
+            patch_version: '0',
+            body: 'Release notes',
+          },
+          null,
+          2,
+        )}\n`,
+      )
+    } finally {
+      stdout.mockRestore()
+    }
   })
 
   it('returns the effective dry-run result from shared code', async () => {

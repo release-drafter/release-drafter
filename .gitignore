@@ -97,6 +97,12 @@ Thumbs.db
 # Ignore built ts files
 __tests__/runner/*
 
+# npm artifacts are built during publication; only Action bundles are committed
+/dist/cli.js
+/dist/drafter.js
+/dist/chunks/public/
+/dist/types/
+
 # IDE files
 .idea
 *.code-workspace

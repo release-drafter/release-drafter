@@ -77,6 +77,15 @@ Each release-mode flag accepts an optional `true` or `false` value, so
 `--latest false` can override a config that marks stable releases as latest.
 Prereleases are never marked as latest, matching the action's behavior.
 
+Use `--json` to write the same release variables as the action outputs to
+`stdout`. Human-readable logs remain available on `stderr`, so the JSON can be
+redirected to a file or queried with `jq`:
+
+```sh
+npx release-drafter owner/repository --dry-run --json > release.json
+npx release-drafter owner/repository --dry-run --json | jq -r .tag_name
+```
+
 ## Configuration
 
 The action requires a configuration file. Default location is
@@ -753,9 +762,13 @@ inputs to other Actions in the workflow
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`               | The ID of the release that was created or updated.                                                                                                                                                                            |
 | `name`             | The name of this release.                                                                                                                                                                                                     |
-| `tag_name`         | The name of the tag associated with this release.                                                                                                                                                                             |
-| `draft`            | Whether the release is a draft.                                                                                                                                                                                               |
-| `prerelease`       | Whether the release is a prerelease.                                                                                                                                                                                          |
+| `tag_name`          | The name of the tag associated with this release.                                                                                                                                                                             |
+| `target_commitish`  | The resolved branch or commit SHA targeted by the release.                                                                                                                                                                    |
+| `previous_commitish` | The tag or ref used as the release comparison baseline.                                                                                                                                                                      |
+| `draft`             | Whether the release is a draft.                                                                                                                                                                                               |
+| `prerelease`        | Whether the release is a prerelease.                                                                                                                                                                                          |
+| `latest`            | Whether the release is configured to be marked as latest when published.                                                                                                                                                      |
+| `dry_run`           | Whether writes were suppressed by dry-run mode.                                                                                                                                                                               |
 | `body`             | The body of the drafted release, useful if it needs to be included in files.                                                                                                                                                  |
 | `html_url`         | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                                                    |
 | `upload_url`       | The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the [`@actions/upload-release-asset GitHub Action`](https://www.github.com/actions/upload-release-asset). |

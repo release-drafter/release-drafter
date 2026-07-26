@@ -65,12 +65,28 @@ describe('smoke config migration e2e', () => {
             "v2.0.1",
           ],
           [
+            "target_commitish",
+            "master",
+          ],
+          [
+            "previous_commitish",
+            "v2.0.0",
+          ],
+          [
             "draft",
             "true",
           ],
           [
             "prerelease",
             "false",
+          ],
+          [
+            "latest",
+            "true",
+          ],
+          [
+            "dry_run",
+            "true",
           ],
           [
             "name",

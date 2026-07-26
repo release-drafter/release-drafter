@@ -1916,28 +1916,39 @@ var validateParsedConfig = (parsedConfig) => {
 	if (parsedConfig["filter-by-range"] && !(0, import_valid.default)(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
 };
 //#endregion
-//#region src/actions/drafter/config/set-action-output.ts
-var setActionOutput = (params) => {
+//#region src/actions/drafter/config/get-release-output.ts
+var getReleaseOutput = (params) => {
 	const { releasePayload, upsertedRelease } = params;
-	info("Set action outputs...");
 	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body, name: releaseName, tag: releaseTagName } = releasePayload;
 	const outputName = upsertedRelease?.data.name ?? releaseName;
 	const outputTagName = upsertedRelease?.data.tag_name ?? releaseTagName;
-	if (upsertedRelease) {
-		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl } } = upsertedRelease;
-		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
-		if (htmlUrl) setOutput("html_url", htmlUrl);
-		if (uploadUrl) setOutput("upload_url", uploadUrl);
-	}
-	if (outputTagName) setOutput("tag_name", outputTagName);
-	setOutput("draft", releasePayload.draft.toString());
-	setOutput("prerelease", releasePayload.prerelease.toString());
-	if (outputName) setOutput("name", outputName);
-	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
-	if (majorVersion) setOutput("major_version", majorVersion);
-	if (minorVersion) setOutput("minor_version", minorVersion);
-	if (patchVersion) setOutput("patch_version", patchVersion);
-	setOutput("body", body);
+	const releaseId = upsertedRelease?.data.id;
+	const htmlUrl = upsertedRelease?.data.html_url;
+	const uploadUrl = upsertedRelease?.data.upload_url;
+	return {
+		...releaseId && Number.isInteger(releaseId) ? { id: releaseId.toString() } : {},
+		...htmlUrl ? { html_url: htmlUrl } : {},
+		...uploadUrl ? { upload_url: uploadUrl } : {},
+		...outputTagName ? { tag_name: outputTagName } : {},
+		target_commitish: releasePayload.targetCommitish,
+		...params.previousCommitish ? { previous_commitish: params.previousCommitish } : {},
+		draft: releasePayload.draft,
+		prerelease: releasePayload.prerelease,
+		latest: releasePayload.make_latest,
+		dry_run: params.dryRun,
+		...outputName ? { name: outputName } : {},
+		...resolvedVersion ? { resolved_version: resolvedVersion } : {},
+		...majorVersion ? { major_version: majorVersion } : {},
+		...minorVersion ? { minor_version: minorVersion } : {},
+		...patchVersion ? { patch_version: patchVersion } : {},
+		body
+	};
+};
+//#endregion
+//#region src/actions/drafter/config/set-action-output.ts
+var setActionOutput = (params) => {
+	info("Set action outputs...");
+	for (const [name, value] of Object.entries(getReleaseOutput(params))) setOutput(name, value.toString());
 	info("Outputs set!");
 };
 //#endregion
@@ -3861,7 +3872,8 @@ var main = async (params) => {
 			dryRun: effectiveInput["dry-run"],
 			github: params.github
 		}),
-		dryRun: effectiveInput["dry-run"]
+		dryRun: !!effectiveInput["dry-run"],
+		previousCommitish: params.previousCommitish ?? lastRelease?.tag_name
 	};
 };
 //#endregion
@@ -3882,7 +3894,7 @@ async function run() {
 			octokit: getActionOctokit(input.token),
 			logger: core_exports
 		};
-		const { upsertedRelease, releasePayload } = await main({
+		setActionOutput(await main({
 			input,
 			config: mergeInputAndConfig({
 				config: await getConfig(input["config-name"], github),
@@ -3891,11 +3903,7 @@ async function run() {
 				ref: github.ref
 			}),
 			github
-		});
-		setActionOutput({
-			upsertedRelease,
-			releasePayload
-		});
+		}));
 	} catch (error) {
 		if (error instanceof Error) setFailed(error.message);
 	}

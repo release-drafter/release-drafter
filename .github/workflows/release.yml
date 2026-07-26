@@ -68,6 +68,11 @@ jobs:
       - name: Install npm with staged publishing support
         run: npm install --global npm@12.0.1
 
+      - run: npm ci
+
+      - name: Build npm package
+        run: npm run build
+
       - name: Stage npm package
         run: |
           if [[ "${{ needs.build.outputs.prerelease }}" == "true" ]]; then

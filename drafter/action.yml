@@ -99,10 +99,18 @@ outputs:
     description: The name of the release
   tag_name:
     description: The name of the tag associated with the release.
+  target_commitish:
+    description: The resolved branch or commit SHA targeted by the release.
+  previous_commitish:
+    description: The tag or ref used as the release comparison baseline.
   draft:
     description: Whether the release is a draft.
   prerelease:
     description: Whether the release is a prerelease.
+  latest:
+    description: Whether the release is configured to be marked as latest when published.
+  dry_run:
+    description: Whether writes were suppressed by dry-run mode.
   body:
     description: The body of the drafted release.
   html_url:

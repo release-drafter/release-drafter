@@ -13,6 +13,7 @@ type CliOptions = {
   to?: string
   config: string
   dryRun: boolean
+  json: boolean
   publish?: BooleanOption
   prerelease?: BooleanOption
   latest?: BooleanOption
@@ -54,6 +55,7 @@ cli
   )
   .option('--prerelease [boolean]', 'Mark the release as a prerelease')
   .option('--latest [boolean]', 'Mark the published release as latest')
+  .option('--json', 'Output release variables as JSON', { default: false })
   .action(async (repository: string, options: CliOptions) => {
     await draftRelease({
       repository,
@@ -62,6 +64,7 @@ cli
       to: options.to,
       config: options.config,
       dryRun: options.dryRun,
+      json: options.json,
       publish: parseBooleanOption('publish', options.publish),
       prerelease: parseBooleanOption('prerelease', options.prerelease),
       latest: parseBooleanOption('latest', options.latest),

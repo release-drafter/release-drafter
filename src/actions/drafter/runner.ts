@@ -32,16 +32,13 @@ export async function run(): Promise<void> {
       ref: github.ref,
     })
 
-    const { upsertedRelease, releasePayload } = await main({
+    const result = await main({
       input,
       config,
       github,
     })
 
-    setActionOutput({
-      upsertedRelease,
-      releasePayload,
-    })
+    setActionOutput(result)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

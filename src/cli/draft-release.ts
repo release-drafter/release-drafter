@@ -1,16 +1,17 @@
-import { consola } from 'consola'
+import { consola, createConsola } from 'consola'
+import { getReleaseOutput } from '#src/actions/drafter/config/get-release-output.ts'
 import { getOctokit } from '#src/common/get-octokit.ts'
 import type { Logger } from '#src/common/logger.ts'
 import { draftRelease as runReleaseDrafter } from '#src/drafter.ts'
 import { resolveToken } from './auth.ts'
 import { normalizeConfigTarget, parseRepository } from './options.ts'
 
-const logger: Logger = {
-  debug: (message) => consola.debug(message),
-  error: (message) => consola.error(message),
-  info: (message) => consola.info(message),
-  warning: (message) => consola.warn(message),
-}
+const createLogger = (output: typeof consola): Logger => ({
+  debug: (message) => output.debug(message),
+  error: (message) => output.error(message),
+  info: (message) => output.info(message),
+  warning: (message) => output.warn(message),
+})
 
 export type CliArguments = {
   repository: string
@@ -19,12 +20,17 @@ export type CliArguments = {
   to?: string
   config: string
   dryRun: boolean
+  json?: boolean
   publish?: boolean
   prerelease?: boolean
   latest?: boolean
 }
 
 export const draftRelease = async (args: CliArguments) => {
+  const output = args.json
+    ? createConsola({ stdout: process.stderr, stderr: process.stderr })
+    : consola
+  const logger = createLogger(output)
   const repo = parseRepository(args.repository)
   const token = await resolveToken()
   const octokit = getOctokit(token, { logger })
@@ -48,7 +54,7 @@ export const draftRelease = async (args: CliArguments) => {
     },
   )
 
-  consola.box(`✍️ Release Drafter\n${args.repository}`)
+  output.box(`✍️ Release Drafter\n${args.repository}`)
 
   const result = await runReleaseDrafter({
     repo,
@@ -64,6 +70,12 @@ export const draftRelease = async (args: CliArguments) => {
     latest: args.latest,
     logger,
   })
+
+  if (args.json) {
+    process.stdout.write(
+      `${JSON.stringify(getReleaseOutput(result), null, 2)}\n`,
+    )
+  }
 
   return result
 }
