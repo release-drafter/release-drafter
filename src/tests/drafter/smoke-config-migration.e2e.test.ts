@@ -65,6 +65,14 @@ describe('smoke config migration e2e', () => {
             "v2.0.1",
           ],
           [
+            "draft",
+            "true",
+          ],
+          [
+            "prerelease",
+            "false",
+          ],
+          [
             "name",
             "v2.0.1",
           ],

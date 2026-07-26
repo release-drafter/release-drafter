@@ -37,6 +37,8 @@ export const setActionOutput = (params: {
   }
 
   if (outputTagName) core.setOutput('tag_name', outputTagName)
+  core.setOutput('draft', releasePayload.draft.toString())
+  core.setOutput('prerelease', releasePayload.prerelease.toString())
   if (outputName) core.setOutput('name', outputName)
   if (resolvedVersion) core.setOutput('resolved_version', resolvedVersion)
   if (majorVersion) core.setOutput('major_version', majorVersion)

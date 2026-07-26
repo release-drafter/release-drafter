@@ -11,6 +11,9 @@ permissions:
 jobs:
   build:
     if: github.repository == 'release-drafter/release-drafter'
+    outputs:
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -30,26 +33,22 @@ jobs:
       - name: Check for clean working directory
         run: npm run check:clean
 
-      - name: Parse pushed tag version
-        id: version
-        run: |
-          tag=${GITHUB_REF/refs\/tags\//}
-          version=${tag#v}
-          major=${version%%.*}
-          echo "tag=${tag}" >> $GITHUB_OUTPUT
-          echo "version=${version}" >> $GITHUB_OUTPUT
-          echo "major=${major}" >> $GITHUB_OUTPUT
-
       - name: Publish Release
+        id: release
         uses: ./
         with:
-          version: ${{ steps.version.outputs.version }}
+          tag: ${{ github.ref_name }}
           publish: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
 
-      - name: Update major tag v${{ steps.version.outputs.major }}
+      - name: Update major tag v${{ steps.release.outputs.major_version }}
+        if: steps.release.outputs.prerelease != 'true'
+        env:
+          MAJOR: ${{ steps.release.outputs.major_version }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
         run: |
-          git tag v${{ steps.version.outputs.major }} ${{ steps.version.outputs.tag }} -f
-          git push origin refs/tags/v${{ steps.version.outputs.major }} -f
+          git tag "v${MAJOR}" "${RELEASE_TAG}" -f
+          git push origin "refs/tags/v${MAJOR}" -f
 
   publish-npm:
     if: github.repository == 'release-drafter/release-drafter'
@@ -70,4 +69,9 @@ jobs:
         run: npm install --global npm@12.0.1
 
       - name: Stage npm package
-        run: npm stage publish
+        run: |
+          if [[ "${{ needs.build.outputs.prerelease }}" == "true" ]]; then
+            npm stage publish --tag next
+          else
+            npm stage publish
+          fi

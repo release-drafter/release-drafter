@@ -1930,6 +1930,8 @@ var setActionOutput = (params) => {
 		if (uploadUrl) setOutput("upload_url", uploadUrl);
 	}
 	if (outputTagName) setOutput("tag_name", outputTagName);
+	setOutput("draft", releasePayload.draft.toString());
+	setOutput("prerelease", releasePayload.prerelease.toString());
 	if (outputName) setOutput("name", outputName);
 	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
 	if (majorVersion) setOutput("major_version", majorVersion);
