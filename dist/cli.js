@@ -1157,7 +1157,9 @@ var draftRelease$1 = async (options) => {
 	const input = actionInputSchema.parse({
 		"config-name": options.configName,
 		version: options.version,
-		publish: "false",
+		publish: options.publish?.toString(),
+		prerelease: options.prerelease?.toString(),
+		latest: options.latest?.toString(),
 		token: options.token,
 		"dry-run": options.dryRun,
 		commitish
@@ -1270,24 +1272,42 @@ var draftRelease = async (args) => {
 		commitish: targetCommitish,
 		previousCommitish: args.from,
 		version: args.version,
-		dryRun: args.dryRun
+		dryRun: args.dryRun,
+		publish: args.publish,
+		prerelease: args.prerelease,
+		latest: args.latest
 	});
 	consola.info(`📝 Found ${result.pullRequests.length} pull requests across ${result.commits.length} commits`);
 	if (args.dryRun) consola.success(`🧪 Dry run complete for ${result.releasePayload.name}`);
-	else consola.success(`✨ Draft ready: ${result.upsertedRelease?.data.html_url || result.releasePayload.name}`);
+	else {
+		const release = result.upsertedRelease?.data.html_url || result.releasePayload.name;
+		if (result.releasePayload.draft) consola.success(`✨ Draft ready: ${release}`);
+		else if (result.releasePayload.prerelease) consola.success(`🚀 Prerelease published: ${release}`);
+		else if (result.releasePayload.make_latest) consola.success(`🚀 Latest release published: ${release}`);
+		else consola.success(`🚀 Release published: ${release}`);
+	}
 	return result;
 };
 //#endregion
 //#region src/cli/run.ts
+var parseBooleanOption = (name, value) => {
+	if (value === void 0) return void 0;
+	if (value === true || value === "true") return true;
+	if (value === false || value === "false") return false;
+	throw new Error(`--${name} must be true or false`);
+};
 var cli = cac("release-drafter");
-cli.command("<repository>", "✍️ Create or update a GitHub release draft").option("-f, --from <commitish>", "Override the previous release").option("-r, --release-version <version>", "Override the resolved release version").option("-t, --to <commitish>", "Target commitish (defaults to the repository default branch)").option("-c, --config <target>", "Config target or github.com blob URL", { default: "release-drafter.yml" }).option("--dry-run", "Build and print the release without creating it", { default: false }).action(async (repository, options) => {
+cli.command("<repository>", "✍️ Create, update, or publish a GitHub release").option("-f, --from <commitish>", "Override the previous release").option("-r, --release-version <version>", "Override the resolved release version").option("-t, --to <commitish>", "Target commitish (defaults to the repository default branch)").option("-c, --config <target>", "Config target or github.com blob URL", { default: "release-drafter.yml" }).option("--dry-run", "Build and print the release without writing to GitHub", { default: false }).option("--publish [boolean]", "Publish the release instead of leaving a draft").option("--prerelease [boolean]", "Mark the release as a prerelease").option("--latest [boolean]", "Mark the published release as latest").action(async (repository, options) => {
 	await draftRelease({
 		repository,
 		from: options.from,
 		version: options.releaseVersion,
 		to: options.to,
 		config: options.config,
-		dryRun: options.dryRun
+		dryRun: options.dryRun,
+		publish: parseBooleanOption("publish", options.publish),
+		prerelease: parseBooleanOption("prerelease", options.prerelease),
+		latest: parseBooleanOption("latest", options.latest)
 	});
 });
 cli.help();
