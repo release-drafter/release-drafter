@@ -45,6 +45,7 @@
   },
   "scripts": {
     "build": "vite build",
+    "prepack": "npm run build",
     "cli": "npm run build --silent && node dist/cli.js",
     "test": "vitest",
     "test:run": "vitest run",

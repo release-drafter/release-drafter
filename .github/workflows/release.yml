@@ -71,12 +71,29 @@ jobs:
 
       - run: npm ci
 
+      - name: Verify package version matches the released tag
+        env:
+          RELEASE_TAG: ${{ needs.build.outputs.tag_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [[ "v${version}" != "${RELEASE_TAG}" ]]; then
+            echo "::error::package.json version v${version} does not match released tag ${RELEASE_TAG}"
+            exit 1
+          fi
+
+      # The npm artifacts are not tracked in git. `prepack` also builds them, but
+      # build explicitly so a staging failure cannot be mistaken for a bad build.
       - name: Build npm package
         run: npm run build
 
+      # Staging only uploads the version; it is deliberately not published here.
+      # Releasing it to the registry requires a manual `npm stage approve <id>`
+      # (see `npm stage list`), which is the intended human approval gate.
       - name: Stage npm package
+        env:
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
         run: |
-          if [[ "${{ needs.build.outputs.prerelease }}" == "true" ]]; then
+          if [[ "${PRERELEASE}" == "true" ]]; then
             npm stage publish --tag next
           else
             npm stage publish
