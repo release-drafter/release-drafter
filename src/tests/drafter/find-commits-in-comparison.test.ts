@@ -2,11 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findCommitsInComparison } from '#src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts'
 
 const localMocks = vi.hoisted(() => ({
+  compareCommitsWithBasehead: vi.fn(),
   graphql: vi.fn(),
 }))
 
 vi.mock('#src/common/get-octokit.ts', () => ({
-  getOctokit: () => ({ graphql: localMocks.graphql }),
+  getOctokit: () => ({
+    graphql: localMocks.graphql,
+    rest: {
+      repos: {
+        compareCommitsWithBasehead: localMocks.compareCommitsWithBasehead,
+      },
+    },
+  }),
 }))
 
 const commit = (oid: string) => ({
@@ -25,7 +33,6 @@ const response = (
   pageInfo: { hasNextPage: boolean; endCursor: string | null },
 ) => ({
   repository: {
-    base: { __typename: 'Commit', oid: 'base' },
     head: {
       __typename: 'Commit',
       history: { nodes, pageInfo },
@@ -49,19 +56,29 @@ const params = {
 
 describe('findCommitsInComparison', () => {
   beforeEach(() => {
+    localMocks.compareCommitsWithBasehead.mockReset()
     localMocks.graphql.mockReset()
   })
 
-  it('resolves commitishes and walks history to the base commit', async () => {
+  it('hydrates the exact REST comparison set regardless of history order', async () => {
+    localMocks.compareCommitsWithBasehead
+      .mockResolvedValueOnce({
+        data: { commits: [{ sha: 'head' }, { sha: 'side-branch' }] },
+        headers: { link: '<next>; rel="next"' },
+      })
+      .mockResolvedValueOnce({
+        data: { commits: [{ sha: 'middle' }] },
+        headers: {},
+      })
     localMocks.graphql
       .mockResolvedValueOnce(
-        response([commit('head'), commit('middle')], {
+        response([commit('head'), commit('base')], {
           hasNextPage: true,
           endCursor: 'next',
         }),
       )
       .mockResolvedValueOnce(
-        response([commit('base')], {
+        response([commit('side-branch'), commit('middle')], {
           hasNextPage: false,
           endCursor: null,
         }),
@@ -69,12 +86,30 @@ describe('findCommitsInComparison', () => {
 
     const result = await findCommitsInComparison(params)
 
-    expect(result.map(({ oid }) => oid)).toEqual(['head', 'middle'])
+    expect(result.map(({ oid }) => oid)).toEqual([
+      'head',
+      'side-branch',
+      'middle',
+    ])
+    expect(localMocks.compareCommitsWithBasehead).toHaveBeenNthCalledWith(1, {
+      owner: 'octocat',
+      repo: 'example',
+      basehead: 'base...main',
+      per_page: 100,
+      page: 1,
+    })
+    expect(localMocks.compareCommitsWithBasehead).toHaveBeenNthCalledWith(2, {
+      owner: 'octocat',
+      repo: 'example',
+      basehead: 'base...main',
+      per_page: 100,
+      page: 2,
+    })
     expect(localMocks.graphql).toHaveBeenNthCalledWith(
       1,
       expect.any(String),
       expect.objectContaining({
-        baseCommitish: 'base^{commit}',
+        baseCommitish: 'base',
         headCommitish: 'main^{commit}',
       }),
     )
@@ -105,6 +140,7 @@ describe('findCommitsInComparison', () => {
     })
 
     expect(result.map(({ oid }) => oid)).toEqual(['ahead-of-merge-base'])
+    expect(localMocks.compareCommitsWithBasehead).not.toHaveBeenCalled()
     expect(localMocks.graphql).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
@@ -115,7 +151,21 @@ describe('findCommitsInComparison', () => {
     )
   })
 
-  it('rejects a base commitish outside the target history', async () => {
+  it('returns no commits when the REST comparison is empty', async () => {
+    localMocks.compareCommitsWithBasehead.mockResolvedValue({
+      data: { commits: [] },
+      headers: {},
+    })
+
+    await expect(findCommitsInComparison(params)).resolves.toEqual([])
+    expect(localMocks.graphql).not.toHaveBeenCalled()
+  })
+
+  it('rejects comparison commits missing from the target history', async () => {
+    localMocks.compareCommitsWithBasehead.mockResolvedValue({
+      data: { commits: [{ sha: 'head' }, { sha: 'missing' }] },
+      headers: {},
+    })
     localMocks.graphql.mockResolvedValue(
       response([commit('head')], {
         hasNextPage: false,
@@ -124,7 +174,7 @@ describe('findCommitsInComparison', () => {
     )
 
     await expect(findCommitsInComparison(params)).rejects.toThrow(
-      'Base commitish base is not an ancestor of main',
+      'Comparison commits were not found in the history of main: missing',
     )
   })
 })

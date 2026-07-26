@@ -32905,12 +32905,6 @@ var FindCommitsInComparisonDocument = new TypedDocumentString(`
         }
       }
     }
-    base: object(expression: $baseCommitish) @include(if: $useCommitishes) {
-      __typename
-      ... on Commit {
-        oid
-      }
-    }
     head: object(expression: $headCommitish) @include(if: $useCommitishes) {
       __typename
       ... on Commit {
