@@ -1,7 +1,5 @@
-import * as core from '@actions/core'
-import { context } from '@actions/github'
 import validRange from 'semver/ranges/valid.js'
-import { stringToRegex } from '#src/common/index.ts'
+import { type Logger, stringToRegex } from '#src/common/index.ts'
 import { parseCategories } from './parse-categories.ts'
 import type { Config } from './schemas/config.schema.ts'
 import type { CommonConfig } from './schemas/index.ts'
@@ -48,6 +46,7 @@ export type ParsedConfig = ReturnType<typeof mergeInputAndConfig>
 export const mergeInputAndConfig = (params: {
   config: Config
   input: CommonConfig
+  logger: Logger
   ref?: string
 }) => {
   const { config: originalConfig, input } = params
@@ -67,14 +66,18 @@ export const mergeInputAndConfig = (params: {
     'version-resolver': versionResolver,
   }
 
-  applyOverrides(config, input)
+  applyOverrides(config, input, params.logger)
 
   const { commitish, latest, prerelease } = getParsedDefaults(
     config,
-    params.ref ?? context.ref,
+    params.ref,
   )
-  const replacers = getTransformedReplacers(config)
-  const categories = getTransformedCategories(config, deprecatedCategoryConfig)
+  const replacers = getTransformedReplacers(config, params.logger)
+  const categories = getTransformedCategories(
+    config,
+    deprecatedCategoryConfig,
+    params.logger,
+  )
 
   // Build parsed config object - alters original type
   const parsedConfig = {
@@ -91,27 +94,32 @@ export const mergeInputAndConfig = (params: {
   return parsedConfig
 }
 
-const applyOverrides = (config: MutableConfig, input: CommonConfig) => {
-  applyStringOverride(config, input, 'commitish')
-  applyStringOverride(config, input, 'header')
-  applyStringOverride(config, input, 'footer')
+const applyOverrides = (
+  config: MutableConfig,
+  input: CommonConfig,
+  logger: Logger,
+) => {
+  applyStringOverride(config, input, 'commitish', logger)
+  applyStringOverride(config, input, 'header', logger)
+  applyStringOverride(config, input, 'footer', logger)
 
-  applyStringOverride(config, input, 'prerelease-identifier')
+  applyStringOverride(config, input, 'prerelease-identifier', logger)
 
-  applyBooleanOverride(config, input, 'prerelease')
-  applyBooleanOverride(config, input, 'include-pre-releases')
-  applyBooleanOverride(config, input, 'latest')
-  applyStringOverride(config, input, 'filter-by-range')
+  applyBooleanOverride(config, input, 'prerelease', logger)
+  applyBooleanOverride(config, input, 'include-pre-releases', logger)
+  applyBooleanOverride(config, input, 'latest', logger)
+  applyStringOverride(config, input, 'filter-by-range', logger)
 
-  applyReleaseModeOverrides(config, input)
+  applyReleaseModeOverrides(config, input, logger)
 }
 
 const applyReleaseModeOverrides = (
   config: MutableConfig,
   input: CommonConfig,
+  logger: Logger,
 ) => {
   if (config.latest && config.prerelease) {
-    core.warning(
+    logger.warning(
       "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.",
     )
     config.latest = false
@@ -125,7 +133,7 @@ const applyReleaseModeOverrides = (
     !config.prerelease &&
     (!hasInputPrerelease || hasInputPrereleaseIdentifier)
   ) {
-    core.warning(
+    logger.warning(
       `You specified a 'prerelease-identifier' (${config['prerelease-identifier']}), but 'prerelease' is set to false. Switching to true.`,
     )
     config.prerelease = true
@@ -136,6 +144,7 @@ const applyBooleanOverride = (
   config: MutableConfig,
   input: CommonConfig,
   key: SharedBooleanKey,
+  logger: Logger,
 ) => {
   const inputValue = input[key]
   if (typeof inputValue !== 'boolean') {
@@ -144,7 +153,7 @@ const applyBooleanOverride = (
 
   const configValue = config[key]
   if (typeof configValue === 'boolean' && configValue !== inputValue) {
-    core.info(
+    logger.info(
       `Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`,
     )
   }
@@ -156,6 +165,7 @@ const applyStringOverride = (
   config: MutableConfig,
   input: CommonConfig,
   key: SharedStringKey,
+  logger: Logger,
 ) => {
   const inputValue = input[key]
   if (!inputValue) {
@@ -164,7 +174,7 @@ const applyStringOverride = (
 
   const configValue = config[key]
   if (configValue && configValue !== inputValue) {
-    core.info(
+    logger.info(
       `Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`,
     )
   }
@@ -179,13 +189,13 @@ const getParsedDefaults = (config: MutableConfig, ref?: string) => ({
     typeof config.prerelease !== 'boolean' ? false : config.prerelease,
 })
 
-const getTransformedReplacers = (config: MutableConfig) =>
+const getTransformedReplacers = (config: MutableConfig, logger: Logger) =>
   config.replacers
     .map((r) => {
       try {
         return { ...r, search: stringToRegex(r.search) }
       } catch {
-        core.warning(`Bad replacer regex: '${r.search}'`)
+        logger.warning(`Bad replacer regex: '${r.search}'`)
         return false
       }
     })
@@ -194,7 +204,8 @@ const getTransformedReplacers = (config: MutableConfig) =>
 const getTransformedCategories = (
   config: Pick<MutableConfig, 'categories'>,
   deprecatedCategoryConfig: DeprecatedCategoryConfig,
-) => parseCategories(config, deprecatedCategoryConfig)
+  logger: Logger,
+) => parseCategories(config, deprecatedCategoryConfig, logger)
 
 const validateParsedConfig = (parsedConfig: ParsedConfig) => {
   if (!parsedConfig.commitish) {

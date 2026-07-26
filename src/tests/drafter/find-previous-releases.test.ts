@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findPreviousReleases } from '#src/actions/drafter/lib/index.ts'
 import type { Octokit } from '#src/common/get-octokit.ts'
-import { mockContext, mocks as sharedMocks } from '#tests/mocks/index.ts'
+import {
+  mockContext,
+  mocks as sharedMocks,
+  testGitHubContext,
+} from '#tests/mocks/index.ts'
 
 const localMocks = vi.hoisted(() => {
   return {
@@ -20,6 +24,11 @@ vi.mock(import('#src/common/get-octokit.ts'), async (iom) => {
     }),
   }
 })
+
+const localOctokit = {
+  ...testGitHubContext().octokit,
+  paginate: localMocks.releases,
+} as never
 
 describe('find previous releases', () => {
   beforeEach(async () => {
@@ -41,6 +50,7 @@ describe('find previous releases', () => {
     ])
 
     const { lastRelease } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': 'test-',
@@ -58,6 +68,7 @@ describe('find previous releases', () => {
     ])
 
     const { lastRelease } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',
@@ -79,6 +90,7 @@ describe('find previous releases', () => {
     ])
 
     const { draftRelease } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',
@@ -99,6 +111,7 @@ describe('find previous releases', () => {
     ])
 
     const { draftRelease } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',
@@ -116,6 +129,7 @@ describe('find previous releases', () => {
     ])
 
     const { draftRelease } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',
@@ -137,6 +151,7 @@ describe('find previous releases', () => {
     ])
 
     const { draftRelease: preDraft } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       prerelease: true,
       'tag-prefix': '',
@@ -156,6 +171,7 @@ describe('find previous releases', () => {
     ])
 
     const { draftRelease: stableDraft } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       prerelease: false,
       'tag-prefix': '',
@@ -176,6 +192,7 @@ describe('find previous releases', () => {
     ])
 
     const { draftRelease } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       'tag-prefix': '',
       'filter-by-commitish': false,
@@ -222,6 +239,7 @@ describe('find previous releases', () => {
     ])
 
     const { draftRelease, lastRelease } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',
@@ -275,6 +293,7 @@ describe('find previous releases', () => {
     ])
 
     const { draftRelease } = await findPreviousReleases({
+      github: testGitHubContext({ octokit: localOctokit }),
       commitish: 'refs/heads/master',
       'filter-by-commitish': false,
       'tag-prefix': '',

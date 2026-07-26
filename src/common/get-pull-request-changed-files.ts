@@ -1,5 +1,4 @@
 import type { Octokit } from './get-octokit.ts'
-import { getOctokit } from './get-octokit.ts'
 
 const PULL_REQUEST_FILES_PER_PAGE = 50
 
@@ -33,9 +32,9 @@ export const getPullRequestsChangedFiles = async (params: {
   owner: string
   repo: string
   pullRequests: PullRequestRef[]
-  octokit?: Octokit
+  octokit: Octokit
 }) => {
-  const octokit = params.octokit ?? getOctokit()
+  const { octokit } = params
   const changedFileEntries = await Promise.all(
     params.pullRequests.map(async (pullRequest) => {
       const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`

@@ -1,5 +1,5 @@
-import * as core from '@actions/core'
 import type { ReleaseType } from 'semver'
+import { type Logger, noopLogger } from '#src/common/index.ts'
 import {
   filterPullRequestsByPreCategories,
   getChangelogCategories,
@@ -90,12 +90,14 @@ const getHighestPriority = (params: {
 }
 
 export const resolveVersionKeyIncrement = (params: {
+  logger?: Logger
   pullRequests: Awaited<ReturnType<typeof findPullRequests>>['pullRequests']
   config: Pick<
     ParsedConfig,
     'categories' | 'prerelease' | 'prerelease-identifier'
   >
 }): ReleaseType => {
+  const logger = params.logger ?? noopLogger
   const { pullRequests, config } = params
 
   const filteredPullRequests = filterPullRequestsByPreCategories(
@@ -124,7 +126,7 @@ export const resolveVersionKeyIncrement = (params: {
     ([, priority]) => priority === resolvedPriority,
   )?.[0] as keyof typeof priorityMap
 
-  core.debug(`versionKey: ${versionKey}`)
+  logger.debug(`versionKey: ${versionKey}`)
 
   let versionKeyIncrement: ReleaseType = versionKey
 
@@ -135,7 +137,7 @@ export const resolveVersionKeyIncrement = (params: {
     versionKeyIncrement = `pre${versionKeyIncrement}`
   }
 
-  core.info(
+  logger.info(
     `Version increment: ${versionKeyIncrement}${!versionKey ? ' (default)' : ''}`,
   )
 

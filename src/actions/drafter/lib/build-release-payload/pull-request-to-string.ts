@@ -7,6 +7,7 @@ import { renderTemplate } from './render-template/index.ts'
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
 
 export const pullRequestToString = (params: {
+  serverUrl?: string
   category?: string
   commits: Awaited<ReturnType<typeof findPullRequests>>['commits']
   pullRequests: Pr[]
@@ -42,6 +43,7 @@ export const pullRequestToString = (params: {
           $NUMBER: pullRequest.number.toString(),
           $AUTHORS: generateAuthorsSentence({
             commits: params.commits,
+            serverUrl: params.serverUrl,
             pullRequests: [pullRequest],
             noAuthorsTemplate: renderTemplate({
               template: authorTemplate,

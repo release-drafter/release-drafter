@@ -47,15 +47,16 @@ starting point. It reads authentication from `GITHUB_TOKEN`, `GH_TOKEN`, or the
 GitHub CLI.
 
 ```sh
-npm install
-npm run cli -- owner/repository
+npx release-drafter owner/repository
 ```
+
+From a source checkout, use `npm run cli -- owner/repository` instead.
 
 Use `--from` to override the starting commitish and `--release-version` to
 override the resolved version:
 
 ```sh
-npm run cli -- owner/repository --from v8.0.0 --release-version 9.0.0
+npx release-drafter owner/repository --from v8.0.0 --release-version 9.0.0
 ```
 
 The target commitish defaults to the repository's default branch; override it with
@@ -68,8 +69,8 @@ By default, the CLI creates or updates a draft. Use `--publish` to publish it,
 optionally with `--prerelease` or `--latest`:
 
 ```sh
-npm run cli -- owner/repository --publish --prerelease
-npm run cli -- owner/repository --publish --latest
+npx release-drafter owner/repository --publish --prerelease
+npx release-drafter owner/repository --publish --latest
 ```
 
 Each release-mode flag accepts an optional `true` or `false` value, so
@@ -779,16 +780,23 @@ console.log(result.releasePayload)
 ```
 
 It uses the same configuration loading, release generation, publication controls,
-and pull request merge-ref safeguards as the action and CLI.
+and pull request merge-ref safeguards as the action and CLI. Pass a `logger` with
+`debug`, `info`, `warning`, and `error` methods to receive the same lifecycle
+messages; library logging is silent by default. An existing `octokit` client can
+also be injected.
 
 ## GitHub Enterprise Server (GHES)
 
-Release Drafter creates its GitHub client with
-[`@actions/github.getOctokit()`](https://github.com/actions/toolkit/tree/main/packages/github#readme).
-In GitHub Actions, that client uses the runtime API base URL from
-`GITHUB_API_URL`, so the same workflow can target GHES without extra
-`github.com`-specific configuration, assuming the required REST and GraphQL APIs
-are available on the instance.
+In GitHub Actions, Release Drafter uses `@actions/github` in a thin runtime
+adapter. This preserves the Actions Toolkit's proxy handling and automatically
+uses `GITHUB_API_URL` for GHES.
+
+The CLI and programmatic API construct an ESM Octokit client directly without
+importing the Actions runtime. The CLI honors `GITHUB_API_URL`; when using
+`HTTP_PROXY` or `HTTPS_PROXY`, enable Node's environment proxy support with
+`NODE_USE_ENV_PROXY=1`. Programmatic callers can pass `apiUrl` for API requests
+and `serverUrl` for generated web links, or inject a preconfigured `octokit`
+client.
 
 ## Contributing
 

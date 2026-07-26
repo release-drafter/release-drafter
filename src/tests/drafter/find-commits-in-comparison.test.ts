@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findCommitsInComparison } from '#src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts'
+import { testGitHubContext } from '#tests/mocks/index.ts'
 
 const localMocks = vi.hoisted(() => ({
   compareCommitsWithBasehead: vi.fn(),
@@ -16,6 +17,18 @@ vi.mock('#src/common/get-octokit.ts', () => ({
     },
   }),
 }))
+
+const github = () =>
+  testGitHubContext({
+    octokit: {
+      graphql: localMocks.graphql,
+      rest: {
+        repos: {
+          compareCommitsWithBasehead: localMocks.compareCommitsWithBasehead,
+        },
+      },
+    } as never,
+  })
 
 const commit = (oid: string) => ({
   __typename: 'Commit',
@@ -84,7 +97,10 @@ describe('findCommitsInComparison', () => {
         }),
       )
 
-    const result = await findCommitsInComparison(params)
+    const result = await findCommitsInComparison({
+      ...params,
+      github: github(),
+    })
 
     expect(result.map(({ oid }) => oid)).toEqual([
       'head',
@@ -135,6 +151,7 @@ describe('findCommitsInComparison', () => {
     })
 
     const result = await findCommitsInComparison({
+      github: github(),
       ...params,
       useCommitishes: false,
     })
@@ -157,7 +174,9 @@ describe('findCommitsInComparison', () => {
       headers: {},
     })
 
-    await expect(findCommitsInComparison(params)).resolves.toEqual([])
+    await expect(
+      findCommitsInComparison({ ...params, github: github() }),
+    ).resolves.toEqual([])
     expect(localMocks.graphql).not.toHaveBeenCalled()
   })
 
@@ -173,7 +192,9 @@ describe('findCommitsInComparison', () => {
       }),
     )
 
-    await expect(findCommitsInComparison(params)).rejects.toThrow(
+    await expect(
+      findCommitsInComparison({ ...params, github: github() }),
+    ).rejects.toThrow(
       'Comparison commits were not found in the history of main: missing',
     )
   })

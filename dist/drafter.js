@@ -1,2 +1,2 @@
-import { t as draftRelease } from "./chunks/drafter.js";
+import { t as draftRelease } from "./chunks/public/drafter.js";
 export { draftRelease };

@@ -1,9 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path, { isAbsolute } from 'node:path'
 import process from 'node:process'
-import * as core from '@actions/core'
+import type { Logger } from '../logger.ts'
 
-export const getConfigFileFromFs = (normalizedFilepath: string) => {
+export const getConfigFileFromFs = (
+  normalizedFilepath: string,
+  logger: Logger,
+) => {
   // normalizeFilepath should have already handled this
   // this is just a safety net
   if (isAbsolute(normalizedFilepath)) {
@@ -22,7 +25,7 @@ export const getConfigFileFromFs = (normalizedFilepath: string) => {
 
   const configPath = path.join(repoRoot, normalizedFilepath)
 
-  core.info(`Looking for config locally at ${configPath}...`)
+  logger.info(`Looking for config locally at ${configPath}...`)
 
   if (!existsSync(repoRoot)) {
     throw new Error(`Root repo path does not exist: ${repoRoot}`)
@@ -34,7 +37,7 @@ export const getConfigFileFromFs = (normalizedFilepath: string) => {
     )
   }
 
-  core.info(`Loading from file: ${configPath}`)
+  logger.info(`Loading from file: ${configPath}`)
 
   return readFileSync(configPath, 'utf8')
 }

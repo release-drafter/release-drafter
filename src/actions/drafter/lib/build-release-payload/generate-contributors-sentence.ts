@@ -1,4 +1,3 @@
-import { context } from '@actions/github'
 import { filterPullRequestsByPreCategories } from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPullRequests } from '../find-pull-requests/index.ts'
@@ -62,7 +61,7 @@ export const generateAuthorsSentence = (params: {
   serverUrl?: string
 }) => {
   const { commits, pullRequests } = params
-  const serverUrl = params.serverUrl ?? context.serverUrl
+  const serverUrl = params.serverUrl ?? 'https://github.com'
   const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey))
   const includedMergeCommitOids = new Set(
     pullRequests.flatMap((pullRequest) =>

@@ -1,7 +1,8 @@
 import * as core from '@actions/core'
 import nock from 'nock'
 import { describe, expect, it, vi } from 'vitest'
-import { composeConfigGet } from '#src/common/config/index.ts'
+import { composeConfigGet as composeConfigGetBase } from '#src/common/config/index.ts'
+import { testGitHubContext } from '#tests/mocks/index.ts'
 
 const mocks = vi.hoisted(() => ({
   existsSync: vi.fn(),
@@ -19,6 +20,19 @@ vi.mock(import('node:fs'), async (iom) => {
 
 // disable mocks from setup file
 vi.unmock(import('#src/common/config/index.ts'))
+
+const composeConfigGet = (
+  configFilename: string,
+  currentContext: { repo: { owner: string; repo: string }; ref: string },
+) => {
+  const github = testGitHubContext()
+  return composeConfigGetBase(
+    configFilename,
+    currentContext,
+    github.octokit,
+    github.logger,
+  )
+}
 
 const getContentEndpoint = (params: {
   path: string

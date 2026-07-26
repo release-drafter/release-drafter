@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findRecentMergedPullRequests } from '#src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts'
 import type { Octokit } from '#src/common/get-octokit.ts'
-import { mockContext } from '#tests/mocks/index.ts'
+import { mockContext, testGitHubContext } from '#tests/mocks/index.ts'
+
+const localOctokit = () => ({ graphql: localMocks.graphql }) as never
 
 const OWNER = 'toolmantim'
 const REPO = 'release-drafter-test-project'
@@ -104,6 +106,7 @@ describe('findRecentMergedPullRequests', () => {
     )
 
     const result = await findRecentMergedPullRequests({
+      github: testGitHubContext({ octokit: localOctokit() }),
       ...baseOpts,
       commitOids: new Set(['abc123', 'def456']),
       foundPrKeys: new Set(),
@@ -120,6 +123,7 @@ describe('findRecentMergedPullRequests', () => {
     )
 
     const result = await findRecentMergedPullRequests({
+      github: testGitHubContext({ octokit: localOctokit() }),
       ...baseOpts,
       commitOids: new Set(['abc123']),
       foundPrKeys: new Set([`${OWNER}/${REPO}#10`]),
@@ -134,6 +138,7 @@ describe('findRecentMergedPullRequests', () => {
     )
 
     const result = await findRecentMergedPullRequests({
+      github: testGitHubContext({ octokit: localOctokit() }),
       ...baseOpts,
       commitOids: new Set(['abc123']),
       foundPrKeys: new Set(),
@@ -156,6 +161,7 @@ describe('findRecentMergedPullRequests', () => {
     )
 
     const result = await findRecentMergedPullRequests({
+      github: testGitHubContext({ octokit: localOctokit() }),
       ...baseOpts,
       commitOids: new Set(['abc123']),
       foundPrKeys: new Set(),
@@ -183,6 +189,7 @@ describe('findRecentMergedPullRequests', () => {
     )
 
     const result = await findRecentMergedPullRequests({
+      github: testGitHubContext({ octokit: localOctokit() }),
       ...baseOpts,
       commitOids: new Set(['sha-10', 'sha-11']),
       foundPrKeys: new Set(),
@@ -200,6 +207,7 @@ describe('findRecentMergedPullRequests', () => {
     })
 
     const result = await findRecentMergedPullRequests({
+      github: testGitHubContext({ octokit: localOctokit() }),
       ...baseOpts,
       commitOids: new Set(['abc123']),
       foundPrKeys: new Set(),
@@ -212,6 +220,7 @@ describe('findRecentMergedPullRequests', () => {
     localMocks.graphql.mockResolvedValueOnce(makeGraphqlResponse([]))
 
     await findRecentMergedPullRequests({
+      github: testGitHubContext({ octokit: localOctokit() }),
       ...baseOpts,
       commitOids: new Set(['abc123']),
       foundPrKeys: new Set(),
@@ -236,6 +245,7 @@ describe('findRecentMergedPullRequests', () => {
     localMocks.graphql.mockResolvedValueOnce(makeGraphqlResponse([]))
 
     await findRecentMergedPullRequests({
+      github: testGitHubContext({ octokit: localOctokit() }),
       ...baseOpts,
       baseRefName: null,
       commitOids: new Set(['abc123']),

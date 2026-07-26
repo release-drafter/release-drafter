@@ -9,11 +9,13 @@ import { commonConfigSchema } from '#src/actions/drafter/config/schemas/common-c
 import { configSchema } from '#src/actions/drafter/config/schemas/config.schema.ts'
 import { categorizePullRequests } from '#src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts'
 import { resolveVersionKeyIncrement } from '#src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts'
+import { noopLogger } from '#src/common/index.ts'
 
 const makeParsedConfig = (
   categories: NonNullable<z.input<typeof configSchema>['categories']>,
 ) =>
   mergeInputAndConfig({
+    logger: noopLogger,
     config: configSchema.parse({
       template: '$CHANGES',
       commitish: 'refs/heads/main',

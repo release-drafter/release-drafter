@@ -1,21 +1,36 @@
 import process from 'node:process'
-import * as core from '@actions/core'
-import { getOctokit as createOctokit } from '@actions/github'
+import { Octokit as OctokitCore } from '@octokit/core'
 import {
   paginateGraphQL,
   type paginateGraphQLInterface,
 } from '@octokit/plugin-paginate-graphql'
+import { paginateRest } from '@octokit/plugin-paginate-rest'
+import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
 import { type RetryPlugin, retry } from '@octokit/plugin-retry'
+import { type Logger, noopLogger } from './logger.ts'
 
-export const getOctokit = (token = process.env.GITHUB_TOKEN || '') => {
-  return createOctokit(
-    token,
-    {
-      log: { ...core, warn: core.warning },
+const GitHub = OctokitCore.plugin(
+  restEndpointMethods,
+  paginateRest,
+  paginateGraphQL,
+  retry,
+)
+
+export const getOctokit = (
+  token = process.env.GITHUB_TOKEN || '',
+  options: { baseUrl?: string; logger?: Logger } = {},
+) => {
+  const logger = options.logger ?? noopLogger
+  return new GitHub({
+    auth: token,
+    baseUrl: options.baseUrl ?? process.env.GITHUB_API_URL,
+    log: {
+      debug: logger.debug,
+      error: logger.error,
+      info: logger.info,
+      warn: logger.warning,
     },
-    paginateGraphQL,
-    retry,
-  ) as ReturnType<typeof createOctokit> & paginateGraphQLInterface & RetryPlugin
+  }) as InstanceType<typeof GitHub> & paginateGraphQLInterface & RetryPlugin
 }
 
 export type Octokit = ReturnType<typeof getOctokit>

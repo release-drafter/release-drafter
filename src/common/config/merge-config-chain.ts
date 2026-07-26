@@ -1,4 +1,4 @@
-import * as core from '@actions/core'
+import type { Logger } from '../logger.ts'
 import type { MergeStrategy } from './extends.schema.ts'
 import type { getConfigFiles } from './get-config-files.ts'
 import { describeConfigTarget } from './parse-config-target.ts'
@@ -34,6 +34,7 @@ const toMergeableList = (
  */
 export const mergeConfigChain = (
   configResults: Awaited<ReturnType<typeof getConfigFiles>>,
+  logger: Logger,
 ) => {
   const merged: Record<string, unknown> = {}
   // reverse to base-first so each file merges onto everything it extends
@@ -43,7 +44,7 @@ export const mergeConfigChain = (
     // A strategy for a key the file does not set is inert (likely a typo).
     for (const key of Object.keys(strategies)) {
       if (!Object.hasOwn(rest, key)) {
-        core.warning(
+        logger.warning(
           `_extends strategy declares '${key}' in ${describeConfigTarget(fetchedFrom)}, but the file does not set '${key}'; the strategy has no effect.`,
         )
       }
@@ -73,7 +74,7 @@ export const mergeConfigChain = (
       )
       merged[key] =
         strategy === 'append' ? [...inherited, ...own] : [...own, ...inherited]
-      core.info(
+      logger.info(
         `_extends strategy: ${strategy}ed ${own.length} '${key}' item(s) from ${describeConfigTarget(fetchedFrom)} onto ${inherited.length} inherited item(s)`,
       )
     }

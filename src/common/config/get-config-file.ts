@@ -1,6 +1,7 @@
 import { parse as parseYaml } from 'yaml'
 import { prettifyError, ZodError } from 'zod'
 import type { Octokit } from '../get-octokit.ts'
+import type { Logger } from '../logger.ts'
 import { configFileSchema } from './extends.schema.ts'
 import { getConfigFileFromFs } from './get-config-file-from-fs.ts'
 import { getConfigFileFromRepo } from './get-config-file-from-repo.ts'
@@ -14,8 +15,9 @@ const SUPPORTED_FILE_EXTENSIONS = ['json', 'yml', 'yaml']
 
 export const getConfigFile = async (
   configTarget: ConfigTarget,
-  parentTarget?: ConfigTarget,
-  octokit?: Octokit,
+  parentTarget: ConfigTarget | undefined,
+  octokit: Octokit,
+  logger: Logger,
 ) => {
   const _configTarget = structuredClone(configTarget)
   const fileExtension = (
@@ -46,7 +48,7 @@ export const getConfigFile = async (
   let configRaw: string
   if (loadFromFs) {
     try {
-      configRaw = getConfigFileFromFs(_configTarget.filepath)
+      configRaw = getConfigFileFromFs(_configTarget.filepath, logger)
     } catch (error) {
       throw new Error(`Local load failed. ${(error as Error).message}`)
     }

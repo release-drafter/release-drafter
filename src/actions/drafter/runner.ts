@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { getOctokit } from '#src/common/index.ts'
+import { getActionOctokit } from '#src/actions/get-octokit.ts'
 import {
   getActionInput,
   getConfig,
@@ -16,17 +16,19 @@ import { main } from './main.ts'
  */
 export async function run(): Promise<void> {
   try {
-    core.info('Parsing inputs and configuration...')
+    core.info('⚙️ Parsing inputs and configuration...')
     const input = getActionInput()
     const github = {
       repo: context.repo,
       ref: context.ref || (context.payload.ref as string | undefined),
       serverUrl: context.serverUrl,
-      octokit: getOctokit(input.token),
+      octokit: getActionOctokit(input.token),
+      logger: core,
     }
     const config = mergeInputAndConfig({
       config: await getConfig(input['config-name'], github),
       input,
+      logger: github.logger,
       ref: github.ref,
     })
 
