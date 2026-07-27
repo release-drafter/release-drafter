@@ -153,6 +153,7 @@ export const buildReleasePayload = async (params: {
       octokit,
       repo,
       logger,
+      restOnly: params.github.restOnly,
     }),
     prerelease: config.prerelease,
     make_latest: config.prerelease ? false : config.latest,

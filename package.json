@@ -49,6 +49,7 @@
     "cli": "npm run build --silent && node dist/cli.js",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:container": "vitest run --config vitest.container.config.ts",
     "coverage": "node src/scripts/coverage-summary.ts",
     "tsc:check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "format:write": "biome format --write .",
@@ -101,6 +102,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "nock": "^14.0.16",
     "prettier": "^3.9.6",
+    "testcontainers": "^12.0.4",
     "typescript": "^7.0.2",
     "vite": "^8.1.4",
     "vitest": "^4.1.10"

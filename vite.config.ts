@@ -174,6 +174,11 @@ export default defineConfig({
   },
   test: {
     include: ['src/tests/**/*.test.ts'],
+    // Container-backed compatibility tests boot real Gitea and Forgejo servers.
+    // They are opt-in through `npm run test:container`, which runs them under
+    // `vitest.container.config.ts` — they cannot share this project's setup file,
+    // because it calls `nock.disableNetConnect()` and mocks the config module.
+    exclude: ['**/node_modules/**', '**/*.container.test.ts'],
     testTimeout: 60000,
     setupFiles: ['src/tests/setup.ts'],
     coverage: {

@@ -6,6 +6,8 @@ import { needsPullRequestChangedFiles } from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import { findCommitsInComparison } from './find-commits-in-comparison.ts'
+import { findCommitsInComparisonRest } from './find-commits-in-comparison-rest.ts'
+import { findNewContributorLoginsRest } from './find-new-contributor-logins-rest.ts'
 import {
   findRecentMergedPullRequests,
   type RecentMergedPullRequest,
@@ -58,7 +60,7 @@ export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
   previousCommitish?: string
-  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo'>
+  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo' | 'restOnly'>
 }) => {
   const { logger, octokit, repo } = params.github
   const sharedComparisonParams = {
@@ -91,13 +93,36 @@ export const findPullRequests = async (params: {
   logger.info(
     `🔎 Discovering commits between ${previousCommitish} and ${params.config.commitish}...`,
   )
-  const commits = await findCommitsInComparison({
-    baseCommitish: previousCommitish,
-    headCommitish: params.config.commitish,
-    useCommitishes: !!params.previousCommitish,
-    github: params.github,
-    ...sharedComparisonParams,
-  })
+  // Gitea and Forgejo expose GitHub's REST surface but no GraphQL API, so the
+  // comparison falls back to inverting the pull request index over REST.
+  const restOnly = !!params.github.restOnly
+  const commits = restOnly
+    ? await findCommitsInComparisonRest({
+        baseCommitish: previousCommitish,
+        headCommitish: params.config.commitish,
+        github: params.github,
+        // Recovering squashed co-authors costs a request per pull request, so
+        // only pay it when a template actually renders contributors.
+        withCommitAuthors: [
+          params.config['change-template'],
+          params.config['change-author-template'],
+          params.config.header,
+          params.config.template,
+          params.config.footer,
+        ].some(
+          (template) =>
+            template?.includes('$AUTHORS') ||
+            template?.includes('$CONTRIBUTORS'),
+        ),
+        ...sharedComparisonParams,
+      })
+    : await findCommitsInComparison({
+        baseCommitish: previousCommitish,
+        headCommitish: params.config.commitish,
+        useCommitishes: !!params.previousCommitish,
+        github: params.github,
+        ...sharedComparisonParams,
+      })
 
   logger.info(`  Found ${commits.length} commits.`)
 
@@ -127,8 +152,10 @@ export const findPullRequests = async (params: {
   const isBranchRef = commitish.startsWith('refs/heads/')
   const isUnsupportedRef =
     commitish.startsWith('refs/tags/') || commitish.startsWith('refs/pull/')
+  // The REST path already reads the pull request table directly, so it has no
+  // index lag to compensate for and needs no safety net.
   const recoveredPRs =
-    comparisonCommitOids.size === 0 || isUnsupportedRef
+    comparisonCommitOids.size === 0 || isUnsupportedRef || restOnly
       ? []
       : await findRecentMergedPullRequests({
           baseRefName: isBranchRef
@@ -172,7 +199,12 @@ export const findPullRequests = async (params: {
     params.config.footer,
   ].some((template) => template?.includes('$NEW_CONTRIBUTORS'))
   const newContributorLogins = usesNewContributors
-    ? await findNewContributorLogins(pullRequests, params.github)
+    ? restOnly
+      ? await findNewContributorLoginsRest({
+          pullRequests,
+          github: params.github,
+        })
+      : await findNewContributorLogins(pullRequests, params.github)
     : new Set<string>()
 
   logger.info(

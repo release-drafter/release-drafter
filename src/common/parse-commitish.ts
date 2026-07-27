@@ -10,6 +10,56 @@ import { executeGraphql } from './graphql.ts'
 export const commitishToCommitExpression = (commitish: string) =>
   `${commitish}^{commit}`
 
+/**
+ * Gitea and Forgejo have no GraphQL API, so the tag and pull request resolvers
+ * below fall back to REST. `git/commits/{ref}` peels an annotated tag to its
+ * commit the same way GraphQL's `refs/tags/x^{commit}` expression does.
+ */
+const resolveTagToCommitShaRest = async (params: {
+  octokit: Octokit
+  tagRef: string
+  repo: GitHubContext['repo']
+}) => {
+  const { octokit, tagRef, repo } = params
+  const response = await octokit.request(
+    'GET /repos/{owner}/{repo}/git/commits/{commit_sha}',
+    {
+      owner: repo.owner,
+      repo: repo.repo,
+      commit_sha: tagRef.replace(/^refs\/tags\//, ''),
+    },
+  )
+
+  if (!response.data.sha) {
+    throw new Error(`Tag ${tagRef} does not point to a commit`)
+  }
+
+  return response.data.sha
+}
+
+const resolvePullRequestToCommitShaRest = async (params: {
+  octokit: Octokit
+  pullRequestNumber: number
+  refType: 'head' | 'merge'
+  repo: GitHubContext['repo']
+}) => {
+  const { octokit, pullRequestNumber, refType, repo } = params
+  const { data } = await octokit.rest.pulls.get({
+    owner: repo.owner,
+    repo: repo.repo,
+    pull_number: pullRequestNumber,
+  })
+  const commitSha = refType === 'head' ? data.head.sha : data.merge_commit_sha
+
+  if (!commitSha) {
+    throw new Error(
+      `Pull request #${pullRequestNumber} does not have a ${refType} commit`,
+    )
+  }
+
+  return commitSha
+}
+
 const resolveTagToCommitSha = async (params: {
   octokit: Octokit
   tagRef: string
@@ -76,15 +126,17 @@ const resolvePullRequestToCommitSha = async (params: {
  */
 export const parseCommitishForRelease = async (
   commitish: ParsedConfig['commitish'],
-  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo'>,
+  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo' | 'restOnly'>,
 ) => {
-  const { logger, octokit, repo } = github
+  const { logger, octokit, repo, restOnly } = github
   if (commitish.startsWith('refs/heads/')) {
     return commitish.replace(/^refs\/heads\//, '')
   }
 
   if (commitish.startsWith('refs/tags/')) {
-    return resolveTagToCommitSha({
+    const resolve = restOnly ? resolveTagToCommitShaRest : resolveTagToCommitSha
+
+    return resolve({
       octokit,
       repo,
       tagRef: commitish,
@@ -103,7 +155,11 @@ export const parseCommitishForRelease = async (
     if (pullRequestRef) {
       const [, pullRequestNumber, refType] = pullRequestRef
 
-      return resolvePullRequestToCommitSha({
+      const resolve = restOnly
+        ? resolvePullRequestToCommitShaRest
+        : resolvePullRequestToCommitSha
+
+      return resolve({
         octokit,
         repo,
         pullRequestNumber: Number(pullRequestNumber),

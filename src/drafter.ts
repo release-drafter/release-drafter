@@ -5,6 +5,7 @@ import { actionInputSchema } from '#src/actions/drafter/config/schemas/action-in
 import { main } from '#src/actions/drafter/main.ts'
 import { getOctokit, type Octokit } from '#src/common/get-octokit.ts'
 import { type Logger, noopLogger } from '#src/common/logger.ts'
+import { resolveRestOnly } from '#src/common/resolve-api-mode.ts'
 
 export type DraftReleaseOptions = {
   repo: { owner: string; repo: string }
@@ -23,6 +24,12 @@ export type DraftReleaseOptions = {
   latest?: boolean
   apiUrl?: string
   serverUrl?: string
+  /**
+   * Forces the REST-only code paths, for forges with no GraphQL API. Left unset,
+   * it is inferred from {@link apiUrl} and the environment; see
+   * {@link resolveRestOnly}.
+   */
+  restOnly?: boolean
   logger?: Logger
 }
 
@@ -37,6 +44,10 @@ export const draftRelease = async (options: DraftReleaseOptions) => {
   const commitish = options.commitish || repository?.data.default_branch
   if (!commitish) throw new Error('Unable to resolve the target commitish')
 
+  const restOnly = resolveRestOnly({
+    explicit: options.restOnly,
+    apiUrl: options.apiUrl ?? process.env.GITHUB_API_URL,
+  })
   const github = {
     repo: options.repo,
     ref: commitish,
@@ -46,6 +57,13 @@ export const draftRelease = async (options: DraftReleaseOptions) => {
       'https://github.com',
     octokit,
     logger,
+    restOnly,
+  }
+
+  if (restOnly) {
+    logger.debug(
+      'No GraphQL API detected; using the REST-only comparison and commitish resolvers.',
+    )
   }
 
   logger.info(

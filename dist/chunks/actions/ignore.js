@@ -33354,12 +33354,13 @@ var getConfigFileFromFs = (normalizedFilepath, logger) => {
 //#region src/common/config/get-config-file-from-repo.ts
 var getConfigFileFromRepo = async (configTarget, octokit) => {
 	let res;
+	const ref = configTarget.ref?.replace(/^(?:refs\/)?(?:heads|tags)\//, "");
 	try {
 		res = await octokit.rest.repos.getContent({
 			owner: configTarget.repo.owner,
 			repo: configTarget.repo.repo,
 			path: configTarget.filepath,
-			ref: configTarget.ref,
+			ref,
 			mediaType: { format: "raw" }
 		});
 	} catch (error) {
@@ -33367,6 +33368,7 @@ var getConfigFileFromRepo = async (configTarget, octokit) => {
 		throw new Error(`Failed to fetch config from repo: ${error.message}`);
 	}
 	if (Array.isArray(res.data)) throw new Error(`Fetched content is a directory (array), expected a file. (target: ${configTarget.repo.owner ? `${configTarget.repo.owner}/` : ""}${configTarget.repo.repo}:${configTarget.filepath}${configTarget.ref ? `@${configTarget.ref}` : ""})`);
+	if (typeof res.data === "object" && "content" in res.data && typeof res.data.content === "string" && res.data.encoding === "base64") return Buffer.from(res.data.content, "base64").toString("utf8");
 	if (!res.headers["content-type"]?.startsWith("application/vnd.github.v3.raw")) throw new Error(`Fetched content has wrong content-type (${res.headers["content-type"]}), expected a raw file. (target: ${configTarget.repo.owner ? `${configTarget.repo.owner}/` : ""}${configTarget.repo.repo}:${configTarget.filepath}${configTarget.ref ? `@${configTarget.ref}` : ""})`);
 	if (typeof res.data !== "string") throw new Error(`Fetched content is not a string. (target: ${configTarget.repo.owner ? `${configTarget.repo.owner}/` : ""}${configTarget.repo.repo}:${configTarget.filepath}${configTarget.ref ? `@${configTarget.ref}` : ""})`);
 	return res.data;

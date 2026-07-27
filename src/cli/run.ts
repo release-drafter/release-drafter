@@ -16,6 +16,7 @@ type CliOptions = {
   config: string
   dryRun: boolean
   json: boolean
+  rest?: boolean
   publish?: BooleanOption
   prerelease?: BooleanOption
   latest?: BooleanOption
@@ -60,6 +61,10 @@ cli
   .option('--prerelease [boolean]', 'Mark the release as a prerelease')
   .option('--latest [boolean]', 'Mark the published release as latest')
   .option('--json', 'Output release variables as JSON', { default: false })
+  .option(
+    '--rest',
+    'Use only the REST API, for forges without GraphQL (Gitea, Forgejo). Inferred from the API URL when omitted',
+  )
   .action(async (repository: string, options: CliOptions) => {
     await draftRelease({
       repository,
@@ -71,6 +76,7 @@ cli
       config: options.config,
       dryRun: options.dryRun,
       json: options.json,
+      rest: options.rest,
       publish: parseBooleanOption('publish', options.publish),
       prerelease: parseBooleanOption('prerelease', options.prerelease),
       latest: parseBooleanOption('latest', options.latest),

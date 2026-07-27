@@ -23,6 +23,7 @@ export type CliArguments = {
   config: string
   dryRun: boolean
   json?: boolean
+  rest?: boolean
   publish?: boolean
   prerelease?: boolean
   latest?: boolean
@@ -69,6 +70,7 @@ export const draftRelease = async (args: CliArguments) => {
     tag: args.tag,
     version: args.version,
     dryRun: args.dryRun,
+    restOnly: args.rest,
     publish: args.publish,
     prerelease: args.prerelease,
     latest: args.latest,

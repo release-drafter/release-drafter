@@ -1,5 +1,6 @@
 import { i as __toESM, t as __commonJSMin } from "../../chunks/actions/rolldown-runtime.js";
 import { C as setFailed, S as info, _ as union, b as core_exports, c as ZodDefault, d as boolean, f as literal, g as stringbool, h as string, i as sharedInputSchema, l as _enum, m as object, n as stringToRegex, o as getPullRequestsChangedFiles, p as number, r as escapeStringRegexp, s as composeConfigGet, t as require_ignore, u as array, v as getActionOctokit, w as setOutput, x as getInput, y as context } from "../../chunks/actions/ignore.js";
+import process$1 from "node:process";
 //#region src/common/logger.ts
 var noop = () => {};
 var noopLogger = {
@@ -7,6 +8,51 @@ var noopLogger = {
 	error: noop,
 	info: noop,
 	warning: noop
+};
+//#endregion
+//#region src/common/resolve-api-mode.ts
+/**
+* Decides whether to drive a forge through REST only, because it has no GraphQL
+* API.
+*
+* Resolution runs most-specific first, and never inspects a version number: what
+* matters is whether a GraphQL endpoint exists, not which build is serving it.
+*
+* 1. An explicit choice from `--rest` or the library option always wins.
+* 2. The API URL, which describes the *target*. GitHub serves `api.github.com`,
+*    GitHub Enterprise Server serves REST at `/api/v3` and GraphQL at
+*    `/api/graphql`; Gitea and Forgejo serve REST at `/api/v1` and have no
+*    GraphQL at all, so the path segment separates them.
+* 3. `GITHUB_GRAPHQL_URL`, which describes the *host*. Gitea and Forgejo runners
+*    set it empty while GitHub populates it, so an empty value means the
+*    surrounding forge has no GraphQL. It is checked after the API URL precisely
+*    because the two can disagree — running this inside a Gitea job against
+*    github.com leaves it empty even though the target does have GraphQL.
+* 4. Otherwise assume GraphQL, matching the unconfigured `api.github.com` default.
+*
+* A forge that later ships GraphQL is picked up automatically at step 3 once its
+* runner populates the variable.
+*/
+var resolveRestOnly = (options = {}) => {
+	if (options.explicit !== void 0) return options.explicit;
+	const fromApiUrl = restOnlyFromApiUrl(options.apiUrl);
+	if (fromApiUrl !== void 0) return fromApiUrl;
+	const graphqlUrl = options.graphqlUrl === void 0 ? process$1.env.GITHUB_GRAPHQL_URL : options.graphqlUrl;
+	if (typeof graphqlUrl === "string") return graphqlUrl.trim() === "";
+	return false;
+};
+var restOnlyFromApiUrl = (apiUrl) => {
+	if (!apiUrl) return void 0;
+	let url;
+	try {
+		url = new URL(apiUrl);
+	} catch {
+		return;
+	}
+	if (url.hostname === "api.github.com" || url.hostname === "github.com") return false;
+	const path = url.pathname.replace(/\/+$/, "");
+	if (path.endsWith("/api/v3")) return false;
+	if (path.endsWith("/api/v1")) return true;
 };
 //#endregion
 //#region src/common/graphql.ts
@@ -318,6 +364,32 @@ var ResolvePullRequestCommitishDocument = new TypedDocumentString(`
 //#endregion
 //#region src/common/parse-commitish.ts
 var commitishToCommitExpression = (commitish) => `${commitish}^{commit}`;
+/**
+* Gitea and Forgejo have no GraphQL API, so the tag and pull request resolvers
+* below fall back to REST. `git/commits/{ref}` peels an annotated tag to its
+* commit the same way GraphQL's `refs/tags/x^{commit}` expression does.
+*/
+var resolveTagToCommitShaRest = async (params) => {
+	const { octokit, tagRef, repo } = params;
+	const response = await octokit.request("GET /repos/{owner}/{repo}/git/commits/{commit_sha}", {
+		owner: repo.owner,
+		repo: repo.repo,
+		commit_sha: tagRef.replace(/^refs\/tags\//, "")
+	});
+	if (!response.data.sha) throw new Error(`Tag ${tagRef} does not point to a commit`);
+	return response.data.sha;
+};
+var resolvePullRequestToCommitShaRest = async (params) => {
+	const { octokit, pullRequestNumber, refType, repo } = params;
+	const { data } = await octokit.rest.pulls.get({
+		owner: repo.owner,
+		repo: repo.repo,
+		pull_number: pullRequestNumber
+	});
+	const commitSha = refType === "head" ? data.head.sha : data.merge_commit_sha;
+	if (!commitSha) throw new Error(`Pull request #${pullRequestNumber} does not have a ${refType} commit`);
+	return commitSha;
+};
 var resolveTagToCommitSha = async (params) => {
 	const { octokit, tagRef, repo } = params;
 	const target = (await executeGraphql(octokit.graphql, ResolveCommitishDocument, {
@@ -352,9 +424,9 @@ var resolvePullRequestToCommitSha = async (params) => {
 * default branch.
 */
 var parseCommitishForRelease = async (commitish, github) => {
-	const { logger, octokit, repo } = github;
+	const { logger, octokit, repo, restOnly } = github;
 	if (commitish.startsWith("refs/heads/")) return commitish.replace(/^refs\/heads\//, "");
-	if (commitish.startsWith("refs/tags/")) return resolveTagToCommitSha({
+	if (commitish.startsWith("refs/tags/")) return (restOnly ? resolveTagToCommitShaRest : resolveTagToCommitSha)({
 		octokit,
 		repo,
 		tagRef: commitish
@@ -366,7 +438,7 @@ var parseCommitishForRelease = async (commitish, github) => {
 		const pullRequestRef = /^refs\/pull\/(\d+)\/(head|merge)$/.exec(commitish);
 		if (pullRequestRef) {
 			const [, pullRequestNumber, refType] = pullRequestRef;
-			return resolvePullRequestToCommitSha({
+			return (restOnly ? resolvePullRequestToCommitShaRest : resolvePullRequestToCommitSha)({
 				octokit,
 				repo,
 				pullRequestNumber: Number(pullRequestNumber),
@@ -3417,7 +3489,8 @@ var buildReleasePayload = async (params) => {
 		targetCommitish: await parseCommitishForRelease(config.commitish, {
 			octokit,
 			repo,
-			logger
+			logger,
+			restOnly: params.github.restOnly
 		}),
 		prerelease: config.prerelease,
 		make_latest: config.prerelease ? false : config.latest,
@@ -3644,6 +3717,206 @@ var findCommitsInComparison = async (params) => {
 	return commits;
 };
 //#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison-rest.ts
+/**
+* Walks closed pull requests newest-first, keeping only those whose merge commit
+* is in the comparison, and stops as soon as it can prove no later page can
+* contribute.
+*
+* Listing every closed pull request is what makes the naive REST port
+* pathological: on a repository with thousands of them it transfers tens of
+* megabytes to use a handful of records. Two independent stop conditions bound
+* it — every comparison commit has been matched, or a whole page predates the
+* oldest commit under consideration. The date check is the load-bearing one,
+* since most comparison commits are not merge commits and so never match.
+*/
+var findPullRequestsForMergeCommits = async (params) => {
+	const { octokit, owner, repo, commitShas, oldestCommitDate } = params;
+	const matched = /* @__PURE__ */ new Map();
+	const remaining = new Set(commitShas);
+	const pages = octokit.paginate.iterator(octokit.rest.pulls.list, {
+		owner,
+		repo,
+		state: "closed",
+		sort: "updated",
+		direction: "desc",
+		per_page: 100
+	});
+	for await (const page of pages) {
+		for (const pullRequest of page.data) {
+			if (!pullRequest.merged_at || !pullRequest.merge_commit_sha) continue;
+			if (remaining.delete(pullRequest.merge_commit_sha)) matched.set(pullRequest.merge_commit_sha, pullRequest);
+		}
+		if (remaining.size === 0) break;
+		if (oldestCommitDate && page.data.length > 0 && page.data.every((pullRequest) => (pullRequest.updated_at ?? "") < oldestCommitDate)) break;
+	}
+	return matched;
+};
+/**
+* Collects the accounts credited on each pull request, keyed by pull request
+* number.
+*
+* A squash merge collapses its branch into one commit whose extra authors survive
+* only as `Co-authored-by:` trailers. GitHub's GraphQL `Commit.authors` resolves
+* those trailer addresses to accounts through a mapping no REST route exposes —
+* `search/users?q=…in:email` misses any address its owner keeps private and, for
+* a domain that also backs an organisation, answers with the organisation
+* instead. So rather than resolving addresses at all, this reads the pull
+* request's own pre-squash commits, each of which already carries its resolved
+* `author`. That yields exactly the set GraphQL reports.
+*
+* Costs one request per pull request, hence the caller's `withCommitAuthors`
+* gate.
+*/
+var findPullRequestAuthorLogins = async (params) => {
+	const { octokit, owner, repo } = params;
+	const entries = await Promise.all(params.pullRequestNumbers.map(async (pullNumber) => {
+		const commits = await octokit.paginate(octokit.rest.pulls.listCommits, {
+			owner,
+			repo,
+			pull_number: pullNumber,
+			per_page: 100
+		});
+		const byLogin = /* @__PURE__ */ new Map();
+		for (const commit of commits) {
+			const login = commit.author?.login;
+			if (login && !byLogin.has(login)) byLogin.set(login, commit.commit.author?.name ?? null);
+		}
+		return [pullNumber, byLogin];
+	}));
+	return new Map(entries);
+};
+var findCommitsInComparisonRest = async (params) => {
+	const { octokit } = params.github;
+	const nameWithOwner = `${params.owner}/${params.name}`;
+	const comparison = await octokit.paginate(octokit.rest.repos.compareCommitsWithBasehead, {
+		owner: params.owner,
+		repo: params.name,
+		basehead: `${params.baseCommitish}...${params.headCommitish}`,
+		per_page: 100
+	}, (response) => {
+		const data = response.data;
+		return Array.isArray(data) ? data : data.commits;
+	});
+	const commitDates = comparison.flatMap((commit) => {
+		const date = commit.commit.committer?.date ?? commit.commit.author?.date;
+		return date ? [date] : [];
+	});
+	const pullRequestsByMergeCommit = await findPullRequestsForMergeCommits({
+		octokit,
+		owner: params.owner,
+		repo: params.name,
+		commitShas: new Set(comparison.map((commit) => commit.sha)),
+		oldestCommitDate: commitDates.length > 0 ? commitDates.reduce((a, b) => a < b ? a : b) : void 0
+	});
+	const authorLoginsByPullRequest = params.withCommitAuthors ? await findPullRequestAuthorLogins({
+		octokit,
+		owner: params.owner,
+		repo: params.name,
+		pullRequestNumbers: [...pullRequestsByMergeCommit.values()].map((pullRequest) => pullRequest.number)
+	}) : /* @__PURE__ */ new Map();
+	return comparison.map((commit) => {
+		const pullRequest = pullRequestsByMergeCommit.get(commit.sha);
+		const login = commit.author?.login;
+		const pullRequestAuthors = pullRequest ? authorLoginsByPullRequest.get(pullRequest.number) : void 0;
+		return {
+			__typename: "Commit",
+			id: commit.sha,
+			oid: commit.sha,
+			committedDate: commit.commit.committer?.date ?? commit.commit.author?.date ?? "",
+			message: commit.commit.message,
+			author: {
+				__typename: "GitActor",
+				name: commit.commit.author?.name ?? null,
+				user: login ? {
+					__typename: "User",
+					login
+				} : null
+			},
+			authors: {
+				__typename: "GitActorConnection",
+				nodes: [...pullRequestAuthors ? [...pullRequestAuthors].map(([authorLogin, authorName]) => ({
+					__typename: "GitActor",
+					name: authorName,
+					user: {
+						__typename: "User",
+						login: authorLogin
+					}
+				})) : login ? [{
+					__typename: "GitActor",
+					name: commit.commit.author?.name ?? null,
+					user: {
+						__typename: "User",
+						login
+					}
+				}] : []]
+			},
+			associatedPullRequests: {
+				__typename: "PullRequestConnection",
+				nodes: pullRequest ? [{
+					__typename: "PullRequest",
+					title: pullRequest.title,
+					number: pullRequest.number,
+					...params.withPullRequestURL ? { url: pullRequest.html_url } : {},
+					...params.withPullRequestBody ? { body: pullRequest.body ?? "" } : {},
+					author: pullRequest.user ? {
+						__typename: "User",
+						login: pullRequest.user.login,
+						url: pullRequest.user.html_url
+					} : null,
+					baseRepository: {
+						__typename: "Repository",
+						nameWithOwner
+					},
+					mergedAt: pullRequest.merged_at,
+					isCrossRepository: pullRequest.head?.repo?.full_name !== pullRequest.base?.repo?.full_name,
+					labels: {
+						__typename: "LabelConnection",
+						nodes: (pullRequest.labels ?? []).map((label) => ({
+							__typename: "Label",
+							name: typeof label === "string" ? label : label.name
+						}))
+					},
+					merged: true,
+					...params.withBaseRefName ? { baseRefName: pullRequest.base?.ref } : {},
+					...params.withHeadRefName ? { headRefName: pullRequest.head?.ref } : {}
+				}] : []
+			}
+		};
+	});
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-new-contributor-logins-rest.ts
+var findNewContributorLoginsRest = async (params) => {
+	const { octokit, repo } = params.github;
+	const firstMergedAtByLogin = /* @__PURE__ */ new Map();
+	for (const pullRequest of params.pullRequests) {
+		if (pullRequest.author?.__typename !== "User" || !pullRequest.mergedAt) continue;
+		const previous = firstMergedAtByLogin.get(pullRequest.author.login);
+		if (!previous || pullRequest.mergedAt < previous) firstMergedAtByLogin.set(pullRequest.author.login, pullRequest.mergedAt);
+	}
+	if (firstMergedAtByLogin.size === 0) return /* @__PURE__ */ new Set();
+	const results = await Promise.all([...firstMergedAtByLogin].map(async ([login, mergedAt]) => {
+		const authored = await octokit.paginate("GET /repos/{owner}/{repo}/pulls", {
+			owner: repo.owner,
+			repo: repo.repo,
+			state: "closed",
+			poster: login,
+			limit: 100,
+			per_page: 100
+		});
+		if (authored.length === 0) return {
+			login,
+			isNew: false
+		};
+		return {
+			login,
+			isNew: !authored.some((pullRequest) => pullRequest.merged_at && pullRequest.merged_at < mergedAt)
+		};
+	}));
+	return new Set(results.flatMap(({ login, isNew }) => isNew ? [login] : []));
+};
+//#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts
 var RECENT_PR_LOOKBACK = 5;
 var findRecentMergedPullRequests = async (params) => {
@@ -3704,7 +3977,20 @@ var findPullRequests = async (params) => {
 		};
 	}
 	logger.info(`🔎 Discovering commits between ${previousCommitish} and ${params.config.commitish}...`);
-	const commits = await findCommitsInComparison({
+	const restOnly = !!params.github.restOnly;
+	const commits = restOnly ? await findCommitsInComparisonRest({
+		baseCommitish: previousCommitish,
+		headCommitish: params.config.commitish,
+		github: params.github,
+		withCommitAuthors: [
+			params.config["change-template"],
+			params.config["change-author-template"],
+			params.config.header,
+			params.config.template,
+			params.config.footer
+		].some((template) => template?.includes("$AUTHORS") || template?.includes("$CONTRIBUTORS")),
+		...sharedComparisonParams
+	}) : await findCommitsInComparison({
 		baseCommitish: previousCommitish,
 		headCommitish: params.config.commitish,
 		useCommitishes: !!params.previousCommitish,
@@ -3718,7 +4004,7 @@ var findPullRequests = async (params) => {
 	const { commitish } = params.config;
 	const isBranchRef = commitish.startsWith("refs/heads/");
 	const isUnsupportedRef = commitish.startsWith("refs/tags/") || commitish.startsWith("refs/pull/");
-	const recoveredPRs = comparisonCommitOids.size === 0 || isUnsupportedRef ? [] : await findRecentMergedPullRequests({
+	const recoveredPRs = comparisonCommitOids.size === 0 || isUnsupportedRef || restOnly ? [] : await findRecentMergedPullRequests({
 		baseRefName: isBranchRef ? commitish.replace(/^refs\/heads\//, "") : null,
 		commitOids: comparisonCommitOids,
 		foundPrKeys: new Set(pullRequestsByKey.keys()),
@@ -3742,7 +4028,10 @@ var findPullRequests = async (params) => {
 		params.config.header,
 		params.config.template,
 		params.config.footer
-	].some((template) => template?.includes("$NEW_CONTRIBUTORS")) ? await findNewContributorLogins(pullRequests, params.github) : /* @__PURE__ */ new Set();
+	].some((template) => template?.includes("$NEW_CONTRIBUTORS")) ? restOnly ? await findNewContributorLoginsRest({
+		pullRequests,
+		github: params.github
+	}) : await findNewContributorLogins(pullRequests, params.github) : /* @__PURE__ */ new Set();
 	logger.info(`  Found ${pullRequests.length} merged pull requests targeting ${repo.owner}/${repo.repo}${pullRequests.length > 0 ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
 	return {
 		commits,
@@ -3888,13 +4177,16 @@ async function run() {
 	try {
 		info("⚙️ Parsing inputs and configuration...");
 		const input = getActionInput();
+		const restOnly = resolveRestOnly({ apiUrl: context.apiUrl });
 		const github = {
 			repo: context.repo,
 			ref: context.ref || context.payload.ref,
 			serverUrl: context.serverUrl,
 			octokit: getActionOctokit(input.token),
-			logger: core_exports
+			logger: core_exports,
+			restOnly
 		};
+		if (restOnly) info("🔌 No GraphQL API detected; using REST-only code paths.");
 		setActionOutput(await main({
 			input,
 			config: mergeInputAndConfig({

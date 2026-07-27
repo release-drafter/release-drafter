@@ -7,13 +7,19 @@ export const getConfigFileFromRepo = async (
   octokit: Octokit,
 ): Promise<string> => {
   let res: Awaited<ReturnType<typeof octokit.rest.repos.getContent>>
+  // Gitea's contents endpoint resolves only bare branch and tag names, 404ing on
+  // every fully qualified form (`refs/heads/x`, `heads/x`, `refs/tags/x`) — even
+  // though its own commits endpoint accepts them, and GitHub and Forgejo accept
+  // both. Actions supply `GITHUB_REF` fully qualified, so strip the prefix; the
+  // bare name resolves identically on every forge.
+  const ref = configTarget.ref?.replace(/^(?:refs\/)?(?:heads|tags)\//, '')
   try {
     // see: https://docs.github.com/en/rest/repos/contents
     res = await octokit.rest.repos.getContent({
       owner: configTarget.repo.owner,
       repo: configTarget.repo.repo,
       path: configTarget.filepath,
-      ref: configTarget.ref,
+      ref,
       mediaType: { format: 'raw' },
     })
   } catch (error) {
@@ -31,6 +37,18 @@ export const getConfigFileFromRepo = async (
     throw new Error(
       `Fetched content is a directory (array), expected a file. (target: ${configTarget.repo.owner ? `${configTarget.repo.owner}/` : ''}${configTarget.repo.repo}:${configTarget.filepath}${configTarget.ref ? `@${configTarget.ref}` : ''})`,
     )
+  }
+
+  // GitHub honours `mediaType.format: 'raw'` and returns the file body as a
+  // string. Gitea and Forgejo ignore it and always return the JSON content
+  // object, so fall back to decoding the base64 payload they send instead.
+  if (
+    typeof res.data === 'object' &&
+    'content' in res.data &&
+    typeof res.data.content === 'string' &&
+    res.data.encoding === 'base64'
+  ) {
+    return Buffer.from(res.data.content, 'base64').toString('utf8')
   }
 
   if (

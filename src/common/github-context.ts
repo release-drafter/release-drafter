@@ -7,4 +7,11 @@ export type GitHubContext = {
   serverUrl: string
   octokit: Octokit
   logger: Logger
+  /**
+   * Set for forges with no GraphQL API (Gitea, Forgejo), which take the REST-only
+   * code paths. Resolved once by {@link resolveRestOnly} and carried here so the
+   * decision is made at the edge rather than re-derived from the environment
+   * deep in the call graph. Absent means GraphQL, as on GitHub.
+   */
+  restOnly?: boolean
 }
