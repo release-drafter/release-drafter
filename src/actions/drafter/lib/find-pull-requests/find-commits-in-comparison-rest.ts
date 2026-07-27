@@ -27,21 +27,36 @@ type ComparisonPage = {
   }>
 }
 
-type PullRequestListItem = Awaited<
-  ReturnType<GitHubContext['octokit']['rest']['pulls']['list']>
->['data'][number]
+type PullRequestDetail = Awaited<
+  ReturnType<GitHubContext['octokit']['rest']['pulls']['get']>
+>['data']
+
+type IssueListItem = {
+  number: number
+  pull_request?: { merged_at?: string | null } | null
+}
 
 /**
- * Walks closed pull requests newest-first, keeping only those whose merge commit
- * is in the comparison, and stops as soon as it can prove no later page can
- * contribute.
+ * Finds the pull requests whose merge commit appears in the comparison, keyed by
+ * that commit.
  *
  * Listing every closed pull request is what makes the naive REST port
  * pathological: on a repository with thousands of them it transfers tens of
- * megabytes to use a handful of records. Two independent stop conditions bound
- * it — every comparison commit has been matched, or a whole page predates the
- * oldest commit under consideration. The date check is the load-bearing one,
- * since most comparison commits are not merge commits and so never match.
+ * megabytes to use a handful of records. The bound therefore has to come from the
+ * server, and `since` provides it — the issues route accepts it on GitHub, Gitea
+ * and Forgejo alike, and filters by update time.
+ *
+ * A pull request merged into the range cannot have been updated before the range's
+ * oldest commit, since `updated_at >= merged_at`, so `since` cannot exclude a
+ * relevant one. Crucially it makes the result independent of ordering, unlike
+ * stopping the walk early on a page that looks old: `sort`/`direction` are
+ * GitHub's spelling and Gitea and Forgejo want `recentupdate`, so the order is
+ * never guaranteed — and a violation would only become visible on a page that an
+ * early exit had already declined to fetch.
+ *
+ * The issues route does not carry `merge_commit_sha`, so each candidate that
+ * actually merged costs one detail request. That is bounded by activity since the
+ * previous release rather than by repository history.
  */
 const findPullRequestsForMergeCommits = async (params: {
   octokit: GitHubContext['octokit']
@@ -51,40 +66,43 @@ const findPullRequestsForMergeCommits = async (params: {
   oldestCommitDate?: string
 }) => {
   const { octokit, owner, repo, commitShas, oldestCommitDate } = params
-  const matched = new Map<string, PullRequestListItem>()
+  const matched = new Map<string, PullRequestDetail>()
   const remaining = new Set(commitShas)
 
-  const pages = octokit.paginate.iterator(octokit.rest.pulls.list, {
-    owner,
-    repo,
-    state: 'closed',
-    sort: 'updated',
-    direction: 'desc',
-    per_page: 100,
-  })
+  const candidates = (await octokit.paginate(
+    'GET /repos/{owner}/{repo}/issues',
+    {
+      owner,
+      repo,
+      state: 'closed',
+      ...(oldestCommitDate ? { since: oldestCommitDate } : {}),
+      // Gitea's page-size name; GitHub ignores it. Gitea's `type=pulls` is
+      // deliberately not sent — GitHub rejects that value outright with a 422,
+      // and `--rest` may legitimately point at GitHub — so pull requests are
+      // separated from issues below by the `pull_request` key, which every forge
+      // sets.
+      limit: 100,
+      per_page: 100,
+    } as never,
+  )) as IssueListItem[]
 
-  for await (const page of pages) {
-    for (const pullRequest of page.data) {
-      if (!pullRequest.merged_at || !pullRequest.merge_commit_sha) continue
-      if (remaining.delete(pullRequest.merge_commit_sha)) {
-        matched.set(pullRequest.merge_commit_sha, pullRequest)
+  const merged = candidates.filter(
+    (candidate) => candidate.pull_request?.merged_at,
+  )
+
+  await Promise.all(
+    merged.map(async (candidate) => {
+      const { data } = await octokit.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: candidate.number,
+      })
+
+      if (data.merge_commit_sha && remaining.has(data.merge_commit_sha)) {
+        matched.set(data.merge_commit_sha, data)
       }
-    }
-
-    if (remaining.size === 0) break
-
-    // `sort: updated` is a hint, not a guarantee on every forge, so only stop
-    // when the entire page is older than the oldest commit in range.
-    if (
-      oldestCommitDate &&
-      page.data.length > 0 &&
-      page.data.every(
-        (pullRequest) => (pullRequest.updated_at ?? '') < oldestCommitDate,
-      )
-    ) {
-      break
-    }
-  }
+    }),
+  )
 
   return matched
 }
@@ -276,10 +294,13 @@ export const findCommitsInComparisonRest = async (params: {
                   pullRequest.base?.repo?.full_name,
                 labels: {
                   __typename: 'LabelConnection' as const,
-                  nodes: (pullRequest.labels ?? []).map((label) => ({
-                    __typename: 'Label' as const,
-                    name: typeof label === 'string' ? label : label.name,
-                  })),
+                  nodes: (pullRequest.labels ?? []).map(
+                    (label: string | { name?: string }) => ({
+                      __typename: 'Label' as const,
+                      name:
+                        (typeof label === 'string' ? label : label.name) ?? '',
+                    }),
+                  ),
                 },
                 merged: true,
                 ...(params.withBaseRefName

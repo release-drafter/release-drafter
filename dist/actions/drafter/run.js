@@ -3719,37 +3719,47 @@ var findCommitsInComparison = async (params) => {
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison-rest.ts
 /**
-* Walks closed pull requests newest-first, keeping only those whose merge commit
-* is in the comparison, and stops as soon as it can prove no later page can
-* contribute.
+* Finds the pull requests whose merge commit appears in the comparison, keyed by
+* that commit.
 *
 * Listing every closed pull request is what makes the naive REST port
 * pathological: on a repository with thousands of them it transfers tens of
-* megabytes to use a handful of records. Two independent stop conditions bound
-* it — every comparison commit has been matched, or a whole page predates the
-* oldest commit under consideration. The date check is the load-bearing one,
-* since most comparison commits are not merge commits and so never match.
+* megabytes to use a handful of records. The bound therefore has to come from the
+* server, and `since` provides it — the issues route accepts it on GitHub, Gitea
+* and Forgejo alike, and filters by update time.
+*
+* A pull request merged into the range cannot have been updated before the range's
+* oldest commit, since `updated_at >= merged_at`, so `since` cannot exclude a
+* relevant one. Crucially it makes the result independent of ordering, unlike
+* stopping the walk early on a page that looks old: `sort`/`direction` are
+* GitHub's spelling and Gitea and Forgejo want `recentupdate`, so the order is
+* never guaranteed — and a violation would only become visible on a page that an
+* early exit had already declined to fetch.
+*
+* The issues route does not carry `merge_commit_sha`, so each candidate that
+* actually merged costs one detail request. That is bounded by activity since the
+* previous release rather than by repository history.
 */
 var findPullRequestsForMergeCommits = async (params) => {
 	const { octokit, owner, repo, commitShas, oldestCommitDate } = params;
 	const matched = /* @__PURE__ */ new Map();
 	const remaining = new Set(commitShas);
-	const pages = octokit.paginate.iterator(octokit.rest.pulls.list, {
+	const merged = (await octokit.paginate("GET /repos/{owner}/{repo}/issues", {
 		owner,
 		repo,
 		state: "closed",
-		sort: "updated",
-		direction: "desc",
+		...oldestCommitDate ? { since: oldestCommitDate } : {},
+		limit: 100,
 		per_page: 100
-	});
-	for await (const page of pages) {
-		for (const pullRequest of page.data) {
-			if (!pullRequest.merged_at || !pullRequest.merge_commit_sha) continue;
-			if (remaining.delete(pullRequest.merge_commit_sha)) matched.set(pullRequest.merge_commit_sha, pullRequest);
-		}
-		if (remaining.size === 0) break;
-		if (oldestCommitDate && page.data.length > 0 && page.data.every((pullRequest) => (pullRequest.updated_at ?? "") < oldestCommitDate)) break;
-	}
+	})).filter((candidate) => candidate.pull_request?.merged_at);
+	await Promise.all(merged.map(async (candidate) => {
+		const { data } = await octokit.rest.pulls.get({
+			owner,
+			repo,
+			pull_number: candidate.number
+		});
+		if (data.merge_commit_sha && remaining.has(data.merge_commit_sha)) matched.set(data.merge_commit_sha, data);
+	}));
 	return matched;
 };
 /**
@@ -3874,7 +3884,7 @@ var findCommitsInComparisonRest = async (params) => {
 						__typename: "LabelConnection",
 						nodes: (pullRequest.labels ?? []).map((label) => ({
 							__typename: "Label",
-							name: typeof label === "string" ? label : label.name
+							name: (typeof label === "string" ? label : label.name) ?? ""
 						}))
 					},
 					merged: true,
@@ -3897,21 +3907,22 @@ var findNewContributorLoginsRest = async (params) => {
 	}
 	if (firstMergedAtByLogin.size === 0) return /* @__PURE__ */ new Set();
 	const results = await Promise.all([...firstMergedAtByLogin].map(async ([login, mergedAt]) => {
-		const authored = await octokit.paginate("GET /repos/{owner}/{repo}/pulls", {
+		const merges = (await octokit.paginate("GET /repos/{owner}/{repo}/issues", {
 			owner: repo.owner,
 			repo: repo.repo,
 			state: "closed",
-			poster: login,
+			creator: login,
+			created_by: login,
 			limit: 100,
 			per_page: 100
-		});
-		if (authored.length === 0) return {
+		})).flatMap((item) => item.pull_request?.merged_at ? [item.pull_request.merged_at] : []);
+		if (merges.length === 0) return {
 			login,
 			isNew: false
 		};
 		return {
 			login,
-			isNew: !authored.some((pullRequest) => pullRequest.merged_at && pullRequest.merged_at < mergedAt)
+			isNew: !merges.some((earlierMergedAt) => earlierMergedAt < mergedAt)
 		};
 	}));
 	return new Set(results.flatMap(({ login, isNew }) => isNew ? [login] : []));

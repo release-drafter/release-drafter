@@ -194,6 +194,12 @@ export const startForge = async (flavor: ForgeFlavor) => {
   })
   await merge(repoPath, Number(groundwork?.number))
 
+  // Merge timestamps have one-second granularity, and the seeding below runs well
+  // inside that. Without a gap the groundwork merge can share a timestamp with the
+  // first in-range one, leaving "did this author merge anything strictly earlier"
+  // genuinely ambiguous rather than false.
+  await new Promise((resolve) => setTimeout(resolve, 1500))
+
   await api(`${repoPath}/releases`, {
     tag_name: 'v1.0.0',
     target_commitish: 'main',

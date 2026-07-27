@@ -18,7 +18,7 @@ type CandidatePullRequest = {
   mergedAt?: string | null
 }
 
-type AuthoredPullRequest = { merged_at?: string | null }
+type AuthoredIssue = { pull_request?: { merged_at?: string | null } | null }
 
 export const findNewContributorLoginsRest = async (params: {
   pullRequests: CandidatePullRequest[]
@@ -44,29 +44,35 @@ export const findNewContributorLoginsRest = async (params: {
 
   const results = await Promise.all(
     [...firstMergedAtByLogin].map(async ([login, mergedAt]) => {
+      // The issues route is the only one both forges filter by author, and they
+      // disagree on the name: GitHub wants `creator`, Gitea and Forgejo want
+      // `created_by`. Each ignores the other's, so sending both serves either.
+      // The pulls route is not usable here — its Gitea-only `poster` is silently
+      // ignored by GitHub, which then returns every closed pull request.
       const authored = (await octokit.paginate(
-        'GET /repos/{owner}/{repo}/pulls',
+        'GET /repos/{owner}/{repo}/issues',
         {
           owner: repo.owner,
           repo: repo.repo,
           state: 'closed',
-          // `poster` is the Gitea and Forgejo author filter and `limit` their
-          // page-size name; both forges ignore `per_page`'s absence and GitHub
-          // ignores the extra keys, so one shape serves either.
-          poster: login,
+          creator: login,
+          created_by: login,
           limit: 100,
           per_page: 100,
         } as never,
-      )) as AuthoredPullRequest[]
+      )) as AuthoredIssue[]
 
-      // A filter naming an account that does not exist fails open on these
-      // forges and returns every pull request, so an author with no matches at
-      // all is treated as unproven rather than new.
-      if (authored.length === 0) return { login, isNew: false }
+      const merges = authored.flatMap((item) =>
+        item.pull_request?.merged_at ? [item.pull_request.merged_at] : [],
+      )
 
-      const hadEarlierMerge = authored.some(
-        (pullRequest) =>
-          pullRequest.merged_at && pullRequest.merged_at < mergedAt,
+      // Their own in-range pull request should always be here. Nothing at all
+      // means the author filter did not apply, so claim nothing rather than
+      // crediting a first contribution that may not be one.
+      if (merges.length === 0) return { login, isNew: false }
+
+      const hadEarlierMerge = merges.some(
+        (earlierMergedAt) => earlierMergedAt < mergedAt,
       )
 
       return { login, isNew: !hadEarlierMerge }

@@ -223,33 +223,29 @@ const restGithub = () => {
   const { octokit } = testGitHubContext()
   const { rest } = octokit
 
-  const paginate = Object.assign(
-    vi.fn(
-      async (
-        route: unknown,
-        _options: Record<string, unknown>,
-        mapPage?: (response: { data: unknown }) => unknown,
-      ) => {
-        if (route === rest.repos.compareCommitsWithBasehead) {
-          return mapPage?.({ data: restComparison })
-        }
-        if (route === rest.pulls.listCommits) {
-          return restPullRequestCommits
-        }
-        throw new Error('unexpected paginated route')
-      },
-    ),
-    {
-      iterator: vi.fn((route: unknown) => {
-        if (route !== rest.pulls.list) {
-          throw new Error('unexpected iterated route')
-        }
-        return {
-          async *[Symbol.asyncIterator]() {
-            yield { data: [restPullRequest] }
+  const paginate = vi.fn(
+    async (
+      route: unknown,
+      _options: Record<string, unknown>,
+      mapPage?: (response: { data: unknown }) => unknown,
+    ) => {
+      if (route === rest.repos.compareCommitsWithBasehead) {
+        return mapPage?.({ data: restComparison })
+      }
+      if (route === rest.pulls.listCommits) {
+        return restPullRequestCommits
+      }
+      // The merge-commit index is built from `since`-filtered candidates, then
+      // one detail request each; see findPullRequestsForMergeCommits.
+      if (route === 'GET /repos/{owner}/{repo}/issues') {
+        return [
+          {
+            number: PULL_REQUEST.number,
+            pull_request: { merged_at: PULL_REQUEST.mergedAt },
           },
-        }
-      }),
+        ]
+      }
+      throw new Error(`unexpected paginated route: ${String(route)}`)
     },
   )
 
@@ -257,6 +253,13 @@ const restGithub = () => {
     octokit: {
       ...octokit,
       paginate: paginate as unknown as Octokit['paginate'],
+      rest: {
+        ...rest,
+        pulls: {
+          ...rest.pulls,
+          get: vi.fn(async () => ({ data: restPullRequest })),
+        },
+      },
     } as never,
   })
 }
