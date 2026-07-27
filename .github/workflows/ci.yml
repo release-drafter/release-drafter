@@ -87,6 +87,26 @@ jobs:
       - name: Check for clean working directory
         run: npm run check:clean
 
+  container-tests:
+    name: Forge Compatibility (containers)
+    runs-on: ubuntu-latest
+    # Booting a Gitea and a Forgejo server, then driving them through the REST
+    # API, is far slower than the unit suite, so it runs as its own job.
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run forge compatibility tests
+        run: npm run test:container
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
