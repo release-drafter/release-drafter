@@ -389,6 +389,10 @@ var exclusiveConfigSchema = object({
 	*/
 	"new-contributor-template": string().optional().default("* $AUTHOR_MENTION made their first contribution in #$NUMBER"),
 	/**
+	* The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list.
+	*/
+	"no-new-contributor-template": string().optional().default("* No new contributors"),
+	/**
 	* The template to use for `$CONTRIBUTORS` when there's no contributors to list.
 	*/
 	"no-contributors-template": string().optional().default("No contributors"),
@@ -2469,7 +2473,7 @@ var generateNewContributorsList = (params) => {
 		if (!previous || (pullRequest.mergedAt ?? "") < (previous.mergedAt ?? "")) firstPullRequestByLogin.set(pullRequest.author.login, pullRequest);
 	}
 	const entries = [...firstPullRequestByLogin.entries()].filter(([, pullRequest]) => includedPullRequestKeys.has(pullRequestKey(pullRequest))).sort(([, a], [, b]) => (a.mergedAt ?? "").localeCompare(b.mergedAt ?? "") || a.number - b.number);
-	if (entries.length === 0) return "";
+	if (entries.length === 0) return config["no-new-contributor-template"];
 	return entries.map(([login, pullRequest]) => renderTemplate({
 		template: config["new-contributor-template"],
 		object: {
