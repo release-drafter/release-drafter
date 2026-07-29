@@ -59,11 +59,11 @@ override the resolved version:
 npx release-drafter owner/repository --from v8.0.0 --release-version 9.0.0
 ```
 
-The target commitish defaults to the repository's default branch; override it with
-`--to`. The CLI uses the same config loading as the action, including the fallback
-to the organization's `.github` repository. Use `--config` to select another
-config or `--dry-run` to print the generated release without creating or updating
-it.
+The target commitish defaults to the repository's default branch; override it
+with `--to`. The CLI uses the same config loading as the action, including the
+fallback to the organization's `.github` repository. Use `--config` to select
+another config or `--dry-run` to print the generated release without creating or
+updating it.
 
 `--name` and `--tag` override the resolved release name and tag, mirroring the
 action's `name` and `tag` inputs:
@@ -801,11 +801,11 @@ const result = await draftRelease({
 console.log(result.releasePayload)
 ```
 
-It uses the same configuration loading, release generation, publication controls,
-and pull request merge-ref safeguards as the action and CLI. Pass a `logger` with
-`debug`, `info`, `warning`, and `error` methods to receive the same lifecycle
-messages; library logging is silent by default. An existing `octokit` client can
-also be injected.
+It uses the same configuration loading, release generation, publication
+controls, and pull request merge-ref safeguards as the action and CLI. Pass a
+`logger` with `debug`, `info`, `warning`, and `error` methods to receive the
+same lifecycle messages; library logging is silent by default. An existing
+`octokit` client can also be injected.
 
 ## GitHub Enterprise Server (GHES)
 
@@ -816,10 +816,10 @@ uses `GITHUB_API_URL` for GHES.
 The CLI and programmatic API construct an ESM Octokit client directly without
 importing the Actions runtime. The CLI honors `GITHUB_API_URL` for API requests
 and `GITHUB_SERVER_URL` for generated web links and `--config` blob URLs; when
-using `HTTP_PROXY` or `HTTPS_PROXY`, enable Node's environment proxy support with
-`NODE_USE_ENV_PROXY=1`. Programmatic callers can pass `apiUrl` for API requests
-and `serverUrl` for generated web links, or inject a preconfigured `octokit`
-client — in which case `token` may be omitted.
+using `HTTP_PROXY` or `HTTPS_PROXY`, enable Node's environment proxy support
+with `NODE_USE_ENV_PROXY=1`. Programmatic callers can pass `apiUrl` for API
+requests and `serverUrl` for generated web links, or inject a preconfigured
+`octokit` client — in which case `token` may be omitted.
 
 ## Contributing
 
