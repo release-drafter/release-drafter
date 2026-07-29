@@ -42,6 +42,7 @@ export const buildReleasePayload = async (params: {
     | 'category-template'
     | 'exclude-contributors'
     | 'new-contributor-template'
+    | 'no-new-contributor-template'
     | 'no-contributors-template'
     | 'prerelease'
     | 'version-template'
