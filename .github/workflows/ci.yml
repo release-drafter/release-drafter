@@ -10,26 +10,30 @@ permissions:
   contents: read
 
 jobs:
-  check-pr-labels:
-    name: 'Check PR Labels'
+  lint-pr-title:
+    name: 'Lint PR Title'
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
     steps:
-      - name: "Check for type: or dependencies label"
+      - name: 'Validate conventional pull request title'
+        uses: amannn/action-semantic-pull-request@v6.1.1
         env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          # Fetch at runtime so that re-running a failed workflow 
-          # after adding a label will pick up the newly added label.
-          LABELS=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/labels" --jq '.[].name')
-          if echo "$LABELS" | grep -qE '^type: |^dependencies$'; then
-            echo "PR has a valid label."
-          else
-            echo "Error: PR must have a 'dependencies' label or at least one label starting with 'type: '."
-            exit 1
-          fi
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          types: |
+            build
+            chore
+            ci
+            docs
+            feat
+            fix
+            perf
+            refactor
+            revert
+            style
+            test
+          validateSingleCommit: false
 
   smoke-test-drafter:
     name: 'Smoke Test for Drafter'
