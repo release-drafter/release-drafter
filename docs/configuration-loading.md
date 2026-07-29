@@ -249,7 +249,9 @@ template: |
   $CHANGES
 ```
 
-> [!note] The fallback only applies when:
+> [!note]
+>
+> The fallback only applies when:
 >
 > - the `config-name:` does not explicitly target another repository, and
 > - release-drafter is **not** already running inside the `.github` repository
