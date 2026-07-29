@@ -1,0 +1,9 @@
+# Generated or vendored output.
+dist
+coverage
+.licenses
+logs
+
+# Release note content shipped to users, not documentation. Reflowing these
+# templates would rewrite the text that ends up in drafted releases.
+src/actions/drafter/lib/build-release-payload/static

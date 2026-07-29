@@ -33,6 +33,10 @@
     "yaml.format.enable": false // waiting for https://github.com/biomejs/biome/issues/2365
   },
   "markdown.validate.enabled": true,
+  "[markdown]": {
+    // Biome cannot format Markdown yet, so Prettier owns it.
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "search.exclude": {
     "**/node_modules": true,
     "**/bower_components": true,

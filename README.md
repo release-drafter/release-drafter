@@ -232,9 +232,9 @@ version-template: "ver $MAJOR"
 
 ## Version Resolver
 
-Any category with `semver-increment` contributes to `$RESOLVED_VERSION`.
-Use `type: version-resolver` categories when you want version resolution rules
-that do not also render a changelog section.
+Any category with `semver-increment` contributes to `$RESOLVED_VERSION`. Use
+`type: version-resolver` categories when you want version resolution rules that
+do not also render a changelog section.
 
 Before version resolution runs, any `pre-include` and `pre-exclude` categories
 filter the candidate pull requests. After that:
@@ -343,9 +343,9 @@ pipeline:
 both changelog generation and version resolution.
 
 Categories are evaluated in the order they are defined. By default, a pull
-request can match multiple categories of the same type. Setting `exclusive:
-true` on a `changelog` or `version-resolver` category stops later categories of
-that same type from also matching the same pull request.
+request can match multiple categories of the same type. Setting
+`exclusive: true` on a `changelog` or `version-resolver` category stops later
+categories of that same type from also matching the same pull request.
 
 Each category supports the following keys:
 
@@ -411,8 +411,8 @@ The `labels-mode` and `paths-mode` options control how the configured labels or
 path patterns are compared. `any` is the default. Path matching operates on the
 pull request's changed files.
 
-The `conventional` option parses the pull request title as a conventional
-commit header. Set it to `true` to match any conventional title, or configure
+The `conventional` option parses the pull request title as a conventional commit
+header. Set it to `true` to match any conventional title, or configure
 `type`/`types`, `scope`/`scopes`, and `breaking`:
 
 ```yml
@@ -436,8 +436,9 @@ categories:
 
 Within a condition, `label` is shorthand for a single `labels` entry. If both
 `label` and `labels` are present, they are combined before `labels-mode` is
-applied. With the default `labels-mode: any`, `labels: ["feature",
-"enhancement"]` matches pull requests carrying either label.
+applied. With the default `labels-mode: any`,
+`labels: ["feature", "enhancement"]` matches pull requests carrying either
+label.
 
 Likewise, `path` is shorthand for a single `paths` entry. If both `path` and
 `paths` are present, they are combined before `paths-mode` is applied.
@@ -472,8 +473,8 @@ Optionally you can add a `collapse-after` entry to your category item, if the
 category has more than the defined `collapse-after` pull requests then it will
 show all pull requests collapsed for that category. Setting `collapse-after` to
 `0` will always collapse the category regardless of the number of pull requests,
-and setting it to `-1` disables collapsing.
-Append the `collapse-after` integer to your category as following:
+and setting it to `-1` disables collapsing. Append the `collapse-after` integer
+to your category as following:
 
 ```yml
 categories:
@@ -485,9 +486,8 @@ categories:
 
 ## Exclude Changes
 
-The recommended way to exclude changes is a `type: pre-exclude` category.
-For example, append the following to your
-`.github/release-drafter.yml` file:
+The recommended way to exclude changes is a `type: pre-exclude` category. For
+example, append the following to your `.github/release-drafter.yml` file:
 
 ```yml
 categories:
@@ -496,15 +496,14 @@ categories:
       label: "skip-changelog"
 ```
 
-Changes with the label "skip-changelog" will now be excluded from the
-release draft.
+Changes with the label "skip-changelog" will now be excluded from the release
+draft.
 
 ## Include Changes
 
-The recommended way to include only a subset of changes is a
-`type: pre-include` category. Only changes that match at least one
-`pre-include` category are kept for the rest of the pipeline. For example,
-append the following to your
+The recommended way to include only a subset of changes is a `type: pre-include`
+category. Only changes that match at least one `pre-include` category are kept
+for the rest of the pipeline. For example, append the following to your
 `.github/release-drafter.yml` file:
 
 ```yml
@@ -515,8 +514,8 @@ categories:
         - "app-foo"
 ```
 
-Changes with the label "app-foo" will be the only changes included
-in the release draft.
+Changes with the label "app-foo" will be the only changes included in the
+release draft.
 
 ## Exclude Contributors
 
@@ -663,7 +662,9 @@ first place, automation may be an acceptable risk for you too.
 > - `prerelease-identifier` is not required when `prerelease` is enabled, but
 >   your prerelease may not be named after / be associated with a tag that is
 >   semver-compliant to an actual prerelease.
-> - when specified, `prerelease-identifier` enables `prerelease: true` if both values come from the same config location; explicit action inputs still take precedence over config file values
+> - when specified, `prerelease-identifier` enables `prerelease: true` if both
+>   values come from the same config location; explicit action inputs still take
+>   precedence over config file values
 
 If you want your stable releases to include changes since the last prerelease
 instead of the last stable release, use `include-pre-releases: true`. This can
@@ -730,8 +731,8 @@ Release Drafter creates its GitHub client with
 [`@actions/github.getOctokit()`](https://github.com/actions/toolkit/tree/main/packages/github#readme).
 In GitHub Actions, that client uses the runtime API base URL from
 `GITHUB_API_URL`, so the same workflow can target GHES without extra
-`github.com`-specific configuration, assuming the required REST and GraphQL
-APIs are available on the instance.
+`github.com`-specific configuration, assuming the required REST and GraphQL APIs
+are available on the instance.
 
 ## Contributing
 

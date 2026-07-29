@@ -111,9 +111,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Generate dynamic config from template using 'sed'
-        run: sed "s|{{CURR_REF}}|${{ github.ref }}|g"
-          .github/release-drafter-template.yml >
-          .github/release-drafter-parsed.yml
+        run: |
+          sed "s|{{CURR_REF}}|${{ github.ref }}|g" \
+            .github/release-drafter-template.yml \
+            > .github/release-drafter-parsed.yml
       - name: Use dynamic release-drafter configuration
         uses: release-drafter/release-drafter@v7
         with:
@@ -154,8 +155,8 @@ template: |
 ```
 
 > [!note]  
-> The same syntax as `config_name:` applies to `_extends` (and to the `from`
-> key of its mapping form below). Below all produce the same output :
+> The same syntax as `config_name:` applies to `_extends` (and to the `from` key
+> of its mapping form below). Below all produce the same output :
 >
 > - `_extends: ../configs/release-drafter-common.yml`
 > - `_extends: github:/configs/release-drafter-common.yml`
@@ -165,14 +166,14 @@ template: |
 
 ### Merge strategies for `_extends`
 
-Configs in an `_extends` chain are merged shallowly: a key in the extending
-file replaces the inherited value entirely. That is usually what you want,
-but for list keys (`categories`, `autolabeler`, `replacers`, ...) it means an
-extending file cannot add entries without repeating the whole inherited list.
+Configs in an `_extends` chain are merged shallowly: a key in the extending file
+replaces the inherited value entirely. That is usually what you want, but for
+list keys (`categories`, `autolabeler`, `replacers`, ...) it means an extending
+file cannot add entries without repeating the whole inherited list.
 
-The mapping form of `_extends` lets the extending file pick a merge strategy
-per key: `from` is the target (same syntax as the string form), `strategy`
-maps config keys to how they merge:
+The mapping form of `_extends` lets the extending file pick a merge strategy per
+key: `from` is the target (same syntax as the string form), `strategy` maps
+config keys to how they merge:
 
 ```yml
 # your-org/.github: .github/release-drafter.yml
@@ -208,27 +209,27 @@ categories:
 
 Semantics :
 
-- Available strategies are `override` (the default for every key, identical
-  to the shallow merge above), `append` (the inherited list plus the
-  extending file's entries, in that order), and `prepend` (the extending
-  file's entries first). Categories are evaluated in the order they are
-  defined, so the strategy decides where the file's own entries land.
-- `append` and `prepend` only work on list values. Merging a key whose own
-  or inherited value is present and not a list fails with an error naming
-  the key and the file. An absent or empty (`categories:`) value counts as
-  an empty list.
-- A file's `strategy` governs only the step where that file itself is
-  merged onto the configs it extends; it is not inherited. In a chain
-  `A extends B extends C`, `B`'s strategy applies when `B` is merged onto
-  `C`, and `A`'s strategy applies when `A` is merged onto that result. A
-  file without a strategy overrides, even if a file below it appended.
+- Available strategies are `override` (the default for every key, identical to
+  the shallow merge above), `append` (the inherited list plus the extending
+  file's entries, in that order), and `prepend` (the extending file's entries
+  first). Categories are evaluated in the order they are defined, so the
+  strategy decides where the file's own entries land.
+- `append` and `prepend` only work on list values. Merging a key whose own or
+  inherited value is present and not a list fails with an error naming the key
+  and the file. An absent or empty (`categories:`) value counts as an empty
+  list.
+- A file's `strategy` governs only the step where that file itself is merged
+  onto the configs it extends; it is not inherited. In a chain
+  `A extends B extends C`, `B`'s strategy applies when `B` is merged onto `C`,
+  and `A`'s strategy applies when `A` is merged onto that result. A file without
+  a strategy overrides, even if a file below it appended.
 - Like the string form, the `_extends` key is stripped from the composed
   configuration and never reaches the config schema.
 
 > [!warning]  
 > Older release-drafter versions only understand the plain string form of
-> `_extends` and fail on the mapping form. Make sure every repository using
-> it runs an action version that supports it.
+> `_extends` and fail on the mapping form. Make sure every repository using it
+> runs an action version that supports it.
 
 ### Org-wide config via the `.github` repo
 
@@ -249,6 +250,7 @@ template: |
 ```
 
 > [!note]
+>
 > The fallback only applies when:
 >
 > - the `config-name:` does not explicitly target another repository, and
