@@ -482,7 +482,7 @@ var commonConfigSchema = object({
 	*/
 	"include-pre-releases": stringbool().or(boolean()).optional(),
 	/**
-	* The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to. Tag and pull request refs are resolved to commit SHAs. Defaults to the branch that release-drafter runs for, e.g. `master` when configured to run on pushes to `master`.
+	* The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to. Tag and pull request refs are resolved to commit SHAs. Defaults to the branch that release-drafter runs for, e.g. `main` when configured to run on pushes to `main`.
 	*/
 	commitish: string().optional(),
 	/**
@@ -844,6 +844,10 @@ var exclusiveConfigSchema = object({
 	*/
 	"new-contributor-template": string().optional().default("* $AUTHOR_MENTION made their first contribution in #$NUMBER"),
 	/**
+	* The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list.
+	*/
+	"no-new-contributor-template": string().optional().default("* No new contributors"),
+	/**
 	* The template to use for `$CONTRIBUTORS` when there's no contributors to list.
 	*/
 	"no-contributors-template": string().optional().default("No contributors"),
@@ -906,7 +910,7 @@ var exclusiveConfigSchema = object({
 	template: string().optional().default("")
 }).meta({
 	title: "JSON schema for Release Drafter yaml files",
-	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
+	id: "https://github.com/release-drafter/release-drafter/blob/main/drafter/schema.json"
 });
 var configSchema = exclusiveConfigSchema.and(commonConfigSchema);
 var configSchemaDefaults = Object.fromEntries(Object.entries({
@@ -2946,7 +2950,7 @@ var generateNewContributorsList = (params) => {
 		if (!previous || (pullRequest.mergedAt ?? "") < (previous.mergedAt ?? "")) firstPullRequestByLogin.set(pullRequest.author.login, pullRequest);
 	}
 	const entries = [...firstPullRequestByLogin.entries()].filter(([, pullRequest]) => includedPullRequestKeys.has(pullRequestKey(pullRequest))).sort(([, a], [, b]) => (a.mergedAt ?? "").localeCompare(b.mergedAt ?? "") || a.number - b.number);
-	if (entries.length === 0) return "";
+	if (entries.length === 0) return config["no-new-contributor-template"];
 	return entries.map(([login, pullRequest]) => renderTemplate({
 		template: config["new-contributor-template"],
 		object: {
