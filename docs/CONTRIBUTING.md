@@ -79,7 +79,8 @@ npm version [major | minor | patch] --ignore-scripts=false
 
 > [!IMPORTANT]
 >
-> - You may want the version increment to correspond to the last drafted release.
+> - You may want the version increment to correspond to the last drafted
+>   release.
 > - You can use a version number instead of `major | minor | patch` if needed.
 > - This repository sets `ignore-scripts=true` in `.npmrc`, so the flag above is
 >   required when you want `npm version` to run the release lifecycle scripts.

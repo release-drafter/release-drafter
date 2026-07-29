@@ -11,6 +11,7 @@
         "bierner.markdown-preview-github-styles",
         "davidanson.vscode-markdownlint",
         "biomejs.biome",
+        "esbenp.prettier-vscode",
         "github.copilot",
         "github.copilot-chat",
         "github.vscode-github-actions",
@@ -22,6 +23,9 @@
       ],
       "settings": {
         "editor.defaultFormatter": "biomejs.biome",
+        "[markdown]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
         "editor.tabSize": 2,
         "editor.formatOnSave": true,
         "markdown.extension.list.indentationSize": "adaptive",

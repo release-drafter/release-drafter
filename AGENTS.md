@@ -14,27 +14,28 @@ the code generated from `src/`. CI checks that `dist/` is up to date.
 
 ## Repository Structure
 
-| Path             | Description                                      |
-| ---------------- | ------------------------------------------------ |
-| `.devcontainer/` | Development container configuration              |
-| `.github/`       | GitHub configuration                             |
-| `.licenses/`     | License information                              |
-| `.vscode/`       | VS Code configuration                            |
-| `autolabeler/`   | Entrypoint for the Autolabeler action            |
-| `badges/`        | Badges for README                                |
-| `coverage/`      | Non-versioned coverage output                    |
-| `dist/`          | Generated JavaScript code                        |
-| `docs/`          | Documentation complementary to `README.md`       |
-| `drafter/`       | Entrypoint for the Drafter action                |
-| `src/`           | TypeScript source code                           |
-| `.node-version`  | Node.js version configuration                    |
-| `biome.jsonc`    | Biome linter and formatter configuration         |
-| `action.yml`     | Entrypoint to the Drafter action                 |
-| `vite.config.ts` | Vite configuration for bundling and testing      |
-| `LICENSE`        | License file                                     |
-| `package.json`   | NPM package configuration                        |
-| `README.md`      | Project documentation                            |
-| `tsconfig.json`  | TypeScript configuration                         |
+| Path              | Description                                 |
+| ----------------- | ------------------------------------------- |
+| `.devcontainer/`  | Development container configuration         |
+| `.github/`        | GitHub configuration                        |
+| `.licenses/`      | License information                         |
+| `.vscode/`        | VS Code configuration                       |
+| `autolabeler/`    | Entrypoint for the Autolabeler action       |
+| `badges/`         | Badges for README                           |
+| `coverage/`       | Non-versioned coverage output               |
+| `dist/`           | Generated JavaScript code                   |
+| `docs/`           | Documentation complementary to `README.md`  |
+| `drafter/`        | Entrypoint for the Drafter action           |
+| `src/`            | TypeScript source code                      |
+| `.node-version`   | Node.js version configuration               |
+| `biome.jsonc`     | Biome linter and formatter configuration    |
+| `.prettierrc.yml` | Prettier configuration, Markdown only       |
+| `action.yml`      | Entrypoint to the Drafter action            |
+| `vite.config.ts`  | Vite configuration for bundling and testing |
+| `LICENSE`         | License file                                |
+| `package.json`    | NPM package configuration                   |
+| `README.md`       | Project documentation                       |
+| `tsconfig.json`   | TypeScript configuration                    |
 
 ## Setup
 
@@ -54,6 +55,10 @@ npm run all
 ```
 
 CI will fail if generated files are stale.
+
+Biome formats every language it supports. Markdown is not one of them, so
+Prettier formats `.md` files via `npm run format:md:write` (already included in
+`npm run all`). Do not point Prettier at any other file type.
 
 ## Testing
 
