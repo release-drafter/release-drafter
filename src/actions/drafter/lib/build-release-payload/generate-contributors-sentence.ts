@@ -172,7 +172,10 @@ export const generateNewContributorsList = (params: {
   newContributorLogins: ReadonlySet<string>
   config: Pick<
     ParsedConfig,
-    'categories' | 'exclude-contributors' | 'new-contributor-template'
+    | 'categories'
+    | 'exclude-contributors'
+    | 'new-contributor-template'
+    | 'no-new-contributor-template'
   >
 }) => {
   const { pullRequests, newContributorLogins, config } = params
@@ -207,7 +210,7 @@ export const generateNewContributorsList = (params: {
         (a.mergedAt ?? '').localeCompare(b.mergedAt ?? '') ||
         a.number - b.number,
     )
-  if (entries.length === 0) return ''
+  if (entries.length === 0) return config['no-new-contributor-template']
 
   return entries
     .map(([login, pullRequest]) =>

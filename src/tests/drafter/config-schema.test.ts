@@ -130,7 +130,17 @@ const suites: SuiteParams[] = [
     parseValid: false,
   },
   {
-    parseInput: { template, 'category-template': null },
+    parseInput: { template, 'new-contributor-template': null },
+    errorContains: 'Invalid input: expected string, received null',
+    parseValid: false,
+  },
+  {
+    parseInput: { template, 'no-new-contributor-template': ['No new'] },
+    errorContains: 'Invalid input: expected string, received array',
+    parseValid: false,
+  },
+  {
+    parseInput: { template, 'no-new-contributor-template': null },
     errorContains: 'Invalid input: expected string, received null',
     parseValid: false,
   },

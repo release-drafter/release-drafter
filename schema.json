@@ -114,6 +114,10 @@
       "default": "* $AUTHOR_MENTION made their first contribution in #$NUMBER",
       "type": "string"
     },
+    "no-new-contributor-template": {
+      "default": "* No new contributors",
+      "type": "string"
+    },
     "no-contributors-template": {
       "default": "No contributors",
       "type": "string"

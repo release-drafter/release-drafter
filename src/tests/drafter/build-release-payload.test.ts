@@ -1118,6 +1118,29 @@ describe('generate contributors sentence', () => {
     ).toBe('* @first-timer made their first contribution in #42')
   })
 
+  it('renders default placeholder when there are no new contributors', () => {
+    expect(
+      generateNewContributorsList({
+        pullRequests: [userPullRequest],
+        newContributorLogins: new Set(),
+        config,
+      }),
+    ).toBe('* No new contributors')
+  })
+
+  it('renders a custom placeholder when there are no new contributors', () => {
+    expect(
+      generateNewContributorsList({
+        pullRequests: [userPullRequest],
+        newContributorLogins: new Set(),
+        config: {
+          ...config,
+          'no-new-contributor-template': 'Nobody made their first contribution',
+        },
+      }),
+    ).toBe('Nobody made their first contribution')
+  })
+
   it('renders new contributors with a custom template', () => {
     const newContributorPullRequest = {
       ...userPullRequest,
@@ -1183,7 +1206,7 @@ describe('generate contributors sentence', () => {
         newContributorLogins: new Set(['first-timer']),
         config: skipConfig,
       }),
-    ).toBe('')
+    ).toBe('* No new contributors')
   })
 
   it('excludes contributors whose pull requests are excluded', () => {
