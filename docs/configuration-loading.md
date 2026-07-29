@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD033 -->
+
 # Configuration Loading
 
 When specifying your `config-name:` inside the action's inputs, you can leverage
@@ -109,8 +111,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Generate dynamic config from template using 'sed'
-        run:
-          sed "s|{{CURR_REF}}|${{ github.ref }}|g"
+        run: sed "s|{{CURR_REF}}|${{ github.ref }}|g"
           .github/release-drafter-template.yml >
           .github/release-drafter-parsed.yml
       - name: Use dynamic release-drafter configuration
@@ -132,7 +133,7 @@ template: |
 ```yml
 # .github/release-drafter/backend.yml
 _extends: /configs/release-drafter-common.yml
-tag-template: 'backend/v$RESOLVED_VERSION'
+tag-template: "backend/v$RESOLVED_VERSION"
 ```
 
 ```yaml
@@ -145,7 +146,7 @@ steps:
 Imported config will be :
 
 ```yml
-tag-template: 'backend/v$RESOLVED_VERSION'
+tag-template: "backend/v$RESOLVED_VERSION"
 template: |
   ## What’s Changed
 
@@ -176,9 +177,9 @@ maps config keys to how they merge:
 ```yml
 # your-org/.github: .github/release-drafter.yml
 categories:
-  - title: '🚀 Features'
+  - title: "🚀 Features"
     when:
-      label: 'feature'
+      label: "feature"
 ```
 
 ```yml
@@ -188,21 +189,21 @@ _extends:
   strategy:
     categories: append
 categories:
-  - type: 'pre-exclude'
+  - type: "pre-exclude"
     when:
-      label: 'skip-changelog'
+      label: "skip-changelog"
 ```
 
 Imported config will be :
 
 ```yml
 categories:
-  - title: '🚀 Features'
+  - title: "🚀 Features"
     when:
-      label: 'feature'
-  - type: 'pre-exclude'
+      label: "feature"
+  - type: "pre-exclude"
     when:
-      label: 'skip-changelog'
+      label: "skip-changelog"
 ```
 
 Semantics :

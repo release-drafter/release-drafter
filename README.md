@@ -1,4 +1,4 @@
-<!-- <!-- markdownlint-disable MD033 --> -->
+<!-- markdownlint-disable MD033 -->
 
 <h1 align="center">
   <img src="docs/design/logo.svg" alt="Release Drafter Logo" width="450" />
