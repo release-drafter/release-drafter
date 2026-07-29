@@ -11,6 +11,8 @@
     },
   ],
   "dependencyDashboard": false,
+  // Renovate docs: this makes PR titles conventional, e.g. chore(deps): update eslint to v7.30.0.
+  // Release Drafter categorizes Renovate PRs from those titles, not from the labels below.
   "semanticCommits": "enabled",
   "labels": ["type: dependencies"],
   "rangeStrategy": "bump",
@@ -24,6 +26,7 @@
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
+      // Keep Actions updates out of chore(deps); Release Drafter treats ci(deps) as a dependency update.
       "semanticCommitType": "ci",
       "labels": ["type: maintenance"],
     },

@@ -14,36 +14,57 @@ template: |
 categories:
   - title: 'Breaking'
     semver-increment: 'major'
+    exclusive: true
     when:
-      label: 'type: breaking'
+      conventional:
+        breaking: true
   - title: 'New'
     semver-increment: 'minor'
+    exclusive: true
     when:
-      label: 'type: feature'
-  - title: 'Bug Fixes'
-    semver-increment: 'patch'
-    when:
-      label: 'type: bug'
-  - title: 'Maintenance'
-    semver-increment: 'patch'
-    when:
-      label: 'type: maintenance'
-  - title: 'Documentation'
-    semver-increment: 'patch'
-    when:
-      label: 'type: docs'
-  - title: 'Other changes'
+      conventional:
+        type: 'feat'
   - title: 'Dependency Updates'
     semver-increment: 'patch'
+    exclusive: true
     when:
-      labels: 
-        - 'type: dependencies'
-        - 'dependencies'
+      conventional:
+        scopes:
+          - 'deps'
+          - 'deps-dev'
+        types:
+          - 'build'
+          - 'chore'
+          - 'ci'
+          - 'fix'
     collapse-after: 5
-  - type: 'version-resolver'
+  - title: 'Bug Fixes'
     semver-increment: 'patch'
+    exclusive: true
     when:
-      label: 'type: security'
+      conventional:
+        type: 'fix'
+  - title: 'Maintenance'
+    semver-increment: 'patch'
+    exclusive: true
+    when:
+      conventional:
+        types:
+          - 'build'
+          - 'chore'
+          - 'ci'
+          - 'perf'
+          - 'refactor'
+          - 'revert'
+          - 'style'
+          - 'test'
+  - title: 'Documentation'
+    semver-increment: 'patch'
+    exclusive: true
+    when:
+      conventional:
+        type: 'docs'
+  - title: 'Other changes'
   - type: 'pre-exclude'
     when:
       label: 'skip-changelog'
