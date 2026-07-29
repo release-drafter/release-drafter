@@ -1206,7 +1206,7 @@ describe('generate contributors sentence', () => {
         newContributorLogins: new Set(['first-timer']),
         config: skipConfig,
       }),
-    ).toBe('')
+    ).toBe('* No new contributors')
   })
 
   it('excludes contributors whose pull requests are excluded', () => {
