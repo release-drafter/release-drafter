@@ -15,21 +15,39 @@ template: |
 categories:
   - title: 'Breaking'
     semver-increment: 'major'
+    exclusive: true
     when:
       conventional:
         breaking: true
   - title: 'New'
     semver-increment: 'minor'
+    exclusive: true
     when:
       conventional:
         type: 'feat'
+  - title: 'Dependency Updates'
+    semver-increment: 'patch'
+    exclusive: true
+    when:
+      conventional:
+        scopes:
+          - 'deps'
+          - 'deps-dev'
+        types:
+          - 'build'
+          - 'chore'
+          - 'ci'
+          - 'fix'
+    collapse-after: 5
   - title: 'Bug Fixes'
     semver-increment: 'patch'
+    exclusive: true
     when:
       conventional:
         type: 'fix'
   - title: 'Maintenance'
     semver-increment: 'patch'
+    exclusive: true
     when:
       conventional:
         types:
@@ -43,27 +61,11 @@ categories:
           - 'test'
   - title: 'Documentation'
     semver-increment: 'patch'
+    exclusive: true
     when:
       conventional:
         type: 'docs'
   - title: 'Other changes'
-  - title: 'Dependency Updates'
-    semver-increment: 'patch'
-    when:
-      conventional:
-        scopes:
-          - 'deps'
-          - 'deps-dev'
-        types:
-          - 'build'
-          - 'chore'
-    collapse-after: 5
-  - type: 'version-resolver'
-    semver-increment: 'patch'
-    when:
-      conventional:
-        scope: 'deps'
-        type: 'fix'
   - type: 'pre-exclude'
     when:
       label: 'skip-changelog'
