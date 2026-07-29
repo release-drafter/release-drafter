@@ -400,7 +400,7 @@ export const exclusiveConfigSchema = object({
   template: string().optional().default(''),
 }).meta({
   title: 'JSON schema for Release Drafter yaml files',
-  id: 'https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json',
+  id: 'https://github.com/release-drafter/release-drafter/blob/main/drafter/schema.json',
 })
 
 export const configSchema = exclusiveConfigSchema.and(commonConfigSchema)

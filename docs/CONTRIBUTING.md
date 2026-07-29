@@ -72,7 +72,7 @@ or opening a new one.
 Run the following command:
 
 ```bash
-git checkout master
+git checkout main
 git pull
 npm version [major | minor | patch] --ignore-scripts=false
 ```

@@ -27,7 +27,7 @@ var commonConfigSchema = object({
 	*/
 	"include-pre-releases": stringbool().or(boolean()).optional(),
 	/**
-	* The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to. Tag and pull request refs are resolved to commit SHAs. Defaults to the branch that release-drafter runs for, e.g. `master` when configured to run on pushes to `master`.
+	* The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to. Tag and pull request refs are resolved to commit SHAs. Defaults to the branch that release-drafter runs for, e.g. `main` when configured to run on pushes to `main`.
 	*/
 	commitish: string().optional(),
 	/**
@@ -451,7 +451,7 @@ var exclusiveConfigSchema = object({
 	template: string().optional().default("")
 }).meta({
 	title: "JSON schema for Release Drafter yaml files",
-	id: "https://github.com/release-drafter/release-drafter/blob/master/drafter/schema.json"
+	id: "https://github.com/release-drafter/release-drafter/blob/main/drafter/schema.json"
 });
 var configSchema = exclusiveConfigSchema.and(commonConfigSchema);
 var configSchemaDefaults = Object.fromEntries(Object.entries({
