@@ -67,7 +67,7 @@ inputs:
       The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to.
       Tag and pull request refs are resolved to commit SHAs.
       Pull request merge refs force dry-run mode and disable publishing because they point to ephemeral merge commits.
-      Defaults to the branch that release-drafter runs for, e.g. `master` when configured to run on pushes to `master`.
+      Defaults to the branch that release-drafter runs for, e.g. `main` when configured to run on pushes to `main`.
     required: false
     default: ''
   header:
