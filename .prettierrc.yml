@@ -11,3 +11,16 @@ proseWrap: always
 tabWidth: 2
 useTabs: false
 endOfLine: lf
+
+# Prettier formats code inside fenced blocks, and it does so with its own
+# defaults rather than Biome's. Left alone it rewrites JavaScript examples with
+# double quotes and semicolons, contradicting the style of the code they
+# document. These mirror `javascript.formatter` in biome.jsonc and must stay in
+# sync with it.
+singleQuote: true
+semi: false
+quoteProps: as-needed
+trailingComma: all
+bracketSpacing: true
+bracketSameLine: false
+arrowParens: always

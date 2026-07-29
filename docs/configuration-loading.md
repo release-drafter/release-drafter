@@ -134,7 +134,7 @@ template: |
 ```yml
 # .github/release-drafter/backend.yml
 _extends: /configs/release-drafter-common.yml
-tag-template: "backend/v$RESOLVED_VERSION"
+tag-template: 'backend/v$RESOLVED_VERSION'
 ```
 
 ```yaml
@@ -147,7 +147,7 @@ steps:
 Imported config will be :
 
 ```yml
-tag-template: "backend/v$RESOLVED_VERSION"
+tag-template: 'backend/v$RESOLVED_VERSION'
 template: |
   ## What’s Changed
 
@@ -178,9 +178,9 @@ config keys to how they merge:
 ```yml
 # your-org/.github: .github/release-drafter.yml
 categories:
-  - title: "🚀 Features"
+  - title: '🚀 Features'
     when:
-      label: "feature"
+      label: 'feature'
 ```
 
 ```yml
@@ -190,21 +190,21 @@ _extends:
   strategy:
     categories: append
 categories:
-  - type: "pre-exclude"
+  - type: 'pre-exclude'
     when:
-      label: "skip-changelog"
+      label: 'skip-changelog'
 ```
 
 Imported config will be :
 
 ```yml
 categories:
-  - title: "🚀 Features"
+  - title: '🚀 Features'
     when:
-      label: "feature"
-  - type: "pre-exclude"
+      label: 'feature'
+  - type: 'pre-exclude'
     when:
-      label: "skip-changelog"
+      label: 'skip-changelog'
 ```
 
 Semantics :
