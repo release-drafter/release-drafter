@@ -52,7 +52,7 @@ The `file:` schemes requires the runtime's file-system (the runner's) to have
 the file at hand. If the desired file is in your repo, make sure to use
 `actions/checkout`.
 
-> [!note]  
+> [!note]
 > If you want to use an unmodified copy of the config that was pushed to your
 > repo on the same event your workflow is running for, you need neither the
 > `file:` scheme nor the `actions/checkout` action.
@@ -154,7 +154,7 @@ template: |
   $CHANGES
 ```
 
-> [!note]  
+> [!note]
 > The same syntax as `config_name:` applies to `_extends` (and to the `from` key
 > of its mapping form below). Below all produce the same output :
 >
@@ -226,7 +226,7 @@ Semantics :
 - Like the string form, the `_extends` key is stripped from the composed
   configuration and never reaches the config schema.
 
-> [!warning]  
+> [!warning]
 > Older release-drafter versions only understand the plain string form of
 > `_extends` and fail on the mapping form. Make sure every repository using it
 > runs an action version that supports it.

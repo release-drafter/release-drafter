@@ -46,7 +46,7 @@ The action requires a configuration file. Default location is
 `.github/release-drafter.yml`, and will be fetched using octokit behind the
 scenes. You do not need to checkout your repository beforehand.
 
-> [!note]  
+> [!note]
 > For advanced scenarios, please read dedicated
 > [Configuration Loading](./docs/configuration-loading.md) article. (ex: dynamic
 > config, extending other files, fetch from another repo, etc...)
