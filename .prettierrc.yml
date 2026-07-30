@@ -1,13 +1,19 @@
-# See: https://prettier.io/docs/en/configuration
-#
-# Prettier is scoped to Markdown only. Biome owns every other language in this
-# repository, but it has no Markdown formatter, so `.md` files were silently
-# skipped by `biome check` (unknown file types are ignored). The `format:md:*`
-# scripts and the ignore rules in .prettierignore keep the two tools from
-# formatting the same files.
+# Markdown only; Biome owns every other language but cannot format Markdown.
 
 printWidth: 80
-proseWrap: always
+# Keep authored line breaks. Reflowing rewraps prose that reads fine and, since
+# a URL cannot be broken, pushes long links onto their own line.
+proseWrap: preserve
 tabWidth: 2
 useTabs: false
 endOfLine: lf
+
+# Applied to code in fenced blocks. Mirrors `javascript.formatter` in
+# biome.jsonc; keep in sync.
+singleQuote: true
+semi: false
+quoteProps: as-needed
+trailingComma: all
+bracketSpacing: true
+bracketSameLine: false
+arrowParens: always

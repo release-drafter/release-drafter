@@ -46,7 +46,7 @@ The action requires a configuration file. Default location is
 `.github/release-drafter.yml`, and will be fetched using octokit behind the
 scenes. You do not need to checkout your repository beforehand.
 
-> [!note]  
+> [!note]
 > For advanced scenarios, please read dedicated
 > [Configuration Loading](./docs/configuration-loading.md) article. (ex: dynamic
 > config, extending other files, fetch from another repo, etc...)
@@ -72,34 +72,34 @@ The following is a more complicated configuration, which categorises the changes
 into headings, and automatically suggests the next version number:
 
 ```yml
-name-template: "v$RESOLVED_VERSION 🌈"
-tag-template: "v$RESOLVED_VERSION"
+name-template: 'v$RESOLVED_VERSION 🌈'
+tag-template: 'v$RESOLVED_VERSION'
 categories:
-  - title: "🚀 Features"
+  - title: '🚀 Features'
     semver-increment: minor
     when:
       labels:
-        - "feature"
-        - "enhancement"
-  - title: "🐛 Bug Fixes"
+        - 'feature'
+        - 'enhancement'
+  - title: '🐛 Bug Fixes'
     when:
       labels:
-        - "fix"
-        - "bugfix"
-        - "bug"
-  - title: "🧰 Maintenance"
+        - 'fix'
+        - 'bugfix'
+        - 'bug'
+  - title: '🧰 Maintenance'
     when:
-      label: "chore"
-  - type: "pre-exclude"
+      label: 'chore'
+  - type: 'pre-exclude'
     when:
-      label: "skip-changelog"
-  - type: "version-resolver"
-    semver-increment: "major"
+      label: 'skip-changelog'
+  - type: 'version-resolver'
+    semver-increment: 'major'
     when:
-      label: "major"
-  - type: "version-resolver"
-    semver-increment: "patch"
-change-template: "- $TITLE (#$NUMBER) $AUTHORS"
+      label: 'major'
+  - type: 'version-resolver'
+    semver-increment: 'patch'
+change-template: '- $TITLE (#$NUMBER) $AUTHORS'
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 template: |
   ## Changes
@@ -215,7 +215,7 @@ You can use any of the following variables in `version-template` to format the
 You may want to use this when producing non semver output.
 
 ```yaml
-version-template: "ver $MAJOR"
+version-template: 'ver $MAJOR'
 ```
 
 > [!IMPORTANT]
@@ -224,7 +224,7 @@ version-template: "ver $MAJOR"
 > versions parseable by semver.coerce() (we enbale `loose` mode)
 >
 > ```ts
-> semver.coerce("ver 1", true); // { version: '1.0.0' }
+> semver.coerce('ver 1', true) // { version: '1.0.0' }
 > ```
 >
 > If you simply want a verbose title for your releases, use the `name-template`
@@ -250,20 +250,20 @@ independently for changelog categories and version-resolver categories.
 
 ```yml
 categories:
-  - type: "version-resolver"
-    semver-increment: "major"
+  - type: 'version-resolver'
+    semver-increment: 'major'
     when:
-      label: "major"
-  - type: "version-resolver"
-    semver-increment: "minor"
+      label: 'major'
+  - type: 'version-resolver'
+    semver-increment: 'minor'
     when:
-      label: "minor"
-  - type: "version-resolver"
-    semver-increment: "patch"
+      label: 'minor'
+  - type: 'version-resolver'
+    semver-increment: 'patch'
     when:
-      label: "patch"
-  - type: "version-resolver"
-    semver-increment: "patch"
+      label: 'patch'
+  - type: 'version-resolver'
+    semver-increment: 'patch'
 ```
 
 The example above:
@@ -310,7 +310,7 @@ categories:
     when:
       label: bug
   - title: todo
-category-template: ""
+category-template: ''
 change-template: |-
   - type: $CATEGORY
     message: |-
@@ -318,7 +318,7 @@ change-template: |-
     pull: $NUMBER
     authors:
       $AUTHORS
-change-author-template: "- $AUTHOR"
+change-author-template: '- $AUTHOR'
 change-authors-separator: "\n    "
 ```
 
@@ -380,31 +380,31 @@ The condition keys are:
 
 ```yml
 categories:
-  - title: "🚀 Features"
-    semver-increment: "minor"
+  - title: '🚀 Features'
+    semver-increment: 'minor'
     when:
       - conventional:
-          type: "feat"
+          type: 'feat'
       - labels:
-          - "feature"
-          - "enhancement"
-  - title: "🐛 Bug Fixes"
+          - 'feature'
+          - 'enhancement'
+  - title: '🐛 Bug Fixes'
     when:
       - labels:
-          - "bug"
-          - "fix"
+          - 'bug'
+          - 'fix'
       - labels:
-          - "regression"
+          - 'regression'
         paths:
-          - "src/**"
-  - title: "⬆️ Dependencies"
+          - 'src/**'
+  - title: '⬆️ Dependencies'
     collapse-after: 0
     exclusive: true
     when:
-      label: "dependencies"
-  - type: "pre-exclude"
+      label: 'dependencies'
+  - type: 'pre-exclude'
     when:
-      label: "skip-changelog"
+      label: 'skip-changelog'
 ```
 
 The `labels-mode` and `paths-mode` options control how the configured labels or
@@ -417,20 +417,20 @@ header. Set it to `true` to match any conventional title, or configure
 
 ```yml
 categories:
-  - title: "Conventional Changes"
+  - title: 'Conventional Changes'
     when:
       conventional: true
-  - title: "🚀 Features"
-    semver-increment: "minor"
+  - title: '🚀 Features'
+    semver-increment: 'minor'
     when:
       conventional:
-        type: "feat"
-  - title: "💥 Breaking API Changes"
-    semver-increment: "major"
+        type: 'feat'
+  - title: '💥 Breaking API Changes'
+    semver-increment: 'major'
     when:
       conventional:
-        type: "feat"
-        scope: "api"
+        type: 'feat'
+        scope: 'api'
         breaking: true
 ```
 
@@ -478,10 +478,10 @@ to your category as following:
 
 ```yml
 categories:
-  - title: "⬆️ Dependencies"
+  - title: '⬆️ Dependencies'
     collapse-after: 3
     when:
-      label: "dependencies"
+      label: 'dependencies'
 ```
 
 ## Exclude Changes
@@ -491,9 +491,9 @@ example, append the following to your `.github/release-drafter.yml` file:
 
 ```yml
 categories:
-  - type: "pre-exclude"
+  - type: 'pre-exclude'
     when:
-      label: "skip-changelog"
+      label: 'skip-changelog'
 ```
 
 Changes with the label "skip-changelog" will now be excluded from the release
@@ -508,10 +508,10 @@ for the rest of the pipeline. For example, append the following to your
 
 ```yml
 categories:
-  - type: "pre-include"
+  - type: 'pre-include'
     when:
       labels:
-        - "app-foo"
+        - 'app-foo'
 ```
 
 Changes with the label "app-foo" will be the only changes included in the
@@ -526,7 +526,7 @@ include yourself, to better highlight only the third-party contributions.
 
 ```yml
 exclude-contributors:
-  - "myusername"
+  - 'myusername'
 ```
 
 ## Replacers
@@ -538,10 +538,10 @@ order.
 ```yml
 replacers:
   - search: '/CVE-(\d{4})-(\d+)/g'
-    replace: "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2"
-  - search: "myname"
-    replace: "My Name"
-  - search: "/- ([a-z])/g"
+    replace: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2'
+  - search: 'myname'
+    replace: 'My Name'
+  - search: '/- ([a-z])/g'
     replace: '- \u$1' # Uppercase the first letter of each changelog entry
 ```
 
@@ -584,21 +584,21 @@ at least one of the matchers meets the criteria.
 ```yml
 # .github/release-drafter.yml
 autolabeler:
-  - label: "chore"
+  - label: 'chore'
     files:
-      - "*.md"
+      - '*.md'
     branch:
       - '/docs{0,1}\/.+/'
-  - label: "bug"
+  - label: 'bug'
     branch:
       - '/fix\/.+/'
     title:
-      - "/fix/i"
-  - label: "enhancement"
+      - '/fix/i'
+  - label: 'enhancement'
     branch:
       - '/feature\/.+/'
     body:
-      - "/JIRA-[0-9]{1,4}/"
+      - '/JIRA-[0-9]{1,4}/'
 
 # ... rest of release-drafter config
 ```
@@ -637,7 +637,7 @@ jobs:
       - uses: release-drafter/release-drafter@v6
         with:
           prerelease: true
-          prerelease-identifier: "rc" # Use semver identifiers : alpha, beta, rc, etc
+          prerelease-identifier: 'rc' # Use semver identifiers : alpha, beta, rc, etc
 ```
 
 Here, both jobs run in parallel every time you add changes to the configured
