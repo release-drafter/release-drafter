@@ -1,9 +1,13 @@
-# Generated or vendored output.
+# Markdown only; Biome owns every other language.
+# `!*/` is required: gitignore cannot re-include a file under an excluded directory.
+*
+!*/
+!**/*.md
+
 dist
 coverage
 .licenses
 logs
 
-# Release note content shipped to users, not documentation. Reflowing these
-# templates would rewrite the text that ends up in drafted releases.
+# Release note templates, shipped to users as content.
 src/actions/drafter/lib/build-release-payload/static

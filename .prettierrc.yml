@@ -1,10 +1,4 @@
-# See: https://prettier.io/docs/en/configuration
-#
-# Prettier is scoped to Markdown only. Biome owns every other language in this
-# repository, but it has no Markdown formatter, so `.md` files were silently
-# skipped by `biome check` (unknown file types are ignored). The `format:md:*`
-# scripts and the ignore rules in .prettierignore keep the two tools from
-# formatting the same files.
+# Markdown only; Biome owns every other language but cannot format Markdown.
 
 printWidth: 80
 proseWrap: always
@@ -12,11 +6,8 @@ tabWidth: 2
 useTabs: false
 endOfLine: lf
 
-# Prettier formats code inside fenced blocks, and it does so with its own
-# defaults rather than Biome's. Left alone it rewrites JavaScript examples with
-# double quotes and semicolons, contradicting the style of the code they
-# document. These mirror `javascript.formatter` in biome.jsonc and must stay in
-# sync with it.
+# Applied to code in fenced blocks. Mirrors `javascript.formatter` in
+# biome.jsonc; keep in sync.
 singleQuote: true
 semi: false
 quoteProps: as-needed
