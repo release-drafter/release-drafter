@@ -1,13 +1,4 @@
-# Markdown only; Biome owns every other language.
-# `!*/` is required: gitignore cannot re-include a file under an excluded directory.
+# Markdown only; `!*/` lets the negation reach files below the root.
 *
 !*/
-!**/*.md
-
-dist
-coverage
-.licenses
-logs
-
-# Release note templates, shipped to users as content.
-src/actions/drafter/lib/build-release-payload/static
+!*.md
