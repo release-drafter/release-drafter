@@ -1,4 +1,3 @@
-import * as core from '@actions/core'
 import type { ReleaseType, SemVer } from 'semver'
 import coerce from 'semver/functions/coerce.js'
 import inc from 'semver/functions/inc.js'
@@ -8,6 +7,7 @@ import parse from 'semver/functions/parse.js'
 import patch from 'semver/functions/patch.js'
 import prerelease from 'semver/functions/prerelease.js'
 import type { Config } from '#src/actions/drafter/config/index.ts'
+import { type Logger, noopLogger } from '#src/common/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import { renderTemplate } from './render-template/index.ts'
 
@@ -26,14 +26,17 @@ export class VersionDescriptor {
 
   public preReleaseIdentifier?: string
   public tagPrefix?: string
+  private logger: Logger
 
   constructor(
     from: SemVer | Pick<Release, 'tag_name' | 'name'> | string | undefined,
-    opt?: {
+    opt: {
       preReleaseIdentifier?: string
       tagPrefix?: Config['tag-prefix']
+      logger?: Logger
     },
   ) {
+    this.logger = opt.logger ?? noopLogger
     this.preReleaseIdentifier = opt?.preReleaseIdentifier
     this.tagPrefix = opt?.tagPrefix
 
@@ -63,14 +66,14 @@ export class VersionDescriptor {
           : this._toSemver(this._stripTag(from))
 
       if (!ver) {
-        core.warning(
+        this.logger.warning(
           `Failed to parse version from input ${from}. Defaulting coerced version to null.`,
         )
         return null
       }
       return ver
     } else {
-      core.debug(
+      this.logger.debug(
         `Building version descriptor without version input. Defaulting coerced version to null.`,
       )
       return null
@@ -137,6 +140,7 @@ export class VersionDescriptor {
     return new VersionDescriptor(_incrementedSemver, {
       tagPrefix: this.tagPrefix,
       preReleaseIdentifier: this.preReleaseIdentifier,
+      logger: this.logger,
     })
   }
 

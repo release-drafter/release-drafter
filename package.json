@@ -4,7 +4,23 @@
   "version": "7.7.0",
   "author": "",
   "type": "module",
-  "private": true,
+  "types": "./dist/types/drafter.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist/cli.js",
+    "dist/drafter.js",
+    "dist/chunks/public",
+    "dist/types"
+  ],
+  "bin": {
+    "release-drafter": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types/drafter.d.ts",
+      "default": "./dist/drafter.js"
+    }
+  },
   "homepage": "https://github.com/release-drafter/release-drafter",
   "repository": {
     "type": "git",
@@ -29,8 +45,11 @@
   },
   "scripts": {
     "build": "vite build",
+    "prepack": "npm run build",
+    "cli": "npm run build --silent && node dist/cli.js",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:container": "vitest run --config vitest.container.config.ts",
     "coverage": "node src/scripts/coverage-summary.ts",
     "tsc:check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "format:write": "biome format --write .",
@@ -41,7 +60,7 @@
     "check": "biome check --write .",
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "schemas": "node src/scripts/json-schema.ts",
-    "all": "npm run check && npm run format:md:write && npm run tsc:check && npm run test:run && npm run schemas && npm run build",
+    "all": "npm run check && npm run format:md:write && npm run build && npm run tsc:check && npm run test:run && npm run schemas",
     "check:clean": "node src/scripts/check-clean.ts",
     "preversion": "npm run all && npm run check:clean",
     "version": "git add package.json package-lock.json",
@@ -52,18 +71,21 @@
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
     "@graphql-typed-document-node/core": "^3.2.0",
+    "@octokit/core": "^7.0.6",
     "@octokit/graphql": "^9.0.3",
     "@octokit/plugin-paginate-graphql": "^6.0.0",
+    "@octokit/plugin-paginate-rest": "^14.0.0",
     "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
     "@octokit/plugin-retry": "^8.1.0",
     "@octokit/request-error": "^7.1.0",
     "@octokit/types": "^16.0.0",
+    "cac": "^7.0.0",
     "compare-versions": "^6.1.1",
+    "consola": "^3.4.2",
     "conventional-commits-parser": "^6.4.0",
     "escape-string-regexp": "^5.0.0",
     "graphql": "^17.0.2",
     "ignore": "^7.0.6",
-    "regex-parser": "^2.3.1",
     "semver": "^7.8.5",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
@@ -80,6 +102,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "nock": "^14.0.16",
     "prettier": "^3.9.6",
+    "testcontainers": "^12.0.4",
     "typescript": "^7.0.2",
     "vite": "^8.1.4",
     "vitest": "^4.1.10"

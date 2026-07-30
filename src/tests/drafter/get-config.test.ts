@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getConfig } from '#src/actions/drafter/config/get-config.ts'
-import { mocks } from '#tests/mocks/index.ts'
+import { mocks, testGitHubContext } from '#tests/mocks/index.ts'
 
 describe('get drafter config', () => {
   it('logs the file path and ref for every fetched remote config', async () => {
@@ -20,7 +20,7 @@ describe('get drafter config', () => {
       },
     ])
 
-    await getConfig('release-drafter.yml')
+    await getConfig('release-drafter.yml', testGitHubContext())
 
     expect(mocks.core.info).toHaveBeenCalledWith(
       'Config fetched from "octocat/hello-world/.github/release-drafter.yml@main".',
@@ -41,7 +41,7 @@ describe('get drafter config', () => {
       },
     ])
 
-    await getConfig('release-drafter.yml')
+    await getConfig('release-drafter.yml', testGitHubContext())
 
     expect(mocks.core.info).toHaveBeenCalledWith(
       'Config fetched locally from "config/release-drafter.yml".',

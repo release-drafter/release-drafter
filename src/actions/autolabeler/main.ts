@@ -1,35 +1,36 @@
-import * as core from '@actions/core'
-import { context } from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import ignore from 'ignore'
-import { getOctokit, getPullRequestChangedFiles } from '#src/common/index.ts'
+import {
+  type GitHubContext,
+  getPullRequestChangedFiles,
+} from '#src/common/index.ts'
 import type { ParsedConfig } from './config/index.ts'
 
 export const main = async (params: {
   config: ParsedConfig
   dryRun?: boolean
+  eventName: string
+  payload: PullRequestEvent
+  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo'>
 }) => {
-  core.info(
-    `Running for event "${context.eventName || '[undefined]'}.${context.payload.action || '[undefined]'}"`,
+  const { logger, octokit, repo } = params.github
+  logger.info(
+    `Running for event "${params.eventName || '[undefined]'}.${params.payload.action || '[undefined]'}"`,
   )
 
   if (
-    context.eventName !== 'pull_request' &&
-    context.eventName !== 'pull_request_target'
+    params.eventName !== 'pull_request' &&
+    params.eventName !== 'pull_request_target'
   ) {
     throw new Error(
-      `Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`,
+      `Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${params.eventName}'`,
     )
   }
-  const octokit = getOctokit()
 
-  /**
-   * @see https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request
-   */
-  const payload = context.payload as PullRequestEvent
+  const payload = params.payload
 
   const changedFiles = await getPullRequestChangedFiles(octokit, {
-    ...context.repo,
+    ...repo,
     pull_number: payload.number,
   })
   const labels = new Set<string>()
@@ -43,7 +44,7 @@ export const main = async (params: {
       if (changedFiles.some((file) => matcher.ignores(file))) {
         labels.add(autolabel.label)
         found = true
-        core.info(`Found label for files: '${autolabel.label}'`)
+        logger.info(`Found label for files: '${autolabel.label}'`)
       }
     }
 
@@ -53,7 +54,7 @@ export const main = async (params: {
         if (matcher.test(payload.pull_request.head.ref)) {
           labels.add(autolabel.label)
           found = true
-          core.info(`Found label for branch: '${autolabel.label}'`)
+          logger.info(`Found label for branch: '${autolabel.label}'`)
           break
         }
       }
@@ -65,7 +66,7 @@ export const main = async (params: {
         if (matcher.test(payload.pull_request.title)) {
           labels.add(autolabel.label)
           found = true
-          core.info(`Found label for title: '${autolabel.label}'`)
+          logger.info(`Found label for title: '${autolabel.label}'`)
           break
         }
       }
@@ -81,7 +82,7 @@ export const main = async (params: {
         if (matcher.test(payload.pull_request.body)) {
           labels.add(autolabel.label)
           found = true
-          core.info(`Found label for body: '${autolabel.label}'`)
+          logger.info(`Found label for body: '${autolabel.label}'`)
           break
         }
       }
@@ -90,12 +91,12 @@ export const main = async (params: {
 
   if (labels.size > 0) {
     if (params.dryRun) {
-      core.info(
+      logger.info(
         `[dry-run] Would add labels [${Array.from(labels).join(', ')}] to PR #${payload.number}`,
       )
     } else {
       await octokit.rest.issues.addLabels({
-        ...context.repo,
+        ...repo,
         issue_number: payload.number,
         labels: Array.from(labels),
       })

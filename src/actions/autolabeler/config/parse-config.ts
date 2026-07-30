@@ -1,5 +1,4 @@
-import * as core from '@actions/core'
-import { stringToRegex } from '#src/common/index.ts'
+import { type Logger, stringToRegex } from '#src/common/index.ts'
 import type { Config } from './config.schema.ts'
 
 /**
@@ -9,7 +8,13 @@ import type { Config } from './config.schema.ts'
  *
  * Input takes precedence, because it's more easy to change at runtime
  */
-export const parseConfig = ({ config: originalConfig }: { config: Config }) => {
+export const parseConfig = ({
+  config: originalConfig,
+  logger,
+}: {
+  config: Config
+  logger: Logger
+}) => {
   const config = structuredClone(originalConfig)
 
   // Apply some transformations
@@ -30,7 +35,7 @@ export const parseConfig = ({ config: originalConfig }: { config: Config }) => {
           }),
         }
       } catch {
-        core.warning(
+        logger.warning(
           `Bad autolabeler regex: '${autolabel.branch}', '${autolabel.title}' or '${autolabel.body}'`,
         )
         return false

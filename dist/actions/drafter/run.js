@@ -1,4 +1,459 @@
-import { A as setOutput, C as stringbool, D as getInput, E as error, M as __commonJSMin, N as __toESM, O as info, S as string, T as debug, _ as array, a as parseCommitishForRelease, b as number, c as executeGraphql, d as getPullRequestsChangedFiles, f as composeConfigGet, g as _enum, h as ZodDefault, i as sharedInputSchema, j as warning, k as setFailed, l as paginateGraphql, m as context, n as stringToRegex, o as FindCommitsInComparisonDocument, p as getOctokit, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, v as boolean, w as union, x as object, y as literal } from "../../chunks/ignore.js";
+import { i as __toESM, t as __commonJSMin } from "../../chunks/actions/rolldown-runtime.js";
+import { C as setFailed, S as info, _ as union, b as core_exports, c as ZodDefault, d as boolean, f as literal, g as stringbool, h as string, i as sharedInputSchema, l as _enum, m as object, n as stringToRegex, o as getPullRequestsChangedFiles, p as number, r as escapeStringRegexp, s as composeConfigGet, t as require_ignore, u as array, v as getActionOctokit, w as setOutput, x as getInput, y as context } from "../../chunks/actions/ignore.js";
+import process$1 from "node:process";
+//#region src/common/logger.ts
+var noop = () => {};
+var noopLogger = {
+	debug: noop,
+	error: noop,
+	info: noop,
+	warning: noop
+};
+//#endregion
+//#region src/common/resolve-api-mode.ts
+/**
+* Decides whether to drive a forge through REST only, because it has no GraphQL
+* API.
+*
+* Resolution runs most-specific first, and never inspects a version number: what
+* matters is whether a GraphQL endpoint exists, not which build is serving it.
+*
+* 1. An explicit choice from `--rest` or the library option always wins.
+* 2. The API URL, which describes the *target*. GitHub serves `api.github.com`,
+*    GitHub Enterprise Server serves REST at `/api/v3` and GraphQL at
+*    `/api/graphql`; Gitea and Forgejo serve REST at `/api/v1` and have no
+*    GraphQL at all, so the path segment separates them.
+* 3. `GITHUB_GRAPHQL_URL`, which describes the *host*. Gitea and Forgejo runners
+*    set it empty while GitHub populates it, so an empty value means the
+*    surrounding forge has no GraphQL. It is checked after the API URL precisely
+*    because the two can disagree — running this inside a Gitea job against
+*    github.com leaves it empty even though the target does have GraphQL.
+* 4. Otherwise assume GraphQL, matching the unconfigured `api.github.com` default.
+*
+* A forge that later ships GraphQL is picked up automatically at step 3 once its
+* runner populates the variable.
+*/
+var resolveRestOnly = (options = {}) => {
+	if (options.explicit !== void 0) return options.explicit;
+	const fromApiUrl = restOnlyFromApiUrl(options.apiUrl);
+	if (fromApiUrl !== void 0) return fromApiUrl;
+	const graphqlUrl = options.graphqlUrl === void 0 ? process$1.env.GITHUB_GRAPHQL_URL : options.graphqlUrl;
+	if (typeof graphqlUrl === "string") return graphqlUrl.trim() === "";
+	return false;
+};
+var restOnlyFromApiUrl = (apiUrl) => {
+	if (!apiUrl) return void 0;
+	let url;
+	try {
+		url = new URL(apiUrl);
+	} catch {
+		return;
+	}
+	if (url.hostname === "api.github.com" || url.hostname === "github.com") return false;
+	const path = url.pathname.replace(/\/+$/, "");
+	if (path.endsWith("/api/v3")) return false;
+	if (path.endsWith("/api/v1")) return true;
+};
+//#endregion
+//#region src/common/graphql.ts
+var executeGraphql = (client, document, variables) => client(document.toString(), variables);
+/**
+* Iterate a generated GraphQL document's paginated connection one page at a
+* time, following the same plugin conventions as {@link paginateGraphql}.
+*
+* Prefer {@link paginateGraphql}; reach for this only when a caller has to stop
+* before the connection is exhausted, which merging every page cannot express.
+*/
+var paginateGraphqlIterator = (client, document, variables) => client.paginate.iterator(document.toString(), variables);
+//#endregion
+//#region src/types/github.graphql.generated.ts
+var TypedDocumentString = class extends String {
+	__apiType;
+	value;
+	__meta__;
+	constructor(value, __meta__) {
+		super(value);
+		this.value = value;
+		this.__meta__ = __meta__;
+	}
+	toString() {
+		return this.value;
+	}
+};
+new TypedDocumentString(`
+    fragment PullRequestFields on PullRequest {
+  __typename
+  title
+  number
+  url @include(if: $withPullRequestURL)
+  body @include(if: $withPullRequestBody)
+  author {
+    __typename
+    login
+    url
+  }
+  baseRepository {
+    __typename
+    nameWithOwner
+  }
+  mergedAt
+  isCrossRepository
+  labels(first: 100) {
+    __typename
+    nodes {
+      __typename
+      name
+    }
+  }
+  merged
+  baseRefName @include(if: $withBaseRefName)
+  headRefName @include(if: $withHeadRefName)
+}
+    `, { "fragmentName": "PullRequestFields" });
+new TypedDocumentString(`
+    fragment ComparisonCommitFields on Commit {
+  __typename
+  id
+  oid
+  committedDate
+  message
+  author {
+    __typename
+    name
+    user {
+      __typename
+      login
+    }
+  }
+  authors(first: 100) {
+    nodes {
+      __typename
+      name
+      user {
+        __typename
+        login
+      }
+    }
+  }
+  associatedPullRequests(first: $pullRequestLimit) {
+    __typename
+    nodes {
+      ...PullRequestFields
+    }
+  }
+}
+    fragment PullRequestFields on PullRequest {
+  __typename
+  title
+  number
+  url @include(if: $withPullRequestURL)
+  body @include(if: $withPullRequestBody)
+  author {
+    __typename
+    login
+    url
+  }
+  baseRepository {
+    __typename
+    nameWithOwner
+  }
+  mergedAt
+  isCrossRepository
+  labels(first: 100) {
+    __typename
+    nodes {
+      __typename
+      name
+    }
+  }
+  merged
+  baseRefName @include(if: $withBaseRefName)
+  headRefName @include(if: $withHeadRefName)
+}`, { "fragmentName": "ComparisonCommitFields" });
+var FindCommitsInComparisonDocument = new TypedDocumentString(`
+    query findCommitsInComparison($name: String!, $owner: String!, $baseCommitish: String!, $headCommitish: String!, $useCommitishes: Boolean!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $cursor: String, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!, $pullRequestLimit: Int!, $historyLimit: Int!) {
+  repository(name: $name, owner: $owner) {
+    ref(qualifiedName: $baseCommitish) @skip(if: $useCommitishes) {
+      compare(headRef: $headCommitish) {
+        commits(first: $historyLimit, after: $cursor) {
+          __typename
+          pageInfo {
+            __typename
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            ...ComparisonCommitFields
+          }
+        }
+      }
+    }
+    head: object(expression: $headCommitish) @include(if: $useCommitishes) {
+      __typename
+      ... on Commit {
+        history(first: $historyLimit, after: $cursor) {
+          __typename
+          pageInfo {
+            __typename
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            ...ComparisonCommitFields
+          }
+        }
+      }
+    }
+  }
+}
+    fragment ComparisonCommitFields on Commit {
+  __typename
+  id
+  oid
+  committedDate
+  message
+  author {
+    __typename
+    name
+    user {
+      __typename
+      login
+    }
+  }
+  authors(first: 100) {
+    nodes {
+      __typename
+      name
+      user {
+        __typename
+        login
+      }
+    }
+  }
+  associatedPullRequests(first: $pullRequestLimit) {
+    __typename
+    nodes {
+      ...PullRequestFields
+    }
+  }
+}
+fragment PullRequestFields on PullRequest {
+  __typename
+  title
+  number
+  url @include(if: $withPullRequestURL)
+  body @include(if: $withPullRequestBody)
+  author {
+    __typename
+    login
+    url
+  }
+  baseRepository {
+    __typename
+    nameWithOwner
+  }
+  mergedAt
+  isCrossRepository
+  labels(first: 100) {
+    __typename
+    nodes {
+      __typename
+      name
+    }
+  }
+  merged
+  baseRefName @include(if: $withBaseRefName)
+  headRefName @include(if: $withHeadRefName)
+}`);
+new TypedDocumentString(`
+    query findCommitsWithPathChangesQuery($name: String!, $owner: String!, $targetCommitish: String!, $after: String, $path: String) {
+  repository(name: $name, owner: $owner) {
+    object(expression: $targetCommitish) {
+      ... on Commit {
+        __typename
+        history(path: $path, after: $after) {
+          __typename
+          pageInfo {
+            __typename
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            __typename
+            id
+          }
+        }
+      }
+    }
+  }
+}
+    `);
+var FindRecentMergedPullRequestsDocument = new TypedDocumentString(`
+    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
+  repository(name: $name, owner: $owner) {
+    pullRequests(
+      states: [MERGED]
+      baseRefName: $baseRefName
+      orderBy: { field: UPDATED_AT, direction: DESC }
+      first: $limit
+    ) {
+      __typename
+      nodes {
+        ...PullRequestFields
+        mergeCommit {
+          __typename
+          oid
+        }
+      }
+    }
+  }
+}
+    fragment PullRequestFields on PullRequest {
+  __typename
+  title
+  number
+  url @include(if: $withPullRequestURL)
+  body @include(if: $withPullRequestBody)
+  author {
+    __typename
+    login
+    url
+  }
+  baseRepository {
+    __typename
+    nameWithOwner
+  }
+  mergedAt
+  isCrossRepository
+  labels(first: 100) {
+    __typename
+    nodes {
+      __typename
+      name
+    }
+  }
+  merged
+  baseRefName @include(if: $withBaseRefName)
+  headRefName @include(if: $withHeadRefName)
+}`);
+var ResolveCommitishDocument = new TypedDocumentString(`
+    query resolveCommitish($name: String!, $owner: String!, $expression: String!) {
+  repository(name: $name, owner: $owner) {
+    object(expression: $expression) {
+      __typename
+      oid
+    }
+  }
+}
+    `);
+var ResolvePullRequestCommitishDocument = new TypedDocumentString(`
+    query resolvePullRequestCommitish($name: String!, $owner: String!, $number: Int!) {
+  repository(name: $name, owner: $owner) {
+    pullRequest(number: $number) {
+      headRefOid
+      mergeCommit {
+        oid
+      }
+      potentialMergeCommit {
+        oid
+      }
+    }
+  }
+}
+    `);
+//#endregion
+//#region src/common/parse-commitish.ts
+var commitishToCommitExpression = (commitish) => `${commitish}^{commit}`;
+/**
+* Gitea and Forgejo have no GraphQL API, so the tag and pull request resolvers
+* below fall back to REST. `git/commits/{ref}` peels an annotated tag to its
+* commit the same way GraphQL's `refs/tags/x^{commit}` expression does.
+*/
+var resolveTagToCommitShaRest = async (params) => {
+	const { octokit, tagRef, repo } = params;
+	const response = await octokit.request("GET /repos/{owner}/{repo}/git/commits/{commit_sha}", {
+		owner: repo.owner,
+		repo: repo.repo,
+		commit_sha: tagRef.replace(/^refs\/tags\//, "")
+	});
+	if (!response.data.sha) throw new Error(`Tag ${tagRef} does not point to a commit`);
+	return response.data.sha;
+};
+var resolvePullRequestToCommitShaRest = async (params) => {
+	const { octokit, pullRequestNumber, refType, repo } = params;
+	const { data } = await octokit.rest.pulls.get({
+		owner: repo.owner,
+		repo: repo.repo,
+		pull_number: pullRequestNumber
+	});
+	const commitSha = refType === "head" ? data.head.sha : data.merge_commit_sha;
+	if (!commitSha) throw new Error(`Pull request #${pullRequestNumber} does not have a ${refType} commit`);
+	return commitSha;
+};
+var resolveTagToCommitSha = async (params) => {
+	const { octokit, tagRef, repo } = params;
+	const target = (await executeGraphql(octokit.graphql, ResolveCommitishDocument, {
+		name: repo.repo,
+		owner: repo.owner,
+		expression: commitishToCommitExpression(tagRef)
+	})).repository?.object;
+	if (target?.__typename !== "Commit") throw new Error(`Tag ${tagRef} does not point to a commit`);
+	return target.oid;
+};
+var resolvePullRequestToCommitSha = async (params) => {
+	const { octokit, pullRequestNumber, refType, repo } = params;
+	const pullRequest = (await executeGraphql(octokit.graphql, ResolvePullRequestCommitishDocument, {
+		name: repo.repo,
+		owner: repo.owner,
+		number: pullRequestNumber
+	})).repository?.pullRequest;
+	const commitSha = refType === "head" ? pullRequest?.headRefOid : pullRequest?.potentialMergeCommit?.oid ?? pullRequest?.mergeCommit?.oid;
+	if (!commitSha) throw new Error(`Pull request #${pullRequestNumber} does not have a ${refType} commit`);
+	return commitSha;
+};
+/**
+* GitHub's Releases API accepts a branch name or commit SHA as
+* `target_commitish`. Normalize fully qualified branch refs, resolve fully
+* qualified tag and pull request refs to commit SHAs before building the API
+* payload.
+*
+* A tag without the `refs/tags/` prefix cannot be distinguished reliably from
+* a branch with the same name, so it is passed through unchanged.
+*
+* If ref resolution fails, preserve the existing fallback to the repository's
+* default branch.
+*/
+var parseCommitishForRelease = async (commitish, github) => {
+	const { logger, octokit, repo, restOnly } = github;
+	if (commitish.startsWith("refs/heads/")) return commitish.replace(/^refs\/heads\//, "");
+	if (commitish.startsWith("refs/tags/")) return (restOnly ? resolveTagToCommitShaRest : resolveTagToCommitSha)({
+		octokit,
+		repo,
+		tagRef: commitish
+	}).catch(() => {
+		logger.warning(`${commitish} could not be resolved to a commit SHA, falling back to default branch`);
+		return "";
+	});
+	if (commitish.startsWith("refs/pull/")) {
+		const pullRequestRef = /^refs\/pull\/(\d+)\/(head|merge)$/.exec(commitish);
+		if (pullRequestRef) {
+			const [, pullRequestNumber, refType] = pullRequestRef;
+			return (restOnly ? resolvePullRequestToCommitShaRest : resolvePullRequestToCommitSha)({
+				octokit,
+				repo,
+				pullRequestNumber: Number(pullRequestNumber),
+				refType
+			}).catch(() => {
+				logger.warning(`${commitish} could not be resolved to a commit SHA, falling back to default branch`);
+				return "";
+			});
+		}
+		logger.warning(`${commitish} is not a supported pull request ref, falling back to default branch`);
+		return "";
+	}
+	return commitish;
+};
+//#endregion
 //#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
@@ -467,11 +922,15 @@ var configSchemaDefaults = Object.fromEntries(Object.entries({
 }));
 //#endregion
 //#region src/actions/drafter/config/get-config.ts
-var getConfig = async (configName) => {
-	const { config, contexts } = await composeConfigGet(configName, context);
+var getConfig = async (configName, github) => {
+	const { config, contexts } = await composeConfigGet(configName, {
+		repo: github.repo,
+		ref: github.ref ?? ""
+	}, github.octokit, github.logger);
 	contexts.forEach(({ filepath, ref, repo, scheme }) => {
 		const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ""}`;
-		info(`Config fetched ${scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`}.`);
+		const location = scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`;
+		github.logger.info(`Config fetched ${location}.`);
 	});
 	return configSchema.parse(config);
 };
@@ -1263,8 +1722,8 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	};
 }));
 //#endregion
-//#region src/actions/drafter/config/parse-categories.ts
-var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+//#region node_modules/semver/ranges/valid.js
+var require_valid = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var Range = require_range();
 	var validRange = (range, options) => {
 		try {
@@ -1274,17 +1733,19 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 		}
 	};
 	module.exports = validRange;
-})))(), 1);
+}));
+//#endregion
+//#region src/actions/drafter/config/parse-categories.ts
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
 var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
-var normalizeConventional = (conventional) => {
+var normalizeConventional = (conventional, logger) => {
 	if (!conventional) return;
 	if (conventional === true) return {
 		types: [],
 		scopes: [],
 		breaking: void 0
 	};
-	if (Object.keys(conventional).length === 0) warning("Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.");
+	if (Object.keys(conventional).length === 0) logger.warning("Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.");
 	return {
 		types: [...conventional.types || [], ...conventional.type ? [conventional.type] : []],
 		scopes: [...conventional.scopes || [], ...conventional.scope ? [conventional.scope] : []],
@@ -1308,17 +1769,17 @@ var normalizeConventional = (conventional) => {
 * @param categories - Categories from the raw config
 * @returns Array of fully parsed categories with normalized conditions
 */
-function parseCategories(categories, deprecatedConfig) {
+function parseCategories(categories, deprecatedConfig, logger) {
 	const parsedCategories = structuredClone(categories.categories).map((cat) => {
 		const { labels, label, when: _when, "collapse-after": rawCollapseAfter, "semver-increment": rawSemverIncrement, exclusive: rawExclusive, title, ..._cat } = cat;
 		const collapseAfter = rawCollapseAfter ?? categorySchemaDefaults["collapse-after"];
 		const semverIncrement = rawSemverIncrement ?? categorySchemaDefaults["semver-increment"];
 		const exclusive = rawExclusive ?? categorySchemaDefaults.exclusive;
 		const deprecatedLabels = [...labels || [], ...label ? [label] : []];
-		if (deprecatedLabels.length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
+		if (deprecatedLabels.length > 0) logger.warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
 		const parsedWhenConditions = (_when !== void 0 ? Array.isArray(_when) ? _when.length > 0 || deprecatedLabels.length === 0 ? _when : [{}] : [_when] : deprecatedLabels.length > 0 ? [{}] : []).map((condition) => {
 			const { path, label, conventional, ..._cond } = condition;
-			const normalizedConventional = normalizeConventional(conventional);
+			const normalizedConventional = normalizeConventional(conventional, logger);
 			return {
 				..._cond,
 				"labels-mode": condition["labels-mode"] ?? changeConditionSchemaDefaults["labels-mode"],
@@ -1343,8 +1804,8 @@ function parseCategories(categories, deprecatedConfig) {
 				title
 			};
 			case "version-resolver":
-				if (title) warning(`Title "${title}" ignored for category of type "${categoryType}"`);
-				if (collapseAfter !== -1) warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
+				if (title) logger.warning(`Title "${title}" ignored for category of type "${categoryType}"`);
+				if (collapseAfter !== -1) logger.warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
 				return {
 					type: "version-resolver",
 					when: parsedWhenConditions,
@@ -1353,10 +1814,10 @@ function parseCategories(categories, deprecatedConfig) {
 				};
 			case "pre-exclude":
 			case "pre-include":
-				if (title) warning(`Title "${title}" ignored for category of type "${categoryType}"`);
-				if (collapseAfter !== -1) warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
+				if (title) logger.warning(`Title "${title}" ignored for category of type "${categoryType}"`);
+				if (collapseAfter !== -1) logger.warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
 				if (exclusive) throw new Error(`"exclusive" can only be set on categories of type "changelog" or "version-resolver"; it cannot be used on category of type "${categoryType}".`);
-				if (semverIncrement !== "patch") warning(`"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`);
+				if (semverIncrement !== "patch") logger.warning(`"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`);
 				return {
 					type: categoryType,
 					when: parsedWhenConditions
@@ -1364,7 +1825,7 @@ function parseCategories(categories, deprecatedConfig) {
 			default: throw new Error(`Unsupported category type: ${categoryType}`);
 		}
 	});
-	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`));
+	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) logger.warning(withMigrationDocumentationLink(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`));
 	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) {
 		if (parsedCategories.findIndex((cat) => cat.type === "pre-exclude") !== -1) throw new Error("A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels field. Please either remove the deprecated field or remove the existing 'pre-exclude' category to resolve this conflict.");
 		parsedCategories.push({
@@ -1378,7 +1839,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["include-labels"] && deprecatedConfig["include-labels"].length > 0 || deprecatedConfig["include-paths"] && deprecatedConfig["include-paths"].length > 0) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'include-labels' or 'include-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-include"' category.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'include-labels' or 'include-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-include"' category.`));
 		if (parsedCategories.findIndex((cat) => cat.type === "pre-include") !== -1) throw new Error("A 'pre-include' category already exists. Cannot migrate deprecated include-labels or include-paths fields. Please either remove the deprecated fields or remove the existing 'pre-include' category to resolve this conflict.");
 		parsedCategories.push({
 			type: "pre-include",
@@ -1391,7 +1852,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["version-resolver"].default !== configSchemaDefaults["version-resolver"].default) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.default' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "${deprecatedConfig["version-resolver"].default}"' to 'type: changelog' category with no 'when' condition (uncategorized changes), or move the default resolver to a new category with type 'version-resolver' and 'semver-increment' set to "${deprecatedConfig["version-resolver"].default}" - also without 'when' conditions.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.default' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "${deprecatedConfig["version-resolver"].default}"' to 'type: changelog' category with no 'when' condition (uncategorized changes), or move the default resolver to a new category with type 'version-resolver' and 'semver-increment' set to "${deprecatedConfig["version-resolver"].default}" - also without 'when' conditions.`));
 		if (parsedCategories.findIndex((cat) => cat.type === "version-resolver" && cat.when.length === 0) !== -1) throw new Error("A 'version-resolver' category with no 'when' condition already exists. Cannot migrate deprecated 'version-resolver.default' field. Please either remove the deprecated field or remove the existing 'version-resolver' category to resolve this conflict.");
 		parsedCategories.push({
 			type: "version-resolver",
@@ -1401,7 +1862,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["version-resolver"].major.labels !== configSchemaDefaults["version-resolver"].major.labels && deprecatedConfig["version-resolver"].major.labels.length > 0) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.major.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "major"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.major.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'major'.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.major.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "major"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.major.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'major'.`));
 		parsedCategories.push({
 			type: "version-resolver",
 			"semver-increment": "major",
@@ -1415,7 +1876,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["version-resolver"].minor.labels !== configSchemaDefaults["version-resolver"].minor.labels && deprecatedConfig["version-resolver"].minor.labels.length > 0) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.minor.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "minor"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.minor.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'minor'.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.minor.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "minor"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.minor.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'minor'.`));
 		parsedCategories.push({
 			type: "version-resolver",
 			"semver-increment": "minor",
@@ -1429,7 +1890,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["version-resolver"].patch.labels !== configSchemaDefaults["version-resolver"].patch.labels && deprecatedConfig["version-resolver"].patch.labels.length > 0) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.patch.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "patch"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.patch.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'patch'.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.patch.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "patch"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.patch.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'patch'.`));
 		parsedCategories.push({
 			type: "version-resolver",
 			"semver-increment": "patch",
@@ -1446,6 +1907,7 @@ function parseCategories(categories, deprecatedConfig) {
 }
 //#endregion
 //#region src/actions/drafter/config/merge-input-and-config.ts
+var import_valid = /* @__PURE__ */ __toESM(require_valid(), 1);
 /**
 * Returns a copy of `config`, updated with values from `input`.
 *
@@ -1463,10 +1925,10 @@ var mergeInputAndConfig = (params) => {
 		"exclude-paths": excludePaths,
 		"version-resolver": versionResolver
 	};
-	applyOverrides(config, input);
-	const { commitish, latest, prerelease } = getParsedDefaults(config);
-	const replacers = getTransformedReplacers(config);
-	const categories = getTransformedCategories(config, deprecatedCategoryConfig);
+	applyOverrides(config, input, params.logger);
+	const { commitish, latest, prerelease } = getParsedDefaults(config, params.ref);
+	const replacers = getTransformedReplacers(config, params.logger);
+	const categories = getTransformedCategories(config, deprecatedCategoryConfig, params.logger);
 	const parsedConfig = {
 		...config,
 		commitish,
@@ -1478,60 +1940,60 @@ var mergeInputAndConfig = (params) => {
 	validateParsedConfig(parsedConfig);
 	return parsedConfig;
 };
-var applyOverrides = (config, input) => {
-	applyStringOverride(config, input, "commitish");
-	applyStringOverride(config, input, "header");
-	applyStringOverride(config, input, "footer");
-	applyStringOverride(config, input, "prerelease-identifier");
-	applyBooleanOverride(config, input, "prerelease");
-	applyBooleanOverride(config, input, "include-pre-releases");
-	applyBooleanOverride(config, input, "latest");
-	applyStringOverride(config, input, "filter-by-range");
-	applyReleaseModeOverrides(config, input);
+var applyOverrides = (config, input, logger) => {
+	applyStringOverride(config, input, "commitish", logger);
+	applyStringOverride(config, input, "header", logger);
+	applyStringOverride(config, input, "footer", logger);
+	applyStringOverride(config, input, "prerelease-identifier", logger);
+	applyBooleanOverride(config, input, "prerelease", logger);
+	applyBooleanOverride(config, input, "include-pre-releases", logger);
+	applyBooleanOverride(config, input, "latest", logger);
+	applyStringOverride(config, input, "filter-by-range", logger);
+	applyReleaseModeOverrides(config, input, logger);
 };
-var applyReleaseModeOverrides = (config, input) => {
+var applyReleaseModeOverrides = (config, input, logger) => {
 	if (config.latest && config.prerelease) {
-		warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
+		logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
 		config.latest = false;
 	}
 	const hasInputPrerelease = typeof input.prerelease === "boolean";
 	const hasInputPrereleaseIdentifier = !!input["prerelease-identifier"];
 	if (config["prerelease-identifier"] && !config.prerelease && (!hasInputPrerelease || hasInputPrereleaseIdentifier)) {
-		warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
+		logger.warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
 		config.prerelease = true;
 	}
 };
-var applyBooleanOverride = (config, input, key) => {
+var applyBooleanOverride = (config, input, key, logger) => {
 	const inputValue = input[key];
 	if (typeof inputValue !== "boolean") return;
 	const configValue = config[key];
-	if (typeof configValue === "boolean" && configValue !== inputValue) info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
+	if (typeof configValue === "boolean" && configValue !== inputValue) logger.info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
 	config[key] = inputValue;
 };
-var applyStringOverride = (config, input, key) => {
+var applyStringOverride = (config, input, key, logger) => {
 	const inputValue = input[key];
 	if (!inputValue) return;
 	const configValue = config[key];
-	if (configValue && configValue !== inputValue) info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
+	if (configValue && configValue !== inputValue) logger.info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
 	config[key] = inputValue;
 };
-var getParsedDefaults = (config) => ({
-	commitish: config.commitish || context.ref || context.payload.ref,
+var getParsedDefaults = (config, ref) => ({
+	commitish: config.commitish || ref || "",
 	latest: typeof config.latest !== "boolean" ? true : config.latest,
 	prerelease: typeof config.prerelease !== "boolean" ? false : config.prerelease
 });
-var getTransformedReplacers = (config) => config.replacers.map((r) => {
+var getTransformedReplacers = (config, logger) => config.replacers.map((r) => {
 	try {
 		return {
 			...r,
 			search: stringToRegex(r.search)
 		};
 	} catch {
-		warning(`Bad replacer regex: '${r.search}'`);
+		logger.warning(`Bad replacer regex: '${r.search}'`);
 		return false;
 	}
 }).filter((r) => !!r);
-var getTransformedCategories = (config, deprecatedCategoryConfig) => parseCategories(config, deprecatedCategoryConfig);
+var getTransformedCategories = (config, deprecatedCategoryConfig, logger) => parseCategories(config, deprecatedCategoryConfig, logger);
 var validateParsedConfig = (parsedConfig) => {
 	if (!parsedConfig.commitish) throw new Error("'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)");
 	if (parsedConfig.categories.filter((category) => category.type === "changelog" && !category.title).length > 0) throw new Error("Every 'type: \"changelog\"' category must define a non-empty 'title'.");
@@ -1539,26 +2001,39 @@ var validateParsedConfig = (parsedConfig) => {
 	if (parsedConfig["filter-by-range"] && !(0, import_valid.default)(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
 };
 //#endregion
-//#region src/actions/drafter/config/set-action-output.ts
-var setActionOutput = (params) => {
+//#region src/actions/drafter/config/get-release-output.ts
+var getReleaseOutput = (params) => {
 	const { releasePayload, upsertedRelease } = params;
-	info("Set action outputs...");
 	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body, name: releaseName, tag: releaseTagName } = releasePayload;
 	const outputName = upsertedRelease?.data.name ?? releaseName;
 	const outputTagName = upsertedRelease?.data.tag_name ?? releaseTagName;
-	if (upsertedRelease) {
-		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl } } = upsertedRelease;
-		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
-		if (htmlUrl) setOutput("html_url", htmlUrl);
-		if (uploadUrl) setOutput("upload_url", uploadUrl);
-	}
-	if (outputTagName) setOutput("tag_name", outputTagName);
-	if (outputName) setOutput("name", outputName);
-	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
-	if (majorVersion) setOutput("major_version", majorVersion);
-	if (minorVersion) setOutput("minor_version", minorVersion);
-	if (patchVersion) setOutput("patch_version", patchVersion);
-	setOutput("body", body);
+	const releaseId = upsertedRelease?.data.id;
+	const htmlUrl = upsertedRelease?.data.html_url;
+	const uploadUrl = upsertedRelease?.data.upload_url;
+	return {
+		...releaseId && Number.isInteger(releaseId) ? { id: releaseId.toString() } : {},
+		...htmlUrl ? { html_url: htmlUrl } : {},
+		...uploadUrl ? { upload_url: uploadUrl } : {},
+		...outputTagName ? { tag_name: outputTagName } : {},
+		target_commitish: releasePayload.targetCommitish,
+		...params.previousCommitish ? { previous_commitish: params.previousCommitish } : {},
+		draft: releasePayload.draft,
+		prerelease: releasePayload.prerelease,
+		latest: releasePayload.make_latest,
+		dry_run: params.dryRun,
+		...outputName ? { name: outputName } : {},
+		...resolvedVersion ? { resolved_version: resolvedVersion } : {},
+		...majorVersion ? { major_version: majorVersion } : {},
+		...minorVersion ? { minor_version: minorVersion } : {},
+		...patchVersion ? { patch_version: patchVersion } : {},
+		body
+	};
+};
+//#endregion
+//#region src/actions/drafter/config/set-action-output.ts
+var setActionOutput = (params) => {
+	info("Set action outputs...");
+	for (const [name, value] of Object.entries(getReleaseOutput(params))) setOutput(name, value.toString());
 	info("Outputs set!");
 };
 //#endregion
@@ -2396,9 +2871,9 @@ var renderTemplate = (params) => {
 var botSuffix = "[bot]";
 var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
 var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
-var renderAuthorMention = (contributor) => {
+var renderAuthorMention = (contributor, serverUrl) => {
 	if ("name" in contributor) return contributor.name;
-	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.botUrl ?? `${context.serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
+	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.botUrl ?? `${serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
 	if (botUrl) return `[@${contributor.login}](${botUrl})`;
 	return `@${contributor.login}`;
 };
@@ -2408,11 +2883,13 @@ var generateContributorsSentence = (params) => {
 		commits,
 		pullRequests: filterPullRequestsByPreCategories(pullRequests, config.categories),
 		excludeContributors: config["exclude-contributors"],
-		noAuthorsTemplate: config["no-contributors-template"]
+		noAuthorsTemplate: config["no-contributors-template"],
+		serverUrl: params.serverUrl
 	});
 };
 var generateAuthorsSentence = (params) => {
 	const { commits, pullRequests } = params;
+	const serverUrl = params.serverUrl ?? "https://github.com";
 	const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey));
 	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => "mergeCommit" in pullRequest && pullRequest.mergeCommit?.oid ? [pullRequest.mergeCommit.oid] : []));
 	const contributors = /* @__PURE__ */ new Map();
@@ -2451,7 +2928,7 @@ var generateAuthorsSentence = (params) => {
 				template: authorTemplate,
 				object: {
 					$AUTHOR: author,
-					$AUTHOR_MENTION: renderAuthorMention(contributor)
+					$AUTHOR_MENTION: renderAuthorMention(contributor, serverUrl)
 				}
 			});
 		});
@@ -2459,7 +2936,7 @@ var generateAuthorsSentence = (params) => {
 		if (params.authorsFinalSeparator !== void 0 && authors.length > 1) return `${authors.slice(0, -1).join(separator)}${params.authorsFinalSeparator}${authors.at(-1)}`;
 		return authors.join(separator);
 	}
-	const mentions = sortedContributors.map(renderAuthorMention);
+	const mentions = sortedContributors.map((contributor) => renderAuthorMention(contributor, serverUrl));
 	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
 	return mentions[0];
 };
@@ -2502,6 +2979,7 @@ var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 			$NUMBER: pullRequest.number.toString(),
 			$AUTHORS: generateAuthorsSentence({
 				commits: params.commits,
+				serverUrl: params.serverUrl,
 				pullRequests: [pullRequest],
 				noAuthorsTemplate: renderTemplate({
 					template: authorTemplate,
@@ -2539,6 +3017,7 @@ var generateChangeLog = (params) => {
 	if (categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) + uncategorizedPullRequests.length === 0) return config["no-changes-template"];
 	const changeLog = [];
 	if (uncategorizedPullRequests.length > 0) changeLog.push(pullRequestToString({
+		serverUrl: params.serverUrl,
 		commits,
 		pullRequests: uncategorizedPullRequests,
 		config
@@ -2551,6 +3030,7 @@ var generateChangeLog = (params) => {
 		});
 		if (categoryTitle) changeLog.push(categoryTitle, "\n\n");
 		const pullRequestString = pullRequestToString({
+			serverUrl: params.serverUrl,
 			category: category.title,
 			commits,
 			pullRequests: category.pullRequests,
@@ -2671,7 +3151,9 @@ var VersionDescriptor = class VersionDescriptor {
 	prerelease = null;
 	preReleaseIdentifier;
 	tagPrefix;
+	logger;
 	constructor(from, opt) {
+		this.logger = opt.logger ?? noopLogger;
 		this.preReleaseIdentifier = opt?.preReleaseIdentifier;
 		this.tagPrefix = opt?.tagPrefix;
 		this.version = this._coerce(from);
@@ -2684,12 +3166,12 @@ var VersionDescriptor = class VersionDescriptor {
 		if (from) {
 			const ver = typeof from === "object" ? this._isRelease(from) ? this._toSemver(this._stripTag(from.tag_name)) || this._toSemver(this._stripTag(from.name)) : this._toSemver(from) : this._toSemver(this._stripTag(from));
 			if (!ver) {
-				warning(`Failed to parse version from input ${from}. Defaulting coerced version to null.`);
+				this.logger.warning(`Failed to parse version from input ${from}. Defaulting coerced version to null.`);
 				return null;
 			}
 			return ver;
 		} else {
-			debug(`Building version descriptor without version input. Defaulting coerced version to null.`);
+			this.logger.debug(`Building version descriptor without version input. Defaulting coerced version to null.`);
 			return null;
 		}
 	}
@@ -2715,7 +3197,8 @@ var VersionDescriptor = class VersionDescriptor {
 		if (!_incrementedSemver) throw new Error(`Failed to parse version ${_incrementedVersion} after incrementing ${this.version} with increment ${increment}`);
 		return new VersionDescriptor(_incrementedSemver, {
 			tagPrefix: this.tagPrefix,
-			preReleaseIdentifier: this.preReleaseIdentifier
+			preReleaseIdentifier: this.preReleaseIdentifier,
+			logger: this.logger
 		});
 	}
 	rendered(template) {
@@ -2733,24 +3216,27 @@ var VersionDescriptor = class VersionDescriptor {
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/get-version-info.ts
 var getVersionInfo = (params) => {
+	const logger = params.logger ?? noopLogger;
 	const { lastRelease, config, input, versionKeyIncrement: _versionKeyIncrement } = params;
-	info(`Resolving version info based on:`);
-	info(`   - last release: ${lastRelease?.tag_name || "none"}`);
-	info(`   - version input: ${input.version || input.tag || input.name || "none"}`);
-	info(`   - version key increment: ${_versionKeyIncrement}`);
+	logger.info(`🏷️ Resolving version information...`);
+	logger.info(`  last release: ${lastRelease?.tag_name || "none"}`);
+	logger.info(`  version input: ${input.version || input.tag || input.name || "none"}`);
+	logger.info(`  version key increment: ${_versionKeyIncrement}`);
 	let _localIncrement = structuredClone(_versionKeyIncrement);
-	info(`Coerce and parse versions from last release...`);
+	logger.info(`  Coercing and parsing version from last release...`);
 	const versionFromLastRelease = new VersionDescriptor(lastRelease, {
 		tagPrefix: config["tag-prefix"],
-		preReleaseIdentifier: config["prerelease-identifier"]
+		preReleaseIdentifier: config["prerelease-identifier"],
+		logger
 	});
-	info(`Parsed version from last release: ${versionFromLastRelease.version?.format() || "none"}.`);
-	info(`Coerce and parse versions from input...`);
+	logger.info(`  Parsed version from last release: ${versionFromLastRelease.version?.format() || "none"}.`);
+	logger.info(`  Coercing and parsing version from input...`);
 	const versionFromInput = new VersionDescriptor(input.version || input.tag || input.name, {
 		tagPrefix: config["tag-prefix"],
-		preReleaseIdentifier: config["prerelease-identifier"]
+		preReleaseIdentifier: config["prerelease-identifier"],
+		logger
 	});
-	info(`Parsed version from input: ${versionFromInput.version?.format() || "none"}.`);
+	logger.info(`  Parsed version from input: ${versionFromInput.version?.format() || "none"}.`);
 	let referenceVersion;
 	if (versionFromInput.version) {
 		_localIncrement = "no_increment";
@@ -2762,13 +3248,14 @@ var getVersionInfo = (params) => {
 		if (incrementsToPrerelease) {
 			if (lastReleaseIsPrerelease) {
 				if (_localIncrement !== "prerelease") {
-					info(`versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || "none"}). The version will be incremented as a prerelease instead.`);
+					logger.info(`  versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || "none"}). The version will be incremented as a prerelease instead.`);
 					_localIncrement = "prerelease";
 				}
 			}
 		}
 	} else referenceVersion = new VersionDescriptor("0.0.0", {
 		preReleaseIdentifier: config["prerelease-identifier"],
+		logger,
 		tagPrefix: config["tag-prefix"]
 	});
 	return {
@@ -2800,6 +3287,7 @@ var getVersionInfo = (params) => {
 * based on the input and config.
 */
 var renderReleaseName = (params) => {
+	const logger = params.logger ?? noopLogger;
 	let name = structuredClone(params.inputName);
 	const { config, versionInfo } = params;
 	if (name === void 0) name = versionInfo ? renderTemplate({
@@ -2810,7 +3298,7 @@ var renderReleaseName = (params) => {
 		template: name,
 		object: versionInfo
 	});
-	debug(`name: ${name}`);
+	logger.debug(`name: ${name}`);
 	return name;
 };
 //#endregion
@@ -2820,6 +3308,7 @@ var renderReleaseName = (params) => {
 * based on the input and config.
 */
 var renderTagName = (params) => {
+	const logger = params.logger ?? noopLogger;
 	let tagName = structuredClone(params.inputTagName);
 	const { config, versionInfo } = params;
 	if (tagName === void 0) tagName = versionInfo ? renderTemplate({
@@ -2830,7 +3319,7 @@ var renderTagName = (params) => {
 		template: tagName,
 		object: versionInfo
 	});
-	debug(`tag: ${tagName}`);
+	logger.debug(`tag: ${tagName}`);
 	return tagName;
 };
 //#endregion
@@ -2863,6 +3352,7 @@ var getHighestPriority = (params) => {
 	return Math.max(highestPriority ?? 0, priorityMap[emptyWhenCategory["semver-increment"]]);
 };
 var resolveVersionKeyIncrement = (params) => {
+	const logger = params.logger ?? noopLogger;
 	const { pullRequests, config } = params;
 	const filteredPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
 	const changelogPriority = getHighestPriority({
@@ -2877,24 +3367,25 @@ var resolveVersionKeyIncrement = (params) => {
 	}) ?? priorityMap.patch;
 	const resolvedPriority = Math.max(changelogPriority ?? 0, versionResolverPriority);
 	const versionKey = Object.entries(priorityMap).find(([, priority]) => priority === resolvedPriority)?.[0];
-	debug(`versionKey: ${versionKey}`);
+	logger.debug(`versionKey: ${versionKey}`);
 	let versionKeyIncrement = versionKey;
 	if (config.prerelease && config["prerelease-identifier"]) versionKeyIncrement = `pre${versionKeyIncrement}`;
-	info(`Version increment: ${versionKeyIncrement}${!versionKey ? " (default)" : ""}`);
+	logger.info(`Version increment: ${versionKeyIncrement}${!versionKey ? " (default)" : ""}`);
 	return versionKeyIncrement;
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/sort-pull-requests.ts
 var sortPullRequests = (params) => {
+	const logger = params.logger ?? noopLogger;
 	const { pullRequests, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
 	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
 	const sort = sortDirection === "ascending" ? sortAscending : sortDescending;
 	return structuredClone(pullRequests).sort((a, b) => {
 		try {
 			return sort(getSortField(a), getSortField(b));
-		} catch (error$1) {
-			warning(`Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
-			error(error$1);
+		} catch (error) {
+			logger.warning(`Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
+			logger.error(error);
 			return 0;
 		}
 	});
@@ -2928,40 +3419,44 @@ var last_not_found_default = "> [!WARNING]\n> Release Drafter could not find a p
 * Previously known as `generateReleaseInfo`.
 */
 var buildReleasePayload = async (params) => {
-	const { commits, config, input, lastRelease, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests } = params;
-	info(`Building release payload and body...`);
+	const { commits, config, input, lastRelease, previousCommitish, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests } = params;
+	const { logger, octokit, repo, serverUrl } = params.github;
+	logger.info(`📝 Generating release payload and body...`);
 	const sortedPullRequests = sortPullRequests({
 		pullRequests,
-		config
+		config,
+		logger
 	});
-	let body = (config.header || "") + config.template + (!lastRelease ? `\n---\n${renderTemplate({
+	let body = (config.header || "") + config.template + (!lastRelease && !previousCommitish ? `\n---\n${renderTemplate({
 		template: last_not_found_default,
 		object: {
-			$OWNER: context.repo.owner,
-			$REPOSITORY: context.repo.repo
+			$OWNER: repo.owner,
+			$REPOSITORY: repo.repo
 		}
 	})}\n---\n` : "") + (config.footer || "");
 	body = renderTemplate({
 		template: body,
 		object: {
-			$PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : "",
+			$PREVIOUS_TAG: previousCommitish ?? lastRelease?.tag_name ?? "",
 			$CHANGES: generateChangeLog({
 				commits,
 				pullRequests: sortedPullRequests,
-				config
+				config,
+				serverUrl
 			}),
 			$CONTRIBUTORS: generateContributorsSentence({
 				commits,
 				pullRequests: sortedPullRequests,
-				config
+				config,
+				serverUrl
 			}),
 			$NEW_CONTRIBUTORS: generateNewContributorsList({
 				pullRequests: sortedPullRequests,
 				newContributorLogins,
 				config
 			}),
-			$OWNER: context.repo.owner,
-			$REPOSITORY: context.repo.repo
+			$OWNER: repo.owner,
+			$REPOSITORY: repo.repo
 		},
 		replacers: config.replacers
 	});
@@ -2971,10 +3466,12 @@ var buildReleasePayload = async (params) => {
 		input,
 		versionKeyIncrement: resolveVersionKeyIncrement({
 			pullRequests,
-			config
-		})
+			config,
+			logger
+		}),
+		logger
 	});
-	debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`);
+	logger.debug(`🤖 versionInfo: ${JSON.stringify(versionInfo, null, 2)}`);
 	if (versionInfo) body = renderTemplate({
 		template: body,
 		object: versionInfo
@@ -2983,17 +3480,24 @@ var buildReleasePayload = async (params) => {
 		name: renderReleaseName({
 			inputName: input.name,
 			config,
-			versionInfo
+			versionInfo,
+			logger
 		}),
 		tag: renderTagName({
 			inputTagName: input.tag,
 			config,
-			versionInfo
+			versionInfo,
+			logger
 		}),
 		body,
-		targetCommitish: await parseCommitishForRelease(config.commitish),
+		targetCommitish: await parseCommitishForRelease(config.commitish, {
+			octokit,
+			repo,
+			logger,
+			restOnly: params.github.restOnly
+		}),
 		prerelease: config.prerelease,
-		make_latest: config.latest,
+		make_latest: config.prerelease ? false : config.latest,
 		draft: !input.publish,
 		resolvedVersion: versionInfo?.$RESOLVED_VERSION,
 		majorVersion: versionInfo?.$RESOLVED_VERSION_MAJOR,
@@ -3001,19 +3505,19 @@ var buildReleasePayload = async (params) => {
 		patchVersion: versionInfo?.$RESOLVED_VERSION_PATCH,
 		prereleaseVersion: versionInfo?.$RESOLVED_VERSION_PRERELEASE
 	};
-	info(`Release payload built successfully`);
-	info(`  name:                        ${res.name}`);
-	info(`  tag:                         ${res.tag}`);
-	info(`  body:                        ${res.body.length} characters long`);
-	info(`  targetCommitish:             ${res.targetCommitish}`);
-	info(`  prerelease:                  ${res.prerelease}`);
-	info(`  make_latest:                 ${res.make_latest}`);
-	info(`  draft:                       ${res.draft}${!res.draft ? " (will be published !)" : ""}`);
-	info(`  RESOLVED_VERSION:            ${res.resolvedVersion}`);
-	info(`  RESOLVED_VERSION_MAJOR:      ${res.majorVersion}`);
-	info(`  RESOLVED_VERSION_MINOR:      ${res.minorVersion}`);
-	info(`  RESOLVED_VERSION_PATCH:      ${res.patchVersion}`);
-	info(`  RESOLVED_VERSION_PRERELEASE: ${res.prereleaseVersion}`);
+	logger.info(`  Release payload built successfully`);
+	logger.info(`  name:                        ${res.name}`);
+	logger.info(`  tag:                         ${res.tag}`);
+	logger.info(`  body:                        ${res.body.length} characters long`);
+	logger.info(`  targetCommitish:             ${res.targetCommitish}`);
+	logger.info(`  prerelease:                  ${res.prerelease}`);
+	logger.info(`  make_latest:                 ${res.make_latest}`);
+	logger.info(`  draft:                       ${res.draft}${!res.draft ? " (will be published !)" : ""}`);
+	logger.info(`  RESOLVED_VERSION:            ${res.resolvedVersion}`);
+	logger.info(`  RESOLVED_VERSION_MAJOR:      ${res.majorVersion}`);
+	logger.info(`  RESOLVED_VERSION_MINOR:      ${res.minorVersion}`);
+	logger.info(`  RESOLVED_VERSION_PATCH:      ${res.patchVersion}`);
+	logger.info(`  RESOLVED_VERSION_PRERELEASE: ${res.prereleaseVersion}`);
 	return res;
 };
 //#endregion
@@ -3082,7 +3586,6 @@ var compareVersions = (v1, v2) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/find-previous-releases/sort-releases.ts
-var import_satisfies = /* @__PURE__ */ __toESM(require_satisfies(), 1);
 var sortReleases = (params) => {
 	const tagPrefixRexExp = params.tagPrefix ? new RegExp(`^${escapeStringRegexp(params.tagPrefix)}`) : void 0;
 	return params.releases.sort((r1, r2) => {
@@ -3097,6 +3600,7 @@ var sortReleases = (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/find-previous-releases/find-previous-releases.ts
+var import_satisfies = /* @__PURE__ */ __toESM(require_satisfies(), 1);
 var RELEASE_COUNT_LIMIT = 1e3;
 /**
 * Lists every release and :
@@ -3114,18 +3618,18 @@ var RELEASE_COUNT_LIMIT = 1e3;
 */
 var findPreviousReleases = async (params) => {
 	const { commitish, "filter-by-commitish": filterByCommitish, "tag-prefix": tagPrefix, prerelease: isPreRelease, "include-pre-releases": includePreReleases, "filter-by-range": filterByRange } = params;
-	const octokit = getOctokit();
-	info("Fetching releases from GitHub...");
+	const { logger, octokit, repo } = params.github;
+	logger.info("🔎 Discovering previous releases from GitHub...");
 	let releaseCount = 0;
 	const releases = await octokit.paginate(octokit.rest.repos.listReleases, {
-		...context.repo,
+		...repo,
 		per_page: 100
 	}, (response, done) => {
 		releaseCount += response.data.length;
 		if (releaseCount >= RELEASE_COUNT_LIMIT) done();
 		return response.data;
 	});
-	info(`Found ${releases.length} releases`);
+	logger.info(`  Found ${releases.length} releases`);
 	const headRefRegex = /^refs\/heads\//;
 	const targetCommitishName = commitish.replace(headRefRegex, "");
 	const commitishFilteredReleases = filterByCommitish ? releases.filter((r) => targetCommitishName === r.target_commitish.replace(headRefRegex, "")) : releases;
@@ -3134,11 +3638,11 @@ var findPreviousReleases = async (params) => {
 		if (!parsedRange) return false;
 		const parsedVersion = (0, import_coerce.default)(r.tag_name, { loose: true })?.version;
 		if (!parsedVersion) {
-			warning(`Failed to coerce semver version for "${r.tag_name}" : will be excluded from releases considered for drafting.`);
+			logger.warning(`Failed to coerce semver version for "${r.tag_name}" : will be excluded from releases considered for drafting.`);
 			return false;
 		}
 		const doesSatisfy = !!(0, import_satisfies.default)(parsedVersion, parsedRange, { loose: true });
-		debug(`Range "${parsedRange}" ${doesSatisfy ? "satisfies" : "does not satisfy"} version "${parsedVersion}" `);
+		logger.debug(`Range "${parsedRange}" ${doesSatisfy ? "satisfies" : "does not satisfy"} version "${parsedVersion}" `);
 		return doesSatisfy;
 	}) : commitishFilteredReleases;
 	const filteredReleases = tagPrefix ? semverRangeFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix)) : semverRangeFilteredReleases;
@@ -3146,25 +3650,25 @@ var findPreviousReleases = async (params) => {
 	let draftReleases = filteredReleases.filter((r) => r.draft);
 	publishedReleases = publishedReleases.filter((publishedRelease) => isPreRelease || includePreReleases ? publishedRelease.prerelease || !publishedRelease.prerelease : !publishedRelease.prerelease);
 	draftReleases = draftReleases.filter((draftRelease) => isPreRelease ? draftRelease.prerelease : !draftRelease.prerelease);
-	const draftRelease = draftReleases[0];
+	const draftRelease = draftReleases.at(0);
 	const lastRelease = sortReleases({
 		releases: publishedReleases,
 		tagPrefix
 	})?.at(-1);
 	if (draftRelease) {
 		if (draftReleases.length > 1) {
-			warning(`Multiple draft releases found : ${draftReleases.map((r) => r.tag_name).join(", ")}`);
-			warning(`Using the first one returned by GitHub API: ${draftRelease.tag_name}`);
+			logger.warning(`Multiple draft releases found : ${draftReleases.map((r) => r.tag_name).join(", ")}`);
+			logger.warning(`Using the first one returned by GitHub API: ${draftRelease.tag_name}`);
 		}
-		info(`Draft release${isPreRelease ? " (which is a prerelease)" : ""}:`);
-		info(`  tag_name:  ${draftRelease.tag_name}`);
-		info(`  name:      ${draftRelease.name}`);
-	} else info(`No draft release found${isPreRelease ? " (among prerelease drafts)" : ""}`);
+		logger.info(`  Draft release${isPreRelease ? " (which is a prerelease)" : ""}:`);
+		logger.info(`    tag_name:  ${draftRelease.tag_name}`);
+		logger.info(`    name:      ${draftRelease.name}`);
+	} else logger.info(`  No draft release found${isPreRelease ? " (among prerelease drafts)" : ""}`);
 	if (lastRelease) {
-		info(`Last release${isPreRelease ? " (including prerelease)" : ""}:`);
-		info(`  tag_name:  ${lastRelease.tag_name}`);
-		info(`  name:      ${lastRelease.name}`);
-	} else warning(`No published release found${isPreRelease ? " (including prerelease)" : ""}`);
+		logger.info(`  Last release${isPreRelease ? " (including prerelease)" : ""}:`);
+		logger.info(`    tag_name:  ${lastRelease.tag_name}`);
+		logger.info(`    name:      ${lastRelease.name}`);
+	} else logger.warning(`  No published release found${isPreRelease ? " (including prerelease)" : ""}`);
 	return {
 		draftRelease,
 		lastRelease
@@ -3172,20 +3676,270 @@ var findPreviousReleases = async (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts
+/**
+* Resolves the exact `base...head` commit set. This is the only GitHub API that
+* applies merge-base comparison semantics to *arbitrary* commitishes; GraphQL's
+* `Ref.compare` needs a qualified ref name and cannot walk an annotated tag or a
+* bare SHA. The oids only select commits out of the GraphQL history below, which
+* is what supplies the pull request and author fields REST lacks.
+*/
+var findComparisonCommitOids = async (octokit, params) => {
+	const commits = await octokit.paginate(octokit.rest.repos.compareCommitsWithBasehead, {
+		owner: params.owner,
+		repo: params.name,
+		basehead: `${params.baseCommitish}...${params.headCommitish}`,
+		per_page: 100
+	}, (response) => response.data.commits);
+	return new Set(commits.map((commit) => commit.sha));
+};
 var findCommitsInComparison = async (params) => {
-	const data = await paginateGraphql(getOctokit().graphql, FindCommitsInComparisonDocument, params);
-	if (!data.repository?.ref?.compare) throw new Error("Query returned an unexpected result: ref or comparison not found");
-	return (data.repository.ref.compare.commits.nodes || []).filter((commit) => commit != null);
+	const { octokit } = params.github;
+	const { github: _github, ...comparisonParams } = params;
+	const commits = [];
+	const useCommitishes = params.useCommitishes ?? false;
+	const remainingComparisonOids = useCommitishes ? await findComparisonCommitOids(octokit, params) : void 0;
+	if (remainingComparisonOids?.size === 0) return commits;
+	const pages = paginateGraphqlIterator(octokit.graphql, FindCommitsInComparisonDocument, {
+		...comparisonParams,
+		useCommitishes,
+		headCommitish: useCommitishes ? commitishToCommitExpression(params.headCommitish) : params.headCommitish
+	});
+	for await (const data of pages) {
+		const repository = data.repository;
+		if (remainingComparisonOids) {
+			const history = repository?.head?.__typename === "Commit" ? repository.head.history : void 0;
+			if (!history) throw new Error("Head commitish could not be resolved to a commit");
+			for (const commit of history.nodes ?? []) if (commit && remainingComparisonOids.delete(commit.oid)) commits.push(commit);
+			if (remainingComparisonOids.size === 0) return commits;
+		} else {
+			const comparison = repository?.ref?.compare?.commits;
+			if (!comparison) throw new Error("Query returned an unexpected result: ref or comparison not found");
+			commits.push(...(comparison.nodes ?? []).filter((commit) => commit != null));
+		}
+	}
+	if (remainingComparisonOids?.size) throw new Error(`Comparison commits were not found in the history of ${params.headCommitish}: ${[...remainingComparisonOids].join(", ")}`);
+	return commits;
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison-rest.ts
+/**
+* Finds the pull requests whose merge commit appears in the comparison, keyed by
+* that commit.
+*
+* Listing every closed pull request is what makes the naive REST port
+* pathological: on a repository with thousands of them it transfers tens of
+* megabytes to use a handful of records. The bound therefore has to come from the
+* server, and `since` provides it — the issues route accepts it on GitHub, Gitea
+* and Forgejo alike, and filters by update time.
+*
+* A pull request merged into the range cannot have been updated before the range's
+* oldest commit, since `updated_at >= merged_at`, so `since` cannot exclude a
+* relevant one. Crucially it makes the result independent of ordering, unlike
+* stopping the walk early on a page that looks old: `sort`/`direction` are
+* GitHub's spelling and Gitea and Forgejo want `recentupdate`, so the order is
+* never guaranteed — and a violation would only become visible on a page that an
+* early exit had already declined to fetch.
+*
+* The issues route does not carry `merge_commit_sha`, so each candidate that
+* actually merged costs one detail request. That is bounded by activity since the
+* previous release rather than by repository history.
+*/
+var findPullRequestsForMergeCommits = async (params) => {
+	const { octokit, owner, repo, commitShas, oldestCommitDate } = params;
+	const matched = /* @__PURE__ */ new Map();
+	const remaining = new Set(commitShas);
+	const merged = (await octokit.paginate("GET /repos/{owner}/{repo}/issues", {
+		owner,
+		repo,
+		state: "closed",
+		...oldestCommitDate ? { since: oldestCommitDate } : {},
+		limit: 100,
+		per_page: 100
+	})).filter((candidate) => candidate.pull_request?.merged_at);
+	await Promise.all(merged.map(async (candidate) => {
+		const { data } = await octokit.rest.pulls.get({
+			owner,
+			repo,
+			pull_number: candidate.number
+		});
+		if (data.merge_commit_sha && remaining.has(data.merge_commit_sha)) matched.set(data.merge_commit_sha, data);
+	}));
+	return matched;
+};
+/**
+* Collects the accounts credited on each pull request, keyed by pull request
+* number.
+*
+* A squash merge collapses its branch into one commit whose extra authors survive
+* only as `Co-authored-by:` trailers. GitHub's GraphQL `Commit.authors` resolves
+* those trailer addresses to accounts through a mapping no REST route exposes —
+* `search/users?q=…in:email` misses any address its owner keeps private and, for
+* a domain that also backs an organisation, answers with the organisation
+* instead. So rather than resolving addresses at all, this reads the pull
+* request's own pre-squash commits, each of which already carries its resolved
+* `author`. That yields exactly the set GraphQL reports.
+*
+* Costs one request per pull request, hence the caller's `withCommitAuthors`
+* gate.
+*/
+var findPullRequestAuthorLogins = async (params) => {
+	const { octokit, owner, repo } = params;
+	const entries = await Promise.all(params.pullRequestNumbers.map(async (pullNumber) => {
+		const commits = await octokit.paginate(octokit.rest.pulls.listCommits, {
+			owner,
+			repo,
+			pull_number: pullNumber,
+			per_page: 100
+		});
+		const byLogin = /* @__PURE__ */ new Map();
+		for (const commit of commits) {
+			const login = commit.author?.login;
+			if (login && !byLogin.has(login)) byLogin.set(login, commit.commit.author?.name ?? null);
+		}
+		return [pullNumber, byLogin];
+	}));
+	return new Map(entries);
+};
+var findCommitsInComparisonRest = async (params) => {
+	const { octokit } = params.github;
+	const nameWithOwner = `${params.owner}/${params.name}`;
+	const comparison = await octokit.paginate(octokit.rest.repos.compareCommitsWithBasehead, {
+		owner: params.owner,
+		repo: params.name,
+		basehead: `${params.baseCommitish}...${params.headCommitish}`,
+		per_page: 100
+	}, (response) => {
+		const data = response.data;
+		return Array.isArray(data) ? data : data.commits;
+	});
+	const commitDates = comparison.flatMap((commit) => {
+		const date = commit.commit.committer?.date ?? commit.commit.author?.date;
+		return date ? [date] : [];
+	});
+	const pullRequestsByMergeCommit = await findPullRequestsForMergeCommits({
+		octokit,
+		owner: params.owner,
+		repo: params.name,
+		commitShas: new Set(comparison.map((commit) => commit.sha)),
+		oldestCommitDate: commitDates.length > 0 ? commitDates.reduce((a, b) => a < b ? a : b) : void 0
+	});
+	const authorLoginsByPullRequest = params.withCommitAuthors ? await findPullRequestAuthorLogins({
+		octokit,
+		owner: params.owner,
+		repo: params.name,
+		pullRequestNumbers: [...pullRequestsByMergeCommit.values()].map((pullRequest) => pullRequest.number)
+	}) : /* @__PURE__ */ new Map();
+	return comparison.map((commit) => {
+		const pullRequest = pullRequestsByMergeCommit.get(commit.sha);
+		const login = commit.author?.login;
+		const pullRequestAuthors = pullRequest ? authorLoginsByPullRequest.get(pullRequest.number) : void 0;
+		return {
+			__typename: "Commit",
+			id: commit.sha,
+			oid: commit.sha,
+			committedDate: commit.commit.committer?.date ?? commit.commit.author?.date ?? "",
+			message: commit.commit.message,
+			author: {
+				__typename: "GitActor",
+				name: commit.commit.author?.name ?? null,
+				user: login ? {
+					__typename: "User",
+					login
+				} : null
+			},
+			authors: {
+				__typename: "GitActorConnection",
+				nodes: [...pullRequestAuthors ? [...pullRequestAuthors].map(([authorLogin, authorName]) => ({
+					__typename: "GitActor",
+					name: authorName,
+					user: {
+						__typename: "User",
+						login: authorLogin
+					}
+				})) : login ? [{
+					__typename: "GitActor",
+					name: commit.commit.author?.name ?? null,
+					user: {
+						__typename: "User",
+						login
+					}
+				}] : []]
+			},
+			associatedPullRequests: {
+				__typename: "PullRequestConnection",
+				nodes: pullRequest ? [{
+					__typename: "PullRequest",
+					title: pullRequest.title,
+					number: pullRequest.number,
+					...params.withPullRequestURL ? { url: pullRequest.html_url } : {},
+					...params.withPullRequestBody ? { body: pullRequest.body ?? "" } : {},
+					author: pullRequest.user ? {
+						__typename: "User",
+						login: pullRequest.user.login,
+						url: pullRequest.user.html_url
+					} : null,
+					baseRepository: {
+						__typename: "Repository",
+						nameWithOwner
+					},
+					mergedAt: pullRequest.merged_at,
+					isCrossRepository: pullRequest.head?.repo?.full_name !== pullRequest.base?.repo?.full_name,
+					labels: {
+						__typename: "LabelConnection",
+						nodes: (pullRequest.labels ?? []).map((label) => ({
+							__typename: "Label",
+							name: (typeof label === "string" ? label : label.name) ?? ""
+						}))
+					},
+					merged: true,
+					...params.withBaseRefName ? { baseRefName: pullRequest.base?.ref } : {},
+					...params.withHeadRefName ? { headRefName: pullRequest.head?.ref } : {}
+				}] : []
+			}
+		};
+	});
+};
+//#endregion
+//#region src/actions/drafter/lib/find-pull-requests/find-new-contributor-logins-rest.ts
+var findNewContributorLoginsRest = async (params) => {
+	const { octokit, repo } = params.github;
+	const firstMergedAtByLogin = /* @__PURE__ */ new Map();
+	for (const pullRequest of params.pullRequests) {
+		if (pullRequest.author?.__typename !== "User" || !pullRequest.mergedAt) continue;
+		const previous = firstMergedAtByLogin.get(pullRequest.author.login);
+		if (!previous || pullRequest.mergedAt < previous) firstMergedAtByLogin.set(pullRequest.author.login, pullRequest.mergedAt);
+	}
+	if (firstMergedAtByLogin.size === 0) return /* @__PURE__ */ new Set();
+	const results = await Promise.all([...firstMergedAtByLogin].map(async ([login, mergedAt]) => {
+		const merges = (await octokit.paginate("GET /repos/{owner}/{repo}/issues", {
+			owner: repo.owner,
+			repo: repo.repo,
+			state: "closed",
+			creator: login,
+			created_by: login,
+			limit: 100,
+			per_page: 100
+		})).flatMap((item) => item.pull_request?.merged_at ? [item.pull_request.merged_at] : []);
+		if (merges.length === 0) return {
+			login,
+			isNew: false
+		};
+		return {
+			login,
+			isNew: !merges.some((earlierMergedAt) => earlierMergedAt < mergedAt)
+		};
+	}));
+	return new Set(results.flatMap(({ login, isNew }) => isNew ? [login] : []));
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-recent-merged-pull-requests.ts
 var RECENT_PR_LOOKBACK = 5;
 var findRecentMergedPullRequests = async (params) => {
-	const octokit = getOctokit();
-	const nameWithOwner = `${context.repo.owner}/${context.repo.repo}`;
+	const { logger, octokit, repo } = params.github;
+	const nameWithOwner = `${repo.owner}/${repo.repo}`;
 	const missingPRs = ((await executeGraphql(octokit.graphql, FindRecentMergedPullRequestsDocument, {
-		name: context.repo.repo,
-		owner: context.repo.owner,
+		name: repo.repo,
+		owner: repo.owner,
 		baseRefName: params.baseRefName,
 		limit: RECENT_PR_LOOKBACK,
 		...params.fieldFlags
@@ -3195,12 +3949,13 @@ var findRecentMergedPullRequests = async (params) => {
 		return params.commitOids.has(pr.mergeCommit.oid) && !params.foundPrKeys.has(prKey);
 	});
 	if (missingPRs.length === 0) return [];
-	info(`Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(", ")}`);
+	logger.info(`  Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(", ")}`);
 	return missingPRs.filter((pr) => pr != null);
 };
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
-var findNewContributorLogins = async (pullRequests) => {
+var findNewContributorLogins = async (pullRequests, github) => {
+	const { octokit, repo } = github;
 	const firstMergedAtByLogin = /* @__PURE__ */ new Map();
 	for (const pullRequest of pullRequests) {
 		if (pullRequest.author?.__typename !== "User" || !pullRequest.mergedAt) continue;
@@ -3209,17 +3964,17 @@ var findNewContributorLogins = async (pullRequests) => {
 	}
 	const candidates = [...firstMergedAtByLogin];
 	if (candidates.length === 0) return /* @__PURE__ */ new Set();
-	const variables = Object.fromEntries(candidates.map(([login, mergedAt], index) => [`query${index}`, `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged author:${login} merged:<${mergedAt}`]));
-	const data = await getOctokit().graphql(`query findPreviousContributions(${candidates.map((_, index) => `$query${index}: String!`).join(", ")}) {
+	const variables = Object.fromEntries(candidates.map(([login, mergedAt], index) => [`query${index}`, `repo:${repo.owner}/${repo.repo} is:pr is:merged author:${login} merged:<${mergedAt}`]));
+	const data = await octokit.graphql(`query findPreviousContributions(${candidates.map((_, index) => `$query${index}: String!`).join(", ")}) {
       ${candidates.map((_, index) => `author${index}: search(query: $query${index}, type: ISSUE, first: 1) { issueCount }`).join("\n")}
     }`, variables);
 	return new Set(candidates.flatMap(([login], index) => data[`author${index}`]?.issueCount === 0 ? [login] : []));
 };
 var findPullRequests = async (params) => {
+	const { logger, octokit, repo } = params.github;
 	const sharedComparisonParams = {
-		name: context.repo.repo,
-		owner: context.repo.owner,
-		headRef: params.config.commitish,
+		name: repo.repo,
+		owner: repo.owner,
 		withPullRequestBody: params.config["change-template"].includes("$BODY"),
 		withPullRequestURL: params.config["change-template"].includes("$URL"),
 		withBaseRefName: params.config["change-template"].includes("$BASE_REF_NAME"),
@@ -3227,30 +3982,48 @@ var findPullRequests = async (params) => {
 		pullRequestLimit: params.config["pull-request-limit"],
 		historyLimit: params.config["history-limit"]
 	};
-	if (!params.lastRelease?.tag_name) {
-		warning("A previous (published) release is required to find changes");
+	const previousCommitish = params.previousCommitish || (params.lastRelease?.tag_name ? `refs/tags/${params.lastRelease.tag_name}` : void 0);
+	if (!previousCommitish) {
+		logger.warning("A previous (published) release is required to find changes");
 		return {
 			commits: [],
 			newContributorLogins: /* @__PURE__ */ new Set(),
 			pullRequests: []
 		};
 	}
-	info(`Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`);
-	const commits = await findCommitsInComparison({
-		baseRef: `refs/tags/${params.lastRelease.tag_name}`,
+	logger.info(`🔎 Discovering commits between ${previousCommitish} and ${params.config.commitish}...`);
+	const restOnly = !!params.github.restOnly;
+	const commits = restOnly ? await findCommitsInComparisonRest({
+		baseCommitish: previousCommitish,
+		headCommitish: params.config.commitish,
+		github: params.github,
+		withCommitAuthors: [
+			params.config["change-template"],
+			params.config["change-author-template"],
+			params.config.header,
+			params.config.template,
+			params.config.footer
+		].some((template) => template?.includes("$AUTHORS") || template?.includes("$CONTRIBUTORS")),
+		...sharedComparisonParams
+	}) : await findCommitsInComparison({
+		baseCommitish: previousCommitish,
+		headCommitish: params.config.commitish,
+		useCommitishes: !!params.previousCommitish,
+		github: params.github,
 		...sharedComparisonParams
 	});
-	info(`Found ${commits.length} commits.`);
+	logger.info(`  Found ${commits.length} commits.`);
 	const pullRequestsByKey = new Map(commits.flatMap((commit) => commit.associatedPullRequests?.nodes ?? []).filter((pr) => pr != null).map((pr) => [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr]));
 	const pullRequestsRaw = [...pullRequestsByKey.values()];
 	const comparisonCommitOids = new Set(commits.flatMap((c) => c.oid ? [c.oid] : []));
 	const { commitish } = params.config;
 	const isBranchRef = commitish.startsWith("refs/heads/");
 	const isUnsupportedRef = commitish.startsWith("refs/tags/") || commitish.startsWith("refs/pull/");
-	const recoveredPRs = comparisonCommitOids.size === 0 || isUnsupportedRef ? [] : await findRecentMergedPullRequests({
+	const recoveredPRs = comparisonCommitOids.size === 0 || isUnsupportedRef || restOnly ? [] : await findRecentMergedPullRequests({
 		baseRefName: isBranchRef ? commitish.replace(/^refs\/heads\//, "") : null,
 		commitOids: comparisonCommitOids,
 		foundPrKeys: new Set(pullRequestsByKey.keys()),
+		github: params.github,
 		fieldFlags: {
 			withPullRequestBody: sharedComparisonParams.withPullRequestBody,
 			withPullRequestURL: sharedComparisonParams.withPullRequestURL,
@@ -3258,19 +4031,23 @@ var findPullRequests = async (params) => {
 			withHeadRefName: sharedComparisonParams.withHeadRefName
 		}
 	});
-	const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
+	const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter((pr) => pr.baseRepository?.nameWithOwner === `${repo.owner}/${repo.repo}` && pr.merged);
 	const shouldLoadPullRequestChangedFiles = needsPullRequestChangedFiles(params.config.categories);
 	const pullRequestChangedFiles = shouldLoadPullRequestChangedFiles ? await getPullRequestsChangedFiles({
-		owner: context.repo.owner,
-		repo: context.repo.repo,
-		pullRequests
+		owner: repo.owner,
+		repo: repo.repo,
+		pullRequests,
+		octokit
 	}) : /* @__PURE__ */ new Map();
 	const newContributorLogins = [
 		params.config.header,
 		params.config.template,
 		params.config.footer
-	].some((template) => template?.includes("$NEW_CONTRIBUTORS")) ? await findNewContributorLogins(pullRequests) : /* @__PURE__ */ new Set();
-	info(`Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${pullRequests.length > 0 ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
+	].some((template) => template?.includes("$NEW_CONTRIBUTORS")) ? restOnly ? await findNewContributorLoginsRest({
+		pullRequests,
+		github: params.github
+	}) : await findNewContributorLogins(pullRequests, params.github) : /* @__PURE__ */ new Set();
+	logger.info(`  Found ${pullRequests.length} merged pull requests targeting ${repo.owner}/${repo.repo}${pullRequests.length > 0 ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(", ")}` : "."}`);
 	return {
 		commits,
 		newContributorLogins,
@@ -3283,11 +4060,11 @@ var findPullRequests = async (params) => {
 //#endregion
 //#region src/actions/drafter/lib/upsert-release/create-release.ts
 var createRelease = async (params) => {
-	const octokit = getOctokit();
+	const { octokit, repo } = params.github;
 	const { releasePayload } = params;
 	return octokit.rest.repos.createRelease({
-		owner: context.repo.owner,
-		repo: context.repo.repo,
+		owner: repo.owner,
+		repo: repo.repo,
 		target_commitish: releasePayload.targetCommitish,
 		name: releasePayload.name,
 		tag_name: releasePayload.tag,
@@ -3300,7 +4077,7 @@ var createRelease = async (params) => {
 //#endregion
 //#region src/actions/drafter/lib/upsert-release/update-release.ts
 var updateRelease = async (params) => {
-	const octokit = getOctokit();
+	const { octokit, repo } = params.github;
 	const { draftRelease, releasePayload } = params;
 	const updateReleaseParameters = {
 		name: releasePayload.name || draftRelease.name || void 0,
@@ -3311,8 +4088,8 @@ var updateRelease = async (params) => {
 	if (!updateReleaseParameters.tag_name) delete updateReleaseParameters.tag_name;
 	if (!updateReleaseParameters.target_commitish) delete updateReleaseParameters.target_commitish;
 	return octokit.rest.repos.updateRelease({
-		owner: context.repo.owner,
-		repo: context.repo.repo,
+		owner: repo.owner,
+		repo: repo.repo,
 		release_id: draftRelease.id,
 		body: releasePayload.body,
 		draft: releasePayload.draft,
@@ -3325,23 +4102,28 @@ var updateRelease = async (params) => {
 //#region src/actions/drafter/lib/upsert-release/upsert-release.ts
 var upsertRelease = async (params) => {
 	const { draftRelease, releasePayload, dryRun } = params;
+	const { logger } = params.github;
 	if (dryRun) {
-		if (!draftRelease) info(`[dry-run] Would create a new release with payload: ${JSON.stringify(releasePayload, null, 2)}`);
-		else info(`[dry-run] Would update existing release (id: ${draftRelease.id}) with payload: ${JSON.stringify(releasePayload, null, 2)}`);
+		if (!draftRelease) logger.info(`🤖 [dry-run] Would create a new release with payload: ${JSON.stringify(releasePayload, null, 2)}`);
+		else logger.info(`🤖 [dry-run] Would update existing release (id: ${draftRelease.id}) with payload: ${JSON.stringify(releasePayload, null, 2)}`);
 		return;
 	}
 	if (!draftRelease) {
-		info("Creating new release...");
-		const res = await createRelease({ releasePayload });
-		info("Release created!");
+		logger.info("🚀 Creating new release...");
+		const res = await createRelease({
+			releasePayload,
+			github: params.github
+		});
+		logger.info(`🎉 Release created: ${res.data.html_url || releasePayload.name}`);
 		return res;
 	} else {
-		info("Updating existing release...");
+		logger.info("🚀 Updating existing release...");
 		const res = await updateRelease({
 			draftRelease,
-			releasePayload
+			releasePayload,
+			github: params.github
 		});
-		info("Release updated!");
+		logger.info(`🎉 Release updated: ${res.data.html_url || releasePayload.name}`);
 		return res;
 	}
 };
@@ -3357,33 +4139,46 @@ var main = async (params) => {
 	* 6. set action outputs
 	*/
 	const { config, input } = params;
+	const { logger } = params.github;
 	const isPullRequestMergeRef = /^refs\/pull\/\d+\/merge$/.test(config.commitish);
 	const effectiveInput = isPullRequestMergeRef ? {
 		...input,
 		"dry-run": true,
 		publish: false
 	} : input;
-	if (isPullRequestMergeRef && !input["dry-run"]) warning(`${config.commitish} points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.`);
-	const { draftRelease, lastRelease } = await findPreviousReleases(config);
+	if (isPullRequestMergeRef && !input["dry-run"]) logger.warning(`${config.commitish} points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.`);
+	const { draftRelease, lastRelease } = await findPreviousReleases({
+		...config,
+		github: params.github
+	});
 	const { commits, newContributorLogins, pullRequests } = await findPullRequests({
 		lastRelease,
-		config
+		config,
+		previousCommitish: params.previousCommitish,
+		github: params.github
 	});
 	const releasePayload = await buildReleasePayload({
 		commits,
 		config,
 		input: effectiveInput,
 		lastRelease,
+		previousCommitish: params.previousCommitish,
 		newContributorLogins,
-		pullRequests
+		pullRequests,
+		github: params.github
 	});
 	return {
+		commits,
+		pullRequests,
+		releasePayload,
 		upsertedRelease: await upsertRelease({
 			draftRelease,
 			releasePayload,
-			dryRun: effectiveInput["dry-run"]
+			dryRun: effectiveInput["dry-run"],
+			github: params.github
 		}),
-		releasePayload
+		dryRun: !!effectiveInput["dry-run"],
+		previousCommitish: params.previousCommitish ?? lastRelease?.tag_name
 	};
 };
 //#endregion
@@ -3395,19 +4190,28 @@ var main = async (params) => {
 */
 async function run() {
 	try {
-		info("Parsing inputs and configuration...");
+		info("⚙️ Parsing inputs and configuration...");
 		const input = getActionInput();
-		const { upsertedRelease, releasePayload } = await main({
+		const restOnly = resolveRestOnly({ apiUrl: context.apiUrl });
+		const github = {
+			repo: context.repo,
+			ref: context.ref || context.payload.ref,
+			serverUrl: context.serverUrl,
+			octokit: getActionOctokit(input.token),
+			logger: core_exports,
+			restOnly
+		};
+		if (restOnly) info("🔌 No GraphQL API detected; using REST-only code paths.");
+		setActionOutput(await main({
 			input,
 			config: mergeInputAndConfig({
-				config: await getConfig(input["config-name"]),
-				input
-			})
-		});
-		setActionOutput({
-			upsertedRelease,
-			releasePayload
-		});
+				config: await getConfig(input["config-name"], github),
+				input,
+				logger: github.logger,
+				ref: github.ref
+			}),
+			github
+		}));
 	} catch (error) {
 		if (error instanceof Error) setFailed(error.message);
 	}

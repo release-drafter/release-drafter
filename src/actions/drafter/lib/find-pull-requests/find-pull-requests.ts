@@ -1,10 +1,13 @@
-import * as core from '@actions/core'
-import { context } from '@actions/github'
-import { getOctokit, getPullRequestsChangedFiles } from '#src/common/index.ts'
+import {
+  type GitHubContext,
+  getPullRequestsChangedFiles,
+} from '#src/common/index.ts'
 import { needsPullRequestChangedFiles } from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import { findCommitsInComparison } from './find-commits-in-comparison.ts'
+import { findCommitsInComparisonRest } from './find-commits-in-comparison-rest.ts'
+import { findNewContributorLoginsRest } from './find-new-contributor-logins-rest.ts'
 import {
   findRecentMergedPullRequests,
   type RecentMergedPullRequest,
@@ -15,7 +18,9 @@ const findNewContributorLogins = async (
     author?: { __typename?: string; login: string } | null
     mergedAt?: string | null
   }>,
+  github: Pick<GitHubContext, 'octokit' | 'repo'>,
 ) => {
+  const { octokit, repo } = github
   const firstMergedAtByLogin = new Map<string, string>()
 
   for (const pullRequest of pullRequests) {
@@ -34,12 +39,10 @@ const findNewContributorLogins = async (
   const variables = Object.fromEntries(
     candidates.map(([login, mergedAt], index) => [
       `query${index}`,
-      `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged author:${login} merged:<${mergedAt}`,
+      `repo:${repo.owner}/${repo.repo} is:pr is:merged author:${login} merged:<${mergedAt}`,
     ]),
   )
-  const data = await getOctokit().graphql<
-    Record<string, { issueCount: number }>
-  >(
+  const data = await octokit.graphql<Record<string, { issueCount: number }>>(
     `query findPreviousContributions(${candidates.map((_, index) => `$query${index}: String!`).join(', ')}) {
       ${candidates.map((_, index) => `author${index}: search(query: $query${index}, type: ISSUE, first: 1) { issueCount }`).join('\n')}
     }`,
@@ -56,11 +59,13 @@ const findNewContributorLogins = async (
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
+  previousCommitish?: string
+  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo' | 'restOnly'>
 }) => {
+  const { logger, octokit, repo } = params.github
   const sharedComparisonParams = {
-    name: context.repo.repo,
-    owner: context.repo.owner,
-    headRef: params.config.commitish,
+    name: repo.repo,
+    owner: repo.owner,
     withPullRequestBody: params.config['change-template'].includes('$BODY'),
     withPullRequestURL: params.config['change-template'].includes('$URL'),
     withBaseRefName:
@@ -71,8 +76,13 @@ export const findPullRequests = async (params: {
     historyLimit: params.config['history-limit'],
   }
 
-  if (!params.lastRelease?.tag_name) {
-    core.warning('A previous (published) release is required to find changes')
+  const previousCommitish =
+    params.previousCommitish ||
+    (params.lastRelease?.tag_name
+      ? `refs/tags/${params.lastRelease.tag_name}`
+      : undefined)
+  if (!previousCommitish) {
+    logger.warning('A previous (published) release is required to find changes')
     return {
       commits: [],
       newContributorLogins: new Set<string>(),
@@ -80,15 +90,41 @@ export const findPullRequests = async (params: {
     }
   }
 
-  core.info(
-    `Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`,
+  logger.info(
+    `🔎 Discovering commits between ${previousCommitish} and ${params.config.commitish}...`,
   )
-  const commits = await findCommitsInComparison({
-    baseRef: `refs/tags/${params.lastRelease.tag_name}`,
-    ...sharedComparisonParams,
-  })
+  // Gitea and Forgejo expose GitHub's REST surface but no GraphQL API, so the
+  // comparison falls back to inverting the pull request index over REST.
+  const restOnly = !!params.github.restOnly
+  const commits = restOnly
+    ? await findCommitsInComparisonRest({
+        baseCommitish: previousCommitish,
+        headCommitish: params.config.commitish,
+        github: params.github,
+        // Recovering squashed co-authors costs a request per pull request, so
+        // only pay it when a template actually renders contributors.
+        withCommitAuthors: [
+          params.config['change-template'],
+          params.config['change-author-template'],
+          params.config.header,
+          params.config.template,
+          params.config.footer,
+        ].some(
+          (template) =>
+            template?.includes('$AUTHORS') ||
+            template?.includes('$CONTRIBUTORS'),
+        ),
+        ...sharedComparisonParams,
+      })
+    : await findCommitsInComparison({
+        baseCommitish: previousCommitish,
+        headCommitish: params.config.commitish,
+        useCommitishes: !!params.previousCommitish,
+        github: params.github,
+        ...sharedComparisonParams,
+      })
 
-  core.info(`Found ${commits.length} commits.`)
+  logger.info(`  Found ${commits.length} commits.`)
 
   // Extract unique PRs from commits, deduplicated by repo + PR number
   const pullRequestsByKey = new Map(
@@ -116,8 +152,10 @@ export const findPullRequests = async (params: {
   const isBranchRef = commitish.startsWith('refs/heads/')
   const isUnsupportedRef =
     commitish.startsWith('refs/tags/') || commitish.startsWith('refs/pull/')
+  // The REST path already reads the pull request table directly, so it has no
+  // index lag to compensate for and needs no safety net.
   const recoveredPRs =
-    comparisonCommitOids.size === 0 || isUnsupportedRef
+    comparisonCommitOids.size === 0 || isUnsupportedRef || restOnly
       ? []
       : await findRecentMergedPullRequests({
           baseRefName: isBranchRef
@@ -125,6 +163,7 @@ export const findPullRequests = async (params: {
             : null,
           commitOids: comparisonCommitOids,
           foundPrKeys: new Set(pullRequestsByKey.keys()),
+          github: params.github,
           fieldFlags: {
             withPullRequestBody: sharedComparisonParams.withPullRequestBody,
             withPullRequestURL: sharedComparisonParams.withPullRequestURL,
@@ -139,8 +178,7 @@ export const findPullRequests = async (params: {
       // `baseRepository` is the repository the PR targets, not the head/fork repo.
       // Keep fork PRs that target the current repository, and exclude associated
       // PRs that belong to some other repository but share the same commit.
-      pr.baseRepository?.nameWithOwner ===
-        `${context.repo.owner}/${context.repo.repo}` &&
+      pr.baseRepository?.nameWithOwner === `${repo.owner}/${repo.repo}` &&
       // Ensure PR is merged
       pr.merged,
   )
@@ -149,9 +187,10 @@ export const findPullRequests = async (params: {
   )
   const pullRequestChangedFiles = shouldLoadPullRequestChangedFiles
     ? await getPullRequestsChangedFiles({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
+        owner: repo.owner,
+        repo: repo.repo,
         pullRequests,
+        octokit,
       })
     : new Map<string, string[]>()
   const usesNewContributors = [
@@ -160,11 +199,16 @@ export const findPullRequests = async (params: {
     params.config.footer,
   ].some((template) => template?.includes('$NEW_CONTRIBUTORS'))
   const newContributorLogins = usesNewContributors
-    ? await findNewContributorLogins(pullRequests)
+    ? restOnly
+      ? await findNewContributorLoginsRest({
+          pullRequests,
+          github: params.github,
+        })
+      : await findNewContributorLogins(pullRequests, params.github)
     : new Set<string>()
 
-  core.info(
-    `Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${
+  logger.info(
+    `  Found ${pullRequests.length} merged pull requests targeting ${repo.owner}/${repo.repo}${
       pullRequests.length > 0
         ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(', ')}`
         : '.'

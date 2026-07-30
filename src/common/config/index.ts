@@ -1,4 +1,5 @@
-import * as core from '@actions/core'
+import type { Octokit } from '../get-octokit.ts'
+import type { Logger } from '../logger.ts'
 import { getConfigFiles } from './get-config-files.ts'
 import { mergeConfigChain } from './merge-config-chain.ts'
 
@@ -13,32 +14,39 @@ export async function composeConfigGet(
     repo: { owner: string; repo: string }
     ref: string
   },
+  octokit: Octokit,
+  logger: Logger,
 ) {
-  core.debug(
+  logger.debug(
     `composeConfigGet: Starting config composition with filename: ${configFilename}`,
   )
-  core.debug(
+  logger.debug(
     `composeConfigGet: Current context - repo: ${currentContext.repo.owner}/${currentContext.repo.repo}, ref: ${currentContext.ref}`,
   )
 
-  const configResults = await getConfigFiles(configFilename, currentContext)
-  core.debug(
+  const configResults = await getConfigFiles(
+    configFilename,
+    currentContext,
+    octokit,
+    logger,
+  )
+  logger.debug(
     `composeConfigGet: Retrieved ${configResults.length} config file(s)`,
   )
 
   const contexts = configResults.map((c) => c.fetchedFrom).filter(Boolean)
-  core.debug(`composeConfigGet: Resolved ${contexts.length} context(s)`)
+  logger.debug(`composeConfigGet: Resolved ${contexts.length} context(s)`)
   contexts.forEach((ctx, idx) => {
-    core.debug(
+    logger.debug(
       `composeConfigGet: Context[${idx}] - scheme: ${ctx.scheme}, filepath: ${ctx.filepath}${ctx.repo ? `, repo: ${ctx.repo.owner}/${ctx.repo.repo}` : ''}`,
     )
   })
 
   const result = {
     contexts,
-    config: mergeConfigChain(configResults),
+    config: mergeConfigChain(configResults, logger),
   }
-  core.debug(
+  logger.debug(
     `composeConfigGet: Config composition complete with ${Object.keys(result.config).length} keys`,
   )
   return result

@@ -1,16 +1,16 @@
-import { context } from '@actions/github'
-import { getOctokit } from '#src/common/index.ts'
+import type { GitHubContext } from '#src/common/index.ts'
 import type { buildReleasePayload } from '../build-release-payload/index.ts'
 
 export const createRelease = async (params: {
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
+  github: Pick<GitHubContext, 'octokit' | 'repo'>
 }) => {
-  const octokit = getOctokit()
+  const { octokit, repo } = params.github
   const { releasePayload } = params
 
   return octokit.rest.repos.createRelease({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
+    owner: repo.owner,
+    repo: repo.repo,
     target_commitish: releasePayload.targetCommitish,
     name: releasePayload.name,
     tag_name: releasePayload.tag,

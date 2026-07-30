@@ -8,6 +8,12 @@ import {
 } from '#src/actions/drafter/config/schemas/config.schema.ts'
 import { mocks } from '#tests/mocks/index.ts'
 
+const parseCategoriesWithLogger = (
+  ...args: Parameters<typeof parseCategories> extends [...infer P, unknown]
+    ? P
+    : never
+) => parseCategories(...args, mocks.core)
+
 const migrationDocumentationUrl =
   'https://github.com/release-drafter/release-drafter/pull/1558'
 
@@ -33,6 +39,7 @@ describe('parseCategories', () => {
     })
 
     const parsed = mergeInputAndConfig({
+      logger: mocks.core,
       config,
       input: commonConfigSchema.parse({}),
     })
@@ -117,6 +124,7 @@ describe('parseCategories', () => {
     })
 
     const parsed = mergeInputAndConfig({
+      logger: mocks.core,
       config,
       input: commonConfigSchema.parse({}),
     })
@@ -157,7 +165,7 @@ describe('parseCategories', () => {
   })
 
   it('applies deprecated category labels to every when branch and warns', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -226,6 +234,7 @@ describe('parseCategories', () => {
 
     expect(() =>
       mergeInputAndConfig({
+        logger: mocks.core,
         config,
         input: commonConfigSchema.parse({}),
       }),
@@ -235,7 +244,7 @@ describe('parseCategories', () => {
   })
 
   it('defaults an omitted category type to changelog during parsing', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -278,7 +287,7 @@ describe('parseCategories', () => {
   })
 
   it('normalizes when.label as a single labels entry', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -309,7 +318,7 @@ describe('parseCategories', () => {
   })
 
   it('normalizes when.path as a single paths entry', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -340,7 +349,7 @@ describe('parseCategories', () => {
   })
 
   it('combines when.label and when.labels into one label predicate set', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -373,7 +382,7 @@ describe('parseCategories', () => {
   })
 
   it('combines when.path and when.paths into one path predicate set', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -406,7 +415,7 @@ describe('parseCategories', () => {
   })
 
   it('normalizes conventional matcher shorthands inside when conditions', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -446,7 +455,7 @@ describe('parseCategories', () => {
   })
 
   it('normalizes conventional true to any conventional title matcher', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -480,7 +489,7 @@ describe('parseCategories', () => {
   })
 
   it('normalizes conventional empty object to any conventional title matcher with warning', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {
@@ -517,7 +526,7 @@ describe('parseCategories', () => {
   })
 
   it('drops conditions that only set labels-mode without configuring labels or paths', () => {
-    const parsed = parseCategories(
+    const parsed = parseCategoriesWithLogger(
       {
         categories: [
           {

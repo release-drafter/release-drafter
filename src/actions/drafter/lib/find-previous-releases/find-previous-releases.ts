@@ -1,9 +1,7 @@
-import * as core from '@actions/core'
-import { context } from '@actions/github'
 import coerce from 'semver/functions/coerce.js'
 import satisfies from 'semver/functions/satisfies.js'
 import validRange from 'semver/ranges/valid.js'
-import { getOctokit } from '#src/common/index.ts'
+import type { GitHubContext } from '#src/common/index.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import { sortReleases } from './sort-releases.ts'
 
@@ -33,7 +31,7 @@ export const findPreviousReleases = async (
     | 'prerelease'
     | 'include-pre-releases'
     | 'filter-by-range'
-  >,
+  > & { github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo'> },
 ) => {
   const {
     commitish,
@@ -43,15 +41,15 @@ export const findPreviousReleases = async (
     'include-pre-releases': includePreReleases,
     'filter-by-range': filterByRange,
   } = params
-  const octokit = getOctokit()
+  const { logger, octokit, repo } = params.github
 
-  core.info('Fetching releases from GitHub...')
+  logger.info('🔎 Discovering previous releases from GitHub...')
 
   let releaseCount = 0
   const releases = await octokit.paginate(
     octokit.rest.repos.listReleases,
     {
-      ...context.repo,
+      ...repo,
       per_page: 100,
     },
     (response, done) => {
@@ -63,7 +61,7 @@ export const findPreviousReleases = async (
     },
   )
 
-  core.info(`Found ${releases.length} releases`)
+  logger.info(`  Found ${releases.length} releases`)
 
   // Filter releases
   const headRefRegex = /^refs\/heads\// // `refs/heads/branch` and `branch` are the same thing in this context
@@ -82,7 +80,7 @@ export const findPreviousReleases = async (
           const parsedVersion = coerce(r.tag_name, { loose: true })?.version
 
           if (!parsedVersion) {
-            core.warning(
+            logger.warning(
               `Failed to coerce semver version for "${r.tag_name}" : will be excluded from releases considered for drafting.`,
             )
             return false
@@ -92,7 +90,7 @@ export const findPreviousReleases = async (
             loose: true,
           })
 
-          core.debug(
+          logger.debug(
             `Range "${parsedRange}" ${
               doesSatisfy ? 'satisfies' : 'does not satisfy'
             } version "${parsedVersion}" `,
@@ -126,7 +124,7 @@ export const findPreviousReleases = async (
   )
 
   // Sort results
-  const draftRelease = draftReleases[0] // Should this be sorted ?
+  const draftRelease = draftReleases.at(0) // Should this be sorted ?
   const lastRelease = sortReleases({
     releases: publishedReleases,
     tagPrefix,
@@ -134,32 +132,36 @@ export const findPreviousReleases = async (
 
   if (draftRelease) {
     if (draftReleases.length > 1) {
-      core.warning(
+      logger.warning(
         `Multiple draft releases found : ${draftReleases
           .map((r) => r.tag_name)
           .join(', ')}`,
       )
-      core.warning(
+      logger.warning(
         `Using the first one returned by GitHub API: ${draftRelease.tag_name}`,
       )
     }
 
-    core.info(`Draft release${isPreRelease ? ' (which is a prerelease)' : ''}:`)
-    core.info(`  tag_name:  ${draftRelease.tag_name}`)
-    core.info(`  name:      ${draftRelease.name}`)
+    logger.info(
+      `  Draft release${isPreRelease ? ' (which is a prerelease)' : ''}:`,
+    )
+    logger.info(`    tag_name:  ${draftRelease.tag_name}`)
+    logger.info(`    name:      ${draftRelease.name}`)
   } else {
-    core.info(
-      `No draft release found${isPreRelease ? ' (among prerelease drafts)' : ''}`,
+    logger.info(
+      `  No draft release found${isPreRelease ? ' (among prerelease drafts)' : ''}`,
     )
   }
 
   if (lastRelease) {
-    core.info(`Last release${isPreRelease ? ' (including prerelease)' : ''}:`)
-    core.info(`  tag_name:  ${lastRelease.tag_name}`)
-    core.info(`  name:      ${lastRelease.name}`)
+    logger.info(
+      `  Last release${isPreRelease ? ' (including prerelease)' : ''}:`,
+    )
+    logger.info(`    tag_name:  ${lastRelease.tag_name}`)
+    logger.info(`    name:      ${lastRelease.name}`)
   } else {
-    core.warning(
-      `No published release found${isPreRelease ? ' (including prerelease)' : ''}`,
+    logger.warning(
+      `  No published release found${isPreRelease ? ' (including prerelease)' : ''}`,
     )
   }
 

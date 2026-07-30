@@ -1,5 +1,6 @@
 import { basename } from 'node:path'
-import * as core from '@actions/core'
+import type { Octokit } from '../get-octokit.ts'
+import type { Logger } from '../logger.ts'
 import { getConfigFile } from './get-config-file.ts'
 import { normalizeFilepath } from './normalize-filepath.ts'
 import { parseConfigTarget } from './parse-config-target.ts'
@@ -10,10 +11,12 @@ export const getConfigFiles = async (
     repo: { owner: string; repo: string }
     ref: string
   },
+  octokit: Octokit,
+  logger: Logger,
 ) => {
-  core.debug(`getConfigFiles: Starting with filename: ${configFilename}`)
+  logger.debug(`getConfigFiles: Starting with filename: ${configFilename}`)
   let configTarget = parseConfigTarget(configFilename, currentContext)
-  core.debug(
+  logger.debug(
     `getConfigFiles: Parsed config target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`,
   )
 
@@ -28,7 +31,12 @@ export const getConfigFiles = async (
 
   let requestedRepoConfig: Awaited<ReturnType<typeof getConfigFile>>
   try {
-    requestedRepoConfig = await getConfigFile(configTarget)
+    requestedRepoConfig = await getConfigFile(
+      configTarget,
+      undefined,
+      octokit,
+      logger,
+    )
   } catch (error) {
     if (
       canFallBackToOrgRepo &&
@@ -36,7 +44,7 @@ export const getConfigFiles = async (
       error.message.includes('Config file not found') &&
       configTarget.scheme === 'github'
     ) {
-      core.info(
+      logger.info(
         `Config not found in ${currentContext.repo.owner}/${currentContext.repo.repo}, falling back to ${currentContext.repo.owner}/.github`,
       )
       const orgFallbackTarget = {
@@ -44,12 +52,17 @@ export const getConfigFiles = async (
         repo: { owner: currentContext.repo.owner, repo: '.github' },
         ref: undefined,
       }
-      requestedRepoConfig = await getConfigFile(orgFallbackTarget)
+      requestedRepoConfig = await getConfigFile(
+        orgFallbackTarget,
+        undefined,
+        octokit,
+        logger,
+      )
     } else {
       throw error
     }
   }
-  core.debug(
+  logger.debug(
     `getConfigFiles: Fetched initial config from ${requestedRepoConfig.fetchedFrom.scheme}:${requestedRepoConfig.fetchedFrom.filepath}`,
   )
 
@@ -59,25 +72,25 @@ export const getConfigFiles = async (
 
   // if the configuration has no `_extends` key, we are done here.
   if (!lastExtends) {
-    core.debug(
+    logger.debug(
       `getConfigFiles: No _extends found in config, returning single file`,
     )
     return files
   }
-  core.debug(`getConfigFiles: Found _extends directive: ${lastExtends.from}`)
+  logger.debug(`getConfigFiles: Found _extends directive: ${lastExtends.from}`)
 
   const MAX_EXTENDS_DEPTH = 33
   let extendsDepth = 0
 
   do {
     extendsDepth++
-    core.debug(
+    logger.debug(
       `getConfigFiles: Processing _extends depth ${extendsDepth}: ${lastExtends.from}`,
     )
 
     if (extendsDepth > MAX_EXTENDS_DEPTH) {
       const error = `Maximum extends depth (${MAX_EXTENDS_DEPTH}) exceeded. Check for circular dependencies or reduce the chain of extended configurations.`
-      core.error(`getConfigFiles: ${error}`)
+      logger.error(`getConfigFiles: ${error}`)
       throw new Error(error)
     }
 
@@ -89,7 +102,7 @@ export const getConfigFiles = async (
       configTarget.filepath = basename(lastFetchedFrom.filepath)
     }
 
-    core.debug(
+    logger.debug(
       `getConfigFiles: Parsed _extends target - scheme: ${configTarget.scheme}, filepath: ${configTarget.filepath}`,
     )
 
@@ -115,26 +128,31 @@ export const getConfigFiles = async (
       )
     })
     if (alreadyLoaded) {
-      core.warning(
+      logger.warning(
         `Recursion detected. Ignoring "_extends: ${lastExtends.from}".`,
       )
-      core.debug(`getConfigFiles: Recursion detected, stopping extends chain`)
+      logger.debug(`getConfigFiles: Recursion detected, stopping extends chain`)
       return files
     }
 
-    const extendRepoConfig = await getConfigFile(configTarget, lastFetchedFrom)
-    core.debug(
+    const extendRepoConfig = await getConfigFile(
+      configTarget,
+      lastFetchedFrom,
+      octokit,
+      logger,
+    )
+    logger.debug(
       `getConfigFiles: Fetched extended config from ${extendRepoConfig.fetchedFrom.scheme}:${extendRepoConfig.fetchedFrom.filepath}`,
     )
 
     lastFetchedFrom = extendRepoConfig.fetchedFrom
     lastExtends = extendRepoConfig.config._extends
     files.push(extendRepoConfig)
-    core.debug(
+    logger.debug(
       `getConfigFiles: Added extended config to chain. Total files: ${files.length}, next _extends: ${lastExtends?.from || 'none'}`,
     )
   } while (lastExtends)
-  core.debug(
+  logger.debug(
     `getConfigFiles: Extends chain complete with ${files.length} file(s)`,
   )
 

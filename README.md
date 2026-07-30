@@ -40,6 +40,59 @@ jobs:
           config-name: release-drafter.yml # the default, loads '.github/release-drafter.yml'
 ```
 
+### ✍️ Local CLI
+
+The local CLI creates or updates a draft using the last published release as its
+starting point. It reads authentication from `GITHUB_TOKEN`, `GH_TOKEN`, or the
+GitHub CLI.
+
+```sh
+npx release-drafter owner/repository
+```
+
+From a source checkout, use `npm run cli -- owner/repository` instead.
+
+Use `--from` to override the starting commitish and `--release-version` to
+override the resolved version:
+
+```sh
+npx release-drafter owner/repository --from v8.0.0 --release-version 9.0.0
+```
+
+The target commitish defaults to the repository's default branch; override it
+with `--to`. The CLI uses the same config loading as the action, including the
+fallback to the organization's `.github` repository. Use `--config` to select
+another config or `--dry-run` to print the generated release without creating or
+updating it.
+
+`--name` and `--tag` override the resolved release name and tag, mirroring the
+action's `name` and `tag` inputs:
+
+```sh
+npx release-drafter owner/repository --tag v9.0.0 --name 'Release 9.0.0'
+```
+
+By default, the CLI creates or updates a draft. Use `--publish` to publish it,
+optionally with `--prerelease` or `--latest`:
+
+```sh
+npx release-drafter owner/repository --publish --prerelease
+npx release-drafter owner/repository --publish --latest
+```
+
+Each release-mode flag accepts an optional `true` or `false` value, so
+`--latest false` can override a config that marks stable releases as latest.
+Prereleases are never marked as latest, matching the action's behavior.
+
+Use `--json` to write the same release variables as the action outputs to
+`stdout`. Human-readable logs remain available on `stderr`, so the JSON can be
+redirected to a file or queried with `jq`:
+
+```sh
+npx release-drafter owner/repository --dry-run --json > release.json
+npx release-drafter owner/repository --dry-run --json | jq -r .tag_name
+```
+
 ## Configuration
 
 The action requires a configuration file. Default location is
@@ -712,27 +765,61 @@ The Release Drafter GitHub Action sets a couple of outputs which can be used as
 inputs to other Actions in the workflow
 ([example](https://github.com/actions/upload-release-asset#example-workflow---upload-a-release-asset)).
 
-| Output             | Description                                                                                                                                                                                                                   |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | The ID of the release that was created or updated.                                                                                                                                                                            |
-| `name`             | The name of this release.                                                                                                                                                                                                     |
-| `tag_name`         | The name of the tag associated with this release.                                                                                                                                                                             |
-| `body`             | The body of the drafted release, useful if it needs to be included in files.                                                                                                                                                  |
-| `html_url`         | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                                                    |
-| `upload_url`       | The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the [`@actions/upload-release-asset GitHub Action`](https://www.github.com/actions/upload-release-asset). |
-| `resolved_version` | Version resolved by [Version Resolver](#version-resolver). i.e. `6.3.1`                                                                                                                                                       |
-| `major_version`    | Major part of resolved version by [Version Resolver](#version-resolver). i.e. `6` for version `6.3.1`                                                                                                                         |
-| `minor_version`    | Minor part of resolved version by [Version Resolver](#version-resolver). i.e. `3` for version `6.3.1`                                                                                                                         |
-| `patch_version`    | Patch part of resolved version by [Version Resolver](#version-resolver). i.e. `1` for version `6.3.1`                                                                                                                         |
+| Output               | Description                                                                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                 | The ID of the release that was created or updated.                                                                                                                                                                            |
+| `name`               | The name of this release.                                                                                                                                                                                                     |
+| `tag_name`           | The name of the tag associated with this release.                                                                                                                                                                             |
+| `target_commitish`   | The resolved branch or commit SHA targeted by the release.                                                                                                                                                                    |
+| `previous_commitish` | The tag or ref used as the release comparison baseline.                                                                                                                                                                       |
+| `draft`              | Whether the release is a draft.                                                                                                                                                                                               |
+| `prerelease`         | Whether the release is a prerelease.                                                                                                                                                                                          |
+| `latest`             | Whether the release is configured to be marked as latest when published.                                                                                                                                                      |
+| `dry_run`            | Whether writes were suppressed by dry-run mode.                                                                                                                                                                               |
+| `body`               | The body of the drafted release, useful if it needs to be included in files.                                                                                                                                                  |
+| `html_url`           | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                                                    |
+| `upload_url`         | The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the [`@actions/upload-release-asset GitHub Action`](https://www.github.com/actions/upload-release-asset). |
+| `resolved_version`   | Version resolved by [Version Resolver](#version-resolver). i.e. `6.3.1`                                                                                                                                                       |
+| `major_version`      | Major part of resolved version by [Version Resolver](#version-resolver). i.e. `6` for version `6.3.1`                                                                                                                         |
+| `minor_version`      | Minor part of resolved version by [Version Resolver](#version-resolver). i.e. `3` for version `6.3.1`                                                                                                                         |
+| `patch_version`      | Patch part of resolved version by [Version Resolver](#version-resolver). i.e. `1` for version `6.3.1`                                                                                                                         |
+
+## Programmatic API
+
+The drafter flow is also available as a library export:
+
+```js
+import { draftRelease } from 'release-drafter'
+
+const result = await draftRelease({
+  repo: { owner: 'owner', repo: 'repository' },
+  token: process.env.GITHUB_TOKEN,
+  previousCommitish: 'v1.0.0',
+  publish: false,
+})
+
+console.log(result.releasePayload)
+```
+
+It uses the same configuration loading, release generation, publication
+controls, and pull request merge-ref safeguards as the action and CLI. Pass a
+`logger` with `debug`, `info`, `warning`, and `error` methods to receive the
+same lifecycle messages; library logging is silent by default. An existing
+`octokit` client can also be injected.
 
 ## GitHub Enterprise Server (GHES)
 
-Release Drafter creates its GitHub client with
-[`@actions/github.getOctokit()`](https://github.com/actions/toolkit/tree/main/packages/github#readme).
-In GitHub Actions, that client uses the runtime API base URL from
-`GITHUB_API_URL`, so the same workflow can target GHES without extra
-`github.com`-specific configuration, assuming the required REST and GraphQL APIs
-are available on the instance.
+In GitHub Actions, Release Drafter uses `@actions/github` in a thin runtime
+adapter. This preserves the Actions Toolkit's proxy handling and automatically
+uses `GITHUB_API_URL` for GHES.
+
+The CLI and programmatic API construct an ESM Octokit client directly without
+importing the Actions runtime. The CLI honors `GITHUB_API_URL` for API requests
+and `GITHUB_SERVER_URL` for generated web links and `--config` blob URLs; when
+using `HTTP_PROXY` or `HTTPS_PROXY`, enable Node's environment proxy support
+with `NODE_USE_ENV_PROXY=1`. Programmatic callers can pass `apiUrl` for API
+requests and `serverUrl` for generated web links, or inject a preconfigured
+`octokit` client — in which case `token` may be omitted.
 
 ## Contributing
 

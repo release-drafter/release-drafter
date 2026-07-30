@@ -1,4 +1,5 @@
-import { A as setOutput, D as getInput, N as __toESM, O as info, S as string, _ as array, f as composeConfigGet, i as sharedInputSchema, j as warning, k as setFailed, m as context, n as stringToRegex, p as getOctokit, t as require_ignore, u as getPullRequestChangedFiles, x as object } from "../../chunks/ignore.js";
+import { i as __toESM } from "../../chunks/actions/rolldown-runtime.js";
+import { C as setFailed, a as getPullRequestChangedFiles, b as core_exports, h as string, i as sharedInputSchema, m as object, n as stringToRegex, s as composeConfigGet, t as require_ignore, u as array, v as getActionOctokit, w as setOutput, x as getInput, y as context } from "../../chunks/actions/ignore.js";
 //#region src/actions/autolabeler/config/action-input.schema.ts
 var actionInputSchema = object({ 
 /**
@@ -37,10 +38,13 @@ var getActionInput = () => {
 };
 //#endregion
 //#region src/actions/autolabeler/config/get-config.ts
-var getConfig = async (configName) => {
-	const { config, contexts } = await composeConfigGet(configName, context);
-	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
-	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally" : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
+var getConfig = async (configName, github) => {
+	const { config, contexts } = await composeConfigGet(configName, {
+		repo: github.repo,
+		ref: github.ref ?? ""
+	}, github.octokit, github.logger);
+	if (contexts.length > 1) github.logger.info(`Config was fetched from ${contexts.length} different contexts.`);
+	else if (contexts.length === 1) github.logger.info(`Config fetched ${contexts[0].scheme === "file" ? "locally" : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
 	return configSchema.parse(config);
 };
 //#endregion
@@ -52,7 +56,7 @@ var getConfig = async (configName) => {
 *
 * Input takes precedence, because it's more easy to change at runtime
 */
-var parseConfig = ({ config: originalConfig }) => {
+var parseConfig = ({ config: originalConfig, logger }) => {
 	const config = structuredClone(originalConfig);
 	const autolabeler = config.autolabeler.map((autolabel) => {
 		try {
@@ -69,7 +73,7 @@ var parseConfig = ({ config: originalConfig }) => {
 				})
 			};
 		} catch {
-			warning(`Bad autolabeler regex: '${autolabel.branch}', '${autolabel.title}' or '${autolabel.body}'`);
+			logger.warning(`Bad autolabeler regex: '${autolabel.branch}', '${autolabel.title}' or '${autolabel.body}'`);
 			return false;
 		}
 	}).filter((a) => !!a);
@@ -82,15 +86,12 @@ var parseConfig = ({ config: originalConfig }) => {
 //#region src/actions/autolabeler/main.ts
 var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
 var main = async (params) => {
-	info(`Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`);
-	if (context.eventName !== "pull_request" && context.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`);
-	const octokit = getOctokit();
-	/**
-	* @see https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request
-	*/
-	const payload = context.payload;
+	const { logger, octokit, repo } = params.github;
+	logger.info(`Running for event "${params.eventName || "[undefined]"}.${params.payload.action || "[undefined]"}"`);
+	if (params.eventName !== "pull_request" && params.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${params.eventName}'`);
+	const payload = params.payload;
 	const changedFiles = await getPullRequestChangedFiles(octokit, {
-		...context.repo,
+		...repo,
 		pull_number: payload.number
 	});
 	const labels = /* @__PURE__ */ new Set();
@@ -101,14 +102,14 @@ var main = async (params) => {
 			if (changedFiles.some((file) => matcher.ignores(file))) {
 				labels.add(autolabel.label);
 				found = true;
-				info(`Found label for files: '${autolabel.label}'`);
+				logger.info(`Found label for files: '${autolabel.label}'`);
 			}
 		}
 		if (!found && autolabel.branch.length > 0) {
 			for (const matcher of autolabel.branch) if (matcher.test(payload.pull_request.head.ref)) {
 				labels.add(autolabel.label);
 				found = true;
-				info(`Found label for branch: '${autolabel.label}'`);
+				logger.info(`Found label for branch: '${autolabel.label}'`);
 				break;
 			}
 		}
@@ -116,7 +117,7 @@ var main = async (params) => {
 			for (const matcher of autolabel.title) if (matcher.test(payload.pull_request.title)) {
 				labels.add(autolabel.label);
 				found = true;
-				info(`Found label for title: '${autolabel.label}'`);
+				logger.info(`Found label for title: '${autolabel.label}'`);
 				break;
 			}
 		}
@@ -124,14 +125,14 @@ var main = async (params) => {
 			for (const matcher of autolabel.body) if (matcher.test(payload.pull_request.body)) {
 				labels.add(autolabel.label);
 				found = true;
-				info(`Found label for body: '${autolabel.label}'`);
+				logger.info(`Found label for body: '${autolabel.label}'`);
 				break;
 			}
 		}
 	}
-	if (labels.size > 0) if (params.dryRun) info(`[dry-run] Would add labels [${Array.from(labels).join(", ")}] to PR #${payload.number}`);
+	if (labels.size > 0) if (params.dryRun) logger.info(`[dry-run] Would add labels [${Array.from(labels).join(", ")}] to PR #${payload.number}`);
 	else await octokit.rest.issues.addLabels({
-		...context.repo,
+		...repo,
 		issue_number: payload.number,
 		labels: Array.from(labels)
 	});
@@ -150,9 +151,21 @@ var main = async (params) => {
 async function run() {
 	try {
 		const input = getActionInput();
+		const github = {
+			logger: core_exports,
+			octokit: getActionOctokit(input.token),
+			ref: context.ref,
+			repo: context.repo
+		};
 		const { labels, pr_number } = await main({
-			config: parseConfig({ config: await getConfig(input["config-name"]) }),
-			dryRun: input["dry-run"]
+			config: parseConfig({
+				config: await getConfig(input["config-name"], github),
+				logger: core_exports
+			}),
+			dryRun: input["dry-run"],
+			eventName: context.eventName,
+			payload: context.payload,
+			github
 		});
 		if (pr_number) setOutput("number", pr_number);
 		if (labels) setOutput("labels", labels);

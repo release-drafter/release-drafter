@@ -1,6 +1,4 @@
-import * as core from '@actions/core'
-import { context } from '@actions/github'
-import { executeGraphql, getOctokit } from '#src/common/index.ts'
+import { executeGraphql, type GitHubContext } from '#src/common/index.ts'
 import {
   FindRecentMergedPullRequestsDocument,
   type FindRecentMergedPullRequestsQuery,
@@ -28,16 +26,17 @@ export const findRecentMergedPullRequests = async (params: {
   commitOids: Set<string>
   foundPrKeys: Set<string>
   fieldFlags: PullRequestFieldFlags
+  github: Pick<GitHubContext, 'logger' | 'octokit' | 'repo'>
 }): Promise<RecentMergedPullRequest[]> => {
-  const octokit = getOctokit()
-  const nameWithOwner = `${context.repo.owner}/${context.repo.repo}`
+  const { logger, octokit, repo } = params.github
+  const nameWithOwner = `${repo.owner}/${repo.repo}`
 
   const data = await executeGraphql(
     octokit.graphql,
     FindRecentMergedPullRequestsDocument,
     {
-      name: context.repo.repo,
-      owner: context.repo.owner,
+      name: repo.repo,
+      owner: repo.owner,
       baseRefName: params.baseRefName,
       limit: RECENT_PR_LOOKBACK,
       ...params.fieldFlags,
@@ -57,8 +56,8 @@ export const findRecentMergedPullRequests = async (params: {
 
   if (missingPRs.length === 0) return []
 
-  core.info(
-    `Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(', ')}`,
+  logger.info(
+    `  Found ${missingPRs.length} recently merged PR(s) missing from GraphQL index, recovering: ${missingPRs.map((pr) => `#${pr?.number}`).join(', ')}`,
   )
 
   return missingPRs.filter((pr): pr is RecentMergedPullRequest => pr != null)

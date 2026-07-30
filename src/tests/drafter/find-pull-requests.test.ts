@@ -6,7 +6,7 @@ import { configSchema } from '#src/actions/drafter/config/schemas/config.schema.
 import { categorizePullRequests } from '#src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts'
 import { findPullRequests } from '#src/actions/drafter/lib/find-pull-requests/index.ts'
 import type { Octokit } from '#src/common/get-octokit.ts'
-import { mockContext } from '../mocks/index.ts'
+import { mockContext, mocks, testGitHubContext } from '../mocks/index.ts'
 
 const localMocks = vi.hoisted(() => ({
   findCommitsInComparison: vi.fn(),
@@ -38,10 +38,17 @@ vi.mock('#src/common/get-octokit.ts', () => ({
     }) as unknown as Octokit,
 }))
 
+const localOctokit = {
+  graphql: localMocks.graphql,
+  paginate: localMocks.paginate,
+  rest: { pulls: { listFiles: localMocks.listFiles } },
+} as never
+
 const makeConfig = (
   categories: NonNullable<z.input<typeof configSchema>['categories']>,
 ) =>
   mergeInputAndConfig({
+    logger: mocks.core,
     config: configSchema.parse({
       template: '$CHANGES',
       commitish: 'refs/heads/main',
@@ -95,6 +102,28 @@ describe('findPullRequests', () => {
     localMocks.listFiles.mockReset()
   })
 
+  it('uses an explicit previous commitish without a published release', async () => {
+    localMocks.findCommitsInComparison.mockResolvedValue([
+      makeCommit('id-1', 42),
+    ])
+
+    const result = await findPullRequests({
+      github: testGitHubContext({ octokit: localOctokit }),
+      lastRelease: undefined,
+      config: makeConfig([]),
+      previousCommitish: '47ba33fd8c30c8764e8bc98517c6a902f0f43d26',
+    })
+
+    expect(result.pullRequests.map(({ number }) => number)).toEqual([42])
+    expect(localMocks.findCommitsInComparison).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseCommitish: '47ba33fd8c30c8764e8bc98517c6a902f0f43d26',
+        headCommitish: 'refs/heads/main',
+        useCommitishes: true,
+      }),
+    )
+  })
+
   it('identifies a first-time contribution from merge history', async () => {
     const commit = makeCommit('first-contribution', 42)
     const pullRequest = commit.associatedPullRequests.nodes[0]
@@ -110,6 +139,7 @@ describe('findPullRequests', () => {
     })
 
     const config = mergeInputAndConfig({
+      logger: mocks.core,
       config: configSchema.parse({
         template: '$NEW_CONTRIBUTORS',
         commitish: 'refs/heads/main',
@@ -118,6 +148,7 @@ describe('findPullRequests', () => {
     })
 
     const result = await findPullRequests({
+      github: testGitHubContext({ octokit: localOctokit }),
       lastRelease: { tag_name: 'v1.0.0' } as Awaited<
         ReturnType<
           typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
@@ -149,6 +180,7 @@ describe('findPullRequests', () => {
     localMocks.paginate.mockResolvedValue(['docs/readme.md', 'src/index.ts'])
 
     const result = await findPullRequests({
+      github: testGitHubContext({ octokit: localOctokit }),
       lastRelease: {
         tag_name: 'v1.0.0',
       } as Awaited<
@@ -200,6 +232,7 @@ describe('findPullRequests', () => {
     localMocks.paginate.mockResolvedValue(['docs/readme.md', 'src/index.ts'])
 
     const result = await findPullRequests({
+      github: testGitHubContext({ octokit: localOctokit }),
       lastRelease: {
         tag_name: 'v1.0.0',
       } as Awaited<
@@ -245,6 +278,7 @@ describe('findPullRequests', () => {
     localMocks.paginate.mockResolvedValue(['docs/readme.md', 'src/index.ts'])
 
     const config = mergeInputAndConfig({
+      logger: mocks.core,
       config: configSchema.parse({
         template: '$CHANGES',
         commitish: 'refs/heads/main',
@@ -254,6 +288,7 @@ describe('findPullRequests', () => {
     })
 
     const result = await findPullRequests({
+      github: testGitHubContext({ octokit: localOctokit }),
       lastRelease: {
         tag_name: 'v1.0.0',
       } as Awaited<
@@ -304,6 +339,7 @@ describe('findPullRequests', () => {
     ])
 
     const result = await findPullRequests({
+      github: testGitHubContext({ octokit: localOctokit }),
       lastRelease: {
         tag_name: 'v1.0.0',
       } as Awaited<
@@ -331,6 +367,7 @@ describe('findPullRequests', () => {
 
     await expect(
       findPullRequests({
+        github: testGitHubContext({ octokit: localOctokit }),
         lastRelease: {
           tag_name: 'v1.0.0',
         } as Awaited<

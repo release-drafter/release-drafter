@@ -13,7 +13,11 @@ import {
   generateNewContributorsList,
 } from '#src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts'
 import { buildReleasePayload } from '#src/actions/drafter/lib/index.ts'
-import { mockContext, mocks as sharedMocks } from '#tests/mocks/index.ts'
+import {
+  mockContext,
+  mocks as sharedMocks,
+  testGitHubContext,
+} from '#tests/mocks/index.ts'
 
 describe('generate changelog', () => {
   let config: ReturnType<typeof mergeInputAndConfig>
@@ -21,6 +25,8 @@ describe('generate changelog', () => {
   beforeEach(async () => {
     await mockContext('push')
     config = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
       }),
@@ -145,6 +151,8 @@ describe('generate changelog', () => {
 
   it('adds proper details/summary markdown when collapse-after is set and more than 3 PRs', () => {
     const categorizedConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
         categories: [
@@ -181,6 +189,8 @@ describe('generate changelog', () => {
 
   it('adds proper details/summary markdown when collapse-after is set to 0 and has a PR', () => {
     const categorizedConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
         categories: [
@@ -208,6 +218,8 @@ describe('generate changelog', () => {
 
   it('does not collapse when the category has exactly collapse-after pull requests', () => {
     const categorizedConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
         categories: [
@@ -233,6 +245,8 @@ describe('generate changelog', () => {
 
   it('does not collapse when collapse-after is disabled with -1', () => {
     const categorizedConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
         categories: [
@@ -254,6 +268,8 @@ describe('generate changelog', () => {
 
   it('does not add proper details/summary markdown when collapse-after is set and less than 3 PRs', () => {
     const categorizedConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
         categories: [
@@ -300,6 +316,8 @@ describe('generate changelog', () => {
 
   it('returns no-changes-template when all pull requests are excluded by exclude-labels', () => {
     const excludedConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
         'exclude-labels': ['bug', 'feature', 'bugfix', 'dependencies'],
@@ -318,6 +336,8 @@ describe('generate changelog', () => {
 
   it('returns no-changes-template when no pull requests match include-labels', () => {
     const includedConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
         'include-labels': ['non-existent-label'],
@@ -341,6 +361,8 @@ describe('build release payload', () => {
   beforeEach(async () => {
     await mockContext('push')
     config = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CHANGES',
       }),
@@ -348,6 +370,41 @@ describe('build release payload', () => {
         token: 'test',
       }),
     })
+  })
+
+  it('does not mark prereleases as latest in the release payload', async () => {
+    const releasePayload = await buildReleasePayload({
+      github: testGitHubContext(),
+      commits: [],
+      config: { ...config, prerelease: true, latest: true },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease: undefined,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.prerelease).toBe(true)
+    expect(releasePayload.make_latest).toBe(false)
+  })
+
+  it('keeps the comparison base separate from the version baseline', async () => {
+    const previousCommitish = '47ba33fd8c30c8764e8bc98517c6a902f0f43d26'
+    const lastRelease = {
+      tag_name: 'v7.6.0',
+      name: 'v7.6.0',
+    } as Parameters<typeof buildReleasePayload>[0]['lastRelease']
+
+    const releasePayload = await buildReleasePayload({
+      github: testGitHubContext(),
+      commits: [],
+      config: { ...config, template: '$PREVIOUS_TAG' },
+      input: actionInputSchema.parse({ token: 'test' }),
+      lastRelease,
+      previousCommitish,
+      pullRequests: [],
+    })
+
+    expect(releasePayload.body).toBe(previousCommitish)
+    expect(releasePayload.resolvedVersion).toBe('7.6.1')
   })
 
   it('resolves tag refs recursively to commit SHAs', async () => {
@@ -368,6 +425,7 @@ describe('build release payload', () => {
       })
 
     const releasePayload = await buildReleasePayload({
+      github: testGitHubContext(),
       commits: [],
       config: { ...config, commitish: 'refs/tags/v1.2.3' },
       input: actionInputSchema.parse({ token: 'test' }),
@@ -391,6 +449,7 @@ describe('build release payload', () => {
       .reply(200, { data: { repository: { object: null } } })
 
     const releasePayload = await buildReleasePayload({
+      github: testGitHubContext(),
       commits: [],
       config: { ...config, commitish: 'refs/tags/missing' },
       input: actionInputSchema.parse({ token: 'test' }),
@@ -450,6 +509,7 @@ describe('build release payload', () => {
       .reply(200, { data: { repository: { pullRequest } } })
 
     const releasePayload = await buildReleasePayload({
+      github: testGitHubContext(),
       commits: [],
       config: { ...config, commitish },
       input: actionInputSchema.parse({ token: 'test' }),
@@ -473,6 +533,7 @@ describe('build release payload', () => {
       .reply(200, { data: { repository: { pullRequest: null } } })
 
     const releasePayload = await buildReleasePayload({
+      github: testGitHubContext(),
       commits: [],
       config: { ...config, commitish: 'refs/pull/123/merge' },
       input: actionInputSchema.parse({ token: 'test' }),
@@ -489,6 +550,7 @@ describe('build release payload', () => {
 
   it('normalizes fully qualified branch refs', async () => {
     const releasePayload = await buildReleasePayload({
+      github: testGitHubContext(),
       commits: [],
       config,
       input: actionInputSchema.parse({ token: 'test' }),
@@ -509,6 +571,7 @@ describe('build release payload', () => {
     ],
   ])('maps commitish %s to %s', async (commitish, expectedTargetCommitish) => {
     const releasePayload = await buildReleasePayload({
+      github: testGitHubContext(),
       commits: [],
       config: { ...config, commitish },
       input: actionInputSchema.parse({ token: 'test' }),
@@ -757,6 +820,8 @@ describe('generate contributors sentence', () => {
   beforeEach(async () => {
     await mockContext('push')
     config = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({ template: '$CONTRIBUTORS' }),
       input: actionInputSchema.parse({ token: 'test' }),
     })
@@ -907,15 +972,14 @@ describe('generate contributors sentence', () => {
       '@octocat, @cchanche, @jetersen and [@github-actions[bot]](https://github.com/apps/github-actions)',
     )
 
-    const serverUrl = context.serverUrl
-    try {
-      context.serverUrl = 'https://github.example.com/'
-      expect(generateContributorsSentence(params)).toBe(
-        '@octocat, @cchanche, @jetersen and [@github-actions[bot]](https://github.example.com/apps/github-actions)',
-      )
-    } finally {
-      context.serverUrl = serverUrl
-    }
+    expect(
+      generateContributorsSentence({
+        ...params,
+        serverUrl: 'https://github.example.com/',
+      }),
+    ).toBe(
+      '@octocat, @cchanche, @jetersen and [@github-actions[bot]](https://github.example.com/apps/github-actions)',
+    )
   })
 
   it('renders author placeholders in pull request changelogs', () => {
@@ -990,6 +1054,8 @@ describe('generate contributors sentence', () => {
 
   it('renders the README multiline author configuration as valid YAML', () => {
     const readmeConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse(
         parse(`
           template: "$CHANGES"
@@ -1191,6 +1257,8 @@ describe('generate contributors sentence', () => {
       author,
     }
     const skipConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$NEW_CONTRIBUTORS',
         categories: [
@@ -1225,6 +1293,8 @@ describe('generate contributors sentence', () => {
       },
     }
     const skipConfig = mergeInputAndConfig({
+      logger: sharedMocks.core,
+      ref: context.ref,
       config: configSchema.parse({
         template: '$CONTRIBUTORS',
         categories: [
