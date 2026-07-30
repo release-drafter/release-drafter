@@ -2919,7 +2919,7 @@ var sortDescending = (a, b) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/static/last-not-found.md?raw
-var last_not_found_default = "> [!WARNING]\n>\n> Release Drafter could not find a previous **published release** for\n> `$OWNER/$REPOSITORY`. This draft was created **without a comparison\n> baseline**.\n\n> [!IMPORTANT]\n>\n> Treat this draft as a manual starting point. Review the proposed version, tag,\n> and notes before publishing.\n\nIf you did not expect this to happen,\n[open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).\n";
+var last_not_found_default = "> [!WARNING]\n> Release Drafter could not find a previous **published release** for `$OWNER/$REPOSITORY`. This draft was created **without a comparison baseline**.\n\n> [!IMPORTANT]\n> Treat this draft as a manual starting point.\n> Review the proposed version, tag, and notes before publishing.\n\nIf you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).\n";
 //#endregion
 //#region src/actions/drafter/lib/build-release-payload/build-release-payload.ts
 /**

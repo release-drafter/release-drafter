@@ -1,7 +1,9 @@
 # Markdown only; Biome owns every other language but cannot format Markdown.
 
 printWidth: 80
-proseWrap: always
+# Keep authored line breaks. Reflowing rewraps prose that reads fine and, since
+# a URL cannot be broken, pushes long links onto their own line.
+proseWrap: preserve
 tabWidth: 2
 useTabs: false
 endOfLine: lf
