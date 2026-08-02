@@ -108,6 +108,33 @@ describe('workspace foundation', () => {
     }
   })
 
+  it('requires every setup-node step to use the repository Node version', () => {
+    const fixtureRoot = mkdtempSync(
+      join(tmpdir(), 'release-drafter-workflows-'),
+    )
+    try {
+      mkdirSync(join(fixtureRoot, '.github/workflows'), { recursive: true })
+      writeFileSync(
+        join(fixtureRoot, '.github/workflows/node.yaml'),
+        `
+          jobs:
+            build:
+              steps:
+                - uses: actions/setup-node@v6
+                  with:
+                    node-version-file: .node-version
+                - uses: actions/setup-node@v6
+        `,
+      )
+
+      expect(collectWorkflowFailures(fixtureRoot)).toEqual([
+        'node.yaml setup-node step build/2 must select Node through .node-version',
+      ])
+    } finally {
+      rmSync(fixtureRoot, { force: true, recursive: true })
+    }
+  })
+
   it('rejects undeclared source imports and private imports left in public output', () => {
     const fixtureRoot = mkdtempSync(
       join(tmpdir(), 'release-drafter-boundaries-'),
