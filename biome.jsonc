@@ -89,5 +89,17 @@
         },
       },
     },
+    {
+      // Root action sources intentionally import workspace package entrypoints.
+      // Biome would otherwise rewrite them to package source files.
+      "includes": ["src/actions/**/*.ts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useImportExtensions": "off",
+          },
+        },
+      },
+    },
   ],
 }

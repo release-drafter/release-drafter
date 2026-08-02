@@ -53,6 +53,10 @@ typings/
 # Workspace package builds are generated; root /dist stays tracked for Actions.
 packages/*/dist/
 
+# Source must override global ignore files that commonly exclude Release/.
+!packages/core/src/release/
+!packages/core/src/release/**
+
 # Optional npm cache directory
 .npm
 

@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/autolabeler",
   "version": "7.7.0",
-  "description": "Autolabeler package boundary skeleton.",
+  "description": "Runtime-neutral configuration and matching for Release Drafter's autolabeler.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -16,9 +16,20 @@
     }
   },
   "scripts": {
-    "build": "vite build --config ../../vite.workspace.config.ts",
-    "tsc:check": "tsc --noEmit -p tsconfig.json"
+    "build": "vite build --config ../../vite.workspace.config.ts && tsc --emitDeclarationOnly --noEmit false --declarationMap false --outDir dist -p tsconfig.json",
+    "tsc:check": "tsc --noEmit -p tsconfig.json",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts"
+  },
+  "dependencies": {
+    "escape-string-regexp": "^5.0.0",
+    "ignore": "^7.0.6",
+    "regex-parser": "^2.3.1",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   },
   "license": "MIT",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
 }

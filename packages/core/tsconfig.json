@@ -1,5 +1,6 @@
 {
   "extends": "../../tsconfig.workspace.json",
+  "compilerOptions": { "rootDir": "src" },
   "include": ["src/**/*.ts"],
   "exclude": ["src/**/*.test.ts"]
 }

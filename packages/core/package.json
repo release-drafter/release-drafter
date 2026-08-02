@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/core",
   "version": "7.7.0",
-  "description": "Forge-neutral release drafting core skeleton.",
+  "description": "Forge-neutral release drafting and orchestration.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -16,11 +16,22 @@
     }
   },
   "scripts": {
-    "build": "vite build --config ../../vite.workspace.config.ts",
-    "tsc:check": "tsc --noEmit -p tsconfig.json"
+    "build": "vite build --config ../../vite.workspace.config.ts && tsc --emitDeclarationOnly --noEmit false --declarationMap false --outDir dist -p tsconfig.json",
+    "tsc:check": "tsc --noEmit -p tsconfig.json",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts"
+  },
+  "dependencies": {
+    "compare-versions": "^6.1.1",
+    "conventional-commits-parser": "^6.4.0",
+    "escape-string-regexp": "^5.0.0",
+    "ignore": "^7.0.6",
+    "regex-parser": "^2.3.1",
+    "semver": "^7.8.5",
+    "zod": "^4.4.3"
   },
   "license": "MIT",
   "devDependencies": {
+    "@types/semver": "^7.7.1",
     "vitest": "^4.1.10"
   },
   "private": true

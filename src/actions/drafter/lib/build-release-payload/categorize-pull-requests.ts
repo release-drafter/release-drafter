@@ -1,10 +1,10 @@
 import {
   type ChangelogCategory,
-  filterPullRequestsByPreCategories,
+  evaluateCategories,
   getChangelogCategories,
-  matchesCategory,
-} from '../../common/category-matching.ts'
+} from '@release-drafter/core'
 import type { ParsedConfig } from '../../config/index.ts'
+import { toCorePullRequest } from '../core-compat.ts'
 import type { findPullRequests } from '../find-pull-requests/index.ts'
 
 type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
@@ -13,51 +13,27 @@ export const categorizePullRequests = (params: {
   pullRequests: Pr[]
   config: Pick<ParsedConfig, 'categories'>
 }): [Pr[], (ChangelogCategory & { pullRequests: Pr[] })[]] => {
-  const { pullRequests, config } = params
-  const changelogCategories = getChangelogCategories(config.categories)
-  const uncategorizedPullRequests: Pr[] = []
-  const categorizedPullRequests: (ChangelogCategory & {
-    pullRequests: Pr[]
-  })[] = changelogCategories.map((category) => {
-    return { ...category, pullRequests: [] }
-  })
+  const changelogCategories = getChangelogCategories(params.config.categories)
+  const categorized = changelogCategories.map((category) => ({
+    ...category,
+    pullRequests: [] as Pr[],
+  }))
+  const uncategorized: Pr[] = []
 
-  const uncategorizedCategoryIndex = changelogCategories.findIndex(
-    (category) => category.when.length === 0,
-  )
-  const filteredPullRequests = filterPullRequestsByPreCategories(
-    pullRequests,
-    config.categories,
-  )
-
-  for (const pullRequest of filteredPullRequests) {
-    let matchedAnyCategory = false
-
-    for (const category of categorizedPullRequests) {
-      if (category.when.length === 0) {
-        continue
-      }
-
-      if (matchesCategory(category, pullRequest)) {
-        category.pullRequests.push(pullRequest)
-        matchedAnyCategory = true
-
-        if (category.exclusive) {
-          break
-        }
-      }
+  for (const pullRequest of params.pullRequests) {
+    const evaluation = evaluateCategories(
+      toCorePullRequest(pullRequest),
+      params.config.categories,
+    )
+    if (!evaluation.included) continue
+    if (evaluation.changelogCategories.length === 0) {
+      uncategorized.push(pullRequest)
+      continue
     }
-
-    if (!matchedAnyCategory) {
-      if (uncategorizedCategoryIndex === -1) {
-        uncategorizedPullRequests.push(pullRequest)
-      } else {
-        categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(
-          pullRequest,
-        )
-      }
+    for (const category of evaluation.changelogCategories) {
+      const index = changelogCategories.indexOf(category)
+      if (index !== -1) categorized[index].pullRequests.push(pullRequest)
     }
   }
-
-  return [uncategorizedPullRequests, categorizedPullRequests]
+  return [uncategorized, categorized]
 }

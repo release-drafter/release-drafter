@@ -1,5 +1,6 @@
+import { builtinModules } from 'node:module'
 import { dirname, resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 const packageJson = process.env.npm_package_json
 if (!packageJson)
@@ -16,6 +17,22 @@ export default defineConfig({
     minify: false,
     outDir: resolve(workspaceRoot, 'dist'),
     target: 'node24',
+    rollupOptions: {
+      // Workspace packages target Node, not Vite's browser compatibility layer.
+      // @ts-expect-error remove this when Vite's rolldown platform option is stable
+      platform: 'node',
+      external: (id) => id.startsWith('node:') || builtinModules.includes(id),
+    },
+  },
+  test: {
+    include: ['src/**/*.test.ts'],
+    testTimeout: 60000,
+    coverage: {
+      enabled: true,
+      reporter: ['json-summary'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/**/*.generated.ts'],
+    },
   },
   plugins: [
     {

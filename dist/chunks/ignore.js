@@ -33093,8 +33093,8 @@ function escapeStringRegexp(string) {
 	return string.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
 }
 //#endregion
-//#region src/common/string-to-regex.ts
-var import_lib = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+//#region node_modules/regex-parser/lib/index.js
+var require_lib = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = function(input) {
 		if (typeof input !== "string") throw new Error("Invalid input. Input must be a string");
 		var m = input.match(/(\/?)(.+)\1([a-z]*)/i);
@@ -33104,10 +33104,8 @@ var import_lib = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((export
 		}).join("");
 		return new RegExp(m[2], validFlags);
 	};
-})))(), 1);
-var stringToRegex = (search) => {
-	return /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, import_lib.default)(search) : new RegExp(escapeStringRegexp(search), "g");
-};
+}));
+require_lib();
 //#endregion
 //#region node_modules/ignore/index.js
 var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
@@ -33344,4 +33342,4 @@ var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	define(module.exports, Symbol.for("setupWindows"), setupWindows);
 }));
 //#endregion
-export { setOutput as A, stringbool as C, getInput as D, error as E, __commonJSMin as M, __toESM as N, info as O, string$1 as S, debug as T, array as _, parseCommitishForRelease as a, number as b, executeGraphql as c, getPullRequestsChangedFiles as d, composeConfigGet as f, _enum as g, ZodDefault as h, sharedInputSchema as i, warning as j, setFailed as k, paginateGraphql as l, context as m, stringToRegex as n, FindCommitsInComparisonDocument as o, getOctokit as p, escapeStringRegexp as r, FindRecentMergedPullRequestsDocument as s, require_ignore as t, getPullRequestChangedFiles as u, boolean as v, union as w, object as x, literal as y };
+export { setOutput as A, stringbool as C, getInput as D, debug as E, __commonJSMin as M, __toESM as N, info as O, string$1 as S, core_exports as T, array as _, parseCommitishForRelease as a, number as b, executeGraphql as c, getPullRequestsChangedFiles as d, composeConfigGet as f, _enum as g, ZodDefault as h, sharedInputSchema as i, warning as j, setFailed as k, paginateGraphql as l, context as m, require_lib as n, FindCommitsInComparisonDocument as o, getOctokit as p, escapeStringRegexp as r, FindRecentMergedPullRequestsDocument as s, require_ignore as t, getPullRequestChangedFiles as u, boolean as v, union as w, object as x, literal as y };
