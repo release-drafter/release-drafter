@@ -52,7 +52,14 @@ const runSmokeConfigDryRun = async (params: {
       body.query.includes('query findRecentMergedPullRequests'),
     )
     .reply(200, {
-      data: { repository: { pullRequests: { nodes: [] } } },
+      data: {
+        repository: {
+          pullRequests: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [],
+          },
+        },
+      },
     })
   const releaseScope = nockGetReleases({
     releaseFiles: params.releaseFiles,

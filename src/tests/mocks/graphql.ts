@@ -139,18 +139,34 @@ export const mockGraphqlQuery = (
             body.query.includes('query findRecentMergedPullRequests'),
           )
           .reply(200, {
-            data: { repository: { pullRequests: { nodes: [] } } },
+            data: {
+              repository: {
+                pullRequests: {
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                  nodes: [],
+                },
+              },
+            },
           })
       }
       continue
     }
 
     for (const payload of payloads) {
+      const response = getGqlPayload(payload)
+      if (
+        (param.query || defaultQuery) === 'query findRecentMergedPullRequests'
+      ) {
+        response.data.repository.pullRequests.pageInfo ??= {
+          hasNextPage: false,
+          endCursor: null,
+        }
+      }
       scope = scope
         .post('/graphql', (body) =>
           body.query.includes(param.query || defaultQuery),
         )
-        .reply(200, getGqlPayload(payload))
+        .reply(200, response)
     }
   }
 

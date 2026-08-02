@@ -68,7 +68,14 @@ vi.mock('#src/common/get-octokit.ts', () => ({
         }
       }
       if (query.includes('findRecentMergedPullRequests')) {
-        return { repository: { pullRequests: { nodes: [] } } }
+        return {
+          repository: {
+            pullRequests: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [],
+            },
+          },
+        }
       }
       if (query.includes('findPullRequestChangedFiles')) {
         const paths = await localMocks.paginate()
