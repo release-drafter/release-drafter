@@ -6,7 +6,6 @@ on:
       - v*.*.*
 
 permissions:
-  id-token: write
   contents: write
 
 jobs:
@@ -30,10 +29,6 @@ jobs:
 
       - name: Check for clean working directory
         run: npm run check:clean
-
-      - name: Publish
-        if: false # Publishing is currently disabled, see https://github.com/release-drafter/release-drafter/pull/1475#discussion_r2901869066
-        run: npm publish # Publishes to npmjs, using package.json's version
 
       - name: Parse pushed tag version
         id: version

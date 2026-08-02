@@ -1,6 +1,6 @@
 {
-  "name": "release-drafter",
-  "description": "Drafts your next release notes as pull requests are merged into your branch(es).",
+  "name": "@release-drafter/root",
+  "description": "Private workspace coordinator for Release Drafter.",
   "version": "7.7.0",
   "author": "",
   "type": "module",
@@ -28,11 +28,13 @@
     "#tests/*": "./src/tests/*"
   },
   "scripts": {
-    "build": "vite build",
+    "build": "npm run build:actions && npm run build:workspaces",
+    "build:actions": "vite build",
+    "build:workspaces": "npm run build --workspaces --if-present",
     "test": "vitest",
     "test:run": "vitest run",
     "coverage": "node src/scripts/coverage-summary.ts",
-    "tsc:check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "tsc:check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && npm run tsc:check --workspaces --if-present",
     "format:write": "biome format --write .",
     "format:check": "biome format .",
     "format:md:write": "prettier --write \"**/*.md\"",
@@ -41,10 +43,13 @@
     "check": "biome check --write .",
     "codegen": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "schemas": "node src/scripts/json-schema.ts",
-    "all": "npm run check && npm run format:md:write && npm run tsc:check && npm run test:run && npm run schemas && npm run build",
+    "guard:packages": "node src/scripts/guard-packages.ts",
+    "guard:boundaries": "node src/scripts/guard-boundaries.ts",
+    "guard:workspaces": "npm run guard:packages && npm run guard:boundaries",
+    "all": "npm run check && npm run format:md:write && npm run guard:workspaces && npm run tsc:check && npm run test:run && npm run schemas && npm run build",
     "check:clean": "node src/scripts/check-clean.ts",
     "preversion": "npm run all && npm run check:clean",
-    "version": "git add package.json package-lock.json",
+    "version": "node src/scripts/sync-workspace-versions.ts && npm install --package-lock-only --ignore-scripts && git add package.json package-lock.json packages/*/package.json",
     "postversion": "git push && git push origin v$npm_package_version"
   },
   "license": "MIT",
@@ -83,5 +88,8 @@
     "typescript": "^7.0.2",
     "vite": "^8.1.4",
     "vitest": "^4.1.10"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

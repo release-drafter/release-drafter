@@ -57,17 +57,19 @@ export default defineConfig({
     minify: false,
   },
   test: {
-    include: ['src/tests/**/*.test.ts'],
+    include: ['src/tests/**/*.test.ts', 'packages/*/src/**/*.test.ts'],
     testTimeout: 60000,
     setupFiles: ['src/tests/setup.ts'],
     coverage: {
       enabled: true,
       reporter: ['json-summary'],
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.ts', 'packages/*/src/**/*.ts'],
       exclude: [
         'src/tests/**/*.ts',
+        'packages/*/src/**/*.test.ts',
         'src/scripts/**/*',
         'src/**/*.generated.ts',
+        'packages/*/src/**/*.generated.ts',
       ],
     },
   },

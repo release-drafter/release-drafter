@@ -1,17 +1,20 @@
 import { execSync } from 'node:child_process'
 
-const status = execSync('git status --porcelain', { encoding: 'utf-8' }).trim()
+const unstagedDiff = execSync('git diff --text', { encoding: 'utf-8' })
+const untracked = execSync('git ls-files --others --exclude-standard', {
+  encoding: 'utf-8',
+}).trim()
 
-if (status) {
-  const diff = execSync('git diff --ignore-space-at-eol --text', {
-    encoding: 'utf-8',
-  })
+if (unstagedDiff || untracked) {
   console.error(
-    '💥 Detected uncommitted or untracked changes after build checks. No diffs are allowed.',
+    '💥 Detected unstaged or untracked changes after build checks. Generated artifacts must match the staged tree.',
   )
-  console.error(execSync('git status --short', { encoding: 'utf-8' }).trim())
-  if (diff) {
-    console.error(diff)
+  const status = execSync('git status --short', { encoding: 'utf-8' }).trim()
+  if (status) {
+    console.error(status)
+  }
+  if (unstagedDiff) {
+    console.error(unstagedDiff)
   }
   process.exit(1)
 }

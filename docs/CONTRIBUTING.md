@@ -44,6 +44,34 @@ request being accepted:
 Work in Progress pull requests are also welcome to get feedback early on, or if
 there is something blocked you.
 
+## Workspace development
+
+Release Drafter uses a private npm-workspaces root. Install dependencies from the
+repository root with `npm install` so npm can link every workspace declared under
+`packages/*` and update `package-lock.json` deterministically.
+
+The current GitHub Action entrypoints remain at the repository root:
+`action.yml`, `drafter/action.yml`, `autolabeler/action.yml`, and the tracked
+bundles under `dist/actions/*/run.js`. Workspace skeletons are buildable package
+boundaries only and do not move existing Action behavior.
+
+Common commands:
+
+- `npm run all` formats, lints, validates workspace publication and dependency
+  boundaries, type-checks, tests, regenerates schemas, and rebuilds bundles.
+- `npm run guard:packages` verifies the private root, private scoped workspaces,
+  Node 24 declarations, and the sole structurally publishable `release-drafter`
+  facade package.
+- `npm run guard:boundaries` prevents accidental runtime dependencies on private
+  workspace packages.
+- `npm run check:clean` verifies generation left no unstaged or untracked drift
+  relative to the intended staged tree.
+- `npm run build --workspaces --if-present` builds package skeletons after the
+  root Vite Action bundle build.
+
+Do not add npm publication workflows or make scoped `@release-drafter/*`
+workspaces publishable without a dedicated maintainer-approved release plan.
+
 ## Issue Management Policy
 
 To maintain project health and keep issues actionable, we automatically manage
@@ -88,9 +116,11 @@ npm version [major | minor | patch] --ignore-scripts=false
 The command does the following:
 
 - Run tests (`preversion` script)
-- Bumps the version number in [package.json](../package.json) and create
-  corresponding tag
-- Stage changes for git (`version` script)
+- Bumps the private root version in [package.json](../package.json)
+- Synchronizes that version to every workspace manifest, including the public
+  `packages/release-drafter/package.json` facade, refreshes `package-lock.json`,
+  and stages all versioned manifests (`version` script)
+- Creates the corresponding tag
 - Commit and tag
 - Push & push tag (`postversion` script)
 
