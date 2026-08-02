@@ -61,7 +61,7 @@ export type RepositoryConfigRequest = {
 }
 
 const RELEASE_COUNT_LIMIT = 1000
-const RECENT_PR_LOOKBACK = 5
+const PULL_REQUEST_PAGE_SIZE = 100
 const DEFAULT_CONCURRENCY = 5
 
 const deriveEndpoints = (
@@ -456,30 +456,57 @@ export class GitHubAdapter implements ForgeAdapter {
     foundKeys: Set<string>,
     baseRefName: string | null,
   ): Promise<GraphPullRequest[]> {
-    const data: {
-      repository?: {
-        pullRequests?: { nodes?: Array<GraphPullRequest | null> | null } | null
-      } | null
-    } = await this.graphql(FindRecentMergedPullRequestsDocument.toString(), {
-      name: params.repository.name,
-      owner: params.repository.owner,
-      baseRefName,
-      limit: RECENT_PR_LOOKBACK,
-      withPullRequestBody: params.pullRequestFields.body,
-      withPullRequestURL: params.pullRequestFields.url,
-      withBaseRefName: params.pullRequestFields.baseRefName,
-      withHeadRefName: params.pullRequestFields.headRefName,
-    })
-    return (data.repository?.pullRequests?.nodes ?? []).flatMap(
-      (pullRequest) => {
-        if (!pullRequest?.mergeCommit?.oid) return []
-        const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
-        return commitOids.has(pullRequest.mergeCommit.oid) &&
-          !foundKeys.has(key)
-          ? [pullRequest]
-          : []
-      },
-    )
+    const recovered: GraphPullRequest[] = []
+    let cursor: string | null = null
+    let shouldContinue = true
+    while (shouldContinue) {
+      const data: {
+        repository?: {
+          pullRequests?: {
+            pageInfo: {
+              hasNextPage: boolean
+              endCursor?: string | null
+            }
+            nodes?: Array<GraphPullRequest | null> | null
+          } | null
+        } | null
+      } = await this.graphql(FindRecentMergedPullRequestsDocument.toString(), {
+        name: params.repository.name,
+        owner: params.repository.owner,
+        baseRefName,
+        cursor,
+        limit: PULL_REQUEST_PAGE_SIZE,
+        withPullRequestBody: params.pullRequestFields.body,
+        withPullRequestURL: params.pullRequestFields.url,
+        withBaseRefName: params.pullRequestFields.baseRefName,
+        withHeadRefName: params.pullRequestFields.headRefName,
+      })
+      const pullRequests = data.repository?.pullRequests
+      if (!pullRequests) {
+        throw new Error('Query returned no recent pull request connection')
+      }
+      recovered.push(
+        ...(pullRequests.nodes ?? []).flatMap((pullRequest) => {
+          if (!pullRequest?.mergeCommit?.oid) return []
+          const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
+          return commitOids.has(pullRequest.mergeCommit.oid) &&
+            !foundKeys.has(key)
+            ? [pullRequest]
+            : []
+        }),
+      )
+      if (
+        pullRequests.pageInfo.hasNextPage &&
+        !pullRequests.pageInfo.endCursor
+      ) {
+        throw new Error(
+          'Query returned no end cursor for the next recent pull request page',
+        )
+      }
+      cursor = pullRequests.pageInfo.endCursor ?? null
+      shouldContinue = pullRequests.pageInfo.hasNextPage
+    }
+    return recovered
   }
 
   private async loadChangedFiles(

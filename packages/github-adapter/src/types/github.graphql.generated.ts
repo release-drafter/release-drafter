@@ -8731,6 +8731,7 @@ export type FindRecentMergedPullRequestsQueryVariables = Exact<{
   name: string;
   owner: string;
   baseRefName?: string | null | undefined;
+  cursor?: string | null | undefined;
   limit: number;
   withPullRequestBody: boolean;
   withPullRequestURL: boolean;
@@ -8739,7 +8740,7 @@ export type FindRecentMergedPullRequestsQueryVariables = Exact<{
 }>;
 
 
-export type FindRecentMergedPullRequestsQuery = { repository: { pullRequests: { nodes: Array<{ title: string, number: number, url?: string, body?: string, isCrossRepository: boolean, mergedAt: string | null, merged: boolean, baseRefName?: string, headRefName?: string, mergeCommit: { oid: string } | null, author:
+export type FindRecentMergedPullRequestsQuery = { repository: { pullRequests: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, nodes: Array<{ title: string, number: number, url?: string, body?: string, isCrossRepository: boolean, mergedAt: string | null, merged: boolean, baseRefName?: string, headRefName?: string, mergeCommit: { oid: string } | null, author:
           | { __typename: 'Bot', login: string, url: string }
           | { __typename: 'EnterpriseUserAccount', login: string, url: string }
           | { __typename: 'Mannequin', login: string, url: string }
@@ -8867,14 +8868,19 @@ export const FindPullRequestChangedFilesDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<FindPullRequestChangedFilesQuery, FindPullRequestChangedFilesQueryVariables>;
 export const FindRecentMergedPullRequestsDocument = new TypedDocumentString(`
-    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
+    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $cursor: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
   repository(name: $name, owner: $owner) {
     pullRequests(
       states: [MERGED]
       baseRefName: $baseRefName
       orderBy: { field: UPDATED_AT, direction: DESC }
       first: $limit
+      after: $cursor
     ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         ...AdapterPullRequestFields
         mergeCommit {
