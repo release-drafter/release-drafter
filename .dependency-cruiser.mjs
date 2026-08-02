@@ -110,7 +110,7 @@ export default {
     ...workspaceBoundaryRules,
   ],
   options: {
-    doNotFollow: { path: '^node_modules/' },
+    doNotFollow: { path: '(^|/)node_modules/' },
     enhancedResolveOptions: {
       conditionNames: ['types', 'import', 'node', 'default'],
       exportsFields: ['exports'],

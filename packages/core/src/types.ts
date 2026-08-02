@@ -19,6 +19,7 @@ export type PullRequest = {
   baseRefName?: string
   headRefName?: string
   baseRepository?: string | null
+  isCrossRepository?: boolean
   author?: ReleaseAuthor | null
   labels?: string[]
   changedFiles?: string[]
@@ -28,10 +29,14 @@ export type PullRequest = {
 export type CommitAuthor = {
   name?: string | null
   login?: string | null
+  type?: string
 }
 
 export type Commit = {
+  id?: string
   oid: string
+  committedAt?: string
+  message?: string
   author?: CommitAuthor | null
   authors?: (CommitAuthor | null)[] | null
   associatedPullRequests?:

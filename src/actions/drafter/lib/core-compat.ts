@@ -76,7 +76,7 @@ export const toCoreCommit = (commit: RawCommit): Commit => ({
 })
 
 export const toCoreRelease = (release: RawRelease): Release => ({
-  id: release.id,
+  id: release.id ?? '',
   tagName: release.tag_name,
   name: release.name,
   targetCommitish: release.target_commitish,

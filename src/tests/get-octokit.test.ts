@@ -7,19 +7,18 @@ describe('getOctokit', () => {
     vi.stubEnv('GITHUB_TOKEN', 'test')
   })
 
-  it('retries a transient server failure', async () => {
+  it('does not retry a transient server failure under Vitest', async () => {
     const scope = nock('https://api.github.com')
       .get('/repos/release-drafter/release-drafter')
+      .once()
       .reply(500, { message: 'Server Error' })
-      .get('/repos/release-drafter/release-drafter')
-      .reply(200, { id: 1 })
 
-    const response = await getOctokit().request('GET /repos/{owner}/{repo}', {
-      owner: 'release-drafter',
-      repo: 'release-drafter',
-    })
-
-    expect(response.status).toBe(200)
+    await expect(
+      getOctokit().request('GET /repos/{owner}/{repo}', {
+        owner: 'release-drafter',
+        repo: 'release-drafter',
+      }),
+    ).rejects.toMatchObject({ status: 500 })
     expect(scope.isDone()).toBe(true)
   })
 

@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/github-adapter",
   "version": "7.7.0",
-  "description": "GitHub adapter package boundary skeleton.",
+  "description": "Authentication-bound GitHub adapter for Release Drafter core.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -17,8 +17,22 @@
   },
   "scripts": {
     "build": "vite build --config ../../vite.workspace.config.ts",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts",
     "tsc:check": "tsc --noEmit -p tsconfig.json"
   },
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@octokit/core": "^7.0.6",
+    "@octokit/plugin-paginate-graphql": "^6.0.0",
+    "@octokit/plugin-paginate-rest": "^14.0.0",
+    "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
+    "@octokit/plugin-retry": "^8.1.0",
+    "@release-drafter/core": "*",
+    "undici": "^7.29.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
 }

@@ -1,0 +1,20 @@
+query findPullRequestChangedFiles(
+  $name: String!
+  $owner: String!
+  $number: Int!
+  $cursor: String
+) {
+  repository(name: $name, owner: $owner) {
+    pullRequest(number: $number) {
+      files(first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          path
+        }
+      }
+    }
+  }
+}

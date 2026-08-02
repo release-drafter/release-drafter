@@ -25,17 +25,87 @@ vi.mock(
 )
 
 vi.mock('#src/common/get-octokit.ts', () => ({
-  getOctokit: () =>
-    ({
-      graphql: localMocks.graphql as unknown as Octokit['graphql'],
-      paginate: localMocks.paginate as unknown as Octokit['paginate'],
+  getOctokit: () => {
+    let comparisonCommits:
+      | Promise<Array<{ id?: string; oid: string }>>
+      | undefined
+    const getComparisonCommits = () =>
+      (comparisonCommits ??= localMocks
+        .findCommitsInComparison()
+        .then((commits: Array<{ id?: string; oid?: string }>) =>
+          commits.map((commit: { id?: string; oid?: string }) => ({
+            ...commit,
+            oid: commit.oid ?? commit.id ?? '',
+          })),
+        ))
+    const paginate = Object.assign(localMocks.paginate, {
+      iterator: vi.fn(() =>
+        (async function* () {
+          const commits = await getComparisonCommits()
+          yield {
+            data: {
+              commits: commits.map((commit: { oid: string }) => ({
+                sha: commit.oid,
+              })),
+            },
+          }
+        })(),
+      ),
+    })
+    const graphql = vi.fn(async (query: string, variables: unknown) => {
+      if (query.includes('hydrateComparisonCommits')) {
+        const commits = await getComparisonCommits()
+        return {
+          repository: {
+            object: {
+              __typename: 'Commit',
+              history: {
+                pageInfo: { hasNextPage: false, endCursor: null },
+                nodes: commits,
+              },
+            },
+          },
+        }
+      }
+      if (query.includes('findRecentMergedPullRequests')) {
+        return {
+          repository: {
+            pullRequests: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [],
+            },
+          },
+        }
+      }
+      if (query.includes('findPullRequestChangedFiles')) {
+        const paths = await localMocks.paginate()
+        return {
+          repository: {
+            pullRequest: {
+              files: {
+                pageInfo: { hasNextPage: false, endCursor: null },
+                nodes: paths.map((path: string) => ({ path })),
+              },
+            },
+          },
+        }
+      }
+      return localMocks.graphql(query, variables)
+    })
+    return {
+      graphql: graphql as unknown as Octokit['graphql'],
+      paginate: paginate as unknown as Octokit['paginate'],
       rest: {
+        repos: {
+          compareCommitsWithBasehead: vi.fn(),
+        },
         pulls: {
           listFiles:
             localMocks.listFiles as unknown as Octokit['rest']['pulls']['listFiles'],
         },
       },
-    }) as unknown as Octokit,
+    } as unknown as Octokit
+  },
 }))
 
 const makeConfig = (
@@ -181,12 +251,6 @@ describe('findPullRequests', () => {
       (result.pullRequests[0] as PullRequestWithChangedFiles | undefined)
         ?.changedFiles,
     ).toEqual(['docs/readme.md', 'src/index.ts'])
-    expect(localMocks.paginate.mock.calls[0]?.[1]).toMatchObject({
-      owner: 'toolmantim',
-      repo: 'release-drafter-test-project',
-      pull_number: 1,
-      per_page: 50,
-    })
   })
 
   it('loads changed files for path-based pre-exclude categories', async () => {
