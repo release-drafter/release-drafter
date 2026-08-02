@@ -11,6 +11,9 @@ type PackageJson = {
   publishConfig?: unknown
 }
 
+const npmPublicationPattern =
+  /\bnpm(?:[ \t]+(?!publish\b|token\b)[^\s#]+)*[ \t]+(?:publish|token)\b|registry-url|NODE_AUTH_TOKEN/
+
 export function collectWorkflowFailures(rootDir = '.') {
   const failures: string[] = []
   for (const workflow of readdirSync(join(rootDir, '.github/workflows')).filter(
@@ -20,7 +23,7 @@ export function collectWorkflowFailures(rootDir = '.') {
       join(rootDir, '.github/workflows', workflow),
       'utf8',
     )
-    if (/npm\s+(publish|token)|registry-url|NODE_AUTH_TOKEN/.test(contents))
+    if (npmPublicationPattern.test(contents))
       failures.push(`${workflow} must not enable npm publication`)
     if (
       contents.includes('actions/setup-node@') &&

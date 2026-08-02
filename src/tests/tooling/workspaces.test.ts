@@ -84,7 +84,7 @@ describe('workspace foundation', () => {
         expect(contents).toContain('node-version-file: .node-version')
       }
       expect(contents).not.toMatch(
-        /npm\s+(publish|token)|registry-url|NODE_AUTH_TOKEN/,
+        /\bnpm(?:[ \t]+(?!publish\b|token\b)[^\s#]+)*[ \t]+(?:publish|token)\b|registry-url|NODE_AUTH_TOKEN/,
       )
     }
   })
@@ -97,7 +97,7 @@ describe('workspace foundation', () => {
       mkdirSync(join(fixtureRoot, '.github/workflows'), { recursive: true })
       writeFileSync(
         join(fixtureRoot, '.github/workflows/publish.yaml'),
-        'name: publish\nsteps:\n  - run: npm publish\n',
+        'name: publish\nsteps:\n  - run: npm --workspace release-drafter publish\n',
       )
 
       expect(collectWorkflowFailures(fixtureRoot)).toEqual([
@@ -116,6 +116,7 @@ describe('workspace foundation', () => {
       name: string
       directory: string
       dependencies?: Record<string, string>
+      devDependencies?: Record<string, string>
       source?: string
       output?: string
     }) => {
@@ -127,6 +128,7 @@ describe('workspace foundation', () => {
         JSON.stringify({
           name: params.name,
           dependencies: params.dependencies,
+          devDependencies: params.devDependencies,
         }),
       )
       writeFileSync(join(workspace, 'src/index.ts'), params.source ?? '')
@@ -137,14 +139,21 @@ describe('workspace foundation', () => {
       writeWorkspace({
         directory: 'core',
         name: '@release-drafter/core',
-        source: "import '@release-drafter/rest-adapter'",
+        source: `
+          import '@release-drafter/rest-adapter'
+          require('@release-drafter/rest-adapter')
+        `,
         output: "export * from '@release-drafter/github-adapter'",
       })
       writeWorkspace({
         directory: 'github-adapter',
         name: '@release-drafter/github-adapter',
-        dependencies: { '@release-drafter/core': 'workspace:*' },
-        source: "import type {} from '@release-drafter/core'",
+        devDependencies: { '@release-drafter/core': 'workspace:*' },
+        source: `
+          import type { Core } from '@release-drafter/core'
+          // import '@release-drafter/rest-adapter'
+          const example = "require('@release-drafter/core')"
+        `,
       })
       writeWorkspace({
         directory: 'release-drafter',
