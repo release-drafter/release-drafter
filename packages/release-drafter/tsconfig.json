@@ -1,4 +1,9 @@
 {
   "extends": "../../tsconfig.workspace.json",
+  "compilerOptions": {
+    "paths": {
+      "@release-drafter/core": ["../core/src/index.ts"]
+    }
+  },
   "include": ["src"]
 }
