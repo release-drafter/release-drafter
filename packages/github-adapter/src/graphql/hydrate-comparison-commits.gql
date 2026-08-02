@@ -1,0 +1,51 @@
+query hydrateComparisonCommits(
+  $name: String!
+  $owner: String!
+  $headRef: String!
+  $cursor: String
+  $historyLimit: Int!
+  $pullRequestLimit: Int!
+  $withPullRequestBody: Boolean!
+  $withPullRequestURL: Boolean!
+  $withBaseRefName: Boolean!
+  $withHeadRefName: Boolean!
+) {
+  repository(name: $name, owner: $owner) {
+    object(expression: $headRef) {
+      __typename
+      ... on Commit {
+        history(first: $historyLimit, after: $cursor) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          nodes {
+            id
+            oid
+            committedDate
+            message
+            author {
+              name
+              user {
+                login
+              }
+            }
+            authors(first: 100) {
+              nodes {
+                name
+                user {
+                  login
+                }
+              }
+            }
+            associatedPullRequests(first: $pullRequestLimit) {
+              nodes {
+                ...AdapterPullRequestFields
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

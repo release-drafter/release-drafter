@@ -1,21 +1,9 @@
-import process from 'node:process'
-import * as core from '@actions/core'
-import { getOctokit as createOctokit } from '@actions/github'
-import {
-  paginateGraphQL,
-  type paginateGraphQLInterface,
-} from '@octokit/plugin-paginate-graphql'
-import { type RetryPlugin, retry } from '@octokit/plugin-retry'
+import { getGitHubAdapter } from './get-github-adapter.ts'
 
-export const getOctokit = () => {
-  return createOctokit(
-    process.env.GITHUB_TOKEN || '',
-    {
-      log: { ...core, warn: core.warning },
-    },
-    paginateGraphQL,
-    retry,
-  ) as ReturnType<typeof createOctokit> & paginateGraphQLInterface & RetryPlugin
-}
+/**
+ * Temporary compatibility seam for legacy Action modules. Octokit construction,
+ * endpoints, retry, pagination, and proxy behavior are owned by the GitHub adapter.
+ */
+export const getOctokit = () => getGitHubAdapter().octokit
 
 export type Octokit = ReturnType<typeof getOctokit>

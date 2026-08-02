@@ -1,24 +1,32 @@
-import { context } from '@actions/github'
-import { getOctokit } from '#src/common/index.ts'
+import {
+  getGitHubAdapter,
+  getOctokit,
+  getRepository,
+} from '#src/common/index.ts'
 import type { buildReleasePayload } from '../build-release-payload/index.ts'
 
 export const createRelease = async (params: {
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
 }) => {
-  const octokit = getOctokit()
   const { releasePayload } = params
-
-  return octokit.rest.repos.createRelease({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    target_commitish: releasePayload.targetCommitish,
-    name: releasePayload.name,
-    tag_name: releasePayload.tag,
-    body: releasePayload.body,
-    draft: releasePayload.draft,
-    prerelease: releasePayload.prerelease,
-    make_latest: releasePayload.prerelease
-      ? 'false'
-      : (releasePayload.make_latest.toString() as 'true' | 'false'),
+  const release = await getGitHubAdapter(getOctokit()).createRelease({
+    repository: getRepository(),
+    payload: {
+      ...releasePayload,
+      makeLatest: releasePayload.make_latest,
+    },
   })
+  return {
+    data: {
+      id: release.id,
+      tag_name: release.tagName,
+      name: release.name ?? null,
+      target_commitish: release.targetCommitish ?? '',
+      created_at: release.createdAt ?? '',
+      draft: release.draft ?? false,
+      prerelease: release.prerelease ?? false,
+      html_url: release.url ?? '',
+      upload_url: release.uploadUrl ?? '',
+    },
+  }
 }
