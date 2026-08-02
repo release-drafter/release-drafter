@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { parse } from 'yaml'
 
 type PackageJson = {
   name?: string
@@ -9,6 +10,18 @@ type PackageJson = {
   workspaces?: string[]
   engines?: { node?: string }
   publishConfig?: unknown
+}
+
+type Workflow = {
+  jobs?: Record<
+    string,
+    {
+      steps?: Array<{
+        uses?: unknown
+        with?: Record<string, unknown>
+      }>
+    }
+  >
 }
 
 const npmPublicationPattern =
@@ -25,11 +38,20 @@ export function collectWorkflowFailures(rootDir = '.') {
     )
     if (npmPublicationPattern.test(contents))
       failures.push(`${workflow} must not enable npm publication`)
-    if (
-      contents.includes('actions/setup-node@') &&
-      !contents.includes('node-version-file: .node-version')
-    )
-      failures.push(`${workflow} must select Node through .node-version`)
+    const parsedWorkflow = parse(contents) as Workflow
+    for (const [jobName, job] of Object.entries(parsedWorkflow.jobs ?? {})) {
+      for (const [stepIndex, step] of (job.steps ?? []).entries()) {
+        if (
+          typeof step.uses === 'string' &&
+          step.uses.startsWith('actions/setup-node@') &&
+          step.with?.['node-version-file'] !== '.node-version'
+        ) {
+          failures.push(
+            `${workflow} setup-node step ${jobName}/${stepIndex + 1} must select Node through .node-version`,
+          )
+        }
+      }
+    }
   }
   return failures
 }
