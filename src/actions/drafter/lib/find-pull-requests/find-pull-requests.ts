@@ -1,76 +1,18 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { getOctokit, getPullRequestsChangedFiles } from '#src/common/index.ts'
+import {
+  getGitHubAdapter,
+  getOctokit,
+  getRepository,
+} from '#src/common/index.ts'
 import { needsPullRequestChangedFiles } from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
-import { findCommitsInComparison } from './find-commits-in-comparison.ts'
-import {
-  findRecentMergedPullRequests,
-  type RecentMergedPullRequest,
-} from './find-recent-merged-pull-requests.ts'
-
-const findNewContributorLogins = async (
-  pullRequests: Array<{
-    author?: { __typename?: string; login: string } | null
-    mergedAt?: string | null
-  }>,
-) => {
-  const firstMergedAtByLogin = new Map<string, string>()
-
-  for (const pullRequest of pullRequests) {
-    if (pullRequest.author?.__typename !== 'User' || !pullRequest.mergedAt)
-      continue
-
-    const previous = firstMergedAtByLogin.get(pullRequest.author.login)
-    if (!previous || pullRequest.mergedAt < previous) {
-      firstMergedAtByLogin.set(pullRequest.author.login, pullRequest.mergedAt)
-    }
-  }
-
-  const candidates = [...firstMergedAtByLogin]
-  if (candidates.length === 0) return new Set<string>()
-
-  const variables = Object.fromEntries(
-    candidates.map(([login, mergedAt], index) => [
-      `query${index}`,
-      `repo:${context.repo.owner}/${context.repo.repo} is:pr is:merged author:${login} merged:<${mergedAt}`,
-    ]),
-  )
-  const data = await getOctokit().graphql<
-    Record<string, { issueCount: number }>
-  >(
-    `query findPreviousContributions(${candidates.map((_, index) => `$query${index}: String!`).join(', ')}) {
-      ${candidates.map((_, index) => `author${index}: search(query: $query${index}, type: ISSUE, first: 1) { issueCount }`).join('\n')}
-    }`,
-    variables,
-  )
-
-  return new Set(
-    candidates.flatMap(([login], index) =>
-      data[`author${index}`]?.issueCount === 0 ? [login] : [],
-    ),
-  )
-}
 
 export const findPullRequests = async (params: {
   lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
   config: ParsedConfig
 }) => {
-  const sharedComparisonParams = {
-    name: context.repo.repo,
-    owner: context.repo.owner,
-    headRef: params.config.commitish,
-    withPullRequestBody: params.config['change-template'].includes('$BODY'),
-    withPullRequestURL: params.config['change-template'].includes('$URL'),
-    withBaseRefName:
-      params.config['change-template'].includes('$BASE_REF_NAME'),
-    withHeadRefName:
-      params.config['change-template'].includes('$HEAD_REF_NAME'),
-    pullRequestLimit: params.config['pull-request-limit'],
-    historyLimit: params.config['history-limit'],
-  }
-
   if (!params.lastRelease?.tag_name) {
     core.warning('A previous (published) release is required to find changes')
     return {
@@ -80,109 +22,145 @@ export const findPullRequests = async (params: {
     }
   }
 
+  const baseRef = `refs/tags/${params.lastRelease.tag_name}`
   core.info(
-    `Finding commits between refs/tags/${params.lastRelease.tag_name} and ${params.config.commitish}...`,
+    `Finding commits between ${baseRef} and ${params.config.commitish}...`,
   )
-  const commits = await findCommitsInComparison({
-    baseRef: `refs/tags/${params.lastRelease.tag_name}`,
-    ...sharedComparisonParams,
+  const changes = await getGitHubAdapter(getOctokit()).findChanges({
+    repository: getRepository(),
+    comparison: {
+      baseRef,
+      headRef: params.config.commitish,
+    },
+    pullRequestFields: {
+      body: params.config['change-template'].includes('$BODY'),
+      url: params.config['change-template'].includes('$URL'),
+      baseRefName: params.config['change-template'].includes('$BASE_REF_NAME'),
+      headRefName: params.config['change-template'].includes('$HEAD_REF_NAME'),
+    },
+    pullRequestLimit: params.config['pull-request-limit'],
+    historyLimit: params.config['history-limit'],
+    includeChangedFiles: needsPullRequestChangedFiles(params.config.categories),
+    includeNewContributors: [
+      params.config.header,
+      params.config.template,
+      params.config.footer,
+    ].some((template) => template?.includes('$NEW_CONTRIBUTORS')),
   })
 
-  core.info(`Found ${commits.length} commits.`)
-
-  // Extract unique PRs from commits, deduplicated by repo + PR number
-  const pullRequestsByKey = new Map(
-    commits
-      .flatMap((commit) => commit.associatedPullRequests?.nodes ?? [])
-      .filter((pr) => pr != null)
-      .map(
-        (pr) =>
-          [`${pr.baseRepository?.nameWithOwner}#${pr.number}`, pr] as const,
-      ),
-  )
-  const pullRequestsRaw = [...pullRequestsByKey.values()]
-
-  // GitHub's associatedPullRequests index lags for very recently merged PRs;
-  // query the PR table directly to recover any whose merge commit is in range.
-  const comparisonCommitOids = new Set(
-    commits.flatMap((c) => (c.oid ? [c.oid] : [])),
-  )
-  // Filter by branch only when commitish is a confirmed branch ref
-  // (refs/heads/...). For bare values (e.g. "main", "v1.2.3") we can't tell
-  // branch from tag, so fall back to no filter and rely on OID intersection.
-  // Skip the safety net entirely for tag/pull refs since PRs don't merge into
-  // those.
-  const { commitish } = params.config
-  const isBranchRef = commitish.startsWith('refs/heads/')
-  const isUnsupportedRef =
-    commitish.startsWith('refs/tags/') || commitish.startsWith('refs/pull/')
-  const recoveredPRs =
-    comparisonCommitOids.size === 0 || isUnsupportedRef
-      ? []
-      : await findRecentMergedPullRequests({
-          baseRefName: isBranchRef
-            ? commitish.replace(/^refs\/heads\//, '')
-            : null,
-          commitOids: comparisonCommitOids,
-          foundPrKeys: new Set(pullRequestsByKey.keys()),
-          fieldFlags: {
-            withPullRequestBody: sharedComparisonParams.withPullRequestBody,
-            withPullRequestURL: sharedComparisonParams.withPullRequestURL,
-            withBaseRefName: sharedComparisonParams.withBaseRefName,
-            withHeadRefName: sharedComparisonParams.withHeadRefName,
-          },
-        })
-  const pullRequests: Array<
-    (typeof pullRequestsRaw)[number] | RecentMergedPullRequest
-  > = [...pullRequestsRaw, ...recoveredPRs].filter(
-    (pr) =>
-      // `baseRepository` is the repository the PR targets, not the head/fork repo.
-      // Keep fork PRs that target the current repository, and exclude associated
-      // PRs that belong to some other repository but share the same commit.
-      pr.baseRepository?.nameWithOwner ===
-        `${context.repo.owner}/${context.repo.repo}` &&
-      // Ensure PR is merged
-      pr.merged,
-  )
-  const shouldLoadPullRequestChangedFiles = needsPullRequestChangedFiles(
-    params.config.categories,
-  )
-  const pullRequestChangedFiles = shouldLoadPullRequestChangedFiles
-    ? await getPullRequestsChangedFiles({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        pullRequests,
-      })
-    : new Map<string, string[]>()
-  const usesNewContributors = [
-    params.config.header,
-    params.config.template,
-    params.config.footer,
-  ].some((template) => template?.includes('$NEW_CONTRIBUTORS'))
-  const newContributorLogins = usesNewContributors
-    ? await findNewContributorLogins(pullRequests)
-    : new Set<string>()
-
+  core.info(`Found ${changes.commits.length} commits.`)
   core.info(
-    `Found ${pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${
-      pullRequests.length > 0
-        ? `: ${pullRequests.map((pr) => `#${pr.number}`).join(', ')}`
+    `Found ${changes.pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${
+      changes.pullRequests.length > 0
+        ? `: ${changes.pullRequests.map((pullRequest) => `#${pullRequest.number}`).join(', ')}`
         : '.'
     }`,
   )
 
+  const rawPullRequests = changes.pullRequests.map((pullRequest) => ({
+    __typename: 'PullRequest' as const,
+    title: pullRequest.title,
+    number: pullRequest.number,
+    url: pullRequest.url,
+    body: pullRequest.body,
+    author: pullRequest.author
+      ? {
+          __typename: pullRequest.author.type,
+          login: pullRequest.author.login,
+          url: pullRequest.author.url,
+        }
+      : pullRequest.author,
+    baseRepository: pullRequest.baseRepository
+      ? {
+          __typename: 'Repository' as const,
+          nameWithOwner: pullRequest.baseRepository,
+        }
+      : null,
+    mergedAt: pullRequest.mergedAt,
+    isCrossRepository: pullRequest.isCrossRepository ?? false,
+    labels: {
+      __typename: 'LabelConnection' as const,
+      nodes: (pullRequest.labels ?? []).map((name) => ({
+        __typename: 'Label' as const,
+        name,
+      })),
+    },
+    merged: true,
+    baseRefName: pullRequest.baseRefName,
+    headRefName: pullRequest.headRefName,
+    ...(pullRequest.mergeCommitOid
+      ? {
+          mergeCommit: {
+            __typename: 'Commit' as const,
+            oid: pullRequest.mergeCommitOid,
+          },
+        }
+      : {}),
+    ...(pullRequest.changedFiles
+      ? { changedFiles: pullRequest.changedFiles }
+      : {}),
+  }))
+  const pullRequestsByKey = new Map(
+    rawPullRequests.map((pullRequest) => [
+      `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`,
+      pullRequest,
+    ]),
+  )
+
   return {
-    commits,
-    newContributorLogins,
-    pullRequests: pullRequests.map((pullRequest) =>
-      shouldLoadPullRequestChangedFiles
+    commits: changes.commits.map((commit) => ({
+      __typename: 'Commit' as const,
+      id: commit.id,
+      oid: commit.oid,
+      committedDate: commit.committedAt,
+      message: commit.message,
+      author: commit.author
         ? {
-            ...pullRequest,
-            changedFiles: pullRequestChangedFiles.get(
-              `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`,
+            __typename: 'GitActor' as const,
+            name: commit.author.name,
+            user: commit.author.login
+              ? { __typename: 'User' as const, login: commit.author.login }
+              : null,
+          }
+        : commit.author,
+      authors: commit.authors
+        ? {
+            __typename: 'GitActorConnection' as const,
+            nodes: commit.authors.map((author) =>
+              author
+                ? {
+                    __typename: 'GitActor' as const,
+                    name: author.name,
+                    user: author.login
+                      ? { __typename: 'User' as const, login: author.login }
+                      : null,
+                  }
+                : author,
             ),
           }
-        : pullRequest,
-    ),
+        : commit.authors,
+      associatedPullRequests: commit.associatedPullRequests
+        ? {
+            __typename: 'PullRequestConnection' as const,
+            nodes: commit.associatedPullRequests.map((pullRequest) =>
+              pullRequest
+                ? (pullRequestsByKey.get(
+                    `${pullRequest.baseRepository}#${pullRequest.number}`,
+                  ) ?? {
+                    number: pullRequest.number,
+                    baseRepository: pullRequest.baseRepository
+                      ? {
+                          __typename: 'Repository' as const,
+                          nameWithOwner: pullRequest.baseRepository,
+                        }
+                      : null,
+                  })
+                : pullRequest,
+            ),
+          }
+        : commit.associatedPullRequests,
+    })),
+    newContributorLogins: changes.newContributorLogins,
+    pullRequests: rawPullRequests,
   }
 }

@@ -1,6 +1,8 @@
-import { context } from '@actions/github'
-import type { Endpoints } from '@octokit/types'
-import { getOctokit } from '#src/common/index.ts'
+import {
+  getGitHubAdapter,
+  getOctokit,
+  getRepository,
+} from '#src/common/index.ts'
 import type { buildReleasePayload } from '../build-release-payload/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 
@@ -11,45 +13,36 @@ export const updateRelease = async (params: {
   >
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
 }) => {
-  const octokit = getOctokit()
   const { draftRelease, releasePayload } = params
-
-  type UpdateParams =
-    Endpoints['PATCH /repos/{owner}/{repo}/releases/{release_id}']['parameters']
-
-  const updateReleaseParameters: Pick<
-    UpdateParams,
-    'name' | 'tag_name' | 'target_commitish'
-  > = {
-    name: releasePayload.name || draftRelease.name || undefined,
-    tag_name: releasePayload.tag || draftRelease.tag_name,
-    target_commitish: releasePayload.targetCommitish,
-  }
-
-  // Let GitHub figure out `name` and `tag_name` if undefined
-  if (!updateReleaseParameters.name) {
-    delete updateReleaseParameters.name
-  }
-  if (!updateReleaseParameters.tag_name) {
-    delete updateReleaseParameters.tag_name
-  }
-
-  // Keep existing `target_commitish` if not overridden
-  // (sending `null` resets it to the default branch)
-  if (!updateReleaseParameters.target_commitish) {
-    delete updateReleaseParameters.target_commitish
-  }
-
-  return octokit.rest.repos.updateRelease({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    release_id: draftRelease.id,
-    body: releasePayload.body,
-    draft: releasePayload.draft,
-    prerelease: releasePayload.prerelease,
-    make_latest: releasePayload.prerelease
-      ? 'false'
-      : (releasePayload.make_latest.toString() as 'true' | 'false'),
-    ...updateReleaseParameters,
+  const release = await getGitHubAdapter(getOctokit()).updateRelease({
+    repository: getRepository(),
+    release: {
+      id: draftRelease.id ?? '',
+      tagName: draftRelease.tag_name,
+      name: draftRelease.name,
+      targetCommitish: draftRelease.target_commitish,
+      createdAt: draftRelease.created_at,
+      draft: draftRelease.draft,
+      prerelease: draftRelease.prerelease,
+      url: draftRelease.html_url,
+      uploadUrl: draftRelease.upload_url,
+    },
+    payload: {
+      ...releasePayload,
+      makeLatest: releasePayload.make_latest,
+    },
   })
+  return {
+    data: {
+      id: release.id,
+      tag_name: release.tagName,
+      name: release.name ?? null,
+      target_commitish: release.targetCommitish ?? '',
+      created_at: release.createdAt ?? '',
+      draft: release.draft ?? false,
+      prerelease: release.prerelease ?? false,
+      html_url: release.url ?? '',
+      upload_url: release.uploadUrl ?? '',
+    },
+  }
 }

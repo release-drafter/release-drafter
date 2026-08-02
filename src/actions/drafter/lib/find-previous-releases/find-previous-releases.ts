@@ -1,14 +1,14 @@
 import * as core from '@actions/core'
-import { context } from '@actions/github'
 import coerce from 'semver/functions/coerce.js'
 import satisfies from 'semver/functions/satisfies.js'
 import validRange from 'semver/ranges/valid.js'
-import { getOctokit } from '#src/common/index.ts'
+import {
+  getGitHubAdapter,
+  getOctokit,
+  getRepository,
+} from '#src/common/index.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import { sortReleases } from './sort-releases.ts'
-
-// GitHub API currently returns a 500 HTTP response if you attempt to fetch over 1000 releases.
-const RELEASE_COUNT_LIMIT = 1000
 
 /**
  * Lists every release and :
@@ -43,25 +43,30 @@ export const findPreviousReleases = async (
     'include-pre-releases': includePreReleases,
     'filter-by-range': filterByRange,
   } = params
-  const octokit = getOctokit()
-
   core.info('Fetching releases from GitHub...')
-
-  let releaseCount = 0
-  const releases = await octokit.paginate(
-    octokit.rest.repos.listReleases,
-    {
-      ...context.repo,
-      per_page: 100,
-    },
-    (response, done) => {
-      releaseCount += response.data.length
-      if (releaseCount >= RELEASE_COUNT_LIMIT) {
-        done()
-      }
-      return response.data
-    },
-  )
+  const releases = (
+    await getGitHubAdapter(getOctokit()).listReleases({
+      repository: getRepository(),
+    })
+  ).map((release) => ({
+    tag_name: release.tagName,
+    ...(release.id !== undefined ? { id: release.id } : {}),
+    ...(release.name !== undefined ? { name: release.name } : {}),
+    ...(release.targetCommitish !== undefined
+      ? { target_commitish: release.targetCommitish }
+      : {}),
+    ...(release.createdAt !== undefined
+      ? { created_at: release.createdAt }
+      : {}),
+    ...(release.draft !== undefined ? { draft: release.draft } : {}),
+    ...(release.prerelease !== undefined
+      ? { prerelease: release.prerelease }
+      : {}),
+    ...(release.url !== undefined ? { html_url: release.url } : {}),
+    ...(release.uploadUrl !== undefined
+      ? { upload_url: release.uploadUrl }
+      : {}),
+  }))
 
   core.info(`Found ${releases.length} releases`)
 
@@ -71,7 +76,8 @@ export const findPreviousReleases = async (
   const commitishFilteredReleases = filterByCommitish
     ? releases.filter(
         (r) =>
-          targetCommitishName === r.target_commitish.replace(headRefRegex, ''),
+          targetCommitishName ===
+          (r.target_commitish ?? '').replace(headRefRegex, ''),
       )
     : releases
   const semverRangeFilteredReleases =
