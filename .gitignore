@@ -53,6 +53,9 @@ typings/
 # Workspace package builds are generated; root /dist stays tracked for Actions.
 packages/*/dist/
 
+# Generated from the repository license cache for the public npm package.
+packages/release-drafter/THIRD_PARTY_NOTICES
+
 # Optional npm cache directory
 .npm
 
