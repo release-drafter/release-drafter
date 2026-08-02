@@ -18,10 +18,10 @@ by its terms.
 2. Configure and install the dependencies: `npm install`
 3. Create a new branch: `git checkout -b my-branch-name`
 4. Make your change, add tests, and run `npm run all` before pushing — this runs
-   formatting, linting, type checking, tests, and builds the `dist/` directory.
-   The CI pipeline enforces that the repository has no uncommitted changes after
-   these steps, so **you must run `npm run all` locally before pushing** to
-   avoid build failures.
+   formatting, linting, type checking, tests, and builds the root Action bundles
+   and workspace packages. The CI pipeline enforces that tracked generated files
+   have no uncommitted changes after these steps, so **you must run `npm run all`
+   locally before pushing** to avoid build failures.
 5. Push to your fork and [submit a pull request][pr]
 6. Give yourself a high five, and wait for your pull request to be reviewed and
    merged.
@@ -55,6 +55,11 @@ The current GitHub Action entrypoints remain at the repository root:
 bundles under `dist/actions/*/run.js`. Workspace skeletons are buildable package
 boundaries only and do not move existing Action behavior.
 
+Only the root `dist/` directory is tracked because GitHub Actions execute those
+bundles directly from the repository. Builds under `packages/*/dist/` are
+generated, ignored artifacts; package manifests include them when packing after
+a workspace build.
+
 Common commands:
 
 - `npm run all` formats, lints, validates workspace publication and dependency
@@ -63,7 +68,8 @@ Common commands:
   Node 24 declarations, and the sole structurally publishable `release-drafter`
   facade package.
 - `npm run guard:boundaries` prevents accidental runtime dependencies on private
-  workspace packages.
+  workspace packages. Run `npm run build:workspaces` first when invoking this
+  guard outside `npm run all` so emitted output is available for inspection.
 - `npm run check:clean` verifies generation left no unstaged or untracked drift
   relative to the intended staged tree.
 - `npm run build --workspaces --if-present` builds package skeletons after the

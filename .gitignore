@@ -50,6 +50,9 @@ typings/
 # TypeScript cache
 *.tsbuildinfo
 
+# Workspace package builds are generated; root /dist stays tracked for Actions.
+packages/*/dist/
+
 # Optional npm cache directory
 .npm
 
