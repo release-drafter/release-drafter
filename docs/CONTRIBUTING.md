@@ -18,10 +18,10 @@ by its terms.
 2. Configure and install the dependencies: `npm install`
 3. Create a new branch: `git checkout -b my-branch-name`
 4. Make your change, add tests, and run `npm run all` before pushing — this runs
-   formatting, linting, type checking, tests, and builds the `dist/` directory.
-   The CI pipeline enforces that the repository has no uncommitted changes after
-   these steps, so **you must run `npm run all` locally before pushing** to
-   avoid build failures.
+   formatting, linting, type checking, tests, and builds the root Action bundles
+   and workspace packages. The CI pipeline enforces that tracked generated files
+   have no uncommitted changes after these steps, so **you must run `npm run all`
+   locally before pushing** to avoid build failures.
 5. Push to your fork and [submit a pull request][pr]
 6. Give yourself a high five, and wait for your pull request to be reviewed and
    merged.
@@ -43,6 +43,50 @@ request being accepted:
 
 Work in Progress pull requests are also welcome to get feedback early on, or if
 there is something blocked you.
+
+## Workspace development
+
+Release Drafter uses a private npm-workspaces root. Install dependencies from the
+repository root with `npm install` so npm can link every workspace declared under
+`packages/*` and update `package-lock.json` deterministically.
+
+The current GitHub Action entrypoints remain at the repository root:
+`action.yml`, `drafter/action.yml`, `autolabeler/action.yml`, and the tracked
+bundles under `dist/actions/*/run.js`. Workspace skeletons are buildable package
+boundaries only and do not move existing Action behavior.
+
+Only the root `dist/` directory is tracked because GitHub Actions execute those
+bundles directly from the repository. Builds under `packages/*/dist/` are
+generated, ignored artifacts; package manifests include them when packing after
+a workspace build.
+
+Common commands:
+
+- `npm run all` formats, lints, validates dependency hygiene, workspace
+  publication and dependency boundaries, type-checks, tests, regenerates
+  schemas, and rebuilds bundles. Tooling tests also run Node's `--check` against
+  every `src/scripts/*.ts` entry so they remain directly runnable on Node 24
+  without a compile step.
+- `npm run check:dependencies` runs Knip's complementary unused and unlisted
+  dependency checks without enabling its broader unused-file/export analysis.
+- `npm run check:boundaries` uses dependency-cruiser's SWC parser to validate
+  internal imports in workspace source and generated JavaScript/declarations.
+- `npm run guard:packages` verifies the private root, private scoped workspaces,
+  Node 24 declarations, and the sole structurally publishable `release-drafter`
+  facade package.
+- `npm run guard:boundaries` keeps the focused source-level check that runtime
+  imports are not satisfied only by `devDependencies`. Dependency-cruiser owns
+  the general source and emitted-output graph checks, while the focused SWC AST
+  pass retains the type-only distinction its extracted edges do not expose.
+- Run `npm run build:workspaces` before `npm run check:boundaries` outside
+  `npm run all` so generated JavaScript and declaration files are available.
+- `npm run check:clean` verifies generation left no unstaged or untracked drift
+  relative to the intended staged tree.
+- `npm run build --workspaces --if-present` builds package skeletons after the
+  root Vite Action bundle build.
+
+Do not add npm publication workflows or make scoped `@release-drafter/*`
+workspaces publishable without a dedicated maintainer-approved release plan.
 
 ## Issue Management Policy
 
@@ -88,9 +132,11 @@ npm version [major | minor | patch] --ignore-scripts=false
 The command does the following:
 
 - Run tests (`preversion` script)
-- Bumps the version number in [package.json](../package.json) and create
-  corresponding tag
-- Stage changes for git (`version` script)
+- Bumps the private root version in [package.json](../package.json)
+- Synchronizes that version to every workspace manifest, including the public
+  `packages/release-drafter/package.json` facade, refreshes `package-lock.json`,
+  and stages all versioned manifests (`version` script)
+- Creates the corresponding tag
 - Commit and tag
 - Push & push tag (`postversion` script)
 
