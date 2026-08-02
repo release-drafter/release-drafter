@@ -1,5 +1,495 @@
-import { A as setOutput, C as stringbool, D as getInput, E as error, M as __commonJSMin, N as __toESM, O as info, S as string, T as debug, _ as array, a as parseCommitishForRelease, b as number, c as executeGraphql, d as getPullRequestsChangedFiles, f as composeConfigGet, g as _enum, h as ZodDefault, i as sharedInputSchema, j as warning, k as setFailed, l as paginateGraphql, m as context, n as stringToRegex, o as FindCommitsInComparisonDocument, p as getOctokit, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, v as boolean, w as union, x as object, y as literal } from "../../chunks/ignore.js";
-//#region src/actions/drafter/config/schemas/common-config.schema.ts
+import { A as setOutput, C as stringbool, D as getInput, E as debug, M as __commonJSMin, N as __toESM, O as info, S as string, T as core_exports, _ as array, a as parseCommitishForRelease, b as number, c as executeGraphql, d as getPullRequestsChangedFiles, f as composeConfigGet, g as _enum, h as ZodDefault, i as sharedInputSchema, j as warning, k as setFailed, l as paginateGraphql, m as context, n as require_lib, o as FindCommitsInComparisonDocument, p as getOctokit, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, v as boolean, w as union, x as object, y as literal } from "../../chunks/ignore.js";
+//#region node_modules/conventional-commits-parser/dist/regex.js
+var nomatchRegex = /(?!.*)/;
+function escape(string) {
+	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function joinOr(parts) {
+	return parts.map((val) => typeof val === "string" ? escape(val.trim()) : val.source).filter(Boolean).join("|");
+}
+function getNotesRegex(noteKeywords, notesPattern) {
+	if (!noteKeywords) return nomatchRegex;
+	const noteKeywordsSelection = joinOr(noteKeywords);
+	if (!notesPattern) return new RegExp(`^[\\s|*]*(${noteKeywordsSelection})[:\\s]+(.*)`, "i");
+	return notesPattern(noteKeywordsSelection);
+}
+function getReferencePartsRegex(issuePrefixes, issuePrefixesCaseSensitive) {
+	if (!issuePrefixes) return nomatchRegex;
+	const flags = issuePrefixesCaseSensitive ? "g" : "gi";
+	return new RegExp(`(?:.*?)??\\s*([\\w-\\.\\/]*?)??(${joinOr(issuePrefixes)})([\\w-]+)(?=\\s|$|[,;)\\]])`, flags);
+}
+function getReferencesRegex(referenceActions) {
+	if (!referenceActions) return /()(.+)/gi;
+	const joinedKeywords = joinOr(referenceActions);
+	return new RegExp(`(${joinedKeywords})(?:\\s+(.*?))(?=(?:${joinedKeywords})|$)`, "gi");
+}
+/**
+* Make the regexes used to parse a commit.
+* @param options
+* @returns Regexes.
+*/
+function getParserRegexes(options = {}) {
+	return {
+		notes: getNotesRegex(options.noteKeywords, options.notesPattern),
+		referenceParts: getReferencePartsRegex(options.issuePrefixes, options.issuePrefixesCaseSensitive),
+		references: getReferencesRegex(options.referenceActions),
+		mentions: /@([\w-]+)/g,
+		url: /\b(?:https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%_+.~#?&//=])+\b/
+	};
+}
+//#endregion
+//#region node_modules/conventional-commits-parser/dist/utils.js
+var SCISSOR = "------------------------ >8 ------------------------";
+/**
+* Remove leading and trailing newlines.
+* @param input
+* @returns String without leading and trailing newlines.
+*/
+function trimNewLines(input) {
+	const matches = input.match(/[^\r\n]/);
+	if (typeof matches?.index !== "number") return "";
+	const firstIndex = matches.index;
+	let lastIndex = input.length - 1;
+	while (input[lastIndex] === "\r" || input[lastIndex] === "\n") lastIndex--;
+	return input.substring(firstIndex, lastIndex + 1);
+}
+/**
+* Append a newline to a string.
+* @param src
+* @param line
+* @returns String with appended newline.
+*/
+function appendLine(src, line) {
+	return src ? `${src}\n${line || ""}` : line || "";
+}
+/**
+* Creates a function that filters out comments lines.
+* @param char
+* @returns Comment filter function.
+*/
+function getCommentFilter(char) {
+	return char ? (line) => !line.startsWith(char) : () => true;
+}
+/**
+* Select lines before the scissor.
+* @param lines
+* @param commentChar
+* @returns Lines before the scissor.
+*/
+function truncateToScissor(lines, commentChar) {
+	const scissorIndex = lines.indexOf(`${commentChar} ${SCISSOR}`);
+	if (scissorIndex === -1) return lines;
+	return lines.slice(0, scissorIndex);
+}
+/**
+* Filter out GPG sign lines.
+* @param line
+* @returns True if the line is not a GPG sign line.
+*/
+function gpgFilter(line) {
+	return !line.match(/^\s*gpg:/);
+}
+/**
+* Assign matched correspondence to the target object.
+* @param target - The target object to assign values to.
+* @param matches - The RegExp match array containing the matched groups.
+* @param correspondence - An array of keys that correspond to the matched groups.
+* @returns The target object with assigned values.
+*/
+function assignMatchedCorrespondence(target, matches, correspondence) {
+	const { groups } = matches;
+	for (let i = 0, len = correspondence.length, key; i < len; i++) {
+		key = correspondence[i];
+		target[key] = (groups ? groups[key] : matches[i + 1]) || null;
+	}
+	return target;
+}
+//#endregion
+//#region node_modules/conventional-commits-parser/dist/options.js
+var defaultOptions = {
+	noteKeywords: ["BREAKING CHANGE", "BREAKING-CHANGE"],
+	issuePrefixes: ["#"],
+	referenceActions: [
+		"close",
+		"closes",
+		"closed",
+		"fix",
+		"fixes",
+		"fixed",
+		"resolve",
+		"resolves",
+		"resolved"
+	],
+	headerPattern: /^(\w*)(?:\(([\w$@.\-*/ ]*)\))?: (.*)$/,
+	headerCorrespondence: [
+		"type",
+		"scope",
+		"subject"
+	],
+	revertPattern: /^Revert\s"([\s\S]*)"\s*This reverts commit (\w*)\.?/,
+	revertCorrespondence: ["header", "hash"],
+	fieldPattern: /^-(.*?)-$/
+};
+//#endregion
+//#region node_modules/conventional-commits-parser/dist/CommitParser.js
+/**
+* Helper to create commit object.
+* @param initialData - Initial commit data.
+* @returns Commit object with empty data.
+*/
+function createCommitObject(initialData = {}) {
+	return {
+		merge: null,
+		revert: null,
+		header: null,
+		body: null,
+		footer: null,
+		notes: [],
+		mentions: [],
+		references: [],
+		...initialData
+	};
+}
+/**
+* Commit message parser.
+*/
+var CommitParser = class {
+	options;
+	regexes;
+	lines = [];
+	lineIndex = 0;
+	commit = createCommitObject();
+	constructor(options = {}) {
+		this.options = {
+			...defaultOptions,
+			...options
+		};
+		this.regexes = getParserRegexes(this.options);
+	}
+	currentLine() {
+		return this.lines[this.lineIndex];
+	}
+	nextLine() {
+		return this.lines[this.lineIndex++];
+	}
+	isLineAvailable() {
+		return this.lineIndex < this.lines.length;
+	}
+	parseReference(input, action) {
+		const { regexes } = this;
+		if (regexes.url.test(input)) return null;
+		const matches = regexes.referenceParts.exec(input);
+		if (!matches) return null;
+		let [raw, repository = null, prefix, issue] = matches;
+		let owner = null;
+		if (repository) {
+			const slashIndex = repository.indexOf("/");
+			if (slashIndex !== -1) {
+				owner = repository.slice(0, slashIndex);
+				repository = repository.slice(slashIndex + 1);
+			}
+		}
+		return {
+			raw,
+			action,
+			owner,
+			repository,
+			prefix,
+			issue
+		};
+	}
+	parseReferences(input) {
+		const { regexes } = this;
+		const regex = input.match(regexes.references) ? regexes.references : /()(.+)/gi;
+		const references = [];
+		let matches;
+		let action;
+		let sentence;
+		let reference;
+		while (true) {
+			matches = regex.exec(input);
+			if (!matches) break;
+			action = matches[1] || null;
+			sentence = matches[2] || "";
+			while (true) {
+				reference = this.parseReference(sentence, action);
+				if (!reference) break;
+				references.push(reference);
+			}
+		}
+		return references;
+	}
+	skipEmptyLines() {
+		let line = this.currentLine();
+		while (line !== void 0 && !line.trim()) {
+			this.nextLine();
+			line = this.currentLine();
+		}
+	}
+	parseMerge() {
+		const { commit, options } = this;
+		const correspondence = options.mergeCorrespondence || [];
+		const merge = this.currentLine();
+		const matches = merge && options.mergePattern ? merge.match(options.mergePattern) : null;
+		if (matches) {
+			this.nextLine();
+			commit.merge = matches[0] || null;
+			assignMatchedCorrespondence(commit, matches, correspondence);
+			return true;
+		}
+		return false;
+	}
+	parseHeader(isMergeCommit) {
+		if (isMergeCommit) this.skipEmptyLines();
+		const { commit, options } = this;
+		const correspondence = options.headerCorrespondence || [];
+		const header = commit.header ?? this.nextLine();
+		let matches = null;
+		if (header) {
+			if (options.breakingHeaderPattern) matches = header.match(options.breakingHeaderPattern);
+			if (!matches && options.headerPattern) matches = header.match(options.headerPattern);
+		}
+		if (header) commit.header = header;
+		if (matches) assignMatchedCorrespondence(commit, matches, correspondence);
+	}
+	parseMeta() {
+		const { options, commit } = this;
+		if (!options.fieldPattern || !this.isLineAvailable()) return false;
+		let matches;
+		let field = null;
+		let parsed = false;
+		while (this.isLineAvailable()) {
+			matches = this.currentLine().match(options.fieldPattern);
+			if (matches) {
+				field = matches[1] || null;
+				this.nextLine();
+				continue;
+			}
+			if (field) {
+				parsed = true;
+				commit[field] = appendLine(commit[field], this.currentLine());
+				this.nextLine();
+			} else break;
+		}
+		return parsed;
+	}
+	parseNotes() {
+		const { regexes, commit } = this;
+		if (!this.isLineAvailable()) return false;
+		const matches = this.currentLine().match(regexes.notes);
+		let references = [];
+		if (matches) {
+			const note = {
+				title: matches[1],
+				text: matches[2]
+			};
+			commit.notes.push(note);
+			commit.footer = appendLine(commit.footer, this.currentLine());
+			this.nextLine();
+			while (this.isLineAvailable()) {
+				if (this.parseMeta()) return true;
+				if (this.parseNotes()) return true;
+				references = this.parseReferences(this.currentLine());
+				if (references.length) commit.references.push(...references);
+				else note.text = appendLine(note.text, this.currentLine());
+				commit.footer = appendLine(commit.footer, this.currentLine());
+				this.nextLine();
+				if (references.length) break;
+			}
+			return true;
+		}
+		return false;
+	}
+	parseBodyAndFooter(isBody) {
+		const { commit } = this;
+		if (!this.isLineAvailable()) return isBody;
+		const references = this.parseReferences(this.currentLine());
+		const isStillBody = !references.length && isBody;
+		if (isStillBody) commit.body = appendLine(commit.body, this.currentLine());
+		else {
+			commit.references.push(...references);
+			commit.footer = appendLine(commit.footer, this.currentLine());
+		}
+		this.nextLine();
+		return isStillBody;
+	}
+	parseBreakingHeader() {
+		const { commit, options } = this;
+		if (!options.breakingHeaderPattern || commit.notes.length || !commit.header) return;
+		const matches = commit.header.match(options.breakingHeaderPattern);
+		if (matches) commit.notes.push({
+			title: "BREAKING CHANGE",
+			text: matches[3]
+		});
+	}
+	parseMentions(input) {
+		const { commit, regexes } = this;
+		let matches;
+		for (;;) {
+			matches = regexes.mentions.exec(input);
+			if (!matches) break;
+			commit.mentions.push(matches[1]);
+		}
+	}
+	parseRevert(input) {
+		const { commit, options } = this;
+		const correspondence = options.revertCorrespondence || [];
+		const matches = options.revertPattern ? input.match(options.revertPattern) : null;
+		if (matches) commit.revert = assignMatchedCorrespondence({}, matches, correspondence);
+	}
+	cleanupCommit() {
+		const { commit } = this;
+		if (commit.body) commit.body = trimNewLines(commit.body);
+		if (commit.footer) commit.footer = trimNewLines(commit.footer);
+		commit.notes.forEach((note) => {
+			note.text = trimNewLines(note.text);
+		});
+		const referencesSet = /* @__PURE__ */ new Set();
+		commit.references = commit.references.filter((reference) => {
+			const uid = `${reference.action} ${reference.raw}`.toLocaleLowerCase();
+			const ok = !referencesSet.has(uid);
+			if (ok) referencesSet.add(uid);
+			return ok;
+		});
+	}
+	/**
+	* Parse commit message string into an object.
+	* @param input - Commit message string.
+	* @returns Commit object.
+	*/
+	parse(input) {
+		if (!input.trim()) throw new TypeError("Expected a raw commit");
+		const { commentChar } = this.options;
+		const commentFilter = getCommentFilter(commentChar);
+		const rawLines = trimNewLines(input).split(/\r?\n/);
+		const lines = commentChar ? truncateToScissor(rawLines, commentChar).filter((line) => commentFilter(line) && gpgFilter(line)) : rawLines.filter((line) => gpgFilter(line));
+		const commit = createCommitObject();
+		this.lines = lines;
+		this.lineIndex = 0;
+		this.commit = commit;
+		const isMergeCommit = this.parseMerge();
+		this.parseHeader(isMergeCommit);
+		if (commit.header) commit.references = this.parseReferences(commit.header);
+		let isBody = true;
+		while (this.isLineAvailable()) {
+			this.parseMeta();
+			if (this.parseNotes()) isBody = false;
+			if (!this.parseBodyAndFooter(isBody)) isBody = false;
+		}
+		this.parseBreakingHeader();
+		this.parseMentions(input);
+		this.parseRevert(input);
+		this.cleanupCommit();
+		return commit;
+	}
+};
+//#endregion
+//#region packages/core/src/category-matching.ts
+var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
+var conventionalParser = new CommitParser({
+	headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
+	breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/
+});
+var priority$1 = {
+	patch: 1,
+	minor: 2,
+	major: 3
+};
+var unique = (values) => [...new Set(values)];
+var getPullRequestLabels = (pullRequest) => (pullRequest.labels ?? []).filter((label) => label.length > 0);
+var matchesValues = (actualValues, expectedValues, mode) => {
+	const actual = unique(actualValues);
+	const expected = unique(expectedValues);
+	if (expected.length === 0) return true;
+	switch (mode) {
+		case "all": return expected.every((value) => actual.includes(value));
+		case "only": return actual.length > 0 && actual.every((value) => expected.includes(value));
+		case "exactly": return actual.length === expected.length && actual.every((value) => expected.includes(value));
+		default: return expected.some((value) => actual.includes(value));
+	}
+};
+var matchesPullRequestPaths = (condition, pullRequest) => {
+	if (condition.paths.length === 0) return true;
+	const changedFiles = unique(pullRequest.changedFiles ?? []);
+	if (changedFiles.length === 0) return false;
+	const matchers = unique(condition.paths).map((path) => (0, import_ignore.default)().add(path));
+	const allPatternsMatch = matchers.every((matcher) => changedFiles.some((file) => matcher.ignores(file)));
+	const onlyPatternsMatch = changedFiles.every((file) => matchers.some((matcher) => matcher.ignores(file)));
+	switch (condition["paths-mode"]) {
+		case "all": return allPatternsMatch;
+		case "only": return onlyPatternsMatch;
+		case "exactly": return allPatternsMatch && onlyPatternsMatch;
+		default: return changedFiles.some((file) => matchers.some((matcher) => matcher.ignores(file)));
+	}
+};
+var parseConventionalTitle = (title) => {
+	if (!title) return void 0;
+	const parsed = conventionalParser.parse(title);
+	if (typeof parsed.type !== "string") return void 0;
+	return {
+		type: parsed.type,
+		scope: typeof parsed.scope === "string" ? parsed.scope : void 0,
+		breaking: parsed.notes.length > 0
+	};
+};
+var matchesConventionalTitle = (condition, pullRequest) => {
+	if (!condition.conventional) return true;
+	const parsed = parseConventionalTitle(pullRequest.title);
+	if (!parsed) return false;
+	const { types, scopes, breaking } = condition.conventional;
+	return (types.length === 0 || types.includes(parsed.type)) && (scopes.length === 0 || parsed.scope !== void 0 && scopes.includes(parsed.scope)) && (breaking === void 0 || breaking === parsed.breaking);
+};
+var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesPullRequestPaths(condition, pullRequest) && matchesConventionalTitle(condition, pullRequest);
+var matchesCategory = (category, pullRequest) => category.when.length === 0 || category.when.some((condition) => matchesCategoryCondition(condition, pullRequest));
+var selectCategories = (categories, pullRequest) => {
+	const matched = [];
+	for (const category of categories) {
+		if (category.when.length === 0) continue;
+		if (!matchesCategory(category, pullRequest)) continue;
+		matched.push(category);
+		if (category.exclusive) break;
+	}
+	const fallback = categories.find((category) => category.when.length === 0);
+	return {
+		categories: matched.length > 0 ? matched : fallback ? [fallback] : [],
+		usedFallback: matched.length === 0 && fallback !== void 0
+	};
+};
+/**
+* Evaluates every category concern for one change in one deterministic pass.
+*/
+var evaluateCategories = (pullRequest, categories) => {
+	const preIncludes = categories.filter((category) => category.type === "pre-include");
+	const preExcludes = categories.filter((category) => category.type === "pre-exclude");
+	const includedByPrecondition = preIncludes.length === 0 || preIncludes.some((category) => matchesCategory(category, pullRequest));
+	const excluded = includedByPrecondition && preExcludes.some((category) => matchesCategory(category, pullRequest));
+	const included = includedByPrecondition && !excluded;
+	const changelog = included ? selectCategories(getChangelogCategories(categories), pullRequest) : {
+		categories: [],
+		usedFallback: false
+	};
+	const version = included ? selectCategories(getVersionResolverCategories(categories), pullRequest) : {
+		categories: [],
+		usedFallback: false
+	};
+	const highest = [...changelog.categories, ...version.categories].map((category) => category["semver-increment"]).filter((increment) => increment in priority$1).reduce((current, increment) => !current || priority$1[increment] > priority$1[current] ? increment : current, void 0);
+	return {
+		included,
+		excluded,
+		changelogCategories: changelog.categories,
+		versionResolverCategories: version.categories,
+		usedChangelogFallback: changelog.usedFallback,
+		usedVersionFallback: version.usedFallback,
+		fallbackOnly: included && (changelog.categories.length > 0 || version.categories.length > 0) && changelog.categories.every((category) => category.when.length === 0) && version.categories.every((category) => category.when.length === 0),
+		versionIncrement: highest
+	};
+};
+var filterPullRequestsByPreCategories = (pullRequests, categories) => pullRequests.filter((pullRequest) => evaluateCategories(pullRequest, categories).included);
+var needsPullRequestChangedFiles = (categories) => categories.some((category) => category.when.some((condition) => condition.paths.length > 0));
+var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
+var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
+//#endregion
+//#region packages/core/src/config/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
 * the config file or the action input.
@@ -43,58 +533,8 @@ var commonConfigSchema = object({
 	*/
 	"filter-by-range": string().optional()
 });
-var actionInputSchema = object({
-	/**
-	* If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
-	* The config should still be located inside `.github` as that's where we are looking for config files.
-	* @default 'release-drafter.yml'
-	*/
-	"config-name": string().optional().default("release-drafter.yml"),
-	/**
-	* The name that will be used in the GitHub release that's created or updated.
-	* This will override any `name-template` specified in your `release-drafter.yml` if defined.
-	*/
-	name: string().optional(),
-	/**
-	* The tag name to be associated with the GitHub release that's created or updated.
-	* This will override any `tag-template` specified in your `release-drafter.yml` if defined.
-	*/
-	tag: string().optional(),
-	/**
-	* The version to be associated with the GitHub release that's created or updated.
-	* This will override any version calculated by the release-drafter.
-	*/
-	version: string().optional(),
-	/**
-	* A boolean indicating whether the release being created or updated should be immediately published.
-	*/
-	publish: stringbool().optional().default(false)
-}).and(sharedInputSchema).and(commonConfigSchema);
 //#endregion
-//#region src/actions/drafter/config/get-action-inputs.ts
-var getActionInput = () => {
-	const getInput$1 = (name) => getInput(name) || void 0;
-	const actionInput = {
-		"config-name": getInput$1("config-name"),
-		name: getInput$1("name"),
-		tag: getInput$1("tag"),
-		version: getInput$1("version"),
-		publish: getInput$1("publish"),
-		token: getInput$1("token"),
-		latest: getInput$1("latest"),
-		prerelease: getInput$1("prerelease"),
-		"prerelease-identifier": getInput$1("prerelease-identifier"),
-		"include-pre-releases": getInput$1("include-pre-releases"),
-		commitish: getInput$1("commitish"),
-		header: getInput$1("header"),
-		footer: getInput$1("footer"),
-		"dry-run": getInput$1("dry-run"),
-		"filter-by-range": getInput$1("filter-by-range")
-	};
-	return actionInputSchema.parse(actionInput);
-};
-//#endregion
-//#region src/actions/drafter/config/schemas/config.schema.ts
+//#region packages/core/src/config/config.schema.ts
 /**
 * A single set of predicates that are combined with AND logic.
 * All specified predicates must be satisfied for a change to match.
@@ -465,16 +905,6 @@ var configSchemaDefaults = Object.fromEntries(Object.entries({
 	if (value instanceof ZodDefault) return [key, value.def.defaultValue];
 	return [key, void 0];
 }));
-//#endregion
-//#region src/actions/drafter/config/get-config.ts
-var getConfig = async (configName) => {
-	const { config, contexts } = await composeConfigGet(configName, context);
-	contexts.forEach(({ filepath, ref, repo, scheme }) => {
-		const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ""}`;
-		info(`Config fetched ${scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`}.`);
-	});
-	return configSchema.parse(config);
-};
 //#endregion
 //#region node_modules/semver/internal/lrucache.js
 var require_lrucache = /* @__PURE__ */ __commonJSMin(((exports, module) => {
@@ -1263,7 +1693,7 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	};
 }));
 //#endregion
-//#region src/actions/drafter/config/parse-categories.ts
+//#region packages/core/src/string-to-regex.ts
 var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var Range = require_range();
 	var validRange = (range, options) => {
@@ -1275,16 +1705,20 @@ var import_valid = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 	};
 	module.exports = validRange;
 })))(), 1);
+var import_lib = /* @__PURE__ */ __toESM(require_lib(), 1);
+var stringToRegex = (search) => /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, import_lib.default)(search) : new RegExp(escapeStringRegexp(search), "g");
+//#endregion
+//#region packages/core/src/config/parse-categories.ts
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
 var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
-var normalizeConventional = (conventional) => {
+var normalizeConventional = (conventional, logger) => {
 	if (!conventional) return;
 	if (conventional === true) return {
 		types: [],
 		scopes: [],
 		breaking: void 0
 	};
-	if (Object.keys(conventional).length === 0) warning("Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.");
+	if (Object.keys(conventional).length === 0) logger.warning("Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.");
 	return {
 		types: [...conventional.types || [], ...conventional.type ? [conventional.type] : []],
 		scopes: [...conventional.scopes || [], ...conventional.scope ? [conventional.scope] : []],
@@ -1308,17 +1742,17 @@ var normalizeConventional = (conventional) => {
 * @param categories - Categories from the raw config
 * @returns Array of fully parsed categories with normalized conditions
 */
-function parseCategories(categories, deprecatedConfig) {
+function parseCategories(categories, deprecatedConfig, logger) {
 	const parsedCategories = structuredClone(categories.categories).map((cat) => {
 		const { labels, label, when: _when, "collapse-after": rawCollapseAfter, "semver-increment": rawSemverIncrement, exclusive: rawExclusive, title, ..._cat } = cat;
 		const collapseAfter = rawCollapseAfter ?? categorySchemaDefaults["collapse-after"];
 		const semverIncrement = rawSemverIncrement ?? categorySchemaDefaults["semver-increment"];
 		const exclusive = rawExclusive ?? categorySchemaDefaults.exclusive;
 		const deprecatedLabels = [...labels || [], ...label ? [label] : []];
-		if (deprecatedLabels.length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
+		if (deprecatedLabels.length > 0) logger.warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
 		const parsedWhenConditions = (_when !== void 0 ? Array.isArray(_when) ? _when.length > 0 || deprecatedLabels.length === 0 ? _when : [{}] : [_when] : deprecatedLabels.length > 0 ? [{}] : []).map((condition) => {
 			const { path, label, conventional, ..._cond } = condition;
-			const normalizedConventional = normalizeConventional(conventional);
+			const normalizedConventional = normalizeConventional(conventional, logger);
 			return {
 				..._cond,
 				"labels-mode": condition["labels-mode"] ?? changeConditionSchemaDefaults["labels-mode"],
@@ -1343,8 +1777,8 @@ function parseCategories(categories, deprecatedConfig) {
 				title
 			};
 			case "version-resolver":
-				if (title) warning(`Title "${title}" ignored for category of type "${categoryType}"`);
-				if (collapseAfter !== -1) warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
+				if (title) logger.warning(`Title "${title}" ignored for category of type "${categoryType}"`);
+				if (collapseAfter !== -1) logger.warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
 				return {
 					type: "version-resolver",
 					when: parsedWhenConditions,
@@ -1353,10 +1787,10 @@ function parseCategories(categories, deprecatedConfig) {
 				};
 			case "pre-exclude":
 			case "pre-include":
-				if (title) warning(`Title "${title}" ignored for category of type "${categoryType}"`);
-				if (collapseAfter !== -1) warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
+				if (title) logger.warning(`Title "${title}" ignored for category of type "${categoryType}"`);
+				if (collapseAfter !== -1) logger.warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
 				if (exclusive) throw new Error(`"exclusive" can only be set on categories of type "changelog" or "version-resolver"; it cannot be used on category of type "${categoryType}".`);
-				if (semverIncrement !== "patch") warning(`"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`);
+				if (semverIncrement !== "patch") logger.warning(`"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`);
 				return {
 					type: categoryType,
 					when: parsedWhenConditions
@@ -1364,7 +1798,7 @@ function parseCategories(categories, deprecatedConfig) {
 			default: throw new Error(`Unsupported category type: ${categoryType}`);
 		}
 	});
-	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) warning(withMigrationDocumentationLink(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`));
+	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) logger.warning(withMigrationDocumentationLink(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`));
 	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) {
 		if (parsedCategories.findIndex((cat) => cat.type === "pre-exclude") !== -1) throw new Error("A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels field. Please either remove the deprecated field or remove the existing 'pre-exclude' category to resolve this conflict.");
 		parsedCategories.push({
@@ -1378,7 +1812,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["include-labels"] && deprecatedConfig["include-labels"].length > 0 || deprecatedConfig["include-paths"] && deprecatedConfig["include-paths"].length > 0) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'include-labels' or 'include-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-include"' category.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'include-labels' or 'include-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-include"' category.`));
 		if (parsedCategories.findIndex((cat) => cat.type === "pre-include") !== -1) throw new Error("A 'pre-include' category already exists. Cannot migrate deprecated include-labels or include-paths fields. Please either remove the deprecated fields or remove the existing 'pre-include' category to resolve this conflict.");
 		parsedCategories.push({
 			type: "pre-include",
@@ -1391,7 +1825,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["version-resolver"].default !== configSchemaDefaults["version-resolver"].default) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.default' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "${deprecatedConfig["version-resolver"].default}"' to 'type: changelog' category with no 'when' condition (uncategorized changes), or move the default resolver to a new category with type 'version-resolver' and 'semver-increment' set to "${deprecatedConfig["version-resolver"].default}" - also without 'when' conditions.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.default' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "${deprecatedConfig["version-resolver"].default}"' to 'type: changelog' category with no 'when' condition (uncategorized changes), or move the default resolver to a new category with type 'version-resolver' and 'semver-increment' set to "${deprecatedConfig["version-resolver"].default}" - also without 'when' conditions.`));
 		if (parsedCategories.findIndex((cat) => cat.type === "version-resolver" && cat.when.length === 0) !== -1) throw new Error("A 'version-resolver' category with no 'when' condition already exists. Cannot migrate deprecated 'version-resolver.default' field. Please either remove the deprecated field or remove the existing 'version-resolver' category to resolve this conflict.");
 		parsedCategories.push({
 			type: "version-resolver",
@@ -1401,7 +1835,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["version-resolver"].major.labels !== configSchemaDefaults["version-resolver"].major.labels && deprecatedConfig["version-resolver"].major.labels.length > 0) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.major.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "major"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.major.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'major'.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.major.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "major"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.major.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'major'.`));
 		parsedCategories.push({
 			type: "version-resolver",
 			"semver-increment": "major",
@@ -1415,7 +1849,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["version-resolver"].minor.labels !== configSchemaDefaults["version-resolver"].minor.labels && deprecatedConfig["version-resolver"].minor.labels.length > 0) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.minor.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "minor"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.minor.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'minor'.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.minor.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "minor"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.minor.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'minor'.`));
 		parsedCategories.push({
 			type: "version-resolver",
 			"semver-increment": "minor",
@@ -1429,7 +1863,7 @@ function parseCategories(categories, deprecatedConfig) {
 		});
 	}
 	if (deprecatedConfig["version-resolver"].patch.labels !== configSchemaDefaults["version-resolver"].patch.labels && deprecatedConfig["version-resolver"].patch.labels.length > 0) {
-		warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.patch.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "patch"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.patch.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'patch'.`));
+		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.patch.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "patch"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.patch.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'patch'.`));
 		parsedCategories.push({
 			type: "version-resolver",
 			"semver-increment": "patch",
@@ -1445,16 +1879,9 @@ function parseCategories(categories, deprecatedConfig) {
 	return parsedCategories;
 }
 //#endregion
-//#region src/actions/drafter/config/merge-input-and-config.ts
-/**
-* Returns a copy of `config`, updated with values from `input`.
-*
-* Also performs some validation.
-*
-* Input takes precedence, because it's more easy to change at runtime
-*/
-var mergeInputAndConfig = (params) => {
-	const { config: originalConfig, input } = params;
+//#region packages/core/src/config/merge-input-and-config.ts
+var mergeInputAndConfig$1 = (params) => {
+	const { config: originalConfig, input, defaultCommitish, logger } = params;
 	const { "exclude-labels": excludeLabels, "include-labels": includeLabels, "include-paths": includePaths, "exclude-paths": excludePaths, "version-resolver": versionResolver, ...config } = structuredClone(originalConfig);
 	const deprecatedCategoryConfig = {
 		"exclude-labels": excludeLabels,
@@ -1463,10 +1890,22 @@ var mergeInputAndConfig = (params) => {
 		"exclude-paths": excludePaths,
 		"version-resolver": versionResolver
 	};
-	applyOverrides(config, input);
-	const { commitish, latest, prerelease } = getParsedDefaults(config);
-	const replacers = getTransformedReplacers(config);
-	const categories = getTransformedCategories(config, deprecatedCategoryConfig);
+	applyOverrides(config, input, logger);
+	const commitish = config.commitish || defaultCommitish || "";
+	const latest = typeof config.latest !== "boolean" ? true : config.latest;
+	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
+	const replacers = config.replacers.map((replacer) => {
+		try {
+			return {
+				...replacer,
+				search: stringToRegex(replacer.search)
+			};
+		} catch {
+			logger.warning(`Bad replacer regex: '${replacer.search}'`);
+			return false;
+		}
+	}).filter((replacer) => !!replacer);
+	const categories = parseCategories(config, deprecatedCategoryConfig, logger);
 	const parsedConfig = {
 		...config,
 		commitish,
@@ -1478,575 +1917,75 @@ var mergeInputAndConfig = (params) => {
 	validateParsedConfig(parsedConfig);
 	return parsedConfig;
 };
-var applyOverrides = (config, input) => {
-	applyStringOverride(config, input, "commitish");
-	applyStringOverride(config, input, "header");
-	applyStringOverride(config, input, "footer");
-	applyStringOverride(config, input, "prerelease-identifier");
-	applyBooleanOverride(config, input, "prerelease");
-	applyBooleanOverride(config, input, "include-pre-releases");
-	applyBooleanOverride(config, input, "latest");
-	applyStringOverride(config, input, "filter-by-range");
-	applyReleaseModeOverrides(config, input);
+var applyOverrides = (config, input, logger) => {
+	applyStringOverride(config, input, "commitish", logger);
+	applyStringOverride(config, input, "header", logger);
+	applyStringOverride(config, input, "footer", logger);
+	applyStringOverride(config, input, "prerelease-identifier", logger);
+	applyBooleanOverride(config, input, "prerelease", logger);
+	applyBooleanOverride(config, input, "include-pre-releases", logger);
+	applyBooleanOverride(config, input, "latest", logger);
+	applyStringOverride(config, input, "filter-by-range", logger);
+	applyReleaseModeOverrides(config, input, logger);
 };
-var applyReleaseModeOverrides = (config, input) => {
+var applyReleaseModeOverrides = (config, input, logger) => {
 	if (config.latest && config.prerelease) {
-		warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
+		logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
 		config.latest = false;
 	}
 	const hasInputPrerelease = typeof input.prerelease === "boolean";
 	const hasInputPrereleaseIdentifier = !!input["prerelease-identifier"];
 	if (config["prerelease-identifier"] && !config.prerelease && (!hasInputPrerelease || hasInputPrereleaseIdentifier)) {
-		warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
+		logger.warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
 		config.prerelease = true;
 	}
 };
-var applyBooleanOverride = (config, input, key) => {
+var applyBooleanOverride = (config, input, key, logger) => {
 	const inputValue = input[key];
 	if (typeof inputValue !== "boolean") return;
 	const configValue = config[key];
-	if (typeof configValue === "boolean" && configValue !== inputValue) info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
+	if (typeof configValue === "boolean" && configValue !== inputValue) logger.info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
 	config[key] = inputValue;
 };
-var applyStringOverride = (config, input, key) => {
+var applyStringOverride = (config, input, key, logger) => {
 	const inputValue = input[key];
 	if (!inputValue) return;
 	const configValue = config[key];
-	if (configValue && configValue !== inputValue) info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
+	if (configValue && configValue !== inputValue) logger.info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
 	config[key] = inputValue;
 };
-var getParsedDefaults = (config) => ({
-	commitish: config.commitish || context.ref || context.payload.ref,
-	latest: typeof config.latest !== "boolean" ? true : config.latest,
-	prerelease: typeof config.prerelease !== "boolean" ? false : config.prerelease
-});
-var getTransformedReplacers = (config) => config.replacers.map((r) => {
-	try {
-		return {
-			...r,
-			search: stringToRegex(r.search)
-		};
-	} catch {
-		warning(`Bad replacer regex: '${r.search}'`);
-		return false;
-	}
-}).filter((r) => !!r);
-var getTransformedCategories = (config, deprecatedCategoryConfig) => parseCategories(config, deprecatedCategoryConfig);
 var validateParsedConfig = (parsedConfig) => {
 	if (!parsedConfig.commitish) throw new Error("'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)");
-	if (parsedConfig.categories.filter((category) => category.type === "changelog" && !category.title).length > 0) throw new Error("Every 'type: \"changelog\"' category must define a non-empty 'title'.");
+	if (parsedConfig.categories.some((category) => category.type === "changelog" && !category.title)) throw new Error("Every 'type: \"changelog\"' category must define a non-empty 'title'.");
 	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.");
 	if (parsedConfig["filter-by-range"] && !(0, import_valid.default)(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
 };
 //#endregion
-//#region src/actions/drafter/config/set-action-output.ts
-var setActionOutput = (params) => {
-	const { releasePayload, upsertedRelease } = params;
-	info("Set action outputs...");
-	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body, name: releaseName, tag: releaseTagName } = releasePayload;
-	const outputName = upsertedRelease?.data.name ?? releaseName;
-	const outputTagName = upsertedRelease?.data.tag_name ?? releaseTagName;
-	if (upsertedRelease) {
-		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl } } = upsertedRelease;
-		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
-		if (htmlUrl) setOutput("html_url", htmlUrl);
-		if (uploadUrl) setOutput("upload_url", uploadUrl);
-	}
-	if (outputTagName) setOutput("tag_name", outputTagName);
-	if (outputName) setOutput("name", outputName);
-	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
-	if (majorVersion) setOutput("major_version", majorVersion);
-	if (minorVersion) setOutput("minor_version", minorVersion);
-	if (patchVersion) setOutput("patch_version", patchVersion);
-	setOutput("body", body);
-	info("Outputs set!");
-};
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/regex.js
-var nomatchRegex = /(?!.*)/;
-function escape(string) {
-	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-function joinOr(parts) {
-	return parts.map((val) => typeof val === "string" ? escape(val.trim()) : val.source).filter(Boolean).join("|");
-}
-function getNotesRegex(noteKeywords, notesPattern) {
-	if (!noteKeywords) return nomatchRegex;
-	const noteKeywordsSelection = joinOr(noteKeywords);
-	if (!notesPattern) return new RegExp(`^[\\s|*]*(${noteKeywordsSelection})[:\\s]+(.*)`, "i");
-	return notesPattern(noteKeywordsSelection);
-}
-function getReferencePartsRegex(issuePrefixes, issuePrefixesCaseSensitive) {
-	if (!issuePrefixes) return nomatchRegex;
-	const flags = issuePrefixesCaseSensitive ? "g" : "gi";
-	return new RegExp(`(?:.*?)??\\s*([\\w-\\.\\/]*?)??(${joinOr(issuePrefixes)})([\\w-]+)(?=\\s|$|[,;)\\]])`, flags);
-}
-function getReferencesRegex(referenceActions) {
-	if (!referenceActions) return /()(.+)/gi;
-	const joinedKeywords = joinOr(referenceActions);
-	return new RegExp(`(${joinedKeywords})(?:\\s+(.*?))(?=(?:${joinedKeywords})|$)`, "gi");
-}
-/**
-* Make the regexes used to parse a commit.
-* @param options
-* @returns Regexes.
-*/
-function getParserRegexes(options = {}) {
-	return {
-		notes: getNotesRegex(options.noteKeywords, options.notesPattern),
-		referenceParts: getReferencePartsRegex(options.issuePrefixes, options.issuePrefixesCaseSensitive),
-		references: getReferencesRegex(options.referenceActions),
-		mentions: /@([\w-]+)/g,
-		url: /\b(?:https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%_+.~#?&//=])+\b/
-	};
-}
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/utils.js
-var SCISSOR = "------------------------ >8 ------------------------";
-/**
-* Remove leading and trailing newlines.
-* @param input
-* @returns String without leading and trailing newlines.
-*/
-function trimNewLines(input) {
-	const matches = input.match(/[^\r\n]/);
-	if (typeof matches?.index !== "number") return "";
-	const firstIndex = matches.index;
-	let lastIndex = input.length - 1;
-	while (input[lastIndex] === "\r" || input[lastIndex] === "\n") lastIndex--;
-	return input.substring(firstIndex, lastIndex + 1);
-}
-/**
-* Append a newline to a string.
-* @param src
-* @param line
-* @returns String with appended newline.
-*/
-function appendLine(src, line) {
-	return src ? `${src}\n${line || ""}` : line || "";
-}
-/**
-* Creates a function that filters out comments lines.
-* @param char
-* @returns Comment filter function.
-*/
-function getCommentFilter(char) {
-	return char ? (line) => !line.startsWith(char) : () => true;
-}
-/**
-* Select lines before the scissor.
-* @param lines
-* @param commentChar
-* @returns Lines before the scissor.
-*/
-function truncateToScissor(lines, commentChar) {
-	const scissorIndex = lines.indexOf(`${commentChar} ${SCISSOR}`);
-	if (scissorIndex === -1) return lines;
-	return lines.slice(0, scissorIndex);
-}
-/**
-* Filter out GPG sign lines.
-* @param line
-* @returns True if the line is not a GPG sign line.
-*/
-function gpgFilter(line) {
-	return !line.match(/^\s*gpg:/);
-}
-/**
-* Assign matched correspondence to the target object.
-* @param target - The target object to assign values to.
-* @param matches - The RegExp match array containing the matched groups.
-* @param correspondence - An array of keys that correspond to the matched groups.
-* @returns The target object with assigned values.
-*/
-function assignMatchedCorrespondence(target, matches, correspondence) {
-	const { groups } = matches;
-	for (let i = 0, len = correspondence.length, key; i < len; i++) {
-		key = correspondence[i];
-		target[key] = (groups ? groups[key] : matches[i + 1]) || null;
-	}
-	return target;
-}
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/options.js
-var defaultOptions = {
-	noteKeywords: ["BREAKING CHANGE", "BREAKING-CHANGE"],
-	issuePrefixes: ["#"],
-	referenceActions: [
-		"close",
-		"closes",
-		"closed",
-		"fix",
-		"fixes",
-		"fixed",
-		"resolve",
-		"resolves",
-		"resolved"
-	],
-	headerPattern: /^(\w*)(?:\(([\w$@.\-*/ ]*)\))?: (.*)$/,
-	headerCorrespondence: [
-		"type",
-		"scope",
-		"subject"
-	],
-	revertPattern: /^Revert\s"([\s\S]*)"\s*This reverts commit (\w*)\.?/,
-	revertCorrespondence: ["header", "hash"],
-	fieldPattern: /^-(.*?)-$/
-};
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/CommitParser.js
-/**
-* Helper to create commit object.
-* @param initialData - Initial commit data.
-* @returns Commit object with empty data.
-*/
-function createCommitObject(initialData = {}) {
-	return {
-		merge: null,
-		revert: null,
-		header: null,
-		body: null,
-		footer: null,
-		notes: [],
-		mentions: [],
-		references: [],
-		...initialData
-	};
-}
-/**
-* Commit message parser.
-*/
-var CommitParser = class {
-	options;
-	regexes;
-	lines = [];
-	lineIndex = 0;
-	commit = createCommitObject();
-	constructor(options = {}) {
-		this.options = {
-			...defaultOptions,
-			...options
-		};
-		this.regexes = getParserRegexes(this.options);
-	}
-	currentLine() {
-		return this.lines[this.lineIndex];
-	}
-	nextLine() {
-		return this.lines[this.lineIndex++];
-	}
-	isLineAvailable() {
-		return this.lineIndex < this.lines.length;
-	}
-	parseReference(input, action) {
-		const { regexes } = this;
-		if (regexes.url.test(input)) return null;
-		const matches = regexes.referenceParts.exec(input);
-		if (!matches) return null;
-		let [raw, repository = null, prefix, issue] = matches;
-		let owner = null;
-		if (repository) {
-			const slashIndex = repository.indexOf("/");
-			if (slashIndex !== -1) {
-				owner = repository.slice(0, slashIndex);
-				repository = repository.slice(slashIndex + 1);
-			}
-		}
-		return {
-			raw,
-			action,
-			owner,
-			repository,
-			prefix,
-			issue
-		};
-	}
-	parseReferences(input) {
-		const { regexes } = this;
-		const regex = input.match(regexes.references) ? regexes.references : /()(.+)/gi;
-		const references = [];
-		let matches;
-		let action;
-		let sentence;
-		let reference;
-		while (true) {
-			matches = regex.exec(input);
-			if (!matches) break;
-			action = matches[1] || null;
-			sentence = matches[2] || "";
-			while (true) {
-				reference = this.parseReference(sentence, action);
-				if (!reference) break;
-				references.push(reference);
-			}
-		}
-		return references;
-	}
-	skipEmptyLines() {
-		let line = this.currentLine();
-		while (line !== void 0 && !line.trim()) {
-			this.nextLine();
-			line = this.currentLine();
-		}
-	}
-	parseMerge() {
-		const { commit, options } = this;
-		const correspondence = options.mergeCorrespondence || [];
-		const merge = this.currentLine();
-		const matches = merge && options.mergePattern ? merge.match(options.mergePattern) : null;
-		if (matches) {
-			this.nextLine();
-			commit.merge = matches[0] || null;
-			assignMatchedCorrespondence(commit, matches, correspondence);
-			return true;
-		}
-		return false;
-	}
-	parseHeader(isMergeCommit) {
-		if (isMergeCommit) this.skipEmptyLines();
-		const { commit, options } = this;
-		const correspondence = options.headerCorrespondence || [];
-		const header = commit.header ?? this.nextLine();
-		let matches = null;
-		if (header) {
-			if (options.breakingHeaderPattern) matches = header.match(options.breakingHeaderPattern);
-			if (!matches && options.headerPattern) matches = header.match(options.headerPattern);
-		}
-		if (header) commit.header = header;
-		if (matches) assignMatchedCorrespondence(commit, matches, correspondence);
-	}
-	parseMeta() {
-		const { options, commit } = this;
-		if (!options.fieldPattern || !this.isLineAvailable()) return false;
-		let matches;
-		let field = null;
-		let parsed = false;
-		while (this.isLineAvailable()) {
-			matches = this.currentLine().match(options.fieldPattern);
-			if (matches) {
-				field = matches[1] || null;
-				this.nextLine();
-				continue;
-			}
-			if (field) {
-				parsed = true;
-				commit[field] = appendLine(commit[field], this.currentLine());
-				this.nextLine();
-			} else break;
-		}
-		return parsed;
-	}
-	parseNotes() {
-		const { regexes, commit } = this;
-		if (!this.isLineAvailable()) return false;
-		const matches = this.currentLine().match(regexes.notes);
-		let references = [];
-		if (matches) {
-			const note = {
-				title: matches[1],
-				text: matches[2]
-			};
-			commit.notes.push(note);
-			commit.footer = appendLine(commit.footer, this.currentLine());
-			this.nextLine();
-			while (this.isLineAvailable()) {
-				if (this.parseMeta()) return true;
-				if (this.parseNotes()) return true;
-				references = this.parseReferences(this.currentLine());
-				if (references.length) commit.references.push(...references);
-				else note.text = appendLine(note.text, this.currentLine());
-				commit.footer = appendLine(commit.footer, this.currentLine());
-				this.nextLine();
-				if (references.length) break;
-			}
-			return true;
-		}
-		return false;
-	}
-	parseBodyAndFooter(isBody) {
-		const { commit } = this;
-		if (!this.isLineAvailable()) return isBody;
-		const references = this.parseReferences(this.currentLine());
-		const isStillBody = !references.length && isBody;
-		if (isStillBody) commit.body = appendLine(commit.body, this.currentLine());
-		else {
-			commit.references.push(...references);
-			commit.footer = appendLine(commit.footer, this.currentLine());
-		}
-		this.nextLine();
-		return isStillBody;
-	}
-	parseBreakingHeader() {
-		const { commit, options } = this;
-		if (!options.breakingHeaderPattern || commit.notes.length || !commit.header) return;
-		const matches = commit.header.match(options.breakingHeaderPattern);
-		if (matches) commit.notes.push({
-			title: "BREAKING CHANGE",
-			text: matches[3]
-		});
-	}
-	parseMentions(input) {
-		const { commit, regexes } = this;
-		let matches;
-		for (;;) {
-			matches = regexes.mentions.exec(input);
-			if (!matches) break;
-			commit.mentions.push(matches[1]);
-		}
-	}
-	parseRevert(input) {
-		const { commit, options } = this;
-		const correspondence = options.revertCorrespondence || [];
-		const matches = options.revertPattern ? input.match(options.revertPattern) : null;
-		if (matches) commit.revert = assignMatchedCorrespondence({}, matches, correspondence);
-	}
-	cleanupCommit() {
-		const { commit } = this;
-		if (commit.body) commit.body = trimNewLines(commit.body);
-		if (commit.footer) commit.footer = trimNewLines(commit.footer);
-		commit.notes.forEach((note) => {
-			note.text = trimNewLines(note.text);
-		});
-		const referencesSet = /* @__PURE__ */ new Set();
-		commit.references = commit.references.filter((reference) => {
-			const uid = `${reference.action} ${reference.raw}`.toLocaleLowerCase();
-			const ok = !referencesSet.has(uid);
-			if (ok) referencesSet.add(uid);
-			return ok;
-		});
-	}
-	/**
-	* Parse commit message string into an object.
-	* @param input - Commit message string.
-	* @returns Commit object.
-	*/
-	parse(input) {
-		if (!input.trim()) throw new TypeError("Expected a raw commit");
-		const { commentChar } = this.options;
-		const commentFilter = getCommentFilter(commentChar);
-		const rawLines = trimNewLines(input).split(/\r?\n/);
-		const lines = commentChar ? truncateToScissor(rawLines, commentChar).filter((line) => commentFilter(line) && gpgFilter(line)) : rawLines.filter((line) => gpgFilter(line));
-		const commit = createCommitObject();
-		this.lines = lines;
-		this.lineIndex = 0;
-		this.commit = commit;
-		const isMergeCommit = this.parseMerge();
-		this.parseHeader(isMergeCommit);
-		if (commit.header) commit.references = this.parseReferences(commit.header);
-		let isBody = true;
-		while (this.isLineAvailable()) {
-			this.parseMeta();
-			if (this.parseNotes()) isBody = false;
-			if (!this.parseBodyAndFooter(isBody)) isBody = false;
-		}
-		this.parseBreakingHeader();
-		this.parseMentions(input);
-		this.parseRevert(input);
-		this.cleanupCommit();
-		return commit;
-	}
-};
-//#endregion
-//#region src/actions/drafter/common/category-matching.ts
-var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
-var conventionalParser = new CommitParser({
-	headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
-	breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/
-});
-var getPullRequestLabels = (pullRequest) => (pullRequest.labels?.nodes ?? []).filter((label) => Boolean(label?.name)).map((label) => label.name);
-var unique = (values) => [...new Set(values)];
-var matchesValues = (actualValues, expectedValues, mode) => {
-	const actual = unique(actualValues);
-	const expected = unique(expectedValues);
-	if (expected.length === 0) return true;
-	switch (mode) {
-		case "all": return expected.every((value) => actual.includes(value));
-		case "only": return actual.length > 0 && actual.every((value) => expected.includes(value));
-		case "exactly": return actual.length === expected.length && actual.every((value) => expected.includes(value));
-		default: return expected.length === 0 || expected.some((value) => actual.includes(value));
-	}
-};
-var matchesPullRequestPaths = (condition, pullRequest) => {
-	if (condition.paths.length === 0) return true;
-	const changedFiles = unique(pullRequest.changedFiles ?? []);
-	if (changedFiles.length === 0) return false;
-	const expectedMatchers = unique(condition.paths).map((path) => ({
-		path,
-		matcher: (0, import_ignore.default)().add(path)
-	}));
-	const matchesAllConfiguredPaths = expectedMatchers.every(({ matcher }) => changedFiles.some((file) => matcher.ignores(file)));
-	const matchesOnlyConfiguredPaths = changedFiles.length > 0 && changedFiles.every((file) => expectedMatchers.some(({ matcher }) => matcher.ignores(file)));
-	switch (condition["paths-mode"]) {
-		case "all": return matchesAllConfiguredPaths;
-		case "only": return matchesOnlyConfiguredPaths;
-		case "exactly": return matchesAllConfiguredPaths && matchesOnlyConfiguredPaths;
-		default: return changedFiles.some((file) => expectedMatchers.some(({ matcher }) => matcher.ignores(file)));
-	}
-};
-var parseConventionalTitle = (title) => {
-	if (!title) return void 0;
-	const parsed = conventionalParser.parse(title);
-	if (typeof parsed.type !== "string") return void 0;
-	return {
-		type: parsed.type,
-		scope: typeof parsed.scope === "string" ? parsed.scope : void 0,
-		breaking: parsed.notes.length > 0
-	};
-};
-var matchesConventionalTitle = (condition, pullRequest) => {
-	if (!condition.conventional) return true;
-	const parsed = parseConventionalTitle(pullRequest.title);
-	if (!parsed) return false;
-	const { types, scopes, breaking } = condition.conventional;
-	return (types.length === 0 || types.includes(parsed.type)) && (scopes.length === 0 || parsed.scope !== void 0 && scopes.includes(parsed.scope)) && (breaking === void 0 || breaking === parsed.breaking);
-};
-var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesPullRequestPaths(condition, pullRequest) && matchesConventionalTitle(condition, pullRequest);
-var matchesCategory = (category, pullRequest) => category.when.length === 0 || category.when.some((condition) => matchesCategoryCondition(condition, pullRequest));
-var filterPullRequestsByPreCategories = (pullRequests, categories) => {
-	const preIncludeCategories = categories.filter((category) => category.type === "pre-include");
-	const preExcludeCategories = categories.filter((category) => category.type === "pre-exclude");
-	return pullRequests.filter((pullRequest) => {
-		if (!(preIncludeCategories.length === 0 || preIncludeCategories.some((category) => matchesCategory(category, pullRequest)))) return false;
-		return !preExcludeCategories.some((category) => matchesCategory(category, pullRequest));
-	});
-};
-/**
-* Determines if any of the categories require loading pull request changed files.
-*/
-var needsPullRequestChangedFiles = (categories) => categories.some((category) => category.when.some((condition) => condition.paths.length > 0));
-var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
-var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
-//#endregion
-//#region src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts
+//#region packages/core/src/release/categorize-pull-requests.ts
 var categorizePullRequests = (params) => {
 	const { pullRequests, config } = params;
 	const changelogCategories = getChangelogCategories(config.categories);
+	const categorizedPullRequests = changelogCategories.map((category) => ({
+		...category,
+		pullRequests: []
+	}));
 	const uncategorizedPullRequests = [];
-	const categorizedPullRequests = changelogCategories.map((category) => {
-		return {
-			...category,
-			pullRequests: []
-		};
-	});
-	const uncategorizedCategoryIndex = changelogCategories.findIndex((category) => category.when.length === 0);
-	const filteredPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
-	for (const pullRequest of filteredPullRequests) {
-		let matchedAnyCategory = false;
-		for (const category of categorizedPullRequests) {
-			if (category.when.length === 0) continue;
-			if (matchesCategory(category, pullRequest)) {
-				category.pullRequests.push(pullRequest);
-				matchedAnyCategory = true;
-				if (category.exclusive) break;
-			}
+	for (const pullRequest of pullRequests) {
+		const evaluation = evaluateCategories(pullRequest, config.categories);
+		if (!evaluation.included) continue;
+		if (evaluation.changelogCategories.length === 0) {
+			uncategorizedPullRequests.push(pullRequest);
+			continue;
 		}
-		if (!matchedAnyCategory) if (uncategorizedCategoryIndex === -1) uncategorizedPullRequests.push(pullRequest);
-		else categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(pullRequest);
+		for (const matchedCategory of evaluation.changelogCategories) {
+			const index = changelogCategories.indexOf(matchedCategory);
+			if (index !== -1) categorizedPullRequests[index].pullRequests.push(pullRequest);
+		}
 	}
 	return [uncategorizedPullRequests, categorizedPullRequests];
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/render-template/util/charCode.ts
+//#region packages/core/src/release/render-template/util/charCode.ts
 var CharCode = /* @__PURE__ */ function(CharCode) {
 	CharCode[CharCode["Backslash"] = 92] = "Backslash";
 	CharCode[CharCode["Tab"] = 9] = "Tab";
@@ -2077,7 +2016,7 @@ var CharCode = /* @__PURE__ */ function(CharCode) {
 	return CharCode;
 }({});
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/render-template/util/search.ts
+//#region packages/core/src/release/render-template/util/search.ts
 function containsUppercaseCharacter(target) {
 	if (!target) return false;
 	return target.toLowerCase() !== target;
@@ -2108,7 +2047,7 @@ function buildReplaceStringForSpecificSpecialCharacter(matches, pattern, special
 	return replaceString.slice(0, -1);
 }
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/render-template/util/replacePattern.ts
+//#region packages/core/src/release/render-template/util/replacePattern.ts
 /**
 * Assigned when the replace pattern is entirely static.
 */
@@ -2355,7 +2294,7 @@ function parseReplaceString(replaceString) {
 	return result.finalize();
 }
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/render-template/render-template.ts
+//#region packages/core/src/release/render-template/render-template.ts
 var getReplaceMatches = (args) => {
 	const lastArg = args[args.length - 1];
 	const hasGroups = typeof lastArg === "object" && lastArg !== null;
@@ -2392,21 +2331,22 @@ var renderTemplate = (params) => {
 	return input;
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/generate-contributors-sentence.ts
+//#region packages/core/src/release/generate-contributors-sentence.ts
 var botSuffix = "[bot]";
-var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
 var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
-var renderAuthorMention = (contributor) => {
+var renderAuthorMention = (contributor, serverUrl) => {
 	if ("name" in contributor) return contributor.name;
-	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.botUrl ?? `${context.serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
+	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.botUrl ?? `${serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
 	if (botUrl) return `[@${contributor.login}](${botUrl})`;
 	return `@${contributor.login}`;
 };
 var generateContributorsSentence = (params) => {
-	const { commits, pullRequests, config } = params;
+	const { commits, pullRequests, config, serverUrl } = params;
 	return generateAuthorsSentence({
 		commits,
 		pullRequests: filterPullRequestsByPreCategories(pullRequests, config.categories),
+		serverUrl,
 		excludeContributors: config["exclude-contributors"],
 		noAuthorsTemplate: config["no-contributors-template"]
 	});
@@ -2414,18 +2354,18 @@ var generateContributorsSentence = (params) => {
 var generateAuthorsSentence = (params) => {
 	const { commits, pullRequests } = params;
 	const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey));
-	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => "mergeCommit" in pullRequest && pullRequest.mergeCommit?.oid ? [pullRequest.mergeCommit.oid] : []));
+	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
 	const contributors = /* @__PURE__ */ new Map();
 	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
 	for (const commit of commits) {
-		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.nodes?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
-		for (const author of commit.authors?.nodes ?? (commit.author ? [commit.author] : [])) if (author?.user) {
-			const login = normalizeLogin(author.user.login);
+		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
+		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) if (author?.login) {
+			const login = normalizeLogin(author.login);
 			contributors.set(`login:${login}`, { login });
 		} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
 	}
 	for (const pullRequest of pullRequests) if (pullRequest.author) {
-		const isBot = pullRequest.author.__typename === "Bot";
+		const isBot = pullRequest.author.type === "Bot";
 		const login = normalizeLogin(pullRequest.author.login, isBot);
 		pullRequestAuthorLogins.add(login);
 		contributors.set(`login:${login}`, {
@@ -2451,7 +2391,7 @@ var generateAuthorsSentence = (params) => {
 				template: authorTemplate,
 				object: {
 					$AUTHOR: author,
-					$AUTHOR_MENTION: renderAuthorMention(contributor)
+					$AUTHOR_MENTION: renderAuthorMention(contributor, params.serverUrl)
 				}
 			});
 		});
@@ -2459,7 +2399,7 @@ var generateAuthorsSentence = (params) => {
 		if (params.authorsFinalSeparator !== void 0 && authors.length > 1) return `${authors.slice(0, -1).join(separator)}${params.authorsFinalSeparator}${authors.at(-1)}`;
 		return authors.join(separator);
 	}
-	const mentions = sortedContributors.map(renderAuthorMention);
+	const mentions = sortedContributors.map((contributor) => renderAuthorMention(contributor, params.serverUrl));
 	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
 	return mentions[0];
 };
@@ -2486,10 +2426,10 @@ var generateNewContributorsList = (params) => {
 	})).join("\n");
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/pull-request-to-string.ts
+//#region packages/core/src/release/pull-request-to-string.ts
 var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 	let pullAuthor = "ghost";
-	if (pullRequest.author) pullAuthor = pullRequest.author.__typename && pullRequest.author.__typename === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
+	if (pullRequest.author) pullAuthor = pullRequest.author.type === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
 	const authorTemplate = params.config["change-author-template"];
 	return renderTemplate({
 		template: params.config["change-template"],
@@ -2503,6 +2443,7 @@ var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 			$AUTHORS: generateAuthorsSentence({
 				commits: params.commits,
 				pullRequests: [pullRequest],
+				serverUrl: params.serverUrl,
 				noAuthorsTemplate: renderTemplate({
 					template: authorTemplate,
 					object: {
@@ -2529,22 +2470,23 @@ var escapeTitle = (params) => params.title.replace(new RegExp(`[${escapeStringRe
 	return `\\${match}`;
 });
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/generate-changelog.ts
+//#region packages/core/src/release/generate-changelog.ts
 var generateChangeLog = (params) => {
-	const { commits = [], pullRequests, config } = params;
+	const { commits = [], pullRequests, serverUrl, config } = params;
 	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
 		pullRequests,
 		config
 	});
-	if (categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) + uncategorizedPullRequests.length === 0) return config["no-changes-template"];
+	if (uncategorizedPullRequests.length + categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) === 0) return config["no-changes-template"];
 	const changeLog = [];
 	if (uncategorizedPullRequests.length > 0) changeLog.push(pullRequestToString({
 		commits,
 		pullRequests: uncategorizedPullRequests,
+		serverUrl,
 		config
 	}), "\n\n");
-	for (const [index, category] of categorizedPullRequests.entries()) {
-		if (category.pullRequests.length === 0) continue;
+	const nonEmptyCategories = categorizedPullRequests.filter((category) => category.pullRequests.length > 0);
+	for (const [index, category] of nonEmptyCategories.entries()) {
 		const categoryTitle = renderTemplate({
 			template: config["category-template"],
 			object: { $TITLE: category.title }
@@ -2554,11 +2496,12 @@ var generateChangeLog = (params) => {
 			category: category.title,
 			commits,
 			pullRequests: category.pullRequests,
+			serverUrl,
 			config
 		});
 		if (category["collapse-after"] !== -1 && category.pullRequests.length > category["collapse-after"]) changeLog.push("<details>", "\n", `<summary>${category.pullRequests.length} change${category.pullRequests.length > 1 ? "s" : ""}</summary>`, "\n\n", pullRequestString, "\n", "</details>");
 		else changeLog.push(pullRequestString);
-		if (index + 1 !== categorizedPullRequests.length) changeLog.push("\n\n");
+		if (index + 1 !== nonEmptyCategories.length) changeLog.push("\n\n");
 	}
 	return changeLog.join("").trim();
 };
@@ -2655,7 +2598,7 @@ var require_prerelease = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = prerelease;
 }));
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/version-descriptor.ts
+//#region packages/core/src/release/version-descriptor.ts
 var import_coerce = /* @__PURE__ */ __toESM(require_coerce(), 1);
 var import_inc = /* @__PURE__ */ __toESM(require_inc(), 1);
 var import_major = /* @__PURE__ */ __toESM(require_major(), 1);
@@ -2671,49 +2614,44 @@ var VersionDescriptor = class VersionDescriptor {
 	prerelease = null;
 	preReleaseIdentifier;
 	tagPrefix;
+	logger;
 	constructor(from, opt) {
-		this.preReleaseIdentifier = opt?.preReleaseIdentifier;
-		this.tagPrefix = opt?.tagPrefix;
-		this.version = this._coerce(from);
+		this.logger = opt.logger;
+		this.preReleaseIdentifier = opt.preReleaseIdentifier;
+		this.tagPrefix = opt.tagPrefix;
+		this.version = this.coerce(from);
 		this.major = this.version ? (0, import_major.default)(this.version).toString() : null;
 		this.minor = this.version ? (0, import_minor.default)(this.version).toString() : null;
 		this.patch = this.version ? (0, import_patch.default)(this.version).toString() : null;
 		this.prerelease = this.version === null ? null : (0, import_prerelease.default)(this.version) ? `-${(0, import_prerelease.default)(this.version)?.join(".")}` : "";
 	}
-	_coerce(from) {
-		if (from) {
-			const ver = typeof from === "object" ? this._isRelease(from) ? this._toSemver(this._stripTag(from.tag_name)) || this._toSemver(this._stripTag(from.name)) : this._toSemver(from) : this._toSemver(this._stripTag(from));
-			if (!ver) {
-				warning(`Failed to parse version from input ${from}. Defaulting coerced version to null.`);
-				return null;
-			}
-			return ver;
-		} else {
-			debug(`Building version descriptor without version input. Defaulting coerced version to null.`);
+	coerce(from) {
+		if (!from) {
+			this.logger.debug("Building version descriptor without version input. Defaulting coerced version to null.");
 			return null;
 		}
+		const version = typeof from === "object" ? this.isRelease(from) ? this.toSemver(this.stripTag(from.tagName)) || this.toSemver(this.stripTag(from.name)) : this.toSemver(from) : this.toSemver(this.stripTag(from));
+		if (version) return version;
+		this.logger.warning(`Failed to parse version from input ${String(from)}. Defaulting coerced version to null.`);
+		return null;
 	}
-	_isRelease(input) {
-		return typeof input === "object" && input !== null && (typeof input?.tag_name === "string" || typeof input?.name === "string");
+	isRelease(input) {
+		return typeof input === "object" && input !== null && (typeof input.tagName === "string" || typeof input.name === "string");
 	}
-	_stripTag(input) {
+	stripTag(input) {
 		return this.tagPrefix && input?.startsWith(this.tagPrefix) ? input.slice(this.tagPrefix.length) : input;
 	}
-	_toSemver(version) {
-		const result = (0, import_parse.default)(version);
-		if (result) return result;
-		return (0, import_coerce.default)(version);
+	toSemver(version) {
+		return (0, import_parse.default)(version) || (0, import_coerce.default)(version);
 	}
-	/**
-	* Alters version in-place by incrementing it according to the specified release type (major, minor, patch, prerelease).
-	*/
 	incremented(increment) {
 		if (!this.version || increment === "no_increment") return this;
-		const _incrementedVersion = (0, import_inc.default)(this.version, increment, true, this.preReleaseIdentifier);
-		if (!_incrementedVersion) throw new Error(`Failed to increment version ${this.version} with increment ${increment}`);
-		const _incrementedSemver = this._toSemver(_incrementedVersion);
-		if (!_incrementedSemver) throw new Error(`Failed to parse version ${_incrementedVersion} after incrementing ${this.version} with increment ${increment}`);
-		return new VersionDescriptor(_incrementedSemver, {
+		const incrementedVersion = (0, import_inc.default)(this.version, increment, true, this.preReleaseIdentifier);
+		if (!incrementedVersion) throw new Error(`Failed to increment version ${this.version} with increment ${increment}`);
+		const incrementedSemver = this.toSemver(incrementedVersion);
+		if (!incrementedSemver) throw new Error(`Failed to parse version ${incrementedVersion} after incrementing ${this.version} with increment ${increment}`);
+		return new VersionDescriptor(incrementedSemver, {
+			logger: this.logger,
 			tagPrefix: this.tagPrefix,
 			preReleaseIdentifier: this.preReleaseIdentifier
 		});
@@ -2731,26 +2669,28 @@ var VersionDescriptor = class VersionDescriptor {
 	}
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/get-version-info.ts
+//#region packages/core/src/release/get-version-info.ts
 var getVersionInfo = (params) => {
-	const { lastRelease, config, input, versionKeyIncrement: _versionKeyIncrement } = params;
-	info(`Resolving version info based on:`);
-	info(`   - last release: ${lastRelease?.tag_name || "none"}`);
-	info(`   - version input: ${input.version || input.tag || input.name || "none"}`);
-	info(`   - version key increment: ${_versionKeyIncrement}`);
+	const { lastRelease, config, input, logger, versionKeyIncrement: _versionKeyIncrement } = params;
+	logger.info(`Resolving version info based on:`);
+	logger.info(`   - last release: ${lastRelease?.tagName || "none"}`);
+	logger.info(`   - version input: ${input.version || input.tag || input.name || "none"}`);
+	logger.info(`   - version key increment: ${_versionKeyIncrement}`);
 	let _localIncrement = structuredClone(_versionKeyIncrement);
-	info(`Coerce and parse versions from last release...`);
+	logger.info(`Coerce and parse versions from last release...`);
 	const versionFromLastRelease = new VersionDescriptor(lastRelease, {
+		logger,
 		tagPrefix: config["tag-prefix"],
 		preReleaseIdentifier: config["prerelease-identifier"]
 	});
-	info(`Parsed version from last release: ${versionFromLastRelease.version?.format() || "none"}.`);
-	info(`Coerce and parse versions from input...`);
+	logger.info(`Parsed version from last release: ${versionFromLastRelease.version?.format() || "none"}.`);
+	logger.info(`Coerce and parse versions from input...`);
 	const versionFromInput = new VersionDescriptor(input.version || input.tag || input.name, {
+		logger,
 		tagPrefix: config["tag-prefix"],
 		preReleaseIdentifier: config["prerelease-identifier"]
 	});
-	info(`Parsed version from input: ${versionFromInput.version?.format() || "none"}.`);
+	logger.info(`Parsed version from input: ${versionFromInput.version?.format() || "none"}.`);
 	let referenceVersion;
 	if (versionFromInput.version) {
 		_localIncrement = "no_increment";
@@ -2762,12 +2702,13 @@ var getVersionInfo = (params) => {
 		if (incrementsToPrerelease) {
 			if (lastReleaseIsPrerelease) {
 				if (_localIncrement !== "prerelease") {
-					info(`versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || "none"}). The version will be incremented as a prerelease instead.`);
+					logger.info(`versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || "none"}). The version will be incremented as a prerelease instead.`);
 					_localIncrement = "prerelease";
 				}
 			}
 		}
 	} else referenceVersion = new VersionDescriptor("0.0.0", {
+		logger,
 		preReleaseIdentifier: config["prerelease-identifier"],
 		tagPrefix: config["tag-prefix"]
 	});
@@ -2794,14 +2735,25 @@ var getVersionInfo = (params) => {
 	};
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/render-release-name.ts
+//#region packages/core/src/release/last-release-not-found.ts
+var lastReleaseNotFoundTemplate = `> [!WARNING]
+> Release Drafter could not find a previous **published release** for \`$OWNER/$REPOSITORY\`. This draft was created **without a comparison baseline**.
+
+> [!IMPORTANT]
+> Treat this draft as a manual starting point.
+> Review the proposed version, tag, and notes before publishing.
+
+If you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).
+`;
+//#endregion
+//#region packages/core/src/release/render-release-name.ts
 /**
 * Renders the release name,
 * based on the input and config.
 */
 var renderReleaseName = (params) => {
 	let name = structuredClone(params.inputName);
-	const { config, versionInfo } = params;
+	const { config, versionInfo, logger } = params;
 	if (name === void 0) name = versionInfo ? renderTemplate({
 		template: config["name-template"] || "",
 		object: versionInfo
@@ -2810,18 +2762,18 @@ var renderReleaseName = (params) => {
 		template: name,
 		object: versionInfo
 	});
-	debug(`name: ${name}`);
+	logger.debug(`name: ${name}`);
 	return name;
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/render-tag-name.ts
+//#region packages/core/src/release/render-tag-name.ts
 /**
 * Renders the tag name for the release,
 * based on the input and config.
 */
 var renderTagName = (params) => {
 	let tagName = structuredClone(params.inputTagName);
-	const { config, versionInfo } = params;
+	const { config, versionInfo, logger } = params;
 	if (tagName === void 0) tagName = versionInfo ? renderTemplate({
 		template: config["tag-template"] || "",
 		object: versionInfo
@@ -2830,71 +2782,50 @@ var renderTagName = (params) => {
 		template: tagName,
 		object: versionInfo
 	});
-	debug(`tag: ${tagName}`);
+	logger.debug(`tag: ${tagName}`);
 	return tagName;
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/resolve-version-increment.ts
-var priorityMap = {
+//#region packages/core/src/release/resolve-version-increment.ts
+var priority = {
 	patch: 1,
 	minor: 2,
 	major: 3
 };
-var getHighestPriority = (params) => {
-	const { pullRequests, categories, emptyWhenBehavior } = params;
-	const emptyWhenCategory = categories.find((category) => category.when.length === 0);
-	const matchedPullRequests = /* @__PURE__ */ new Set();
-	let highestPriority;
-	let remainingPullRequests = [...pullRequests];
-	for (const category of categories) {
-		if (category.when.length === 0) continue;
-		const matchingPullRequests = remainingPullRequests.filter((pullRequest) => matchesCategory(category, pullRequest));
-		if (matchingPullRequests.length === 0) continue;
-		highestPriority = Math.max(highestPriority ?? 0, priorityMap[category["semver-increment"]]);
-		for (const pullRequest of matchingPullRequests) matchedPullRequests.add(pullRequest);
-		if (category.exclusive) {
-			const matchedPullRequestsSet = new Set(matchingPullRequests);
-			remainingPullRequests = remainingPullRequests.filter((pullRequest) => !matchedPullRequestsSet.has(pullRequest));
+var highestIncrement = (increments, fallback = "patch") => increments.reduce((current, increment) => priority[increment] > priority[current] ? increment : current, fallback);
+var resolveVersionKeyIncrement = (params) => {
+	const { pullRequests, config, logger } = params;
+	const changelogIncrements = [];
+	const explicitResolverIncrements = [];
+	for (const pullRequest of pullRequests) {
+		const evaluation = evaluateCategories(pullRequest, config.categories);
+		if (!evaluation.included) continue;
+		for (const category of evaluation.changelogCategories) if (category["semver-increment"] in priority) changelogIncrements.push(category["semver-increment"]);
+		if (!evaluation.usedVersionFallback) {
+			for (const category of evaluation.versionResolverCategories) if (category["semver-increment"] in priority) explicitResolverIncrements.push(category["semver-increment"]);
 		}
 	}
-	if (!emptyWhenCategory) return highestPriority;
-	if (emptyWhenBehavior === "fallback") return highestPriority ?? priorityMap[emptyWhenCategory["semver-increment"]];
-	if (!pullRequests.some((pullRequest) => !matchedPullRequests.has(pullRequest))) return highestPriority;
-	return Math.max(highestPriority ?? 0, priorityMap[emptyWhenCategory["semver-increment"]]);
-};
-var resolveVersionKeyIncrement = (params) => {
-	const { pullRequests, config } = params;
-	const filteredPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
-	const changelogPriority = getHighestPriority({
-		pullRequests: filteredPullRequests,
-		categories: getChangelogCategories(config.categories),
-		emptyWhenBehavior: "uncategorized"
-	});
-	const versionResolverPriority = getHighestPriority({
-		pullRequests: filteredPullRequests,
-		categories: getVersionResolverCategories(config.categories),
-		emptyWhenBehavior: "fallback"
-	}) ?? priorityMap.patch;
-	const resolvedPriority = Math.max(changelogPriority ?? 0, versionResolverPriority);
-	const versionKey = Object.entries(priorityMap).find(([, priority]) => priority === resolvedPriority)?.[0];
-	debug(`versionKey: ${versionKey}`);
-	let versionKeyIncrement = versionKey;
+	const resolverFallback = getVersionResolverCategories(config.categories).find((category) => category.when.length === 0)?.["semver-increment"];
+	const resolverIncrement = highestIncrement(explicitResolverIncrements.length > 0 ? explicitResolverIncrements : resolverFallback && resolverFallback in priority ? [resolverFallback] : ["patch"]);
+	const resolved = highestIncrement([...changelogIncrements, resolverIncrement]);
+	logger.debug(`versionKey: ${resolved}`);
+	let versionKeyIncrement = resolved;
 	if (config.prerelease && config["prerelease-identifier"]) versionKeyIncrement = `pre${versionKeyIncrement}`;
-	info(`Version increment: ${versionKeyIncrement}${!versionKey ? " (default)" : ""}`);
+	logger.info(`Resolved version increment: ${versionKeyIncrement}`);
 	return versionKeyIncrement;
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/sort-pull-requests.ts
+//#region packages/core/src/release/sort-pull-requests.ts
 var sortPullRequests = (params) => {
-	const { pullRequests, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
+	const { pullRequests, logger, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
 	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
 	const sort = sortDirection === "ascending" ? sortAscending : sortDescending;
 	return structuredClone(pullRequests).sort((a, b) => {
 		try {
 			return sort(getSortField(a), getSortField(b));
-		} catch (error$1) {
-			warning(`Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
-			error(error$1);
+		} catch (error) {
+			logger.warning(`Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
+			logger.error(error);
 			return 0;
 		}
 	});
@@ -2918,41 +2849,36 @@ var sortDescending = (a, b) => {
 	return 0;
 };
 //#endregion
-//#region src/actions/drafter/lib/build-release-payload/static/last-not-found.md?raw
-var last_not_found_default = "> [!WARNING]\n> Release Drafter could not find a previous **published release** for `$OWNER/$REPOSITORY`. This draft was created **without a comparison baseline**.\n\n> [!IMPORTANT]\n> Treat this draft as a manual starting point.\n> Review the proposed version, tag, and notes before publishing.\n\nIf you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).\n";
-//#endregion
-//#region src/actions/drafter/lib/build-release-payload/build-release-payload.ts
-/**
-* Outputs the payload for creating or updating a release.
-*
-* Previously known as `generateReleaseInfo`.
-*/
-var buildReleasePayload = async (params) => {
-	const { commits, config, input, lastRelease, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests } = params;
-	info(`Building release payload and body...`);
+//#region packages/core/src/release/build-release-payload.ts
+var buildReleasePayload$1 = async (params) => {
+	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests, repository } = params;
+	logger.info("Building release payload and body...");
 	const sortedPullRequests = sortPullRequests({
 		pullRequests,
-		config
+		config,
+		logger
 	});
 	let body = (config.header || "") + config.template + (!lastRelease ? `\n---\n${renderTemplate({
-		template: last_not_found_default,
+		template: lastReleaseNotFoundTemplate,
 		object: {
-			$OWNER: context.repo.owner,
-			$REPOSITORY: context.repo.repo
+			$OWNER: repository.owner,
+			$REPOSITORY: repository.name
 		}
 	})}\n---\n` : "") + (config.footer || "");
 	body = renderTemplate({
 		template: body,
 		object: {
-			$PREVIOUS_TAG: lastRelease ? lastRelease.tag_name : "",
+			$PREVIOUS_TAG: lastRelease?.tagName ?? "",
 			$CHANGES: generateChangeLog({
 				commits,
 				pullRequests: sortedPullRequests,
+				serverUrl: repository.serverUrl,
 				config
 			}),
 			$CONTRIBUTORS: generateContributorsSentence({
 				commits,
 				pullRequests: sortedPullRequests,
+				serverUrl: repository.serverUrl,
 				config
 			}),
 			$NEW_CONTRIBUTORS: generateNewContributorsList({
@@ -2960,8 +2886,8 @@ var buildReleasePayload = async (params) => {
 				newContributorLogins,
 				config
 			}),
-			$OWNER: context.repo.owner,
-			$REPOSITORY: context.repo.repo
+			$OWNER: repository.owner,
+			$REPOSITORY: repository.name
 		},
 		replacers: config.replacers
 	});
@@ -2971,29 +2897,36 @@ var buildReleasePayload = async (params) => {
 		input,
 		versionKeyIncrement: resolveVersionKeyIncrement({
 			pullRequests,
-			config
-		})
+			config,
+			logger
+		}),
+		logger
 	});
-	debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`);
+	logger.debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`);
 	if (versionInfo) body = renderTemplate({
 		template: body,
 		object: versionInfo
 	});
-	const res = {
+	const releasePayload = {
 		name: renderReleaseName({
 			inputName: input.name,
 			config,
-			versionInfo
+			versionInfo,
+			logger
 		}),
 		tag: renderTagName({
 			inputTagName: input.tag,
 			config,
-			versionInfo
+			versionInfo,
+			logger
 		}),
 		body,
-		targetCommitish: await parseCommitishForRelease(config.commitish),
+		targetCommitish: await adapter.resolveCommitish({
+			repository,
+			commitish: config.commitish
+		}),
 		prerelease: config.prerelease,
-		make_latest: config.latest,
+		makeLatest: config.latest,
 		draft: !input.publish,
 		resolvedVersion: versionInfo?.$RESOLVED_VERSION,
 		majorVersion: versionInfo?.$RESOLVED_VERSION_MAJOR,
@@ -3001,35 +2934,21 @@ var buildReleasePayload = async (params) => {
 		patchVersion: versionInfo?.$RESOLVED_VERSION_PATCH,
 		prereleaseVersion: versionInfo?.$RESOLVED_VERSION_PRERELEASE
 	};
-	info(`Release payload built successfully`);
-	info(`  name:                        ${res.name}`);
-	info(`  tag:                         ${res.tag}`);
-	info(`  body:                        ${res.body.length} characters long`);
-	info(`  targetCommitish:             ${res.targetCommitish}`);
-	info(`  prerelease:                  ${res.prerelease}`);
-	info(`  make_latest:                 ${res.make_latest}`);
-	info(`  draft:                       ${res.draft}${!res.draft ? " (will be published !)" : ""}`);
-	info(`  RESOLVED_VERSION:            ${res.resolvedVersion}`);
-	info(`  RESOLVED_VERSION_MAJOR:      ${res.majorVersion}`);
-	info(`  RESOLVED_VERSION_MINOR:      ${res.minorVersion}`);
-	info(`  RESOLVED_VERSION_PATCH:      ${res.patchVersion}`);
-	info(`  RESOLVED_VERSION_PRERELEASE: ${res.prereleaseVersion}`);
-	return res;
+	logger.info("Release payload built successfully");
+	logger.info(`  name:                        ${releasePayload.name}`);
+	logger.info(`  tag:                         ${releasePayload.tag}`);
+	logger.info(`  body:                        ${releasePayload.body.length} characters long`);
+	logger.info(`  targetCommitish:             ${releasePayload.targetCommitish}`);
+	logger.info(`  prerelease:                  ${releasePayload.prerelease}`);
+	logger.info(`  make_latest:                 ${releasePayload.makeLatest}`);
+	logger.info(`  draft:                       ${releasePayload.draft}${!releasePayload.draft ? " (will be published !)" : ""}`);
+	logger.info(`  RESOLVED_VERSION:            ${releasePayload.resolvedVersion}`);
+	logger.info(`  RESOLVED_VERSION_MAJOR:      ${releasePayload.majorVersion}`);
+	logger.info(`  RESOLVED_VERSION_MINOR:      ${releasePayload.minorVersion}`);
+	logger.info(`  RESOLVED_VERSION_PATCH:      ${releasePayload.patchVersion}`);
+	logger.info(`  RESOLVED_VERSION_PRERELEASE: ${releasePayload.prereleaseVersion}`);
+	return releasePayload;
 };
-//#endregion
-//#region node_modules/semver/functions/satisfies.js
-var require_satisfies = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var Range = require_range();
-	var satisfies = (version, range, options) => {
-		try {
-			range = new Range(range, options);
-		} catch (er) {
-			return false;
-		}
-		return range.test(version);
-	};
-	module.exports = satisfies;
-}));
 //#endregion
 //#region node_modules/compare-versions/lib/esm/utils.js
 var semver = /^[v^~<>=]*?(\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+))?(?:-([\da-z\-]+(?:\.[\da-z\-]+)*))?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?)?)?$/i;
@@ -3081,8 +3000,189 @@ var compareVersions = (v1, v2) => {
 	return 0;
 };
 //#endregion
+//#region packages/core/src/release-orchestration.ts
+var import_satisfies = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	var Range = require_range();
+	var satisfies = (version, range, options) => {
+		try {
+			range = new Range(range, options);
+		} catch (er) {
+			return false;
+		}
+		return range.test(version);
+	};
+	module.exports = satisfies;
+})))(), 1);
+var actionInputSchema = object({
+	/**
+	* If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
+	* The config should still be located inside `.github` as that's where we are looking for config files.
+	* @default 'release-drafter.yml'
+	*/
+	"config-name": string().optional().default("release-drafter.yml"),
+	/**
+	* The name that will be used in the GitHub release that's created or updated.
+	* This will override any `name-template` specified in your `release-drafter.yml` if defined.
+	*/
+	name: string().optional(),
+	/**
+	* The tag name to be associated with the GitHub release that's created or updated.
+	* This will override any `tag-template` specified in your `release-drafter.yml` if defined.
+	*/
+	tag: string().optional(),
+	/**
+	* The version to be associated with the GitHub release that's created or updated.
+	* This will override any version calculated by the release-drafter.
+	*/
+	version: string().optional(),
+	/**
+	* A boolean indicating whether the release being created or updated should be immediately published.
+	*/
+	publish: stringbool().optional().default(false)
+}).and(sharedInputSchema).and(commonConfigSchema);
+//#endregion
+//#region src/actions/drafter/config/get-action-inputs.ts
+var getActionInput = () => {
+	const getInput$1 = (name) => getInput(name) || void 0;
+	const actionInput = {
+		"config-name": getInput$1("config-name"),
+		name: getInput$1("name"),
+		tag: getInput$1("tag"),
+		version: getInput$1("version"),
+		publish: getInput$1("publish"),
+		token: getInput$1("token"),
+		latest: getInput$1("latest"),
+		prerelease: getInput$1("prerelease"),
+		"prerelease-identifier": getInput$1("prerelease-identifier"),
+		"include-pre-releases": getInput$1("include-pre-releases"),
+		commitish: getInput$1("commitish"),
+		header: getInput$1("header"),
+		footer: getInput$1("footer"),
+		"dry-run": getInput$1("dry-run"),
+		"filter-by-range": getInput$1("filter-by-range")
+	};
+	return actionInputSchema.parse(actionInput);
+};
+//#endregion
+//#region src/actions/drafter/config/get-config.ts
+var getConfig = async (configName) => {
+	const { config, contexts } = await composeConfigGet(configName, context);
+	contexts.forEach(({ filepath, ref, repo, scheme }) => {
+		const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ""}`;
+		info(`Config fetched ${scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`}.`);
+	});
+	return configSchema.parse(config);
+};
+//#endregion
+//#region src/actions/drafter/config/merge-input-and-config.ts
+var mergeInputAndConfig = (params) => mergeInputAndConfig$1({
+	...params,
+	defaultCommitish: context.ref || context.payload.ref,
+	logger: core_exports
+});
+//#endregion
+//#region src/actions/drafter/config/set-action-output.ts
+var setActionOutput = (params) => {
+	const { releasePayload, upsertedRelease } = params;
+	info("Set action outputs...");
+	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body, name: releaseName, tag: releaseTagName } = releasePayload;
+	const outputName = upsertedRelease?.data.name ?? releaseName;
+	const outputTagName = upsertedRelease?.data.tag_name ?? releaseTagName;
+	if (upsertedRelease) {
+		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl } } = upsertedRelease;
+		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
+		if (htmlUrl) setOutput("html_url", htmlUrl);
+		if (uploadUrl) setOutput("upload_url", uploadUrl);
+	}
+	if (outputTagName) setOutput("tag_name", outputTagName);
+	if (outputName) setOutput("name", outputName);
+	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
+	if (majorVersion) setOutput("major_version", majorVersion);
+	if (minorVersion) setOutput("minor_version", minorVersion);
+	if (patchVersion) setOutput("patch_version", patchVersion);
+	setOutput("body", body);
+	info("Outputs set!");
+};
+//#endregion
+//#region src/actions/drafter/lib/core-compat.ts
+var toCorePullRequest = (pullRequest) => ({
+	number: pullRequest.number,
+	title: pullRequest.title,
+	body: pullRequest.body,
+	url: pullRequest.url,
+	mergedAt: pullRequest.mergedAt,
+	baseRefName: pullRequest.baseRefName,
+	headRefName: pullRequest.headRefName,
+	baseRepository: pullRequest.baseRepository?.nameWithOwner,
+	author: pullRequest.author ? {
+		login: pullRequest.author.login,
+		url: pullRequest.author.url,
+		type: pullRequest.author.__typename
+	} : pullRequest.author,
+	labels: (pullRequest.labels?.nodes ?? []).map((label) => label?.name).filter((name) => Boolean(name)),
+	changedFiles: "changedFiles" in pullRequest ? pullRequest.changedFiles : void 0,
+	mergeCommitOid: "mergeCommit" in pullRequest && pullRequest.mergeCommit ? pullRequest.mergeCommit.oid : void 0
+});
+var toCoreCommit = (commit) => ({
+	oid: commit.oid,
+	author: commit.author ? {
+		name: commit.author.name,
+		login: commit.author.user?.login
+	} : commit.author,
+	authors: commit.authors ? (commit.authors.nodes ?? []).map((author) => author ? {
+		name: author.name,
+		login: author.user?.login
+	} : author) : commit.authors,
+	associatedPullRequests: commit.associatedPullRequests ? (commit.associatedPullRequests.nodes ?? []).map((pullRequest) => pullRequest ? {
+		number: pullRequest.number,
+		baseRepository: pullRequest.baseRepository?.nameWithOwner
+	} : pullRequest) : commit.associatedPullRequests
+});
+var toCoreRelease = (release) => ({
+	id: release.id,
+	tagName: release.tag_name,
+	name: release.name,
+	targetCommitish: release.target_commitish,
+	createdAt: release.created_at,
+	draft: release.draft,
+	prerelease: release.prerelease,
+	url: release.html_url,
+	uploadUrl: release.upload_url
+});
+var toLegacyReleasePayload = (payload) => {
+	const { makeLatest, ...legacyPayload } = payload;
+	return {
+		...legacyPayload,
+		make_latest: makeLatest
+	};
+};
+//#endregion
+//#region src/actions/drafter/lib/build-release-payload/build-release-payload.ts
+var buildReleasePayload = async (params) => {
+	return toLegacyReleasePayload(await buildReleasePayload$1({
+		adapter: { resolveCommitish: ({ commitish }) => parseCommitishForRelease(commitish) },
+		commits: params.commits.map(toCoreCommit),
+		config: params.config,
+		input: {
+			name: params.input.name,
+			tag: params.input.tag,
+			version: params.input.version,
+			publish: params.input.publish,
+			dryRun: params.input["dry-run"]
+		},
+		lastRelease: params.lastRelease ? toCoreRelease(params.lastRelease) : void 0,
+		logger: core_exports,
+		newContributorLogins: params.newContributorLogins,
+		pullRequests: params.pullRequests.map(toCorePullRequest),
+		repository: {
+			owner: context.repo.owner,
+			name: context.repo.repo,
+			serverUrl: context.serverUrl
+		}
+	}));
+};
+//#endregion
 //#region src/actions/drafter/lib/find-previous-releases/sort-releases.ts
-var import_satisfies = /* @__PURE__ */ __toESM(require_satisfies(), 1);
 var sortReleases = (params) => {
 	const tagPrefixRexExp = params.tagPrefix ? new RegExp(`^${escapeStringRegexp(params.tagPrefix)}`) : void 0;
 	return params.releases.sort((r1, r2) => {
