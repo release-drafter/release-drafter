@@ -1,10 +1,12 @@
-import type { ReleaseType } from 'semver'
+import type { IncrementType } from 'verkit'
 import {
   evaluateCategories,
   getVersionResolverCategories,
 } from '../category-matching.ts'
 import type { Logger } from '../ports.ts'
 import type { ParsedConfig, PullRequest } from '../types.ts'
+
+type ReleaseType = Exclude<IncrementType, 'release'>
 
 const priority = { patch: 1, minor: 2, major: 3 } as const
 const highestIncrement = (

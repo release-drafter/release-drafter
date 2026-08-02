@@ -1,12 +1,16 @@
 import * as core from '@actions/core'
-import type { ReleaseType, SemVer } from 'semver'
-import coerce from 'semver/functions/coerce.js'
-import inc from 'semver/functions/inc.js'
-import major from 'semver/functions/major.js'
-import minor from 'semver/functions/minor.js'
-import parse from 'semver/functions/parse.js'
-import patch from 'semver/functions/patch.js'
-import prerelease from 'semver/functions/prerelease.js'
+import {
+  coerce,
+  getMajor,
+  getMinor,
+  getPatch,
+  getPrerelease,
+  type IncrementType,
+  increment,
+  normalize,
+  type SemVer,
+  tryParse,
+} from 'verkit'
 import type { Config } from '#src/actions/drafter/config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import { renderTemplate } from './render-template/index.ts'
@@ -15,6 +19,8 @@ type Release = Exclude<
   Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease'],
   undefined
 >
+
+type ReleaseType = Exclude<IncrementType, 'release'>
 
 export class VersionDescriptor {
   public version: SemVer | null = null
@@ -39,15 +45,15 @@ export class VersionDescriptor {
 
     this.version = this._coerce(from)
 
-    this.major = this.version ? major(this.version).toString() : null
-    this.minor = this.version ? minor(this.version).toString() : null
-    this.patch = this.version ? patch(this.version).toString() : null
-    this.prerelease =
-      this.version === null
-        ? null
-        : prerelease(this.version)
-          ? `-${prerelease(this.version)?.join('.')}`
-          : ''
+    this.major = this.version ? getMajor(this.version).toString() : null
+    this.minor = this.version ? getMinor(this.version).toString() : null
+    this.patch = this.version ? getPatch(this.version).toString() : null
+    const prerelease = this.version ? getPrerelease(this.version) : null
+    this.prerelease = this.version
+      ? prerelease?.length
+        ? `-${prerelease.join('.')}`
+        : ''
+      : null
   }
 
   private _coerce(
@@ -96,33 +102,29 @@ export class VersionDescriptor {
   }
 
   private _toSemver(version?: string | SemVer | null | undefined) {
-    const result = parse(version)
-    if (result) {
-      return result
-    }
-
-    // doesn't handle prerelease
-    return coerce(version)
+    if (!version) return null
+    const parsedVersion = tryParse(version)
+    if (parsedVersion) return parsedVersion
+    const coercedVersion = coerce(version)
+    return coercedVersion ? tryParse(coercedVersion) : null
   }
 
   /**
    * Alters version in-place by incrementing it according to the specified release type (major, minor, patch, prerelease).
    */
-  public incremented(increment: ReleaseType | 'no_increment') {
-    if (!this.version || increment === 'no_increment') {
+  public incremented(incrementType: ReleaseType | 'no_increment') {
+    if (!this.version || incrementType === 'no_increment') {
       return this
     }
 
-    const _incrementedVersion = inc(
-      this.version,
-      increment,
-      true,
-      this.preReleaseIdentifier,
-    )
+    const _incrementedVersion = increment(this.version, incrementType, {
+      loose: true,
+      identifier: this.preReleaseIdentifier,
+    })
 
     if (!_incrementedVersion) {
       throw new Error(
-        `Failed to increment version ${this.version} with increment ${increment}`,
+        `Failed to increment version ${normalize(this.version)} with increment ${incrementType}`,
       )
     }
 
@@ -130,7 +132,7 @@ export class VersionDescriptor {
 
     if (!_incrementedSemver) {
       throw new Error(
-        `Failed to parse version ${_incrementedVersion} after incrementing ${this.version} with increment ${increment}`,
+        `Failed to parse version ${_incrementedVersion} after incrementing ${normalize(this.version)} with increment ${incrementType}`,
       )
     }
 
