@@ -27,6 +27,7 @@ type PackageJson = {
       types?: Record<string, string>
     }
   >
+  scripts?: Record<string, string>
 }
 const readJson = (path: string) =>
   JSON.parse(readFileSync(path, 'utf8')) as PackageJson
@@ -122,6 +123,15 @@ describe('workspace foundation', () => {
     }
   })
 
+  it('builds workspace dependencies before generating schemas', () => {
+    const scripts = readJson('package.json').scripts
+
+    expect(scripts?.['generate:schemas']).toBe(
+      'npm run build:workspaces && node src/scripts/json-schema.ts',
+    )
+    expect(scripts?.ci).toContain('npm run generate:schemas')
+    expect(scripts?.ci).not.toContain('npm run build:workspaces')
+  })
   it('rejects npm publication from .yaml workflows', () => {
     const fixtureRoot = mkdtempSync(
       join(tmpdir(), 'release-drafter-workflows-'),
