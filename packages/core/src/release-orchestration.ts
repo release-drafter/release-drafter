@@ -198,11 +198,13 @@ export const draftRelease = async (params: {
     logger,
     releases,
   })
-  const { commits, newContributorLogins, pullRequests } = lastRelease
+  const comparisonBase =
+    input.from ?? (lastRelease ? `refs/tags/${lastRelease.tagName}` : undefined)
+  const { commits, newContributorLogins, pullRequests } = comparisonBase
     ? await adapter.findChanges({
         repository,
         comparison: {
-          baseRef: `refs/tags/${lastRelease.tagName}`,
+          baseRef: comparisonBase,
           headRef: config.commitish,
         },
         pullRequestFields: {
