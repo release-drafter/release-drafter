@@ -25,7 +25,11 @@
     "noEmit": true,
     "useDefineForClassFields": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": { "#src/*": ["./src/*"] },
+    "paths": {
+      "#src/*": ["./src/*"],
+      "@release-drafter/autolabeler": ["./packages/autolabeler/src/index.ts"],
+      "@release-drafter/core": ["./packages/core/src/index.ts"]
+    },
     "skipLibCheck": true
   },
   "exclude": ["coverage", "dist", "node_modules", "**/*.generated.ts"],

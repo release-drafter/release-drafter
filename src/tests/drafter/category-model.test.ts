@@ -98,6 +98,28 @@ describe('category model', () => {
     )
   })
 
+  it('normalizes legacy GraphQL labels for category and version evaluators', () => {
+    const config = makeParsedConfig([
+      {
+        title: 'Features',
+        'semver-increment': 'minor',
+        when: { labels: ['feature'] },
+      },
+    ])
+    const pullRequest = makePullRequest(['feature'])
+
+    const [uncategorized, categories] = categorizePullRequests({
+      pullRequests: [pullRequest],
+      config,
+    })
+
+    expect(uncategorized).toEqual([])
+    expect(categories[0]?.pullRequests).toEqual([pullRequest])
+    expect(
+      resolveVersionKeyIncrement({ pullRequests: [pullRequest], config }),
+    ).toBe('minor')
+  })
+
   it('treats when.path as shorthand for a single paths value', () => {
     const pathConfig = makeParsedConfig([
       {

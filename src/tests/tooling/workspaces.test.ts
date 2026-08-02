@@ -21,6 +21,7 @@ type PackageJson = {
   private?: boolean
   engines?: { node?: string }
   exports?: unknown
+  scripts?: Record<string, string>
 }
 const readJson = (path: string) =>
   JSON.parse(readFileSync(path, 'utf8')) as PackageJson
@@ -88,6 +89,16 @@ describe('workspace foundation', () => {
         stdio: 'pipe',
       })
     }
+  })
+
+  it('builds workspace dependencies before generating schemas', () => {
+    const scripts = readJson('package.json').scripts
+
+    expect(scripts?.schemas).toBe(
+      'npm run build:workspaces && node src/scripts/json-schema.ts',
+    )
+    expect(scripts?.all).toContain('npm run schemas')
+    expect(scripts?.all).not.toContain('npm run build:workspaces')
   })
 
   it('keeps CI on Node 24 without enabling npm publication', () => {

@@ -1,5 +1,5 @@
-import * as core from '@actions/core'
-import type { ParsedConfig } from '../../config/index.ts'
+import type { Logger } from '../ports.ts'
+import type { ParsedConfig } from '../types.ts'
 import type { getVersionInfo } from './get-version-info.ts'
 import { renderTemplate } from './render-template/index.ts'
 
@@ -11,9 +11,10 @@ export const renderReleaseName = (params: {
   inputName: string | undefined
   config: Pick<ParsedConfig, 'name-template'>
   versionInfo: ReturnType<typeof getVersionInfo>
+  logger: Logger
 }) => {
   let name = structuredClone(params.inputName)
-  const { config, versionInfo } = params
+  const { config, versionInfo, logger } = params
 
   if (name === undefined) {
     name = versionInfo
@@ -29,6 +30,6 @@ export const renderReleaseName = (params: {
     })
   }
 
-  core.debug(`name: ${name}`)
+  logger.debug(`name: ${name}`)
   return name
 }

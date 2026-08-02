@@ -1,15 +1,15 @@
-import * as core from '@actions/core'
-import type { Config } from '../../config/index.ts'
-import type { findPullRequests } from '../find-pull-requests/index.ts'
-
-type Pr = Awaited<ReturnType<typeof findPullRequests>>['pullRequests'][number]
+import type { Config } from '../config/config.schema.ts'
+import type { Logger } from '../ports.ts'
+import type { PullRequest } from '../types.ts'
 
 export const sortPullRequests = (params: {
-  pullRequests: Pr[]
+  pullRequests: PullRequest[]
+  logger: Logger
   config: Pick<Config, 'sort-by' | 'sort-direction'>
 }) => {
   const {
     pullRequests,
+    logger,
     config: { 'sort-by': sortBy, 'sort-direction': sortDirection },
   } = params
 
@@ -21,17 +21,17 @@ export const sortPullRequests = (params: {
     try {
       return sort(getSortField(a), getSortField(b))
     } catch (error) {
-      core.warning(
+      logger.warning(
         `Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`,
       )
-      core.error(error as Error)
+      logger.error(error as Error)
       return 0
     }
   })
 }
 
-const getTitle = (pr: Pr) => pr.title
-const getMergedAt = (pr: Pr) => pr.mergedAt
+const getTitle = (pr: PullRequest) => pr.title
+const getMergedAt = (pr: PullRequest) => pr.mergedAt
 
 type TData = ReturnType<typeof getTitle> | ReturnType<typeof getMergedAt>
 
