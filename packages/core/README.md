@@ -14,3 +14,7 @@ the core never relies on ambient forge context. The adapter also declares
 whether its forge supports draft releases. Core uses that capability to make
 `publish: false` calculation-only on forges without drafts and to update an
 existing published release with the generated tag when `publish: true`.
+
+`ReleaseInput.from` optionally overrides only the change comparison baseline.
+Release selection and automatic version resolution continue to use the selected
+last published release.

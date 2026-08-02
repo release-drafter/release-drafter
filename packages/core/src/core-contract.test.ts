@@ -399,6 +399,77 @@ describe('draftRelease', () => {
     serverUrl: 'https://github.com',
   }
 
+  it('uses an explicit from only as the change comparison base', async () => {
+    const existingDraft = release({
+      id: 'draft',
+      tagName: 'v1.1.0',
+      draft: true,
+    })
+    const forge = adapter({
+      draftReleases: true,
+      releases: [release({ tagName: 'v1.0.0' }), existingDraft],
+    })
+
+    const result = await draftRelease({
+      adapter: forge,
+      config: orchestrationConfig(),
+      input: { publish: false, dryRun: true, from: 'v0.1.0' },
+      logger,
+      repository,
+    })
+
+    expect(forge.findChanges).toHaveBeenCalledWith(
+      expect.objectContaining({
+        comparison: { baseRef: 'v0.1.0', headRef: 'main' },
+      }),
+    )
+    expect(result.releasePayload.resolvedVersion).toBe('1.0.1')
+    expect(result.plan).toMatchObject({
+      action: 'dry-run',
+      draftRelease: existingDraft,
+    })
+  })
+
+  it('finds changes from an explicit from without a selected release', async () => {
+    const forge = adapter({ draftReleases: true, releases: [] })
+
+    const result = await draftRelease({
+      adapter: forge,
+      config: orchestrationConfig(),
+      input: { publish: false, dryRun: true, from: 'initial-commit' },
+      logger,
+      repository,
+    })
+
+    expect(forge.findChanges).toHaveBeenCalledWith(
+      expect.objectContaining({
+        comparison: { baseRef: 'initial-commit', headRef: 'main' },
+      }),
+    )
+    expect(result.releasePayload.resolvedVersion).toBe('0.0.1')
+  })
+
+  it('uses the selected last release tag as the default comparison base', async () => {
+    const forge = adapter({
+      draftReleases: true,
+      releases: [release({ tagName: 'v1.0.0' })],
+    })
+
+    await draftRelease({
+      adapter: forge,
+      config: orchestrationConfig(),
+      input: { publish: false, dryRun: true },
+      logger,
+      repository,
+    })
+
+    expect(forge.findChanges).toHaveBeenCalledWith(
+      expect.objectContaining({
+        comparison: { baseRef: 'refs/tags/v1.0.0', headRef: 'main' },
+      }),
+    )
+  })
+
   it('makes publish false calculation-only when the forge has no drafts', async () => {
     const forge = adapter({
       draftReleases: false,
