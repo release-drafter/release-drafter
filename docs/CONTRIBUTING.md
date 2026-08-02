@@ -62,14 +62,24 @@ a workspace build.
 
 Common commands:
 
-- `npm run all` formats, lints, validates workspace publication and dependency
-  boundaries, type-checks, tests, regenerates schemas, and rebuilds bundles.
+- `npm run all` formats, lints, validates dependency hygiene, workspace
+  publication and dependency boundaries, type-checks, tests, regenerates
+  schemas, and rebuilds bundles. Tooling tests also run Node's `--check` against
+  every `src/scripts/*.ts` entry so they remain directly runnable on Node 24
+  without a compile step.
+- `npm run check:dependencies` runs Knip's complementary unused and unlisted
+  dependency checks without enabling its broader unused-file/export analysis.
+- `npm run check:boundaries` uses dependency-cruiser's SWC parser to validate
+  internal imports in workspace source and generated JavaScript/declarations.
 - `npm run guard:packages` verifies the private root, private scoped workspaces,
   Node 24 declarations, and the sole structurally publishable `release-drafter`
   facade package.
-- `npm run guard:boundaries` prevents accidental runtime dependencies on private
-  workspace packages. Run `npm run build:workspaces` first when invoking this
-  guard outside `npm run all` so emitted output is available for inspection.
+- `npm run guard:boundaries` keeps the focused source-level check that runtime
+  imports are not satisfied only by `devDependencies`. Dependency-cruiser owns
+  the general source and emitted-output graph checks, while the focused SWC AST
+  pass retains the type-only distinction its extracted edges do not expose.
+- Run `npm run build:workspaces` before `npm run check:boundaries` outside
+  `npm run all` so generated JavaScript and declaration files are available.
 - `npm run check:clean` verifies generation left no unstaged or untracked drift
   relative to the intended staged tree.
 - `npm run build --workspaces --if-present` builds package skeletons after the
