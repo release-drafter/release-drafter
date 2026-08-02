@@ -234,6 +234,79 @@ describe('GitHubAdapter', () => {
     )
   })
 
+  it('recovers a matching recent pull request from the second page', async () => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield { data: { commits: [{ sha: 'matching-oid' }] } }
+      })() as never,
+    )
+    const pullRequest = (number: number, oid: string) => ({
+      number,
+      title: `Pull request ${number}`,
+      merged: true,
+      baseRepository: {
+        nameWithOwner: `${repository.owner}/${repository.name}`,
+      },
+      mergeCommit: { oid },
+    })
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  oid: 'matching-oid',
+                  associatedPullRequests: { nodes: [] },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: {
+            pageInfo: { hasNextPage: true, endCursor: 'recent-next' },
+            nodes: [pullRequest(2, 'unrelated-oid')],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [pullRequest(1, 'matching-oid')],
+          },
+        },
+      })
+
+    const result = await adapter(octokit).findChanges({
+      repository,
+      comparison: { baseRef: 'base', headRef: 'main' },
+      pullRequestFields: {
+        body: false,
+        url: false,
+        baseRefName: false,
+        headRefName: false,
+      },
+      pullRequestLimit: 20,
+      historyLimit: 100,
+      includeChangedFiles: false,
+      includeNewContributors: false,
+    })
+
+    expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('findRecentMergedPullRequests'),
+      expect.objectContaining({ cursor: 'recent-next', limit: 100 }),
+    )
+  })
+
   it('paginates changed files through GraphQL without REST file calls', async () => {
     const octokit = mockOctokit()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
@@ -267,7 +340,14 @@ describe('GitHubAdapter', () => {
           },
         },
       })
-      .mockResolvedValueOnce({ repository: { pullRequests: { nodes: [] } } })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [],
+          },
+        },
+      })
       .mockResolvedValueOnce({
         repository: {
           pullRequest: {

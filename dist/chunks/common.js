@@ -57942,14 +57942,19 @@ var FindPullRequestChangedFilesDocument = new TypedDocumentString(`
 }
     `);
 var FindRecentMergedPullRequestsDocument = new TypedDocumentString(`
-    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
+    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $cursor: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
   repository(name: $name, owner: $owner) {
     pullRequests(
       states: [MERGED]
       baseRefName: $baseRefName
       orderBy: { field: UPDATED_AT, direction: DESC }
       first: $limit
+      after: $cursor
     ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         ...AdapterPullRequestFields
         mergeCommit {
@@ -58077,7 +58082,7 @@ var ResolvePullRequestCommitishDocument = new TypedDocumentString(`
 //#region packages/github-adapter/src/index.ts
 var GitHubOctokit = Octokit.plugin(restEndpointMethods, paginateRest, paginateGraphQL, retry);
 var RELEASE_COUNT_LIMIT = 1e3;
-var RECENT_PR_LOOKBACK = 5;
+var PULL_REQUEST_PAGE_SIZE = 100;
 var DEFAULT_CONCURRENCY = 5;
 var deriveEndpoints = (options) => {
 	const serverUrl = (options.serverUrl ?? "https://github.com").replace(/\/$/, "");
@@ -58298,20 +58303,32 @@ var GitHubAdapter = class {
 		return [...found.values()];
 	}
 	async findRecentPullRequests(params, commitOids, foundKeys, baseRefName) {
-		return ((await this.graphql(FindRecentMergedPullRequestsDocument.toString(), {
-			name: params.repository.name,
-			owner: params.repository.owner,
-			baseRefName,
-			limit: RECENT_PR_LOOKBACK,
-			withPullRequestBody: params.pullRequestFields.body,
-			withPullRequestURL: params.pullRequestFields.url,
-			withBaseRefName: params.pullRequestFields.baseRefName,
-			withHeadRefName: params.pullRequestFields.headRefName
-		})).repository?.pullRequests?.nodes ?? []).flatMap((pullRequest) => {
-			if (!pullRequest?.mergeCommit?.oid) return [];
-			const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
-			return commitOids.has(pullRequest.mergeCommit.oid) && !foundKeys.has(key) ? [pullRequest] : [];
-		});
+		const recovered = [];
+		let cursor = null;
+		let shouldContinue = true;
+		while (shouldContinue) {
+			const pullRequests = (await this.graphql(FindRecentMergedPullRequestsDocument.toString(), {
+				name: params.repository.name,
+				owner: params.repository.owner,
+				baseRefName,
+				cursor,
+				limit: PULL_REQUEST_PAGE_SIZE,
+				withPullRequestBody: params.pullRequestFields.body,
+				withPullRequestURL: params.pullRequestFields.url,
+				withBaseRefName: params.pullRequestFields.baseRefName,
+				withHeadRefName: params.pullRequestFields.headRefName
+			})).repository?.pullRequests;
+			if (!pullRequests) throw new Error("Query returned no recent pull request connection");
+			recovered.push(...(pullRequests.nodes ?? []).flatMap((pullRequest) => {
+				if (!pullRequest?.mergeCommit?.oid) return [];
+				const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+				return commitOids.has(pullRequest.mergeCommit.oid) && !foundKeys.has(key) ? [pullRequest] : [];
+			}));
+			if (pullRequests.pageInfo.hasNextPage && !pullRequests.pageInfo.endCursor) throw new Error("Query returned no end cursor for the next recent pull request page");
+			cursor = pullRequests.pageInfo.endCursor ?? null;
+			shouldContinue = pullRequests.pageInfo.hasNextPage;
+		}
+		return recovered;
 	}
 	async loadChangedFiles(repository, pullRequests) {
 		const entries = await mapConcurrent(pullRequests, this.changedFilesConcurrency, async (pullRequest) => {
