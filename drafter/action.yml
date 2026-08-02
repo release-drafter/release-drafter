@@ -88,7 +88,7 @@ inputs:
     default: ''
   filter-by-range:
     description: |
-      Filter releases that satisfies this semver range. Evaluates the tag name againts node's semver.satisfies().
+      Filter releases whose tag names satisfy this SemVer range.
     required: false
     default: ''
 

@@ -1,7 +1,5 @@
 import { compareVersions } from 'compare-versions'
-import coerce from 'semver/functions/coerce.js'
-import satisfies from 'semver/functions/satisfies.js'
-import validRange from 'semver/ranges/valid.js'
+import { coerce, normalizeRange, satisfies } from 'verkit'
 import { needsPullRequestChangedFiles } from './category-matching.ts'
 import type { ForgeAdapter, Logger } from './ports.ts'
 import { buildReleasePayload } from './release/build-release-payload.ts'
@@ -57,11 +55,10 @@ export const selectPreviousReleases = (params: {
 }): PreviousReleases => {
   const { config, logger } = params
   const targetCommitish = stripHeadRef(config.commitish ?? '')
-  const shouldFilterByRange =
-    Boolean(config['filter-by-range']) && config['filter-by-range'] !== '*'
-  const parsedRange = shouldFilterByRange
-    ? validRange(config['filter-by-range'])
-    : null
+  const filterByRange = config['filter-by-range']
+  const shouldFilterByRange = Boolean(filterByRange) && filterByRange !== '*'
+  const parsedRange =
+    shouldFilterByRange && filterByRange ? normalizeRange(filterByRange) : null
   const releases = params.releases.filter((release) => {
     if (
       config['filter-by-commitish'] &&
@@ -77,14 +74,14 @@ export const selectPreviousReleases = (params: {
     }
     if (shouldFilterByRange) {
       if (!parsedRange) return false
-      const parsedVersion = coerce(release.tagName, { loose: true })?.version
-      if (!parsedVersion) {
+      const coercedVersion = coerce(release.tagName, { loose: true })
+      if (!coercedVersion) {
         logger.warning(
           `Failed to coerce semver version for "${release.tagName}" : will be excluded from releases considered for drafting.`,
         )
         return false
       }
-      return satisfies(parsedVersion, parsedRange, { loose: true })
+      return satisfies(coercedVersion, parsedRange, { loose: true })
     }
     return true
   })

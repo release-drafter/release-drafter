@@ -40,7 +40,7 @@ export const commonConfigSchema = object({
    */
   footer: string().optional(),
   /**
-   * Filter releases that satisfies this semver range. Evaluates the tag name againts node's semver.satisfies().
+   * Filter releases whose tag names satisfy this SemVer range.
    */
   'filter-by-range': string().optional(),
 })
