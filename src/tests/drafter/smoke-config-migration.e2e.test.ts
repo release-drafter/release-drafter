@@ -1,9 +1,10 @@
+import nock from 'nock'
 import { describe, expect, it, vi } from 'vitest'
 import { runDrafter } from '#tests/helpers/index.ts'
 import type { AvailableConfigs } from '#tests/mocks/config.ts'
 import {
+  getGqlPayload,
   mockContext,
-  mockGraphqlQuery,
   mockInput,
   mocks,
   nockGetReleases,
@@ -17,9 +18,42 @@ const runSmokeConfigDryRun = async (params: {
   await mockInput('dry-run', 'true')
   mocks.config.mockReturnValue(params.config)
 
-  const gqlScope = mockGraphqlQuery({
-    payload: 'graphql-comparison-merge-commit',
-  })
+  const comparisonPayload = getGqlPayload('graphql-comparison-merge-commit')
+  const commits = comparisonPayload.data.repository.ref.compare.commits.nodes
+    .filter(Boolean)
+    .map((commit: { id: string; oid?: string }) => ({
+      ...commit,
+      oid: commit.oid ?? commit.id,
+    }))
+  const comparisonScope = nock('https://api.github.com')
+    .get(/\/repos\/[^/]+\/[^/]+\/compare\//)
+    .query(true)
+    .reply(200, {
+      commits: commits.map((commit: { oid: string }) => ({ sha: commit.oid })),
+    })
+  const gqlScope = nock('https://api.github.com')
+    .post('/graphql', (body) =>
+      body.query.includes('query hydrateComparisonCommits'),
+    )
+    .reply(200, {
+      data: {
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: commits,
+            },
+          },
+        },
+      },
+    })
+    .post('/graphql', (body) =>
+      body.query.includes('query findRecentMergedPullRequests'),
+    )
+    .reply(200, {
+      data: { repository: { pullRequests: { nodes: [] } } },
+    })
   const releaseScope = nockGetReleases({
     releaseFiles: params.releaseFiles,
   })
@@ -27,6 +61,7 @@ const runSmokeConfigDryRun = async (params: {
   await runDrafter()
 
   expect(releaseScope.isDone()).toBe(true)
+  expect(comparisonScope.isDone()).toBe(true)
   expect(gqlScope.pendingMocks().length).toBe(0)
   expect(mocks.postReleaseBody).not.toHaveBeenCalled()
   expect(mocks.patchReleaseBody).not.toHaveBeenCalled()

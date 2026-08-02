@@ -1,0 +1,24 @@
+fragment AdapterPullRequestFields on PullRequest {
+  title
+  number
+  url @include(if: $withPullRequestURL)
+  body @include(if: $withPullRequestBody)
+  author {
+    __typename
+    login
+    url
+  }
+  baseRepository {
+    nameWithOwner
+  }
+  isCrossRepository
+  mergedAt
+  labels(first: 100) {
+    nodes {
+      name
+    }
+  }
+  merged
+  baseRefName @include(if: $withBaseRefName)
+  headRefName @include(if: $withHeadRefName)
+}

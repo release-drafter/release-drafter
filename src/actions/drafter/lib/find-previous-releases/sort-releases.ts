@@ -1,12 +1,14 @@
 import { compareVersions } from 'compare-versions'
 import regexEscape from 'escape-string-regexp'
-import type { Octokit } from '#src/common/get-octokit.ts'
 import type { Config } from '../../config/index.ts'
 
-export const sortReleases = (params: {
-  releases: Awaited<
-    ReturnType<Octokit['rest']['repos']['listReleases']>
-  >['data']
+export const sortReleases = <
+  T extends {
+    tag_name: string
+    created_at?: string
+  },
+>(params: {
+  releases: T[]
   tagPrefix: Config['tag-prefix']
 }) => {
   // For semver, we find the greatest release number
@@ -27,7 +29,8 @@ export const sortReleases = (params: {
       return compareVersions(tag_name_1, tag_name_2)
     } catch {
       return (
-        new Date(r1.created_at).getTime() - new Date(r2.created_at).getTime()
+        new Date(r1.created_at ?? '').getTime() -
+        new Date(r2.created_at ?? '').getTime()
       )
     }
   })

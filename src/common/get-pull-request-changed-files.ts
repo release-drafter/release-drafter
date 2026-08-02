@@ -1,7 +1,7 @@
+import process from 'node:process'
+import { getGitHubAdapter } from './get-github-adapter.ts'
 import type { Octokit } from './get-octokit.ts'
 import { getOctokit } from './get-octokit.ts'
-
-const PULL_REQUEST_FILES_PER_PAGE = 50
 
 type PullRequestRef = {
   number: number
@@ -18,16 +18,14 @@ export const getPullRequestChangedFiles = async (
     pull_number: number
   },
 ) =>
-  // Octokit follows the REST pagination links for us; per_page only controls
-  // how many files each HTTP request retrieves.
-  octokit.paginate(
-    octokit.rest.pulls.listFiles,
-    {
-      ...params,
-      per_page: PULL_REQUEST_FILES_PER_PAGE,
+  getGitHubAdapter(octokit).findPullRequestChangedFiles({
+    repository: {
+      owner: params.owner,
+      name: params.repo,
+      serverUrl: process.env.GITHUB_SERVER_URL ?? 'https://github.com',
     },
-    (response) => response.data.map((file) => file.filename),
-  )
+    number: params.pull_number,
+  })
 
 export const getPullRequestsChangedFiles = async (params: {
   owner: string

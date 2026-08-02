@@ -1,0 +1,26 @@
+query findRecentMergedPullRequests(
+  $name: String!
+  $owner: String!
+  $baseRefName: String
+  $limit: Int!
+  $withPullRequestBody: Boolean!
+  $withPullRequestURL: Boolean!
+  $withBaseRefName: Boolean!
+  $withHeadRefName: Boolean!
+) {
+  repository(name: $name, owner: $owner) {
+    pullRequests(
+      states: [MERGED]
+      baseRefName: $baseRefName
+      orderBy: { field: UPDATED_AT, direction: DESC }
+      first: $limit
+    ) {
+      nodes {
+        ...AdapterPullRequestFields
+        mergeCommit {
+          oid
+        }
+      }
+    }
+  }
+}

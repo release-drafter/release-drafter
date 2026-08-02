@@ -122,7 +122,7 @@ export function parseConfigTarget(
   return {
     scheme: scheme,
     filepath: targetFilepath,
-    ref: targetRef,
+    ref: targetRef?.replace(/^refs\/heads\//, ''),
     repo: targetRepo,
   }
 }

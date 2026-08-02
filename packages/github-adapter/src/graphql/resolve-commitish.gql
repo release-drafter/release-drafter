@@ -1,0 +1,8 @@
+query resolveCommitish($name: String!, $owner: String!, $expression: String!) {
+  repository(name: $name, owner: $owner) {
+    object(expression: $expression) {
+      __typename
+      oid
+    }
+  }
+}

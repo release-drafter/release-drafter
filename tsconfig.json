@@ -28,7 +28,10 @@
     "paths": {
       "#src/*": ["./src/*"],
       "@release-drafter/autolabeler": ["./packages/autolabeler/src/index.ts"],
-      "@release-drafter/core": ["./packages/core/src/index.ts"]
+      "@release-drafter/core": ["./packages/core/src/index.ts"],
+      "@release-drafter/github-adapter": [
+        "./packages/github-adapter/src/index.ts"
+      ]
     },
     "skipLibCheck": true
   },

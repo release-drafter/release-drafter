@@ -446,6 +446,7 @@ describe('draftRelease', () => {
         comparison: { baseRef: 'initial-commit', headRef: 'main' },
       }),
     )
+    expect(result.releasePayload.targetCommitish).toBe('main')
     expect(result.releasePayload.resolvedVersion).toBe('0.0.1')
   })
 

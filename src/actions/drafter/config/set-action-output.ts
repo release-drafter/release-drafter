@@ -1,11 +1,17 @@
 import * as core from '@actions/core'
-import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods'
 import type { buildReleasePayload } from '../lib/index.ts'
 
 export const setActionOutput = (params: {
   upsertedRelease:
-    | RestEndpointMethodTypes['repos']['createRelease']['response']
-    | RestEndpointMethodTypes['repos']['updateRelease']['response']
+    | {
+        data: {
+          id: string | number
+          name: string | null
+          tag_name: string
+          html_url: string
+          upload_url: string
+        }
+      }
     | undefined
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
 }) => {

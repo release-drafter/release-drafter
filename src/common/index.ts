@@ -1,5 +1,6 @@
 /* node:coverage ignore file -- @preserve */
 export { composeConfigGet } from './config/index.ts'
+export { getGitHubAdapter, getRepository } from './get-github-adapter.ts'
 export { getOctokit } from './get-octokit.ts'
 export {
   getPullRequestChangedFiles,

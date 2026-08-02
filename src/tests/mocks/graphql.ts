@@ -44,20 +44,33 @@ export const getGqlPayload = (payload: Payload) =>
     ),
   )
 
+const commitOid = (commit: { id?: string; oid?: string }) => {
+  if (commit.oid) return commit.oid
+  const decodedId = Buffer.from(commit.id || '', 'base64').toString('utf8')
+  return decodedId.slice(decodedId.lastIndexOf(':') + 1)
+}
+
 export const mockGraphqlQuery = (
   params:
     | {
         query?: Query
         payload: Payload | Payload[]
+        variables?: Record<string, unknown>
+        suppressRecentPullRequestMock?: boolean
       }
     | Array<{
         query?: Query
         payload: Payload | Payload[]
+        variables?: Record<string, unknown>
+        suppressRecentPullRequestMock?: boolean
       }>,
 ) => {
   const paramsList = Array.isArray(params) ? params : [params]
 
   let scope = nock('https://api.github.com')
+  const hasRecentPullRequestFixture = paramsList.some(
+    (param) => param.query === 'query findRecentMergedPullRequests',
+  )
 
   for (const param of paramsList) {
     const payloads = Array.isArray(param.payload)
@@ -65,6 +78,72 @@ export const mockGraphqlQuery = (
       : [param.payload]
 
     const defaultQuery: Query = 'query findCommitsInComparison'
+
+    if ((param.query || defaultQuery) === 'query findCommitsInComparison') {
+      const comparisonPayloads = payloads.map(getGqlPayload)
+      const commits = comparisonPayloads.flatMap((payload) =>
+        payload.data.repository.ref.compare.commits.nodes
+          .filter(Boolean)
+          .map((commit: { id?: string; oid?: string }) => ({
+            ...commit,
+            oid: commitOid(commit),
+          })),
+      )
+
+      scope = scope
+        .get(/\/repos\/[^/]+\/[^/]+\/compare\//)
+        .query(true)
+        .reply(200, {
+          commits: commits.map((commit) => ({ sha: commit.oid })),
+        })
+
+      if (commits.length === 0) continue
+
+      for (const payload of comparisonPayloads) {
+        const history = payload.data.repository.ref.compare.commits
+        scope = scope
+          .post(
+            '/graphql',
+            (body) =>
+              body.query.includes('query hydrateComparisonCommits') &&
+              Object.entries(param.variables || {}).every(
+                ([key, value]) => body.variables[key] === value,
+              ),
+          )
+          .reply(200, {
+            data: {
+              repository: {
+                object: {
+                  __typename: 'Commit',
+                  history: {
+                    ...history,
+                    nodes: history.nodes
+                      .filter(Boolean)
+                      .map((commit: { id?: string; oid?: string }) => ({
+                        ...commit,
+                        oid: commitOid(commit),
+                      })),
+                  },
+                },
+              },
+            },
+          })
+      }
+
+      if (
+        !hasRecentPullRequestFixture &&
+        !param.suppressRecentPullRequestMock
+      ) {
+        scope = scope
+          .post('/graphql', (body) =>
+            body.query.includes('query findRecentMergedPullRequests'),
+          )
+          .reply(200, {
+            data: { repository: { pullRequests: { nodes: [] } } },
+          })
+      }
+      continue
+    }
 
     for (const payload of payloads) {
       scope = scope
