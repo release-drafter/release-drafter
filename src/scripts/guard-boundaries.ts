@@ -1,8 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { extname, join, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { SyntaxKind } from 'typescript/unstable/ast'
-import { createScanner } from 'typescript/unstable/ast/scanner'
+import { type ParseOptions, parseFileSync } from '@swc/core'
 
 type PackageJson = {
   name?: string
@@ -11,8 +10,14 @@ type PackageJson = {
   peerDependencies?: Record<string, string>
 }
 
-const sourceExtensions = ['.ts', '.tsx', '.js', '.mjs', '.cjs']
-const outputExtensions = ['.js', '.mjs', '.cjs', '.d.ts', '.d.mts', '.d.cts']
+const typescriptExtensions = new Set(['.ts', '.tsx', '.mts', '.cts'])
+const sourceExtensions = [
+  ...typescriptExtensions,
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+]
 
 const walkFiles = (directory: string, extensions: string[]): string[] => {
   try {
@@ -40,51 +45,41 @@ type PrivateImport = {
   typeOnly: boolean
 }
 
-type ScannedToken = {
-  kind: SyntaxKind
-  value: string
-}
-
 const privatePackageName = (specifier: string) =>
   specifier.match(/^(@release-drafter\/[a-z0-9-]+)(?:\/|$)/)?.[1]
 
-const scanTokens = (contents: string): ScannedToken[] => {
-  const scanner = createScanner(true, undefined, contents)
-  const tokens: ScannedToken[] = []
-  for (
-    let kind = scanner.scan();
-    kind !== SyntaxKind.EndOfFile;
-    kind = scanner.scan()
-  ) {
-    tokens.push({ kind, value: scanner.getTokenValue() })
-  }
-  return tokens
-}
+type AstNode = Record<string, unknown> & { type?: string }
 
-const namedBindingsAreTypeOnly = (tokens: ScannedToken[]) => {
-  if (
-    tokens[0]?.kind !== SyntaxKind.OpenBraceToken ||
-    tokens.at(-1)?.kind !== SyntaxKind.CloseBraceToken
-  )
-    return false
+const isAstNode = (value: unknown): value is AstNode =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
 
-  const bindings: ScannedToken[][] = [[]]
-  for (const token of tokens.slice(1, -1)) {
-    if (token.kind === SyntaxKind.CommaToken) bindings.push([])
-    else bindings.at(-1)?.push(token)
+const stringLiteralValue = (value: unknown) =>
+  isAstNode(value) &&
+  value.type === 'StringLiteral' &&
+  typeof value.value === 'string'
+    ? value.value
+    : undefined
+
+const parserOptions = (path: string): ParseOptions => {
+  const extension = extname(path)
+  if (typescriptExtensions.has(extension)) {
+    return {
+      syntax: 'typescript',
+      tsx: extension === '.tsx',
+      decorators: true,
+      target: 'esnext',
+    }
   }
-  const nonemptyBindings = bindings.filter((binding) => binding.length > 0)
-  return (
-    nonemptyBindings.length > 0 &&
-    nonemptyBindings.every(
-      (binding) => binding[0]?.kind === SyntaxKind.TypeKeyword,
-    )
-  )
+  return {
+    syntax: 'ecmascript',
+    jsx: extension === '.jsx',
+    decorators: true,
+    target: 'esnext',
+  }
 }
 
 const privateImports = (path: string): PrivateImport[] => {
   const imports = new Map<string, boolean>()
-  const tokens = scanTokens(readFileSync(path, 'utf8'))
 
   const addImport = (specifier: string, typeOnly: boolean) => {
     const packageName = privatePackageName(specifier)
@@ -92,80 +87,74 @@ const privateImports = (path: string): PrivateImport[] => {
     imports.set(packageName, (imports.get(packageName) ?? true) && typeOnly)
   }
 
-  for (let index = 0; index < tokens.length; index += 1) {
-    const token = tokens[index]
-    const next = tokens[index + 1]
-    if (
-      token.kind === SyntaxKind.RequireKeyword &&
-      next?.kind === SyntaxKind.OpenParenToken &&
-      tokens[index + 2]?.kind === SyntaxKind.StringLiteral
+  const visit = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      for (const child of value) visit(child)
+      return
+    }
+    if (!isAstNode(value)) return
+
+    if (value.type === 'ImportDeclaration') {
+      const specifier = stringLiteralValue(value.source)
+      const bindings = Array.isArray(value.specifiers) ? value.specifiers : []
+      const bindingsAreTypeOnly =
+        bindings.length > 0 &&
+        bindings.every(
+          (binding) =>
+            isAstNode(binding) &&
+            binding.type === 'ImportSpecifier' &&
+            binding.isTypeOnly === true,
+        )
+      if (specifier)
+        addImport(specifier, value.typeOnly === true || bindingsAreTypeOnly)
+    } else if (
+      value.type === 'ExportNamedDeclaration' ||
+      value.type === 'ExportAllDeclaration'
     ) {
-      addImport(tokens[index + 2].value, false)
-      continue
-    }
-
-    if (token.kind === SyntaxKind.ImportKeyword) {
+      const specifier = stringLiteralValue(value.source)
+      const bindings = Array.isArray(value.specifiers) ? value.specifiers : []
+      const bindingsAreTypeOnly =
+        bindings.length > 0 &&
+        bindings.every(
+          (binding) => isAstNode(binding) && binding.isTypeOnly === true,
+        )
+      if (specifier)
+        addImport(specifier, value.typeOnly === true || bindingsAreTypeOnly)
+    } else if (value.type === 'TsImportType') {
+      const specifier = stringLiteralValue(value.argument)
+      if (specifier) addImport(specifier, true)
+    } else if (value.type === 'TsImportEqualsDeclaration') {
+      const moduleReference = isAstNode(value.moduleRef)
+        ? value.moduleRef
+        : undefined
+      const specifier =
+        moduleReference?.type === 'TsExternalModuleReference'
+          ? stringLiteralValue(moduleReference.expression)
+          : undefined
+      if (specifier) addImport(specifier, value.isTypeOnly === true)
+    } else if (value.type === 'CallExpression') {
+      const callee = isAstNode(value.callee) ? value.callee : undefined
+      const firstArgument = Array.isArray(value.arguments)
+        ? value.arguments[0]
+        : undefined
+      const argumentExpression = isAstNode(firstArgument)
+        ? firstArgument.expression
+        : undefined
+      const specifier = stringLiteralValue(argumentExpression)
       if (
-        next?.kind === SyntaxKind.OpenParenToken &&
-        tokens[index + 2]?.kind === SyntaxKind.StringLiteral
-      ) {
-        addImport(tokens[index + 2].value, false)
-        continue
-      }
-      if (next?.kind === SyntaxKind.StringLiteral) {
-        addImport(next.value, false)
-        continue
-      }
-
-      const fromIndex = tokens.findIndex(
-        (candidate, candidateIndex) =>
-          candidateIndex > index && candidate.kind === SyntaxKind.FromKeyword,
+        specifier &&
+        (callee?.type === 'Import' ||
+          (callee?.type === 'Identifier' && callee.value === 'require'))
       )
-      if (
-        fromIndex > index &&
-        tokens[fromIndex + 1]?.kind === SyntaxKind.StringLiteral
-      ) {
-        const clause = tokens.slice(index + 1, fromIndex)
-        addImport(
-          tokens[fromIndex + 1].value,
-          clause[0]?.kind === SyntaxKind.TypeKeyword ||
-            namedBindingsAreTypeOnly(clause),
-        )
-      }
-      continue
+        addImport(specifier, false)
     }
 
-    if (token.kind === SyntaxKind.ExportKeyword) {
-      const typeOnly = next?.kind === SyntaxKind.TypeKeyword
-      const clauseStart = index + (typeOnly ? 2 : 1)
-      let fromIndex = -1
-      if (tokens[clauseStart]?.kind === SyntaxKind.AsteriskToken) {
-        fromIndex = tokens.findIndex(
-          (candidate, candidateIndex) =>
-            candidateIndex > clauseStart &&
-            candidate.kind === SyntaxKind.FromKeyword,
-        )
-      } else if (tokens[clauseStart]?.kind === SyntaxKind.OpenBraceToken) {
-        const closeBraceIndex = tokens.findIndex(
-          (candidate, candidateIndex) =>
-            candidateIndex > clauseStart &&
-            candidate.kind === SyntaxKind.CloseBraceToken,
-        )
-        if (tokens[closeBraceIndex + 1]?.kind === SyntaxKind.FromKeyword)
-          fromIndex = closeBraceIndex + 1
-      }
-      if (
-        fromIndex > index &&
-        tokens[fromIndex + 1]?.kind === SyntaxKind.StringLiteral
-      ) {
-        const clause = tokens.slice(clauseStart, fromIndex)
-        addImport(
-          tokens[fromIndex + 1].value,
-          typeOnly || namedBindingsAreTypeOnly(clause),
-        )
-      }
+    for (const [key, child] of Object.entries(value)) {
+      if (key !== 'span') visit(child)
     }
   }
+
+  visit(parseFileSync(path, parserOptions(path)))
 
   return [...imports].map(([packageName, typeOnly]) => ({
     packageName,
@@ -173,8 +162,16 @@ const privateImports = (path: string): PrivateImport[] => {
   }))
 }
 
-/** Returns workspace boundary violations beneath a repository root. */
-export const collectBoundaryFailures = (root = process.cwd()): string[] => {
+/**
+ * Returns runtime imports that are declared only as development dependencies.
+ *
+ * dependency-cruiser owns workspace graph extraction and declaration/output
+ * coverage. This focused SWC AST check remains because dependency-cruiser's
+ * extracted edges do not retain the type-only distinction needed here.
+ */
+export const collectRuntimeDependencyFailures = (
+  root = process.cwd(),
+): string[] => {
   const failures: string[] = []
   const packagesRoot = join(root, 'packages')
 
@@ -190,42 +187,22 @@ export const collectBoundaryFailures = (root = process.cwd()): string[] => {
       ...Object.keys(manifest.dependencies ?? {}),
       ...Object.keys(manifest.peerDependencies ?? {}),
     ])
-    const declaredTypeDependencies = new Set([
-      ...declaredRuntimeDependencies,
-      ...Object.keys(manifest.devDependencies ?? {}),
-    ])
+    const declaredDevelopmentDependencies = new Set(
+      Object.keys(manifest.devDependencies ?? {}),
+    )
 
     for (const path of walkFiles(
       join(workspaceRoot, 'src'),
       sourceExtensions,
     )) {
       for (const importedPackage of privateImports(path)) {
-        const declaredDependencies = importedPackage.typeOnly
-          ? declaredTypeDependencies
-          : declaredRuntimeDependencies
-        if (!declaredDependencies.has(importedPackage.packageName)) {
-          const dependencyKind = importedPackage.typeOnly ? 'type' : 'runtime'
-          failures.push(
-            `${manifest.name} imports undeclared private ${dependencyKind} dependency ${importedPackage.packageName} in ${relative(root, path)}`,
-          )
-        }
-      }
-    }
-
-    for (const path of walkFiles(
-      join(workspaceRoot, 'dist'),
-      outputExtensions,
-    )) {
-      for (const importedPackage of privateImports(path)) {
-        if (manifest.name === 'release-drafter') {
-          failures.push(
-            `public facade output contains unresolved private import ${importedPackage.packageName} in ${relative(root, path)}`,
-          )
-        } else if (
-          !declaredRuntimeDependencies.has(importedPackage.packageName)
+        if (
+          !importedPackage.typeOnly &&
+          !declaredRuntimeDependencies.has(importedPackage.packageName) &&
+          declaredDevelopmentDependencies.has(importedPackage.packageName)
         ) {
           failures.push(
-            `${manifest.name} output imports undeclared private runtime dependency ${importedPackage.packageName} in ${relative(root, path)}`,
+            `${manifest.name} imports private runtime dependency ${importedPackage.packageName} from devDependencies in ${relative(root, path)}`,
           )
         }
       }
@@ -236,10 +213,10 @@ export const collectBoundaryFailures = (root = process.cwd()): string[] => {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
-  const failures = collectBoundaryFailures()
+  const failures = collectRuntimeDependencyFailures()
   if (failures.length > 0) {
     console.error(failures.join('\n'))
     process.exit(1)
   }
-  console.log('Workspace boundary guard passed')
+  console.log('Workspace runtime dependency guard passed')
 }

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "include": ["dependencies", "devDependencies", "unlisted"],
+  "vite": false,
+  "workspaces": {
+    ".": {
+      "entry": ["src/actions/*/run.ts", "src/scripts/*.ts", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "*.{ts,mts,cts,js,mjs,cjs}"],
+    },
+    "packages/*": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": false,
+    },
+  },
+}

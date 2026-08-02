@@ -1,15 +1,17 @@
+import { execFileSync } from 'node:child_process'
 import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { collectBoundaryFailures } from '#src/scripts/guard-boundaries.ts'
+import { collectRuntimeDependencyFailures } from '#src/scripts/guard-boundaries.ts'
 import { collectWorkflowFailures } from '#src/scripts/guard-packages.ts'
 import { syncWorkspaceVersions } from '#src/scripts/sync-workspace-versions.ts'
 
@@ -74,6 +76,20 @@ describe('workspace foundation', () => {
     )
   })
 
+  it('keeps TypeScript scripts directly parseable by Node without compilation', () => {
+    const scripts = readdirSync('src/scripts')
+      .filter((path) => path.endsWith('.ts'))
+      .sort()
+    expect(scripts.length).toBeGreaterThan(0)
+
+    for (const script of scripts) {
+      execFileSync(process.execPath, ['--check', join('src/scripts', script)], {
+        encoding: 'utf8',
+        stdio: 'pipe',
+      })
+    }
+  })
+
   it('keeps CI on Node 24 without enabling npm publication', () => {
     expect(readFileSync('.node-version', 'utf8').trim()).toMatch(/^24\./)
     for (const workflow of readdirSync('.github/workflows').filter(
@@ -135,17 +151,71 @@ describe('workspace foundation', () => {
     }
   })
 
-  it('rejects undeclared source imports and private imports left in public output', () => {
+  it('rejects runtime workspace imports satisfied only by devDependencies', () => {
     const fixtureRoot = mkdtempSync(
       join(tmpdir(), 'release-drafter-boundaries-'),
     )
     const writeWorkspace = (params: {
       name: string
       directory: string
-      dependencies?: Record<string, string>
       devDependencies?: Record<string, string>
       source?: string
-      output?: string
+    }) => {
+      const workspace = join(fixtureRoot, 'packages', params.directory)
+      mkdirSync(join(workspace, 'src'), { recursive: true })
+      writeFileSync(
+        join(workspace, 'package.json'),
+        JSON.stringify({
+          name: params.name,
+          devDependencies: params.devDependencies,
+        }),
+      )
+      writeFileSync(join(workspace, 'src/index.ts'), params.source ?? '')
+    }
+
+    try {
+      writeWorkspace({
+        directory: 'github-adapter',
+        name: '@release-drafter/github-adapter',
+        devDependencies: { '@release-drafter/core': 'workspace:*' },
+        source: "import '@release-drafter/core'",
+      })
+      writeWorkspace({
+        directory: 'gitea-adapter',
+        name: '@release-drafter/gitea-adapter',
+        devDependencies: { '@release-drafter/core': 'workspace:*' },
+        source: `
+          import type { Core } from '@release-drafter/core'
+          type CoreModule = import('@release-drafter/core').Core
+        `,
+      })
+
+      expect(collectRuntimeDependencyFailures(fixtureRoot)).toEqual([
+        expect.stringContaining(
+          '@release-drafter/github-adapter imports private runtime dependency @release-drafter/core from devDependencies',
+        ),
+      ])
+    } finally {
+      rmSync(fixtureRoot, { force: true, recursive: true })
+    }
+  })
+
+  it('uses dependency-cruiser with SWC for source, JavaScript, and declaration boundaries', () => {
+    const fixtureRoot = mkdtempSync(
+      join(tmpdir(), 'release-drafter-dependency-cruiser-'),
+    )
+    const configPath = join(process.cwd(), '.dependency-cruiser.mjs')
+    const dependencyCruiserCli = join(
+      process.cwd(),
+      'node_modules/dependency-cruiser/bin/dependency-cruise.mjs',
+    )
+    const writeWorkspace = (params: {
+      name: string
+      directory: string
+      dependencies?: Record<string, string>
+      source?: string
+      javascript?: string
+      declaration?: string
     }) => {
       const workspace = join(fixtureRoot, 'packages', params.directory)
       mkdirSync(join(workspace, 'src'), { recursive: true })
@@ -154,53 +224,74 @@ describe('workspace foundation', () => {
         join(workspace, 'package.json'),
         JSON.stringify({
           name: params.name,
+          type: 'module',
           dependencies: params.dependencies,
-          devDependencies: params.devDependencies,
+          exports: {
+            '.': {
+              types: './dist/index.d.ts',
+              import: './dist/index.js',
+            },
+          },
         }),
       )
       writeFileSync(join(workspace, 'src/index.ts'), params.source ?? '')
-      writeFileSync(join(workspace, 'dist/index.js'), params.output ?? '')
+      writeFileSync(join(workspace, 'dist/index.js'), params.javascript ?? '')
+      writeFileSync(
+        join(workspace, 'dist/index.d.ts'),
+        params.declaration ?? '',
+      )
+
+      const packageParts = params.name.split('/')
+      const link = join(fixtureRoot, 'node_modules', ...packageParts)
+      mkdirSync(join(link, '..'), { recursive: true })
+      symlinkSync(
+        workspace,
+        link,
+        process.platform === 'win32' ? 'junction' : 'dir',
+      )
     }
 
     try {
       writeWorkspace({
         directory: 'core',
         name: '@release-drafter/core',
-        source: `
-          import '@release-drafter/rest-adapter'
-          require('@release-drafter/rest-adapter')
-        `,
-        output: "export * from '@release-drafter/github-adapter'",
+        source: "import '@release-drafter/rest-adapter'",
+        javascript: "export * from '@release-drafter/github-adapter'",
       })
       writeWorkspace({
         directory: 'github-adapter',
         name: '@release-drafter/github-adapter',
-        devDependencies: { '@release-drafter/core': 'workspace:*' },
-        source: `
-          import type { Core } from '@release-drafter/core'
-          // import '@release-drafter/rest-adapter'
-          const example = "require('@release-drafter/core')"
-        `,
       })
       writeWorkspace({
         directory: 'release-drafter',
         name: 'release-drafter',
         dependencies: { '@release-drafter/core': 'workspace:*' },
-        source: "export * from '@release-drafter/core'",
-        output: "export * from '@release-drafter/core'",
+        declaration: "export * from '@release-drafter/core'",
+      })
+      writeWorkspace({
+        directory: 'rest-adapter',
+        name: '@release-drafter/rest-adapter',
       })
 
-      expect(collectBoundaryFailures(fixtureRoot)).toEqual([
-        expect.stringContaining(
-          '@release-drafter/core imports undeclared private runtime dependency @release-drafter/rest-adapter',
-        ),
-        expect.stringContaining(
-          '@release-drafter/core output imports undeclared private runtime dependency @release-drafter/github-adapter',
-        ),
-        expect.stringContaining(
-          'public facade output contains unresolved private import @release-drafter/core',
-        ),
-      ])
+      let output = ''
+      try {
+        execFileSync(
+          process.execPath,
+          [dependencyCruiserCli, '--config', configPath, 'packages'],
+          {
+            cwd: fixtureRoot,
+            encoding: 'utf8',
+            stdio: 'pipe',
+          },
+        )
+      } catch (error) {
+        const failure = error as { stderr?: string; stdout?: string }
+        output = `${failure.stdout ?? ''}${failure.stderr ?? ''}`
+      }
+
+      expect(output).toContain('workspace-source-dependencies-core')
+      expect(output).toContain('workspace-output-dependencies-core')
+      expect(output).toContain('public-facade-must-bundle-private-workspaces')
     } finally {
       rmSync(fixtureRoot, { force: true, recursive: true })
     }
