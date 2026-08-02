@@ -14,6 +14,18 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 type PackedFile = { path: string }
 type PackResult = { filename: string; files: PackedFile[] }
+type PackOutput = PackResult[] | Record<string, PackResult>
+
+const parsePackResult = (output: string): PackResult => {
+  const parsed = JSON.parse(output) as PackOutput
+  const packResult = Array.isArray(parsed)
+    ? parsed[0]
+    : Object.values(parsed)[0]
+  if (!packResult?.filename || !Array.isArray(packResult.files)) {
+    throw new Error('npm pack did not describe an artifact')
+  }
+  return packResult
+}
 
 const repositoryRoot = resolve(import.meta.dirname, '../../..')
 const facadeDirectory = join(repositoryRoot, 'packages/release-drafter')
@@ -66,16 +78,17 @@ describe.sequential('release-drafter packed programmatic facade', () => {
     mkdirSync(consumerDirectory)
 
     execNpm(['run', 'build', '--workspace', 'release-drafter'])
-    const packOutput = execNpm([
-      'pack',
-      '--ignore-scripts',
-      '--json',
-      '--pack-destination',
-      packDirectory,
+    const packOutput = execNpm(
+      [
+        'pack',
+        '--ignore-scripts',
+        '--json',
+        '--pack-destination',
+        packDirectory,
+      ],
       facadeDirectory,
-    ])
-    const [packResult] = JSON.parse(packOutput) as PackResult[]
-    if (!packResult) throw new Error('npm pack did not describe an artifact')
+    )
+    const packResult = parsePackResult(packOutput)
     packedFiles = packResult.files.map(({ path }) => path).sort()
 
     writeFileSync(
