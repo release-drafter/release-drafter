@@ -184,6 +184,8 @@ export type ParsedConfig = Omit<
 }
 
 export type ReleaseInput = {
+  /** Ref, tag, branch, or commit SHA used only as the change comparison base. */
+  from?: string
   name?: string
   tag?: string
   version?: string
