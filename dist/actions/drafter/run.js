@@ -1,4 +1,4 @@
-import { A as warning, C as stringbool, D as info, E as getInput, O as setFailed, S as string, T as debug, _ as needsPullRequestChangedFiles, a as composeConfigGet, c as require_satisfies, d as mergeInputAndConfig$1, g as commonConfigSchema, h as configSchema, i as getOctokit, j as __toESM, k as setOutput, l as buildReleasePayload$1, m as require_valid, n as parseCommitishForRelease, o as getGitHubAdapter, p as escapeStringRegexp, s as getRepository, t as sharedInputSchema, u as require_coerce, w as core_exports, x as object, y as context } from "../../chunks/common.js";
+import { A as warning, C as stringbool, D as info, E as getInput, O as setFailed, S as string, T as debug, _ as needsPullRequestChangedFiles, a as composeConfigGet, c as buildReleasePayload$1, d as escapeStringRegexp, f as coerce, g as commonConfigSchema, h as configSchema, i as getOctokit, k as setOutput, l as mergeInputAndConfig$1, m as satisfies, n as parseCommitishForRelease, o as getGitHubAdapter, p as normalizeRange, s as getRepository, t as sharedInputSchema, w as core_exports, x as object, y as context } from "../../chunks/common.js";
 //#region node_modules/compare-versions/lib/esm/utils.js
 var semver = /^[v^~<>=]*?(\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+))?(?:-([\da-z\-]+(?:\.[\da-z\-]+)*))?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?)?)?$/i;
 var validateAndParse = (version) => {
@@ -218,9 +218,6 @@ var buildReleasePayload = async (params) => {
 };
 //#endregion
 //#region src/actions/drafter/lib/find-previous-releases/sort-releases.ts
-var import_valid = /* @__PURE__ */ __toESM(require_valid(), 1);
-var import_coerce = /* @__PURE__ */ __toESM(require_coerce(), 1);
-var import_satisfies = /* @__PURE__ */ __toESM(require_satisfies(), 1);
 var sortReleases = (params) => {
 	const tagPrefixRexExp = params.tagPrefix ? new RegExp(`^${escapeStringRegexp(params.tagPrefix)}`) : void 0;
 	return params.releases.sort((r1, r2) => {
@@ -268,14 +265,14 @@ var findPreviousReleases = async (params) => {
 	const targetCommitishName = commitish.replace(headRefRegex, "");
 	const commitishFilteredReleases = filterByCommitish ? releases.filter((r) => targetCommitishName === (r.target_commitish ?? "").replace(headRefRegex, "")) : releases;
 	const semverRangeFilteredReleases = filterByRange && filterByRange !== "*" ? commitishFilteredReleases.filter((r) => {
-		const parsedRange = (0, import_valid.default)(filterByRange);
+		const parsedRange = normalizeRange(filterByRange);
 		if (!parsedRange) return false;
-		const parsedVersion = (0, import_coerce.default)(r.tag_name, { loose: true })?.version;
+		const parsedVersion = coerce(r.tag_name, { loose: true });
 		if (!parsedVersion) {
 			warning(`Failed to coerce semver version for "${r.tag_name}" : will be excluded from releases considered for drafting.`);
 			return false;
 		}
-		const doesSatisfy = !!(0, import_satisfies.default)(parsedVersion, parsedRange, { loose: true });
+		const doesSatisfy = !!satisfies(parsedVersion, parsedRange, { loose: true });
 		debug(`Range "${parsedRange}" ${doesSatisfy ? "satisfies" : "does not satisfy"} version "${parsedVersion}" `);
 		return doesSatisfy;
 	}) : commitishFilteredReleases;

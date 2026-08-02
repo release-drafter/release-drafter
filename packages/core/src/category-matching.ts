@@ -1,8 +1,9 @@
 import { CommitParser } from 'conventional-commits-parser'
 import ignore from 'ignore'
-import type { ReleaseType } from 'semver'
+import type { IncrementType } from 'verkit'
 import type { ParsedConfig, PullRequest } from './types.ts'
 
+type ReleaseType = Exclude<IncrementType, 'release'>
 type ParsedCategory = ParsedConfig['categories'][number]
 type ParsedCondition = ParsedCategory['when'][number]
 type LabelsMode = ParsedCondition['labels-mode']

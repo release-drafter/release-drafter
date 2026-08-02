@@ -1,4 +1,4 @@
-import validRange from 'semver/ranges/valid.js'
+import { normalizeRange } from 'verkit'
 import type { Logger } from '../ports.ts'
 import { stringToRegex } from '../string-to-regex.ts'
 import type { ParsedConfig } from '../types.ts'
@@ -187,7 +187,7 @@ const validateParsedConfig = (parsedConfig: {
   }
   if (
     parsedConfig['filter-by-range'] &&
-    !validRange(parsedConfig['filter-by-range'])
+    !normalizeRange(parsedConfig['filter-by-range'])
   ) {
     throw new Error(
       `'filter-by-range' value "${parsedConfig['filter-by-range']}" could not be parsed as a valid semver range.`,

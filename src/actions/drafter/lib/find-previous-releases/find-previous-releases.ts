@@ -1,7 +1,5 @@
 import * as core from '@actions/core'
-import coerce from 'semver/functions/coerce.js'
-import satisfies from 'semver/functions/satisfies.js'
-import validRange from 'semver/ranges/valid.js'
+import { coerce, normalizeRange, satisfies } from 'verkit'
 import {
   getGitHubAdapter,
   getOctokit,
@@ -83,9 +81,9 @@ export const findPreviousReleases = async (
   const semverRangeFilteredReleases =
     filterByRange && filterByRange !== '*'
       ? commitishFilteredReleases.filter((r) => {
-          const parsedRange = validRange(filterByRange)
+          const parsedRange = normalizeRange(filterByRange)
           if (!parsedRange) return false
-          const parsedVersion = coerce(r.tag_name, { loose: true })?.version
+          const parsedVersion = coerce(r.tag_name, { loose: true })
 
           if (!parsedVersion) {
             core.warning(

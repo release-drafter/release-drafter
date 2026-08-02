@@ -8,27 +8,6 @@ if (!packageJson)
 const workspaceRoot = dirname(packageJson)
 const packageName = process.env.npm_package_name
 if (!packageName) throw new Error('npm_package_name is required')
-const convertSemverModuleToEsm = (source: string) => {
-  let importIndex = 0
-  let converted = source.replace(/^['"]use strict['"];?\s*/u, '')
-  converted = converted.replace(
-    /const\s+(\{[\s\S]*?\}|[$\w]+)\s*=\s*require\((['"])([^'"]+)\2\)/gu,
-    (_match, binding: string, _quote: string, specifier: string) => {
-      const imported = `__commonJsImport${importIndex++}`
-      return `import ${imported} from '${specifier}'\nconst ${binding} = ${imported}`
-    },
-  )
-  if (converted.includes('exports = module.exports = {}')) {
-    return `${converted
-      .replace('exports = module.exports = {}', 'const __defaultExport = {}')
-      .replaceAll(
-        'exports.',
-        '__defaultExport.',
-      )}\nexport default __defaultExport\n`
-  }
-  converted = converted.replace('module.exports =', 'const __defaultExport =')
-  return `${converted}\nexport default __defaultExport\n`
-}
 export default defineConfig({
   resolve: {
     alias:
@@ -89,9 +68,6 @@ export default defineConfig({
             'var RegexParser = module.exports = function',
             'var RegexParser = function',
           )}\nexport default RegexParser\n`
-        }
-        if (normalizedId.includes('/node_modules/semver/')) {
-          return convertSemverModuleToEsm(source)
         }
       },
     },
