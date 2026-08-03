@@ -206,15 +206,18 @@ endpoint, requires an explicit `--forge` selection. This build still accepts
 only `--forge github`. Selecting `gitea`, `forgejo`, `gitlab`, or any other
 unsupported forge fails instead of guessing. Those adapters are not shipped in
 the current CLI build. Endpoint URLs must be absolute HTTP(S) URLs without
-credentials, query parameters, or fragments.
+credentials, query parameters, or fragments. Environment credentials are used
+only when REST and GraphQL endpoints stay on the expected credential origin:
+`api.github.com` for GitHub.com, or the configured server origin for GitHub
+Enterprise Server. Cross-origin endpoints require an explicit `--token`.
 
 ### Exit codes
 
-| Code | Meaning                                                                                  |
-| ---- | ---------------------------------------------------------------------------------------- |
-| `0`  | The command completed successfully, or help/version was displayed.                       |
-| `1`  | Authentication, config loading, network access, validation, or release execution failed. |
-| `2`  | Command-line usage was invalid.                                                          |
+| Code | Meaning                                                                                                    |
+| ---- | ---------------------------------------------------------------------------------------------------------- |
+| `0`  | The command completed successfully, or help/version was displayed.                                         |
+| `1`  | Authentication with resolved credentials, config loading, network access, validation, or execution failed. |
+| `2`  | Command-line usage was invalid, or no credential could be resolved.                                        |
 
 ## Programmatic API
 
