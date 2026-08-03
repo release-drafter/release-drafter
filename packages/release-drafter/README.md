@@ -24,14 +24,19 @@ The repository argument must be exactly `owner/repo`.
 
 ### Authentication
 
-The CLI selects credentials for the target host:
+The CLI selects credentials for the target host in this order:
 
-- GitHub.com: `GITHUB_TOKEN`, then `GH_TOKEN`
-- GitHub Enterprise: `GH_ENTERPRISE_TOKEN`, then `GITHUB_ENTERPRISE_TOKEN`
-- Fallback: `gh auth token` for GitHub.com or
-  `gh auth token --hostname <host>` for GitHub Enterprise
+- GitHub.com: `--token`, then `GITHUB_TOKEN`, then `GH_TOKEN`
+- GitHub Enterprise Server: `--token`, then `GH_ENTERPRISE_TOKEN`, then
+  `GITHUB_ENTERPRISE_TOKEN`
 
-GitHub.com token variables are not reused for a GitHub Enterprise host.
+GitHub.com token variables are not reused for a GitHub Enterprise Server host.
+Release Drafter never invokes `gh`. If you manage credentials with GitHub CLI,
+you can explicitly pass them to Release Drafter from your shell:
+
+```sh
+GH_TOKEN="$(gh auth token)" release-drafter owner/repo
+```
 
 ### Options
 
@@ -54,6 +59,7 @@ Options:
       --server-url <url>       Forge web URL
       --api-url <url>          Forge REST API URL
       --graphql-url <url>      Forge GraphQL API URL
+      --token <token>          GitHub token (overrides environment variables)
       --help                   Show help
       --version                Show version
 ```

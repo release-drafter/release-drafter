@@ -71,19 +71,17 @@ const invoke = async (
   const adapter = createAdapter()
   const adapterFactory = vi.fn(() => adapter)
   const draft = vi.fn<DraftFunction>(async () => releaseResult())
-  const execFile = vi.fn(async () => ({ stdout: 'gh-token\n', stderr: '' }))
   const code = await runCli(argv, {
     stdout: stdout.stream,
     stderr: stderr.stream,
     env: { GITHUB_TOKEN: 'token' },
     cwd: '/workspace',
     readLocalFile: localConfigReader(),
-    execFile,
     adapterFactory,
     draft,
     ...overrides,
   })
-  return { code, stdout, stderr, adapterFactory, draft, execFile }
+  return { code, stdout, stderr, adapterFactory, draft }
 }
 
 describe('CLI runtime security', () => {
@@ -114,26 +112,6 @@ describe('CLI runtime security', () => {
     expect(result.adapterFactory).not.toHaveBeenCalled()
   })
 
-  it('passes the injected environment and bounded options exactly to gh', async () => {
-    const env = { PATH: '/test/bin', GH_CONFIG_DIR: '/safe/config' }
-    const execFile = vi.fn(async () => ({ stdout: 'cli-token\n', stderr: '' }))
-
-    const result = await invoke(['acme/widgets', '--to', 'main'], {
-      env,
-      execFile,
-    })
-
-    expect(result.code).toBe(0)
-    expect(execFile).toHaveBeenCalledOnce()
-    expect(execFile).toHaveBeenCalledWith('gh', ['auth', 'token'], {
-      encoding: 'utf8',
-      env,
-      timeout: 10_000,
-      maxBuffer: 16 * 1024,
-      windowsHide: true,
-    })
-  })
-
   it('routes local configs through the injected atomic reader boundary', async () => {
     const readLocalFile = vi.fn(async () => ({
       contents: '{"template":"local"}',
@@ -154,7 +132,6 @@ describe('CLI runtime security', () => {
   })
 
   it('uses only enterprise token variables for GHES', async () => {
-    const execFile = vi.fn(async () => ({ stdout: 'cli-token\n', stderr: '' }))
     const result = await invoke(
       ['acme/widgets', '--to', 'main', '--server-url', 'https://github.corp'],
       {
@@ -164,7 +141,6 @@ describe('CLI runtime security', () => {
           GH_ENTERPRISE_TOKEN: 'enterprise-token',
           GITHUB_ENTERPRISE_TOKEN: 'enterprise-secondary',
         },
-        execFile,
       },
     )
 
@@ -172,30 +148,16 @@ describe('CLI runtime security', () => {
     expect(result.adapterFactory).toHaveBeenCalledWith(
       expect.objectContaining({ token: 'enterprise-token' }),
     )
-    expect(execFile).not.toHaveBeenCalled()
   })
 
-  it('does not reuse github.com tokens for GHES gh fallback', async () => {
-    const env = { GITHUB_TOKEN: 'github-dot-com-only' }
-    const execFile = vi.fn(async () => ({
-      stdout: 'enterprise-cli\n',
-      stderr: '',
-    }))
-
+  it('does not reuse github.com tokens for GHES', async () => {
     const result = await invoke(
       ['acme/widgets', '--to', 'main', '--server-url', 'https://github.corp'],
-      { env, execFile },
+      { env: { GITHUB_TOKEN: 'github-dot-com-only' } },
     )
 
-    expect(result.code).toBe(0)
-    expect(execFile).toHaveBeenCalledWith(
-      'gh',
-      ['auth', 'token', '--hostname', 'github.corp'],
-      expect.objectContaining({ env }),
-    )
-    expect(result.adapterFactory).toHaveBeenCalledWith(
-      expect.objectContaining({ token: 'enterprise-cli' }),
-    )
+    expect(result.code).toBe(2)
+    expect(result.adapterFactory).not.toHaveBeenCalled()
   })
 
   it.each([
@@ -265,21 +227,18 @@ describe('CLI runtime security', () => {
     expect(result.code).toBe(0)
   })
 
-  it('uses a stable host-aware diagnostic when GHES token lookup fails', async () => {
-    const execFile = vi.fn(async () => {
-      throw new Error('subprocess-secret')
-    })
+  it('uses a stable host-aware usage error when a GHES token is missing', async () => {
     const result = await invoke(
       ['acme/widgets', '--to', 'main', '--server-url', 'https://github.corp'],
-      { env: {}, execFile },
+      { env: {} },
     )
 
-    expect(result.code).toBe(1)
+    expect(result.code).toBe(2)
     expect(result.stderr.text()).toContain('GH_ENTERPRISE_TOKEN')
     expect(result.stderr.text()).toContain('GITHUB_ENTERPRISE_TOKEN')
-    expect(result.stderr.text()).toContain('`gh auth token --hostname`')
-    expect(result.stderr.text()).not.toContain('subprocess-secret')
+    expect(result.stderr.text()).toContain('pass --token')
     expect(result.stderr.text()).not.toContain('GITHUB_TOKEN, GH_TOKEN')
+    expect(result.stderr.text()).toContain('Usage: release-drafter')
   })
 
   it('reports a core-forced dry run in JSON output', async () => {

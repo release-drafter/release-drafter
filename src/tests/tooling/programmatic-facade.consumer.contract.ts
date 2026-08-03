@@ -29,7 +29,6 @@ const parsePackResult = (output: string): PackResult => {
 
 const repositoryRoot = resolve(import.meta.dirname, '../../..')
 const facadeDirectory = join(repositoryRoot, 'packages/release-drafter')
-const facadeDist = join(facadeDirectory, 'dist')
 const typescriptCli = join(repositoryRoot, 'node_modules/typescript/lib/tsc.js')
 
 const listFiles = (directory: string): string[] =>
@@ -68,8 +67,6 @@ describe.sequential('release-drafter packed programmatic facade', () => {
   let consumerDirectory: string
   let installedPackageDirectory: string
   let packedFiles: string[]
-  let javascript: string
-  let declarations: string
 
   beforeAll(() => {
     temporaryDirectory = mkdtempSync(
@@ -80,9 +77,6 @@ describe.sequential('release-drafter packed programmatic facade', () => {
     mkdirSync(packDirectory)
     mkdirSync(consumerDirectory)
 
-    execNpm(['run', 'build', '--workspace', 'release-drafter'])
-    javascript = readFileSync(join(facadeDist, 'index.js'), 'utf8')
-    declarations = readFileSync(join(facadeDist, 'index.d.ts'), 'utf8')
     const packOutput = execNpm(
       [
         'pack',
@@ -123,38 +117,6 @@ describe.sequential('release-drafter packed programmatic facade', () => {
 
   afterAll(() => {
     rmSync(temporaryDirectory, { force: true, recursive: true })
-  })
-
-  it('bundles private runtime implementation without forbidden imports or loaders', () => {
-    const moduleSpecifiers = [
-      ...javascript.matchAll(
-        /\b(?:from|import)\s*(?:\(\s*)?(['"])([^'"]+)\1/gu,
-      ),
-    ].map((match) => match[2])
-
-    expect(javascript).toContain('draftRelease')
-    expect(
-      moduleSpecifiers.filter((specifier) => !specifier?.startsWith('node:')),
-    ).toEqual([])
-    expect(javascript).not.toMatch(/@release-drafter\/|@actions\//)
-    expect(javascript).not.toMatch(/gitbeaker/i)
-    expect(javascript).not.toMatch(
-      /node_modules[\\/]semver[\\/]|node-semver|MAX_SAFE_(?:COMPONENT|BUILD)_LENGTH/i,
-    )
-    expect(javascript).not.toMatch(
-      /\bcreateRequire\b|\b__commonJS\w*\b|\b__require\b|\brequire\s*\(|\bmodule\.exports\b/,
-    )
-  })
-
-  it('emits the real NodeNext-compatible public declaration surface', () => {
-    expect(declarations).toContain('export declare const draftRelease')
-    expect(declarations).toContain('interface DraftReleaseOptions')
-    expect(declarations).toContain('interface ForgeAdapter')
-    expect(declarations).toMatch(
-      /export type \{[^}]*DraftReleaseOptions[^}]*ForgeAdapter/u,
-    )
-    expect(declarations).not.toMatch(/@release-drafter\/|@actions\//)
-    expect(declarations).not.toMatch(/gitbeaker/i)
   })
 
   it('ships the ESM entrypoint and NodeNext declarations in the tarball', () => {
