@@ -35,6 +35,7 @@ const declarationPackages = new Set([
   '@release-drafter/rest-adapter',
   '@release-drafter/gitea-adapter',
   '@release-drafter/forgejo-adapter',
+  '@release-drafter/gitlab-adapter',
 ])
 const publicFacadeRuntimeDependencies = new Set(
   Object.keys(workspaceManifest.dependencies ?? {}),
