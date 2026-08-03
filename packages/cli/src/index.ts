@@ -1,4 +1,3 @@
-import { execFile as nodeExecFile } from 'node:child_process'
 import {
   open as nodeOpen,
   realpath as nodeRealpath,
@@ -34,19 +33,6 @@ export interface WritableStream {
   write(chunk: string): unknown
 }
 
-export type ExecFileResult = { stdout: string; stderr: string }
-export type ExecFile = (
-  file: string,
-  args: readonly string[],
-  options?: {
-    encoding?: BufferEncoding
-    env?: NodeJS.ProcessEnv
-    maxBuffer?: number
-    timeout?: number
-    windowsHide?: boolean
-  },
-) => Promise<ExecFileResult>
-
 export type CliAdapter = ForgeAdapter &
   Pick<GitHubAdapter, 'getRepositoryConfig' | 'octokit'>
 
@@ -64,7 +50,6 @@ export type CliDependencies = {
   env?: NodeJS.ProcessEnv
   cwd?: string | (() => string)
   readLocalFile?: LocalConfigFileReader
-  execFile?: ExecFile
   adapterFactory?: (options: GitHubAdapterOptions) => CliAdapter
   draft?: DraftFunction
   version?: string
@@ -86,6 +71,7 @@ type ParsedOptions = {
   serverUrl: string
   apiUrl?: string
   graphqlUrl?: string
+  token?: string
 }
 
 class UsageError extends Error {}
@@ -108,14 +94,12 @@ Options:
       --server-url <url>       Forge web URL
       --api-url <url>          Forge REST API URL
       --graphql-url <url>      Forge GraphQL API URL
+      --token <token>          GitHub token (overrides environment variables)
       --help                   Show help
       --version                Show version
 `
 
 const REPOSITORY_PATTERN = /^[^/\s]+\/[^/\s]+$/
-const GH_AUTH_TIMEOUT_MS = 10_000
-const GH_AUTH_MAX_BUFFER_BYTES = 16 * 1024
-
 const writeLine = (stream: WritableStream, message: string) => {
   stream.write(`${message}\n`)
 }
@@ -172,6 +156,7 @@ const OPTION_DEFINITIONS = {
   'server-url': { type: 'string' },
   'api-url': { type: 'string' },
   'graphql-url': { type: 'string' },
+  token: { type: 'string' },
   help: { type: 'boolean', default: false },
   version: { type: 'boolean', default: false },
 } as const
@@ -318,26 +303,19 @@ const parseCommandLine = (argv: readonly string[]) => {
     serverUrl,
     apiUrl,
     graphqlUrl,
+    token: values.token,
   }
   return { kind: 'run' as const, options }
 }
 
-const defaultExecFile: ExecFile = (file, args, options) =>
-  new Promise((resolve, reject) => {
-    nodeExecFile(file, [...args], options, (error, stdout, stderr) => {
-      if (error) {
-        reject(error)
-        return
-      }
-      resolve({ stdout: String(stdout), stderr: String(stderr) })
-    })
-  })
-
-const resolveToken = async (params: {
+const resolveToken = (params: {
   env: NodeJS.ProcessEnv
-  execFile: ExecFile
   serverUrl: string
-}): Promise<string> => {
+  token?: string
+}): string => {
+  const explicitToken = params.token?.trim()
+  if (explicitToken) return explicitToken
+
   const isGitHubDotCom =
     new URL(params.serverUrl).hostname.toLowerCase() === 'github.com'
   const environmentToken = isGitHubDotCom
@@ -346,26 +324,10 @@ const resolveToken = async (params: {
       params.env.GITHUB_ENTERPRISE_TOKEN?.trim()
   if (environmentToken) return environmentToken
 
-  const host = new URL(params.serverUrl).hostname
-  const args = ['auth', 'token']
-  if (host.toLowerCase() !== 'github.com') args.push('--hostname', host)
-  try {
-    const { stdout } = await params.execFile('gh', args, {
-      encoding: 'utf8',
-      env: params.env,
-      timeout: GH_AUTH_TIMEOUT_MS,
-      maxBuffer: GH_AUTH_MAX_BUFFER_BYTES,
-      windowsHide: true,
-    })
-    const token = stdout.trim()
-    if (token) return token
-  } catch {
-    // The stable diagnostic below deliberately excludes subprocess output.
-  }
-  throw new Error(
+  throw new UsageError(
     isGitHubDotCom
-      ? 'Unable to resolve a GitHub token from GITHUB_TOKEN, GH_TOKEN, or `gh auth token`.'
-      : 'Unable to resolve a GitHub token from GH_ENTERPRISE_TOKEN, GITHUB_ENTERPRISE_TOKEN, or `gh auth token --hostname`.',
+      ? 'No GitHub token is available. Set GITHUB_TOKEN or GH_TOKEN, or pass --token. To use GitHub CLI credentials safely, run `GH_TOKEN="$(gh auth token)" release-drafter ...`.'
+      : 'No GitHub Enterprise token is available. Set GH_ENTERPRISE_TOKEN or GITHUB_ENTERPRISE_TOKEN, or pass --token.',
   )
 }
 
@@ -478,7 +440,6 @@ export async function runCli(
       realpath: nodeRealpath,
       stat: nodeStat,
     })
-  const execFile = injected.execFile ?? defaultExecFile
   const adapterFactory =
     injected.adapterFactory ??
     ((adapterOptions: GitHubAdapterOptions) =>
@@ -486,10 +447,10 @@ export async function runCli(
   const draft = injected.draft ?? draftRelease
 
   try {
-    const token = await resolveToken({
+    const token = resolveToken({
       env,
-      execFile,
       serverUrl: options.serverUrl,
+      token: options.token,
     })
     const adapter = adapterFactory({
       token,
@@ -552,6 +513,10 @@ export async function runCli(
     return 0
   } catch (error) {
     writeLine(stderr, `error: ${errorMessage(error)}`)
+    if (error instanceof UsageError) {
+      stderr.write(USAGE)
+      return 2
+    }
     return 1
   }
 }

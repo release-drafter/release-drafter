@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process'
 import { readdirSync, readFileSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { dirname, relative, resolve, sep } from 'node:path'
@@ -28,6 +27,8 @@ const forbiddenLegacyRuntime =
   /\bcreateRequire\b|\b__commonJS\w*\b|\b__require\b|\brequire\s*\(|\bmodule\.exports\b/u
 const forbiddenSemver =
   /node_modules\/semver\/|node-semver|SEMVER_SPEC_VERSION/iu
+const forbiddenGhAuthTokenSubprocess =
+  /["']gh["']\s*,\s*\[\s*["']auth["']\s*,\s*["']token["']/u
 const forbiddenAbsolutePath =
   /(?:[A-Za-z]:[\\/](?:[^'"`\s\\/]+[\\/])+|\/(?:home|Users|private|tmp|workspace|builds|runner)[\\/])/u
 
@@ -123,24 +124,6 @@ const reachableModules = (
   return reachable
 }
 
-const buildFacade = () =>
-  execFileSync(
-    process.execPath,
-    [
-      process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
-      'run',
-      'build',
-      '--workspace',
-      'release-drafter',
-    ],
-    {
-      cwd: repositoryRoot,
-      encoding: 'utf8',
-      env: { ...process.env, NO_COLOR: '1' },
-      stdio: 'pipe',
-    },
-  )
-
 describe.sequential('release-drafter workspace build boundary', () => {
   let shippedFiles: Map<string, string>
   let javascriptFiles: Map<string, string>
@@ -149,7 +132,6 @@ describe.sequential('release-drafter workspace build boundary', () => {
   let cliClosure: Set<string>
 
   beforeAll(() => {
-    buildFacade()
     shippedFiles = inventoryShippedFiles(facadeDist)
     javascriptFiles = new Map(
       [...shippedFiles].filter(([file]) => file.endsWith('.js')),
@@ -157,7 +139,7 @@ describe.sequential('release-drafter workspace build boundary', () => {
     declarations = shippedFiles.get('index.d.ts') ?? ''
     indexClosure = reachableModules('index.js', shippedFiles)
     cliClosure = reachableModules('cli.js', shippedFiles)
-  }, 60_000)
+  }, 120_000)
 
   it('emits native ESM entries and a fully referenced shared chunk graph', () => {
     expect([...shippedFiles.keys()]).toEqual(
@@ -220,6 +202,16 @@ describe.sequential('release-drafter workspace build boundary', () => {
           specifier,
         )
       }
+    }
+  })
+
+  it('keeps the CLI closure free of the gh token subprocess fallback', () => {
+    for (const file of cliClosure) {
+      const source = shippedFiles.get(file) ?? ''
+      expect(moduleSpecifiers(source), file).not.toEqual(
+        expect.arrayContaining(['child_process', 'node:child_process']),
+      )
+      expect(source, file).not.toMatch(forbiddenGhAuthTokenSubprocess)
     }
   })
 

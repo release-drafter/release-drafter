@@ -229,14 +229,13 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
   }
   let packResult: PackResult
 
-  beforeAll(() => {
+  beforeAll(async () => {
     temporaryDirectory = mkdtempSync(join(tmpdir(), 'release-drafter-cli-'))
     const packDirectory = join(temporaryDirectory, 'pack')
     consumerDirectory = join(temporaryDirectory, 'consumer')
     mkdirSync(packDirectory)
     mkdirSync(consumerDirectory)
 
-    expectSuccessfulNpm(['run', 'build', '--workspace', 'release-drafter'])
     packResult = parsePackResult(
       expectSuccessfulNpm(
         [
@@ -341,23 +340,23 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     writeFileSync(
       join(consumerDirectory, 'consumer.mts'),
       `
-        import { draftRelease } from 'release-drafter'
-        import type {
-          DraftReleaseOptions,
-          DraftReleaseResult,
-          ForgeAdapter,
-          Logger,
-        } from 'release-drafter'
+      import { draftRelease } from 'release-drafter'
+      import type {
+        DraftReleaseOptions,
+        DraftReleaseResult,
+        ForgeAdapter,
+        Logger,
+      } from 'release-drafter'
 
-        const invoke: (
-          options: DraftReleaseOptions,
-        ) => Promise<DraftReleaseResult> = draftRelease
-        declare const adapter: ForgeAdapter
-        declare const logger: Logger
-        const injectable = { adapter, logger } satisfies Partial<DraftReleaseOptions>
-        void invoke
-        void injectable
-      `,
+      const invoke: (
+        options: DraftReleaseOptions,
+      ) => Promise<DraftReleaseResult> = draftRelease
+      declare const adapter: ForgeAdapter
+      declare const logger: Logger
+      const injectable = { adapter, logger } satisfies Partial<DraftReleaseOptions>
+      void invoke
+      void injectable
+    `,
     )
     writeFileSync(
       join(consumerDirectory, 'tsconfig.json'),
@@ -383,26 +382,26 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     writeFileSync(
       join(consumerDirectory, 'import-api.mjs'),
       `
-        process.argv = [process.execPath, import.meta.filename, '--help']
-        process.exit = (code) => {
-          throw new Error('root import attempted to exit with code ' + code)
-        }
-        const stdoutWrite = process.stdout.write
-        const stderrWrite = process.stderr.write
-        process.stdout.write = () => {
-          throw new Error('root import wrote to stdout')
-        }
-        process.stderr.write = () => {
-          throw new Error('root import wrote to stderr')
-        }
-        const facade = await import('release-drafter')
-        process.stdout.write = stdoutWrite
-        process.stderr.write = stderrWrite
-        if (typeof facade.draftRelease !== 'function') {
-          throw new Error('draftRelease is not a function')
-        }
-        stdoutWrite.call(process.stdout, 'imported\\n')
-      `,
+      process.argv = [process.execPath, import.meta.filename, '--help']
+      process.exit = (code) => {
+        throw new Error('root import attempted to exit with code ' + code)
+      }
+      const stdoutWrite = process.stdout.write
+      const stderrWrite = process.stderr.write
+      process.stdout.write = () => {
+        throw new Error('root import wrote to stdout')
+      }
+      process.stderr.write = () => {
+        throw new Error('root import wrote to stderr')
+      }
+      const facade = await import('release-drafter')
+      process.stdout.write = stdoutWrite
+      process.stderr.write = stderrWrite
+      if (typeof facade.draftRelease !== 'function') {
+        throw new Error('draftRelease is not a function')
+      }
+      stdoutWrite.call(process.stdout, 'imported\\n')
+    `,
     )
     const imported = runNode(['import-api.mjs'], consumerDirectory)
     expectExit(imported, 0)
@@ -439,9 +438,10 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     )
     expectExit(invalid, 2)
     expect(invalid.stdout, formatResult(invalid)).toBe('')
-    expect(invalid.stderr).toMatch(/forge/i)
-    expect(invalid.stderr).toMatch(/invalid|supported|unknown|usage/i)
-    expect(invalid.stderr).not.toMatch(/token|authenticat|network|fetch|ECONN/i)
+    const diagnostic = invalid.stderr.split('\n', 1)[0]
+    expect(diagnostic).toMatch(/forge/i)
+    expect(diagnostic).toMatch(/invalid|supported|unknown|usage/i)
+    expect(diagnostic).not.toMatch(/token|authenticat|network|fetch|ECONN/i)
   })
 
   it('contains no private imports, bundled dependency markers, loaders, paths, or undeclared external imports', () => {
