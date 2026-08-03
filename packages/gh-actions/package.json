@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/gh-actions",
   "version": "7.7.0",
-  "description": "GitHub Actions runtime workspace package.",
+  "description": "Private runtime composition for Release Drafter GitHub Actions.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -17,11 +17,36 @@
       },
       "release-drafter-source": "./src/index.ts",
       "import": "./dist/index.js"
+    },
+    "./drafter": {
+      "types": "./dist/drafter/index.d.ts",
+      "import": "./dist/drafter/index.js"
+    },
+    "./autolabeler": {
+      "types": "./dist/autolabeler/index.d.ts",
+      "import": "./dist/autolabeler/index.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js"
     }
   },
   "scripts": {
     "build": "vite build --config ../../vite.workspace.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "@release-drafter/autolabeler": "*",
+    "@release-drafter/core": "*",
+    "@release-drafter/github-adapter": "*",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@octokit/webhooks-types": "^7.6.1",
+    "vitest": "^4.1.10"
   },
   "license": "MIT",
   "private": true
