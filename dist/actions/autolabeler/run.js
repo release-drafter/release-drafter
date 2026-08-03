@@ -1,13 +1,5 @@
-import { D as info, E as getInput, O as setFailed, S as string, a as composeConfigGet, b as array, d as escapeStringRegexp, i as getOctokit, j as __toESM, k as setOutput, r as getPullRequestChangedFiles, t as sharedInputSchema, u as require_lib, v as require_ignore, w as core_exports, x as object, y as context } from "../../chunks/common.js";
-//#region src/actions/autolabeler/config/action-input.schema.ts
-var actionInputSchema = object({ 
-/**
-* If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
-* The config should still be located inside `.github` as that's where we are looking for config files.
-* @default 'release-drafter.yml'
-*/
-"config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
-//#endregion
+import { C as __toESM, S as setOutput, _ as context, b as info, c as require_lib, f as array, g as require_ignore, i as getGitHubAdapter, l as escapeStringRegexp, m as string, n as sharedInputSchema, p as object, t as composeConfigGet, v as core_exports, x as setFailed, y as getInput } from "../../chunks/config.js";
+import process from "node:process";
 //#region packages/autolabeler/src/config/config.schema.ts
 var configSchema = object({ 
 /**
@@ -32,7 +24,7 @@ var stringToRegex = (search) => /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, impor
 //#endregion
 //#region packages/autolabeler/src/config/parse-config.ts
 /** Compiles configured regex matchers while preserving all other config values. */
-var parseConfig$1 = (params) => {
+var parseConfig = (params) => {
 	const config = structuredClone(params.config);
 	const autolabeler = config.autolabeler.map((rule) => {
 		try {
@@ -90,7 +82,10 @@ var matchLabels = (params) => {
 	};
 };
 //#endregion
-//#region src/actions/autolabeler/config/get-action-inputs.ts
+//#region packages/gh-actions/src/autolabeler/action-input.schema.ts
+var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
+//#endregion
+//#region packages/gh-actions/src/autolabeler/get-action-inputs.ts
 var getActionInput = () => {
 	const getInput$1 = (name) => getInput(name) || void 0;
 	return actionInputSchema.parse({
@@ -100,83 +95,63 @@ var getActionInput = () => {
 	});
 };
 //#endregion
-//#region src/actions/autolabeler/config/get-config.ts
-var getConfig = async (configName) => {
-	const { config, contexts } = await composeConfigGet(configName, context);
+//#region packages/gh-actions/src/autolabeler/get-config.ts
+var getConfig = async (configName, token) => {
+	const { config, contexts } = await composeConfigGet(configName, context, token);
 	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
-	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally" : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
-	return configSchema.parse(config);
+	else if (contexts.length === 1) {
+		const source = contexts[0];
+		info(`Config fetched ${source.scheme === "file" ? "locally" : `on remote "${source.repo.owner}/${source.repo.repo}${source.ref ? `@${source.ref}` : ""}"${source.ref ? "" : " on the default branch"}`}.`);
+	}
+	return parseConfig({
+		config: configSchema.parse(config),
+		logger: core_exports
+	});
 };
 //#endregion
-//#region src/actions/autolabeler/config/parse-config.ts
-var parseConfig = ({ config }) => parseConfig$1({
-	config,
-	logger: core_exports
-});
-//#endregion
-//#region src/actions/autolabeler/main.ts
-var main = async (params) => {
-	info(`Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`);
-	if (context.eventName !== "pull_request" && context.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`);
-	const octokit = getOctokit();
-	const payload = context.payload;
-	const changedFiles = await getPullRequestChangedFiles(octokit, {
-		...context.repo,
-		pull_number: payload.number
-	});
-	const result = matchLabels({
-		config: params.config,
-		pullRequest: {
-			files: changedFiles,
-			branch: payload.pull_request.head.ref,
-			title: payload.pull_request.title,
-			body: payload.pull_request.body
-		}
-	});
-	for (const match of result.matches) info(`Found label for ${match.matcher}: '${match.label}'`);
-	if (result.labels.length > 0) if (params.dryRun) info(`[dry-run] Would add labels [${result.labels.join(", ")}] to PR #${payload.number}`);
-	else await octokit.rest.issues.addLabels({
-		...context.repo,
-		issue_number: payload.number,
-		labels: result.labels
-	});
-	return {
-		pr_number: payload.number.toString(),
-		labels: result.labels.length ? result.labels.join(",") : void 0
-	};
-};
-//#endregion
-//#region src/actions/autolabeler/runner.ts
-/**
-* The main function for the action.
-*
-* @returns Resolves when the action is complete.
-*/
+//#region packages/gh-actions/src/autolabeler/runner.ts
+/** Run the Autolabeler Action using package-owned config and matching logic. */
 async function run() {
 	try {
 		const input = getActionInput();
-		const { labels, pr_number } = await main({
-			config: parseConfig({ config: await getConfig(input["config-name"]) }),
-			dryRun: input["dry-run"]
+		const config = await getConfig(input["config-name"], input.token);
+		info(`Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`);
+		if (context.eventName !== "pull_request" && context.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`);
+		const adapter = getGitHubAdapter(input.token);
+		const payload = context.payload;
+		const result = matchLabels({
+			config,
+			pullRequest: {
+				files: await adapter.findPullRequestChangedFiles({
+					repository: {
+						owner: context.repo.owner,
+						name: context.repo.repo,
+						serverUrl: process.env.GITHUB_SERVER_URL ?? "https://github.com"
+					},
+					number: payload.number
+				}),
+				branch: payload.pull_request.head.ref,
+				title: payload.pull_request.title,
+				body: payload.pull_request.body
+			}
 		});
-		if (pr_number) setOutput("number", pr_number);
-		if (labels) setOutput("labels", labels);
+		for (const match of result.matches) info(`Found label for ${match.matcher}: '${match.label}'`);
+		if (result.labels.length > 0) if (input["dry-run"]) info(`[dry-run] Would add labels [${result.labels.join(", ")}] to PR #${payload.number}`);
+		else await adapter.octokit.rest.issues.addLabels({
+			...context.repo,
+			issue_number: payload.number,
+			labels: result.labels
+		});
+		setOutput("number", payload.number.toString());
+		if (result.labels.length > 0) setOutput("labels", result.labels.join(","));
 	} catch (error) {
 		if (error instanceof Error) setFailed(error.message);
 	}
 }
 //#endregion
-//#region src/actions/autolabeler/run.ts
+//#region packages/gh-actions/src/autolabeler/run.ts
+/*! release-drafter-action-entry:autolabeler */
 /* node:coverage ignore file -- @preserve */
-/**
-* The entrypoint for the action. This file simply imports and runs the action's
-* main logic.
-*
-* Do not add any logic to this file; instead, add it to `runner.ts`.
-*
-* `runner.ts` is the entrypoint for tests and should contain all the action's
-* main logic.
-*/
 await run();
 //#endregion
 export {};

@@ -30,6 +30,8 @@ describe('autolabeler e2e', async () => {
     expect(getScope.isDone()).toBe(true) // should call the mocked endpoints
     expect(postScope.isDone()).toBe(true) // should call the mocked endpoints
     expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    expect(mocks.core.setOutput).toHaveBeenCalledWith('number', '1475')
+    expect(mocks.core.setOutput).toHaveBeenCalledWith('labels', 'chore')
   })
 
   describe('dry-run', () => {
@@ -54,5 +56,35 @@ describe('autolabeler e2e', async () => {
       expect(getScope.isDone()).toBe(true) // GET PR files was still called
       expect(mocks.core.setFailed).not.toHaveBeenCalled()
     })
+  })
+
+  it('sets the pull request number and performs no write when no rule matches', async () => {
+    await mockContext('pull_request-synchronize')
+    mocks.config.mockReturnValue('config-autolabeler-no-match')
+    const getScope = nockGetPrFiles({ filenames: ['src/index.ts'] })
+
+    await runAutolabeler()
+
+    expect(mocks.core.setFailed).not.toHaveBeenCalled()
+    expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
+    expect(mocks.core.setOutput).toHaveBeenCalledWith('number', '1475')
+    expect(mocks.core.setOutput).not.toHaveBeenCalledWith(
+      'labels',
+      expect.anything(),
+    )
+    expect(getScope.isDone()).toBe(true)
+  })
+
+  it('fails without reading pull request files for unsupported events', async () => {
+    await mockContext('push')
+    mocks.config.mockReturnValue('config-autolabeler')
+
+    await runAutolabeler()
+
+    expect(mocks.core.setFailed).toHaveBeenCalledWith(
+      "Event type is wrong. Expected 'pull_request' or 'pull_request_target', received 'push'",
+    )
+    expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
+    expect(mocks.core.setOutput).not.toHaveBeenCalled()
   })
 })

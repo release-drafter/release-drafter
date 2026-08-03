@@ -8,7 +8,7 @@ const generatedDirectories = [
   resolve(repositoryRoot, 'dist/actions'),
   resolve(repositoryRoot, 'dist/chunks'),
 ]
-const activeSourceDirectory = resolve(repositoryRoot, 'src/actions')
+const activeSourceDirectory = resolve(repositoryRoot, 'packages/gh-actions/src')
 const nodeSemverBundleMarker =
   /node_modules[\\/]semver[\\/]|node-semver|SEMVER_SPEC_VERSION/i
 const directNodeSemverSpecifier = /(['"])semver(?:\/[^'"]*)?\1/u
@@ -96,5 +96,62 @@ describe.sequential('action build excludes direct node-semver', () => {
     })
 
     expect(offenders).toEqual([])
+  })
+
+  it('emits distinct first-layer Action entries without cross-entry contamination', () => {
+    expect(
+      listFiles(resolve(repositoryRoot, 'dist/actions'))
+        .map((path) => relative(repositoryRoot, path))
+        .sort(),
+    ).toEqual([
+      'dist/actions/autolabeler/run.js',
+      'dist/actions/drafter/run.js',
+    ])
+
+    const drafterPath = resolve(repositoryRoot, 'dist/actions/drafter/run.js')
+    const autolabelerPath = resolve(
+      repositoryRoot,
+      'dist/actions/autolabeler/run.js',
+    )
+    const drafter = readFileSync(drafterPath, 'utf8')
+    const autolabeler = readFileSync(autolabelerPath, 'utf8')
+
+    expect(drafter).toContain('release-drafter-action-entry:drafter')
+    expect(drafter).not.toContain('release-drafter-action-entry:autolabeler')
+    expect(autolabeler).toContain('release-drafter-action-entry:autolabeler')
+    expect(autolabeler).not.toContain('release-drafter-action-entry:drafter')
+    expect(drafter).not.toBe(autolabeler)
+  })
+
+  it('keeps private facades, sibling entries, and public CLI sources out of bundles', () => {
+    const forbidden = [
+      /@release-drafter\//u,
+      /packages[\\/](?:release-drafter|cli)[\\/]/u,
+      /src[\\/]actions[\\/]/u,
+      /dist[\\/]actions[\\/](?:drafter|autolabeler)[\\/]run\.js/u,
+    ]
+    const offenders = generatedJavaScriptFiles.flatMap((path) => {
+      const contents = readFileSync(path, 'utf8')
+      return forbidden
+        .filter((pattern) => pattern.test(contents))
+        .map((pattern) => `${relative(repositoryRoot, path)}:${pattern.source}`)
+    })
+    expect(offenders).toEqual([])
+  })
+
+  it('retains compiled GHES endpoint and proxy-aware transport evidence', () => {
+    const contents = generatedJavaScriptFiles
+      .map((path) => readFileSync(path, 'utf8'))
+      .join('\n')
+    expect(contents).toContain('GITHUB_SERVER_URL')
+    expect(contents).toContain('GITHUB_API_URL')
+    expect(contents).toContain('GITHUB_GRAPHQL_URL')
+    expect(contents).toContain('EnvHttpProxyAgent')
+    expect(contents).toContain('HTTP_PROXY')
+    expect(contents).toContain('http_proxy')
+    expect(contents).toContain('HTTPS_PROXY')
+    expect(contents).toContain('https_proxy')
+    expect(contents).toContain('NO_PROXY')
+    expect(contents).toContain('no_proxy')
   })
 })

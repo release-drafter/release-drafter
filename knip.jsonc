@@ -4,11 +4,23 @@
   "vite": false,
   "workspaces": {
     ".": {
-      "entry": ["src/actions/*/run.ts", "src/scripts/*.ts", "vite.config.ts"],
+      "entry": ["src/scripts/*.ts", "vite.config.ts"],
       "project": ["src/**/*.{ts,tsx}", "*.{ts,mts,cts,js,mjs,cjs}"],
     },
     "packages/*": {
       "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": false,
+    },
+    "packages/gh-actions": {
+      "entry": [
+        "src/index.ts",
+        "src/config.ts",
+        "src/drafter/index.ts",
+        "src/drafter/run.ts",
+        "src/autolabeler/index.ts",
+        "src/autolabeler/run.ts",
+      ],
       "project": ["src/**/*.{ts,tsx}"],
       "vite": false,
     },

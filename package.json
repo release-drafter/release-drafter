@@ -24,6 +24,7 @@
     "npm": ">=12.0.1"
   },
   "imports": {
+    "#gh-actions/*": "./packages/gh-actions/src/*",
     "#src/*": "./src/*",
     "#tests/*": "./src/tests/*"
   },
@@ -58,17 +59,10 @@
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
-    "@graphql-typed-document-node/core": "^3.2.0",
-    "@octokit/graphql": "^9.0.3",
-    "@octokit/plugin-paginate-graphql": "^6.0.0",
     "@release-drafter/autolabeler": "*",
     "@release-drafter/core": "*",
-    "@release-drafter/github-adapter": "*",
-    "compare-versions": "^6.1.1",
-    "escape-string-regexp": "^5.0.0",
+    "@release-drafter/gh-actions": "*",
     "graphql": "^17.0.2",
-    "regex-parser": "^2.3.1",
-    "verkit": "0.3.1",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
@@ -78,7 +72,6 @@
     "@graphql-codegen/typed-document-node": "^7.1.0",
     "@graphql-codegen/typescript": "^6.1.0",
     "@graphql-codegen/typescript-operations": "^6.1.0",
-    "@octokit/webhooks-types": "^7.6.1",
     "@swc/core": "1.15.46",
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.10",

@@ -105,9 +105,9 @@
       },
     },
     {
-      // Root action sources intentionally import workspace package entrypoints.
+      // Action runtime sources intentionally import workspace package entrypoints.
       // Biome would otherwise rewrite them to package source files.
-      "includes": ["src/actions/**/*.ts"],
+      "includes": ["packages/gh-actions/src/**/*.ts"],
       "linter": {
         "rules": {
           "correctness": {

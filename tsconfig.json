@@ -27,11 +27,22 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "#src/*": ["./src/*"],
+      "#gh-actions/*": ["./packages/gh-actions/src/*"],
       "@release-drafter/autolabeler": ["./packages/autolabeler/src/index.ts"],
       "@release-drafter/cli": ["./packages/cli/src/index.ts"],
       "@release-drafter/core": ["./packages/core/src/index.ts"],
       "@release-drafter/github-adapter": [
         "./packages/github-adapter/src/index.ts"
+      ],
+      "@release-drafter/gh-actions": ["./packages/gh-actions/src/index.ts"],
+      "@release-drafter/gh-actions/drafter": [
+        "./packages/gh-actions/src/drafter/index.ts"
+      ],
+      "@release-drafter/gh-actions/autolabeler": [
+        "./packages/gh-actions/src/autolabeler/index.ts"
+      ],
+      "@release-drafter/gh-actions/config": [
+        "./packages/gh-actions/src/config.ts"
       ]
     },
     "skipLibCheck": true

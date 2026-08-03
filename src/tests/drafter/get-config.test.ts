@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getConfig } from '#src/actions/drafter/config/get-config.ts'
+import { getConfig } from '#gh-actions/drafter/get-config.ts'
 import { mocks } from '#tests/mocks/index.ts'
 
 describe('get drafter config', () => {

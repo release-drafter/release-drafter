@@ -229,6 +229,11 @@ export const draftRelease = async (params: {
           pullRequests: [],
         }
       })()
+  if (pullRequests.length > 0) {
+    logger.info(
+      `Found ${pullRequests.length} merged pull requests targeting ${repository.owner}/${repository.name}: ${pullRequests.map(({ number }) => `#${number}`).join(', ')}`,
+    )
+  }
   const releasePayload = await buildReleasePayload({
     adapter,
     commits,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeFilepath } from '#src/common/config/normalize-filepath.ts'
+import { normalizeFilepath } from '#gh-actions/common/config/normalize-filepath.ts'
 
 const testSuites: Array<{
   // Test cases for normalizeFilepath

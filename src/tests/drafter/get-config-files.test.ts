@@ -2,8 +2,8 @@
 import { readFileSyncOriginal } from 'node:fs'
 import nock from 'nock'
 import { describe, expect, it, vi } from 'vitest'
-import { getConfigFile } from '#src/common/config/get-config-file.ts'
-import { getConfigFiles } from '#src/common/config/get-config-files.ts'
+import { getConfigFile } from '#gh-actions/common/config/get-config-file.ts'
+import { getConfigFiles } from '#gh-actions/common/config/get-config-files.ts'
 
 const mocks = vi.hoisted(() => ({
   existsSync: vi.fn(),
