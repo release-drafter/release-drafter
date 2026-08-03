@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/gitlab-adapter",
   "version": "7.7.0",
-  "description": "GitLab adapter package boundary skeleton.",
+  "description": "Private GitLab forge adapter for Release Drafter.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -17,7 +17,15 @@
   },
   "scripts": {
     "build": "vite build --config ../../vite.workspace.config.ts",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts",
     "tsc:check": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@gitbeaker/rest": "43.8.0",
+    "@release-drafter/core": "*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
   },
   "license": "MIT",
   "private": true

@@ -41,6 +41,9 @@
       "@release-drafter/forgejo-adapter": [
         "./packages/forgejo-adapter/src/index.ts"
       ],
+      "@release-drafter/gitlab-adapter": [
+        "./packages/gitlab-adapter/src/index.ts"
+      ],
       "@release-drafter/gh-actions": ["./packages/gh-actions/src/index.ts"],
       "@release-drafter/gh-actions/drafter": [
         "./packages/gh-actions/src/drafter/index.ts"
