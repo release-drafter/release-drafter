@@ -445,10 +445,6 @@ export async function runCli(
   const { options } = command
   const logger = createLogger(stderr)
   const env = injected.env ?? process.env
-  const cwd =
-    typeof injected.cwd === 'function'
-      ? injected.cwd()
-      : (injected.cwd ?? process.cwd())
   const readLocalFile =
     injected.readLocalFile ??
     createLocalConfigFileReader({
@@ -463,6 +459,10 @@ export async function runCli(
   const draft = injected.draft ?? draftRelease
 
   try {
+    const cwd =
+      typeof injected.cwd === 'function'
+        ? injected.cwd()
+        : (injected.cwd ?? process.cwd())
     const token = resolveToken({
       env,
       serverUrl: options.serverUrl,
