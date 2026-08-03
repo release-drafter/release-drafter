@@ -7,3 +7,11 @@ export const runDrafter = async (...args: Parameters<typeof actionRun>) => {
 export const runAutolabeler = async (...args: Parameters<typeof actionRun>) => {
   await (await import('@release-drafter/gh-actions/autolabeler')).run(...args)
 }
+
+export const runCheckPrTitle = async (
+  ...args: Parameters<typeof actionRun>
+) => {
+  await (await import('@release-drafter/gh-actions/check-pr-title')).run(
+    ...args,
+  )
+}

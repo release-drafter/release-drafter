@@ -51168,25 +51168,9 @@ var getGitHubAdapter = (token, octokit, factory = createGitHubAdapter) => {
 	return defaultAdapter.adapter;
 };
 //#endregion
-//#region packages/gh-actions/src/common/action-contract.ts
-/** Define every action input name exactly once and require complete coverage. */
-var defineActionInputNames = () => (names, ..._missing) => names;
-/** Read the inputs declared by an action contract. */
-var readActionInputs = (names) => Object.fromEntries(names.map((name) => [name, getInput(name) || void 0]));
-/** Write every defined output through the names declared by the contract. */
-var writeActionOutputs = (names, values) => {
-	for (const name of names) {
-		const value = values[name];
-		if (value !== void 0) setOutput(name, value);
-	}
-};
-//#endregion
 //#region packages/gh-actions/src/common/shared-input.schema.ts
-/** Inputs shared by the Drafter and Autolabeler Actions. */
-var sharedInputSchema = object({
-	token: string$1().min(1).default(() => process$1.env.GITHUB_TOKEN || ""),
-	"dry-run": stringbool().or(boolean()).optional()
-}).superRefine((data, context) => {
+/** Read-only token input shared by GitHub Actions. */
+var tokenInputSchema = object({ token: string$1().min(1).default(() => process$1.env.GITHUB_TOKEN || "") }).superRefine((data, context) => {
 	if (data.token && !process$1.env.GITHUB_TOKEN) process$1.env.GITHUB_TOKEN = data.token;
 	if (!process$1.env.GITHUB_TOKEN) context.addIssue({
 		code: "custom",
@@ -51194,6 +51178,8 @@ var sharedInputSchema = object({
 		path: ["token"]
 	});
 });
+/** Inputs shared by the Drafter and Autolabeler Actions. */
+var sharedInputSchema = tokenInputSchema.and(object({ "dry-run": stringbool().or(boolean()).optional() }));
 //#endregion
 //#region node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
@@ -57255,4 +57241,4 @@ async function composeConfigGet(configFilename, currentContext, token) {
 	return result;
 }
 //#endregion
-export { info as C, core_exports as S, string$1 as _, writeActionOutputs as a, Minimatch as b, getRepository as c, _enum as d, array as f, object as g, number as h, readActionInputs as i, escapeStringRegexp as l, literal as m, sharedInputSchema as n, actionLogger as o, boolean as p, defineActionInputNames as r, getGitHubAdapter as s, composeConfigGet as t, ZodDefault as u, stringbool as v, setFailed as w, context as x, union as y };
+export { setFailed as C, info as S, union as _, getGitHubAdapter as a, core_exports as b, ZodDefault as c, boolean as d, literal as f, stringbool as g, string$1 as h, actionLogger as i, _enum as l, object as m, sharedInputSchema as n, getRepository as o, number as p, tokenInputSchema as r, escapeStringRegexp as s, composeConfigGet as t, array as u, Minimatch as v, setOutput as w, getInput as x, context as y };

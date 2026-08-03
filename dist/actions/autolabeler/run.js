@@ -1,4 +1,5 @@
-import { C as info, S as core_exports, _ as string, a as writeActionOutputs, b as Minimatch, f as array, g as object, i as readActionInputs, l as escapeStringRegexp, n as sharedInputSchema, r as defineActionInputNames, s as getGitHubAdapter, t as composeConfigGet, w as setFailed, x as context } from "../../chunks/config.js";
+import { C as setFailed, S as info, a as getGitHubAdapter, b as core_exports, h as string, m as object, n as sharedInputSchema, s as escapeStringRegexp, t as composeConfigGet, u as array, v as Minimatch, y as context } from "../../chunks/config.js";
+import { n as readActionInputs, r as writeActionOutputs, t as defineActionInputNames } from "../../chunks/action-contract.js";
 import process from "node:process";
 //#region packages/autolabeler/src/config/config.schema.ts
 var configSchema = object({ 
