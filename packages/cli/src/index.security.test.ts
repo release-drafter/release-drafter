@@ -131,6 +131,20 @@ describe('CLI runtime security', () => {
     )
   })
 
+  it('reports cwd resolution failures through the runtime error boundary', async () => {
+    const result = await invoke(['acme/widgets', '--to', 'main'], {
+      cwd: () => {
+        throw new Error('current directory is unavailable')
+      },
+    })
+
+    expect(result.code).toBe(1)
+    expect(result.stderr.text()).toContain(
+      'error: current directory is unavailable',
+    )
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
   it('uses only enterprise token variables for GHES', async () => {
     const result = await invoke(
       ['acme/widgets', '--to', 'main', '--server-url', 'https://github.corp'],
