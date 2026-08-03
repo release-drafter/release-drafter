@@ -12,6 +12,10 @@ import {
   enum as zenum,
   null as znull,
 } from 'zod'
+import {
+  LocalConfigFileBoundaryError,
+  type LocalConfigFileReader,
+} from './local-config-file.js'
 
 const SUPPORTED_EXTENSIONS = ['json', 'yml', 'yaml'] as const
 const MAX_EXTENDS_DEPTH = 33
@@ -41,12 +45,6 @@ export interface RepositoryConfigReader {
   }): Promise<string>
 }
 
-/** Injected local file reader. Paths passed to it are absolute and contained by `cwd`. */
-export type ConfigReadFile = (path: string) => string | Promise<string>
-
-/** Injected canonical-path resolver used to enforce the local-file boundary. */
-export type ConfigRealpath = (path: string) => string | Promise<string>
-
 export interface LoadConfigOptions {
   /**
    * Config target using `[github:][[owner/]repo:]filepath[@ref]`,
@@ -60,8 +58,7 @@ export interface LoadConfigOptions {
   cwd: string
   reader: RepositoryConfigReader
   logger: ConfigLogger
-  realpath: ConfigRealpath
-  readFile?: ConfigReadFile
+  readLocalFile?: LocalConfigFileReader
 }
 
 type MergeStrategy = (typeof MERGE_STRATEGIES)[number]
@@ -384,29 +381,6 @@ const normalizeLocalPathLexically = (
   return { absolutePath: candidate, relativePath }
 }
 
-const canonicalizeLocalPath = async (
-  target: ConfigTarget,
-  lexicalPath: { absolutePath: string; relativePath: string },
-  options: Pick<LoadConfigOptions, 'cwd' | 'realpath'>,
-): Promise<{ absolutePath: string; relativePath: string }> => {
-  const [canonicalCwd, canonicalCandidate] = await Promise.all([
-    options.realpath(options.cwd),
-    options.realpath(lexicalPath.absolutePath),
-  ])
-  const relativePath = relative(canonicalCwd, canonicalCandidate)
-  if (
-    !relativePath ||
-    relativePath === '..' ||
-    relativePath.startsWith(`..${sep}`) ||
-    isAbsolute(relativePath)
-  ) {
-    throw new Error(
-      `Local config path must remain within cwd for ${describeTarget(target)}.`,
-    )
-  }
-  return { absolutePath: canonicalCandidate, relativePath }
-}
-
 const isNotFoundError = (error: unknown): boolean => {
   if (!error || typeof error !== 'object') return false
   const candidate = error as {
@@ -502,30 +476,31 @@ const loadSingleConfigFile = async (
     const lexicalPath = normalizeLocalPathLexically(target, parent, options.cwd)
     const fetchedTarget = { ...target, path: lexicalPath.relativePath }
     ensureSupportedExtension(fetchedTarget)
-    if (!options.readFile) {
+    if (!options.readLocalFile) {
       throw new Error(
         `No local file reader was provided for ${describeTarget(fetchedTarget)}.`,
       )
     }
-    let normalized: { absolutePath: string; relativePath: string }
-    try {
-      normalized = await canonicalizeLocalPath(target, lexicalPath, options)
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.startsWith('Local config path must remain within cwd')
-      ) {
-        throw error
-      }
-      throw new Error(
-        `Could not read local config ${describeTarget(fetchedTarget)}.`,
-      )
-    }
-    fetchedTarget.path = normalized.relativePath
     let contents: string
     try {
-      contents = await options.readFile(normalized.absolutePath)
-    } catch {
+      const localFile = await options.readLocalFile(
+        lexicalPath.absolutePath,
+        options.cwd,
+      )
+      const relativePath = relative(
+        localFile.canonicalCwd,
+        localFile.canonicalPath,
+      )
+      fetchedTarget.path = relativePath
+      contents = localFile.contents
+    } catch (error) {
+      if (error instanceof LocalConfigFileBoundaryError) {
+        const detail =
+          error.reason === 'outside-cwd'
+            ? 'Local config path must remain within cwd'
+            : 'Local config path changed while it was being opened'
+        throw new Error(`${detail} for ${describeTarget(fetchedTarget)}.`)
+      }
       throw new Error(
         `Could not read local config ${describeTarget(fetchedTarget)}.`,
       )

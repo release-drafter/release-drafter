@@ -6,8 +6,16 @@ import type {
   DraftFunction,
   WritableStream,
 } from './index.ts'
+import type { LocalConfigFileReader } from './local-config-file.js'
 
 const BASE_CONFIG = 'template: "$CHANGES"\n'
+
+const localConfigReader = (contents = BASE_CONFIG): LocalConfigFileReader =>
+  vi.fn(async (path, cwd) => ({
+    contents,
+    canonicalCwd: cwd,
+    canonicalPath: path,
+  }))
 
 const payload = {
   name: 'Release 2.0.0',
@@ -100,7 +108,7 @@ const invoke = async (
     stderr: stderr.stream,
     env: { GITHUB_TOKEN: 'github-token' },
     cwd: '/workspace',
-    readFile: vi.fn(async () => BASE_CONFIG),
+    readLocalFile: localConfigReader(),
     execFile,
     adapterFactory,
     draft,
@@ -143,7 +151,7 @@ describe('usage and informational commands', () => {
   }) => {
     const adapterFactory = vi.fn()
     const execFile = vi.fn()
-    const readFile = vi.fn()
+    const readLocalFile = vi.fn()
     const draft = vi.fn()
     const stdout = capture()
     const stderr = capture()
@@ -154,7 +162,7 @@ describe('usage and informational commands', () => {
       env: {},
       execFile,
       adapterFactory,
-      readFile,
+      readLocalFile,
       draft,
     })
 
@@ -163,7 +171,7 @@ describe('usage and informational commands', () => {
     expect(stderr.text()).toBe('')
     expect(execFile).not.toHaveBeenCalled()
     expect(adapterFactory).not.toHaveBeenCalled()
-    expect(readFile).not.toHaveBeenCalled()
+    expect(readLocalFile).not.toHaveBeenCalled()
     expect(draft).not.toHaveBeenCalled()
   })
 
@@ -478,17 +486,17 @@ describe('config loading', () => {
   })
 
   it('loads file: targets relative to the injected cwd', async () => {
-    const readFile = vi.fn(async () => '{"template":"local"}')
+    const readLocalFile = localConfigReader('{"template":"local"}')
     const state = createAdapter()
     const result = await invoke(
       ['acme/widgets', '--to', 'main', '--config', 'file:configs/release.json'],
-      { adapter: state.adapter, cwd: '/checkout', readFile },
+      { adapter: state.adapter, cwd: '/checkout', readLocalFile },
     )
 
     expect(result.code).toBe(0)
-    expect(readFile).toHaveBeenCalledWith(
+    expect(readLocalFile).toHaveBeenCalledWith(
       '/checkout/configs/release.json',
-      'utf8',
+      '/checkout',
     )
     expect(state.getRepositoryConfig).not.toHaveBeenCalled()
     expect(result.draft.mock.calls[0][0].config.template).toBe('local')
@@ -633,15 +641,15 @@ describe('config loading', () => {
     const state = createAdapter({
       getConfig: async () => 'template: leaf\n_extends: file:base.yml\n',
     })
-    const readFile = vi.fn(async () => BASE_CONFIG)
+    const readLocalFile = localConfigReader()
     const result = await invoke(
       ['acme/widgets', '--to', 'main', '--config', 'leaf.yml'],
-      { adapter: state.adapter, readFile },
+      { adapter: state.adapter, readLocalFile },
     )
 
     expect(result.code).toBe(1)
     expect(result.stderr.text()).toMatch(/github.*file|local/i)
-    expect(readFile).not.toHaveBeenCalled()
+    expect(readLocalFile).not.toHaveBeenCalled()
     expect(result.draft).not.toHaveBeenCalled()
   })
 })
@@ -678,6 +686,77 @@ describe('output and release result mapping', () => {
     expect(lines).toHaveLength(1)
     expect(lines.at(-1)).toBe(
       'create: v2.0.0 (https://github.example/acme/widgets/releases/tag/v2.0.0)',
+    )
+  })
+
+  it('uses computed dry-run tag and name with referenced release metadata', async () => {
+    const draftRelease = {
+      id: 7,
+      tagName: 'v1-draft',
+      name: 'Old draft',
+      url: 'https://github.example/releases/7',
+      uploadUrl: 'https://uploads.github.example/releases/7/assets',
+    }
+    const result = await invoke(['acme/widgets', '--to', 'main', '--json'], {
+      draftResult: {
+        plan: {
+          action: 'dry-run',
+          draftRelease,
+          releasePayload: payload,
+        },
+        releasePayload: payload,
+      },
+    })
+
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout.text())).toEqual(
+      expect.objectContaining({
+        tag_name: payload.tag,
+        name: payload.name,
+        id: String(draftRelease.id),
+        html_url: draftRelease.url,
+        upload_url: draftRelease.uploadUrl,
+      }),
+    )
+  })
+
+  it.each([
+    'create',
+    'update',
+  ] as const)('uses actual returned release tag and name for %s results', async (action) => {
+    const actualRelease = {
+      id: 42,
+      tagName: 'v2.0.0-server',
+      name: 'Server-normalized release name',
+      url: 'https://github.example/releases/42',
+      uploadUrl: 'https://uploads.github.example/releases/42/assets',
+    }
+    const draftRelease = {
+      id: 7,
+      tagName: 'v1-draft',
+      name: 'Old draft',
+    }
+    const plan =
+      action === 'create'
+        ? { action, releasePayload: payload }
+        : { action, draftRelease, releasePayload: payload }
+    const result = await invoke(['acme/widgets', '--to', 'main', '--json'], {
+      draftResult: {
+        plan,
+        release: actualRelease,
+        releasePayload: payload,
+      },
+    })
+
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout.text())).toEqual(
+      expect.objectContaining({
+        tag_name: actualRelease.tagName,
+        name: actualRelease.name,
+        id: String(actualRelease.id),
+        html_url: actualRelease.url,
+        upload_url: actualRelease.uploadUrl,
+      }),
     )
   })
 
