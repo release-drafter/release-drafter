@@ -107,6 +107,14 @@ export default {
       from: { path: '^packages/' },
       to: { couldNotResolve: true },
     },
+    {
+      name: 'gh-actions-must-not-use-public-facades',
+      severity: 'error',
+      comment:
+        'GitHub Actions compose domain workspaces and adapters directly, never the public package or CLI facades.',
+      from: { path: '^packages/gh-actions/(?:src|dist)/' },
+      to: { path: '^packages/(?:release-drafter|cli)/(?:src|dist)/' },
+    },
     ...workspaceBoundaryRules,
   ],
   options: {
