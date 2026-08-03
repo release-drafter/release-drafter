@@ -29,6 +29,22 @@ before completion can be proven. If bounded history cannot prove that a pull
 request author is a new contributor, the adapter emits a warning and does not
 mark that author as new.
 
+Contributor `historyLimit` values are sent as the requested pagination window,
+not used as a total-item ceiling. Independent adapter item, page, and request
+bounds still apply. Valid total-count headers take precedence over short pages,
+which supports servers that cap responses below the requested page size.
+
+The bounded defaults allow at most 499 comparison commits within the 500-request
+operation budget and at most 1,000 changed files, matching both the list-item
+bound and the default 20-page by 50-item pagination capacity.
+
+## Declarations
+
+Workspace builds emit declarations for the factory, public profile/options/
+limits types, and the concrete Gitea and Forgejo classes and profiles. Package
+type entrypoints therefore match their runtime entrypoints instead of exposing
+only package identity constants.
+
 ## Bundle impact
 
 This package and its current consumers are private workspace packages. They are

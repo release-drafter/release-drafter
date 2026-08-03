@@ -4,9 +4,11 @@ import type {
   Repository,
 } from '@release-drafter/core'
 import { describe, expect, it, vi } from 'vitest'
+import { mapConcurrent, RequestBudget } from './client.ts'
 import {
   createGitHubCompatibleRestAdapter,
   createRestEndpoints,
+  defaultRestAdapterLimits,
   type RestForgeProfile,
 } from './index.ts'
 
@@ -119,6 +121,18 @@ const createAdapter = (
   })
 
 describe('GitHub-compatible REST mechanics', () => {
+  it('keeps default comparison, request, item, and pagination limits coherent', () => {
+    expect(
+      defaultRestAdapterLimits.maxComparisonCommits + 1,
+    ).toBeLessThanOrEqual(defaultRestAdapterLimits.maxRequestsPerOperation)
+    expect(defaultRestAdapterLimits.maxChangedFiles).toBeLessThanOrEqual(
+      defaultRestAdapterLimits.maxItemsPerList,
+    )
+    expect(defaultRestAdapterLimits.maxChangedFiles).toBeLessThanOrEqual(
+      defaultRestAdapterLimits.maxPages * defaultRestAdapterLimits.pageSize,
+    )
+  })
+
   it('uses configured API URLs, explicit authentication, and treats commit-pull 404 as no PR', async () => {
     const fetch = routeFetch((url, init) => {
       expect(url.origin).toBe('https://api.example')
@@ -229,6 +243,27 @@ describe('GitHub-compatible REST mechanics', () => {
     ).rejects.toThrow('above the 1 commit limit')
   })
 
+  it('preflights commit lookup requests before starting concurrent fan-out', async () => {
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({
+          total_commits: 2,
+          commits: [
+            commit('a', '2026-01-01T00:00:00Z'),
+            commit('b', '2026-01-02T00:00:00Z'),
+          ],
+        })
+      }
+      throw new Error(`Commit lookup should not have started: ${url}`)
+    })
+    await expect(
+      createAdapter(fetch, {
+        limits: { maxComparisonCommits: 2, maxRequestsPerOperation: 2 },
+      }).findChanges(request()),
+    ).rejects.toThrow('cannot satisfy 2 more requests')
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
   it('bounds unadvertised streamed response bodies', async () => {
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -294,6 +329,111 @@ describe('GitHub-compatible REST mechanics', () => {
       'b.ts',
       'c.ts',
     ])
+  })
+
+  it('rejects changed-file responses that disagree with the advertised count', async () => {
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({
+          total_commits: 1,
+          commits: [commit('a', '2026-01-01T00:00:00Z')],
+        })
+      }
+      if (url.pathname.endsWith('/commits/a/pull')) {
+        return json(pull(1, { changed_files: 2 }))
+      }
+      if (url.pathname.endsWith('/pulls/1/files')) {
+        return json([{ filename: 'only.ts' }])
+      }
+      throw new Error(`Unexpected ${url}`)
+    })
+    await expect(
+      createAdapter(fetch).findChanges(request({ includeChangedFiles: true })),
+    ).rejects.toThrow('expected 2 files but received 1')
+  })
+
+  it('rejects changed-file advertised and returned item counts above configured bounds', async () => {
+    const advertisedFetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({
+          total_commits: 1,
+          commits: [commit('a', '2026-01-01T00:00:00Z')],
+        })
+      }
+      if (url.pathname.endsWith('/commits/a/pull')) {
+        return json(pull(1, { changed_files: 2 }))
+      }
+      throw new Error(`File pagination should not have started: ${url}`)
+    })
+    await expect(
+      createAdapter(advertisedFetch, {
+        limits: { maxChangedFiles: 1 },
+      }).findChanges(request({ includeChangedFiles: true })),
+    ).rejects.toThrow('above the 1 file limit')
+    expect(advertisedFetch).toHaveBeenCalledTimes(2)
+
+    const itemFetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({
+          total_commits: 1,
+          commits: [commit('a', '2026-01-01T00:00:00Z')],
+        })
+      }
+      if (url.pathname.endsWith('/commits/a/pull')) {
+        return json(pull(1, { changed_files: null }))
+      }
+      if (url.pathname.endsWith('/pulls/1/files')) {
+        return json([{ filename: 'one.ts' }, { filename: 'two.ts' }])
+      }
+      throw new Error(`Unexpected ${url}`)
+    })
+    await expect(
+      createAdapter(itemFetch, { limits: { maxChangedFiles: 1 } }).findChanges(
+        request({ includeChangedFiles: true }),
+      ),
+    ).rejects.toThrow('exceeded the 1 item limit')
+  })
+
+  it('continues short server-capped pages when a valid total proves more items exist', async () => {
+    const fetch = routeFetch((url) => {
+      const page = Number(url.searchParams.get('page'))
+      expect(url.searchParams.get('limit')).toBe('5')
+      return json(
+        page === 1
+          ? [
+              { id: 1, tag_name: 'v1' },
+              { id: 2, tag_name: 'v2' },
+            ]
+          : [
+              { id: 3, tag_name: 'v3' },
+              { id: 4, tag_name: 'v4' },
+            ],
+        {},
+        { 'x-total-count': '4' },
+      )
+    })
+    await expect(
+      createAdapter(fetch, { limits: { pageSize: 5 } }).listReleases({
+        repository,
+      }),
+    ).resolves.toHaveLength(4)
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('rejects paginated rows above the advertised total count', async () => {
+    const fetch = routeFetch(() =>
+      json(
+        [
+          { id: 1, tag_name: 'v1' },
+          { id: 2, tag_name: 'v2' },
+        ],
+        {},
+        { 'x-total-count': '1' },
+      ),
+    )
+    await expect(
+      createAdapter(fetch).listReleases({ repository }),
+    ).rejects.toThrow('above the advertised total of 1')
   })
 
   it('rejects pagination that cannot prove completion within its page bound', async () => {
@@ -455,6 +595,18 @@ describe('GitHub-compatible REST mechanics', () => {
     expect(String(error)).toContain('[REDACTED]')
   })
 
+  it('redacts the complete HTTP body before truncating boundary-crossing tokens', async () => {
+    const token = 'SECRET_TOKEN_BOUNDARY'
+    const http = routeFetch(
+      () => new Response(`${'x'.repeat(495)}${token}`, { status: 500 }),
+    )
+    const error = await createAdapter(http, { token })
+      .listReleases({ repository })
+      .catch((caught: unknown) => caught)
+    expect(String(error)).not.toContain('SECRET')
+    expect(String(error)).not.toContain(token)
+  })
+
   it('prefers PR login identity, never invents an email user, and labels new only with bounded proof', async () => {
     const logger = {
       debug: vi.fn(),
@@ -481,6 +633,7 @@ describe('GitHub-compatible REST mechanics', () => {
       }
       if (url.pathname.endsWith('/pulls')) {
         expect(url.searchParams.get('poster')).toBe('pr-user')
+        expect(url.searchParams.get('limit')).toBe('2')
         return bounded
           ? json([pull(1)], {}, { 'x-total-count': '100' })
           : json([
@@ -508,5 +661,100 @@ describe('GitHub-compatible REST mechanics', () => {
     expect(logger.warning).toHaveBeenCalledWith(
       expect.stringContaining('will not be labeled new'),
     )
+  })
+
+  it('uses historyLimit as the requested window while searching later pages', async () => {
+    const historyPages: number[] = []
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({
+          total_commits: 1,
+          commits: [commit('a', '2026-01-03T00:00:00Z')],
+        })
+      }
+      if (url.pathname.endsWith('/commits/a/pull')) {
+        return json(
+          pull(3, {
+            merge_commit_sha: 'a',
+            merged_at: '2026-01-03T00:00:00Z',
+            user: { login: 'history-user' },
+          }),
+        )
+      }
+      if (url.pathname.endsWith('/pulls')) {
+        expect(url.searchParams.get('limit')).toBe('2')
+        const page = Number(url.searchParams.get('page'))
+        historyPages.push(page)
+        return page === 1
+          ? json(
+              [
+                pull(3, {
+                  merged_at: '2026-01-03T00:00:00Z',
+                  user: { login: 'history-user' },
+                }),
+                pull(4, {
+                  merged_at: '2026-01-04T00:00:00Z',
+                  user: { login: 'history-user' },
+                }),
+              ],
+              {},
+              { 'x-total-count': '3' },
+            )
+          : json(
+              [
+                pull(1, {
+                  merged_at: '2026-01-01T00:00:00Z',
+                  user: { login: 'history-user' },
+                }),
+              ],
+              {},
+              { 'x-total-count': '3' },
+            )
+      }
+      throw new Error(`Unexpected ${url}`)
+    })
+    const result = await createAdapter(fetch).findChanges(
+      request({ includeNewContributors: true, historyLimit: 2 }),
+    )
+    expect(result.newContributorLogins).toEqual(new Set())
+    expect(historyPages).toEqual([1, 2])
+  })
+})
+
+describe('bounded request helpers', () => {
+  it('accepts the exact request budget and rejects bound plus one', () => {
+    const budget = new RequestBudget(2)
+    expect(() => budget.take()).not.toThrow()
+    expect(() => budget.take()).not.toThrow()
+    expect(() => budget.take()).toThrow('request limit of 2')
+  })
+
+  it('honors maximum concurrency and preserves output order', async () => {
+    let active = 0
+    let maximumActive = 0
+    const releases = new Map<number, () => void>()
+    const resultPromise = mapConcurrent([3, 1, 2, 0], 2, async (value) => {
+      active += 1
+      maximumActive = Math.max(maximumActive, active)
+      await new Promise<void>((resolve) => releases.set(value, resolve))
+      active -= 1
+      return `result-${value}`
+    })
+
+    await vi.waitFor(() => expect(active).toBe(2))
+    releases.get(1)?.()
+    await vi.waitFor(() => expect(releases.has(2)).toBe(true))
+    releases.get(3)?.()
+    await vi.waitFor(() => expect(releases.has(0)).toBe(true))
+    releases.get(0)?.()
+    releases.get(2)?.()
+
+    await expect(resultPromise).resolves.toEqual([
+      'result-3',
+      'result-1',
+      'result-2',
+      'result-0',
+    ])
+    expect(maximumActive).toBe(2)
   })
 })

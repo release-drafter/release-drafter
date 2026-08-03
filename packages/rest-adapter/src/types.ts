@@ -1,11 +1,4 @@
-import type {
-  Commit,
-  ForgeAdapter,
-  Logger,
-  PullRequest,
-  Release,
-  Repository,
-} from '@release-drafter/core'
+import type { Logger, PullRequest, Repository } from '@release-drafter/core'
 
 export type Fetch = typeof globalThis.fetch
 
@@ -69,17 +62,6 @@ export type RestAdapterOptions = {
   serverUrl?: string
   apiUrl?: string
   limits?: Partial<RestAdapterLimits>
-}
-
-export type RestForgeAdapter = ForgeAdapter & {
-  readonly profile: RestForgeProfile
-  readonly serverUrl?: string
-  readonly apiUrl?: string
-}
-
-export type NormalizedComparison = {
-  commits: Commit[]
-  rawCommits: RestCommit[]
 }
 
 export type RestUser = {
@@ -147,5 +129,3 @@ export type PullRequestEntry = {
   normalized: PullRequest
   key: string
 }
-
-export type ReleaseNormalizer = (release: RestRelease) => Release

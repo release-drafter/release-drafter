@@ -16,7 +16,6 @@ import type {
   PullRequestEntry,
   RestAdapterOptions,
   RestCommit,
-  RestForgeAdapter,
   RestForgeProfile,
   RestPullRequest,
   RestRelease,
@@ -202,6 +201,7 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
       return { commits: [], pullRequests: [], newContributorLogins: new Set() }
     }
 
+    budget.ensureAvailable(commits.length)
     const associated = await mapConcurrent(
       commits,
       this.client.limits.concurrency,
@@ -339,7 +339,7 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
             repository: params.repository,
             path: this.profile.endpoints.pulls(params.repository),
             budget,
-            maxItems: params.historyLimit,
+            pageSize: params.historyLimit,
             query: {
               [list.authorParameter]: login,
               [list.stateParameter]: list.closedState,
@@ -492,14 +492,7 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
 export const createGitHubCompatibleRestAdapter = (
   profile: RestForgeProfile,
   options: RestAdapterOptions,
-): RestForgeAdapter => {
-  const adapter = new GitHubCompatibleRestAdapter(profile, options)
-  return Object.assign(adapter, {
-    profile,
-    serverUrl: options.serverUrl,
-    apiUrl: options.apiUrl,
-  })
-}
+): ForgeAdapter => new GitHubCompatibleRestAdapter(profile, options)
 
 export const createRestEndpoints = () => {
   const repoPath = (repository: Repository) =>
@@ -523,4 +516,8 @@ export const createRestEndpoints = () => {
 }
 
 export { defaultRestAdapterLimits } from './client.ts'
-export type * from './types.ts'
+export type {
+  RestAdapterLimits,
+  RestAdapterOptions,
+  RestForgeProfile,
+} from './types.ts'
