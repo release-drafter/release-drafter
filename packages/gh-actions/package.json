@@ -34,6 +34,14 @@
       "release-drafter-source": "./src/autolabeler/index.ts",
       "import": "./dist/autolabeler/index.js"
     },
+    "./check-pr-title": {
+      "types": {
+        "release-drafter-source": "./src/check-pr-title/index.ts",
+        "default": "./dist/check-pr-title/index.d.ts"
+      },
+      "release-drafter-source": "./src/check-pr-title/index.ts",
+      "import": "./dist/check-pr-title/index.js"
+    },
     "./config": {
       "types": {
         "release-drafter-source": "./src/config.ts",

@@ -141,6 +141,9 @@ describe('workspace foundation', () => {
     const autolabelerAction = parseYaml(
       readFileSync('autolabeler/action.yml', 'utf8'),
     )
+    const checkPrTitleAction = parseYaml(
+      readFileSync('check-pr-title/action.yml', 'utf8'),
+    )
     const normalizeMain = (metadata: Record<string, unknown>) => ({
       ...metadata,
       runs: { ...(metadata.runs as object), main: '<normalized>' },
@@ -158,6 +161,10 @@ describe('workspace foundation', () => {
     expect(autolabelerAction.runs).toMatchObject({
       using: 'node24',
       main: '../dist/actions/autolabeler/run.js',
+    })
+    expect(checkPrTitleAction.runs).toMatchObject({
+      using: 'node24',
+      main: '../dist/actions/check-pr-title/run.js',
     })
     expect(rootAction.inputs.from).toMatchObject({ required: false })
     expect(Object.keys(rootAction.inputs).sort()).toEqual(
@@ -200,10 +207,16 @@ describe('workspace foundation', () => {
       'token',
     ])
     expect(autolabelerAction.outputs ?? {}).toEqual({})
+    expect(Object.keys(checkPrTitleAction.inputs).sort()).toEqual([
+      'config-name',
+      'token',
+    ])
+    expect(checkPrTitleAction.outputs ?? {}).toEqual({})
 
     for (const artifact of [
       'dist/actions/drafter/run.js',
       'dist/actions/autolabeler/run.js',
+      'dist/actions/check-pr-title/run.js',
     ]) {
       expect(statSync(artifact).isFile()).toBe(true)
       expect(statSync(artifact).size).toBeGreaterThan(0)
@@ -220,11 +233,15 @@ describe('workspace foundation', () => {
       '.',
       './drafter',
       './autolabeler',
+      './check-pr-title',
       './config',
     ])
     expect(manifest.exports['./drafter'].import).toBe('./dist/drafter/index.js')
     expect(manifest.exports['./autolabeler'].import).toBe(
       './dist/autolabeler/index.js',
+    )
+    expect(manifest.exports['./check-pr-title'].import).toBe(
+      './dist/check-pr-title/index.js',
     )
     const identitySource = readFileSync(
       'packages/gh-actions/src/index.ts',
@@ -232,9 +249,11 @@ describe('workspace foundation', () => {
     )
     expect(identitySource).not.toContain("from './drafter/")
     expect(identitySource).not.toContain("from './autolabeler/")
+    expect(identitySource).not.toContain("from './check-pr-title/")
     const workspaceBuild = readFileSync('vite.workspace.config.ts', 'utf8')
     expect(workspaceBuild).toContain("'drafter/index'")
     expect(workspaceBuild).toContain("'autolabeler/index'")
+    expect(workspaceBuild).toContain("'check-pr-title/index'")
   })
 
   it('keeps TypeScript scripts directly parseable by Node without compilation', () => {
