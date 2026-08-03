@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.workspace.json",
   "compilerOptions": {
     "paths": {
-      "@release-drafter/core": ["../core/src/index.ts"]
+      "@release-drafter/cli": ["../cli/src/index.ts"],
+      "@release-drafter/core": ["../core/src/index.ts"],
+      "@release-drafter/github-adapter": ["../github-adapter/src/index.ts"]
     }
   },
   "include": ["src"]
