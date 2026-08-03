@@ -90,8 +90,12 @@
       },
     },
     {
-      // The public facade imports its private build dependency through the workspace package entrypoint.
-      "includes": ["packages/release-drafter/src/index.ts"],
+      // CLI sources import private build dependencies through workspace package entrypoints.
+      "includes": [
+        "packages/cli/src/**/*.ts",
+        "packages/release-drafter/src/index.ts",
+        "packages/release-drafter/src/cli.ts",
+      ],
       "linter": {
         "rules": {
           "correctness": {

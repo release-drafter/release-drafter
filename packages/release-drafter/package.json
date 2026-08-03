@@ -1,14 +1,18 @@
 {
   "name": "release-drafter",
   "version": "7.7.0",
-  "description": "Forge-neutral programmatic API for Release Drafter.",
+  "description": "Programmatic API and command-line interface for Release Drafter.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
+  "bin": {
+    "release-drafter": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,10 +24,19 @@
     "tsc:check": "tsc --noEmit -p tsconfig.json",
     "test:run": "vitest run --config ../../vite.workspace.config.ts"
   },
+  "dependencies": {
+    "@octokit/core": "^7.0.6",
+    "@octokit/plugin-paginate-graphql": "^6.0.0",
+    "@octokit/plugin-paginate-rest": "^14.0.0",
+    "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
+    "@octokit/plugin-retry": "^8.1.0",
+    "undici": "^7.29.0"
+  },
   "devDependencies": {
+    "@release-drafter/cli": "*",
     "@release-drafter/core": "*"
   },
-  "license": "MIT",
+  "license": "ISC",
   "publishConfig": {
     "access": "public"
   }

@@ -1,2 +1,541 @@
-/** Package identity used while the @release-drafter/cli boundary is established. */
+import {
+  open as nodeOpen,
+  realpath as nodeRealpath,
+  stat as nodeStat,
+} from 'node:fs/promises'
+import process from 'node:process'
+import { parseArgs } from 'node:util'
+import {
+  type CommonConfig,
+  type DraftReleaseResult,
+  draftRelease,
+  type ForgeAdapter,
+  type Logger,
+  mergeInputAndConfig,
+  type ParsedConfig,
+  type ReleaseInput,
+  type Repository,
+} from '@release-drafter/core'
+import {
+  GitHubAdapter,
+  type GitHubAdapterOptions,
+} from '@release-drafter/github-adapter'
+import { loadConfig } from './config.ts'
+import {
+  createLocalConfigFileReader,
+  type LocalConfigFileReader,
+} from './local-config-file.js'
+
 export const CLI_PACKAGE_NAME = '@release-drafter/cli' as const
+export const CLI_VERSION = '7.7.0'
+
+export interface WritableStream {
+  write(chunk: string): unknown
+}
+
+export type CliAdapter = ForgeAdapter &
+  Pick<GitHubAdapter, 'getRepositoryConfig' | 'octokit'>
+
+export type DraftFunction = (params: {
+  adapter: ForgeAdapter
+  config: ParsedConfig
+  input: ReleaseInput
+  logger: Logger
+  repository: Repository
+}) => Promise<DraftReleaseResult>
+
+export type CliDependencies = {
+  stdout?: WritableStream
+  stderr?: WritableStream
+  env?: NodeJS.ProcessEnv
+  cwd?: string | (() => string)
+  readLocalFile?: LocalConfigFileReader
+  adapterFactory?: (options: GitHubAdapterOptions) => CliAdapter
+  draft?: DraftFunction
+  version?: string
+}
+
+type ParsedOptions = {
+  repository: Repository
+  from?: string
+  name?: string
+  tag?: string
+  releaseVersion?: string
+  to?: string
+  config: string
+  dryRun: boolean
+  publish: boolean
+  prerelease?: boolean
+  latest?: boolean
+  json: boolean
+  serverUrl: string
+  apiUrl?: string
+  graphqlUrl?: string
+  token?: string
+}
+
+class UsageError extends Error {}
+
+const USAGE = `Usage: release-drafter <owner/repo> [options]
+
+Options:
+  -f, --from <ref>             Change comparison base
+  -n, --name <name>            Release name override
+      --tag <tag>              Release tag override
+  -r, --release-version <ver>  Release version override
+  -t, --to <ref>               Target commitish
+  -c, --config <target>        Config target (default: release-drafter.yml)
+      --dry-run                Calculate without writing
+      --publish [true|false]   Publish instead of drafting (default: false)
+      --prerelease [true|false]
+      --latest [true|false]
+      --json                   Write one JSON result document to stdout
+      --forge <name>           Forge implementation (github only)
+      --server-url <url>       Forge web URL
+      --api-url <url>          Forge REST API URL
+      --graphql-url <url>      Forge GraphQL API URL
+      --token <token>          GitHub token (overrides environment variables)
+      --help                   Show help
+      --version                Show version
+`
+
+const REPOSITORY_PATTERN = /^[^/\s]+\/[^/\s]+$/
+const writeLine = (stream: WritableStream, message: string) => {
+  stream.write(`${message}\n`)
+}
+
+const errorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error)
+
+const createLogger = (stderr: WritableStream): Logger => ({
+  debug() {},
+  info(message) {
+    writeLine(stderr, message)
+  },
+  warning(error) {
+    writeLine(stderr, `warning: ${errorMessage(error)}`)
+  },
+  error(error) {
+    writeLine(stderr, `error: ${errorMessage(error)}`)
+  },
+})
+
+const normalizeOptionalBooleans = (argv: readonly string[]) => {
+  const optionalBooleans = new Set(['--publish', '--prerelease', '--latest'])
+  const normalized: string[] = []
+  for (let index = 0; index < argv.length; index += 1) {
+    const argument = argv[index]
+    if (!optionalBooleans.has(argument)) {
+      normalized.push(argument)
+      continue
+    }
+    const next = argv[index + 1]
+    if (next === 'true' || next === 'false') {
+      normalized.push(`${argument}=${next}`)
+      index += 1
+    } else {
+      normalized.push(`${argument}=true`)
+    }
+  }
+  return normalized
+}
+
+const OPTION_DEFINITIONS = {
+  from: { type: 'string', short: 'f' },
+  name: { type: 'string', short: 'n' },
+  tag: { type: 'string' },
+  'release-version': { type: 'string', short: 'r' },
+  to: { type: 'string', short: 't' },
+  config: { type: 'string', short: 'c', default: 'release-drafter.yml' },
+  'dry-run': { type: 'boolean', default: false },
+  publish: { type: 'string' },
+  prerelease: { type: 'string' },
+  latest: { type: 'string' },
+  json: { type: 'boolean', default: false },
+  forge: { type: 'string' },
+  'server-url': { type: 'string' },
+  'api-url': { type: 'string' },
+  'graphql-url': { type: 'string' },
+  token: { type: 'string' },
+  help: { type: 'boolean', default: false },
+  version: { type: 'boolean', default: false },
+} as const
+
+const parseArguments = (argv: readonly string[]) =>
+  parseArgs({
+    args: normalizeOptionalBooleans(argv),
+    allowPositionals: true,
+    strict: true,
+    options: OPTION_DEFINITIONS,
+  })
+
+const parseOptionalBoolean = (
+  value: string | undefined,
+  option: string,
+): boolean | undefined => {
+  if (value === undefined) return undefined
+  if (value === 'true') return true
+  if (value === 'false') return false
+  throw new UsageError(`${option} must be true or false.`)
+}
+
+const parseUrl = (value: string | undefined, option: string) => {
+  if (!value) return undefined
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error()
+    if (url.username || url.password || url.search || url.hash) {
+      throw new Error()
+    }
+    return url.toString().replace(/\/$/, '')
+  } catch {
+    throw new UsageError(
+      `${option} must be an absolute HTTP(S) URL without credentials, a query, or a fragment.`,
+    )
+  }
+}
+
+const matchesEndpoint = (
+  endpoint: string,
+  expectedProtocol: string,
+  expectedHost: string,
+  expectedPath: string,
+): boolean => {
+  const url = new URL(endpoint)
+  return (
+    url.protocol === expectedProtocol &&
+    url.host.toLowerCase() === expectedHost &&
+    url.pathname.replace(/\/+$/, '') === expectedPath
+  )
+}
+
+const selectForge = (params: {
+  forge?: string
+  serverUrl?: string
+  apiUrl?: string
+  graphqlUrl?: string
+}): 'github' => {
+  if (params.forge) {
+    const forge = params.forge.toLowerCase()
+    if (forge !== 'github') {
+      throw new UsageError(
+        `Forge '${params.forge}' is not supported by this build. Only 'github' is available.`,
+      )
+    }
+    return 'github'
+  }
+  if (!params.serverUrl && !params.apiUrl && !params.graphqlUrl) return 'github'
+
+  const serverUrl = params.serverUrl ?? 'https://github.com'
+  const server = new URL(serverUrl)
+  const serverHost = server.hostname.toLowerCase()
+  const serverAuthority = server.host.toLowerCase()
+  const serverIsGitHub =
+    serverHost === 'github.com' &&
+    server.port === '' &&
+    server.pathname.replace(/\/+$/, '') === ''
+  const apiIsGitHub =
+    params.apiUrl === undefined ||
+    matchesEndpoint(
+      params.apiUrl,
+      serverIsGitHub ? 'https:' : server.protocol,
+      serverIsGitHub ? 'api.github.com' : serverAuthority,
+      serverIsGitHub ? '' : '/api/v3',
+    )
+  const graphqlIsGitHub =
+    params.graphqlUrl === undefined ||
+    matchesEndpoint(
+      params.graphqlUrl,
+      serverIsGitHub ? 'https:' : server.protocol,
+      serverIsGitHub ? 'api.github.com' : serverAuthority,
+      serverIsGitHub ? '/graphql' : '/api/graphql',
+    )
+  if (apiIsGitHub && graphqlIsGitHub) return 'github'
+
+  throw new UsageError(
+    'The custom endpoints are ambiguous. Pass --forge explicitly.',
+  )
+}
+
+const parseCommandLine = (argv: readonly string[]) => {
+  let parsed: ReturnType<typeof parseArguments>
+  try {
+    parsed = parseArguments(argv)
+  } catch (error) {
+    throw new UsageError(errorMessage(error))
+  }
+
+  const values = parsed.values
+  if (values.help) return { kind: 'help' as const }
+  if (values.version) return { kind: 'version' as const }
+  const serverUrl =
+    parseUrl(values['server-url'], '--server-url') ?? 'https://github.com'
+  const apiUrl = parseUrl(values['api-url'], '--api-url')
+  const graphqlUrl = parseUrl(values['graphql-url'], '--graphql-url')
+  selectForge({
+    forge: values.forge,
+    serverUrl: values['server-url'] ? serverUrl : undefined,
+    apiUrl,
+    graphqlUrl,
+  })
+  if (parsed.positionals.length !== 1) {
+    throw new UsageError('Exactly one repository argument is required.')
+  }
+  const repositoryName = parsed.positionals[0]
+  if (!REPOSITORY_PATTERN.test(repositoryName)) {
+    throw new UsageError('Repository must be exactly nonblank owner/name.')
+  }
+  const [owner, name] = repositoryName.split('/')
+
+  const options: ParsedOptions = {
+    repository: { owner, name, serverUrl },
+    from: values.from,
+    name: values.name,
+    tag: values.tag,
+    releaseVersion: values['release-version'],
+    to: values.to,
+    config: values.config,
+    dryRun: values['dry-run'],
+    publish: parseOptionalBoolean(values.publish, '--publish') ?? false,
+    prerelease: parseOptionalBoolean(values.prerelease, '--prerelease'),
+    latest: parseOptionalBoolean(values.latest, '--latest'),
+    json: values.json,
+    serverUrl,
+    apiUrl,
+    graphqlUrl,
+    token: values.token,
+  }
+  return { kind: 'run' as const, options }
+}
+
+const resolveToken = (params: {
+  env: NodeJS.ProcessEnv
+  serverUrl: string
+  apiUrl?: string
+  graphqlUrl?: string
+  token?: string
+}): string => {
+  const explicitToken = params.token?.trim()
+  if (explicitToken) return explicitToken
+
+  const server = new URL(params.serverUrl)
+  const isGitHubDotCom = server.origin.toLowerCase() === 'https://github.com'
+  const expectedEndpointOrigin = isGitHubDotCom
+    ? 'https://api.github.com'
+    : server.origin.toLowerCase()
+  const endpointsMatchCredentialOrigin = [params.apiUrl, params.graphqlUrl]
+    .filter((endpoint): endpoint is string => endpoint !== undefined)
+    .every(
+      (endpoint) =>
+        new URL(endpoint).origin.toLowerCase() === expectedEndpointOrigin,
+    )
+  if (!endpointsMatchCredentialOrigin) {
+    throw new UsageError(
+      'Automatic environment credentials cannot be used with endpoints on a different origin. Pass --token to authorize the custom endpoints explicitly.',
+    )
+  }
+
+  const environmentToken = isGitHubDotCom
+    ? params.env.GITHUB_TOKEN?.trim() || params.env.GH_TOKEN?.trim()
+    : params.env.GH_ENTERPRISE_TOKEN?.trim() ||
+      params.env.GITHUB_ENTERPRISE_TOKEN?.trim()
+  if (environmentToken) return environmentToken
+
+  throw new UsageError(
+    isGitHubDotCom
+      ? 'No GitHub token is available. Set GITHUB_TOKEN or GH_TOKEN, or pass --token. To use GitHub CLI credentials safely, run `GH_TOKEN="$(gh auth token)" release-drafter ...`.'
+      : 'No GitHub Enterprise token is available. Set GH_ENTERPRISE_TOKEN or GITHUB_ENTERPRISE_TOKEN, or pass --token.',
+  )
+}
+
+const defaultBranch = async (
+  adapter: CliAdapter,
+  repository: Repository,
+): Promise<string> => {
+  const response = await adapter.octokit.rest.repos.get({
+    owner: repository.owner,
+    repo: repository.name,
+  })
+  const branch = response.data.default_branch?.trim()
+  if (!branch) throw new Error('GitHub returned a blank default branch.')
+  return branch
+}
+
+const resultDocument = (result: DraftReleaseResult) => {
+  const release = result.release ?? result.plan.draftRelease
+  const payload = result.releasePayload
+  const dryRun = result.plan.action === 'dry-run'
+  return {
+    action: result.plan.action,
+    ...(release?.id !== undefined ? { id: String(release.id) } : {}),
+    ...(release?.url ? { html_url: release.url } : {}),
+    ...(release?.uploadUrl ? { upload_url: release.uploadUrl } : {}),
+    tag_name: dryRun ? payload.tag : (release?.tagName ?? payload.tag),
+    name: dryRun ? payload.name : (release?.name ?? payload.name),
+    ...(payload.resolvedVersion
+      ? { resolved_version: payload.resolvedVersion }
+      : {}),
+    ...(payload.majorVersion ? { major_version: payload.majorVersion } : {}),
+    ...(payload.minorVersion ? { minor_version: payload.minorVersion } : {}),
+    ...(payload.patchVersion ? { patch_version: payload.patchVersion } : {}),
+    ...(payload.prereleaseVersion
+      ? { prerelease_version: payload.prereleaseVersion }
+      : {}),
+    target_commitish: payload.targetCommitish,
+    draft: payload.draft,
+    prerelease: payload.prerelease,
+    latest: payload.makeLatest,
+    dry_run: dryRun,
+    body: payload.body,
+  }
+}
+
+/**
+ * Runs the private Release Drafter CLI without terminating the process.
+ *
+ * Importing this module is side-effect free. Runtime state and I/O are only
+ * consulted after this function is called, and every external boundary can be
+ * injected for deterministic tests.
+ */
+export function runCli(
+  argv: readonly string[],
+  injected?: CliDependencies,
+): Promise<number>
+export function runCli(
+  argv: readonly string[],
+  version?: string,
+  injected?: CliDependencies,
+): Promise<number>
+export async function runCli(
+  argv: readonly string[],
+  versionOrDependencies: string | CliDependencies = CLI_VERSION,
+  dependencies: CliDependencies = {},
+): Promise<number> {
+  const version =
+    typeof versionOrDependencies === 'string'
+      ? versionOrDependencies
+      : (versionOrDependencies.version ?? CLI_VERSION)
+  const injected =
+    typeof versionOrDependencies === 'string'
+      ? dependencies
+      : versionOrDependencies
+  const stdout = injected.stdout ?? process.stdout
+  const stderr = injected.stderr ?? process.stderr
+  const cliArgv =
+    REPOSITORY_PATTERN.test(argv[0] ?? '') || argv[0]?.startsWith('-')
+      ? argv
+      : argv.slice(2)
+
+  let command: ReturnType<typeof parseCommandLine>
+  try {
+    command = parseCommandLine(cliArgv)
+  } catch (error) {
+    writeLine(stderr, `error: ${errorMessage(error)}`)
+    stderr.write(USAGE)
+    return 2
+  }
+  if (command.kind === 'help') {
+    stdout.write(USAGE)
+    return 0
+  }
+  if (command.kind === 'version') {
+    writeLine(stdout, `release-drafter ${version}`)
+    return 0
+  }
+
+  const { options } = command
+  const logger = createLogger(stderr)
+  const env = injected.env ?? process.env
+  const readLocalFile =
+    injected.readLocalFile ??
+    createLocalConfigFileReader({
+      open: nodeOpen,
+      realpath: nodeRealpath,
+      stat: nodeStat,
+    })
+  const adapterFactory =
+    injected.adapterFactory ??
+    ((adapterOptions: GitHubAdapterOptions) =>
+      new GitHubAdapter(adapterOptions))
+  const draft = injected.draft ?? draftRelease
+
+  try {
+    const cwd =
+      typeof injected.cwd === 'function'
+        ? injected.cwd()
+        : (injected.cwd ?? process.cwd())
+    const token = resolveToken({
+      env,
+      serverUrl: options.serverUrl,
+      apiUrl: options.apiUrl,
+      graphqlUrl: options.graphqlUrl,
+      token: options.token,
+    })
+    const adapter = adapterFactory({
+      token,
+      serverUrl: options.serverUrl,
+      apiUrl: options.apiUrl,
+      graphqlUrl: options.graphqlUrl,
+      logger,
+      env,
+    })
+    const branch =
+      options.to ?? (await defaultBranch(adapter, options.repository))
+    const validatedConfig = await loadConfig({
+      target: options.config,
+      repository: options.repository,
+      ref: branch,
+      cwd,
+      reader: adapter,
+      logger,
+      readLocalFile,
+    })
+    const inputOverrides: CommonConfig = {
+      ...(options.to !== undefined ? { commitish: options.to } : {}),
+      ...(options.prerelease !== undefined
+        ? { prerelease: options.prerelease }
+        : {}),
+      ...(options.latest !== undefined ? { latest: options.latest } : {}),
+    }
+    const config = mergeInputAndConfig({
+      config: validatedConfig,
+      input: inputOverrides,
+      defaultCommitish: branch,
+      logger,
+    })
+    const input: ReleaseInput = {
+      publish: options.publish,
+      dryRun: options.dryRun,
+      ...(options.from !== undefined ? { from: options.from } : {}),
+      ...(options.name !== undefined ? { name: options.name } : {}),
+      ...(options.tag !== undefined ? { tag: options.tag } : {}),
+      ...(options.releaseVersion !== undefined
+        ? { version: options.releaseVersion }
+        : {}),
+    }
+    const result = await draft({
+      adapter,
+      config,
+      input,
+      logger,
+      repository: options.repository,
+    })
+    if (options.json) {
+      writeLine(stdout, JSON.stringify(resultDocument(result)))
+    } else {
+      const document = resultDocument(result)
+      writeLine(
+        stderr,
+        `${document.action}: ${document.tag_name}${document.html_url ? ` (${document.html_url})` : ''}`,
+      )
+    }
+    return 0
+  } catch (error) {
+    writeLine(stderr, `error: ${errorMessage(error)}`)
+    if (error instanceof UsageError) {
+      stderr.write(USAGE)
+      return 2
+    }
+    return 1
+  }
+}
