@@ -68,6 +68,10 @@ export default defineConfig({
                   workspaceRoot,
                   'src/autolabeler/index.ts',
                 ),
+                'check-pr-title/index': resolve(
+                  workspaceRoot,
+                  'src/check-pr-title/index.ts',
+                ),
                 config: resolve(workspaceRoot, 'src/config.ts'),
               }
             : resolve(workspaceRoot, 'src/index.ts'),

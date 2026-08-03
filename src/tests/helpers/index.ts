@@ -1,1 +1,1 @@
-export { runAutolabeler, runDrafter } from './runners.ts'
+export { runAutolabeler, runCheckPrTitle, runDrafter } from './runners.ts'

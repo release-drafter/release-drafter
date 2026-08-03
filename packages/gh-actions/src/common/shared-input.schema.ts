@@ -1,12 +1,11 @@
 import process from 'node:process'
 import { boolean, object, string, stringbool } from 'zod'
 
-/** Inputs shared by the Drafter and Autolabeler Actions. */
-export const sharedInputSchema = object({
+/** Read-only token input shared by GitHub Actions. */
+export const tokenInputSchema = object({
   token: string()
     .min(1)
     .default(() => process.env.GITHUB_TOKEN || ''),
-  'dry-run': stringbool().or(boolean()).optional(),
 }).superRefine((data, context) => {
   if (data.token && !process.env.GITHUB_TOKEN)
     process.env.GITHUB_TOKEN = data.token
@@ -18,3 +17,10 @@ export const sharedInputSchema = object({
     })
   }
 })
+
+/** Inputs shared by the Drafter and Autolabeler Actions. */
+export const sharedInputSchema = tokenInputSchema.and(
+  object({
+    'dry-run': stringbool().or(boolean()).optional(),
+  }),
+)

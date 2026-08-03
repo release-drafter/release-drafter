@@ -5,6 +5,7 @@ import type { composeConfigGet } from '#gh-actions/common/config/index.ts'
 import { mocks } from './hoisted.ts'
 
 export type AvailableConfigs =
+  | 'config-check-pr-title'
   | 'config-autolabeler'
   | 'config-autolabeler-no-match'
   | 'config-name-input'

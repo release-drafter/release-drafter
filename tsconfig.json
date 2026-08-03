@@ -41,6 +41,9 @@
       "@release-drafter/gh-actions/autolabeler": [
         "./packages/gh-actions/src/autolabeler/index.ts"
       ],
+      "@release-drafter/gh-actions/check-pr-title": [
+        "./packages/gh-actions/src/check-pr-title/index.ts"
+      ],
       "@release-drafter/gh-actions/config": [
         "./packages/gh-actions/src/config.ts"
       ]

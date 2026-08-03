@@ -22,6 +22,10 @@
       "types": "./dist/autolabeler/index.d.ts",
       "import": "./dist/autolabeler/index.js"
     },
+    "./check-pr-title": {
+      "types": "./dist/check-pr-title/index.d.ts",
+      "import": "./dist/check-pr-title/index.js"
+    },
     "./config": {
       "types": "./dist/config.d.ts",
       "import": "./dist/config.js"

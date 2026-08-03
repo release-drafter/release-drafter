@@ -20,6 +20,8 @@
         "src/drafter/run.ts",
         "src/autolabeler/index.ts",
         "src/autolabeler/run.ts",
+        "src/check-pr-title/index.ts",
+        "src/check-pr-title/run.ts",
       ],
       "project": ["src/**/*.{ts,tsx}"],
       "vite": false,
