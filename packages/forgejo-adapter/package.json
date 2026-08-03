@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/forgejo-adapter",
   "version": "7.7.0",
-  "description": "Forgejo adapter workspace package.",
+  "description": "Private Forgejo REST forge adapter for Release Drafter core.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -21,8 +21,16 @@
   },
   "scripts": {
     "build": "vite build --config ../../vite.workspace.config.ts",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@release-drafter/core": "*",
+    "@release-drafter/rest-adapter": "*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
 }
