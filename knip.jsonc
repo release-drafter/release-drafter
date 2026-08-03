@@ -12,5 +12,18 @@
       "project": ["src/**/*.{ts,tsx}"],
       "vite": false,
     },
+    "packages/release-drafter": {
+      "entry": ["src/index.ts", "src/cli.ts"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": [
+        "@octokit/core",
+        "@octokit/plugin-paginate-graphql",
+        "@octokit/plugin-paginate-rest",
+        "@octokit/plugin-rest-endpoint-methods",
+        "@octokit/plugin-retry",
+        "undici",
+      ],
+      "vite": false,
+    },
   },
 }
