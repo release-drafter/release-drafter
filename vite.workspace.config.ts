@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { dirname, resolve } from 'node:path'
 import { defaultClientConditions, defaultServerConditions } from 'vite'
@@ -8,9 +9,26 @@ const packageJson = process.env.npm_package_json
 if (!packageJson)
   throw new Error('npm_package_json is required to build a workspace')
 const workspaceRoot = dirname(packageJson)
+const workspaceManifest = JSON.parse(readFileSync(packageJson, 'utf8')) as {
+  version?: unknown
+  dependencies?: Record<string, unknown>
+}
+const workspaceVersion = workspaceManifest.version
+if (typeof workspaceVersion !== 'string')
+  throw new Error('workspace package version is required')
 const packageName = process.env.npm_package_name
 if (!packageName) throw new Error('npm_package_name is required')
+const publicFacadeRuntimeDependencies = new Set(
+  Object.keys(workspaceManifest.dependencies ?? {}),
+)
+
 export default defineConfig({
+  define:
+    packageName === 'release-drafter'
+      ? {
+          __RELEASE_DRAFTER_VERSION__: JSON.stringify(workspaceVersion),
+        }
+      : undefined,
   resolve: {
     conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
   },
@@ -24,9 +42,18 @@ export default defineConfig({
   build: {
     emptyOutDir: true,
     lib: {
-      entry: resolve(workspaceRoot, 'src/index.ts'),
+      entry:
+        packageName === 'release-drafter'
+          ? {
+              index: resolve(workspaceRoot, 'src/index.ts'),
+              cli: resolve(workspaceRoot, 'src/cli.ts'),
+            }
+          : resolve(workspaceRoot, 'src/index.ts'),
       formats: ['es'],
-      fileName: 'index',
+      fileName:
+        packageName === 'release-drafter'
+          ? (_format, entryName) => `${entryName}.js`
+          : 'index',
     },
     minify: false,
     outDir: resolve(workspaceRoot, 'dist'),
@@ -35,7 +62,19 @@ export default defineConfig({
       // Workspace packages target Node, not Vite's browser compatibility layer.
       // @ts-expect-error remove this when Vite's rolldown platform option is stable
       platform: 'node',
-      external: (id) => id.startsWith('node:') || builtinModules.includes(id),
+      external: (id) =>
+        id.startsWith('node:') ||
+        builtinModules.includes(id) ||
+        (packageName === 'release-drafter' &&
+          publicFacadeRuntimeDependencies.has(id)),
+      output:
+        packageName === 'release-drafter'
+          ? {
+              chunkFileNames: 'chunks/[name]-[hash].js',
+              codeSplitting: true,
+              comments: false,
+            }
+          : undefined,
     },
   },
   test: {
@@ -52,7 +91,11 @@ export default defineConfig({
     {
       name: 'workspace-declarations',
       async closeBundle() {
-        if (packageName === 'release-drafter') return
+        if (packageName === 'release-drafter') {
+          const { chmod } = await import('node:fs/promises')
+          await chmod(resolve(workspaceRoot, 'dist/cli.js'), 0o755)
+          return
+        }
         const constantName = `${packageName
           .replace('@release-drafter/', '')
           .replaceAll('-', '_')
