@@ -1,0 +1,4 @@
+autolabeler:
+  - label: 'documentation'
+    files:
+      - '*.txt'
