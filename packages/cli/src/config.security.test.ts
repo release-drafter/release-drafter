@@ -4,6 +4,7 @@ import {
   type LoadConfigOptions,
   loadConfig,
 } from './config.js'
+import { LocalConfigFileBoundaryError } from './local-config-file.js'
 
 const repository = {
   owner: 'acme',
@@ -29,56 +30,68 @@ const options = (
     getRepositoryConfig: vi.fn(async () => 'template: safe\n'),
   },
   logger: logger(),
-  realpath: vi.fn(async (path: string) => path),
   ...overrides,
 })
 
 describe('config loader security', () => {
   it('reads a local config through the injected canonical path boundary', async () => {
-    const readFile = vi.fn(async () => 'template: local\n')
-    const realpath = vi.fn(async (path: string) => {
-      if (path === '/checkout-link') return '/real/checkout'
-      if (path === '/checkout-link/configs/release.yml') {
-        return '/real/checkout/configs/release.yml'
-      }
-      throw new Error(`Unexpected path: ${path}`)
-    })
+    const readLocalFile = vi.fn(async () => ({
+      contents: 'template: local\n',
+      canonicalCwd: '/real/checkout',
+      canonicalPath: '/real/checkout/configs/release.yml',
+    }))
 
     const config = await loadConfig(
       options({
         target: 'file:configs/release.yml',
         cwd: '/checkout-link',
-        readFile,
-        realpath,
+        readLocalFile,
       }),
     )
 
     expect(config.template).toBe('local')
-    expect(realpath).toHaveBeenCalledWith('/checkout-link')
-    expect(realpath).toHaveBeenCalledWith('/checkout-link/configs/release.yml')
-    expect(readFile).toHaveBeenCalledWith('/real/checkout/configs/release.yml')
+    expect(readLocalFile).toHaveBeenCalledWith(
+      '/checkout-link/configs/release.yml',
+      '/checkout-link',
+    )
   })
 
   it('rejects a local symlink target whose canonical path escapes cwd', async () => {
-    const readFile = vi.fn(async () => 'template: escaped\n')
-    const realpath = vi.fn(async (path: string) => {
-      if (path === '/checkout') return '/real/checkout'
-      if (path === '/checkout/configs/release.yml') {
-        return '/outside/release.yml'
-      }
-      throw new Error(`Unexpected path: ${path}`)
+    const readLocalFile = vi.fn(async () => {
+      throw new LocalConfigFileBoundaryError(
+        'Local config path must remain within cwd.',
+        'outside-cwd',
+      )
     })
 
     await expect(
       loadConfig(
         options({
           target: 'file:configs/release.yml',
-          readFile,
-          realpath,
+          readLocalFile,
         }),
       ),
     ).rejects.toThrow('Local config path must remain within cwd')
-    expect(readFile).not.toHaveBeenCalled()
+    expect(readLocalFile).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports a local path replacement detected by the atomic reader', async () => {
+    const readLocalFile = vi.fn(async () => {
+      throw new LocalConfigFileBoundaryError(
+        'Local config path changed while it was being opened.',
+        'changed',
+      )
+    })
+
+    await expect(
+      loadConfig(
+        options({
+          target: 'file:configs/release.yml',
+          readLocalFile,
+        }),
+      ),
+    ).rejects.toThrow('Local config path changed while it was being opened')
+    expect(readLocalFile).toHaveBeenCalledTimes(1)
   })
 
   it.each([
