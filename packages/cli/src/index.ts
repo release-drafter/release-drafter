@@ -1,7 +1,8 @@
 import { execFile as nodeExecFile } from 'node:child_process'
 import {
-  readFile as nodeReadFile,
+  open as nodeOpen,
   realpath as nodeRealpath,
+  stat as nodeStat,
 } from 'node:fs/promises'
 import process from 'node:process'
 import { parseArgs } from 'node:util'
@@ -21,6 +22,10 @@ import {
   type GitHubAdapterOptions,
 } from '@release-drafter/github-adapter'
 import { loadConfig } from './config.ts'
+import {
+  createLocalConfigFileReader,
+  type LocalConfigFileReader,
+} from './local-config-file.js'
 
 export const CLI_PACKAGE_NAME = '@release-drafter/cli' as const
 export const CLI_VERSION = '7.7.0'
@@ -58,11 +63,7 @@ export type CliDependencies = {
   stderr?: WritableStream
   env?: NodeJS.ProcessEnv
   cwd?: string | (() => string)
-  readFile?: (
-    path: string,
-    encoding: BufferEncoding,
-  ) => Promise<string> | string
-  realpath?: (path: string) => Promise<string> | string
+  readLocalFile?: LocalConfigFileReader
   execFile?: ExecFile
   adapterFactory?: (options: GitHubAdapterOptions) => CliAdapter
   draft?: DraftFunction
@@ -384,13 +385,14 @@ const defaultBranch = async (
 const resultDocument = (result: DraftReleaseResult) => {
   const release = result.release ?? result.plan.draftRelease
   const payload = result.releasePayload
+  const dryRun = result.plan.action === 'dry-run'
   return {
     action: result.plan.action,
     ...(release?.id !== undefined ? { id: String(release.id) } : {}),
     ...(release?.url ? { html_url: release.url } : {}),
     ...(release?.uploadUrl ? { upload_url: release.uploadUrl } : {}),
-    tag_name: release?.tagName ?? payload.tag,
-    name: release?.name ?? payload.name,
+    tag_name: dryRun ? payload.tag : (release?.tagName ?? payload.tag),
+    name: dryRun ? payload.name : (release?.name ?? payload.name),
     ...(payload.resolvedVersion
       ? { resolved_version: payload.resolvedVersion }
       : {}),
@@ -404,7 +406,7 @@ const resultDocument = (result: DraftReleaseResult) => {
     draft: payload.draft,
     prerelease: payload.prerelease,
     latest: payload.makeLatest,
-    dry_run: result.plan.action === 'dry-run',
+    dry_run: dryRun,
     body: payload.body,
   }
 }
@@ -469,10 +471,13 @@ export async function runCli(
     typeof injected.cwd === 'function'
       ? injected.cwd()
       : (injected.cwd ?? process.cwd())
-  const readFile = injected.readFile ?? nodeReadFile
-  const realpath =
-    injected.realpath ??
-    (injected.readFile ? async (path: string) => path : nodeRealpath)
+  const readLocalFile =
+    injected.readLocalFile ??
+    createLocalConfigFileReader({
+      open: nodeOpen,
+      realpath: nodeRealpath,
+      stat: nodeStat,
+    })
   const execFile = injected.execFile ?? defaultExecFile
   const adapterFactory =
     injected.adapterFactory ??
@@ -503,8 +508,7 @@ export async function runCli(
       cwd,
       reader: adapter,
       logger,
-      readFile: async (path) => readFile(path, 'utf8'),
-      realpath,
+      readLocalFile,
     })
     const inputOverrides: CommonConfig = {
       ...(options.to !== undefined ? { commitish: options.to } : {}),
