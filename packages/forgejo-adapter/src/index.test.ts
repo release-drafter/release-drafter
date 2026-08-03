@@ -24,6 +24,23 @@ describe('Forgejo profile', () => {
     expect(forgejoProfile.response.pullRequestList.authorParameter).toBe(
       'poster',
     )
+    expect({
+      commitPull: forgejoProfile.endpoints.commitPull(repository, 'a/b'),
+      pullFiles: forgejoProfile.endpoints.pullFiles(repository, 7),
+      pulls: forgejoProfile.endpoints.pulls(repository),
+      gitCommit: forgejoProfile.endpoints.gitCommit(repository, 'refs/tags/v1'),
+      pull: forgejoProfile.endpoints.pull(repository, 7),
+      releases: forgejoProfile.endpoints.releases(repository),
+      release: forgejoProfile.endpoints.release(repository, 9),
+    }).toEqual({
+      commitPull: '/repos/owner/repo/commits/a%2Fb/pull',
+      pullFiles: '/repos/owner/repo/pulls/7/files',
+      pulls: '/repos/owner/repo/pulls',
+      gitCommit: '/repos/owner/repo/git/commits/refs%2Ftags%2Fv1',
+      pull: '/repos/owner/repo/pulls/7',
+      releases: '/repos/owner/repo/releases',
+      release: '/repos/owner/repo/releases/9',
+    })
     await expect(
       adapter.findChanges({
         repository,

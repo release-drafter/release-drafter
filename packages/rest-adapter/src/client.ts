@@ -10,11 +10,11 @@ export const defaultRestAdapterLimits: RestAdapterLimits = {
   timeoutMs: 10_000,
   maxResponseBytes: 2 * 1024 * 1024,
   maxComparisonBytes: 10 * 1024 * 1024,
-  maxComparisonCommits: 5_000,
+  maxComparisonCommits: 499,
   maxPages: 20,
   pageSize: 50,
   maxItemsPerList: 1_000,
-  maxChangedFiles: 5_000,
+  maxChangedFiles: 1_000,
   maxRequestsPerOperation: 500,
   concurrency: 4,
 }
@@ -25,10 +25,17 @@ export class RequestBudget {
   constructor(private readonly maximum: number) {}
 
   take() {
+    this.ensureAvailable(1)
     this.used += 1
-    if (this.used > this.maximum) {
+  }
+
+  ensureAvailable(requests: number) {
+    if (!Number.isSafeInteger(requests) || requests < 0) {
+      throw new Error('REST request reservation must be a non-negative integer')
+    }
+    if (this.used + requests > this.maximum) {
       throw new Error(
-        `REST request limit of ${this.maximum} was exceeded for one operation`,
+        `REST request limit of ${this.maximum} cannot satisfy ${requests} more requests for one operation`,
       )
     }
   }
@@ -169,7 +176,7 @@ export class RestClient {
         return undefined
       }
       if (!response.ok) {
-        const safeBody = redact(text.slice(0, 500), this.token)
+        const safeBody = redact(text, this.token).slice(0, 500)
         throw new Error(
           `REST ${method} request failed with ${response.status}${safeBody ? `: ${safeBody}` : ''}`,
         )
@@ -202,10 +209,18 @@ export class RestClient {
     budget: RequestBudget
     query?: Record<string, string | number | boolean | undefined>
     maxItems?: number
+    pageSize?: number
   }): Promise<T[]> {
     const maximum = params.maxItems ?? this.limits.maxItemsPerList
+    const pageSize = params.pageSize ?? this.limits.pageSize
+    if (!Number.isSafeInteger(pageSize) || pageSize <= 0) {
+      throw new Error(
+        'REST pagination page size must be a positive safe integer',
+      )
+    }
     const items: T[] = []
     const pagination = this.profile.response.pagination
+    let advertisedTotal: number | undefined
     for (let page = 1; page <= this.limits.maxPages; page += 1) {
       const response = await this.requestJson<T[]>({
         repository: params.repository,
@@ -214,7 +229,7 @@ export class RestClient {
         query: {
           ...params.query,
           [pagination.pageParameter]: page,
-          [pagination.limitParameter]: this.limits.pageSize,
+          [pagination.limitParameter]: pageSize,
         },
       })
       if (!response || !Array.isArray(response.data)) {
@@ -225,22 +240,32 @@ export class RestClient {
       }
       items.push(...response.data)
       const totalHeader = response.headers.get(pagination.totalCountHeader)
-      const total = totalHeader === null ? undefined : Number(totalHeader)
-      if (
-        typeof total === 'number' &&
-        Number.isSafeInteger(total) &&
-        total > maximum
-      ) {
-        throw new Error(
-          `REST pagination advertised ${total} items, above the ${maximum} item limit`,
-        )
+      const normalizedTotal = totalHeader?.trim()
+      const total =
+        normalizedTotal && /^\d+$/.test(normalizedTotal)
+          ? Number(normalizedTotal)
+          : undefined
+      if (Number.isSafeInteger(total) && (total as number) >= 0) {
+        if (advertisedTotal !== undefined && advertisedTotal !== total) {
+          throw new Error(
+            `REST pagination total changed from ${advertisedTotal} to ${total}`,
+          )
+        }
+        advertisedTotal = total
+        if ((total as number) > maximum) {
+          throw new Error(
+            `REST pagination advertised ${total} items, above the ${maximum} item limit`,
+          )
+        }
       }
-      if (
-        response.data.length < this.limits.pageSize ||
-        (typeof total === 'number' &&
-          Number.isSafeInteger(total) &&
-          items.length >= total)
-      ) {
+      if (advertisedTotal !== undefined) {
+        if (items.length > advertisedTotal) {
+          throw new Error(
+            `REST pagination received ${items.length} items, above the advertised total of ${advertisedTotal}`,
+          )
+        }
+        if (items.length >= advertisedTotal) return items
+      } else if (response.data.length < pageSize) {
         return items
       }
     }
@@ -255,6 +280,9 @@ export const mapConcurrent = async <Input, Output>(
   concurrency: number,
   callback: (input: Input, index: number) => Promise<Output>,
 ): Promise<Output[]> => {
+  if (!Number.isSafeInteger(concurrency) || concurrency <= 0) {
+    throw new Error('REST concurrency must be a positive safe integer')
+  }
   const outputs = new Array<Output>(inputs.length)
   let next = 0
   const workers = Array.from(
