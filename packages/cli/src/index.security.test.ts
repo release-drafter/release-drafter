@@ -7,8 +7,16 @@ import type {
   WritableStream,
 } from './index.ts'
 import { runCli } from './index.ts'
+import type { LocalConfigFileReader } from './local-config-file.js'
 
 const CONFIG = 'template: "$CHANGES"\n'
+
+const localConfigReader = (contents = CONFIG): LocalConfigFileReader =>
+  vi.fn(async (path, cwd) => ({
+    contents,
+    canonicalCwd: cwd,
+    canonicalPath: path,
+  }))
 
 const capture = () => {
   const chunks: string[] = []
@@ -69,7 +77,7 @@ const invoke = async (
     stderr: stderr.stream,
     env: { GITHUB_TOKEN: 'token' },
     cwd: '/workspace',
-    readFile: vi.fn(async () => CONFIG),
+    readLocalFile: localConfigReader(),
     execFile,
     adapterFactory,
     draft,
@@ -126,25 +134,22 @@ describe('CLI runtime security', () => {
     })
   })
 
-  it('routes canonicalization through the injected realpath boundary', async () => {
-    const readFile = vi.fn(async () => '{"template":"local"}')
-    const realpath = vi.fn(async (path: string) =>
-      path === '/workspace'
-        ? '/canonical/workspace'
-        : '/canonical/workspace/configs/release.json',
-    )
+  it('routes local configs through the injected atomic reader boundary', async () => {
+    const readLocalFile = vi.fn(async () => ({
+      contents: '{"template":"local"}',
+      canonicalCwd: '/canonical/workspace',
+      canonicalPath: '/canonical/workspace/configs/release.json',
+    }))
 
     const result = await invoke(
       ['acme/widgets', '--to', 'main', '--config', 'file:configs/release.json'],
-      { readFile, realpath },
+      { readLocalFile },
     )
 
     expect(result.code).toBe(0)
-    expect(realpath).toHaveBeenCalledWith('/workspace')
-    expect(realpath).toHaveBeenCalledWith('/workspace/configs/release.json')
-    expect(readFile).toHaveBeenCalledWith(
-      '/canonical/workspace/configs/release.json',
-      'utf8',
+    expect(readLocalFile).toHaveBeenCalledWith(
+      '/workspace/configs/release.json',
+      '/workspace',
     )
   })
 
