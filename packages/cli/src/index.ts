@@ -311,13 +311,30 @@ const parseCommandLine = (argv: readonly string[]) => {
 const resolveToken = (params: {
   env: NodeJS.ProcessEnv
   serverUrl: string
+  apiUrl?: string
+  graphqlUrl?: string
   token?: string
 }): string => {
   const explicitToken = params.token?.trim()
   if (explicitToken) return explicitToken
 
-  const isGitHubDotCom =
-    new URL(params.serverUrl).hostname.toLowerCase() === 'github.com'
+  const server = new URL(params.serverUrl)
+  const isGitHubDotCom = server.origin.toLowerCase() === 'https://github.com'
+  const expectedEndpointOrigin = isGitHubDotCom
+    ? 'https://api.github.com'
+    : server.origin.toLowerCase()
+  const endpointsMatchCredentialOrigin = [params.apiUrl, params.graphqlUrl]
+    .filter((endpoint): endpoint is string => endpoint !== undefined)
+    .every(
+      (endpoint) =>
+        new URL(endpoint).origin.toLowerCase() === expectedEndpointOrigin,
+    )
+  if (!endpointsMatchCredentialOrigin) {
+    throw new UsageError(
+      'Automatic environment credentials cannot be used with endpoints on a different origin. Pass --token to authorize the custom endpoints explicitly.',
+    )
+  }
+
   const environmentToken = isGitHubDotCom
     ? params.env.GITHUB_TOKEN?.trim() || params.env.GH_TOKEN?.trim()
     : params.env.GH_ENTERPRISE_TOKEN?.trim() ||
@@ -450,6 +467,8 @@ export async function runCli(
     const token = resolveToken({
       env,
       serverUrl: options.serverUrl,
+      apiUrl: options.apiUrl,
+      graphqlUrl: options.graphqlUrl,
       token: options.token,
     })
     const adapter = adapterFactory({
