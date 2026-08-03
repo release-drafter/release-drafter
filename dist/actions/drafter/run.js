@@ -1,4 +1,5 @@
-import { S as setOutput, _ as context, a as getRepository, b as info, d as commonConfigSchema, h as stringbool, i as getGitHubAdapter, m as string, n as sharedInputSchema, o as draftRelease, p as object, r as actionLogger, s as mergeInputAndConfig, t as composeConfigGet, u as configSchema, x as setFailed, y as getInput } from "../../chunks/config.js";
+import { C as context, D as setFailed, E as info, O as setOutput, T as getInput, _ as string, a as getGitHubAdapter, c as mergeInputAndConfig, f as commonConfigSchema, g as object, i as actionLogger, n as sharedInputSchema, o as getRepository, s as draftRelease, v as stringbool } from "../../chunks/config.js";
+import { t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
 var actionInputSchema = object({
 	"config-name": string().optional().default("release-drafter.yml"),
 	/** Ref, tag, branch, or commit SHA used only as the change comparison base. */
@@ -35,12 +36,7 @@ var getActionInput = () => {
 //#endregion
 //#region packages/gh-actions/src/drafter/get-config.ts
 var getConfig = async (configName, token) => {
-	const { config, contexts } = await composeConfigGet(configName, context, token);
-	contexts.forEach(({ filepath, ref, repo, scheme }) => {
-		const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ""}`;
-		info(`Config fetched ${scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`}.`);
-	});
-	return configSchema.parse(config);
+	return getReleaseDrafterConfig(configName, context, token);
 };
 //#endregion
 //#region packages/gh-actions/src/drafter/set-action-output.ts

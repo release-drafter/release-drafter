@@ -52548,11 +52548,8 @@ var getGitHubAdapterOptions = (token, octokit) => ({
 var getGitHubAdapter = (token, octokit, factory = createGitHubAdapter) => factory(getGitHubAdapterOptions(token, octokit));
 //#endregion
 //#region packages/gh-actions/src/common/shared-input.schema.ts
-/** Inputs shared by the Drafter and Autolabeler Actions. */
-var sharedInputSchema = object({
-	token: string$1().min(1).default(() => process$1.env.GITHUB_TOKEN || ""),
-	"dry-run": stringbool().or(boolean()).optional()
-}).superRefine((data, context) => {
+/** Read-only token input shared by GitHub Actions. */
+var tokenInputSchema = object({ token: string$1().min(1).default(() => process$1.env.GITHUB_TOKEN || "") }).superRefine((data, context) => {
 	if (data.token && !process$1.env.GITHUB_TOKEN) process$1.env.GITHUB_TOKEN = data.token;
 	if (!process$1.env.GITHUB_TOKEN) context.addIssue({
 		code: "custom",
@@ -52560,6 +52557,8 @@ var sharedInputSchema = object({
 		path: ["token"]
 	});
 });
+/** Inputs shared by the Drafter and Autolabeler Actions. */
+var sharedInputSchema = tokenInputSchema.and(object({ "dry-run": stringbool().or(boolean()).optional() }));
 //#endregion
 //#region node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
@@ -58581,4 +58580,4 @@ async function composeConfigGet(configFilename, currentContext, token) {
 	return result;
 }
 //#endregion
-export { __toESM as C, setOutput as S, context as _, getRepository as a, info as b, require_lib as c, commonConfigSchema as d, array as f, require_ignore as g, stringbool as h, getGitHubAdapter as i, escapeStringRegexp as l, string$1 as m, sharedInputSchema as n, draftRelease as o, object as p, actionLogger as r, mergeInputAndConfig as s, composeConfigGet as t, configSchema as u, core_exports as v, setFailed as x, getInput as y };
+export { context as C, setFailed as D, info as E, setOutput as O, require_ignore as S, getInput as T, string$1 as _, getGitHubAdapter as a, evaluateCategories as b, mergeInputAndConfig as c, configSchema as d, commonConfigSchema as f, object as g, number as h, actionLogger as i, __toESM as k, require_lib as l, array as m, sharedInputSchema as n, getRepository as o, _enum as p, tokenInputSchema as r, draftRelease as s, composeConfigGet as t, escapeStringRegexp as u, stringbool as v, core_exports as w, needsPullRequestChangedFiles as x, union as y };

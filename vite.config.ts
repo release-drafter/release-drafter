@@ -46,6 +46,8 @@ export default defineConfig({
       input: {
         'actions/drafter/run': 'packages/gh-actions/src/drafter/run.ts',
         'actions/autolabeler/run': 'packages/gh-actions/src/autolabeler/run.ts',
+        'actions/check-pr-title/run':
+          'packages/gh-actions/src/check-pr-title/run.ts',
       },
       output: {
         format: 'es',

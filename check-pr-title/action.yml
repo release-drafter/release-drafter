@@ -1,0 +1,22 @@
+name: 'Release Drafter - Check PR Title'
+description: 'Checks whether a pull request title matches configured conventional categories.'
+author: release-drafter
+branding:
+  icon: check-circle
+  color: orange
+runs:
+  using: node24
+  main: ../dist/actions/check-pr-title/run.js
+inputs:
+  config-name:
+    description: |
+      The Release Drafter config file under `.github` to use.
+    required: false
+    default: 'release-drafter.yml'
+  token:
+    description: >
+      Access token used to read configuration and pull request files. Defaults to
+      github.token.
+    default: ${{ github.token }}
+
+outputs: {}

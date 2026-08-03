@@ -58,6 +58,13 @@ See the [`release-drafter` package README](./packages/release-drafter/README.md)
 for installation instructions, the complete option reference, config targets,
 JSON output, and exit codes.
 
+## Check pull request titles
+
+The read-only Check PR Title action validates pull request titles using the
+`when.conventional` conditions already defined in Release Drafter categories.
+See [`check-pr-title/README.md`](./check-pr-title/README.md) for the workflow,
+permissions, supported events, and matching behavior.
+
 ## Configuration
 
 The action requires a configuration file. Default location is
