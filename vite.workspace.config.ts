@@ -22,6 +22,24 @@ const bundlesGitHubActions = packageName === '@release-drafter/gh-actions'
 const publicFacadeRuntimeDependencies = new Set(
   Object.keys(workspaceManifest.dependencies ?? {}),
 )
+const adapterWorkspaceAliases =
+  packageName === '@release-drafter/rest-adapter'
+    ? {
+        '@release-drafter/core': resolve(workspaceRoot, '../core/src/index.ts'),
+      }
+    : packageName === '@release-drafter/gitea-adapter' ||
+        packageName === '@release-drafter/forgejo-adapter'
+      ? {
+          '@release-drafter/core': resolve(
+            workspaceRoot,
+            '../core/src/index.ts',
+          ),
+          '@release-drafter/rest-adapter': resolve(
+            workspaceRoot,
+            '../rest-adapter/src/index.ts',
+          ),
+        }
+      : undefined
 const workspaceAliases = bundlesCliRuntime
   ? {
       '@release-drafter/core': resolve(workspaceRoot, '../core/src/index.ts'),
@@ -39,7 +57,7 @@ const workspaceAliases = bundlesCliRuntime
           }
         : {}),
     }
-  : undefined
+  : adapterWorkspaceAliases
 
 export default defineConfig({
   define:
