@@ -9,15 +9,15 @@
 import nock from 'nock'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import type * as z from 'zod'
-import type { sharedInputSchema } from '#src/common/shared-input.schema.ts'
 import { mocks } from '#tests/mocks/index.ts'
+import type { sharedInputSchema } from '../../packages/gh-actions/src/common/shared-input.schema.ts'
 
 /**
  * The call to vi.mock is hoisted, so it doesn't matter where you call it.
  * @see https://vitest.dev/api/vi.html#vi-mock
  */
 vi.mock(
-  import('#src/common/config/index.ts'),
+  import('../../packages/gh-actions/src/common/config/index.ts'),
   (await import('#tests/mocks/index.ts')).mockedConfigModule,
 )
 /**

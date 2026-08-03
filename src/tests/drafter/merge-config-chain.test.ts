@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   configFileSchema,
   extendsDeclarationSchema,
-} from '#src/common/config/extends.schema.ts'
-import { mergeConfigChain } from '#src/common/config/merge-config-chain.ts'
-import type { ConfigTarget } from '#src/common/config/parse-config-target.ts'
+} from '#gh-actions/common/config/extends.schema.ts'
+import { mergeConfigChain } from '#gh-actions/common/config/merge-config-chain.ts'
+import type { ConfigTarget } from '#gh-actions/common/config/parse-config-target.ts'
 
 const target = (filepath: string): ConfigTarget => ({
   scheme: 'github',

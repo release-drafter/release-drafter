@@ -1,6 +1,7 @@
+// biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
+import type { actionInputSchema } from '@release-drafter/gh-actions/drafter'
 import { expect, vi } from 'vitest'
 import type * as z from 'zod'
-import type { actionInputSchema } from '#src/actions/drafter/config/index.ts'
 
 /**
  * Mocking GitHub Action inputs for testing.

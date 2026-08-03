@@ -715,6 +715,7 @@ specified in your `release-drafter.yml` config.
 | `tag`                   | The tag name to be associated with the GitHub release that's created or updated. This will override any `tag-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                         |
 | `filter-by-range`       | Filter releases whose tag names satisfy a SemVer range.                                                                                                                                                                                                                                                                                                            |
 | `version`               | The version to be associated with the GitHub release that's created or updated. This will override any version calculated by the release-drafter.                                                                                                                                                                                                                  |
+| `from`                  | A ref, tag, branch, or commit SHA used only as the baseline when comparing changes. It does not select the release version or change which existing draft release is updated.                                                                                                                                                                                      |
 | `publish`               | A boolean indicating whether the release being created or updated should be immediately published. This may be useful if the output of a previous workflow step determines that a new version of your project has been (or will be) released, as with [`salsify/action-detect-and-tag-new-version`](https://github.com/salsify/action-detect-and-tag-new-version). |
 | `prerelease`            | Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.                                                                                                                                                                                                                                                             |
 | `prerelease-identifier` | A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` when both options come from the same config location; explicit action inputs still take precedence. Default `''`.                                                                                                           |
@@ -745,12 +746,11 @@ inputs to other Actions in the workflow
 
 ## GitHub Enterprise Server (GHES)
 
-Release Drafter creates its GitHub client with
-[`@actions/github.getOctokit()`](https://github.com/actions/toolkit/tree/main/packages/github#readme).
-In GitHub Actions, that client uses the runtime API base URL from
-`GITHUB_API_URL`, so the same workflow can target GHES without extra
-`github.com`-specific configuration, assuming the required REST and GraphQL APIs
-are available on the instance.
+Release Drafter composes its GitHub client through the private GitHub Actions
+runtime and GitHub adapter. It passes the Action token together with the runtime
+`GITHUB_SERVER_URL`, `GITHUB_API_URL`, and `GITHUB_GRAPHQL_URL` values, so the
+same workflow can target GHES without `github.com`-specific configuration,
+assuming the required REST and GraphQL APIs are available on the instance.
 
 ## Contributing
 

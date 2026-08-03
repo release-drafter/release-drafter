@@ -44,8 +44,8 @@ export default defineConfig({
       platform: 'node',
       external: (id) => id.startsWith('node:') || builtinModules.includes(id),
       input: {
-        'actions/drafter/run': 'src/actions/drafter/run.ts',
-        'actions/autolabeler/run': 'src/actions/autolabeler/run.ts',
+        'actions/drafter/run': 'packages/gh-actions/src/drafter/run.ts',
+        'actions/autolabeler/run': 'packages/gh-actions/src/autolabeler/run.ts',
       },
       output: {
         format: 'es',

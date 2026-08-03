@@ -1,6 +1,6 @@
 import type * as core from '@actions/core'
 import { vi } from 'vitest'
-import type { composeConfigGet } from '#src/common/index.ts'
+import type { composeConfigGet } from '#gh-actions/common/config/index.ts'
 import type { AvailableConfigs } from './config.ts'
 
 const mocks = vi.hoisted(() => {

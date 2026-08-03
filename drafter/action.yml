@@ -37,6 +37,11 @@ inputs:
       The version to be associated with the GitHub release that's created or updated.
       This will override any version calculated by the release-drafter.
     required: false
+  from:
+    description: |
+      A ref, tag, branch, or commit SHA used only as the baseline when comparing changes.
+      This does not select the release version or change which existing draft release is updated.
+    required: false
   publish:
     description: |
       A boolean indicating whether the release being created or updated should be immediately published.
