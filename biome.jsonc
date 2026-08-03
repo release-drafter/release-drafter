@@ -90,6 +90,17 @@
       },
     },
     {
+      // The public facade imports its private build dependency through the workspace package entrypoint.
+      "includes": ["packages/release-drafter/src/index.ts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useImportExtensions": "off",
+          },
+        },
+      },
+    },
+    {
       // Root action sources intentionally import workspace package entrypoints.
       // Biome would otherwise rewrite them to package source files.
       "includes": ["src/actions/**/*.ts"],

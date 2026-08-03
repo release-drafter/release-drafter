@@ -183,6 +183,7 @@ export const collectRuntimeDependencyFailures = (
     const manifest = JSON.parse(
       readFileSync(manifestPath, 'utf8'),
     ) as PackageJson
+    const bundlesPrivateWorkspaces = manifest.name === 'release-drafter'
     const declaredRuntimeDependencies = new Set([
       ...Object.keys(manifest.dependencies ?? {}),
       ...Object.keys(manifest.peerDependencies ?? {}),
@@ -197,6 +198,7 @@ export const collectRuntimeDependencyFailures = (
     )) {
       for (const importedPackage of privateImports(path)) {
         if (
+          !bundlesPrivateWorkspaces &&
           !importedPackage.typeOnly &&
           !declaredRuntimeDependencies.has(importedPackage.packageName) &&
           declaredDevelopmentDependencies.has(importedPackage.packageName)

@@ -200,7 +200,12 @@ describe('workspace foundation', () => {
           type CoreModule = import('@release-drafter/core').Core
         `,
       })
-
+      writeWorkspace({
+        directory: 'release-drafter',
+        name: 'release-drafter',
+        devDependencies: { '@release-drafter/core': 'workspace:*' },
+        source: "import '@release-drafter/core'",
+      })
       expect(collectRuntimeDependencyFailures(fixtureRoot)).toEqual([
         expect.stringContaining(
           '@release-drafter/github-adapter imports private runtime dependency @release-drafter/core from devDependencies',
