@@ -101,15 +101,15 @@ const invoke = async (
   const adapterFactory = vi.fn(() => adapterState.adapter)
   const draft = vi.fn<DraftFunction>(async () => createResult())
   if (overrides.draftResult) draft.mockResolvedValue(overrides.draftResult)
-  const execFile = vi.fn(async () => ({ stdout: 'gh-token\n', stderr: '' }))
-
   const code = await runCli(argv, {
     stdout: stdout.stream,
     stderr: stderr.stream,
-    env: { GITHUB_TOKEN: 'github-token' },
+    env: {
+      GITHUB_TOKEN: 'github-token',
+      GH_ENTERPRISE_TOKEN: 'enterprise-token',
+    },
     cwd: '/workspace',
     readLocalFile: localConfigReader(),
-    execFile,
     adapterFactory,
     draft,
     ...overrides,
@@ -122,7 +122,6 @@ const invoke = async (
     adapter: adapterState.adapter,
     adapterFactory,
     draft,
-    execFile,
   }
 }
 
@@ -150,7 +149,6 @@ describe('usage and informational commands', () => {
     expected,
   }) => {
     const adapterFactory = vi.fn()
-    const execFile = vi.fn()
     const readLocalFile = vi.fn()
     const draft = vi.fn()
     const stdout = capture()
@@ -160,7 +158,6 @@ describe('usage and informational commands', () => {
       stdout: stdout.stream,
       stderr: stderr.stream,
       env: {},
-      execFile,
       adapterFactory,
       readLocalFile,
       draft,
@@ -169,7 +166,6 @@ describe('usage and informational commands', () => {
     expect(code).toBe(0)
     expect(stdout.text()).toContain(expected)
     expect(stderr.text()).toBe('')
-    expect(execFile).not.toHaveBeenCalled()
     expect(adapterFactory).not.toHaveBeenCalled()
     expect(readLocalFile).not.toHaveBeenCalled()
     expect(draft).not.toHaveBeenCalled()
@@ -202,7 +198,6 @@ describe('usage and informational commands', () => {
     expect(result.stderr.text()).toContain('error:')
     expect(result.stderr.text()).toContain('Usage: release-drafter')
     expect(result.adapterFactory).not.toHaveBeenCalled()
-    expect(result.execFile).not.toHaveBeenCalled()
   })
 })
 
@@ -379,7 +374,20 @@ describe('forge and endpoint selection', () => {
 })
 
 describe('authentication and default branch resolution', () => {
-  it('prefers GITHUB_TOKEN over GH_TOKEN and gh', async () => {
+  it('prefers an explicit token over environment tokens', async () => {
+    const result = await invoke(
+      ['acme/widgets', '--to', 'main', '--token', 'explicit-token'],
+      {
+        env: { GITHUB_TOKEN: 'github-first', GH_TOKEN: 'gh-second' },
+      },
+    )
+
+    expect(result.adapterFactory).toHaveBeenCalledWith(
+      expect.objectContaining({ token: 'explicit-token' }),
+    )
+  })
+
+  it('prefers GITHUB_TOKEN over GH_TOKEN for github.com', async () => {
     const result = await invoke(['acme/widgets', '--to', 'main'], {
       env: { GITHUB_TOKEN: 'github-first', GH_TOKEN: 'gh-second' },
     })
@@ -387,7 +395,6 @@ describe('authentication and default branch resolution', () => {
     expect(result.adapterFactory).toHaveBeenCalledWith(
       expect.objectContaining({ token: 'github-first' }),
     )
-    expect(result.execFile).not.toHaveBeenCalled()
   })
 
   it('uses GH_TOKEN when GITHUB_TOKEN is blank', async () => {
@@ -398,38 +405,19 @@ describe('authentication and default branch resolution', () => {
     expect(result.adapterFactory).toHaveBeenCalledWith(
       expect.objectContaining({ token: 'gh-token' }),
     )
-    expect(result.execFile).not.toHaveBeenCalled()
   })
 
-  it('falls back to gh auth token for github.com', async () => {
-    const execFile = vi.fn(async () => ({ stdout: 'cli-token\n', stderr: '' }))
-    const result = await invoke(['acme/widgets', '--to', 'main'], {
-      env: {},
-      execFile,
-    })
+  it('reports a usage error when no github.com token is available', async () => {
+    const result = await invoke(['acme/widgets', '--to', 'main'], { env: {} })
 
-    expect(execFile).toHaveBeenCalledWith(
-      'gh',
-      ['auth', 'token'],
-      expect.objectContaining({ encoding: 'utf8', env: {} }),
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain('Set GITHUB_TOKEN or GH_TOKEN')
+    expect(result.stderr.text()).toContain('pass --token')
+    expect(result.stderr.text()).toContain(
+      'GH_TOKEN="$(gh auth token)" release-drafter ...',
     )
-    expect(result.adapterFactory).toHaveBeenCalledWith(
-      expect.objectContaining({ token: 'cli-token' }),
-    )
-  })
-
-  it('passes the GHES hostname to gh auth token', async () => {
-    const execFile = vi.fn(async () => ({ stdout: 'cli-token\n', stderr: '' }))
-    await invoke(
-      ['acme/widgets', '--to', 'main', '--server-url', 'https://github.corp'],
-      { env: {}, execFile },
-    )
-
-    expect(execFile).toHaveBeenCalledWith(
-      'gh',
-      ['auth', 'token', '--hostname', 'github.corp'],
-      expect.objectContaining({ encoding: 'utf8', env: {} }),
-    )
+    expect(result.stderr.text()).toContain('Usage: release-drafter')
+    expect(result.adapterFactory).not.toHaveBeenCalled()
   })
 
   it('looks up the default branch only when --to is absent', async () => {

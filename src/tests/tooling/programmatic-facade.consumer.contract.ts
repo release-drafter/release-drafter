@@ -77,7 +77,6 @@ describe.sequential('release-drafter packed programmatic facade', () => {
     mkdirSync(packDirectory)
     mkdirSync(consumerDirectory)
 
-    execNpm(['run', 'build', '--workspace', 'release-drafter'])
     const packOutput = execNpm(
       [
         'pack',
