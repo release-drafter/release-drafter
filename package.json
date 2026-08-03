@@ -68,7 +68,7 @@
     "escape-string-regexp": "^5.0.0",
     "graphql": "^17.0.2",
     "regex-parser": "^2.3.1",
-    "semver": "^7.8.5",
+    "verkit": "0.3.1",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
@@ -81,7 +81,6 @@
     "@octokit/webhooks-types": "^7.6.1",
     "@swc/core": "1.15.46",
     "@types/node": "^24.13.3",
-    "@types/semver": "^7.7.1",
     "@vitest/coverage-v8": "^4.1.10",
     "dependency-cruiser": "18.1.0",
     "knip": "6.29.0",

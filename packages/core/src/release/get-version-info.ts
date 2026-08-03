@@ -1,8 +1,10 @@
-import type { ReleaseType } from 'semver'
+import { type IncrementType, normalize } from 'verkit'
 import type { Config } from '../config/config.schema.ts'
 import type { Logger } from '../ports.ts'
 import type { Release, ReleaseInput } from '../types.ts'
 import { VersionDescriptor } from './version-descriptor.ts'
+
+type ReleaseType = Exclude<IncrementType, 'release'>
 
 export const getVersionInfo = (params: {
   lastRelease: Pick<Release, 'tagName' | 'name'> | undefined
@@ -39,7 +41,7 @@ export const getVersionInfo = (params: {
     preReleaseIdentifier: config['prerelease-identifier'],
   })
   logger.info(
-    `Parsed version from last release: ${versionFromLastRelease.version?.format() || 'none'}.`,
+    `Parsed version from last release: ${normalize(versionFromLastRelease.version ?? '') || 'none'}.`,
   )
 
   logger.info(`Coerce and parse versions from input...`)
@@ -52,7 +54,7 @@ export const getVersionInfo = (params: {
     },
   )
   logger.info(
-    `Parsed version from input: ${versionFromInput.version?.format() || 'none'}.`,
+    `Parsed version from input: ${normalize(versionFromInput.version ?? '') || 'none'}.`,
   )
 
   let referenceVersion: VersionDescriptor
@@ -80,7 +82,7 @@ export const getVersionInfo = (params: {
         //    - 1.2.3-beta.1 --(premajor)--> ??????
         if (_localIncrement !== 'prerelease') {
           logger.info(
-            `versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || 'none'}). The version will be incremented as a prerelease instead.`,
+            `versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${normalize(referenceVersion.version ?? '') || 'none'}). The version will be incremented as a prerelease instead.`,
           )
           _localIncrement = 'prerelease'
         }
