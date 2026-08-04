@@ -3,6 +3,20 @@
   "version": "7.7.0",
   "description": "Programmatic API and command-line interface for Release Drafter.",
   "type": "module",
+  "homepage": "https://github.com/release-drafter/release-drafter",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/release-drafter/release-drafter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/release-drafter/release-drafter/issues"
+  },
+  "keywords": [
+    "actions",
+    "release",
+    "release-notes",
+    "release-automation"
+  ],
   "engines": {
     "node": ">=24.0.0"
   },
@@ -11,7 +25,7 @@
     "LICENSE"
   ],
   "bin": {
-    "release-drafter": "./dist/cli.js"
+    "release-drafter": "dist/cli.js"
   },
   "exports": {
     ".": {
