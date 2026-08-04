@@ -29,8 +29,14 @@ The CLI selects credentials for the target host in this order:
 - GitHub.com: `--token`, then `GITHUB_TOKEN`, then `GH_TOKEN`
 - GitHub Enterprise Server: `--token`, then `GH_ENTERPRISE_TOKEN`, then
   `GITHUB_ENTERPRISE_TOKEN`
+- Gitea: `--token`, then `GITEA_TOKEN`
+- Forgejo: `--token`, then `FORGEJO_TOKEN`
+- GitLab: `--token`, then `GITLAB_TOKEN`
 
 GitHub.com token variables are not reused for a GitHub Enterprise Server host.
+Tokens are never reused across forge families. Automatic environment
+credentials are rejected when an explicit API endpoint uses another origin;
+use `--token` to authorize that combination deliberately.
 Release Drafter never invokes `gh`. If you manage credentials with GitHub CLI,
 you can explicitly pass them to Release Drafter from your shell:
 
@@ -55,17 +61,27 @@ Options:
       --prerelease [true|false]
       --latest [true|false]
       --json                   Write one JSON result document to stdout
-      --forge <name>           Forge implementation (github only)
+      --forge <name>           github, gitea, forgejo, or gitlab
       --server-url <url>       Forge web URL
       --api-url <url>          Forge REST API URL
       --graphql-url <url>      Forge GraphQL API URL
-      --token <token>          GitHub token (overrides environment variables)
+      --token <token>          Forge token (overrides environment variables)
       --help                   Show help
       --version                Show version
 ```
 
 `--publish`, `--prerelease`, and `--latest` accept an explicit `true` or
 `false`. Omitting the value is equivalent to `true`.
+
+GitHub remains the default forge. Explicit Gitea, Forgejo, and GitLab selection
+defaults to `https://gitea.com`, `https://codeberg.org`, and
+`https://gitlab.com`, respectively. Pass `--server-url` for a self-hosted
+instance and `--api-url` only when its REST endpoint is nonstandard.
+
+GitLab Releases do not support drafts or prerelease semantics. For GitLab,
+`--publish false` calculates and returns the proposed release without writing
+it. `--publish true` creates or updates a non-prerelease release. A prerelease
+payload is rejected before any GitLab request is sent.
 
 ### Examples
 
@@ -154,9 +170,9 @@ For example:
 
 ### Config targets
 
-`--config` accepts YAML or JSON from the local filesystem, a repository, or a
-GitHub/GitHub Enterprise blob URL. Repository paths without `.github/` are
-resolved beneath `.github/`.
+`--config` accepts YAML or JSON from the local filesystem or the selected forge
+repository. GitHub and GitHub Enterprise blob URLs are also accepted.
+Repository paths without `.github/` are resolved beneath `.github/`.
 
 ```sh
 # Local file. The path is relative to the current working directory.
@@ -223,12 +239,16 @@ Enterprise Server. Cross-origin endpoints require an explicit `--token`.
 
 ```ts
 import {
+  createForgeAdapter,
   draftRelease,
   type DraftReleaseConfig,
   type ForgeAdapter,
 } from 'release-drafter'
 
-const adapter: ForgeAdapter = createForgeAdapter()
+const adapter: ForgeAdapter = createForgeAdapter({
+  forge: 'github',
+  token: process.env.GITHUB_TOKEN,
+})
 const config: DraftReleaseConfig = loadAndNormalizeReleaseDrafterConfig()
 
 const result = await draftRelease({
@@ -267,3 +287,16 @@ performed.
 
 Importing `release-drafter` does not start the CLI, read environment variables,
 or perform network requests.
+
+`createForgeAdapter(options)` constructs bundled `github`, `gitea`, `forgejo`,
+and `gitlab` adapters without exposing private workspace packages. The
+programmatic API always requires an explicit token.
+
+## Multiforge migration status
+
+This convergence layer selectively ports and supersedes the CLI forge
+selection, explicit authentication, endpoint configuration, and programmatic
+adapter construction proposed in #1684. The implementations now live behind
+the private workspace boundaries from RFC #1691 and are bundled into this
+facade. Container compatibility coverage and npm publication workflow gates
+remain deferred to the later #1697 tooling layers.

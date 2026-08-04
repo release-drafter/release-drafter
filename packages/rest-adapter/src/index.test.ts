@@ -122,6 +122,32 @@ const createAdapter = (
   })
 
 describe('GitHub-compatible REST mechanics', () => {
+  it('loads the default branch and repository config through bounded REST operations', async () => {
+    const fetch = routeFetch((url) => {
+      if (url.pathname.endsWith('/repos/octo/project')) {
+        return json({ default_branch: 'trunk' })
+      }
+      expect(url.pathname).toBe(
+        '/api/v1/repos/octo/project/contents/.github/release-drafter.yml',
+      )
+      expect(url.searchParams.get('ref')).toBe('trunk')
+      return json({
+        encoding: 'base64',
+        content: Buffer.from('template: "$CHANGES"\n').toString('base64'),
+      })
+    })
+    const adapter = createAdapter(fetch)
+
+    await expect(adapter.getDefaultBranch(repository)).resolves.toBe('trunk')
+    await expect(
+      adapter.getRepositoryConfig({
+        repository,
+        path: '.github/release-drafter.yml',
+        ref: 'trunk',
+      }),
+    ).resolves.toBe('template: "$CHANGES"\n')
+  })
+
   it('keeps default comparison, request, item, and pagination limits coherent', () => {
     expect(
       defaultRestAdapterLimits.maxComparisonCommits + 1,
