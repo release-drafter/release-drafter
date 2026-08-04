@@ -5,20 +5,30 @@ import { parse as parseYaml } from 'yaml'
 const read = (path: string) => readFileSync(path, 'utf8')
 
 type Workflow = {
-  on?: Record<string, unknown>
+  on?: {
+    pull_request?: { types?: string[] }
+    push?: { branches?: string[] }
+  }
   permissions?: Record<string, string>
   jobs?: Record<
     string,
     {
+      name?: string
+      needs?: string | string[]
+      if?: string
+      outputs?: Record<string, string>
       timeout?: number
       'timeout-minutes'?: number
       strategy?: {
         matrix?: { forge?: string[] }
       }
       steps?: Array<{
+        id?: string
+        name?: string
         uses?: string
         run?: string
         if?: string
+        env?: Record<string, string>
         'timeout-minutes'?: number
         with?: Record<string, unknown>
       }>
@@ -66,6 +76,78 @@ describe('GitLab integration structure', () => {
     expect(config).not.toContain('**/*.container.test.ts')
     expect(config).not.toContain('src/tests/setup.ts')
     expect(rootConfig).toContain("'**/*.container.test.ts'")
+  })
+
+  it('routes forge conformance by changed paths or an explicit label override', () => {
+    const contents = read('.github/workflows/ci.yml')
+    const workflow = parseYaml(contents) as Workflow
+    const jobs = workflow.jobs ?? {}
+    const scope = jobs['forge-conformance-scope']
+    const matrix = jobs['forge-conformance']
+    const gate = jobs['forge-conformance-gate']
+    const scopeStep = scope?.steps?.find(({ id }) => id === 'scope')
+
+    expect(workflow.on?.pull_request?.types).toEqual([
+      'opened',
+      'synchronize',
+      'reopened',
+      'labeled',
+    ])
+    expect(scope?.outputs?.['should-run']).toBe(
+      '${{ steps.scope.outputs.should-run }}',
+    )
+    expect(scope?.steps?.[0]).toMatchObject({
+      uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0',
+      with: {
+        'fetch-depth': 0,
+        'persist-credentials': false,
+      },
+    })
+
+    expect(scopeStep?.env).toMatchObject({
+      EVENT_ACTION: '${{ github.event.action }}',
+      LABEL_NAME: '${{ github.event.label.name }}',
+      OVERRIDE_LABEL: 'ci:forge-conformance',
+      PR_BASE_SHA: '${{ github.event.pull_request.base.sha }}',
+      PUSH_BEFORE_SHA: '${{ github.event.before }}',
+    })
+    expect(scopeStep?.run).toContain('git diff --quiet --no-renames')
+    expect(scopeStep?.run).toContain('git cat-file -e')
+    expect(scopeStep?.run).toContain('.github/workflows/ci.yml')
+    expect(scopeStep?.run).toContain('.node-version')
+    expect(scopeStep?.run).toContain('package.json')
+    expect(scopeStep?.run).toContain('package-lock.json')
+    expect(scopeStep?.run).toContain(':(glob)tsconfig*.json')
+    expect(scopeStep?.run).toContain(':(glob)vite*.config.ts')
+    expect(scopeStep?.run).toContain(':(glob)vitest*.config.ts')
+    expect(scopeStep?.run).toContain(':(glob)src/**')
+    expect(scopeStep?.run).toContain(':(glob)packages/*/src/**')
+    expect(scopeStep?.run).toContain(':(glob)packages/*/package.json')
+    expect(scopeStep?.run).toContain(':(glob)packages/*/tsconfig*.json')
+    expect(scopeStep?.run).toContain('[[ "$LABEL_NAME" == "$OVERRIDE_LABEL" ]]')
+    expect(scopeStep?.run).toContain('should_run=true')
+
+    expect(matrix?.needs).toBe('forge-conformance-scope')
+    expect(matrix?.if).toBe(
+      "needs.forge-conformance-scope.outputs.should-run == 'true'",
+    )
+    expect(gate).toMatchObject({
+      name: 'Forge conformance',
+      needs: ['forge-conformance-scope', 'forge-conformance'],
+      if: '${{ always() }}',
+    })
+    expect(gate?.steps?.[0]?.run).toContain('SCOPE_RESULT')
+    expect(gate?.steps?.[0]?.run).toContain('MATRIX_RESULT')
+
+    for (const jobName of [
+      'lint-pr-title',
+      'smoke-test-drafter',
+      'smoke-test-autolabeler',
+      'tests',
+      'coverage',
+    ]) {
+      expect(jobs[jobName]?.if).toContain("github.event.action != 'labeled'")
+    }
   })
 
   it('runs GitLab in the normal forge matrix with failure logs', () => {
