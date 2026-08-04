@@ -98,9 +98,11 @@ describe.sequential('built REST adapter declarations', () => {
         const options: RestAdapterOptions = { token: 'token' }
         const limits: RestAdapterLimits = defaultRestAdapterLimits
         const profiles: RestForgeProfile[] = [giteaProfile, forgejoProfile]
+        const gitea = new GiteaAdapter(options)
+        const forgejo = new ForgejoAdapter(options)
         const adapters: ForgeAdapter[] = [
-          new GiteaAdapter(options),
-          new ForgejoAdapter(options),
+          gitea,
+          forgejo,
           createGitHubCompatibleRestAdapter(
             { ...giteaProfile, endpoints: createRestEndpoints() },
             options,
@@ -110,6 +112,10 @@ describe.sequential('built REST adapter declarations', () => {
         void profiles
         void adapters
 
+        // @ts-expect-error Adapter credentials remain encapsulated.
+        void gitea.options
+        // @ts-expect-error Adapter credentials remain encapsulated.
+        void forgejo.options
         // @ts-expect-error Wire response types are intentionally not public.
         type WireCommit = import('@release-drafter/rest-adapter').RestCommit
       `,

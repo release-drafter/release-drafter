@@ -468,6 +468,15 @@ describe('GitHub-compatible REST mechanics', () => {
     ).resolves.toBe('peeled-sha')
   })
 
+  it('normalizes fully qualified branch refs for Gitea-compatible releases', async () => {
+    await expect(
+      createAdapter(vi.fn()).resolveCommitish({
+        repository,
+        commitish: 'refs/heads/feature/test',
+      }),
+    ).resolves.toBe('feature/test')
+  })
+
   it('resolves pull refs and filters associated PRs from another base repository', async () => {
     const fetch = routeFetch((url) => {
       if (url.pathname.includes('/compare/')) {
