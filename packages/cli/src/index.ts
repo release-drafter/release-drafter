@@ -101,7 +101,11 @@ type ParsedOptions = {
 
 class UsageError extends Error {}
 
-const USAGE = `Usage: release-drafter <owner/repo> [options]
+const USAGE = `Usage: release-drafter <repository> [options]
+
+Repository:
+  owner/name                  GitHub, Gitea, or Forgejo repository
+  namespace/project          GitLab repository; nested namespaces are allowed
 
 Options:
   -f, --from <ref>             Change comparison base
@@ -124,7 +128,8 @@ Options:
       --version                Show version
 `
 
-const REPOSITORY_PATTERN = /^[^/\s]+\/[^/\s]+$/
+const REPOSITORY_ARGUMENT_PATTERN = /^[^/\s]+(?:\/[^/\s]+)+$/
+const REPOSITORY_SEGMENT_PATTERN = /^[^/\s]+$/
 const DEFAULT_SERVER_URLS: Record<ForgeName, string> = {
   github: 'https://github.com',
   gitea: 'https://gitea.com',
@@ -318,10 +323,20 @@ const parseCommandLine = (argv: readonly string[]) => {
     throw new UsageError('Exactly one repository argument is required.')
   }
   const repositoryName = parsed.positionals[0]
-  if (!REPOSITORY_PATTERN.test(repositoryName)) {
-    throw new UsageError('Repository must be exactly nonblank owner/name.')
+  const repositorySegments = repositoryName.split('/')
+  if (
+    repositorySegments.length < 2 ||
+    (forge !== 'gitlab' && repositorySegments.length !== 2) ||
+    repositorySegments.some(
+      (segment) => !REPOSITORY_SEGMENT_PATTERN.test(segment),
+    )
+  ) {
+    throw new UsageError(
+      'Repository must be nonblank owner/name; GitLab may include nested namespace segments.',
+    )
   }
-  const [owner, name] = repositoryName.split('/')
+  const name = repositorySegments.pop() as string
+  const owner = repositorySegments.join('/')
 
   const options: ParsedOptions = {
     repository: { owner, name, serverUrl },
@@ -484,7 +499,7 @@ export async function runCli(
   const stdout = injected.stdout ?? process.stdout
   const stderr = injected.stderr ?? process.stderr
   const cliArgv =
-    REPOSITORY_PATTERN.test(argv[0] ?? '') || argv[0]?.startsWith('-')
+    REPOSITORY_ARGUMENT_PATTERN.test(argv[0] ?? '') || argv[0]?.startsWith('-')
       ? argv
       : argv.slice(2)
 

@@ -390,6 +390,53 @@ describe('forge and endpoint selection', () => {
     )
   })
 
+  it('accepts a GitLab repository in a nested namespace', async () => {
+    const result = await invoke([
+      'group/subgroup/project',
+      '--to',
+      'main',
+      '--forge',
+      'gitlab',
+    ])
+
+    expect(result.code).toBe(0)
+    expect(result.adapterFactory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        forge: 'gitlab',
+        repository: {
+          owner: 'group/subgroup',
+          name: 'project',
+          serverUrl: 'https://gitlab.com',
+        },
+      }),
+    )
+  })
+
+  it.each([
+    'group//project',
+    '/group/project',
+    'group/project/',
+    'group /project',
+  ])('rejects malformed GitLab repository path %s', async (repository) => {
+    const result = await invoke([repository, '--forge', 'gitlab'])
+
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain('Repository must be nonblank')
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    'github',
+    'gitea',
+    'forgejo',
+  ] as const)('rejects nested namespaces for the %s forge', async (forge) => {
+    const result = await invoke(['group/subgroup/project', '--forge', forge])
+
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain('Repository must be nonblank')
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
   it('rejects an arbitrary /api/v1 endpoint as ambiguous without inferring a forge', async () => {
     const result = await invoke([
       'acme/widgets',

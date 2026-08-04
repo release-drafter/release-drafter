@@ -203,9 +203,12 @@ CLI config loading supports Release Drafter's `_extends` chains, including
 are resolved from the config that declares `_extends`. A repository config
 cannot extend a local `file:` target.
 
-### GitHub Enterprise and forge selection
+### Forge selection and custom endpoints
 
-The current CLI build supports GitHub and GitHub Enterprise only:
+The CLI supports GitHub, Gitea, Forgejo, and GitLab. GitHub is the default;
+select the other forges explicitly with `--forge`. GitLab repository arguments
+use `namespace/project` and may contain nested namespace segments, such as
+`group/subgroup/project`.
 
 ```sh
 npx release-drafter owner/repo \
@@ -218,14 +221,12 @@ npx release-drafter owner/repo \
 
 GitHub.com and conventional GitHub Enterprise `/api/v3` endpoints can be
 identified as GitHub. A custom ambiguous endpoint, including an `/api/v1`
-endpoint, requires an explicit `--forge` selection. This build still accepts
-only `--forge github`. Selecting `gitea`, `forgejo`, `gitlab`, or any other
-unsupported forge fails instead of guessing. Those adapters are not shipped in
-the current CLI build. Endpoint URLs must be absolute HTTP(S) URLs without
+endpoint, requires an explicit `--forge` selection. `--graphql-url` is supported
+only for GitHub. Endpoint URLs must be absolute HTTP(S) URLs without
 credentials, query parameters, or fragments. Environment credentials are used
-only when REST and GraphQL endpoints stay on the expected credential origin:
-`api.github.com` for GitHub.com, or the configured server origin for GitHub
-Enterprise Server. Cross-origin endpoints require an explicit `--token`.
+only when configured API endpoints stay on the expected credential origin:
+`api.github.com` for GitHub.com, or the configured server origin for other
+targets. Cross-origin endpoints require an explicit `--token`.
 
 ### Exit codes
 
