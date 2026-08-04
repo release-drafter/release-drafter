@@ -92,6 +92,7 @@ type GitLabApi = {
       sha: string,
       options?: object,
     ): Promise<GitLabMergeRequest[]>
+    show(project: string, ref: string, options?: object): Promise<GitLabCommit>
   }
   MergeRequests: {
     allDiffs(
@@ -246,7 +247,8 @@ class GitLabTransport {
             ? options.body
             : JSON.stringify(decamelize(options.body))
         let lastError: unknown
-        for (let attempt = 0; attempt <= this.limits.retries; attempt += 1) {
+        const retries = method === 'POST' ? 0 : this.limits.retries
+        for (let attempt = 0; attempt <= retries; attempt += 1) {
           context.budget.used += 1
           if (context.budget.used > context.budget.maximum) {
             throw new Error(
@@ -260,6 +262,7 @@ class GitLabTransport {
           try {
             const response = await this.fetch(url, {
               method,
+              redirect: 'manual',
               signal,
               headers: {
                 Accept: 'application/json',
@@ -281,7 +284,7 @@ class GitLabTransport {
               const failure = new Error(
                 `GitLab ${method} request failed with ${response.status}${detail ? `: ${detail}` : ''}`,
               )
-              if (retryable(response.status) && attempt < this.limits.retries) {
+              if (retryable(response.status) && attempt < retries) {
                 lastError = failure
                 const retryAfterHeader = response.headers.get('retry-after')
                 const retryAfter = retryAfterHeader?.trim()
@@ -319,7 +322,7 @@ class GitLabTransport {
                 ? `GitLab ${method} request timed out after ${this.limits.timeoutMs}ms`
                 : `GitLab ${method} request failed: ${detail}`,
             )
-            if (attempt >= this.limits.retries || timedOut) throw lastError
+            if (attempt >= retries || timedOut) throw lastError
             await delay(
               Math.min(
                 this.limits.retryBaseDelayMs * 2 ** attempt,
@@ -492,6 +495,12 @@ export class GitLabClient {
   mergeRequest(project: string, iid: number, budget: RequestBudget) {
     return this.transport.response(budget, () =>
       this.api.MergeRequests.show(project, iid),
+    )
+  }
+
+  commit(project: string, ref: string, budget: RequestBudget) {
+    return this.transport.response(budget, () =>
+      this.api.Commits.show(project, ref),
     )
   }
 

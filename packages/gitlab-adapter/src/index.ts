@@ -392,19 +392,21 @@ export class GitLabAdapter implements ForgeAdapter {
         return ''
       }
       try {
+        const budget = client.budget()
         const response = (
-          await client.mergeRequest(
-            project,
-            Number(mergeRequest[1]),
-            client.budget(),
-          )
+          await client.mergeRequest(project, Number(mergeRequest[1]), budget)
         ).data
-        const sha =
-          mergeRequest[2] === 'head'
-            ? response.sha
-            : (response.merge_commit_sha ?? response.squash_commit_sha)
-        if (!sha) throw new Error('merge request omitted the requested SHA')
-        return sha
+        const sha = response.sha
+        if (mergeRequest[2] === 'head') {
+          if (!sha) throw new Error('merge request omitted the requested SHA')
+          return sha
+        }
+        const mergeSha = response.merge_commit_sha ?? response.squash_commit_sha
+        if (mergeSha) return mergeSha
+        const syntheticCommit = await client.commit(project, commitish, budget)
+        if (!syntheticCommit.data.id)
+          throw new Error('synthetic merge ref omitted its commit id')
+        return syntheticCommit.data.id
       } catch {
         client.logger.warning(
           `${commitish} could not be resolved to a commit SHA, falling back to default branch`,
@@ -431,6 +433,8 @@ export class GitLabAdapter implements ForgeAdapter {
   }
 
   async createRelease({ repository, payload }: CreateReleaseRequest) {
+    if (payload.prerelease)
+      throw new Error('GitLab does not support prerelease releases')
     const client = this.client(repository)
     const response = await client.createRelease(
       client.project(repository),
@@ -446,6 +450,8 @@ export class GitLabAdapter implements ForgeAdapter {
   }
 
   async updateRelease({ repository, release, payload }: UpdateReleaseRequest) {
+    if (payload.prerelease)
+      throw new Error('GitLab does not support prerelease releases')
     const client = this.client(repository)
     const response = await client.updateRelease(
       client.project(repository),
