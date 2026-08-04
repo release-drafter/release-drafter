@@ -201,7 +201,9 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
       return { commits: [], pullRequests: [], newContributorLogins: new Set() }
     }
 
-    budget.ensureAvailable(commits.length)
+    budget.ensureAvailable(
+      commits.length + (params.includeChangedFiles ? 1 : 0),
+    )
     const associated = await mapConcurrent(
       commits,
       this.client.limits.concurrency,
@@ -381,7 +383,9 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
     commitish,
   }: ResolveCommitishRequest): Promise<string> {
     if (commitish.startsWith('refs/heads/')) {
-      return commitish.replace(/^refs\/heads\//, '')
+      return this.profile.qualifiedRefMode === 'preserve'
+        ? commitish
+        : commitish.replace(/^refs\/heads\//, '')
     }
     const pullMatch = /^refs\/pull\/(\d+)\/(head|merge)$/.exec(commitish)
     if (commitish.startsWith('refs/pull/')) {
@@ -412,6 +416,7 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
       }
     }
     if (!commitish.startsWith('refs/tags/')) return commitish
+    if (this.profile.qualifiedRefMode === 'preserve') return commitish
     try {
       return await this.resolveTag(
         repository,
@@ -515,10 +520,13 @@ export const createRestEndpoints = () => {
   } satisfies RestForgeProfile['endpoints']
 }
 
-/** Creates the REST profile for the API surface implemented by Gitea and Forgejo. */
-export const createGiteaCompatibleRestProfile = () =>
+/** Creates the shared REST profile with forge-specific qualified-ref behavior. */
+export const createGiteaCompatibleRestProfile = (
+  qualifiedRefMode: RestForgeProfile['qualifiedRefMode'],
+) =>
   ({
     capabilities: { draftReleases: true },
+    qualifiedRefMode,
     apiPath: '/api/v1',
     authHeader: (token: string) => `token ${token}`,
     endpoints: createRestEndpoints(),

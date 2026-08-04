@@ -9,7 +9,7 @@ export const GITEA_ADAPTER_PACKAGE_NAME =
   '@release-drafter/gitea-adapter' as const
 
 /** Explicit Gitea REST protocol profile. */
-export const giteaProfile = createGiteaCompatibleRestProfile()
+export const giteaProfile = createGiteaCompatibleRestProfile('normalize')
 
 export class GiteaAdapter implements ForgeAdapter {
   readonly capabilities = giteaProfile.capabilities
