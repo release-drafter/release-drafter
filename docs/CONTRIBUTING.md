@@ -83,6 +83,24 @@ Common commands:
 - `npm run build --workspaces --if-present` builds workspace packages after the
   root Vite action bundle build.
 
+### Forge conformance tests
+
+The normal `npm run test:run` and `npm run all` commands remain container-free.
+Real-forge compatibility is an opt-in Docker-backed layer:
+
+- `npm run test:conformance:gitea` and `npm run test:conformance:forgejo` run
+  one immutable image, matching the CI matrix. Use
+  `npm run test:conformance:gitea-forgejo` to run both images through the shared
+  `ForgeAdapter` contract.
+- `npm run test:conformance:gitlab` runs the separately configured, heavier
+  GitLab suite.
+
+The shared contract exercises the public facade and normalized release listing,
+change discovery, commitish resolution, release creation, and release updates.
+Forge-specific fixtures may additionally verify default-branch and repository
+config loading. These suites require a working Docker-compatible daemon and fail
+rather than silently skipping when explicitly invoked.
+
 Do not add npm publication workflows or make scoped `@release-drafter/*`
 workspaces publishable unless the maintainers approve a release plan.
 
