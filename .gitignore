@@ -104,6 +104,9 @@ Thumbs.db
 # Ignore built ts files
 __tests__/runner/*
 
+# Failure diagnostics emitted by opt-in real-forge conformance suites
+/artifacts/gitlab/
+
 # IDE files
 .idea
 *.code-workspace

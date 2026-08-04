@@ -299,5 +299,6 @@ This convergence layer selectively ports and supersedes the CLI forge
 selection, explicit authentication, endpoint configuration, and programmatic
 adapter construction proposed in #1684. The implementations now live behind
 the private workspace boundaries from RFC #1691 and are bundled into this
-facade. Container compatibility coverage and npm publication workflow gates
-remain deferred to the later #1697 tooling layers.
+facade. Real Gitea, Forgejo, and GitLab compatibility is covered by the #1697
+Testcontainers tooling layer. npm publication workflow gates remain a separate
+follow-up.
