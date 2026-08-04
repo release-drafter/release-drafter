@@ -1,4 +1,8 @@
 import * as releaseDrafterCore from '@release-drafter/core'
+import { ForgejoAdapter } from '@release-drafter/forgejo-adapter'
+import { GiteaAdapter } from '@release-drafter/gitea-adapter'
+import { GitHubAdapter } from '@release-drafter/github-adapter'
+import { GitLabAdapter } from '@release-drafter/gitlab-adapter'
 import type {
   DraftReleaseOptions,
   DraftReleaseResult,

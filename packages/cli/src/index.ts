@@ -18,10 +18,17 @@ import {
   type ReleaseInput,
   type Repository,
 } from '@release-drafter/core'
+import { ForgejoAdapter } from '@release-drafter/forgejo-adapter'
+import { GiteaAdapter } from '@release-drafter/gitea-adapter'
 import {
   GitHubAdapter,
   type GitHubAdapterOptions,
 } from '@release-drafter/github-adapter'
+import {
+  GitLabAdapter,
+  type GitLabAdapterOptions,
+} from '@release-drafter/gitlab-adapter'
+import type { RestAdapterOptions } from '@release-drafter/rest-adapter'
 import { loadConfig } from './config.ts'
 import {
   createLocalConfigFileReader,
@@ -34,9 +41,22 @@ export interface WritableStream {
   write(chunk: string): unknown
 }
 
+export type ForgeName = 'github' | 'gitea' | 'forgejo' | 'gitlab'
+
 export type CliAdapter = ForgeAdapter &
-  PullRequestReader &
-  Pick<GitHubAdapter, 'getRepositoryConfig' | 'octokit'>
+  PullRequestReader & {
+    getDefaultBranch(repository: Repository): Promise<string>
+    getRepositoryConfig(options: {
+      repository: Repository
+      path: string
+      ref?: string
+    }): Promise<string>
+  }
+
+type AdapterOptions =
+  | GitHubAdapterOptions
+  | RestAdapterOptions
+  | GitLabAdapterOptions
 
 export type DraftFunction = (params: {
   adapter: ForgeAdapter
@@ -52,7 +72,11 @@ export type CliDependencies = {
   env?: NodeJS.ProcessEnv
   cwd?: string | (() => string)
   readLocalFile?: LocalConfigFileReader
-  adapterFactory?: (options: GitHubAdapterOptions) => CliAdapter
+  adapterFactory?: (params: {
+    forge: ForgeName
+    options: AdapterOptions
+    repository: Repository
+  }) => CliAdapter
   draft?: DraftFunction
   version?: string
 }
@@ -60,6 +84,7 @@ export type CliDependencies = {
 type ParsedOptions = {
   repository: Repository
   pullRequestNumber?: number
+  forge: ForgeName
   from?: string
   name?: string
   tag?: string
@@ -94,16 +119,22 @@ Options:
       --prerelease [true|false]
       --latest [true|false]
       --json                   Write one JSON result document to stdout
-      --forge <name>           Forge implementation (github only)
+      --forge <name>           github, gitea, forgejo, or gitlab
       --server-url <url>       Forge web URL
       --api-url <url>          Forge REST API URL
       --graphql-url <url>      Forge GraphQL API URL
-      --token <token>          GitHub token (overrides environment variables)
+      --token <token>          Forge token (overrides environment variables)
       --help                   Show help
       --version                Show version
 `
 
 const REPOSITORY_PATTERN = /^[^/\s]+\/[^/\s]+$/
+const DEFAULT_SERVER_URLS: Record<ForgeName, string> = {
+  github: 'https://github.com',
+  gitea: 'https://gitea.com',
+  forgejo: 'https://codeberg.org',
+  gitlab: 'https://gitlab.com',
+}
 const writeLine = (stream: WritableStream, message: string) => {
   stream.write(`${message}\n`)
 }
@@ -218,15 +249,20 @@ const selectForge = (params: {
   serverUrl?: string
   apiUrl?: string
   graphqlUrl?: string
-}): 'github' => {
+}): ForgeName => {
   if (params.forge) {
     const forge = params.forge.toLowerCase()
-    if (forge !== 'github') {
+    if (!['github', 'gitea', 'forgejo', 'gitlab'].includes(forge)) {
       throw new UsageError(
-        `Forge '${params.forge}' is not supported by this build. Only 'github' is available.`,
+        `Forge '${params.forge}' is not supported. Choose github, gitea, forgejo, or gitlab.`,
       )
     }
-    return 'github'
+    if (forge !== 'github' && params.graphqlUrl) {
+      throw new UsageError(
+        '--graphql-url is supported only for the github forge.',
+      )
+    }
+    return forge as ForgeName
   }
   if (!params.serverUrl && !params.apiUrl && !params.graphqlUrl) return 'github'
 
@@ -291,16 +327,16 @@ const parseCommandLine = (argv: readonly string[]) => {
   const values = parsed.values
   if (values.help) return { kind: 'help' as const }
   if (values.version) return { kind: 'version' as const }
-  const serverUrl =
-    parseUrl(values['server-url'], '--server-url') ?? 'https://github.com'
+  const parsedServerUrl = parseUrl(values['server-url'], '--server-url')
   const apiUrl = parseUrl(values['api-url'], '--api-url')
   const graphqlUrl = parseUrl(values['graphql-url'], '--graphql-url')
-  selectForge({
+  const forge = selectForge({
     forge: values.forge,
-    serverUrl: values['server-url'] ? serverUrl : undefined,
+    serverUrl: parsedServerUrl,
     apiUrl,
     graphqlUrl,
   })
+  const serverUrl = parsedServerUrl ?? DEFAULT_SERVER_URLS[forge]
   const checkPr = parsed.positionals[0] === 'check-pr'
   const expectedPositionals = checkPr ? 3 : 1
   if (parsed.positionals.length !== expectedPositionals)
@@ -331,6 +367,7 @@ const parseCommandLine = (argv: readonly string[]) => {
 
   const options: ParsedOptions = {
     repository,
+    forge,
     ...(checkPr
       ? { pullRequestNumber: parsePullRequestNumber(parsed.positionals[2]) }
       : {}),
@@ -354,6 +391,7 @@ const parseCommandLine = (argv: readonly string[]) => {
 }
 
 const resolveToken = (params: {
+  forge: ForgeName
   env: NodeJS.ProcessEnv
   serverUrl: string
   apiUrl?: string
@@ -364,7 +402,9 @@ const resolveToken = (params: {
   if (explicitToken) return explicitToken
 
   const server = new URL(params.serverUrl)
-  const isGitHubDotCom = server.origin.toLowerCase() === 'https://github.com'
+  const isGitHubDotCom =
+    params.forge === 'github' &&
+    server.origin.toLowerCase() === 'https://github.com'
   const expectedEndpointOrigin = isGitHubDotCom
     ? 'https://api.github.com'
     : server.origin.toLowerCase()
@@ -380,30 +420,52 @@ const resolveToken = (params: {
     )
   }
 
-  const environmentToken = isGitHubDotCom
-    ? params.env.GITHUB_TOKEN?.trim() || params.env.GH_TOKEN?.trim()
-    : params.env.GH_ENTERPRISE_TOKEN?.trim() ||
-      params.env.GITHUB_ENTERPRISE_TOKEN?.trim()
+  const environmentToken =
+    params.forge === 'github'
+      ? isGitHubDotCom
+        ? params.env.GITHUB_TOKEN?.trim() || params.env.GH_TOKEN?.trim()
+        : params.env.GH_ENTERPRISE_TOKEN?.trim() ||
+          params.env.GITHUB_ENTERPRISE_TOKEN?.trim()
+      : params.forge === 'gitea'
+        ? params.env.GITEA_TOKEN?.trim()
+        : params.forge === 'forgejo'
+          ? params.env.FORGEJO_TOKEN?.trim()
+          : params.env.GITLAB_TOKEN?.trim()
   if (environmentToken) return environmentToken
 
   throw new UsageError(
-    isGitHubDotCom
-      ? 'No GitHub token is available. Set GITHUB_TOKEN or GH_TOKEN, or pass --token. To use GitHub CLI credentials safely, run `GH_TOKEN="$(gh auth token)" release-drafter ...`.'
-      : 'No GitHub Enterprise token is available. Set GH_ENTERPRISE_TOKEN or GITHUB_ENTERPRISE_TOKEN, or pass --token.',
+    params.forge === 'github'
+      ? isGitHubDotCom
+        ? 'No GitHub token is available. Set GITHUB_TOKEN or GH_TOKEN, or pass --token. To use GitHub CLI credentials safely, run `GH_TOKEN="$(gh auth token)" release-drafter ...`.'
+        : 'No GitHub Enterprise token is available. Set GH_ENTERPRISE_TOKEN or GITHUB_ENTERPRISE_TOKEN, or pass --token.'
+      : `No ${params.forge} token is available. Set ${params.forge.toUpperCase()}_TOKEN or pass --token.`,
   )
 }
 
-const defaultBranch = async (
-  adapter: CliAdapter,
-  repository: Repository,
-): Promise<string> => {
-  const response = await adapter.octokit.rest.repos.get({
-    owner: repository.owner,
-    repo: repository.name,
-  })
-  const branch = response.data.default_branch?.trim()
-  if (!branch) throw new Error('GitHub returned a blank default branch.')
-  return branch
+const createAdapter = ({
+  forge,
+  options,
+}: {
+  forge: ForgeName
+  options: AdapterOptions
+  repository: Repository
+}): CliAdapter => {
+  switch (forge) {
+    case 'github':
+      return new GitHubAdapter(options as GitHubAdapterOptions)
+    case 'gitea':
+      return new GiteaAdapter(
+        options as RestAdapterOptions,
+      ) as unknown as CliAdapter
+    case 'forgejo':
+      return new ForgejoAdapter(
+        options as RestAdapterOptions,
+      ) as unknown as CliAdapter
+    case 'gitlab':
+      return new GitLabAdapter(
+        options as GitLabAdapterOptions,
+      ) as unknown as CliAdapter
+  }
 }
 
 const resultDocument = (result: DraftReleaseResult) => {
@@ -519,10 +581,7 @@ export async function runCli(
       realpath: nodeRealpath,
       stat: nodeStat,
     })
-  const adapterFactory =
-    injected.adapterFactory ??
-    ((adapterOptions: GitHubAdapterOptions) =>
-      new GitHubAdapter(adapterOptions))
+  const adapterFactory = injected.adapterFactory ?? createAdapter
   const draft = injected.draft ?? draftRelease
 
   try {
@@ -531,6 +590,7 @@ export async function runCli(
         ? injected.cwd()
         : (injected.cwd ?? process.cwd())
     const token = resolveToken({
+      forge: options.forge,
       env,
       serverUrl: options.serverUrl,
       apiUrl: options.apiUrl,
@@ -538,12 +598,17 @@ export async function runCli(
       token: options.token,
     })
     const adapter = adapterFactory({
-      token,
-      serverUrl: options.serverUrl,
-      apiUrl: options.apiUrl,
-      graphqlUrl: options.graphqlUrl,
-      logger,
-      env,
+      forge: options.forge,
+      repository: options.repository,
+      options: {
+        token,
+        serverUrl: options.serverUrl,
+        apiUrl: options.apiUrl,
+        ...(options.forge === 'github'
+          ? { graphqlUrl: options.graphqlUrl, env }
+          : {}),
+        logger,
+      },
     })
     let pullRequest:
       | Awaited<ReturnType<PullRequestReader['getPullRequest']>>
@@ -560,7 +625,7 @@ export async function runCli(
     const branch =
       pullRequest?.baseRefName ??
       options.to ??
-      (await defaultBranch(adapter, options.repository))
+      (await adapter.getDefaultBranch(options.repository))
     const validatedConfig = await loadConfig({
       target: options.config,
       repository: options.repository,

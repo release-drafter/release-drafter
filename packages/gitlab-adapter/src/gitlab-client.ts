@@ -78,6 +78,20 @@ type GitLabComparison = {
 }
 
 type GitLabApi = {
+  Projects: {
+    show(
+      project: string,
+      options?: object,
+    ): Promise<{ default_branch?: string }>
+  }
+  RepositoryFiles: {
+    show(
+      project: string,
+      path: string,
+      ref: string,
+      options?: object,
+    ): Promise<{ content?: string; encoding?: string }>
+  }
   Repositories: {
     compare(
       project: string,
@@ -407,6 +421,23 @@ export class GitLabClient {
 
   project(repository: Repository) {
     return `${repository.owner}/${repository.name}`
+  }
+
+  projectDetails(project: string, budget: RequestBudget) {
+    return this.transport.response(budget, () =>
+      this.api.Projects.show(project),
+    )
+  }
+
+  repositoryFile(
+    project: string,
+    path: string,
+    ref: string,
+    budget: RequestBudget,
+  ) {
+    return this.transport.response(budget, () =>
+      this.api.RepositoryFiles.show(project, path, ref),
+    )
   }
 
   compare(project: string, from: string, to: string, budget: RequestBudget) {

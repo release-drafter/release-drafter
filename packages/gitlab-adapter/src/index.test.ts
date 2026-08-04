@@ -75,6 +75,45 @@ const mergeRequest = (
 })
 
 describe('GitLabAdapter', () => {
+  it('loads the default branch and repository config through GitBeaker', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const path = pathOf(input)
+      if (path === '/api/v4/projects/group%2Fsubgroup%2Fproject') {
+        return json({ default_branch: 'trunk' })
+      }
+      expect(path).toBe(
+        '/api/v4/projects/group%2Fsubgroup%2Fproject/repository/files/.github%2Frelease-drafter.yml?ref=trunk',
+      )
+      return json({
+        encoding: 'base64',
+        content: Buffer.from('template: "$CHANGES"\n').toString('base64'),
+      })
+    })
+    const gitlab = adapter(fetch)
+
+    await expect(
+      gitlab.getRepositoryConfig({
+        repository,
+        path: '.github/release-drafter.yml',
+      }),
+    ).resolves.toBe('template: "$CHANGES"\n')
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('shares the GitLab request budget while resolving a config default branch', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      json({ default_branch: 'trunk' }),
+    )
+
+    await expect(
+      adapter(fetch, { maxRequestsPerOperation: 1 }).getRepositoryConfig({
+        repository,
+        path: '.github/release-drafter.yml',
+      }),
+    ).rejects.toThrow('request limit of 1 was exceeded')
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
   it('uses normalized self-managed host, encoded project id, and private-token auth', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
       expect(String(input)).toContain(

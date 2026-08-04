@@ -1,7 +1,12 @@
-import type { ForgeAdapter, PullRequestReader } from '@release-drafter/core'
+import type {
+  ForgeAdapter,
+  PullRequestReader,
+  Repository,
+} from '@release-drafter/core'
 import {
   createGiteaCompatibleRestProfile,
   createGitHubCompatibleRestAdapter,
+  type GitHubCompatibleRestAdapterRuntime,
   type RestAdapterOptions,
 } from '@release-drafter/rest-adapter'
 export const FORGEJO_ADAPTER_PACKAGE_NAME =
@@ -12,7 +17,7 @@ export const forgejoProfile = createGiteaCompatibleRestProfile('preserve')
 
 export class ForgejoAdapter implements ForgeAdapter, PullRequestReader {
   readonly capabilities = forgejoProfile.capabilities
-  private readonly adapter: ForgeAdapter & PullRequestReader
+  private readonly adapter: GitHubCompatibleRestAdapterRuntime
 
   constructor(options: RestAdapterOptions) {
     this.adapter = createGitHubCompatibleRestAdapter(forgejoProfile, options)
@@ -30,4 +35,8 @@ export class ForgejoAdapter implements ForgeAdapter, PullRequestReader {
     this.adapter.updateRelease(params)
   getPullRequest: PullRequestReader['getPullRequest'] = (params) =>
     this.adapter.getPullRequest(params)
+  getDefaultBranch = (repository: Repository) =>
+    this.adapter.getDefaultBranch(repository)
+  getRepositoryConfig: GitHubCompatibleRestAdapterRuntime['getRepositoryConfig'] =
+    (options) => this.adapter.getRepositoryConfig(options)
 }

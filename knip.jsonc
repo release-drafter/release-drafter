@@ -24,6 +24,7 @@
       "entry": ["src/cli.ts"],
       "project": ["src/**/*.{ts,tsx}"],
       "ignoreDependencies": [
+        "@gitbeaker/rest",
         "@octokit/core",
         "@octokit/plugin-paginate-graphql",
         "@octokit/plugin-paginate-rest",

@@ -47,6 +47,7 @@ const releaseResult = (
 const createAdapter = (): CliAdapter =>
   ({
     capabilities: { draftReleases: true },
+    getDefaultBranch: vi.fn(async () => 'main'),
     octokit: {
       rest: {
         repos: {
@@ -69,7 +70,7 @@ const invoke = async (
   const stdout = capture()
   const stderr = capture()
   const adapter = createAdapter()
-  const adapterFactory = vi.fn(() => adapter)
+  const adapterFactory = vi.fn((_params?: unknown) => adapter)
   const draft = vi.fn<DraftFunction>(async () => releaseResult())
   const code = await runCli(argv, {
     stdout: stdout.stream,
@@ -77,7 +78,10 @@ const invoke = async (
     env: { GITHUB_TOKEN: 'token' },
     cwd: '/workspace',
     readLocalFile: localConfigReader(),
-    adapterFactory,
+    adapterFactory: (params) => {
+      adapterFactory(params.options)
+      return adapter
+    },
     draft,
     ...overrides,
   })
@@ -85,6 +89,63 @@ const invoke = async (
 }
 
 describe('CLI runtime security', () => {
+  it.each([
+    ['gitea', 'GITEA_TOKEN', 'gitea-token'],
+    ['forgejo', 'FORGEJO_TOKEN', 'forgejo-token'],
+    ['gitlab', 'GITLAB_TOKEN', 'gitlab-token'],
+  ] as const)('uses only the %s-specific environment token', async (forge, variable, token) => {
+    const result = await invoke(
+      ['acme/widgets', '--forge', forge, '--to', 'main'],
+      {
+        env: {
+          GITHUB_TOKEN: 'github-secret',
+          GITEA_TOKEN: 'wrong-gitea',
+          FORGEJO_TOKEN: 'wrong-forgejo',
+          GITLAB_TOKEN: 'wrong-gitlab',
+          [variable]: token,
+        },
+      },
+    )
+
+    expect(result.code).toBe(0)
+    expect(result.adapterFactory).toHaveBeenCalledWith(
+      expect.objectContaining({ token }),
+    )
+  })
+
+  it('does not reuse another forge token when the selected forge token is missing', async () => {
+    const result = await invoke(
+      ['acme/widgets', '--forge', 'gitlab', '--to', 'main'],
+      { env: { GITHUB_TOKEN: 'github-secret', GITEA_TOKEN: 'gitea-secret' } },
+    )
+
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain('Set GITLAB_TOKEN or pass --token')
+    expect(result.stderr.text()).not.toContain('github-secret')
+    expect(result.stderr.text()).not.toContain('gitea-secret')
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
+  it('requires an explicit token for a forge API on another origin', async () => {
+    const result = await invoke(
+      [
+        'acme/widgets',
+        '--forge',
+        'gitea',
+        '--api-url',
+        'https://api.attacker.example/v1',
+        '--to',
+        'main',
+      ],
+      { env: { GITEA_TOKEN: 'automatic-secret' } },
+    )
+
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain('Pass --token')
+    expect(result.stderr.text()).not.toContain('automatic-secret')
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
   it.each([
     [
       '--server-url',
