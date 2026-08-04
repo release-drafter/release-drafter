@@ -1,0 +1,171 @@
+name: Forge conformance
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  forge-conformance-scope:
+    name: Forge conformance scope
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.scope.outputs.should-run }}
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect forge conformance scope
+        id: scope
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          LABEL_NAME: ${{ github.event.label.name }}
+          OVERRIDE_LABEL: ci:forge-conformance
+          HAS_OVERRIDE_LABEL: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:forge-conformance') }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -uo pipefail
+
+          should_run=false
+          reason='no relevant files changed'
+
+          if [[ "$EVENT_NAME" == 'pull_request' && "$EVENT_ACTION" == 'labeled' ]]; then
+            if [[ "$LABEL_NAME" == "$OVERRIDE_LABEL" ]]; then
+              should_run=true
+              reason="override label $OVERRIDE_LABEL was added"
+            else
+              reason="labeled event was for $LABEL_NAME"
+            fi
+          elif [[ "$EVENT_NAME" == 'pull_request' && "$HAS_OVERRIDE_LABEL" == 'true' ]]; then
+            should_run=true
+            reason="pull request has override label $OVERRIDE_LABEL"
+          else
+            if [[ "$EVENT_NAME" == 'pull_request' ]]; then
+              base_sha=$PR_BASE_SHA
+            else
+              base_sha=$PUSH_BEFORE_SHA
+            fi
+
+            if [[ -z "$base_sha" ]] || ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
+              echo "::warning::Base SHA is missing or invalid; running forge conformance"
+              should_run=true
+              reason='changed-file detection failed open'
+            else
+              git diff --quiet --no-renames "$base_sha" HEAD -- \
+                .github/workflows/ci.yml \
+                .github/workflows/forge-conformance.yml \
+                .node-version \
+                package.json \
+                package-lock.json \
+                ':(glob)tsconfig*.json' \
+                ':(glob)vite*.config.ts' \
+                ':(glob)vitest*.config.ts' \
+                ':(glob)src/**' \
+                ':(glob)packages/*/src/**' \
+                ':(glob)packages/*/package.json' \
+                ':(glob)packages/*/tsconfig*.json'
+              diff_status=$?
+
+              if [[ $diff_status -eq 1 ]]; then
+                should_run=true
+                reason='relevant files changed'
+              elif [[ $diff_status -gt 1 ]]; then
+                echo "::warning::git diff failed with status $diff_status; running forge conformance"
+                should_run=true
+                reason='changed-file detection failed open'
+              fi
+            fi
+          fi
+
+          echo "should-run=$should_run" >> "$GITHUB_OUTPUT"
+          echo "Forge conformance should-run=$should_run: $reason"
+
+  forge-conformance:
+    name: Forge conformance (${{ matrix.forge }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: forge-conformance-scope
+    if: needs.forge-conformance-scope.outputs.should-run == 'true'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        forge:
+          - gitea
+          - forgejo
+          - gitlab
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run pinned real-forge conformance suite
+        env:
+          GITLAB_TEST_ARTIFACTS: artifacts/gitlab
+        run: npm run test:conformance:${{ matrix.forge }}
+
+      - name: Upload GitLab failure logs
+        if: failure() && matrix.forge == 'gitlab'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: gitlab-integration-logs
+          path: artifacts/gitlab
+          if-no-files-found: warn
+          retention-days: 7
+
+  forge-conformance-gate:
+    name: Forge conformance
+    runs-on: ubuntu-latest
+    needs:
+      - forge-conformance-scope
+      - forge-conformance
+    if: ${{ always() }}
+
+    steps:
+      - name: Enforce forge conformance result
+        shell: bash
+        env:
+          SCOPE_RESULT: ${{ needs.forge-conformance-scope.result }}
+          SHOULD_RUN: ${{ needs.forge-conformance-scope.outputs.should-run }}
+          MATRIX_RESULT: ${{ needs.forge-conformance.result }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$SCOPE_RESULT" != 'success' ]]; then
+            echo "Forge conformance scope finished with $SCOPE_RESULT"
+            exit 1
+          fi
+
+          if [[ "$SHOULD_RUN" == 'true' && "$MATRIX_RESULT" == 'success' ]]; then
+            echo 'Requested forge conformance matrix passed'
+            exit 0
+          fi
+
+          if [[ "$SHOULD_RUN" == 'false' && "$MATRIX_RESULT" == 'skipped' ]]; then
+            echo 'Forge conformance matrix was intentionally skipped'
+            exit 0
+          fi
+
+          echo "Unexpected forge conformance result: should-run=$SHOULD_RUN matrix=$MATRIX_RESULT"
+          exit 1
