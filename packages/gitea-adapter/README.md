@@ -7,7 +7,8 @@ contract for Gitea. It is not published or selected by the public facade yet.
 `@release-drafter/rest-adapter` implementation and profile factory. The shared
 profile declares the `/api/v1` endpoints, `Authorization: token ...`
 authentication, pagination and response field names, draft-release capability,
-and branch-ref normalization required by Gitea.
+and qualified-ref normalization required for compatibility across Gitea
+versions.
 
 Implemented operations include complete commit comparisons, direct merged pull
 request association, bounded changed-file and contributor-history pagination,

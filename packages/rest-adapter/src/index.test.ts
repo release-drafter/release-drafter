@@ -19,6 +19,7 @@ const repository: Repository = {
 }
 const profile = {
   capabilities: { draftReleases: true },
+  qualifiedRefMode: 'normalize',
   apiPath: '/api/v1',
   authHeader: (token: string) => `token ${token}`,
   endpoints: createRestEndpoints(),
@@ -131,6 +132,23 @@ describe('GitHub-compatible REST mechanics', () => {
     expect(defaultRestAdapterLimits.maxChangedFiles).toBeLessThanOrEqual(
       defaultRestAdapterLimits.maxPages * defaultRestAdapterLimits.pageSize,
     )
+  })
+
+  it('reserves changed-file capacity before commit association fan-out', async () => {
+    const commits = Array.from({ length: 499 }, (_, index) =>
+      commit(String(index), '2026-01-01T00:00:00Z'),
+    )
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({ total_commits: commits.length, commits })
+      }
+      throw new Error(`Unexpected ${url}`)
+    })
+
+    await expect(
+      createAdapter(fetch).findChanges(request({ includeChangedFiles: true })),
+    ).rejects.toThrow('cannot satisfy 500 more requests')
+    expect(fetch).toHaveBeenCalledTimes(1)
   })
 
   it('uses configured API URLs, explicit authentication, and treats commit-pull 404 as no PR', async () => {
@@ -468,13 +486,31 @@ describe('GitHub-compatible REST mechanics', () => {
     ).resolves.toBe('peeled-sha')
   })
 
-  it('normalizes fully qualified branch refs for Gitea-compatible releases', async () => {
+  it('applies the profile qualified-ref policy to release targets', async () => {
     await expect(
       createAdapter(vi.fn()).resolveCommitish({
         repository,
         commitish: 'refs/heads/feature/test',
       }),
     ).resolves.toBe('feature/test')
+    const preserveFetch = vi.fn<typeof globalThis.fetch>()
+    const preservingAdapter = createGitHubCompatibleRestAdapter(
+      { ...profile, qualifiedRefMode: 'preserve' },
+      { token: 'secret-token', fetch: preserveFetch },
+    )
+    await expect(
+      preservingAdapter.resolveCommitish({
+        repository,
+        commitish: 'refs/heads/feature/test',
+      }),
+    ).resolves.toBe('refs/heads/feature/test')
+    await expect(
+      preservingAdapter.resolveCommitish({
+        repository,
+        commitish: 'refs/tags/v1.0.0',
+      }),
+    ).resolves.toBe('refs/tags/v1.0.0')
+    expect(preserveFetch).not.toHaveBeenCalled()
   })
 
   it('resolves pull refs and filters associated PRs from another base repository', async () => {

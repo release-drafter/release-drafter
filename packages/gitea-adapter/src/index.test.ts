@@ -21,6 +21,7 @@ describe('Gitea profile', () => {
     })
     const adapter = new GiteaAdapter({ token: 'gitea-token', fetch })
     expect(adapter.capabilities).toEqual({ draftReleases: true })
+    expect(giteaProfile.qualifiedRefMode).toBe('normalize')
     expect(giteaProfile.response.pullRequestList.authorParameter).toBe('poster')
     expect({
       commitPull: giteaProfile.endpoints.commitPull(repository, 'a/b'),

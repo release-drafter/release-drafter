@@ -8,8 +8,8 @@ import {
 export const FORGEJO_ADAPTER_PACKAGE_NAME =
   '@release-drafter/forgejo-adapter' as const
 
-/** Forgejo currently implements the shared Gitea-compatible REST profile. */
-export const forgejoProfile = createGiteaCompatibleRestProfile()
+/** Forgejo implements the shared REST profile while accepting full refs. */
+export const forgejoProfile = createGiteaCompatibleRestProfile('preserve')
 
 export class ForgejoAdapter implements ForgeAdapter {
   readonly capabilities = forgejoProfile.capabilities

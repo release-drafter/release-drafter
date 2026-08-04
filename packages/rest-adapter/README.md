@@ -23,9 +23,10 @@ The package exports a Gitea-compatible profile factory for the REST contract
 currently shared by Gitea and Forgejo. Their branded entrypoints remain thin
 facades over the shared adapter factory, preserving independently evolvable
 package boundaries and bound adapter methods. Each adapter owns its profile
-instance so later divergence does not introduce shared mutable state. Fully
-qualified branch refs are normalized to branch names because Gitea release APIs
-do not accept values such as `refs/heads/main`.
+instance so later divergence does not introduce shared mutable state. The
+profile controls whether fully qualified branch and tag refs are preserved.
+Gitea normalizes them for compatibility with versions that require short branch
+names or commit SHAs, while Forgejo preserves the full refs it supports.
 
 ## Safety behavior
 
