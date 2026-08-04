@@ -352,6 +352,8 @@ const hasNextPage = (response: Expanded<unknown[]>) => {
   )
 }
 
+const GITLAB_MAX_PAGE_SIZE = 100
+
 export class GitLabClient {
   readonly limits: GitLabAdapterLimits
   readonly logger: Logger
@@ -415,32 +417,33 @@ export class GitLabClient {
     )
   }
 
-  associatedMergeRequests(
+  async associatedMergeRequests(
     project: string,
     sha: string,
     limit: number,
     budget: RequestBudget,
   ) {
-    return this.transport
-      .response(budget, () =>
-        this.api.Commits.allMergeRequests(project, sha, {
-          page: 1,
-          perPage: limit + 1,
-        }),
-      )
-      .then((response) => {
-        if (response.data.length > limit || hasNextPage(response)) {
-          throw new Error(
-            `GitLab commit ${sha} has more than the ${limit} associated merge-request limit`,
-          )
-        }
-        return response.data
-      })
+    const limitError = `GitLab commit ${sha} has more than the ${limit} associated merge-request limit`
+    const pageSize = Math.min(GITLAB_MAX_PAGE_SIZE, this.limits.pageSize, limit)
+    return this.paginated(
+      (page) =>
+        this.transport.response(budget, () =>
+          this.api.Commits.allMergeRequests(project, sha, {
+            page,
+            perPage: pageSize,
+          }),
+        ),
+      limit,
+      pageSize,
+      limitError,
+    )
   }
 
   async paginated<T>(
     fetchPage: (page: number) => Promise<Expanded<T[]>>,
     maximum = this.limits.maxItemsPerList,
+    pageSize = this.limits.pageSize,
+    overflowMessage?: string,
   ) {
     const items: T[] = []
     let advertisedTotal: number | undefined
@@ -455,11 +458,15 @@ export class GitLabClient {
         advertisedTotal = total
         if (total > maximum)
           throw new Error(
-            `GitLab pagination advertised ${total} items, above the ${maximum} item limit`,
+            overflowMessage ??
+              `GitLab pagination advertised ${total} items, above the ${maximum} item limit`,
           )
       }
       if (items.length + response.data.length > maximum)
-        throw new Error(`GitLab pagination exceeded the ${maximum} item limit`)
+        throw new Error(
+          overflowMessage ??
+            `GitLab pagination exceeded the ${maximum} item limit`,
+        )
       items.push(...response.data)
       if (advertisedTotal !== undefined) {
         if (items.length > advertisedTotal)
@@ -467,10 +474,7 @@ export class GitLabClient {
             `GitLab pagination received more items than the advertised total of ${advertisedTotal}`,
           )
         if (items.length === advertisedTotal) return items
-      } else if (
-        !hasNextPage(response) &&
-        response.data.length < this.limits.pageSize
-      )
+      } else if (!hasNextPage(response) && response.data.length < pageSize)
         return items
       if (!hasNextPage(response) && response.data.length === 0) return items
     }

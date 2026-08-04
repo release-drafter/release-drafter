@@ -249,6 +249,44 @@ describe('GitLabAdapter', () => {
     })
   })
 
+  it("paginates associated merge requests above GitLab's 100-item page cap", async () => {
+    const mergeRequests = Array.from({ length: 150 }, (_, index) =>
+      mergeRequest(index + 1),
+    )
+    const pages: number[] = []
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const url = new URL(String(input))
+      if (url.pathname.includes('/repository/compare')) {
+        return json({
+          compare_timeout: false,
+          commits: [commit('a', '2026-01-01')],
+        })
+      }
+      if (url.pathname.includes('/commits/a/merge_requests')) {
+        expect(url.searchParams.get('per_page')).toBe('100')
+        const page = Number(url.searchParams.get('page'))
+        pages.push(page)
+        return json(
+          page === 1 ? mergeRequests.slice(0, 100) : mergeRequests.slice(100),
+          {},
+          {
+            'x-next-page': page === 1 ? '2' : '',
+            'x-total': String(mergeRequests.length),
+          },
+        )
+      }
+      throw new Error(`Unexpected ${url}`)
+    })
+
+    const result = await adapter(fetch, {
+      maxAssociatedMergeRequests: 150,
+      pageSize: 150,
+    }).findChanges(request({ pullRequestLimit: 150 }))
+
+    expect(result.pullRequests).toHaveLength(150)
+    expect(pages).toEqual([1, 2])
+  })
+
   it('loads bounded changed files and rejects advertised incompleteness', async () => {
     const makeFetch = (diffs: unknown[]) =>
       vi.fn<typeof globalThis.fetch>(async (input) => {
