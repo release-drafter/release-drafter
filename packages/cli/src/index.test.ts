@@ -61,7 +61,7 @@ const createAdapter = (options?: {
     ref?: string
   }) => Promise<string>
 }) => {
-  const get = vi.fn(async () => ({
+  const get = vi.fn(async (_params?: unknown) => ({
     data: { default_branch: options?.defaultBranch ?? 'main' },
   }))
   const getRepositoryConfig = vi.fn(
@@ -70,6 +70,13 @@ const createAdapter = (options?: {
   const adapter = {
     capabilities: { draftReleases: true },
     octokit: { rest: { repos: { get } } },
+    getDefaultBranch: vi.fn(async (repository) => {
+      const response = await get({
+        owner: repository.owner,
+        repo: repository.name,
+      })
+      return response.data.default_branch
+    }),
     getRepositoryConfig,
     listReleases: vi.fn(),
     findChanges: vi.fn(),
@@ -98,7 +105,7 @@ const invoke = async (
   const adapterState = overrides.adapter
     ? { adapter: overrides.adapter }
     : createAdapter()
-  const adapterFactory = vi.fn(() => adapterState.adapter)
+  const adapterFactory = vi.fn((_params?: unknown) => adapterState.adapter)
   const draft = vi.fn<DraftFunction>(async () => createResult())
   if (overrides.draftResult) draft.mockResolvedValue(overrides.draftResult)
   const code = await runCli(argv, {
@@ -107,10 +114,20 @@ const invoke = async (
     env: {
       GITHUB_TOKEN: 'github-token',
       GH_ENTERPRISE_TOKEN: 'enterprise-token',
+      GITEA_TOKEN: 'gitea-token',
+      FORGEJO_TOKEN: 'forgejo-token',
+      GITLAB_TOKEN: 'gitlab-token',
     },
     cwd: '/workspace',
     readLocalFile: localConfigReader(),
-    adapterFactory,
+    adapterFactory: (params) => {
+      adapterFactory({
+        ...params.options,
+        forge: params.forge,
+        repository: params.repository,
+      })
+      return adapterState.adapter
+    },
     draft,
     ...overrides,
   })
@@ -301,6 +318,33 @@ describe('forge and endpoint selection', () => {
       expected: { serverUrl: 'https://github.com' },
     },
     {
+      name: 'Gitea defaults',
+      argv: ['acme/widgets', '--to', 'main', '--forge', 'gitea'],
+      expected: {
+        forge: 'gitea',
+        serverUrl: 'https://gitea.com',
+        token: 'gitea-token',
+      },
+    },
+    {
+      name: 'Forgejo defaults',
+      argv: ['acme/widgets', '--to', 'main', '--forge', 'forgejo'],
+      expected: {
+        forge: 'forgejo',
+        serverUrl: 'https://codeberg.org',
+        token: 'forgejo-token',
+      },
+    },
+    {
+      name: 'GitLab defaults',
+      argv: ['acme/widgets', '--to', 'main', '--forge', 'gitlab'],
+      expected: {
+        forge: 'gitlab',
+        serverUrl: 'https://gitlab.com',
+        token: 'gitlab-token',
+      },
+    },
+    {
       name: 'recognizable GHES API',
       argv: [
         'acme/widgets',
@@ -346,6 +390,53 @@ describe('forge and endpoint selection', () => {
     )
   })
 
+  it('accepts a GitLab repository in a nested namespace', async () => {
+    const result = await invoke([
+      'group/subgroup/project',
+      '--to',
+      'main',
+      '--forge',
+      'gitlab',
+    ])
+
+    expect(result.code).toBe(0)
+    expect(result.adapterFactory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        forge: 'gitlab',
+        repository: {
+          owner: 'group/subgroup',
+          name: 'project',
+          serverUrl: 'https://gitlab.com',
+        },
+      }),
+    )
+  })
+
+  it.each([
+    'group//project',
+    '/group/project',
+    'group/project/',
+    'group /project',
+  ])('rejects malformed GitLab repository path %s', async (repository) => {
+    const result = await invoke([repository, '--forge', 'gitlab'])
+
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain('Repository must be nonblank')
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    'github',
+    'gitea',
+    'forgejo',
+  ] as const)('rejects nested namespaces for the %s forge', async (forge) => {
+    const result = await invoke(['group/subgroup/project', '--forge', forge])
+
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain('Repository must be nonblank')
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
   it('rejects an arbitrary /api/v1 endpoint as ambiguous without inferring a forge', async () => {
     const result = await invoke([
       'acme/widgets',
@@ -356,20 +447,47 @@ describe('forge and endpoint selection', () => {
     expect(result.code).toBe(2)
     expect(result.stderr.text()).toContain('ambiguous')
     expect(result.stderr.text()).toContain('--forge')
-    expect(result.stderr.text()).not.toMatch(/Gitea|Forgejo/i)
     expect(result.adapterFactory).not.toHaveBeenCalled()
   })
 
-  it.each([
-    'gitea',
-    'forgejo',
-    'unknown',
-  ])('rejects unsupported forge %s clearly', async (forge) => {
+  it('rejects unsupported forge unknown clearly', async () => {
+    const forge = 'unknown'
     const result = await invoke(['acme/widgets', '--forge', forge])
 
     expect(result.code).toBe(2)
     expect(result.stderr.text()).toContain(`Forge '${forge}' is not supported`)
     expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
+  it('rejects GraphQL endpoints for REST-only forges', async () => {
+    const result = await invoke([
+      'acme/widgets',
+      '--forge',
+      'gitlab',
+      '--graphql-url',
+      'https://gitlab.com/api/graphql',
+    ])
+
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain(
+      '--graphql-url is supported only for the github forge',
+    )
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
+  it('keeps GitLab publish false as a calculation-only core input', async () => {
+    const result = await invoke([
+      'acme/widgets',
+      '--forge',
+      'gitlab',
+      '--to',
+      'main',
+      '--publish',
+      'false',
+    ])
+
+    expect(result.code).toBe(0)
+    expect(result.draft.mock.calls[0][0].input.publish).toBe(false)
   })
 })
 

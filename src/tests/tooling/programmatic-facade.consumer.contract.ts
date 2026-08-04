@@ -141,12 +141,17 @@ describe.sequential('release-drafter packed programmatic facade', () => {
     writeFileSync(
       join(consumerDirectory, 'consumer.mts'),
       `
-        import { draftRelease } from 'release-drafter'
+        import { createForgeAdapter, draftRelease } from 'release-drafter'
         import type {
           DraftReleaseOptions,
           DraftReleaseResult,
           ForgeAdapter,
+          ForgejoForgeAdapterOptions,
+          GiteaForgeAdapterOptions,
+          GitHubForgeAdapterOptions,
+          GitLabForgeAdapterOptions,
           Logger,
+          CreateForgeAdapterOptions,
         } from 'release-drafter'
 
         const invoke: (
@@ -157,6 +162,36 @@ describe.sequential('release-drafter packed programmatic facade', () => {
         const injectable = { adapter, logger } satisfies Partial<DraftReleaseOptions>
         void invoke
         void injectable
+        const factoryOptions = {
+          forge: 'gitlab',
+          token: 'token',
+          limits: { retries: 0, maxAssociatedMergeRequests: 5 },
+        } satisfies CreateForgeAdapterOptions
+        const githubOptions = {
+          forge: 'github',
+          token: 'token',
+          requestRetries: 1,
+        } satisfies GitHubForgeAdapterOptions
+        const giteaOptions = {
+          forge: 'gitea',
+          token: 'token',
+          limits: { maxPages: 2 },
+        } satisfies GiteaForgeAdapterOptions
+        const forgejoOptions = {
+          forge: 'forgejo',
+          token: 'token',
+          limits: { maxRequestsPerOperation: 3 },
+        } satisfies ForgejoForgeAdapterOptions
+        const gitlabOptions = {
+          forge: 'gitlab',
+          token: 'token',
+          limits: { retries: 0 },
+        } satisfies GitLabForgeAdapterOptions
+        // @ts-expect-error GitHub must reject ignored adapter limits.
+        createForgeAdapter({ forge: 'github', token: 'token', limits: {} })
+        void createForgeAdapter
+        void factoryOptions
+        void [githubOptions, giteaOptions, forgejoOptions, gitlabOptions]
       `,
     )
     writeFileSync(
@@ -207,6 +242,29 @@ describe.sequential('release-drafter packed programmatic facade', () => {
     )
 
     expect(execNode(['import-api.mjs'], consumerDirectory)).toBe('imported\n')
+  })
+
+  it('constructs all bundled forge adapters without private workspace packages', () => {
+    writeFileSync(
+      join(consumerDirectory, 'construct-adapters.mjs'),
+      `
+        import { createForgeAdapter } from 'release-drafter'
+
+        const results = ['github', 'gitea', 'forgejo', 'gitlab'].map((forge) => {
+          const adapter = createForgeAdapter({
+            forge,
+            token: 'not-a-real-token',
+            fetch: async () => new Response('{}', { status: 200 }),
+          })
+          return [forge, adapter.capabilities.draftReleases]
+        })
+        process.stdout.write(JSON.stringify(results) + '\\n')
+      `,
+    )
+
+    expect(execNode(['construct-adapters.mjs'], consumerDirectory)).toBe(
+      '[["github",true],["gitea",true],["forgejo",true],["gitlab",false]]\n',
+    )
   })
 
   it('runs a dry-run release through the bundled core implementation', () => {

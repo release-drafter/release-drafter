@@ -52264,6 +52264,14 @@ var GitHubAdapter = class {
 			return page;
 		})).map(normalizeRelease);
 	}
+	async getDefaultBranch(repository) {
+		const branch = (await this.octokit.rest.repos.get({
+			owner: repository.owner,
+			repo: repository.name
+		})).data.default_branch?.trim();
+		if (!branch) throw new Error("GitHub returned a blank default branch");
+		return branch;
+	}
 	async findChanges(params) {
 		const { repository, comparison } = params;
 		const comparisonOids = [];

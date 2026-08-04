@@ -1,4 +1,8 @@
 import * as releaseDrafterCore from '@release-drafter/core'
+import { ForgejoAdapter } from '@release-drafter/forgejo-adapter'
+import { GiteaAdapter } from '@release-drafter/gitea-adapter'
+import { GitHubAdapter } from '@release-drafter/github-adapter'
+import { GitLabAdapter } from '@release-drafter/gitlab-adapter'
 
 /** Receives lifecycle messages emitted while calculating or writing a release. */
 export interface Logger {
@@ -140,6 +144,95 @@ export interface ForgeAdapter {
   resolveCommitish(params: ResolveCommitishRequest): Promise<string>
   createRelease(params: CreateReleaseRequest): Promise<Release>
   updateRelease(params: UpdateReleaseRequest): Promise<Release>
+}
+
+export type ForgeName = 'github' | 'gitea' | 'forgejo' | 'gitlab'
+
+export type ForgeFetch = typeof globalThis.fetch
+
+interface CommonForgeAdapterOptions {
+  token: string
+  serverUrl?: string
+  apiUrl?: string
+  logger?: Logger
+  fetch?: ForgeFetch
+}
+
+export interface RestForgeAdapterLimits {
+  timeoutMs: number
+  maxResponseBytes: number
+  maxComparisonBytes: number
+  maxComparisonCommits: number
+  maxPages: number
+  pageSize: number
+  maxItemsPerList: number
+  maxChangedFiles: number
+  maxRequestsPerOperation: number
+  concurrency: number
+}
+
+export interface GitLabForgeAdapterLimits extends RestForgeAdapterLimits {
+  maxAssociatedMergeRequests: number
+  retries: number
+  retryBaseDelayMs: number
+  maxRetryDelayMs: number
+}
+
+export interface GitHubForgeAdapterOptions extends CommonForgeAdapterOptions {
+  forge: 'github'
+  graphqlUrl?: string
+  env?: Record<string, string | undefined>
+  requestAgent?: object
+  requestRetries?: number
+  changedFilesConcurrency?: number
+  contributorConcurrency?: number
+}
+
+export interface GiteaForgeAdapterOptions extends CommonForgeAdapterOptions {
+  forge: 'gitea'
+  limits?: Partial<RestForgeAdapterLimits>
+}
+
+export interface ForgejoForgeAdapterOptions extends CommonForgeAdapterOptions {
+  forge: 'forgejo'
+  limits?: Partial<RestForgeAdapterLimits>
+}
+
+export interface GitLabForgeAdapterOptions extends CommonForgeAdapterOptions {
+  forge: 'gitlab'
+  limits?: Partial<GitLabForgeAdapterLimits>
+}
+
+export type CreateForgeAdapterOptions =
+  | GitHubForgeAdapterOptions
+  | GiteaForgeAdapterOptions
+  | ForgejoForgeAdapterOptions
+  | GitLabForgeAdapterOptions
+
+/** Constructs a bundled forge adapter from a stable structural option shape. */
+export const createForgeAdapter = (
+  options: CreateForgeAdapterOptions,
+): ForgeAdapter => {
+  const defaults: Record<ForgeName, string> = {
+    github: 'https://github.com',
+    gitea: 'https://gitea.com',
+    forgejo: 'https://codeberg.org',
+    gitlab: 'https://gitlab.com',
+  }
+  const adapterOptions = {
+    ...options,
+    serverUrl: options.serverUrl ?? defaults[options.forge],
+  }
+  switch (options.forge) {
+    case 'github':
+      return new GitHubAdapter(adapterOptions)
+    case 'gitea':
+      return new GiteaAdapter(adapterOptions)
+    case 'forgejo':
+      return new ForgejoAdapter(adapterOptions)
+    case 'gitlab':
+      return new GitLabAdapter(adapterOptions)
+  }
 }
 
 export interface ParsedChangeCondition {

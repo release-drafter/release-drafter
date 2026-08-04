@@ -1,7 +1,8 @@
-import type { ForgeAdapter } from '@release-drafter/core'
+import type { ForgeAdapter, Repository } from '@release-drafter/core'
 import {
   createGiteaCompatibleRestProfile,
   createGitHubCompatibleRestAdapter,
+  type GitHubCompatibleRestAdapterRuntime,
   type RestAdapterOptions,
 } from '@release-drafter/rest-adapter'
 
@@ -13,7 +14,7 @@ export const forgejoProfile = createGiteaCompatibleRestProfile('preserve')
 
 export class ForgejoAdapter implements ForgeAdapter {
   readonly capabilities = forgejoProfile.capabilities
-  private readonly adapter: ForgeAdapter
+  private readonly adapter: GitHubCompatibleRestAdapterRuntime
 
   constructor(options: RestAdapterOptions) {
     this.adapter = createGitHubCompatibleRestAdapter(forgejoProfile, options)
@@ -29,4 +30,8 @@ export class ForgejoAdapter implements ForgeAdapter {
     this.adapter.createRelease(params)
   updateRelease: ForgeAdapter['updateRelease'] = (params) =>
     this.adapter.updateRelease(params)
+  getDefaultBranch = (repository: Repository) =>
+    this.adapter.getDefaultBranch(repository)
+  getRepositoryConfig: GitHubCompatibleRestAdapterRuntime['getRepositoryConfig'] =
+    (options) => this.adapter.getRepositoryConfig(options)
 }

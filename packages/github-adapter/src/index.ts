@@ -306,6 +306,16 @@ export class GitHubAdapter implements ForgeAdapter {
     return releases.map(normalizeRelease)
   }
 
+  async getDefaultBranch(repository: Repository): Promise<string> {
+    const response = await this.octokit.rest.repos.get({
+      owner: repository.owner,
+      repo: repository.name,
+    })
+    const branch = response.data.default_branch?.trim()
+    if (!branch) throw new Error('GitHub returned a blank default branch')
+    return branch
+  }
+
   async findChanges(params: FindChangesRequest): Promise<ChangeSet> {
     const { repository, comparison } = params
     const comparisonOids: string[] = []

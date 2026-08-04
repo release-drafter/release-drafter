@@ -4,7 +4,11 @@
     "paths": {
       "@release-drafter/cli": ["../cli/src/index.ts"],
       "@release-drafter/core": ["../core/src/index.ts"],
-      "@release-drafter/github-adapter": ["../github-adapter/src/index.ts"]
+      "@release-drafter/forgejo-adapter": ["../forgejo-adapter/src/index.ts"],
+      "@release-drafter/gitea-adapter": ["../gitea-adapter/src/index.ts"],
+      "@release-drafter/github-adapter": ["../github-adapter/src/index.ts"],
+      "@release-drafter/gitlab-adapter": ["../gitlab-adapter/src/index.ts"],
+      "@release-drafter/rest-adapter": ["../rest-adapter/src/index.ts"]
     }
   },
   "include": ["src"]
