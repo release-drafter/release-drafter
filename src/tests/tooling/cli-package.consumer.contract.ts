@@ -38,6 +38,7 @@ const expectedPackageFiles = [
   'package.json',
 ]
 const approvedRuntimeDependencies = {
+  '@gitbeaker/rest': '43.8.0',
   '@octokit/core': '^7.0.6',
   '@octokit/plugin-paginate-graphql': '^6.0.0',
   '@octokit/plugin-paginate-rest': '^14.0.0',
@@ -89,6 +90,7 @@ const isolatedEnvironment = (): NodeJS.ProcessEnv => {
   for (const name of [
     'ACTIONS_RUNTIME_TOKEN',
     'FORGEJO_TOKEN',
+    'GITEA_TOKEN',
     'GH_ENTERPRISE_TOKEN',
     'GH_TOKEN',
     'GITHUB_TOKEN',
@@ -459,7 +461,6 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
       const relativePath = path.slice(installedPackageDirectory.length + 1)
       const problems: string[] = []
       const checks: [RegExp, string][] = [
-        [/gitbeaker/i, 'GitBeaker marker'],
         [
           /node-semver|SEMVER_SPEC_VERSION|MAX_SAFE_COMPONENT_LENGTH|MAX_SAFE_BUILD_LENGTH/,
           'node-semver marker',

@@ -64,6 +64,22 @@ const workspaceAliases = bundlesCliRuntime
         workspaceRoot,
         '../github-adapter/src/index.ts',
       ),
+      '@release-drafter/rest-adapter': resolve(
+        workspaceRoot,
+        '../rest-adapter/src/index.ts',
+      ),
+      '@release-drafter/gitea-adapter': resolve(
+        workspaceRoot,
+        '../gitea-adapter/src/index.ts',
+      ),
+      '@release-drafter/forgejo-adapter': resolve(
+        workspaceRoot,
+        '../forgejo-adapter/src/index.ts',
+      ),
+      '@release-drafter/gitlab-adapter': resolve(
+        workspaceRoot,
+        '../gitlab-adapter/src/index.ts',
+      ),
       yaml: resolve(workspaceRoot, '../../node_modules/yaml/dist/index.js'),
       ...(packageName === 'release-drafter'
         ? {

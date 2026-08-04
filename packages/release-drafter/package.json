@@ -25,6 +25,7 @@
     "test:run": "vitest run --config ../../vite.workspace.config.ts"
   },
   "dependencies": {
+    "@gitbeaker/rest": "43.8.0",
     "@octokit/core": "^7.0.6",
     "@octokit/plugin-paginate-graphql": "^6.0.0",
     "@octokit/plugin-paginate-rest": "^14.0.0",
@@ -34,7 +35,11 @@
   },
   "devDependencies": {
     "@release-drafter/cli": "*",
-    "@release-drafter/core": "*"
+    "@release-drafter/core": "*",
+    "@release-drafter/forgejo-adapter": "*",
+    "@release-drafter/gitea-adapter": "*",
+    "@release-drafter/github-adapter": "*",
+    "@release-drafter/gitlab-adapter": "*"
   },
   "license": "ISC",
   "publishConfig": {

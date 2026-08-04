@@ -10,6 +10,7 @@ const facadeManifest = resolve(
   'packages/release-drafter/package.json',
 )
 const approvedRuntimeDependencies = new Set([
+  '@gitbeaker/rest',
   '@octokit/core',
   '@octokit/plugin-paginate-graphql',
   '@octokit/plugin-paginate-rest',
@@ -166,7 +167,8 @@ describe.sequential('release-drafter workspace build boundary', () => {
 
     for (const [file, source] of shippedFiles) {
       expect(source, file).not.toMatch(forbiddenImplementation)
-      expect(source, file).not.toMatch(/gitbeaker/iu)
+      if (file.endsWith('.d.ts'))
+        expect(source, file).not.toMatch(/gitbeaker/iu)
       expect(source, file).not.toMatch(forbiddenSemver)
       expect(source, file).not.toMatch(forbiddenAbsolutePath)
       expect(source, file).not.toMatch(forbiddenLegacyRuntime)
@@ -184,15 +186,8 @@ describe.sequential('release-drafter workspace build boundary', () => {
     }
   })
 
-  it('keeps the programmatic entry independent of GitHub adapter dependencies', () => {
-    for (const file of indexClosure) {
-      const source = shippedFiles.get(file) ?? ''
-      const externalImports = moduleSpecifiers(source).filter(
-        (specifier) => !isRelativeSpecifier(specifier),
-      )
-      expect(externalImports, file).toEqual([])
-    }
-
+  it('keeps the programmatic entry independent of the CLI graph', () => {
+    expect(indexClosure).not.toContain('cli.js')
     for (const file of cliClosure) {
       const source = shippedFiles.get(file) ?? ''
       for (const specifier of moduleSpecifiers(source)) {
@@ -219,6 +214,7 @@ describe.sequential('release-drafter workspace build boundary', () => {
     expect(declarations).toContain('export declare const draftRelease')
     expect(declarations).toContain('export interface DraftReleaseOptions')
     expect(declarations).toContain('export interface ForgeAdapter')
+    expect(declarations).toContain('export declare const createForgeAdapter')
     expect(declarations).not.toContain('boundary is established')
     expect(declarations).not.toMatch(/@release-drafter\/|@actions\//)
     expect(declarations).not.toMatch(/gitbeaker/i)

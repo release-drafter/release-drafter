@@ -167,6 +167,52 @@ export class GitLabAdapter implements ForgeAdapter {
     )
   }
 
+  async getDefaultBranch(repository: FindChangesRequest['repository']) {
+    const client = this.client(repository)
+    const response = await client.projectDetails(
+      client.project(repository),
+      client.budget(),
+    )
+    const branch = response.data.default_branch?.trim()
+    if (!branch) throw new Error('GitLab returned a blank default branch')
+    return branch
+  }
+
+  async getRepositoryConfig({
+    repository,
+    path,
+    ref,
+  }: {
+    repository: FindChangesRequest['repository']
+    path: string
+    ref?: string
+  }) {
+    const client = this.client(repository)
+    const project = client.project(repository)
+    const budget = client.budget()
+    let targetRef = ref?.trim()
+    if (!targetRef) {
+      const response = await client.projectDetails(project, budget)
+      targetRef = response.data.default_branch?.trim()
+      if (!targetRef) throw new Error('GitLab returned a blank default branch')
+    }
+    const response = await client.repositoryFile(
+      project,
+      path,
+      targetRef,
+      budget,
+    )
+    if (response.data.encoding !== 'base64' || !response.data.content) {
+      throw new Error(
+        'GitLab repository config response was not base64 content',
+      )
+    }
+    return Buffer.from(
+      response.data.content.replace(/\s/gu, ''),
+      'base64',
+    ).toString('utf8')
+  }
+
   async findChanges(request: FindChangesRequest): Promise<ChangeSet> {
     const client = this.client(request.repository)
     const project = client.project(request.repository)

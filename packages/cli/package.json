@@ -22,7 +22,11 @@
   },
   "dependencies": {
     "@release-drafter/core": "*",
+    "@release-drafter/forgejo-adapter": "*",
+    "@release-drafter/gitea-adapter": "*",
+    "@release-drafter/gitlab-adapter": "*",
     "@release-drafter/github-adapter": "*",
+    "@release-drafter/rest-adapter": "*",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
