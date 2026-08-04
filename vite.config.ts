@@ -60,6 +60,9 @@ export default defineConfig({
   },
   test: {
     include: ['src/tests/**/*.test.ts', 'packages/*/src/**/*.test.ts'],
+    // Real-forge suites require Docker and unrestricted network access. Keep
+    // them opt-in through their dedicated Vitest configurations.
+    exclude: ['**/node_modules/**', '**/dist/**', '**/*.container.test.ts'],
     testTimeout: 60000,
     setupFiles: ['src/tests/setup.ts'],
     coverage: {
