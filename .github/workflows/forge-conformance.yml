@@ -27,9 +27,12 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+
       - name: Detect forge conformance scope
         id: scope
-        shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_ACTION: ${{ github.event.action }}
@@ -38,62 +41,7 @@ jobs:
           HAS_OVERRIDE_LABEL: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:forge-conformance') }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE_SHA: ${{ github.event.before }}
-        run: |
-          set -uo pipefail
-
-          should_run=false
-          reason='no relevant files changed'
-
-          if [[ "$EVENT_NAME" == 'pull_request' && "$EVENT_ACTION" == 'labeled' ]]; then
-            if [[ "$LABEL_NAME" == "$OVERRIDE_LABEL" ]]; then
-              should_run=true
-              reason="override label $OVERRIDE_LABEL was added"
-            else
-              reason="labeled event was for $LABEL_NAME"
-            fi
-          elif [[ "$EVENT_NAME" == 'pull_request' && "$HAS_OVERRIDE_LABEL" == 'true' ]]; then
-            should_run=true
-            reason="pull request has override label $OVERRIDE_LABEL"
-          else
-            if [[ "$EVENT_NAME" == 'pull_request' ]]; then
-              base_sha=$PR_BASE_SHA
-            else
-              base_sha=$PUSH_BEFORE_SHA
-            fi
-
-            if [[ -z "$base_sha" ]] || ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
-              echo "::warning::Base SHA is missing or invalid; running forge conformance"
-              should_run=true
-              reason='changed-file detection failed open'
-            else
-              git diff --quiet --no-renames "$base_sha" HEAD -- \
-                .github/workflows/ci.yml \
-                .github/workflows/forge-conformance.yml \
-                .node-version \
-                package.json \
-                package-lock.json \
-                ':(glob)tsconfig*.json' \
-                ':(glob)vite*.config.ts' \
-                ':(glob)vitest*.config.ts' \
-                ':(glob)src/**' \
-                ':(glob)packages/*/src/**' \
-                ':(glob)packages/*/package.json' \
-                ':(glob)packages/*/tsconfig*.json'
-              diff_status=$?
-
-              if [[ $diff_status -eq 1 ]]; then
-                should_run=true
-                reason='relevant files changed'
-              elif [[ $diff_status -gt 1 ]]; then
-                echo "::warning::git diff failed with status $diff_status; running forge conformance"
-                should_run=true
-                reason='changed-file detection failed open'
-              fi
-            fi
-          fi
-
-          echo "should-run=$should_run" >> "$GITHUB_OUTPUT"
-          echo "Forge conformance should-run=$should_run: $reason"
+        run: node src/scripts/forge-conformance-router.ts
 
   forge-conformance:
     name: Forge conformance (${{ matrix.forge }})

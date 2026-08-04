@@ -27,6 +27,7 @@ type Workflow = {
         name?: string
         uses?: string
         run?: string
+        shell?: string
         if?: string
         env?: Record<string, string>
         'timeout-minutes'?: number
@@ -114,30 +115,23 @@ describe('GitLab integration structure', () => {
         'persist-credentials': false,
       },
     })
+    expect(scope?.steps?.[1]).toMatchObject({
+      uses: 'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020',
+      with: { 'node-version-file': '.node-version' },
+    })
 
     expect(scopeStep?.env).toMatchObject({
+      EVENT_NAME: '${{ github.event_name }}',
       EVENT_ACTION: '${{ github.event.action }}',
       LABEL_NAME: '${{ github.event.label.name }}',
       OVERRIDE_LABEL: 'ci:forge-conformance',
+      HAS_OVERRIDE_LABEL:
+        "${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:forge-conformance') }}",
       PR_BASE_SHA: '${{ github.event.pull_request.base.sha }}',
       PUSH_BEFORE_SHA: '${{ github.event.before }}',
     })
-    expect(scopeStep?.run).toContain('git diff --quiet --no-renames')
-    expect(scopeStep?.run).toContain('git cat-file -e')
-    expect(scopeStep?.run).toContain('.github/workflows/ci.yml')
-    expect(scopeStep?.run).toContain('.github/workflows/forge-conformance.yml')
-    expect(scopeStep?.run).toContain('.node-version')
-    expect(scopeStep?.run).toContain('package.json')
-    expect(scopeStep?.run).toContain('package-lock.json')
-    expect(scopeStep?.run).toContain(':(glob)tsconfig*.json')
-    expect(scopeStep?.run).toContain(':(glob)vite*.config.ts')
-    expect(scopeStep?.run).toContain(':(glob)vitest*.config.ts')
-    expect(scopeStep?.run).toContain(':(glob)src/**')
-    expect(scopeStep?.run).toContain(':(glob)packages/*/src/**')
-    expect(scopeStep?.run).toContain(':(glob)packages/*/package.json')
-    expect(scopeStep?.run).toContain(':(glob)packages/*/tsconfig*.json')
-    expect(scopeStep?.run).toContain('[[ "$LABEL_NAME" == "$OVERRIDE_LABEL" ]]')
-    expect(scopeStep?.run).toContain('should_run=true')
+    expect(scopeStep?.run).toBe('node src/scripts/forge-conformance-router.ts')
+    expect(scopeStep?.shell).toBeUndefined()
 
     expect(matrix?.needs).toBe('forge-conformance-scope')
     expect(matrix?.if).toBe(
