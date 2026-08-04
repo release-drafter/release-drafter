@@ -436,6 +436,64 @@ describe('GitLabAdapter', () => {
     expect(fetch).toHaveBeenCalledTimes(2)
   })
 
+  it('performs only one POST attempt for transient HTTP and network failures', async () => {
+    const payload = {
+      name: 'Two',
+      tag: 'v2',
+      body: 'notes',
+      targetCommitish: 'main',
+      prerelease: false,
+      makeLatest: true,
+      draft: false,
+    }
+    const transientFetch = vi.fn<typeof globalThis.fetch>(async () =>
+      json({ message: 'busy' }, { status: 503 }),
+    )
+    await expect(
+      adapter(transientFetch, { retries: 3 }).createRelease({
+        repository,
+        payload,
+      }),
+    ).rejects.toThrow('GitLab POST request failed with 503')
+    expect(transientFetch).toHaveBeenCalledOnce()
+
+    const networkFetch = vi.fn<typeof globalThis.fetch>(async () => {
+      throw new Error('socket reset')
+    })
+    await expect(
+      adapter(networkFetch, { retries: 3 }).createRelease({
+        repository,
+        payload,
+      }),
+    ).rejects.toThrow('GitLab POST request failed: socket reset')
+    expect(networkFetch).toHaveBeenCalledOnce()
+  })
+
+  it('does not follow cross-origin redirects or forward the private token', async () => {
+    const firstOrigin = 'https://gitlab.example'
+    const secondOrigin = 'https://redirect.example'
+    let secondOriginToken: string | undefined
+    const fetch = vi.fn<typeof globalThis.fetch>(async (_input, init) => {
+      if (init?.redirect !== 'manual') {
+        secondOriginToken =
+          new Headers(init?.headers).get('private-token') ?? undefined
+        return json([])
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { location: `${secondOrigin}/redirected` },
+      })
+    })
+
+    await expect(
+      adapter(fetch).listReleases({
+        repository: { ...repository, serverUrl: firstOrigin },
+      }),
+    ).rejects.toThrow('GitLab GET request failed with 302')
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(secondOriginToken).toBeUndefined()
+  })
+
   it('redacts tokens and reports request and rate-limit metadata', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(
       async () =>
@@ -491,12 +549,44 @@ describe('GitLabAdapter', () => {
       }),
     ).resolves.toBe('merge-sha')
     await expect(
+      instance.resolveCommitish({
+        repository,
+        commitish: 'refs/merge-requests/9/merge',
+      }),
+    ).resolves.toBe('')
+    await expect(
       instance.resolveCommitish({ repository, commitish: 'refs/tags/v1' }),
     ).resolves.toBe('tag-sha')
     await expect(
       instance.resolveCommitish({ repository, commitish: 'refs/tags/missing' }),
     ).resolves.toBe('')
     expect(warning).toHaveBeenCalled()
+  })
+
+  it('resolves an open MR synthetic merge ref when merge SHAs are unavailable', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const path = decodeURIComponent(pathOf(input))
+      if (path.includes('/merge_requests/8')) {
+        return json({
+          state: 'opened',
+          sha: 'head-sha',
+          merge_commit_sha: null,
+          squash_commit_sha: null,
+        })
+      }
+      if (path.includes('/repository/commits/refs/merge-requests/8/merge')) {
+        return json({ id: 'synthetic-merge-sha' })
+      }
+      throw new Error(`Unexpected ${path}`)
+    })
+
+    await expect(
+      adapter(fetch).resolveCommitish({
+        repository,
+        commitish: 'refs/merge-requests/8/merge',
+      }),
+    ).resolves.toBe('synthetic-merge-sha')
+    expect(fetch).toHaveBeenCalledTimes(2)
   })
 
   it('lists, creates, and updates normalized no-draft releases', async () => {
@@ -542,7 +632,7 @@ describe('GitLabAdapter', () => {
       tag: 'v2',
       body: 'notes',
       targetCommitish: 'main',
-      prerelease: true,
+      prerelease: false,
       makeLatest: true,
       draft: true,
     }
@@ -561,6 +651,47 @@ describe('GitLabAdapter', () => {
       { name: 'Two', tag_name: 'v2', description: 'notes', ref: 'main' },
       { name: 'Two', description: 'notes' },
     ])
+  })
+
+  it('rejects prerelease creation before constructing or sending a request', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>()
+    const instance = new GitLabAdapter({ token: '', fetch })
+    await expect(
+      instance.createRelease({
+        repository,
+        payload: {
+          name: 'Two',
+          tag: 'v2',
+          body: 'notes',
+          targetCommitish: 'main',
+          prerelease: true,
+          makeLatest: true,
+          draft: false,
+        },
+      }),
+    ).rejects.toThrow('GitLab does not support prerelease releases')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('rejects prerelease updates before constructing or sending a request', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>()
+    const instance = new GitLabAdapter({ token: '', fetch })
+    await expect(
+      instance.updateRelease({
+        repository,
+        release: { id: 'v1', tagName: 'v1' },
+        payload: {
+          name: 'One',
+          tag: 'v1',
+          body: 'notes',
+          targetCommitish: 'main',
+          prerelease: true,
+          makeLatest: true,
+          draft: false,
+        },
+      }),
+    ).rejects.toThrow('GitLab does not support prerelease releases')
+    expect(fetch).not.toHaveBeenCalled()
   })
 
   it('rejects releases without a tag name', async () => {
