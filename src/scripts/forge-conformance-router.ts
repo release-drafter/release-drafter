@@ -70,7 +70,6 @@ export const routeForgeConformance = (
 
   if (
     eventName === 'pull_request' &&
-    eventAction !== 'labeled' &&
     environment.HAS_OVERRIDE_LABEL === 'true'
   ) {
     return {
