@@ -104,11 +104,14 @@ The dedicated forge-conformance workflow runs this Docker-backed matrix on pull
 requests when changes touch either forge or normal CI workflow, the Node version,
 root package manifest or lockfile, root TypeScript/Vite/Vitest configuration, any
 `src/**` file, or workspace source, manifest, or TypeScript configuration under
-`packages/*`. Maintainers can also apply the `ci:forge-conformance` label to
-request the matrix explicitly. Adding any other label runs only the dedicated
-workflow's inexpensive scope and gate jobs. It does not rerun normal CI or the
-forge matrix. Pushes to `main` run the matrix only when one of the same relevant
-paths changed.
+`packages/*`. The scope job runs the checked-in TypeScript router with the
+repository's pinned Node version and passes fixed pathspec arguments directly to
+Git without shell interpolation. Missing or invalid base commits and unexpected
+Git failures fail open by running the matrix. Maintainers can also apply the
+exact `ci:forge-conformance` label to request the matrix explicitly. Adding any
+other label runs only the dedicated workflow's inexpensive scope and gate jobs.
+It does not rerun normal CI or the forge matrix. Pushes to `main` run the matrix
+only when one of the same relevant paths changed.
 
 The shared contract exercises the public facade and normalized release listing,
 change discovery, commitish resolution, release creation, and release updates.
