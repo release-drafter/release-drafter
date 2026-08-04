@@ -76,7 +76,7 @@ describe('GitLab integration structure', () => {
     const job = workflow.jobs?.['forge-conformance']
     const steps = job?.steps ?? []
 
-    expect(job?.['timeout-minutes']).toBe(10)
+    expect(job?.['timeout-minutes']).toBe(15)
     expect(job?.strategy?.matrix?.forge).toEqual(['gitea', 'forgejo', 'gitlab'])
     expect(contents).not.toContain('pull_request_target')
     expect(contents).not.toMatch(/secrets\./)
