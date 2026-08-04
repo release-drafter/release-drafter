@@ -4,7 +4,13 @@
   "vite": false,
   "workspaces": {
     ".": {
-      "entry": ["src/scripts/*.ts", "vite.config.ts"],
+      "entry": [
+        "src/scripts/*.ts",
+        "src/tests/**/*.test.ts",
+        "src/tests/**/*.contract.ts",
+        "vite.config.ts",
+        "vitest.*.config.ts",
+      ],
       "project": ["src/**/*.{ts,tsx}", "*.{ts,mts,cts,js,mjs,cjs}"],
     },
     "packages/*": {

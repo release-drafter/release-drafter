@@ -87,6 +87,31 @@ jobs:
       - name: Check for clean working directory
         run: npm run check:clean
 
+  forge-conformance:
+    name: Forge conformance (${{ matrix.forge }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        forge:
+          - gitea
+          - forgejo
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run pinned real-forge conformance suite
+        run: npm run test:conformance:${{ matrix.forge }}
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest

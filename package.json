@@ -34,6 +34,10 @@
     "build:workspaces": "npm run build --workspaces --if-present",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:conformance:gitea": "FORGE_CONFORMANCE_TARGET=gitea vitest run --config vitest.forge.config.ts",
+    "test:conformance:forgejo": "FORGE_CONFORMANCE_TARGET=forgejo vitest run --config vitest.forge.config.ts",
+    "test:conformance:gitea-forgejo": "vitest run --config vitest.forge.config.ts",
+    "test:conformance:gitlab": "vitest run --config vitest.gitlab.config.ts",
     "coverage": "node src/scripts/coverage-summary.ts",
     "tsc:check": "tsc --noEmit && npm run tsc:check --workspaces --if-present",
     "format:write": "biome format --write .",
@@ -79,6 +83,7 @@
     "knip": "6.29.0",
     "nock": "^14.0.16",
     "prettier": "^3.9.6",
+    "testcontainers": "12.0.4",
     "typescript": "^7.0.2",
     "vite": "^8.1.4",
     "vitest": "^4.1.10"
