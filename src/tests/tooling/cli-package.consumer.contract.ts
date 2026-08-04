@@ -10,7 +10,7 @@ import {
 } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
@@ -28,6 +28,11 @@ type CommandResult = {
 const repositoryRoot = resolve(import.meta.dirname, '../../..')
 const packageDirectory = join(repositoryRoot, 'packages/release-drafter')
 const typescriptCli = join(repositoryRoot, 'node_modules/typescript/lib/tsc.js')
+const npmCli = resolve(
+  repositoryRoot,
+  process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
+)
+const npxCli = join(dirname(npmCli), 'npx-cli.js')
 const expectedPackageFiles = [
   'LICENSE',
   'README.md',
@@ -194,11 +199,7 @@ const expectExit = (result: CommandResult, status: number): void => {
 }
 
 const runNpm = (args: string[], cwd = repositoryRoot): CommandResult =>
-  runNode(
-    [process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js', ...args],
-    cwd,
-    packageManagerEnvironment(),
-  )
+  runNode([npmCli, ...args], cwd, packageManagerEnvironment())
 
 const expectSuccessfulNpm = (args: string[], cwd = repositoryRoot): string => {
   const result = runNpm(args, cwd)
@@ -222,10 +223,14 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
   let installedCli: string
   let manifest: {
     bin?: Record<string, string> | string
+    bugs?: { url?: string } | string
     dependencies?: Record<string, string>
     exports?: { '.'?: { import?: string; types?: string } | string }
+    homepage?: string
+    keywords?: string[]
     license?: string
     name?: string
+    repository?: { type?: string; url?: string } | string
     type?: string
     version?: string
   }
@@ -305,15 +310,24 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
 
   it('publishes the ESM API, executable CLI, and approved public dependencies', () => {
     expect(manifest).toMatchObject({
-      bin: { 'release-drafter': './dist/cli.js' },
+      bin: { 'release-drafter': 'dist/cli.js' },
       exports: {
         '.': {
           import: './dist/index.js',
           types: './dist/index.d.ts',
         },
       },
+      bugs: {
+        url: 'https://github.com/release-drafter/release-drafter/issues',
+      },
+      homepage: 'https://github.com/release-drafter/release-drafter',
+      keywords: ['actions', 'release', 'release-notes', 'release-automation'],
       license: 'ISC',
       name: 'release-drafter',
+      repository: {
+        type: 'git',
+        url: 'git+https://github.com/release-drafter/release-drafter.git',
+      },
       type: 'module',
     })
     expect(manifest.dependencies).toEqual(approvedRuntimeDependencies)
@@ -423,6 +437,30 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
       installedCli,
       ['--version'],
       consumerDirectory,
+    )
+    expectExit(version, 0)
+    expect(version.stderr, formatResult(version)).toBe('')
+    expect(version.stdout, formatResult(version)).toBe(
+      `release-drafter ${manifest.version}\n`,
+    )
+    expect(containsJsonOutput(version.stdout)).toBe(false)
+  })
+
+  it('resolves the packed-installed CLI through actual offline npx execution', () => {
+    const npxHome = join(temporaryDirectory, 'npx-home')
+    const npxCache = join(temporaryDirectory, 'npx-cache')
+    mkdirSync(npxHome)
+    mkdirSync(npxCache)
+    const version = runNode(
+      [npxCli, '--offline', '--no-install', 'release-drafter', '--version'],
+      consumerDirectory,
+      {
+        ...isolatedEnvironment(),
+        HOME: npxHome,
+        npm_config_cache: npxCache,
+        npm_config_loglevel: 'error',
+        npm_config_yes: 'false',
+      },
     )
     expectExit(version, 0)
     expect(version.stderr, formatResult(version)).toBe('')

@@ -244,26 +244,41 @@ describe.sequential('release-drafter packed programmatic facade', () => {
     expect(execNode(['import-api.mjs'], consumerDirectory)).toBe('imported\n')
   })
 
-  it('constructs all bundled forge adapters without private workspace packages', () => {
+  it('constructs and exercises all bundled forge adapters without private workspace packages', () => {
     writeFileSync(
       join(consumerDirectory, 'construct-adapters.mjs'),
       `
         import { createForgeAdapter } from 'release-drafter'
 
-        const results = ['github', 'gitea', 'forgejo', 'gitlab'].map((forge) => {
-          const adapter = createForgeAdapter({
-            forge,
-            token: 'not-a-real-token',
-            fetch: async () => new Response('{}', { status: 200 }),
-          })
-          return [forge, adapter.capabilities.draftReleases]
-        })
+        const repository = {
+          owner: 'release-drafter',
+          name: 'release-drafter',
+          serverUrl: 'https://example.test',
+        }
+        const results = await Promise.all(
+          ['github', 'gitea', 'forgejo', 'gitlab'].map(async (forge) => {
+            const adapter = createForgeAdapter({
+              forge,
+              token: 'not-a-real-token',
+              fetch: async () =>
+                new Response('[]', {
+                  status: 200,
+                  headers: {
+                    'content-type': 'application/json',
+                    'x-total': '0',
+                  },
+                }),
+            })
+            const releases = await adapter.listReleases({ repository })
+            return [forge, adapter.capabilities.draftReleases, releases.length]
+          }),
+        )
         process.stdout.write(JSON.stringify(results) + '\\n')
       `,
     )
 
     expect(execNode(['construct-adapters.mjs'], consumerDirectory)).toBe(
-      '[["github",true],["gitea",true],["forgejo",true],["gitlab",false]]\n',
+      '[["github",true,0],["gitea",true,0],["forgejo",true,0],["gitlab",false,0]]\n',
     )
   })
 

@@ -300,5 +300,7 @@ selection, explicit authentication, endpoint configuration, and programmatic
 adapter construction proposed in #1684. The implementations now live behind
 the private workspace boundaries from RFC #1691 and are bundled into this
 facade. Real Gitea, Forgejo, and GitLab compatibility is covered by the #1697
-Testcontainers tooling layer. npm publication workflow gates remain a separate
-follow-up.
+Testcontainers tooling layer. Packed artifact inventory, CLI execution through
+`npx`, ESM imports, NodeNext declarations, and npm publication dry runs are
+covered by the package-readiness tests. A real npm publication remains
+separately gated and requires explicit maintainer approval.
