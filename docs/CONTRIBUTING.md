@@ -91,11 +91,14 @@ The normal `npm run test:run` and `npm run all` commands remain container-free.
 Real-forge compatibility is an opt-in Docker-backed layer:
 
 - `npm run test:conformance:gitea` and `npm run test:conformance:forgejo` run
-  one immutable image, matching the CI matrix. Use
+  one immutable image. Use
   `npm run test:conformance:gitea-forgejo` to run both images through the shared
   `ForgeAdapter` contract.
-- `npm run test:conformance:gitlab` runs the separately configured, heavier
-  GitLab suite.
+- `npm run test:conformance:gitlab` runs the heavier GitLab suite serially with
+  extended startup and teardown timeouts.
+
+Gitea, Forgejo, and GitLab all run in the normal forge-conformance CI matrix.
+Failed GitLab jobs upload their redacted container logs and fixture metadata.
 
 The shared contract exercises the public facade and normalized release listing,
 change discovery, commitish resolution, release creation, and release updates.
