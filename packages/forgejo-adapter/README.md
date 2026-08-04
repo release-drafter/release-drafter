@@ -3,11 +3,12 @@
 Private workspace package implementing `@release-drafter/core`'s `ForgeAdapter`
 contract for Forgejo. It is not published or selected by the public facade yet.
 
-`ForgejoAdapter` is a thin explicit profile over
-`@release-drafter/rest-adapter`. The profile independently declares Forgejo's
-`/api/v1` endpoints, `Authorization: token ...` authentication, pagination and
-response field names, and draft-release capability, even where those values
-currently match Gitea.
+`ForgejoAdapter` is a thin branded facade over the shared Gitea-compatible
+`@release-drafter/rest-adapter` implementation and profile factory. Forgejo
+currently uses the same `/api/v1` endpoints, authentication, pagination,
+response fields, release capability, and ref behavior as Gitea. The branded
+entrypoint remains available so Forgejo can override the shared profile if the
+APIs diverge later.
 
 Implemented operations include complete commit comparisons, direct merged pull
 request association, bounded changed-file and contributor-history pagination,

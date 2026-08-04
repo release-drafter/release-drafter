@@ -3,10 +3,11 @@
 Private workspace package implementing `@release-drafter/core`'s `ForgeAdapter`
 contract for Gitea. It is not published or selected by the public facade yet.
 
-`GiteaAdapter` is a thin explicit profile over
-`@release-drafter/rest-adapter`. The profile declares Gitea's `/api/v1`
-endpoints, `Authorization: token ...` authentication, pagination and response
-field names, and draft-release capability.
+`GiteaAdapter` is a thin branded facade over the shared Gitea-compatible
+`@release-drafter/rest-adapter` implementation and profile factory. The shared
+profile declares the `/api/v1` endpoints, `Authorization: token ...`
+authentication, pagination and response field names, draft-release capability,
+and branch-ref normalization required by Gitea.
 
 Implemented operations include complete commit comparisons, direct merged pull
 request association, bounded changed-file and contributor-history pagination,

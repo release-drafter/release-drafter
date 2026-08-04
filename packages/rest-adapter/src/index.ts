@@ -152,8 +152,8 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
   private readonly client: RestClient
 
   constructor(
-    readonly profile: RestForgeProfile,
-    readonly options: RestAdapterOptions,
+    private readonly profile: RestForgeProfile,
+    options: RestAdapterOptions,
   ) {
     this.capabilities = profile.capabilities
     this.client = new RestClient(profile, options)
@@ -514,6 +514,30 @@ export const createRestEndpoints = () => {
       `${repoPath(repository)}/releases/${encoded(id)}`,
   } satisfies RestForgeProfile['endpoints']
 }
+
+/** Creates the REST profile for the API surface implemented by Gitea and Forgejo. */
+export const createGiteaCompatibleRestProfile = () =>
+  ({
+    capabilities: { draftReleases: true },
+    apiPath: '/api/v1',
+    authHeader: (token: string) => `token ${token}`,
+    endpoints: createRestEndpoints(),
+    response: {
+      comparison: { commits: 'commits', totalCommits: 'total_commits' },
+      pagination: {
+        pageParameter: 'page',
+        limitParameter: 'limit',
+        totalCountHeader: 'x-total-count',
+      },
+      pullRequestList: {
+        authorParameter: 'poster',
+        stateParameter: 'state',
+        closedState: 'closed',
+        sortParameter: 'sort',
+        oldestSort: 'oldest',
+      },
+    },
+  }) as const satisfies RestForgeProfile
 
 export { defaultRestAdapterLimits } from './client.ts'
 export type {
