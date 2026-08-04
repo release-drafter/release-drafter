@@ -56,3 +56,40 @@ jobs:
         env:
           COVERAGE_THRESHOLD: '90'
         run: npm run coverage
+
+  forge-conformance:
+    name: Forge conformance (${{ matrix.forge }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        forge:
+          - gitea
+          - forgejo
+          - gitlab
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run pinned real-forge conformance suite
+        env:
+          GITLAB_TEST_ARTIFACTS: artifacts/gitlab
+        run: npm run test:conformance:${{ matrix.forge }}
+
+      - name: Upload GitLab failure logs
+        if: failure() && matrix.forge == 'gitlab'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: gitlab-integration-logs
+          path: artifacts/gitlab
+          if-no-files-found: warn
+          retention-days: 7

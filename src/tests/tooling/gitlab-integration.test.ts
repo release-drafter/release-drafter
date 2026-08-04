@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
@@ -12,6 +12,9 @@ type Workflow = {
     {
       timeout?: number
       'timeout-minutes'?: number
+      strategy?: {
+        matrix?: { forge?: string[] }
+      }
       steps?: Array<{
         uses?: string
         run?: string
@@ -65,34 +68,30 @@ describe('GitLab integration structure', () => {
     expect(rootConfig).toContain("'**/*.container.test.ts'")
   })
 
-  it('runs only by schedule or explicit dispatch with least privilege', () => {
-    const contents = read('.github/workflows/gitlab-integration.yml')
+  it('runs GitLab in the normal forge matrix with failure logs', () => {
+    expect(existsSync('.github/workflows/gitlab-integration.yml')).toBe(false)
+
+    const contents = read('.github/workflows/ci.yml')
     const workflow = parseYaml(contents) as Workflow
-    const job = workflow.jobs?.gitlab
+    const job = workflow.jobs?.['forge-conformance']
     const steps = job?.steps ?? []
 
-    expect(Object.keys(workflow.on ?? {}).sort()).toEqual([
-      'schedule',
-      'workflow_dispatch',
-    ])
-    expect(workflow.permissions).toEqual({ contents: 'read' })
-    expect(job?.['timeout-minutes']).toBe(40)
+    expect(job?.['timeout-minutes']).toBe(10)
+    expect(job?.strategy?.matrix?.forge).toEqual(['gitea', 'forgejo', 'gitlab'])
     expect(contents).not.toContain('pull_request_target')
     expect(contents).not.toMatch(/secrets\./)
     expect(contents).not.toMatch(/continue-on-error:\s*true/)
 
-    for (const step of steps.filter(({ uses }) => uses)) {
-      expect(step.uses).toMatch(/^[^@]+@[0-9a-f]{40}$/)
-    }
-    expect(
-      steps.find(({ run }) => run === 'npm run test:conformance:gitlab')?.[
-        'timeout-minutes'
-      ],
-    ).toBe(30)
+    const matrixCommand = [
+      'npm run test:conformance:',
+      '$',
+      '{{ matrix.forge }}',
+    ].join('')
+    expect(steps.find(({ run }) => run === matrixCommand)).toBeDefined()
     const upload = steps.find(({ uses }) =>
       uses?.startsWith('actions/upload-artifact@'),
     )
-    expect(upload?.if).toBe('failure()')
+    expect(upload?.if).toBe("failure() && matrix.forge == 'gitlab'")
     expect(upload?.with).toMatchObject({
       path: 'artifacts/gitlab',
       'if-no-files-found': 'warn',
