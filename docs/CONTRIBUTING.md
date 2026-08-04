@@ -100,6 +100,14 @@ Real-forge compatibility is an opt-in Docker-backed layer:
 Gitea, Forgejo, and GitLab all run in the normal forge-conformance CI matrix.
 Failed GitLab jobs upload their redacted container logs and fixture metadata.
 
+On pull requests, CI runs this Docker-backed matrix automatically when changes
+touch the CI workflow, Node version, root package manifest or lockfile, root
+TypeScript/Vite/Vitest configuration, any `src/**` file, or workspace source,
+manifest, or TypeScript configuration under `packages/*`. Maintainers can also
+apply the `ci:forge-conformance` label to request the matrix explicitly. Adding
+other labels does not rerun the normal CI jobs or the forge matrix. Pushes to
+`main` run the matrix only when one of the same relevant paths changed.
+
 The shared contract exercises the public facade and normalized release listing,
 change discovery, commitish resolution, release creation, and release updates.
 Forge-specific fixtures may additionally verify default-branch and repository
