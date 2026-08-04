@@ -33,6 +33,7 @@ const declarationPackages = new Set([
   '@release-drafter/rest-adapter',
   '@release-drafter/gitea-adapter',
   '@release-drafter/forgejo-adapter',
+  '@release-drafter/gitlab-adapter',
 ])
 const publicFacadeRuntimeDependencies = new Set(
   Object.keys(workspaceManifest.dependencies ?? {}),
@@ -43,7 +44,8 @@ const adapterWorkspaceAliases =
         '@release-drafter/core': resolve(workspaceRoot, '../core/src/index.ts'),
       }
     : packageName === '@release-drafter/gitea-adapter' ||
-        packageName === '@release-drafter/forgejo-adapter'
+        packageName === '@release-drafter/forgejo-adapter' ||
+        packageName === '@release-drafter/gitlab-adapter'
       ? {
           '@release-drafter/core': resolve(
             workspaceRoot,

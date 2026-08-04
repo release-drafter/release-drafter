@@ -96,6 +96,7 @@
         "packages/rest-adapter/src/**/*.ts",
         "packages/gitea-adapter/src/**/*.ts",
         "packages/forgejo-adapter/src/**/*.ts",
+        "packages/gitlab-adapter/src/**/*.ts",
         "packages/release-drafter/src/index.ts",
         "packages/release-drafter/src/cli.ts",
       ],

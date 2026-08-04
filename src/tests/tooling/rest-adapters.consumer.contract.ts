@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -46,6 +47,7 @@ describe.sequential('built REST adapter declarations', () => {
     execNpm(['run', 'build', '--workspace', '@release-drafter/rest-adapter'])
     execNpm(['run', 'build', '--workspace', '@release-drafter/gitea-adapter'])
     execNpm(['run', 'build', '--workspace', '@release-drafter/forgejo-adapter'])
+    execNpm(['run', 'build', '--workspace', '@release-drafter/gitlab-adapter'])
     consumerDirectory = mkdtempSync(
       join(tmpdir(), 'release-drafter-adapter-consumer-'),
     )
@@ -60,6 +62,7 @@ describe.sequential('built REST adapter declarations', () => {
       'rest-adapter',
       'gitea-adapter',
       'forgejo-adapter',
+      'gitlab-adapter',
     ]) {
       symlinkSync(
         join(repositoryRoot, 'packages', packageDirectory),
@@ -94,12 +97,20 @@ describe.sequential('built REST adapter declarations', () => {
           ForgejoAdapter,
           forgejoProfile,
         } from '@release-drafter/forgejo-adapter'
+        import {
+          GitLabAdapter,
+          defaultGitLabAdapterLimits,
+          type GitLabAdapterLimits,
+          type GitLabAdapterOptions,
+        } from '@release-drafter/gitlab-adapter'
 
         const options: RestAdapterOptions = { token: 'token' }
         const limits: RestAdapterLimits = defaultRestAdapterLimits
         const profiles: RestForgeProfile[] = [giteaProfile, forgejoProfile]
         const gitea = new GiteaAdapter(options)
         const forgejo = new ForgejoAdapter(options)
+        const gitlabOptions: GitLabAdapterOptions = { token: 'token' }
+        const gitlabLimits: GitLabAdapterLimits = defaultGitLabAdapterLimits
         const adapters: ForgeAdapter[] = [
           gitea,
           forgejo,
@@ -107,10 +118,12 @@ describe.sequential('built REST adapter declarations', () => {
             { ...giteaProfile, endpoints: createRestEndpoints() },
             options,
           ),
+          new GitLabAdapter(gitlabOptions),
         ]
         void limits
         void profiles
         void adapters
+        void gitlabLimits
 
         // @ts-expect-error Adapter credentials remain encapsulated.
         void gitea.options
@@ -118,6 +131,10 @@ describe.sequential('built REST adapter declarations', () => {
         void forgejo.options
         // @ts-expect-error Wire response types are intentionally not public.
         type WireCommit = import('@release-drafter/rest-adapter').RestCommit
+        // @ts-expect-error GitBeaker clients are intentionally not public.
+        type GitBeakerClient = import('@release-drafter/gitlab-adapter').Gitlab
+        // @ts-expect-error Internal GitLab wire types are intentionally not public.
+        type GitLabWireCommit = import('@release-drafter/gitlab-adapter').GitLabCommit
       `,
     )
     writeFileSync(
@@ -162,5 +179,18 @@ describe.sequential('built REST adapter declarations', () => {
       repositoryRoot,
     )
     expect(output).toBe('')
+  })
+
+  it('keeps GitBeaker clients and GitLab wire types out of built declarations', () => {
+    const declaration = readFileSync(
+      join(repositoryRoot, 'packages/gitlab-adapter/dist/index.d.ts'),
+      'utf8',
+    )
+    expect(declaration).not.toMatch(/@gitbeaker/i)
+    expect(declaration).not.toMatch(/\bGitlab\b/)
+    expect(declaration).not.toMatch(/\bGitLabClient\b/)
+    expect(declaration).not.toMatch(
+      /\bGitLab(?:Api|Commit|Comparison|Diff|MergeRequest|Release|Tag|User)\b/,
+    )
   })
 })
