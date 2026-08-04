@@ -91,6 +91,7 @@ describe('GitLab integration structure', () => {
     const matrix = jobs['forge-conformance']
     const gate = jobs['forge-conformance-gate']
     const scopeStep = scope?.steps?.find(({ id }) => id === 'scope')
+    const gateSteps = gate?.steps ?? []
 
     expect(ci.on?.pull_request).toBeNull()
     expect(ci.on?.push?.branches).toEqual(['main'])
@@ -142,8 +143,27 @@ describe('GitLab integration structure', () => {
       needs: ['forge-conformance-scope', 'forge-conformance'],
       if: '${{ always() }}',
     })
-    expect(gate?.steps?.[0]?.run).toContain('SCOPE_RESULT')
-    expect(gate?.steps?.[0]?.run).toContain('MATRIX_RESULT')
+    expect(gateSteps[0]).toMatchObject({
+      uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0',
+      with: { 'persist-credentials': false },
+    })
+    expect(gateSteps[1]).toMatchObject({
+      uses: 'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020',
+      with: { 'node-version-file': '.node-version' },
+    })
+    expect(gateSteps[2]).toMatchObject({
+      env: {
+        SCOPE_RESULT: '${{ needs.forge-conformance-scope.result }}',
+        SHOULD_RUN: '${{ needs.forge-conformance-scope.outputs.should-run }}',
+        MATRIX_RESULT: '${{ needs.forge-conformance.result }}',
+      },
+      run: 'node src/scripts/forge-conformance-gate.ts',
+    })
+    expect(gateSteps[2]?.shell).toBeUndefined()
+    expect(contents).not.toContain('set -euo pipefail')
+    expect(contents).not.toMatch(
+      /\[\[.*(?:SCOPE_RESULT|SHOULD_RUN|MATRIX_RESULT)/,
+    )
   })
 
   it('runs GitLab in the dedicated forge matrix with failure logs', () => {
