@@ -260,14 +260,17 @@ describe('createForgeAdapter', () => {
     {
       forge: 'gitea',
       apiUrl: 'https://gitea.com/api/v1',
+      expectedCommitish: 'main',
     },
     {
       forge: 'forgejo',
       apiUrl: 'https://codeberg.org/api/v1',
+      expectedCommitish: 'refs/heads/main',
     },
   ] as const)('delegates $forge release operations through the bundled adapter', async ({
     forge,
     apiUrl,
+    expectedCommitish,
   }) => {
     const releasesUrl = `${apiUrl}/repos/release-drafter/release-drafter/releases`
     const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
@@ -294,7 +297,7 @@ describe('createForgeAdapter', () => {
         repository,
         commitish: 'refs/heads/main',
       }),
-    ).resolves.toBe('main')
+    ).resolves.toBe(expectedCommitish)
     const release = await created.createRelease({ repository, payload })
     await expect(
       created.updateRelease({ repository, release, payload }),
