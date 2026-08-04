@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/rest-adapter",
   "version": "7.7.0",
-  "description": "GitHub-compatible REST mechanics boundary skeleton.",
+  "description": "Bounded GitHub-compatible REST protocol mechanics for Release Drafter forge adapters.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -17,8 +17,15 @@
   },
   "scripts": {
     "build": "vite build --config ../../vite.workspace.config.ts",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts",
     "tsc:check": "tsc --noEmit -p tsconfig.json"
   },
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@release-drafter/core": "*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
 }

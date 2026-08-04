@@ -1,6 +1,15 @@
-import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { builtinModules } from 'node:module'
-import { dirname, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
 
 const packageJson = process.env.npm_package_json
@@ -19,9 +28,33 @@ if (!packageName) throw new Error('npm_package_name is required')
 const bundlesCliRuntime =
   packageName === 'release-drafter' || packageName === '@release-drafter/cli'
 const bundlesGitHubActions = packageName === '@release-drafter/gh-actions'
+const declarationPackages = new Set([
+  '@release-drafter/core',
+  '@release-drafter/rest-adapter',
+  '@release-drafter/gitea-adapter',
+  '@release-drafter/forgejo-adapter',
+])
 const publicFacadeRuntimeDependencies = new Set(
   Object.keys(workspaceManifest.dependencies ?? {}),
 )
+const adapterWorkspaceAliases =
+  packageName === '@release-drafter/rest-adapter'
+    ? {
+        '@release-drafter/core': resolve(workspaceRoot, '../core/src/index.ts'),
+      }
+    : packageName === '@release-drafter/gitea-adapter' ||
+        packageName === '@release-drafter/forgejo-adapter'
+      ? {
+          '@release-drafter/core': resolve(
+            workspaceRoot,
+            '../core/src/index.ts',
+          ),
+          '@release-drafter/rest-adapter': resolve(
+            workspaceRoot,
+            '../rest-adapter/src/index.ts',
+          ),
+        }
+      : undefined
 const workspaceAliases = bundlesCliRuntime
   ? {
       '@release-drafter/core': resolve(workspaceRoot, '../core/src/index.ts'),
@@ -39,7 +72,7 @@ const workspaceAliases = bundlesCliRuntime
           }
         : {}),
     }
-  : undefined
+  : adapterWorkspaceAliases
 
 export default defineConfig({
   define:
@@ -145,6 +178,75 @@ export default defineConfig({
         if (packageName === 'release-drafter') {
           const { chmod } = await import('node:fs/promises')
           await chmod(resolve(workspaceRoot, 'dist/cli.js'), 0o755)
+          return
+        }
+        if (declarationPackages.has(packageName)) {
+          const repositoryRoot = resolve(workspaceRoot, '../..')
+          const temporaryOutDir = mkdtempSync(
+            join(tmpdir(), 'release-drafter-declarations-'),
+          )
+          try {
+            execFileSync(
+              process.execPath,
+              [
+                resolve(repositoryRoot, 'node_modules/typescript/lib/tsc.js'),
+                '-p',
+                resolve(workspaceRoot, 'tsconfig.json'),
+                '--declaration',
+                '--emitDeclarationOnly',
+                '--noEmit',
+                'false',
+                '--declarationMap',
+                'false',
+                '--rootDir',
+                repositoryRoot,
+                '--outDir',
+                temporaryOutDir,
+              ],
+              { cwd: repositoryRoot, stdio: 'pipe' },
+            )
+            const packageDirectory = packageName.replace(
+              '@release-drafter/',
+              '',
+            )
+            const declarationSource = join(
+              temporaryOutDir,
+              'packages',
+              packageDirectory,
+              'src',
+            )
+            const copyDeclarations = (
+              sourceDirectory: string,
+              targetDirectory: string,
+            ) => {
+              mkdirSync(targetDirectory, { recursive: true })
+              for (const entry of readdirSync(sourceDirectory, {
+                withFileTypes: true,
+              })) {
+                const source = join(sourceDirectory, entry.name)
+                const target = join(targetDirectory, entry.name)
+                if (entry.isDirectory()) {
+                  copyDeclarations(source, target)
+                  continue
+                }
+                if (
+                  !entry.name.endsWith('.d.ts') ||
+                  entry.name.endsWith('.test.d.ts')
+                ) {
+                  continue
+                }
+                const declaration = readFileSync(source, 'utf8').replace(
+                  /(['"])(\.[^'"]+)\.ts\1/g,
+                  (_match, quote: string, specifier: string) =>
+                    `${quote}${specifier}.js${quote}`,
+                )
+                writeFileSync(target, declaration)
+              }
+            }
+            copyDeclarations(declarationSource, resolve(workspaceRoot, 'dist'))
+          } finally {
+            rmSync(temporaryOutDir, { force: true, recursive: true })
+          }
           return
         }
         const constantName = `${packageName

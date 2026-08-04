@@ -34,6 +34,13 @@
       "@release-drafter/github-adapter": [
         "./packages/github-adapter/src/index.ts"
       ],
+      "@release-drafter/rest-adapter": ["./packages/rest-adapter/src/index.ts"],
+      "@release-drafter/gitea-adapter": [
+        "./packages/gitea-adapter/src/index.ts"
+      ],
+      "@release-drafter/forgejo-adapter": [
+        "./packages/forgejo-adapter/src/index.ts"
+      ],
       "@release-drafter/gh-actions": ["./packages/gh-actions/src/index.ts"],
       "@release-drafter/gh-actions/drafter": [
         "./packages/gh-actions/src/drafter/index.ts"
