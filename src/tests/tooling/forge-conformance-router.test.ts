@@ -101,12 +101,31 @@ describe('forge conformance router', () => {
           ...baseEnvironment,
           EVENT_ACTION: 'labeled',
           LABEL_NAME: 'documentation',
-          HAS_OVERRIDE_LABEL: 'true',
         },
         runGit,
       ),
     ).toMatchObject({ shouldRun })
     expect(runGit).toHaveBeenCalledTimes(2)
+  })
+
+  it('runs labeled events when the override label already exists', () => {
+    const runGit = gitRunner()
+
+    expect(
+      routeForgeConformance(
+        {
+          ...baseEnvironment,
+          EVENT_ACTION: 'labeled',
+          LABEL_NAME: 'documentation',
+          HAS_OVERRIDE_LABEL: 'true',
+        },
+        runGit,
+      ),
+    ).toEqual({
+      shouldRun: true,
+      reason: 'pull request has override label ci:forge-conformance',
+    })
+    expect(runGit).not.toHaveBeenCalled()
   })
 
   it('runs non-labeled pull request events when the override label exists', () => {
