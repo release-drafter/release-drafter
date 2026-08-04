@@ -89,8 +89,11 @@ describe('forge conformance router', () => {
     expect(runGit).not.toHaveBeenCalled()
   })
 
-  it('suppresses unrelated labeled events even when the override label already exists', () => {
-    const runGit = gitRunner()
+  it.each([
+    ['relevant diff', 1, true],
+    ['irrelevant diff', 0, false],
+  ])('routes an unrelated labeled event using its %s', (_name, diffStatus, shouldRun) => {
+    const runGit = gitRunner(0, diffStatus)
 
     expect(
       routeForgeConformance(
@@ -102,11 +105,8 @@ describe('forge conformance router', () => {
         },
         runGit,
       ),
-    ).toEqual({
-      shouldRun: false,
-      reason: 'labeled event was for documentation',
-    })
-    expect(runGit).not.toHaveBeenCalled()
+    ).toMatchObject({ shouldRun })
+    expect(runGit).toHaveBeenCalledTimes(2)
   })
 
   it('runs non-labeled pull request events when the override label exists', () => {

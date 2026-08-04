@@ -66,14 +66,11 @@ export const routeForgeConformance = (
         reason: `override label ${overrideLabel} was added`,
       }
     }
-    return {
-      shouldRun: false,
-      reason: `labeled event was for ${labelName}`,
-    }
   }
 
   if (
     eventName === 'pull_request' &&
+    eventAction !== 'labeled' &&
     environment.HAS_OVERRIDE_LABEL === 'true'
   ) {
     return {
