@@ -74,6 +74,12 @@ Common commands:
 - `npm run guard:packages` verifies the private root, private scoped workspaces,
   Node 24 declarations, and the sole structurally publishable `release-drafter`
   facade package.
+- `npm run test:package-readiness` explicitly builds the public facade, runs the
+  existing packed ESM, NodeNext, CLI, and isolated `npx` consumer contracts,
+  then creates one reviewed seven-file facade tarball and runs a
+  credential-sanitized, offline `npm publish --dry-run` against that exact
+  tarball. It also verifies the executable CLI, shebang, ISC metadata, and
+  identical pack/publish inventories.
 - `npm run guard:boundaries` keeps the focused source-level check that runtime
   imports are not satisfied only by `devDependencies`. Dependency-cruiser owns
   the general source and emitted-output graph checks, while the focused SWC AST
@@ -131,8 +137,14 @@ predates the patched releases. Keep this temporary acceptance visible in review
 and upgrade the transitive dependency as soon as the cutoff permits it rather
 than bypassing the repository-wide supply-chain policy.
 
-Do not add npm publication workflows or make scoped `@release-drafter/*`
-workspaces publishable without a dedicated maintainer-approved release plan.
+The package-readiness tooling supersedes the readiness-only proposal in #1684.
+It does not adopt a production publication mechanism from that proposal. The
+workflow proves packaging behavior only: it supplies no npm credentials, runs
+npm in offline and dry-run modes, disables provenance, grants only
+`contents: read`, and does not configure a registry or trusted publisher.
+Production publishing remains out of scope. Do not add a real npm publication
+step or make scoped `@release-drafter/*` workspaces publishable without a
+separate maintainer-approved release plan.
 
 ## Issue Management Policy
 
