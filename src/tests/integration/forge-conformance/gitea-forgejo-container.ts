@@ -312,9 +312,16 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
       },
       commitishCases: [
         { commitish: 'main', expected: 'main' },
-        { commitish: 'refs/heads/main', expected: 'main' },
+        {
+          commitish: 'refs/heads/main',
+          expected: flavor === 'forgejo' ? 'refs/heads/main' : 'main',
+        },
         { commitish: baselineCommit.sha, expected: baselineCommit.sha },
-        { commitish: 'refs/tags/v1.0.0', expected: baselineCommit.sha },
+        {
+          commitish: 'refs/tags/v1.0.0',
+          expected:
+            flavor === 'forgejo' ? 'refs/tags/v1.0.0' : baselineCommit.sha,
+        },
         {
           commitish: `refs/pull/${pull.number}/head`,
           expected: beforeMerge.head.sha,
