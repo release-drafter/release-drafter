@@ -91,29 +91,17 @@ jobs:
     if: ${{ always() }}
 
     steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+
       - name: Enforce forge conformance result
-        shell: bash
         env:
           SCOPE_RESULT: ${{ needs.forge-conformance-scope.result }}
           SHOULD_RUN: ${{ needs.forge-conformance-scope.outputs.should-run }}
           MATRIX_RESULT: ${{ needs.forge-conformance.result }}
-        run: |
-          set -euo pipefail
-
-          if [[ "$SCOPE_RESULT" != 'success' ]]; then
-            echo "Forge conformance scope finished with $SCOPE_RESULT"
-            exit 1
-          fi
-
-          if [[ "$SHOULD_RUN" == 'true' && "$MATRIX_RESULT" == 'success' ]]; then
-            echo 'Requested forge conformance matrix passed'
-            exit 0
-          fi
-
-          if [[ "$SHOULD_RUN" == 'false' && "$MATRIX_RESULT" == 'skipped' ]]; then
-            echo 'Forge conformance matrix was intentionally skipped'
-            exit 0
-          fi
-
-          echo "Unexpected forge conformance result: should-run=$SHOULD_RUN matrix=$MATRIX_RESULT"
-          exit 1
+        run: node src/scripts/forge-conformance-gate.ts

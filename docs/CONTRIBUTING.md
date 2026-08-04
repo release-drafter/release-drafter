@@ -108,10 +108,12 @@ root package manifest or lockfile, root TypeScript/Vite/Vitest configuration, an
 repository's pinned Node version and passes fixed pathspec arguments directly to
 Git without shell interpolation. Missing or invalid base commits and unexpected
 Git failures fail open by running the matrix. Maintainers can also apply the
-exact `ci:forge-conformance` label to request the matrix explicitly. Adding any
-other label runs only the dedicated workflow's inexpensive scope and gate jobs.
-It does not rerun normal CI or the forge matrix. Pushes to `main` run the matrix
-only when one of the same relevant paths changed.
+exact `ci:forge-conformance` label to request the matrix explicitly without
+running changed-file detection. Other label events still use the same relevant
+path detection, so they run the matrix only when the pull request changed a
+covered path. The final gate runs checked-in TypeScript on Node.js 24 rather than
+embedding result logic in the workflow. Pushes to `main` run the matrix only when
+one of the same relevant paths changed.
 
 The shared contract exercises the public facade and normalized release listing,
 change discovery, commitish resolution, release creation, and release updates.
