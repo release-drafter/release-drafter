@@ -255,4 +255,50 @@ describe('createForgeAdapter', () => {
     await expect(created.listReleases({ repository })).resolves.toEqual([])
     expect(fetch).toHaveBeenCalledOnce()
   })
+
+  it.each([
+    {
+      forge: 'gitea',
+      apiUrl: 'https://gitea.com/api/v1',
+    },
+    {
+      forge: 'forgejo',
+      apiUrl: 'https://codeberg.org/api/v1',
+    },
+  ] as const)('delegates $forge release operations through the bundled adapter', async ({
+    forge,
+    apiUrl,
+  }) => {
+    const releasesUrl = `${apiUrl}/repos/release-drafter/release-drafter/releases`
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
+      const method = init?.method ?? 'GET'
+      expect(new Headers(init?.headers).get('authorization')).toBe(
+        'token facade-token',
+      )
+      if (method === 'POST') {
+        expect(String(input)).toBe(releasesUrl)
+        return Response.json({ id: 1, tag_name: payload.tag })
+      }
+      expect(method).toBe('PATCH')
+      expect(String(input)).toBe(`${releasesUrl}/1`)
+      return Response.json({ id: 1, tag_name: payload.tag })
+    })
+    const created = createForgeAdapter({
+      forge,
+      token: 'facade-token',
+      fetch,
+    })
+
+    await expect(
+      created.resolveCommitish({
+        repository,
+        commitish: 'refs/heads/main',
+      }),
+    ).resolves.toBe('main')
+    const release = await created.createRelease({ repository, payload })
+    await expect(
+      created.updateRelease({ repository, release, payload }),
+    ).resolves.toMatchObject({ id: 1, tagName: payload.tag })
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
 })
