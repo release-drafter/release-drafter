@@ -104,8 +104,12 @@ type ParsedOptions = {
 
 class UsageError extends Error {}
 
-const USAGE = `Usage: release-drafter <owner/repo> [options]
-       release-drafter check-pr <owner/repo> <number> [options]
+const USAGE = `Usage: release-drafter <repository> [options]
+       release-drafter check-pr <repository> <number> [options]
+
+Repository:
+  owner/name                  GitHub, Gitea, or Forgejo repository
+  namespace/project          GitLab repository; nested namespaces are allowed
 
 Options:
   -f, --from <ref>             Change comparison base
@@ -115,7 +119,7 @@ Options:
   -t, --to <ref>               Target commitish
   -c, --config <target>        Config target (default: release-drafter.yml)
       --dry-run                Calculate without writing
-      --publish [true|false]   Publish instead of drafting (default: false)
+      --publish [true|false]   Publish the release when true (default: false)
       --prerelease [true|false]
       --latest [true|false]
       --json                   Write one JSON result document to stdout
@@ -128,7 +132,8 @@ Options:
       --version                Show version
 `
 
-const REPOSITORY_PATTERN = /^[^/\s]+\/[^/\s]+$/
+const REPOSITORY_ARGUMENT_PATTERN = /^[^/\s]+(?:\/[^/\s]+)+$/
+const REPOSITORY_SEGMENT_PATTERN = /^[^/\s]+$/
 const DEFAULT_SERVER_URLS: Record<ForgeName, string> = {
   github: 'https://github.com',
   gitea: 'https://gitea.com',
@@ -297,13 +302,25 @@ const selectForge = (params: {
   )
 }
 
-const parseRepository = (value: string | undefined, serverUrl: string) => {
-  if (!value || !REPOSITORY_PATTERN.test(value)) {
+const parseRepository = (
+  value: string | undefined,
+  serverUrl: string,
+  forge: ForgeName,
+) => {
+  const segments = value?.split('/') ?? []
+  if (
+    segments.length < 2 ||
+    (forge !== 'gitlab' && segments.length !== 2) ||
+    segments.some((segment) => !REPOSITORY_SEGMENT_PATTERN.test(segment))
+  ) {
     throw new UsageError(
-      'Repository must use the form owner/name. Owner and name cannot be blank.',
+      forge === 'gitlab'
+        ? 'Repository must use the form namespace/project. Namespace and project cannot be blank. The namespace can contain multiple segments.'
+        : 'Repository must use the form owner/name. Owner and name cannot be blank.',
     )
   }
-  const [owner, name] = value.split('/')
+  const name = segments.pop() as string
+  const owner = segments.join('/')
   return { owner, name, serverUrl }
 }
 
@@ -363,6 +380,7 @@ const parseCommandLine = (argv: readonly string[]) => {
   const repository = parseRepository(
     parsed.positionals[checkPr ? 1 : 0],
     serverUrl,
+    forge,
   )
 
   const options: ParsedOptions = {
@@ -549,7 +567,7 @@ export async function runCli(
   const stderr = injected.stderr ?? process.stderr
   const cliArgv =
     argv[0] === 'check-pr' ||
-    REPOSITORY_PATTERN.test(argv[0] ?? '') ||
+    REPOSITORY_ARGUMENT_PATTERN.test(argv[0] ?? '') ||
     argv[0]?.startsWith('-')
       ? argv
       : argv.slice(2)

@@ -20,7 +20,8 @@ You can also run it without a permanent installation:
 npx release-drafter owner/repo --dry-run
 ```
 
-The repository argument must be exactly `owner/repo`.
+For GitHub, Gitea, and Forgejo, use `owner/repo`. For GitLab, use
+`namespace/project`. A GitLab namespace can contain multiple segments.
 
 ### Authentication
 
@@ -58,7 +59,7 @@ Options:
   -t, --to <ref>               Target commitish
   -c, --config <target>        Config target (default: release-drafter.yml)
       --dry-run                Calculate without writing
-      --publish [true|false]   Publish instead of drafting (default: false)
+      --publish [true|false]   Publish the release when true (default: false)
       --prerelease [true|false]
       --latest [true|false]
       --json                   Write one JSON result document to stdout
@@ -229,9 +230,12 @@ CLI config loading supports Release Drafter's `_extends` chains, including
 are resolved from the config that declares `_extends`. A repository config
 cannot extend a local `file:` target.
 
-### GitHub Enterprise Server and forge selection
+### Forge selection and custom endpoints
 
-The CLI supports GitHub.com and GitHub Enterprise Server:
+The CLI supports GitHub, Gitea, Forgejo, and GitLab. GitHub is the default.
+Select the other forges with `--forge`. GitLab repository arguments use
+`namespace/project`. The namespace can contain multiple segments, such as
+`group/subgroup/project`.
 
 ```sh
 npx release-drafter owner/repo \
@@ -244,13 +248,12 @@ npx release-drafter owner/repo \
 
 The CLI identifies GitHub.com and GitHub Enterprise Server endpoints that use
 the standard `/api/v3` path. Other endpoint paths, including `/api/v1`, require
-an explicit `--forge` selection. Only `--forge github` is accepted in this
-version. Selecting `gitea`, `forgejo`, `gitlab`, or another unsupported forge
-fails. Endpoint URLs must be absolute HTTP(S) URLs without credentials, query
-parameters, or fragments. Environment credentials are used only when REST and
-GraphQL endpoints stay on the expected credential origin. The expected origin
-is `api.github.com` for GitHub.com and the configured server origin for GitHub
-Enterprise Server. Cross-origin endpoints require an explicit `--token`.
+an explicit `--forge` selection. `--graphql-url` is supported only for GitHub.
+Endpoint URLs must be absolute HTTP(S) URLs without credentials, query
+parameters, or fragments. Environment credentials are used only when
+configured API endpoints stay on the expected credential origin. The expected
+origin is `api.github.com` for GitHub.com and the configured server origin for
+other targets. Cross-origin endpoints require an explicit `--token`.
 
 ### Exit codes
 
@@ -317,12 +320,3 @@ or perform network requests.
 `createForgeAdapter(options)` constructs bundled `github`, `gitea`, `forgejo`,
 and `gitlab` adapters without exposing private workspace packages. The
 programmatic API always requires an explicit token.
-
-## Multiforge migration status
-
-This convergence layer selectively ports and supersedes the CLI forge
-selection, explicit authentication, endpoint configuration, and programmatic
-adapter construction proposed in #1684. The implementations now live behind
-the private workspace boundaries from RFC #1691 and are bundled into this
-facade. Container compatibility coverage and npm publication workflow gates
-remain deferred to the later #1697 tooling layers.
