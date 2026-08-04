@@ -36,6 +36,7 @@ export type RestForgeProfile = {
   readonly capabilities: {
     draftReleases: boolean
   }
+  readonly qualifiedRefMode: 'normalize' | 'preserve'
   readonly apiPath: string
   readonly authHeader: (token: string) => string
   readonly endpoints: RestEndpointProfile

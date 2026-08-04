@@ -21,6 +21,7 @@ describe('Forgejo profile', () => {
     })
     const adapter = new ForgejoAdapter({ token: 'forgejo-token', fetch })
     expect(adapter.capabilities).toEqual({ draftReleases: true })
+    expect(forgejoProfile.qualifiedRefMode).toBe('preserve')
     expect(forgejoProfile.response.pullRequestList.authorParameter).toBe(
       'poster',
     )
