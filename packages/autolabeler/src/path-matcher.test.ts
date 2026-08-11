@@ -1,0 +1,35 @@
+import { describe, expect, it } from 'vitest'
+import { createPathMatcher } from './path-matcher.ts'
+
+describe('createPathMatcher', () => {
+  it('matches basename, rooted, directory, and dotfile patterns', () => {
+    expect(createPathMatcher(['*.md'])('docs/README.md')).toBe(true)
+    expect(createPathMatcher(['/README.md'])('docs/README.md')).toBe(false)
+    expect(createPathMatcher(['docs/'])('docs/guide.md')).toBe(true)
+    expect(createPathMatcher(['.*'])('nested/.env')).toBe(true)
+  })
+
+  it('applies ordered negation without reopening ignored parents', () => {
+    expect(createPathMatcher(['*.ts', '!skip.ts'])('skip.ts')).toBe(false)
+    expect(
+      createPathMatcher(['generated/', '!generated/keep.ts'])(
+        'generated/keep.ts',
+      ),
+    ).toBe(true)
+    expect(
+      createPathMatcher(['generated/', '!generated/', '!generated/keep.ts'])(
+        'generated/keep.ts',
+      ),
+    ).toBe(false)
+  })
+
+  it('preserves gitignore escaping and glob syntax', () => {
+    expect(createPathMatcher([String.raw`\!important`])('!important')).toBe(
+      true,
+    )
+    expect(createPathMatcher([String.raw`\#hash`])('#hash')).toBe(true)
+    expect(createPathMatcher(['*.{js,ts}'])('file.js')).toBe(false)
+    expect(createPathMatcher(['file+(1).js'])('file1.js')).toBe(false)
+    expect(createPathMatcher(['file[0-9].js'])('file1.js')).toBe(true)
+  })
+})

@@ -11,6 +11,7 @@ allowed:
   - mit
   - cc0-1.0
   - 0bsd
+  - blueoak-1.0.0
   - other
 
 ignored:
