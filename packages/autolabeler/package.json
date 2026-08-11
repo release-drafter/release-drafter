@@ -3,6 +3,7 @@
   "version": "7.7.0",
   "description": "Runtime-neutral configuration and matching for Release Drafter's autolabeler.",
   "type": "module",
+  "sideEffects": false,
   "engines": {
     "node": ">=24.0.0"
   },
@@ -26,7 +27,7 @@
   },
   "dependencies": {
     "escape-string-regexp": "^5.0.0",
-    "ignore": "^7.0.6",
+    "minimatch": "^10.2.6",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },

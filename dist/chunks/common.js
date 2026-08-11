@@ -4,7 +4,7 @@ import os, { EOL } from "node:os";
 import * as crypto$2 from "node:crypto";
 import * as fs from "node:fs";
 import { constants, existsSync, promises, readFileSync } from "node:fs";
-import * as path$1 from "node:path";
+import * as path$2 from "node:path";
 import * as http$2 from "node:http";
 import * as https$1 from "node:https";
 import * as events from "node:events";
@@ -3462,7 +3462,7 @@ var require_data_url$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 //#endregion
 //#region node_modules/undici/lib/web/fetch/webidl.js
 var require_webidl$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var { types: types$4, inspect: inspect$1 } = __require("node:util");
+	var { types: types$5, inspect: inspect$1 } = __require("node:util");
 	var { markAsUncloneable } = __require("node:worker_threads");
 	var { toUSVString } = require_util$13();
 	/** @type {import('../../../types/webidl').Webidl} */
@@ -3609,7 +3609,7 @@ var require_webidl$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				message: `${argument} ("${webidl.util.Type(O)}") is not an Object.`
 			});
 			const result = {};
-			if (!types$4.isProxy(O)) {
+			if (!types$5.isProxy(O)) {
 				const keys = [...Object.getOwnPropertyNames(O), ...Object.getOwnPropertySymbols(O)];
 				for (const key of keys) {
 					const typedKey = keyConverter(key, prefix, argument);
@@ -3705,12 +3705,12 @@ var require_webidl$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		return webidl.util.ConvertToInt(V, 16, "unsigned", opts, prefix, argument);
 	};
 	webidl.converters.ArrayBuffer = function(V, prefix, argument, opts) {
-		if (webidl.util.Type(V) !== "Object" || !types$4.isAnyArrayBuffer(V)) throw webidl.errors.conversionFailed({
+		if (webidl.util.Type(V) !== "Object" || !types$5.isAnyArrayBuffer(V)) throw webidl.errors.conversionFailed({
 			prefix,
 			argument: `${argument} ("${webidl.util.Stringify(V)}")`,
 			types: ["ArrayBuffer"]
 		});
-		if (opts?.allowShared === false && types$4.isSharedArrayBuffer(V)) throw webidl.errors.exception({
+		if (opts?.allowShared === false && types$5.isSharedArrayBuffer(V)) throw webidl.errors.exception({
 			header: "ArrayBuffer",
 			message: "SharedArrayBuffer is not allowed."
 		});
@@ -3721,12 +3721,12 @@ var require_webidl$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		return V;
 	};
 	webidl.converters.TypedArray = function(V, T, prefix, name, opts) {
-		if (webidl.util.Type(V) !== "Object" || !types$4.isTypedArray(V) || V.constructor.name !== T.name) throw webidl.errors.conversionFailed({
+		if (webidl.util.Type(V) !== "Object" || !types$5.isTypedArray(V) || V.constructor.name !== T.name) throw webidl.errors.conversionFailed({
 			prefix,
 			argument: `${name} ("${webidl.util.Stringify(V)}")`,
 			types: [T.name]
 		});
-		if (opts?.allowShared === false && types$4.isSharedArrayBuffer(V.buffer)) throw webidl.errors.exception({
+		if (opts?.allowShared === false && types$5.isSharedArrayBuffer(V.buffer)) throw webidl.errors.exception({
 			header: "ArrayBuffer",
 			message: "SharedArrayBuffer is not allowed."
 		});
@@ -3737,11 +3737,11 @@ var require_webidl$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		return V;
 	};
 	webidl.converters.DataView = function(V, prefix, name, opts) {
-		if (webidl.util.Type(V) !== "Object" || !types$4.isDataView(V)) throw webidl.errors.exception({
+		if (webidl.util.Type(V) !== "Object" || !types$5.isDataView(V)) throw webidl.errors.exception({
 			header: prefix,
 			message: `${name} is not a DataView.`
 		});
-		if (opts?.allowShared === false && types$4.isSharedArrayBuffer(V.buffer)) throw webidl.errors.exception({
+		if (opts?.allowShared === false && types$5.isSharedArrayBuffer(V.buffer)) throw webidl.errors.exception({
 			header: "ArrayBuffer",
 			message: "SharedArrayBuffer is not allowed."
 		});
@@ -3752,15 +3752,15 @@ var require_webidl$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		return V;
 	};
 	webidl.converters.BufferSource = function(V, prefix, name, opts) {
-		if (types$4.isAnyArrayBuffer(V)) return webidl.converters.ArrayBuffer(V, prefix, name, {
+		if (types$5.isAnyArrayBuffer(V)) return webidl.converters.ArrayBuffer(V, prefix, name, {
 			...opts,
 			allowShared: false
 		});
-		if (types$4.isTypedArray(V)) return webidl.converters.TypedArray(V, V.constructor, prefix, name, {
+		if (types$5.isTypedArray(V)) return webidl.converters.TypedArray(V, V.constructor, prefix, name, {
 			...opts,
 			allowShared: false
 		});
-		if (types$4.isDataView(V)) return webidl.converters.DataView(V, prefix, name, {
+		if (types$5.isDataView(V)) return webidl.converters.DataView(V, prefix, name, {
 			...opts,
 			allowShared: false
 		});
@@ -10377,7 +10377,7 @@ var require_response$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var { URLSerializer } = require_data_url$1();
 	var { kConstruct } = require_symbols$5();
 	var assert$39 = __require("node:assert");
-	var { types: types$3 } = __require("node:util");
+	var { types: types$4 } = __require("node:util");
 	var textEncoder = new TextEncoder("utf-8");
 	var Response = class Response {
 		static error() {
@@ -10637,7 +10637,7 @@ var require_response$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	webidl.converters.XMLHttpRequestBodyInit = function(V, prefix, name) {
 		if (typeof V === "string") return webidl.converters.USVString(V, prefix, name);
 		if (isBlobLike(V)) return webidl.converters.Blob(V, prefix, name, { strict: false });
-		if (ArrayBuffer.isView(V) || types$3.isArrayBuffer(V)) return webidl.converters.BufferSource(V, prefix, name);
+		if (ArrayBuffer.isView(V) || types$4.isArrayBuffer(V)) return webidl.converters.BufferSource(V, prefix, name);
 		if (util.isFormDataLike(V)) return webidl.converters.FormData(V, prefix, name, { strict: false });
 		if (V instanceof URLSearchParams) return webidl.converters.URLSearchParams(V, prefix, name);
 		return webidl.converters.DOMString(V, prefix, name);
@@ -12245,7 +12245,7 @@ var require_util$10 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var { ProgressEvent } = require_progressevent();
 	var { getEncoding } = require_encoding$1();
 	var { serializeAMimeType, parseMIMEType } = require_data_url$1();
-	var { types: types$2 } = __require("node:util");
+	var { types: types$3 } = __require("node:util");
 	var { StringDecoder: StringDecoder$1 } = __require("node:string_decoder");
 	var { btoa: btoa$1 } = __require("node:buffer");
 	/** @type {PropertyDescriptor} */
@@ -12278,7 +12278,7 @@ var require_util$10 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 					fireAProgressEvent("loadstart", fr);
 				});
 				isFirstChunk = false;
-				if (!done && types$2.isUint8Array(value)) {
+				if (!done && types$3.isUint8Array(value)) {
 					bytes.push(value);
 					if ((fr[kLastProgressEventFired] === void 0 || Date.now() - fr[kLastProgressEventFired] >= 50) && !fr[kAborted]) {
 						fr[kLastProgressEventFired] = Date.now();
@@ -14890,7 +14890,7 @@ var require_websocket$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var { ByteParser } = require_receiver$1();
 	var { kEnumerableProperty, isBlobLike } = require_util$13();
 	var { getGlobalDispatcher } = require_global$2();
-	var { types: types$1 } = __require("node:util");
+	var { types: types$2 } = __require("node:util");
 	var { ErrorEvent, CloseEvent } = require_events$1();
 	var { SendQueue } = require_sender$1();
 	var WebSocket = class WebSocket extends EventTarget {
@@ -14975,7 +14975,7 @@ var require_websocket$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 				this.#sendQueue.add(data, () => {
 					this.#bufferedAmount -= length;
 				}, sendHints.string);
-			} else if (types$1.isArrayBuffer(data)) {
+			} else if (types$2.isArrayBuffer(data)) {
 				this.#bufferedAmount += data.byteLength;
 				this.#sendQueue.add(data, () => {
 					this.#bufferedAmount -= data.byteLength;
@@ -15156,7 +15156,7 @@ var require_websocket$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	webidl.converters.WebSocketSendData = function(V) {
 		if (webidl.util.Type(V) === "Object") {
 			if (isBlobLike(V)) return webidl.converters.Blob(V, { strict: false });
-			if (ArrayBuffer.isView(V) || types$1.isArrayBuffer(V)) return webidl.converters.BufferSource(V);
+			if (ArrayBuffer.isView(V) || types$2.isArrayBuffer(V)) return webidl.converters.BufferSource(V);
 		}
 		return webidl.converters.USVString(V);
 	};
@@ -16833,7 +16833,7 @@ function toWin32Path(pth) {
 * @return string The platform-specific path.
 */
 function toPlatformPath(pth) {
-	return pth.replace(/[/\\]/g, path$1.sep);
+	return pth.replace(/[/\\]/g, path$2.sep);
 }
 //#endregion
 //#region node_modules/@actions/io/lib/io-util.js
@@ -16904,7 +16904,7 @@ function tryGetExecutablePath(filePath, extensions) {
 		}
 		if (stats && stats.isFile()) {
 			if (IS_WINDOWS$1) {
-				const upperExt = path$1.extname(filePath).toUpperCase();
+				const upperExt = path$2.extname(filePath).toUpperCase();
 				if (extensions.some((validExt) => validExt.toUpperCase() === upperExt)) return filePath;
 			} else if (isUnixExecutable(stats)) return filePath;
 		}
@@ -16920,10 +16920,10 @@ function tryGetExecutablePath(filePath, extensions) {
 			if (stats && stats.isFile()) {
 				if (IS_WINDOWS$1) {
 					try {
-						const directory = path$1.dirname(filePath);
-						const upperName = path$1.basename(filePath).toUpperCase();
+						const directory = path$2.dirname(filePath);
+						const upperName = path$2.basename(filePath).toUpperCase();
 						for (const actualName of yield readdir(directory)) if (upperName === actualName.toUpperCase()) {
-							filePath = path$1.join(directory, actualName);
+							filePath = path$2.join(directory, actualName);
 							break;
 						}
 					} catch (err) {
@@ -17008,21 +17008,21 @@ function findInPath(tool) {
 		if (!tool) throw new Error("parameter 'tool' is required");
 		const extensions = [];
 		if (IS_WINDOWS$1 && process.env["PATHEXT"]) {
-			for (const extension of process.env["PATHEXT"].split(path$1.delimiter)) if (extension) extensions.push(extension);
+			for (const extension of process.env["PATHEXT"].split(path$2.delimiter)) if (extension) extensions.push(extension);
 		}
 		if (isRooted(tool)) {
 			const filePath = yield tryGetExecutablePath(tool, extensions);
 			if (filePath) return [filePath];
 			return [];
 		}
-		if (tool.includes(path$1.sep)) return [];
+		if (tool.includes(path$2.sep)) return [];
 		const directories = [];
 		if (process.env.PATH) {
-			for (const p of process.env.PATH.split(path$1.delimiter)) if (p) directories.push(p);
+			for (const p of process.env.PATH.split(path$2.delimiter)) if (p) directories.push(p);
 		}
 		const matches = [];
 		for (const directory of directories) {
-			const filePath = yield tryGetExecutablePath(path$1.join(directory, tool), extensions);
+			const filePath = yield tryGetExecutablePath(path$2.join(directory, tool), extensions);
 			if (filePath) matches.push(filePath);
 		}
 		return matches;
@@ -17229,7 +17229,7 @@ var ToolRunner = class extends events.EventEmitter {
 	*/
 	exec() {
 		return __awaiter$4(this, void 0, void 0, function* () {
-			if (!isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) this.toolPath = path$1.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+			if (!isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) this.toolPath = path$2.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
 			this.toolPath = yield which(this.toolPath, true);
 			return new Promise((resolve, reject) => __awaiter$4(this, void 0, void 0, function* () {
 				this._debug(`exec tool: ${this.toolPath}`);
@@ -17679,7 +17679,7 @@ function setSecret(secret) {
 function addPath(inputPath) {
 	if (process.env["GITHUB_PATH"] || "") issueFileCommand("PATH", inputPath);
 	else issueCommand("add-path", {}, inputPath);
-	process.env["PATH"] = `${inputPath}${path$1.delimiter}${process.env["PATH"]}`;
+	process.env["PATH"] = `${inputPath}${path$2.delimiter}${process.env["PATH"]}`;
 }
 /**
 * Gets the value of an input.
@@ -17869,7 +17869,7 @@ function getIDToken(aud) {
 }
 //#endregion
 //#region node_modules/zod/v4/core/core.js
-var _a$1;
+var _a$2;
 function $constructor(name, initializer, params) {
 	function init(inst, def) {
 		if (!inst._zod) Object.defineProperty(inst, "_zod", {
@@ -17920,7 +17920,7 @@ var $ZodEncodeError = class extends Error {
 		this.name = "ZodEncodeError";
 	}
 };
-(_a$1 = globalThis).__zod_globalConfig ?? (_a$1.__zod_globalConfig = {});
+(_a$2 = globalThis).__zod_globalConfig ?? (_a$2.__zod_globalConfig = {});
 var globalConfig = globalThis.__zod_globalConfig;
 function config(newConfig) {
 	if (newConfig) Object.assign(globalConfig, newConfig);
@@ -20220,7 +20220,7 @@ function handleRefineResult(result, payload, input, inst) {
 }
 //#endregion
 //#region node_modules/zod/v4/core/registries.js
-var _a;
+var _a$1;
 var $ZodRegistry = class {
 	constructor() {
 		this._map = /* @__PURE__ */ new WeakMap();
@@ -20263,7 +20263,7 @@ var $ZodRegistry = class {
 function registry() {
 	return new $ZodRegistry();
 }
-(_a = globalThis).__zod_globalRegistry ?? (_a.__zod_globalRegistry = registry());
+(_a$1 = globalThis).__zod_globalRegistry ?? (_a$1.__zod_globalRegistry = registry());
 var globalRegistry = globalThis.__zod_globalRegistry;
 //#endregion
 //#region node_modules/zod/v4/core/api.js
@@ -21456,7 +21456,7 @@ var ZodError = /*@__PURE__*/ $constructor("ZodError", initializer);
 var ZodRealError = /*@__PURE__*/ $constructor("ZodError", initializer, { Parent: Error });
 //#endregion
 //#region node_modules/zod/v4/classic/parse.js
-var parse$3 = /* @__PURE__ */ _parse(ZodRealError);
+var parse$2 = /* @__PURE__ */ _parse(ZodRealError);
 var parseAsync = /* @__PURE__ */ _parseAsync(ZodRealError);
 var safeParse$1 = /* @__PURE__ */ _safeParse(ZodRealError);
 var safeParseAsync = /* @__PURE__ */ _safeParseAsync(ZodRealError);
@@ -21516,7 +21516,7 @@ var ZodType = /*@__PURE__*/ $constructor("ZodType", (inst, def) => {
 	inst.def = def;
 	inst.type = def.type;
 	Object.defineProperty(inst, "_def", { value: def });
-	inst.parse = (data, params) => parse$3(inst, data, params, { callee: inst.parse });
+	inst.parse = (data, params) => parse$2(inst, data, params, { callee: inst.parse });
 	inst.safeParse = (data, params) => safeParse$1(inst, data, params);
 	inst.parseAsync = async (data, params) => parseAsync(inst, data, params, { callee: inst.parseAsync });
 	inst.safeParseAsync = async (data, params) => safeParseAsync(inst, data, params);
@@ -27976,7 +27976,7 @@ function parseDocument(source, options = {}) {
 	}
 	return doc;
 }
-function parse$2(src, reviver, options) {
+function parse$1(src, reviver, options) {
 	let _reviver = void 0;
 	if (typeof reviver === "function") _reviver = reviver;
 	else if (options === void 0 && reviver && typeof reviver === "object") options = reviver;
@@ -28992,9 +28992,9 @@ function getValues(context, operator, key, modifier) {
 	return result;
 }
 function parseUrl(template) {
-	return { expand: expand.bind(null, template) };
+	return { expand: expand$1.bind(null, template) };
 }
-function expand(template, context) {
+function expand$1(template, context) {
 	var operators = [
 		"+",
 		"#",
@@ -29027,7 +29027,7 @@ function expand(template, context) {
 	if (template === "/") return template;
 	else return template.replace(/\/$/, "");
 }
-function parse$1(options) {
+function parse(options) {
 	let method = options.method.toUpperCase();
 	let url = (options.url || "/").replace(/:([a-z]\w+)/g, "{$1}");
 	let headers = Object.assign({}, options.headers);
@@ -29064,7 +29064,7 @@ function parse$1(options) {
 	}, typeof body !== "undefined" ? { body } : null, options.request ? { request: options.request } : null);
 }
 function endpointWithDefaults(defaults, route, options) {
-	return parse$1(merge(defaults, route, options));
+	return parse(merge(defaults, route, options));
 }
 function withDefaults$2(oldDefaults, newDefaults) {
 	const DEFAULTS2 = merge(oldDefaults, newDefaults);
@@ -29073,7 +29073,7 @@ function withDefaults$2(oldDefaults, newDefaults) {
 		DEFAULTS: DEFAULTS2,
 		defaults: withDefaults$2.bind(null, DEFAULTS2),
 		merge: merge.bind(null, DEFAULTS2),
-		parse: parse$1
+		parse
 	});
 }
 var endpoint = withDefaults$2(null, DEFAULTS);
@@ -29444,8 +29444,8 @@ function withCustomRequest(customRequest) {
 //#endregion
 //#region node_modules/@octokit/auth-token/dist-bundle/index.js
 var b64url = "(?:[a-zA-Z0-9_-]+)";
-var sep = "\\.";
-var jwtRE = new RegExp(`^${b64url}${sep}${b64url}${sep}${b64url}$`);
+var sep$1 = "\\.";
+var jwtRE = new RegExp(`^${b64url}${sep$1}${b64url}${sep$1}${b64url}$`);
 var isJWT = jwtRE.test.bind(jwtRE);
 async function auth(token) {
 	const isApp = isJWT(token);
@@ -31052,1617 +31052,1534 @@ function paginateRest(octokit) {
 paginateRest.VERSION = VERSION$1;
 new Context();
 var baseUrl = getApiBaseUrl();
-var defaults = {
+var defaults$1 = {
 	baseUrl,
 	request: {
 		agent: getProxyAgent(baseUrl),
 		fetch: getProxyFetch(baseUrl)
 	}
 };
-Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults);
+Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults$1);
 //#endregion
 //#region node_modules/@actions/github/lib/github.js
 var context = new Context();
 //#endregion
-//#region node_modules/conventional-commits-parser/dist/regex.js
-var nomatchRegex = /(?!.*)/;
-function escape(string) {
-	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-function joinOr(parts) {
-	return parts.map((val) => typeof val === "string" ? escape(val.trim()) : val.source).filter(Boolean).join("|");
-}
-function getNotesRegex(noteKeywords, notesPattern) {
-	if (!noteKeywords) return nomatchRegex;
-	const noteKeywordsSelection = joinOr(noteKeywords);
-	if (!notesPattern) return new RegExp(`^[\\s|*]*(${noteKeywordsSelection})[:\\s]+(.*)`, "i");
-	return notesPattern(noteKeywordsSelection);
-}
-function getReferencePartsRegex(issuePrefixes, issuePrefixesCaseSensitive) {
-	if (!issuePrefixes) return nomatchRegex;
-	const flags = issuePrefixesCaseSensitive ? "g" : "gi";
-	return new RegExp(`(?:.*?)??\\s*([\\w-\\.\\/]*?)??(${joinOr(issuePrefixes)})([\\w-]+)(?=\\s|$|[,;)\\]])`, flags);
-}
-function getReferencesRegex(referenceActions) {
-	if (!referenceActions) return /()(.+)/gi;
-	const joinedKeywords = joinOr(referenceActions);
-	return new RegExp(`(${joinedKeywords})(?:\\s+(.*?))(?=(?:${joinedKeywords})|$)`, "gi");
-}
-/**
-* Make the regexes used to parse a commit.
-* @param options
-* @returns Regexes.
-*/
-function getParserRegexes(options = {}) {
-	return {
-		notes: getNotesRegex(options.noteKeywords, options.notesPattern),
-		referenceParts: getReferencePartsRegex(options.issuePrefixes, options.issuePrefixesCaseSensitive),
-		references: getReferencesRegex(options.referenceActions),
-		mentions: /@([\w-]+)/g,
-		url: /\b(?:https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%_+.~#?&//=])+\b/
+//#region node_modules/balanced-match/dist/esm/index.js
+var balanced = (a, b, str) => {
+	const ma = a instanceof RegExp ? maybeMatch(a, str) : a;
+	const mb = b instanceof RegExp ? maybeMatch(b, str) : b;
+	const r = ma !== null && mb != null && range(ma, mb, str);
+	return r && {
+		start: r[0],
+		end: r[1],
+		pre: str.slice(0, r[0]),
+		body: str.slice(r[0] + ma.length, r[1]),
+		post: str.slice(r[1] + mb.length)
 	};
-}
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/utils.js
-var SCISSOR = "------------------------ >8 ------------------------";
-/**
-* Remove leading and trailing newlines.
-* @param input
-* @returns String without leading and trailing newlines.
-*/
-function trimNewLines(input) {
-	const matches = input.match(/[^\r\n]/);
-	if (typeof matches?.index !== "number") return "";
-	const firstIndex = matches.index;
-	let lastIndex = input.length - 1;
-	while (input[lastIndex] === "\r" || input[lastIndex] === "\n") lastIndex--;
-	return input.substring(firstIndex, lastIndex + 1);
-}
-/**
-* Append a newline to a string.
-* @param src
-* @param line
-* @returns String with appended newline.
-*/
-function appendLine(src, line) {
-	return src ? `${src}\n${line || ""}` : line || "";
-}
-/**
-* Creates a function that filters out comments lines.
-* @param char
-* @returns Comment filter function.
-*/
-function getCommentFilter(char) {
-	return char ? (line) => !line.startsWith(char) : () => true;
-}
-/**
-* Select lines before the scissor.
-* @param lines
-* @param commentChar
-* @returns Lines before the scissor.
-*/
-function truncateToScissor(lines, commentChar) {
-	const scissorIndex = lines.indexOf(`${commentChar} ${SCISSOR}`);
-	if (scissorIndex === -1) return lines;
-	return lines.slice(0, scissorIndex);
-}
-/**
-* Filter out GPG sign lines.
-* @param line
-* @returns True if the line is not a GPG sign line.
-*/
-function gpgFilter(line) {
-	return !line.match(/^\s*gpg:/);
-}
-/**
-* Assign matched correspondence to the target object.
-* @param target - The target object to assign values to.
-* @param matches - The RegExp match array containing the matched groups.
-* @param correspondence - An array of keys that correspond to the matched groups.
-* @returns The target object with assigned values.
-*/
-function assignMatchedCorrespondence(target, matches, correspondence) {
-	const { groups } = matches;
-	for (let i = 0, len = correspondence.length, key; i < len; i++) {
-		key = correspondence[i];
-		target[key] = (groups ? groups[key] : matches[i + 1]) || null;
+};
+var maybeMatch = (reg, str) => {
+	const m = str.match(reg);
+	return m ? m[0] : null;
+};
+var range = (a, b, str) => {
+	let begs, beg, left, right = void 0, result;
+	let ai = str.indexOf(a);
+	let bi = str.indexOf(b, ai + 1);
+	let i = ai;
+	if (ai >= 0 && bi > 0) {
+		if (a === b) return [ai, bi];
+		begs = [];
+		left = str.length;
+		while (i >= 0 && !result) {
+			if (i === ai) {
+				begs.push(i);
+				ai = str.indexOf(a, i + 1);
+			} else if (begs.length === 1) {
+				const r = begs.pop();
+				if (r !== void 0) result = [r, bi];
+			} else {
+				beg = begs.pop();
+				if (beg !== void 0 && beg < left) {
+					left = beg;
+					right = bi;
+				}
+				bi = str.indexOf(b, i + 1);
+			}
+			i = ai < bi && ai >= 0 ? ai : bi;
+		}
+		if (begs.length && right !== void 0) result = [left, right];
 	}
-	return target;
-}
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/options.js
-var defaultOptions = {
-	noteKeywords: ["BREAKING CHANGE", "BREAKING-CHANGE"],
-	issuePrefixes: ["#"],
-	referenceActions: [
-		"close",
-		"closes",
-		"closed",
-		"fix",
-		"fixes",
-		"fixed",
-		"resolve",
-		"resolves",
-		"resolved"
-	],
-	headerPattern: /^(\w*)(?:\(([\w$@.\-*/ ]*)\))?: (.*)$/,
-	headerCorrespondence: [
-		"type",
-		"scope",
-		"subject"
-	],
-	revertPattern: /^Revert\s"([\s\S]*)"\s*This reverts commit (\w*)\.?/,
-	revertCorrespondence: ["header", "hash"],
-	fieldPattern: /^-(.*?)-$/
+	return result;
 };
 //#endregion
-//#region node_modules/conventional-commits-parser/dist/CommitParser.js
-/**
-* Helper to create commit object.
-* @param initialData - Initial commit data.
-* @returns Commit object with empty data.
-*/
-function createCommitObject(initialData = {}) {
-	return {
-		merge: null,
-		revert: null,
-		header: null,
-		body: null,
-		footer: null,
-		notes: [],
-		mentions: [],
-		references: [],
-		...initialData
-	};
+//#region node_modules/brace-expansion/dist/esm/index.js
+var escSlash = "\0SLASH" + Math.random() + "\0";
+var escOpen = "\0OPEN" + Math.random() + "\0";
+var escClose = "\0CLOSE" + Math.random() + "\0";
+var escComma = "\0COMMA" + Math.random() + "\0";
+var escPeriod = "\0PERIOD" + Math.random() + "\0";
+var escSlashPattern = new RegExp(escSlash, "g");
+var escOpenPattern = new RegExp(escOpen, "g");
+var escClosePattern = new RegExp(escClose, "g");
+var escCommaPattern = new RegExp(escComma, "g");
+var escPeriodPattern = new RegExp(escPeriod, "g");
+var slashPattern = /\\\\/g;
+var openPattern = /\\{/g;
+var closePattern = /\\}/g;
+var commaPattern = /\\,/g;
+var periodPattern = /\\\./g;
+var EXPANSION_MAX = 1e5;
+var EXPANSION_MAX_LENGTH = 4e6;
+function numeric(str) {
+	return !isNaN(str) ? parseInt(str, 10) : str.charCodeAt(0);
+}
+function escapeBraces(str) {
+	return str.replace(slashPattern, escSlash).replace(openPattern, escOpen).replace(closePattern, escClose).replace(commaPattern, escComma).replace(periodPattern, escPeriod);
+}
+function unescapeBraces(str) {
+	return str.replace(escSlashPattern, "\\").replace(escOpenPattern, "{").replace(escClosePattern, "}").replace(escCommaPattern, ",").replace(escPeriodPattern, ".");
 }
 /**
-* Commit message parser.
+* Basically just str.split(","), but handling cases
+* where we have nested braced sections, which should be
+* treated as individual members, like {a,{b,c},d}
 */
-var CommitParser = class {
-	options;
-	regexes;
-	lines = [];
-	lineIndex = 0;
-	commit = createCommitObject();
-	constructor(options = {}) {
-		this.options = {
-			...defaultOptions,
-			...options
-		};
-		this.regexes = getParserRegexes(this.options);
+function parseCommaParts(str) {
+	if (!str) return [""];
+	const parts = [];
+	const m = balanced("{", "}", str);
+	if (!m) return str.split(",");
+	const { pre, body, post } = m;
+	const p = pre.split(",");
+	p[p.length - 1] += "{" + body + "}";
+	const postParts = parseCommaParts(post);
+	if (post.length) {
+		p[p.length - 1] += postParts.shift();
+		p.push.apply(p, postParts);
 	}
-	currentLine() {
-		return this.lines[this.lineIndex];
+	parts.push.apply(parts, p);
+	return parts;
+}
+function expand(str, options = {}) {
+	if (!str) return [];
+	const { max = EXPANSION_MAX, maxLength = EXPANSION_MAX_LENGTH } = options;
+	if (str.slice(0, 2) === "{}") str = "\\{\\}" + str.slice(2);
+	return expand_(escapeBraces(str), max, maxLength, true).map(unescapeBraces);
+}
+function embrace(str) {
+	return "{" + str + "}";
+}
+function isPadded(el) {
+	return /^-?0\d/.test(el);
+}
+function lte(i, y) {
+	return i <= y;
+}
+function gte(i, y) {
+	return i >= y;
+}
+function combine(acc, pre, values, max, maxLength, dropEmpties) {
+	const out = [];
+	let length = 0;
+	for (let a = 0; a < acc.length; a++) for (let v = 0; v < values.length; v++) {
+		if (out.length >= max) return out;
+		const expansion = acc[a] + pre + values[v];
+		if (dropEmpties && !expansion) continue;
+		if (length + expansion.length > maxLength) return out;
+		out.push(expansion);
+		length += expansion.length;
 	}
-	nextLine() {
-		return this.lines[this.lineIndex++];
+	return out;
+}
+function expandSequence(body, isAlphaSequence, max) {
+	const n = body.split(/\.\./);
+	const N = [];
+	/* c8 ignore start */
+	if (n[0] === void 0 || n[1] === void 0) return N;
+	/* c8 ignore stop */
+	const x = numeric(n[0]);
+	const y = numeric(n[1]);
+	const width = Math.max(n[0].length, n[1].length);
+	let incr = n.length === 3 && n[2] !== void 0 ? Math.max(Math.abs(numeric(n[2])), 1) : 1;
+	let test = lte;
+	if (y < x) {
+		incr *= -1;
+		test = gte;
 	}
-	isLineAvailable() {
-		return this.lineIndex < this.lines.length;
-	}
-	parseReference(input, action) {
-		const { regexes } = this;
-		if (regexes.url.test(input)) return null;
-		const matches = regexes.referenceParts.exec(input);
-		if (!matches) return null;
-		let [raw, repository = null, prefix, issue] = matches;
-		let owner = null;
-		if (repository) {
-			const slashIndex = repository.indexOf("/");
-			if (slashIndex !== -1) {
-				owner = repository.slice(0, slashIndex);
-				repository = repository.slice(slashIndex + 1);
+	const pad = n.some(isPadded);
+	for (let i = x; test(i, y) && N.length < max; i += incr) {
+		let c;
+		if (isAlphaSequence) {
+			c = String.fromCharCode(i);
+			if (c === "\\") c = "";
+		} else {
+			c = String(i);
+			if (pad) {
+				const need = width - c.length;
+				if (need > 0) {
+					const z = new Array(need + 1).join("0");
+					if (i < 0) c = "-" + z + c.slice(1);
+					else c = z + c;
+				}
 			}
 		}
-		return {
-			raw,
-			action,
-			owner,
-			repository,
-			prefix,
-			issue
-		};
+		N.push(c);
 	}
-	parseReferences(input) {
-		const { regexes } = this;
-		const regex = input.match(regexes.references) ? regexes.references : /()(.+)/gi;
-		const references = [];
-		let matches;
-		let action;
-		let sentence;
-		let reference;
-		while (true) {
-			matches = regex.exec(input);
-			if (!matches) break;
-			action = matches[1] || null;
-			sentence = matches[2] || "";
-			while (true) {
-				reference = this.parseReference(sentence, action);
-				if (!reference) break;
-				references.push(reference);
-			}
+	return N;
+}
+function expand_(str, max, maxLength, isTop) {
+	let acc = [""];
+	let dropEmpties = false;
+	let firstGroup = true;
+	for (;;) {
+		const m = balanced("{", "}", str);
+		if (!m) return combine(acc, str, [""], max, maxLength, dropEmpties);
+		const pre = m.pre;
+		if (/\$$/.test(pre)) {
+			acc = combine(acc, pre + "{" + m.body + "}", [""], max, maxLength, dropEmpties && !m.post.length);
+			firstGroup = false;
+			if (!m.post.length) break;
+			str = m.post;
+			continue;
 		}
-		return references;
-	}
-	skipEmptyLines() {
-		let line = this.currentLine();
-		while (line !== void 0 && !line.trim()) {
-			this.nextLine();
-			line = this.currentLine();
-		}
-	}
-	parseMerge() {
-		const { commit, options } = this;
-		const correspondence = options.mergeCorrespondence || [];
-		const merge = this.currentLine();
-		const matches = merge && options.mergePattern ? merge.match(options.mergePattern) : null;
-		if (matches) {
-			this.nextLine();
-			commit.merge = matches[0] || null;
-			assignMatchedCorrespondence(commit, matches, correspondence);
-			return true;
-		}
-		return false;
-	}
-	parseHeader(isMergeCommit) {
-		if (isMergeCommit) this.skipEmptyLines();
-		const { commit, options } = this;
-		const correspondence = options.headerCorrespondence || [];
-		const header = commit.header ?? this.nextLine();
-		let matches = null;
-		if (header) {
-			if (options.breakingHeaderPattern) matches = header.match(options.breakingHeaderPattern);
-			if (!matches && options.headerPattern) matches = header.match(options.headerPattern);
-		}
-		if (header) commit.header = header;
-		if (matches) assignMatchedCorrespondence(commit, matches, correspondence);
-	}
-	parseMeta() {
-		const { options, commit } = this;
-		if (!options.fieldPattern || !this.isLineAvailable()) return false;
-		let matches;
-		let field = null;
-		let parsed = false;
-		while (this.isLineAvailable()) {
-			matches = this.currentLine().match(options.fieldPattern);
-			if (matches) {
-				field = matches[1] || null;
-				this.nextLine();
+		const isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
+		const isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
+		const isSequence = isNumericSequence || isAlphaSequence;
+		const isOptions = m.body.indexOf(",") >= 0;
+		if (!isSequence && !isOptions) {
+			if (m.post.match(/,(?!,).*\}/)) {
+				str = m.pre + "{" + m.body + escClose + m.post;
+				isTop = true;
 				continue;
 			}
-			if (field) {
-				parsed = true;
-				commit[field] = appendLine(commit[field], this.currentLine());
-				this.nextLine();
-			} else break;
+			return combine(acc, pre + "{" + m.body + "}" + m.post, [""], max, maxLength, dropEmpties);
 		}
-		return parsed;
-	}
-	parseNotes() {
-		const { regexes, commit } = this;
-		if (!this.isLineAvailable()) return false;
-		const matches = this.currentLine().match(regexes.notes);
-		let references = [];
-		if (matches) {
-			const note = {
-				title: matches[1],
-				text: matches[2]
-			};
-			commit.notes.push(note);
-			commit.footer = appendLine(commit.footer, this.currentLine());
-			this.nextLine();
-			while (this.isLineAvailable()) {
-				if (this.parseMeta()) return true;
-				if (this.parseNotes()) return true;
-				references = this.parseReferences(this.currentLine());
-				if (references.length) commit.references.push(...references);
-				else note.text = appendLine(note.text, this.currentLine());
-				commit.footer = appendLine(commit.footer, this.currentLine());
-				this.nextLine();
-				if (references.length) break;
+		if (firstGroup) {
+			dropEmpties = isTop && !isSequence;
+			firstGroup = false;
+		}
+		let values;
+		if (isSequence) values = expandSequence(m.body, isAlphaSequence, max);
+		else {
+			let n = parseCommaParts(m.body);
+			if (n.length === 1 && n[0] !== void 0) {
+				n = expand_(n[0], max, maxLength, false).map(embrace);
+				/* c8 ignore start */
+				if (n.length === 1) {
+					acc = combine(acc, pre + n[0], [""], max, maxLength, dropEmpties && !m.post.length);
+					if (!m.post.length) break;
+					str = m.post;
+					continue;
+				}
 			}
-			return true;
+			values = [];
+			for (let j = 0; j < n.length; j++) values.push.apply(values, expand_(n[j], max, maxLength, false));
 		}
+		acc = combine(acc, pre, values, max, maxLength, dropEmpties && !m.post.length);
+		if (!m.post.length) break;
+		str = m.post;
+	}
+	return acc;
+}
+//#endregion
+//#region node_modules/minimatch/dist/esm/assert-valid-pattern.js
+var MAX_PATTERN_LENGTH = 1024 * 64;
+var assertValidPattern = (pattern) => {
+	if (typeof pattern !== "string") throw new TypeError("invalid pattern");
+	if (pattern.length > MAX_PATTERN_LENGTH) throw new TypeError("pattern is too long");
+};
+//#endregion
+//#region node_modules/minimatch/dist/esm/brace-expressions.js
+var posixClasses = {
+	"[:alnum:]": ["\\p{L}\\p{Nl}\\p{Nd}", true],
+	"[:alpha:]": ["\\p{L}\\p{Nl}", true],
+	"[:ascii:]": ["\\x00-\\x7f", false],
+	"[:blank:]": ["\\p{Zs}\\t", true],
+	"[:cntrl:]": ["\\p{Cc}", true],
+	"[:digit:]": ["\\p{Nd}", true],
+	"[:graph:]": [
+		"\\p{Z}\\p{C}",
+		true,
+		true
+	],
+	"[:lower:]": ["\\p{Ll}", true],
+	"[:print:]": ["\\p{C}", true],
+	"[:punct:]": ["\\p{P}", true],
+	"[:space:]": ["\\p{Z}\\t\\r\\n\\v\\f", true],
+	"[:upper:]": ["\\p{Lu}", true],
+	"[:word:]": ["\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}", true],
+	"[:xdigit:]": ["A-Fa-f0-9", false]
+};
+var braceEscape = (s) => s.replace(/[[\]\\-]/g, "\\$&");
+var regexpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+var rangesToString = (ranges) => ranges.join("");
+var parseClass = (glob, position) => {
+	const pos = position;
+	/* c8 ignore start */
+	if (glob.charAt(pos) !== "[") throw new Error("not in a brace expression");
+	/* c8 ignore stop */
+	const ranges = [];
+	const negs = [];
+	let i = pos + 1;
+	let sawStart = false;
+	let uflag = false;
+	let escaping = false;
+	let negate = false;
+	let endPos = pos;
+	let rangeStart = "";
+	WHILE: while (i < glob.length) {
+		const c = glob.charAt(i);
+		if ((c === "!" || c === "^") && i === pos + 1) {
+			negate = true;
+			i++;
+			continue;
+		}
+		if (c === "]" && sawStart && !escaping) {
+			endPos = i + 1;
+			break;
+		}
+		sawStart = true;
+		if (c === "\\") {
+			if (!escaping) {
+				escaping = true;
+				i++;
+				continue;
+			}
+		}
+		if (c === "[" && !escaping) {
+			for (const [cls, [unip, u, neg]] of Object.entries(posixClasses)) if (glob.startsWith(cls, i)) {
+				if (rangeStart) return [
+					"$.",
+					false,
+					glob.length - pos,
+					true
+				];
+				i += cls.length;
+				if (neg) negs.push(unip);
+				else ranges.push(unip);
+				uflag = uflag || u;
+				continue WHILE;
+			}
+		}
+		escaping = false;
+		if (rangeStart) {
+			if (c > rangeStart) ranges.push(braceEscape(rangeStart) + "-" + braceEscape(c));
+			else if (c === rangeStart) ranges.push(braceEscape(c));
+			rangeStart = "";
+			i++;
+			continue;
+		}
+		if (glob.startsWith("-]", i + 1)) {
+			ranges.push(braceEscape(c + "-"));
+			i += 2;
+			continue;
+		}
+		if (glob.startsWith("-", i + 1)) {
+			rangeStart = c;
+			i += 2;
+			continue;
+		}
+		ranges.push(braceEscape(c));
+		i++;
+	}
+	if (endPos < i) return [
+		"",
+		false,
+		0,
+		false
+	];
+	if (!ranges.length && !negs.length) return [
+		"$.",
+		false,
+		glob.length - pos,
+		true
+	];
+	if (negs.length === 0 && ranges.length === 1 && /^\\?.$/.test(ranges[0]) && !negate) return [
+		regexpEscape(ranges[0].length === 2 ? ranges[0].slice(-1) : ranges[0]),
+		false,
+		endPos - pos,
+		false
+	];
+	const sranges = "[" + (negate ? "^" : "") + rangesToString(ranges) + "]";
+	const snegs = "[" + (negate ? "" : "^") + rangesToString(negs) + "]";
+	return [
+		ranges.length && negs.length ? "(" + sranges + "|" + snegs + ")" : ranges.length ? sranges : snegs,
+		uflag,
+		endPos - pos,
+		true
+	];
+};
+//#endregion
+//#region node_modules/minimatch/dist/esm/unescape.js
+/**
+* Un-escape a string that has been escaped with {@link escape}.
+*
+* If the {@link MinimatchOptions.windowsPathsNoEscape} option is used, then
+* square-bracket escapes are removed, but not backslash escapes.
+*
+* For example, it will turn the string `'[*]'` into `*`, but it will not
+* turn `'\\*'` into `'*'`, because `\` is a path separator in
+* `windowsPathsNoEscape` mode.
+*
+* When `windowsPathsNoEscape` is not set, then both square-bracket escapes and
+* backslash escapes are removed.
+*
+* Slashes (and backslashes in `windowsPathsNoEscape` mode) cannot be escaped
+* or unescaped.
+*
+* When `magicalBraces` is not set, escapes of braces (`{` and `}`) will not be
+* unescaped.
+*/
+var unescape = (s, { windowsPathsNoEscape = false, magicalBraces = true } = {}) => {
+	if (magicalBraces) return windowsPathsNoEscape ? s.replace(/\[([^/\\])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^/\\])\]/g, "$1$2").replace(/\\([^/])/g, "$1");
+	return windowsPathsNoEscape ? s.replace(/\[([^/\\{}])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^/\\{}])\]/g, "$1$2").replace(/\\([^/{}])/g, "$1");
+};
+//#endregion
+//#region node_modules/minimatch/dist/esm/ast.js
+var _a;
+var types$1 = /* @__PURE__ */ new Set([
+	"!",
+	"?",
+	"+",
+	"*",
+	"@"
+]);
+var isExtglobType = (c) => types$1.has(c);
+var isExtglobAST = (c) => isExtglobType(c.type);
+var adoptionMap = /* @__PURE__ */ new Map([
+	["!", ["@"]],
+	["?", ["?", "@"]],
+	["@", ["@"]],
+	["*", [
+		"*",
+		"+",
+		"?",
+		"@"
+	]],
+	["+", ["+", "@"]]
+]);
+var adoptionWithSpaceMap = /* @__PURE__ */ new Map([
+	["!", ["?"]],
+	["@", ["?"]],
+	["+", ["?", "*"]]
+]);
+var adoptionAnyMap = /* @__PURE__ */ new Map([
+	["!", ["?", "@"]],
+	["?", ["?", "@"]],
+	["@", ["?", "@"]],
+	["*", [
+		"*",
+		"+",
+		"?",
+		"@"
+	]],
+	["+", [
+		"+",
+		"@",
+		"?",
+		"*"
+	]]
+]);
+var usurpMap = /* @__PURE__ */ new Map([
+	["!", /* @__PURE__ */ new Map([["!", "@"]])],
+	["?", /* @__PURE__ */ new Map([["*", "*"], ["+", "*"]])],
+	["@", /* @__PURE__ */ new Map([
+		["!", "!"],
+		["?", "?"],
+		["@", "@"],
+		["*", "*"],
+		["+", "+"]
+	])],
+	["+", /* @__PURE__ */ new Map([["?", "*"], ["*", "*"]])]
+]);
+var startNoTraversal = "(?!(?:^|/)\\.\\.?(?:$|/))";
+var startNoDot = "(?!\\.)";
+var addPatternStart = /* @__PURE__ */ new Set(["[", "."]);
+var justDots = /* @__PURE__ */ new Set(["..", "."]);
+var reSpecials = /* @__PURE__ */ new Set("().*{}+?[]^$\\!");
+var regExpEscape$1 = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+var qmark = "[^/]";
+var star$1 = "[^/]*?";
+var starNoEmpty = "[^/]+?";
+var ID = 0;
+var AST = class {
+	type;
+	#root;
+	#hasMagic;
+	#uflag = false;
+	#parts = [];
+	#parent;
+	#parentIndex;
+	#negs;
+	#filledNegs = false;
+	#options;
+	#toString;
+	#emptyExt = false;
+	id = ++ID;
+	get depth() {
+		return (this.#parent?.depth ?? -1) + 1;
+	}
+	[Symbol.for("nodejs.util.inspect.custom")]() {
+		return {
+			"@@type": "AST",
+			id: this.id,
+			type: this.type,
+			root: this.#root.id,
+			parent: this.#parent?.id,
+			depth: this.depth,
+			partsLength: this.#parts.length,
+			parts: this.#parts
+		};
+	}
+	constructor(type, parent, options = {}) {
+		this.type = type;
+		if (type) this.#hasMagic = true;
+		this.#parent = parent;
+		this.#root = this.#parent ? this.#parent.#root : this;
+		this.#options = this.#root === this ? options : this.#root.#options;
+		this.#negs = this.#root === this ? [] : this.#root.#negs;
+		if (type === "!" && !this.#root.#filledNegs) this.#negs.push(this);
+		this.#parentIndex = this.#parent ? this.#parent.#parts.length : 0;
+	}
+	get hasMagic() {
+		/* c8 ignore start */
+		if (this.#hasMagic !== void 0) return this.#hasMagic;
+		/* c8 ignore stop */
+		for (const p of this.#parts) {
+			if (typeof p === "string") continue;
+			if (p.type || p.hasMagic) return this.#hasMagic = true;
+		}
+		return this.#hasMagic;
+	}
+	toString() {
+		return this.#toString !== void 0 ? this.#toString : !this.type ? this.#toString = this.#parts.map((p) => String(p)).join("") : this.#toString = this.type + "(" + this.#parts.map((p) => String(p)).join("|") + ")";
+	}
+	#fillNegs() {
+		/* c8 ignore start */
+		if (this !== this.#root) throw new Error("should only call on root");
+		if (this.#filledNegs) return this;
+		/* c8 ignore stop */
+		this.toString();
+		this.#filledNegs = true;
+		let n;
+		while (n = this.#negs.pop()) {
+			if (n.type !== "!") continue;
+			let p = n;
+			let pp = p.#parent;
+			while (pp) {
+				for (let i = p.#parentIndex + 1; !pp.type && i < pp.#parts.length; i++) for (const part of n.#parts) {
+					/* c8 ignore start */
+					if (typeof part === "string") throw new Error("string part in extglob AST??");
+					/* c8 ignore stop */
+					part.copyIn(pp.#parts[i]);
+				}
+				p = pp;
+				pp = p.#parent;
+			}
+		}
+		return this;
+	}
+	push(...parts) {
+		for (const p of parts) {
+			if (p === "") continue;
+			/* c8 ignore start */
+			if (typeof p !== "string" && !(p instanceof _a && p.#parent === this)) throw new Error("invalid part: " + p);
+			/* c8 ignore stop */
+			this.#parts.push(p);
+		}
+	}
+	toJSON() {
+		const ret = this.type === null ? this.#parts.slice().map((p) => typeof p === "string" ? p : p.toJSON()) : [this.type, ...this.#parts.map((p) => p.toJSON())];
+		if (this.isStart() && !this.type) ret.unshift([]);
+		if (this.isEnd() && (this === this.#root || this.#root.#filledNegs && this.#parent?.type === "!")) ret.push({});
+		return ret;
+	}
+	isStart() {
+		if (this.#root === this) return true;
+		if (!this.#parent?.isStart()) return false;
+		if (this.#parentIndex === 0) return true;
+		const p = this.#parent;
+		for (let i = 0; i < this.#parentIndex; i++) {
+			const pp = p.#parts[i];
+			if (!(pp instanceof _a && pp.type === "!")) return false;
+		}
+		return true;
+	}
+	isEnd() {
+		if (this.#root === this) return true;
+		if (this.#parent?.type === "!") return true;
+		if (!this.#parent?.isEnd()) return false;
+		if (!this.type) return this.#parent?.isEnd();
+		/* c8 ignore start */
+		const pl = this.#parent ? this.#parent.#parts.length : 0;
+		/* c8 ignore stop */
+		return this.#parentIndex === pl - 1;
+	}
+	copyIn(part) {
+		if (typeof part === "string") this.push(part);
+		else this.push(part.clone(this));
+	}
+	clone(parent) {
+		const c = new _a(this.type, parent);
+		for (const p of this.#parts) c.copyIn(p);
+		return c;
+	}
+	static #parseAST(str, ast, pos, opt, extDepth) {
+		const maxDepth = opt.maxExtglobRecursion ?? 2;
+		let escaping = false;
+		let inBrace = false;
+		let braceStart = -1;
+		let braceNeg = false;
+		if (ast.type === null) {
+			let i = pos;
+			let acc = "";
+			while (i < str.length) {
+				const c = str.charAt(i++);
+				if (escaping || c === "\\") {
+					escaping = !escaping;
+					acc += c;
+					continue;
+				}
+				if (inBrace) {
+					if (i === braceStart + 1) {
+						if (c === "^" || c === "!") braceNeg = true;
+					} else if (c === "]" && !(i === braceStart + 2 && braceNeg)) inBrace = false;
+					acc += c;
+					continue;
+				} else if (c === "[") {
+					inBrace = true;
+					braceStart = i;
+					braceNeg = false;
+					acc += c;
+					continue;
+				}
+				if (!opt.noext && isExtglobType(c) && str.charAt(i) === "(" && extDepth <= maxDepth) {
+					ast.push(acc);
+					acc = "";
+					const ext = new _a(c, ast);
+					i = _a.#parseAST(str, ext, i, opt, extDepth + 1);
+					ast.push(ext);
+					continue;
+				}
+				acc += c;
+			}
+			ast.push(acc);
+			return i;
+		}
+		let i = pos + 1;
+		let part = new _a(null, ast);
+		const parts = [];
+		let acc = "";
+		while (i < str.length) {
+			const c = str.charAt(i++);
+			if (escaping || c === "\\") {
+				escaping = !escaping;
+				acc += c;
+				continue;
+			}
+			if (inBrace) {
+				if (i === braceStart + 1) {
+					if (c === "^" || c === "!") braceNeg = true;
+				} else if (c === "]" && !(i === braceStart + 2 && braceNeg)) inBrace = false;
+				acc += c;
+				continue;
+			} else if (c === "[") {
+				inBrace = true;
+				braceStart = i;
+				braceNeg = false;
+				acc += c;
+				continue;
+			}
+			/* c8 ignore stop */
+			if (!opt.noext && isExtglobType(c) && str.charAt(i) === "(" && (extDepth <= maxDepth || ast && ast.#canAdoptType(c))) {
+				const depthAdd = ast && ast.#canAdoptType(c) ? 0 : 1;
+				part.push(acc);
+				acc = "";
+				const ext = new _a(c, part);
+				part.push(ext);
+				i = _a.#parseAST(str, ext, i, opt, extDepth + depthAdd);
+				continue;
+			}
+			if (c === "|") {
+				part.push(acc);
+				acc = "";
+				parts.push(part);
+				part = new _a(null, ast);
+				continue;
+			}
+			if (c === ")") {
+				if (acc === "" && ast.#parts.length === 0) ast.#emptyExt = true;
+				part.push(acc);
+				acc = "";
+				ast.push(...parts, part);
+				return i;
+			}
+			acc += c;
+		}
+		ast.type = null;
+		ast.#hasMagic = void 0;
+		ast.#parts = [str.substring(pos - 1)];
+		return i;
+	}
+	#canAdoptWithSpace(child) {
+		return this.#canAdopt(child, adoptionWithSpaceMap);
+	}
+	#canAdopt(child, map = adoptionMap) {
+		if (!child || typeof child !== "object" || child.type !== null || child.#parts.length !== 1 || this.type === null) return false;
+		const gc = child.#parts[0];
+		if (!gc || typeof gc !== "object" || gc.type === null) return false;
+		return this.#canAdoptType(gc.type, map);
+	}
+	#canAdoptType(c, map = adoptionAnyMap) {
+		return !!map.get(this.type)?.includes(c);
+	}
+	#adoptWithSpace(child, index) {
+		const gc = child.#parts[0];
+		const blank = new _a(null, gc, this.options);
+		blank.#parts.push("");
+		gc.push(blank);
+		this.#adopt(child, index);
+	}
+	#adopt(child, index) {
+		const gc = child.#parts[0];
+		this.#parts.splice(index, 1, ...gc.#parts);
+		for (const p of gc.#parts) if (typeof p === "object") p.#parent = this;
+		this.#toString = void 0;
+	}
+	#canUsurpType(c) {
+		return !!usurpMap.get(this.type)?.has(c);
+	}
+	#canUsurp(child) {
+		if (!child || typeof child !== "object" || child.type !== null || child.#parts.length !== 1 || this.type === null || this.#parts.length !== 1) return false;
+		const gc = child.#parts[0];
+		if (!gc || typeof gc !== "object" || gc.type === null) return false;
+		return this.#canUsurpType(gc.type);
+	}
+	#usurp(child) {
+		const m = usurpMap.get(this.type);
+		const gc = child.#parts[0];
+		const nt = m?.get(gc.type);
+		/* c8 ignore start - impossible */
+		if (!nt) return false;
+		/* c8 ignore stop */
+		this.#parts = gc.#parts;
+		for (const p of this.#parts) if (typeof p === "object") p.#parent = this;
+		this.type = nt;
+		this.#toString = void 0;
+		this.#emptyExt = false;
+	}
+	static fromGlob(pattern, options = {}) {
+		const ast = new _a(null, void 0, options);
+		_a.#parseAST(pattern, ast, 0, options, 0);
+		return ast;
+	}
+	toMMPattern() {
+		/* c8 ignore start */
+		if (this !== this.#root) return this.#root.toMMPattern();
+		/* c8 ignore stop */
+		const glob = this.toString();
+		const [re, body, hasMagic, uflag] = this.toRegExpSource();
+		if (!(hasMagic || this.#hasMagic || this.#options.nocase && !this.#options.nocaseMagicOnly && glob.toUpperCase() !== glob.toLowerCase())) return body;
+		const flags = (this.#options.nocase ? "i" : "") + (uflag ? "u" : "");
+		return Object.assign(new RegExp(`^${re}$`, flags), {
+			_src: re,
+			_glob: glob
+		});
+	}
+	get options() {
+		return this.#options;
+	}
+	toRegExpSource(allowDot) {
+		const dot = allowDot ?? !!this.#options.dot;
+		if (this.#root === this) {
+			this.#flatten();
+			this.#fillNegs();
+		}
+		if (!isExtglobAST(this)) {
+			const noEmpty = this.isStart() && this.isEnd() && !this.#parts.some((s) => typeof s !== "string");
+			const src = this.#parts.map((p) => {
+				const [re, _, hasMagic, uflag] = typeof p === "string" ? _a.#parseGlob(p, this.#hasMagic, noEmpty) : p.toRegExpSource(allowDot);
+				this.#hasMagic = this.#hasMagic || hasMagic;
+				this.#uflag = this.#uflag || uflag;
+				return re;
+			}).join("");
+			let start = "";
+			if (this.isStart()) {
+				if (typeof this.#parts[0] === "string") {
+					if (!(this.#parts.length === 1 && justDots.has(this.#parts[0]))) {
+						const aps = addPatternStart;
+						const needNoTrav = dot && aps.has(src.charAt(0)) || src.startsWith("\\.") && aps.has(src.charAt(2)) || src.startsWith("\\.\\.") && aps.has(src.charAt(4));
+						const needNoDot = !dot && !allowDot && aps.has(src.charAt(0));
+						start = needNoTrav ? startNoTraversal : needNoDot ? startNoDot : "";
+					}
+				}
+			}
+			let end = "";
+			if (this.isEnd() && this.#root.#filledNegs && this.#parent?.type === "!") end = "(?:$|\\/)";
+			return [
+				start + src + end,
+				unescape(src),
+				this.#hasMagic = !!this.#hasMagic,
+				this.#uflag
+			];
+		}
+		const repeated = this.type === "*" || this.type === "+";
+		const start = this.type === "!" ? "(?:(?!(?:" : "(?:";
+		let body = this.#partsToRegExp(dot);
+		if (this.isStart() && this.isEnd() && !body && this.type !== "!") {
+			const s = this.toString();
+			const me = this;
+			me.#parts = [s];
+			me.type = null;
+			me.#hasMagic = void 0;
+			return [
+				s,
+				unescape(this.toString()),
+				false,
+				false
+			];
+		}
+		let bodyDotAllowed = !repeated || allowDot || dot || false ? "" : this.#partsToRegExp(true);
+		if (bodyDotAllowed === body) bodyDotAllowed = "";
+		if (bodyDotAllowed) body = `(?:${body})(?:${bodyDotAllowed})*?`;
+		let final = "";
+		if (this.type === "!" && this.#emptyExt) final = (this.isStart() && !dot ? startNoDot : "") + starNoEmpty;
+		else {
+			const close = this.type === "!" ? "))" + (this.isStart() && !dot && !allowDot ? startNoDot : "") + "[^/]*?)" : this.type === "@" ? ")" : this.type === "?" ? ")?" : this.type === "+" && bodyDotAllowed ? ")" : this.type === "*" && bodyDotAllowed ? `)?` : `)${this.type}`;
+			final = start + body + close;
+		}
+		return [
+			final,
+			unescape(body),
+			this.#hasMagic = !!this.#hasMagic,
+			this.#uflag
+		];
+	}
+	#flatten() {
+		if (!isExtglobAST(this)) {
+			for (const p of this.#parts) if (typeof p === "object") p.#flatten();
+		} else {
+			let iterations = 0;
+			let done = false;
+			do {
+				done = true;
+				for (let i = 0; i < this.#parts.length; i++) {
+					const c = this.#parts[i];
+					if (typeof c === "object") {
+						c.#flatten();
+						if (this.#canAdopt(c)) {
+							done = false;
+							this.#adopt(c, i);
+						} else if (this.#canAdoptWithSpace(c)) {
+							done = false;
+							this.#adoptWithSpace(c, i);
+						} else if (this.#canUsurp(c)) {
+							done = false;
+							this.#usurp(c);
+						}
+					}
+				}
+			} while (!done && ++iterations < 10);
+		}
+		this.#toString = void 0;
+	}
+	#partsToRegExp(dot) {
+		return this.#parts.map((p) => {
+			/* c8 ignore start */
+			if (typeof p === "string") throw new Error("string type in extglob ast??");
+			/* c8 ignore stop */
+			const [re, _, _hasMagic, uflag] = p.toRegExpSource(dot);
+			this.#uflag = this.#uflag || uflag;
+			return re;
+		}).filter((p) => !(this.isStart() && this.isEnd()) || !!p).join("|");
+	}
+	static #parseGlob(glob, hasMagic, noEmpty = false) {
+		let escaping = false;
+		let re = "";
+		let uflag = false;
+		let inStar = false;
+		for (let i = 0; i < glob.length; i++) {
+			const c = glob.charAt(i);
+			if (escaping) {
+				escaping = false;
+				re += (reSpecials.has(c) ? "\\" : "") + c;
+				continue;
+			}
+			if (c === "*") {
+				if (inStar) continue;
+				inStar = true;
+				re += noEmpty && /^[*]+$/.test(glob) ? starNoEmpty : star$1;
+				hasMagic = true;
+				continue;
+			} else inStar = false;
+			if (c === "\\") {
+				if (i === glob.length - 1) re += "\\\\";
+				else escaping = true;
+				continue;
+			}
+			if (c === "[") {
+				const [src, needUflag, consumed, magic] = parseClass(glob, i);
+				if (consumed) {
+					re += src;
+					uflag = uflag || needUflag;
+					i += consumed - 1;
+					hasMagic = hasMagic || magic;
+					continue;
+				}
+			}
+			if (c === "?") {
+				re += qmark;
+				hasMagic = true;
+				continue;
+			}
+			re += regExpEscape$1(c);
+		}
+		return [
+			re,
+			unescape(glob),
+			!!hasMagic,
+			uflag
+		];
+	}
+};
+_a = AST;
+//#endregion
+//#region node_modules/minimatch/dist/esm/escape.js
+/**
+* Escape all magic characters in a glob pattern.
+*
+* If the {@link MinimatchOptions.windowsPathsNoEscape}
+* option is used, then characters are escaped by wrapping in `[]`, because
+* a magic character wrapped in a character class can only be satisfied by
+* that exact character.  In this mode, `\` is _not_ escaped, because it is
+* not interpreted as a magic character, but instead as a path separator.
+*
+* If the {@link MinimatchOptions.magicalBraces} option is used,
+* then braces (`{` and `}`) will be escaped.
+*/
+var escape = (s, { windowsPathsNoEscape = false, magicalBraces = false } = {}) => {
+	if (magicalBraces) return windowsPathsNoEscape ? s.replace(/[?*()[\]{}]/g, "[$&]") : s.replace(/[?*()[\]\\{}]/g, "\\$&");
+	return windowsPathsNoEscape ? s.replace(/[?*()[\]]/g, "[$&]") : s.replace(/[?*()[\]\\]/g, "\\$&");
+};
+//#endregion
+//#region node_modules/minimatch/dist/esm/index.js
+var minimatch = (p, pattern, options = {}) => {
+	assertValidPattern(pattern);
+	if (!options.nocomment && pattern.charAt(0) === "#") return false;
+	return new Minimatch(pattern, options).match(p);
+};
+var starDotExtRE = /^\*+([^+@!?*[(]*)$/;
+var starDotExtTest = (ext) => (f) => !f.startsWith(".") && f.endsWith(ext);
+var starDotExtTestDot = (ext) => (f) => f.endsWith(ext);
+var starDotExtTestNocase = (ext) => {
+	ext = ext.toLowerCase();
+	return (f) => !f.startsWith(".") && f.toLowerCase().endsWith(ext);
+};
+var starDotExtTestNocaseDot = (ext) => {
+	ext = ext.toLowerCase();
+	return (f) => f.toLowerCase().endsWith(ext);
+};
+var starDotStarRE = /^\*+\.\*+$/;
+var starDotStarTest = (f) => !f.startsWith(".") && f.includes(".");
+var starDotStarTestDot = (f) => f !== "." && f !== ".." && f.includes(".");
+var dotStarRE = /^\.\*+$/;
+var dotStarTest = (f) => f !== "." && f !== ".." && f.startsWith(".");
+var starRE = /^\*+$/;
+var starTest = (f) => f.length !== 0 && !f.startsWith(".");
+var starTestDot = (f) => f.length !== 0 && f !== "." && f !== "..";
+var qmarksRE = /^\?+([^+@!?*[(]*)?$/;
+var qmarksTestNocase = ([$0, ext = ""]) => {
+	const noext = qmarksTestNoExt([$0]);
+	if (!ext) return noext;
+	ext = ext.toLowerCase();
+	return (f) => noext(f) && f.toLowerCase().endsWith(ext);
+};
+var qmarksTestNocaseDot = ([$0, ext = ""]) => {
+	const noext = qmarksTestNoExtDot([$0]);
+	if (!ext) return noext;
+	ext = ext.toLowerCase();
+	return (f) => noext(f) && f.toLowerCase().endsWith(ext);
+};
+var qmarksTestDot = ([$0, ext = ""]) => {
+	const noext = qmarksTestNoExtDot([$0]);
+	return !ext ? noext : (f) => noext(f) && f.endsWith(ext);
+};
+var qmarksTest = ([$0, ext = ""]) => {
+	const noext = qmarksTestNoExt([$0]);
+	return !ext ? noext : (f) => noext(f) && f.endsWith(ext);
+};
+var qmarksTestNoExt = ([$0]) => {
+	const len = $0.length;
+	return (f) => f.length === len && !f.startsWith(".");
+};
+var qmarksTestNoExtDot = ([$0]) => {
+	const len = $0.length;
+	return (f) => f.length === len && f !== "." && f !== "..";
+};
+/* c8 ignore start */
+var defaultPlatform = typeof process === "object" && process ? typeof process.env === "object" && process.env && process.env.__MINIMATCH_TESTING_PLATFORM__ || process.platform : "posix";
+var path$1 = {
+	win32: { sep: "\\" },
+	posix: { sep: "/" }
+};
+minimatch.sep = defaultPlatform === "win32" ? path$1.win32.sep : path$1.posix.sep;
+var GLOBSTAR = Symbol("globstar **");
+minimatch.GLOBSTAR = GLOBSTAR;
+var star = "[^/]*?";
+var twoStarDot = "(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?";
+var twoStarNoDot = "(?:(?!(?:\\/|^)\\.).)*?";
+var filter = (pattern, options = {}) => (p) => minimatch(p, pattern, options);
+minimatch.filter = filter;
+var ext = (a, b = {}) => Object.assign({}, a, b);
+var defaults = (def) => {
+	if (!def || typeof def !== "object" || !Object.keys(def).length) return minimatch;
+	const orig = minimatch;
+	const m = (p, pattern, options = {}) => orig(p, pattern, ext(def, options));
+	return Object.assign(m, {
+		Minimatch: class Minimatch extends orig.Minimatch {
+			constructor(pattern, options = {}) {
+				super(pattern, ext(def, options));
+			}
+			static defaults(options) {
+				return orig.defaults(ext(def, options)).Minimatch;
+			}
+		},
+		AST: class AST extends orig.AST {
+			/* c8 ignore start */
+			constructor(type, parent, options = {}) {
+				super(type, parent, ext(def, options));
+			}
+			/* c8 ignore stop */
+			static fromGlob(pattern, options = {}) {
+				return orig.AST.fromGlob(pattern, ext(def, options));
+			}
+		},
+		unescape: (s, options = {}) => orig.unescape(s, ext(def, options)),
+		escape: (s, options = {}) => orig.escape(s, ext(def, options)),
+		filter: (pattern, options = {}) => orig.filter(pattern, ext(def, options)),
+		defaults: (options) => orig.defaults(ext(def, options)),
+		makeRe: (pattern, options = {}) => orig.makeRe(pattern, ext(def, options)),
+		braceExpand: (pattern, options = {}) => orig.braceExpand(pattern, ext(def, options)),
+		match: (list, pattern, options = {}) => orig.match(list, pattern, ext(def, options)),
+		sep: orig.sep,
+		GLOBSTAR
+	});
+};
+minimatch.defaults = defaults;
+var braceExpand = (pattern, options = {}) => {
+	assertValidPattern(pattern);
+	if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) return [pattern];
+	return expand(pattern, { max: options.braceExpandMax });
+};
+minimatch.braceExpand = braceExpand;
+var makeRe = (pattern, options = {}) => new Minimatch(pattern, options).makeRe();
+minimatch.makeRe = makeRe;
+var match = (list, pattern, options = {}) => {
+	const mm = new Minimatch(pattern, options);
+	list = list.filter((f) => mm.match(f));
+	if (mm.options.nonull && !list.length) list.push(pattern);
+	return list;
+};
+minimatch.match = match;
+var globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/;
+var regExpEscape = (s) => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+var Minimatch = class {
+	options;
+	set;
+	pattern;
+	windowsPathsNoEscape;
+	nonegate;
+	negate;
+	comment;
+	empty;
+	preserveMultipleSlashes;
+	partial;
+	globSet;
+	globParts;
+	nocase;
+	isWindows;
+	platform;
+	windowsNoMagicRoot;
+	maxGlobstarRecursion;
+	regexp;
+	constructor(pattern, options = {}) {
+		assertValidPattern(pattern);
+		options = options || {};
+		this.options = options;
+		this.maxGlobstarRecursion = options.maxGlobstarRecursion ?? 200;
+		this.pattern = pattern;
+		this.platform = options.platform || defaultPlatform;
+		this.isWindows = this.platform === "win32";
+		const awe = "allowWindowsEscape";
+		this.windowsPathsNoEscape = !!options.windowsPathsNoEscape || options[awe] === false;
+		if (this.windowsPathsNoEscape) this.pattern = this.pattern.replace(/\\/g, "/");
+		this.preserveMultipleSlashes = !!options.preserveMultipleSlashes;
+		this.regexp = null;
+		this.negate = false;
+		this.nonegate = !!options.nonegate;
+		this.comment = false;
+		this.empty = false;
+		this.partial = !!options.partial;
+		this.nocase = !!this.options.nocase;
+		this.windowsNoMagicRoot = options.windowsNoMagicRoot !== void 0 ? options.windowsNoMagicRoot : !!(this.isWindows && this.nocase);
+		this.globSet = [];
+		this.globParts = [];
+		this.set = [];
+		this.make();
+	}
+	hasMagic() {
+		if (this.options.magicalBraces && this.set.length > 1) return true;
+		for (const pattern of this.set) for (const part of pattern) if (typeof part !== "string") return true;
 		return false;
 	}
-	parseBodyAndFooter(isBody) {
-		const { commit } = this;
-		if (!this.isLineAvailable()) return isBody;
-		const references = this.parseReferences(this.currentLine());
-		const isStillBody = !references.length && isBody;
-		if (isStillBody) commit.body = appendLine(commit.body, this.currentLine());
-		else {
-			commit.references.push(...references);
-			commit.footer = appendLine(commit.footer, this.currentLine());
+	debug(..._) {}
+	make() {
+		const pattern = this.pattern;
+		const options = this.options;
+		if (!options.nocomment && pattern.charAt(0) === "#") {
+			this.comment = true;
+			return;
 		}
-		this.nextLine();
-		return isStillBody;
-	}
-	parseBreakingHeader() {
-		const { commit, options } = this;
-		if (!options.breakingHeaderPattern || commit.notes.length || !commit.header) return;
-		const matches = commit.header.match(options.breakingHeaderPattern);
-		if (matches) commit.notes.push({
-			title: "BREAKING CHANGE",
-			text: matches[3]
-		});
-	}
-	parseMentions(input) {
-		const { commit, regexes } = this;
-		let matches;
-		for (;;) {
-			matches = regexes.mentions.exec(input);
-			if (!matches) break;
-			commit.mentions.push(matches[1]);
+		if (!pattern) {
+			this.empty = true;
+			return;
 		}
-	}
-	parseRevert(input) {
-		const { commit, options } = this;
-		const correspondence = options.revertCorrespondence || [];
-		const matches = options.revertPattern ? input.match(options.revertPattern) : null;
-		if (matches) commit.revert = assignMatchedCorrespondence({}, matches, correspondence);
-	}
-	cleanupCommit() {
-		const { commit } = this;
-		if (commit.body) commit.body = trimNewLines(commit.body);
-		if (commit.footer) commit.footer = trimNewLines(commit.footer);
-		commit.notes.forEach((note) => {
-			note.text = trimNewLines(note.text);
-		});
-		const referencesSet = /* @__PURE__ */ new Set();
-		commit.references = commit.references.filter((reference) => {
-			const uid = `${reference.action} ${reference.raw}`.toLocaleLowerCase();
-			const ok = !referencesSet.has(uid);
-			if (ok) referencesSet.add(uid);
-			return ok;
-		});
-	}
-	/**
-	* Parse commit message string into an object.
-	* @param input - Commit message string.
-	* @returns Commit object.
-	*/
-	parse(input) {
-		if (!input.trim()) throw new TypeError("Expected a raw commit");
-		const { commentChar } = this.options;
-		const commentFilter = getCommentFilter(commentChar);
-		const rawLines = trimNewLines(input).split(/\r?\n/);
-		const lines = commentChar ? truncateToScissor(rawLines, commentChar).filter((line) => commentFilter(line) && gpgFilter(line)) : rawLines.filter((line) => gpgFilter(line));
-		const commit = createCommitObject();
-		this.lines = lines;
-		this.lineIndex = 0;
-		this.commit = commit;
-		const isMergeCommit = this.parseMerge();
-		this.parseHeader(isMergeCommit);
-		if (commit.header) commit.references = this.parseReferences(commit.header);
-		let isBody = true;
-		while (this.isLineAvailable()) {
-			this.parseMeta();
-			if (this.parseNotes()) isBody = false;
-			if (!this.parseBodyAndFooter(isBody)) isBody = false;
-		}
-		this.parseBreakingHeader();
-		this.parseMentions(input);
-		this.parseRevert(input);
-		this.cleanupCommit();
-		return commit;
-	}
-};
-//#endregion
-//#region node_modules/ignore/index.js
-var require_ignore = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	function makeArray(subject) {
-		return Array.isArray(subject) ? subject : [subject];
-	}
-	var UNDEFINED = void 0;
-	var EMPTY = "";
-	var SPACE = " ";
-	var ESCAPE = "\\";
-	var REGEX_TEST_BLANK_LINE = /^\s+$/;
-	var REGEX_INVALID_TRAILING_BACKSLASH = /(?:[^\\]|^)\\$/;
-	var REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/;
-	var REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/;
-	var REGEX_SPLITALL_CRLF = /\r?\n/g;
-	var REGEX_TEST_INVALID_PATH = /^\.{0,2}\/|^\.{1,2}$/;
-	var REGEX_TEST_TRAILING_SLASH = /\/$/;
-	var SLASH = "/";
-	var TMP_KEY_IGNORE = "node-ignore";
-	/* istanbul ignore else */
-	if (typeof Symbol !== "undefined") TMP_KEY_IGNORE = Symbol.for("node-ignore");
-	var KEY_IGNORE = TMP_KEY_IGNORE;
-	var define = (object, key, value) => {
-		Object.defineProperty(object, key, { value });
-		return value;
-	};
-	var REGEX_REGEXP_RANGE = /([0-z])-([0-z])/g;
-	var RETURN_FALSE = () => false;
-	var sanitizeRange = (range) => range.replace(REGEX_REGEXP_RANGE, (match, from, to) => from.charCodeAt(0) <= to.charCodeAt(0) ? match : EMPTY);
-	var negateRange = (range) => range.startsWith("!") || range.startsWith("\\^") ? `^${range.slice(range[0] === "!" ? 1 : 2)}` : range;
-	var cleanRangeBackSlash = (slashes) => {
-		const { length } = slashes;
-		return slashes.slice(0, length - length % 2);
-	};
-	var REPLACERS = [
-		[/^\uFEFF/, () => EMPTY],
-		[/((?:\\\\)*?)(\\?\s+)$/, (_, m1, m2) => m1 + (m2.indexOf("\\") === 0 ? SPACE : EMPTY)],
-		[/(\\+?)\s/g, (_, m1) => {
-			const { length } = m1;
-			return m1.slice(0, length - length % 2) + SPACE;
-		}],
-		[/[\\$.|*+(){^]/g, (match) => `\\${match}`],
-		[/(?!\\)\?/g, () => "[^/]"],
-		[/^\//, () => "^"],
-		[/\//g, () => "\\/"],
-		[/^\^*(?:\\\*\\\*\\\/)+/, () => "^(?:.*\\/)?"],
-		[/^(?=[^^])/, function startingReplacer() {
-			return !/\/(?!$)/.test(this) ? "(?:^|\\/)" : "^";
-		}],
-		[/\\\/\\\*\\\*(?=\\\/|$)/g, (_, index, str) => index + 6 < str.length ? "(?:\\/[^\\/]+)*" : "\\/.+"],
-		[/(^|[^\\]+)(\\\*)+(?=.+)/g, (_, p1, p2) => {
-			return p1 + p2.replace(/\\\*/g, "[^\\/]*");
-		}],
-		[/\\\\\\(?=[$.|*+(){^])/g, () => ESCAPE],
-		[/\\\\/g, () => ESCAPE],
-		[/(\\)?\[([^\]/]*?)(\\*)($|\])/g, (match, leadEscape, range, endEscape, close) => leadEscape === ESCAPE ? `\\[${range}${cleanRangeBackSlash(endEscape)}${close}` : close === "]" ? endEscape.length % 2 === 0 ? `[${negateRange(sanitizeRange(range))}${endEscape}]` : "[]" : "[]"],
-		[/(?:[^*])$/, (match) => /\/$/.test(match) ? `${match}$` : `${match}(?=$|\\/$)`]
-	];
-	var REGEX_REPLACE_TRAILING_WILDCARD = /(^|\\\/)?\\\*$/;
-	var MODE_IGNORE = "regex";
-	var MODE_CHECK_IGNORE = "checkRegex";
-	var TRAILING_WILD_CARD_REPLACERS = {
-		[MODE_IGNORE](_, p1) {
-			return `${p1 ? `${p1}[^/]+` : "[^/]*"}(?=$|\\/$)`;
-		},
-		[MODE_CHECK_IGNORE](_, p1) {
-			return `${p1 ? `${p1}[^/]*` : "[^/]*"}(?=$|\\/$)`;
-		}
-	};
-	var makeRegexPrefix = (pattern) => REPLACERS.reduce((prev, [matcher, replacer]) => prev.replace(matcher, replacer.bind(pattern)), pattern);
-	var isString = (subject) => typeof subject === "string";
-	var checkPattern = (pattern) => pattern && isString(pattern) && !REGEX_TEST_BLANK_LINE.test(pattern) && !REGEX_INVALID_TRAILING_BACKSLASH.test(pattern) && pattern.indexOf("#") !== 0;
-	var splitPattern = (pattern) => pattern.split(REGEX_SPLITALL_CRLF).filter(Boolean);
-	var IgnoreRule = class {
-		constructor(pattern, mark, body, ignoreCase, negative, prefix) {
-			this.pattern = pattern;
-			this.mark = mark;
-			this.negative = negative;
-			define(this, "body", body);
-			define(this, "ignoreCase", ignoreCase);
-			define(this, "regexPrefix", prefix);
-		}
-		get regex() {
-			const key = "_regex";
-			if (this[key]) return this[key];
-			return this._make(MODE_IGNORE, key);
-		}
-		get checkRegex() {
-			const key = "_checkRegex";
-			if (this[key]) return this[key];
-			return this._make(MODE_CHECK_IGNORE, key);
-		}
-		_make(mode, key) {
-			const str = this.regexPrefix.replace(REGEX_REPLACE_TRAILING_WILDCARD, TRAILING_WILD_CARD_REPLACERS[mode]);
-			const regex = this.ignoreCase ? new RegExp(str, "i") : new RegExp(str);
-			return define(this, key, regex);
-		}
-	};
-	var createRule = ({ pattern, mark }, ignoreCase) => {
-		let negative = false;
-		let body = pattern;
-		if (body.indexOf("!") === 0) {
-			negative = true;
-			body = body.substr(1);
-		}
-		body = body.replace(REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION, "!").replace(REGEX_REPLACE_LEADING_EXCAPED_HASH, "#");
-		const regexPrefix = makeRegexPrefix(body);
-		return new IgnoreRule(pattern, mark, body, ignoreCase, negative, regexPrefix);
-	};
-	var RuleManager = class {
-		constructor(ignoreCase) {
-			this._ignoreCase = ignoreCase;
-			this._rules = [];
-		}
-		_add(pattern) {
-			if (pattern && pattern[KEY_IGNORE]) {
-				this._rules = this._rules.concat(pattern._rules._rules);
-				this._added = true;
-				return;
+		this.parseNegate();
+		this.globSet = [...new Set(this.braceExpand())];
+		if (options.debug) this.debug = (...args) => console.error(...args);
+		this.debug(this.pattern, this.globSet);
+		const rawGlobParts = this.globSet.map((s) => this.slashSplit(s));
+		this.globParts = this.preprocess(rawGlobParts);
+		this.debug(this.pattern, this.globParts);
+		let set = this.globParts.map((s, _, __) => {
+			if (this.isWindows && this.windowsNoMagicRoot) {
+				const isUNC = s[0] === "" && s[1] === "" && (s[2] === "?" || !globMagic.test(s[2])) && !globMagic.test(s[3]);
+				const isDrive = /^[a-z]:/i.test(s[0]);
+				if (isUNC) return [...s.slice(0, 4), ...s.slice(4).map((ss) => this.parse(ss))];
+				else if (isDrive) return [s[0], ...s.slice(1).map((ss) => this.parse(ss))];
 			}
-			if (isString(pattern)) pattern = { pattern };
-			if (checkPattern(pattern.pattern)) {
-				const rule = createRule(pattern, this._ignoreCase);
-				this._added = true;
-				this._rules.push(rule);
+			return s.map((ss) => this.parse(ss));
+		});
+		this.debug(this.pattern, set);
+		this.set = set.filter((s) => s.indexOf(false) === -1);
+		if (this.isWindows) for (let i = 0; i < this.set.length; i++) {
+			const p = this.set[i];
+			if (p[0] === "" && p[1] === "" && this.globParts[i][2] === "?" && typeof p[3] === "string" && /^[a-z]:$/i.test(p[3])) p[2] = "?";
+		}
+		this.debug(this.pattern, this.set);
+	}
+	preprocess(globParts) {
+		if (this.options.noglobstar) {
+			for (const partset of globParts) for (let j = 0; j < partset.length; j++) if (partset[j] === "**") partset[j] = "*";
+		}
+		const { optimizationLevel = 1 } = this.options;
+		if (optimizationLevel >= 2) {
+			globParts = this.firstPhasePreProcess(globParts);
+			globParts = this.secondPhasePreProcess(globParts);
+		} else if (optimizationLevel >= 1) globParts = this.levelOneOptimize(globParts);
+		else globParts = this.adjascentGlobstarOptimize(globParts);
+		return globParts;
+	}
+	adjascentGlobstarOptimize(globParts) {
+		return globParts.map((parts) => {
+			let gs = -1;
+			while (-1 !== (gs = parts.indexOf("**", gs + 1))) {
+				let i = gs;
+				while (parts[i + 1] === "**") i++;
+				if (i !== gs) parts.splice(gs, i - gs);
+			}
+			return parts;
+		});
+	}
+	levelOneOptimize(globParts) {
+		return globParts.map((parts) => {
+			parts = parts.reduce((set, part) => {
+				const prev = set[set.length - 1];
+				if (part === "**" && prev === "**") return set;
+				if (part === "..") {
+					if (prev && prev !== ".." && prev !== "." && prev !== "**") {
+						set.pop();
+						return set;
+					}
+				}
+				set.push(part);
+				return set;
+			}, []);
+			return parts.length === 0 ? [""] : parts;
+		});
+	}
+	levelTwoFileOptimize(parts) {
+		if (!Array.isArray(parts)) parts = this.slashSplit(parts);
+		let didSomething = false;
+		do {
+			didSomething = false;
+			if (!this.preserveMultipleSlashes) {
+				for (let i = 1; i < parts.length - 1; i++) {
+					const p = parts[i];
+					if (i === 1 && p === "" && parts[0] === "") continue;
+					if (p === "." || p === "") {
+						didSomething = true;
+						parts.splice(i, 1);
+						i--;
+					}
+				}
+				if (parts[0] === "." && parts.length === 2 && (parts[1] === "." || parts[1] === "")) {
+					didSomething = true;
+					parts.pop();
+				}
+			}
+			let dd = 0;
+			while (-1 !== (dd = parts.indexOf("..", dd + 1))) {
+				const p = parts[dd - 1];
+				if (p && p !== "." && p !== ".." && p !== "**" && !(this.isWindows && /^[a-z]:$/i.test(p))) {
+					didSomething = true;
+					parts.splice(dd - 1, 2);
+					dd -= 2;
+				}
+			}
+		} while (didSomething);
+		return parts.length === 0 ? [""] : parts;
+	}
+	firstPhasePreProcess(globParts) {
+		let didSomething = false;
+		do {
+			didSomething = false;
+			for (let parts of globParts) {
+				let gs = -1;
+				while (-1 !== (gs = parts.indexOf("**", gs + 1))) {
+					let gss = gs;
+					while (parts[gss + 1] === "**") gss++;
+					if (gss > gs) parts.splice(gs + 1, gss - gs);
+					let next = parts[gs + 1];
+					const p = parts[gs + 2];
+					const p2 = parts[gs + 3];
+					if (next !== "..") continue;
+					if (!p || p === "." || p === ".." || !p2 || p2 === "." || p2 === "..") continue;
+					didSomething = true;
+					parts.splice(gs, 1);
+					const other = parts.slice(0);
+					other[gs] = "**";
+					globParts.push(other);
+					gs--;
+				}
+				if (!this.preserveMultipleSlashes) {
+					for (let i = 1; i < parts.length - 1; i++) {
+						const p = parts[i];
+						if (i === 1 && p === "" && parts[0] === "") continue;
+						if (p === "." || p === "") {
+							didSomething = true;
+							parts.splice(i, 1);
+							i--;
+						}
+					}
+					if (parts[0] === "." && parts.length === 2 && (parts[1] === "." || parts[1] === "")) {
+						didSomething = true;
+						parts.pop();
+					}
+				}
+				let dd = 0;
+				while (-1 !== (dd = parts.indexOf("..", dd + 1))) {
+					const p = parts[dd - 1];
+					if (p && p !== "." && p !== ".." && p !== "**") {
+						didSomething = true;
+						const splin = dd === 1 && parts[dd + 1] === "**" ? ["."] : [];
+						parts.splice(dd - 1, 2, ...splin);
+						if (parts.length === 0) parts.push("");
+						dd -= 2;
+					}
+				}
+			}
+		} while (didSomething);
+		return globParts;
+	}
+	secondPhasePreProcess(globParts) {
+		for (let i = 0; i < globParts.length - 1; i++) for (let j = i + 1; j < globParts.length; j++) {
+			const matched = this.partsMatch(globParts[i], globParts[j], !this.preserveMultipleSlashes);
+			if (matched) {
+				globParts[i] = [];
+				globParts[j] = matched;
+				break;
 			}
 		}
-		add(pattern) {
-			this._added = false;
-			makeArray(isString(pattern) ? splitPattern(pattern) : pattern).forEach(this._add, this);
-			return this._added;
+		return globParts.filter((gs) => gs.length);
+	}
+	partsMatch(a, b, emptyGSMatch = false) {
+		let ai = 0;
+		let bi = 0;
+		let result = [];
+		let which = "";
+		while (ai < a.length && bi < b.length) if (a[ai] === b[bi]) {
+			result.push(which === "b" ? b[bi] : a[ai]);
+			ai++;
+			bi++;
+		} else if (emptyGSMatch && a[ai] === "**" && b[bi] === a[ai + 1]) {
+			result.push(a[ai]);
+			ai++;
+		} else if (emptyGSMatch && b[bi] === "**" && a[ai] === b[bi + 1]) {
+			result.push(b[bi]);
+			bi++;
+		} else if (a[ai] === "*" && b[bi] && (this.options.dot || !b[bi].startsWith(".")) && b[bi] !== "**") {
+			if (which === "b") return false;
+			which = "a";
+			result.push(a[ai]);
+			ai++;
+			bi++;
+		} else if (b[bi] === "*" && a[ai] && (this.options.dot || !a[ai].startsWith(".")) && a[ai] !== "**") {
+			if (which === "a") return false;
+			which = "b";
+			result.push(b[bi]);
+			ai++;
+			bi++;
+		} else return false;
+		return a.length === b.length && result;
+	}
+	parseNegate() {
+		if (this.nonegate) return;
+		const pattern = this.pattern;
+		let negate = false;
+		let negateOffset = 0;
+		for (let i = 0; i < pattern.length && pattern.charAt(i) === "!"; i++) {
+			negate = !negate;
+			negateOffset++;
 		}
-		test(path, checkUnignored, mode) {
-			let ignored = false;
-			let unignored = false;
-			let matchedRule;
-			this._rules.forEach((rule) => {
-				const { negative } = rule;
-				if (unignored === negative && ignored !== unignored || negative && !ignored && !unignored && !checkUnignored) return;
-				if (!rule[mode].test(path)) return;
-				ignored = !negative;
-				unignored = negative;
-				matchedRule = negative ? UNDEFINED : rule;
+		if (negateOffset) this.pattern = pattern.slice(negateOffset);
+		this.negate = negate;
+	}
+	matchOne(file, pattern, partial = false) {
+		let fileStartIndex = 0;
+		let patternStartIndex = 0;
+		if (this.isWindows) {
+			const fileDrive = typeof file[0] === "string" && /^[a-z]:$/i.test(file[0]);
+			const fileUNC = !fileDrive && file[0] === "" && file[1] === "" && file[2] === "?" && /^[a-z]:$/i.test(file[3]);
+			const patternDrive = typeof pattern[0] === "string" && /^[a-z]:$/i.test(pattern[0]);
+			const patternUNC = !patternDrive && pattern[0] === "" && pattern[1] === "" && pattern[2] === "?" && typeof pattern[3] === "string" && /^[a-z]:$/i.test(pattern[3]);
+			const fdi = fileUNC ? 3 : fileDrive ? 0 : void 0;
+			const pdi = patternUNC ? 3 : patternDrive ? 0 : void 0;
+			if (typeof fdi === "number" && typeof pdi === "number") {
+				const [fd, pd] = [file[fdi], pattern[pdi]];
+				if (fd.toLowerCase() === pd.toLowerCase()) {
+					pattern[pdi] = fd;
+					patternStartIndex = pdi;
+					fileStartIndex = fdi;
+				}
+			}
+		}
+		const { optimizationLevel = 1 } = this.options;
+		if (optimizationLevel >= 2) file = this.levelTwoFileOptimize(file);
+		if (pattern.includes(GLOBSTAR)) return this.#matchGlobstar(file, pattern, partial, fileStartIndex, patternStartIndex);
+		return this.#matchOne(file, pattern, partial, fileStartIndex, patternStartIndex);
+	}
+	#matchGlobstar(file, pattern, partial, fileIndex, patternIndex) {
+		const firstgs = pattern.indexOf(GLOBSTAR, patternIndex);
+		const lastgs = pattern.lastIndexOf(GLOBSTAR);
+		const [head, body, tail] = partial ? [
+			pattern.slice(patternIndex, firstgs),
+			pattern.slice(firstgs + 1),
+			[]
+		] : [
+			pattern.slice(patternIndex, firstgs),
+			pattern.slice(firstgs + 1, lastgs),
+			pattern.slice(lastgs + 1)
+		];
+		if (head.length) {
+			const fileHead = file.slice(fileIndex, fileIndex + head.length);
+			if (!this.#matchOne(fileHead, head, partial, 0, 0)) return false;
+			fileIndex += head.length;
+			patternIndex += head.length;
+		}
+		let fileTailMatch = 0;
+		if (tail.length) {
+			if (tail.length + fileIndex > file.length) return false;
+			let tailStart = file.length - tail.length;
+			if (this.#matchOne(file, tail, partial, tailStart, 0)) fileTailMatch = tail.length;
+			else {
+				if (file[file.length - 1] !== "" || fileIndex + tail.length === file.length) return false;
+				tailStart--;
+				if (!this.#matchOne(file, tail, partial, tailStart, 0)) return false;
+				fileTailMatch = tail.length + 1;
+			}
+		}
+		if (!body.length) {
+			let sawSome = !!fileTailMatch;
+			for (let i = fileIndex; i < file.length - fileTailMatch; i++) {
+				const f = String(file[i]);
+				sawSome = true;
+				if (f === "." || f === ".." || !this.options.dot && f.startsWith(".")) return false;
+			}
+			return partial || sawSome;
+		}
+		const bodySegments = [[[], 0]];
+		let currentBody = bodySegments[0];
+		let nonGsParts = 0;
+		const nonGsPartsSums = [0];
+		for (const b of body) if (b === GLOBSTAR) {
+			nonGsPartsSums.push(nonGsParts);
+			currentBody = [[], 0];
+			bodySegments.push(currentBody);
+		} else {
+			currentBody[0].push(b);
+			nonGsParts++;
+		}
+		let i = bodySegments.length - 1;
+		const fileLength = file.length - fileTailMatch;
+		for (const b of bodySegments) b[1] = fileLength - (nonGsPartsSums[i--] + b[0].length);
+		return !!this.#matchGlobStarBodySections(file, bodySegments, fileIndex, 0, partial, 0, !!fileTailMatch);
+	}
+	#matchGlobStarBodySections(file, bodySegments, fileIndex, bodyIndex, partial, globStarDepth, sawTail) {
+		const bs = bodySegments[bodyIndex];
+		if (!bs) {
+			for (let i = fileIndex; i < file.length; i++) {
+				sawTail = true;
+				const f = file[i];
+				if (f === "." || f === ".." || !this.options.dot && f.startsWith(".")) return false;
+			}
+			return sawTail;
+		}
+		const [body, after] = bs;
+		while (fileIndex <= after) {
+			if (this.#matchOne(file.slice(0, fileIndex + body.length), body, partial, fileIndex, 0) && globStarDepth < this.maxGlobstarRecursion) {
+				const sub = this.#matchGlobStarBodySections(file, bodySegments, fileIndex + body.length, bodyIndex + 1, partial, globStarDepth + 1, sawTail);
+				if (sub !== false) return sub;
+			}
+			const f = file[fileIndex];
+			if (f === "." || f === ".." || !this.options.dot && f.startsWith(".")) return false;
+			fileIndex++;
+		}
+		return partial || null;
+	}
+	#matchOne(file, pattern, partial, fileIndex, patternIndex) {
+		let fi;
+		let pi;
+		let pl;
+		let fl;
+		for (fi = fileIndex, pi = patternIndex, fl = file.length, pl = pattern.length; fi < fl && pi < pl; fi++, pi++) {
+			this.debug("matchOne loop");
+			let p = pattern[pi];
+			let f = file[fi];
+			this.debug(pattern, p, f);
+			/* c8 ignore start */
+			if (p === false || p === GLOBSTAR) return false;
+			/* c8 ignore stop */
+			let hit;
+			if (typeof p === "string") {
+				hit = f === p;
+				this.debug("string match", p, f, hit);
+			} else {
+				hit = p.test(f);
+				this.debug("pattern match", p, f, hit);
+			}
+			if (!hit) return false;
+		}
+		if (fi === fl && pi === pl) return true;
+		else if (fi === fl) return partial;
+		else if (pi === pl) return fi === fl - 1 && file[fi] === "";
+		else throw new Error("wtf?");
+		/* c8 ignore stop */
+	}
+	braceExpand() {
+		return braceExpand(this.pattern, this.options);
+	}
+	parse(pattern) {
+		assertValidPattern(pattern);
+		const options = this.options;
+		if (pattern === "**") return GLOBSTAR;
+		if (pattern === "") return "";
+		let m;
+		let fastTest = null;
+		if (m = pattern.match(starRE)) fastTest = options.dot ? starTestDot : starTest;
+		else if (m = pattern.match(starDotExtRE)) fastTest = (options.nocase ? options.dot ? starDotExtTestNocaseDot : starDotExtTestNocase : options.dot ? starDotExtTestDot : starDotExtTest)(m[1]);
+		else if (m = pattern.match(qmarksRE)) fastTest = (options.nocase ? options.dot ? qmarksTestNocaseDot : qmarksTestNocase : options.dot ? qmarksTestDot : qmarksTest)(m);
+		else if (m = pattern.match(starDotStarRE)) fastTest = options.dot ? starDotStarTestDot : starDotStarTest;
+		else if (m = pattern.match(dotStarRE)) fastTest = dotStarTest;
+		const re = AST.fromGlob(pattern, this.options).toMMPattern();
+		if (fastTest && typeof re === "object") Reflect.defineProperty(re, "test", { value: fastTest });
+		return re;
+	}
+	makeRe() {
+		if (this.regexp || this.regexp === false) return this.regexp;
+		const set = this.set;
+		if (!set.length) {
+			this.regexp = false;
+			return this.regexp;
+		}
+		const options = this.options;
+		const twoStar = options.noglobstar ? star : options.dot ? twoStarDot : twoStarNoDot;
+		const flags = new Set(options.nocase ? ["i"] : []);
+		let re = set.map((pattern) => {
+			const pp = pattern.map((p) => {
+				if (p instanceof RegExp) for (const f of p.flags.split("")) flags.add(f);
+				return typeof p === "string" ? regExpEscape(p) : p === GLOBSTAR ? GLOBSTAR : p._src;
 			});
-			const ret = {
-				ignored,
-				unignored
-			};
-			if (matchedRule) ret.rule = matchedRule;
-			return ret;
-		}
-	};
-	var throwError = (message, Ctor) => {
-		throw new Ctor(message);
-	};
-	var checkPath = (path, originalPath, doThrow) => {
-		if (!isString(path)) return doThrow(`path must be a string, but got \`${originalPath}\``, TypeError);
-		if (!path) return doThrow(`path must not be empty`, TypeError);
-		if (checkPath.isNotRelative(path)) return doThrow(`path should be a \`path.relative()\`d string, but got "${originalPath}"`, RangeError);
-		return true;
-	};
-	var isNotRelative = (path) => REGEX_TEST_INVALID_PATH.test(path);
-	checkPath.isNotRelative = isNotRelative;
-	/* istanbul ignore next */
-	checkPath.convert = (p) => p;
-	var Ignore = class {
-		constructor({ ignorecase = true, ignoreCase = ignorecase, allowRelativePaths = false } = {}) {
-			define(this, KEY_IGNORE, true);
-			this._rules = new RuleManager(ignoreCase);
-			this._strictPathCheck = !allowRelativePaths;
-			this._initCache();
-		}
-		_initCache() {
-			this._ignoreCache = Object.create(null);
-			this._testCache = Object.create(null);
-		}
-		add(pattern) {
-			if (this._rules.add(pattern)) this._initCache();
-			return this;
-		}
-		addPattern(pattern) {
-			return this.add(pattern);
-		}
-		_test(originalPath, cache, checkUnignored, slices) {
-			const path = originalPath && checkPath.convert(originalPath);
-			checkPath(path, originalPath, this._strictPathCheck ? throwError : RETURN_FALSE);
-			return this._t(path, cache, checkUnignored, slices);
-		}
-		checkIgnore(path) {
-			if (!REGEX_TEST_TRAILING_SLASH.test(path)) return this.test(path);
-			const slices = path.split(SLASH).filter(Boolean);
-			slices.pop();
-			if (slices.length) {
-				const parent = this._t(slices.join(SLASH) + SLASH, this._testCache, true, slices);
-				if (parent.ignored) return parent;
+			pp.forEach((p, i) => {
+				const next = pp[i + 1];
+				const prev = pp[i - 1];
+				if (p !== GLOBSTAR || prev === GLOBSTAR) return;
+				if (prev === void 0) if (next !== void 0 && next !== GLOBSTAR) pp[i + 1] = "(?:\\/|" + twoStar + "\\/)?" + next;
+				else pp[i] = twoStar;
+				else if (next === void 0) pp[i - 1] = prev + "(?:\\/|\\/" + twoStar + ")?";
+				else if (next !== GLOBSTAR) {
+					pp[i - 1] = prev + "(?:\\/|\\/" + twoStar + "\\/)" + next;
+					pp[i + 1] = GLOBSTAR;
+				}
+			});
+			const filtered = pp.filter((p) => p !== GLOBSTAR);
+			if (this.partial && filtered.length >= 1) {
+				const prefixes = [];
+				for (let i = 1; i <= filtered.length; i++) prefixes.push(filtered.slice(0, i).join("/"));
+				return "(?:" + prefixes.join("|") + ")";
 			}
-			return this._rules.test(path, false, MODE_CHECK_IGNORE);
+			return filtered.join("/");
+		}).join("|");
+		const [open, close] = set.length > 1 ? ["(?:", ")"] : ["", ""];
+		re = "^" + open + re + close + "$";
+		if (this.partial) re = "^(?:\\/|" + open + re.slice(1, -1) + close + ")$";
+		if (this.negate) re = "^(?!" + re + ").+$";
+		try {
+			this.regexp = new RegExp(re, [...flags].join(""));
+		} catch {
+			this.regexp = false;
 		}
-		_t(path, cache, checkUnignored, slices) {
-			if (path in cache) return cache[path];
-			if (!slices) slices = path.split(SLASH).filter(Boolean);
-			slices.pop();
-			if (!slices.length) return cache[path] = this._rules.test(path, checkUnignored, MODE_IGNORE);
-			const parent = this._t(slices.join(SLASH) + SLASH, cache, checkUnignored, slices);
-			return cache[path] = parent.ignored ? parent : this._rules.test(path, checkUnignored, MODE_IGNORE);
-		}
-		ignores(path) {
-			return this._test(path, this._ignoreCache, false).ignored;
-		}
-		createFilter() {
-			return (path) => !this.ignores(path);
-		}
-		filter(paths) {
-			return makeArray(paths).filter(this.createFilter());
-		}
-		test(path) {
-			return this._test(path, this._testCache, true);
-		}
-	};
-	var factory = (options) => new Ignore(options);
-	var isPathValid = (path) => checkPath(path && checkPath.convert(path), path, RETURN_FALSE);
-	/* istanbul ignore next */
-	var setupWindows = () => {
-		const makePosix = (str) => /^\\\\\?\\/.test(str) || /["<>|\u0000-\u001F]+/u.test(str) ? str : str.replace(/\\/g, "/");
-		checkPath.convert = makePosix;
-		const REGEX_TEST_WINDOWS_PATH_ABSOLUTE = /^[a-z]:\//i;
-		checkPath.isNotRelative = (path) => REGEX_TEST_WINDOWS_PATH_ABSOLUTE.test(path) || isNotRelative(path);
-	};
-	/* istanbul ignore next */
-	if (typeof process !== "undefined" && process.platform === "win32") setupWindows();
-	module.exports = factory;
-	factory.default = factory;
-	module.exports.isPathValid = isPathValid;
-	define(module.exports, Symbol.for("setupWindows"), setupWindows);
-}));
-//#endregion
-//#region packages/core/src/category-matching.ts
-var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
-var conventionalParser = new CommitParser({
-	headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
-	breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/
-});
-var priority$1 = {
-	patch: 1,
-	minor: 2,
-	major: 3
-};
-var unique = (values) => [...new Set(values)];
-var getPullRequestLabels = (pullRequest) => (pullRequest.labels ?? []).filter((label) => label.length > 0);
-var matchesValues = (actualValues, expectedValues, mode) => {
-	const actual = unique(actualValues);
-	const expected = unique(expectedValues);
-	if (expected.length === 0) return true;
-	switch (mode) {
-		case "all": return expected.every((value) => actual.includes(value));
-		case "only": return actual.length > 0 && actual.every((value) => expected.includes(value));
-		case "exactly": return actual.length === expected.length && actual.every((value) => expected.includes(value));
-		default: return expected.some((value) => actual.includes(value));
+		/* c8 ignore stop */
+		return this.regexp;
 	}
-};
-var matchesPullRequestPaths = (condition, pullRequest) => {
-	if (condition.paths.length === 0) return true;
-	const changedFiles = unique(pullRequest.changedFiles ?? []);
-	if (changedFiles.length === 0) return false;
-	const matchers = unique(condition.paths).map((path) => (0, import_ignore.default)().add(path));
-	const allPatternsMatch = matchers.every((matcher) => changedFiles.some((file) => matcher.ignores(file)));
-	const onlyPatternsMatch = changedFiles.every((file) => matchers.some((matcher) => matcher.ignores(file)));
-	switch (condition["paths-mode"]) {
-		case "all": return allPatternsMatch;
-		case "only": return onlyPatternsMatch;
-		case "exactly": return allPatternsMatch && onlyPatternsMatch;
-		default: return changedFiles.some((file) => matchers.some((matcher) => matcher.ignores(file)));
+	slashSplit(p) {
+		if (this.preserveMultipleSlashes) return p.split("/");
+		else if (this.isWindows && /^\/\/[^/]+/.test(p)) return ["", ...p.split(/\/+/)];
+		else return p.split(/\/+/);
 	}
-};
-var parseConventionalTitle = (title) => {
-	if (!title) return void 0;
-	const parsed = conventionalParser.parse(title);
-	if (typeof parsed.type !== "string") return void 0;
-	return {
-		type: parsed.type,
-		scope: typeof parsed.scope === "string" ? parsed.scope : void 0,
-		breaking: parsed.notes.length > 0
-	};
-};
-var matchesConventionalTitle = (condition, pullRequest) => {
-	if (!condition.conventional) return true;
-	const parsed = parseConventionalTitle(pullRequest.title);
-	if (!parsed) return false;
-	const { types, scopes, breaking } = condition.conventional;
-	return (types.length === 0 || types.includes(parsed.type)) && (scopes.length === 0 || parsed.scope !== void 0 && scopes.includes(parsed.scope)) && (breaking === void 0 || breaking === parsed.breaking);
-};
-var matchesCategoryCondition = (condition, pullRequest) => matchesValues(getPullRequestLabels(pullRequest), condition.labels, condition["labels-mode"]) && matchesPullRequestPaths(condition, pullRequest) && matchesConventionalTitle(condition, pullRequest);
-var matchesCategory = (category, pullRequest) => category.when.length === 0 || category.when.some((condition) => matchesCategoryCondition(condition, pullRequest));
-var selectCategories = (categories, pullRequest) => {
-	const matched = [];
-	for (const category of categories) {
-		if (category.when.length === 0) continue;
-		if (!matchesCategory(category, pullRequest)) continue;
-		matched.push(category);
-		if (category.exclusive) break;
-	}
-	const fallback = categories.find((category) => category.when.length === 0);
-	return {
-		categories: matched.length > 0 ? matched : fallback ? [fallback] : [],
-		usedFallback: matched.length === 0 && fallback !== void 0
-	};
-};
-/**
-* Evaluates every category concern for one change in one deterministic pass.
-*/
-var evaluateCategories = (pullRequest, categories) => {
-	const preIncludes = categories.filter((category) => category.type === "pre-include");
-	const preExcludes = categories.filter((category) => category.type === "pre-exclude");
-	const includedByPrecondition = preIncludes.length === 0 || preIncludes.some((category) => matchesCategory(category, pullRequest));
-	const excluded = includedByPrecondition && preExcludes.some((category) => matchesCategory(category, pullRequest));
-	const included = includedByPrecondition && !excluded;
-	const changelog = included ? selectCategories(getChangelogCategories(categories), pullRequest) : {
-		categories: [],
-		usedFallback: false
-	};
-	const version = included ? selectCategories(getVersionResolverCategories(categories), pullRequest) : {
-		categories: [],
-		usedFallback: false
-	};
-	const highest = [...changelog.categories, ...version.categories].map((category) => category["semver-increment"]).filter((increment) => increment in priority$1).reduce((current, increment) => !current || priority$1[increment] > priority$1[current] ? increment : current, void 0);
-	return {
-		included,
-		excluded,
-		changelogCategories: changelog.categories,
-		versionResolverCategories: version.categories,
-		usedChangelogFallback: changelog.usedFallback,
-		usedVersionFallback: version.usedFallback,
-		fallbackOnly: included && (changelog.categories.length > 0 || version.categories.length > 0) && changelog.categories.every((category) => category.when.length === 0) && version.categories.every((category) => category.when.length === 0),
-		versionIncrement: highest
-	};
-};
-var filterPullRequestsByPreCategories = (pullRequests, categories) => pullRequests.filter((pullRequest) => evaluateCategories(pullRequest, categories).included);
-var needsPullRequestChangedFiles = (categories) => categories.some((category) => category.when.some((condition) => condition.paths.length > 0));
-var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
-var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
-//#endregion
-//#region packages/core/src/config/common-config.schema.ts
-/**
-* Configuration parameters that can be specified in both
-* the config file or the action input.
-*
-* Default values cannot be defined here,
-* as action inputs may override config file values.
-*
-* @see merge-input-and-config.ts for how the merging of config and input is handled, including default values.
-*/
-var commonConfigSchema = object({
-	/**
-	* A boolean indicating whether the release being created or updated should be marked as latest.
-	*/
-	latest: stringbool().or(boolean()).optional(),
-	/**
-	* Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
-	*/
-	prerelease: stringbool().or(boolean()).optional(),
-	/**
-	* A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` when both values come from the same config location; explicit action inputs still take precedence. Default `''`.
-	*/
-	"prerelease-identifier": string$1().optional(),
-	/**
-	* When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.
-	*/
-	"include-pre-releases": stringbool().or(boolean()).optional(),
-	/**
-	* The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to. Tag and pull request refs are resolved to commit SHAs. Defaults to the branch that release-drafter runs for, e.g. `main` when configured to run on pushes to `main`.
-	*/
-	commitish: string$1().optional(),
-	/**
-	* A string that would be added before the template body.
-	*/
-	header: string$1().optional(),
-	/**
-	* A string that would be added after the template body.
-	*/
-	footer: string$1().optional(),
-	/**
-	* Filter releases whose tag names satisfy this SemVer range.
-	*/
-	"filter-by-range": string$1().optional()
-});
-//#endregion
-//#region packages/core/src/config/config.schema.ts
-/**
-* A single set of predicates that are combined with AND logic.
-* All specified predicates must be satisfied for a change to match.
-*/
-var changeConditionSchema = object({
-	/**
-	* Conventional commit predicate: matches a change whose title or message
-	* follows the conventional commit shape, e.g. `feat(api)!: add endpoint`.
-	*/
-	conventional: union([literal(true), object({
-		/** Shorthand for one `types` entry. */
-		type: string$1().min(1).optional(),
-		/** Conventional commit types to match, e.g. `feat` or `fix`. */
-		types: array(string$1().min(1)).optional().default([]),
-		/** Shorthand for one `scopes` entry. */
-		scope: string$1().min(1).optional(),
-		/** Conventional commit scopes to match, e.g. `api` or `ui`. */
-		scopes: array(string$1().min(1)).optional().default([]),
-		/** Match titles with (`true`) or without (`false`) a breaking `!`. */
-		breaking: boolean().optional()
-	})]).optional(),
-	/**
-	* Label predicate: matches a change that carries this label.
-	*
-	* Shorthand for adding a single value to `labels`.
-	* If `label` and `labels` are both specified, they are combined.
-	*
-	* Use `labels-mode` to configure how this label is compared to change labels.
-	*/
-	label: string$1().min(1).optional(),
-	/**
-	* Labels predicate: matches a change that carries these labels.
-	*
-	* `labels-mode` defaults to `any`, so the condition matches when the change
-	* shares at least one configured label unless another mode is set.
-	*
-	* Use `labels-mode` to configure how these labels are compared to change labels.
-	*/
-	labels: array(string$1().min(1)).optional().default([]),
-	/**
-	* Matching mode for the `labels` predicate.
-	*
-	* Has no effect unless `label` or `labels` is configured in the same condition.
-	*
-	* The comparison is set-based (label order is ignored).
-	*
-	* - `any`: Change and configured labels overlap (current behavior).
-	* - `all`: Change contains every configured label. Change can have more labels.
-	* - `only`: Every change label is included in configured labels. Configured labels can specify more.
-	* - `exactly`: Change labels and configured labels are the same set.
-	*/
-	"labels-mode": _enum([
-		"any",
-		"all",
-		"only",
-		"exactly"
-	]).optional().default("any"),
-	/**
-	* Path predicate: matches a change that touched this path pattern. Supports glob patterns.
-	*
-	* Same as specifying a single `paths` value.
-	* If `path` and `paths` are both specified, they are combined.
-	*
-	* Use `paths-mode` to configure how this path is matched against the pull
-	* request's changed files.
-	*/
-	path: string$1().min(1).optional(),
-	/**
-	* Paths predicate: matches a change that touched any of these path patterns.
-	* Values support glob patterns.
-	*
-	* If `path` and `paths` are both specified, they are combined before
-	* `paths-mode` is applied.
-	*
-	* Use `paths-mode` to configure how these path patterns are compared to the
-	* pull request's changed files.
-	*/
-	paths: array(string$1().min(1)).optional().default([]),
-	/**
-	* Matching mode for the `paths` predicate.
-	*
-	* Has no effect unless `path` or `paths` is configured in the same condition.
-	*
-	* The comparison is set-based (path order is ignored).
-	*
-	* - `any`: At least one changed file matched a configured path pattern.
-	* - `all`: Every configured path pattern matched at least one changed file.
-	* - `only`: Every changed file matched a configured path pattern.
-	* - `exactly`: Every changed file matched a configured path pattern and every
-	*   configured path pattern matched at least one changed file.
-	*/
-	"paths-mode": _enum([
-		"any",
-		"all",
-		"only",
-		"exactly"
-	]).optional().default("any")
-});
-var changeConditionSchemaDefaults = changeConditionSchema.parse({});
-var categorySchema = object({
-	/**
-	* Expanded in $TITLE in the category-template.
-	*
-	* Required when `type` is `changelog` (default).
-	* This is enforced during merged-config validation rather than by this schema alone.
-	*
-	* May be omitted for non-changelog categories because
-	* they are not rendered in the changelog output.
-	*/
-	title: string$1().min(1).optional(),
-	/**
-	* The type of the category.
-	*
-	* - `changelog`: Included in the generated changelog.
-	* - `pre-include`: Keep only matching changes for later changelog categorization.
-	* - `pre-exclude`: Exclude matching changes for later changelog categorization. Is run against changes that were included in category type `pre-include` if specified.
-	* - `version-resolver`: Used solely to determine `$RESOLVED_VERSION` from the changes this category matches, without rendering a changelog section. Use `type: 'changelog'` (default) and `categories[*].semver-increment` instead if you mean this category to also be included in the changelog.
-	*
-	* `pre-include` always runs before `pre-exclude` in the pipeline.
-	* Omitted values default to `changelog`.
-	*
-	* @default "changelog"
-	*/
-	type: _enum([
-		"changelog",
-		"pre-include",
-		"pre-exclude",
-		"version-resolver"
-	]).optional().default("changelog"),
-	/**
-	* Whether changes included in this category should be excluded from other categories.
-	*
-	* Default behavior allows changes to appear in multiple categories if they match multiple category criteria.
-	*
-	* Only applicable to categories of `type: changelog` or `type: version-resolver`.
-	* This only controls inclusion for a single category type at a time, so a change can still match
-	* one exclusive changelog category and one exclusive version-resolver category.
-	*
-	* @default false
-	*/
-	exclusive: boolean().optional().default(false),
-	/**
-	* Collapses the category's change list into a `<details>`/`<summary>` block
-	* when the number of changes is greater than this value.
-	*
-	* Only applicable to categories of `type: changelog`.
-	*
-	* Set to `0` to always collapse. Set to `-1` to disable collapsing.
-	*
-	* @default -1
-	*/
-	"collapse-after": number().int().min(-1).optional().default(-1),
-	/**
-	* Which version increment this category contributes to `$RESOLVED_VERSION`.
-	*
-	* For `type: changelog` categories, this applies to changes that end up assigned
-	* to the category after changelog matching and `exclusive` handling.
-	* For `type: version-resolver` categories, this applies to changes the category
-	* matches directly, with a category that omits `when` acting as the fallback
-	* when no other `type: version-resolver` category matches.
-	*
-	* If multiple categories contribute, the most severe increment wins.
-	* For example, if one contributing category has `semver-increment: 'minor'`
-	* and another has `semver-increment: 'patch'`, the resulting increment will
-	* be `minor`.
-	*
-	* Applicable to categories of `type: changelog` and `type: version-resolver`.
-	* Ignored for `type: pre-include` and `type: pre-exclude`.
-	*
-	* @default "patch"
-	*/
-	"semver-increment": _enum([
-		"major",
-		"minor",
-		"patch"
-	]).optional().default("patch"),
-	/**
-	* Compatibility shorthand for adding label matching to this category.
-	*
-	* Equivalent to adding the same `labels` predicate to every `when` condition.
-	*
-	* @deprecated Use `when.labels` instead.
-	*/
-	labels: array(string$1().min(1)).optional().default([]),
-	/**
-	* Compatibility shorthand for adding a single label match to this category.
-	*
-	* Equivalent to adding the same `label` predicate to every `when` condition.
-	*
-	* @deprecated Use `when.label` instead.
-	*/
-	label: string$1().min(1).optional(),
-	/**
-	* Conditions that determine whether a change belongs to this category.
-	*
-	* Can be specified as:
-	* - A **single condition** (object): the change must satisfy all predicates in that condition.
-	* - An **array of conditions**: the change must satisfy all predicates of **at least one**
-	*   condition (OR logic across conditions, AND logic within each condition).
-	*
-	* An empty array (default) matches all changes.
-	*
-	* @example
-	* # Shorthand: single condition (must have label "bug" AND touch "src/")
-	* when:
-	*   labels: [bug]
-	*   paths: [src/**]
-	*
-	* @example
-	* # Array: (label "bug" AND path "src/") OR (label "enhancement")
-	* when:
-	*   - labels: [bug]
-	*     paths: [src/**]
-	*   - labels: [enhancement]
-	*/
-	when: changeConditionSchema.or(array(changeConditionSchema)).optional().default([])
-});
-var categorySchemaDefaults = categorySchema.parse({});
-var exclusiveConfigSchema = object({
-	/**
-	* The template to use for each merged change.
-	*/
-	"change-template": string$1().optional().default("* $TITLE (#$NUMBER) $AUTHORS"),
-	/**
-	* The template to use for each author in `$AUTHORS`.
-	*/
-	"change-author-template": string$1().optional().default("$AUTHOR_MENTION"),
-	/**
-	* The separator to use between authors in `$AUTHORS`.
-	*/
-	"change-authors-separator": string$1().optional().default(", "),
-	/**
-	* An optional separator to use before the final author in `$AUTHORS`.
-	*/
-	"change-authors-final-separator": string$1().optional(),
-	/**
-	* Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters.
-	*/
-	"change-title-escapes": string$1().optional(),
-	/**
-	* The template to use for when there’s no changes.
-	*/
-	"no-changes-template": string$1().optional().default("* No changes"),
-	/**
-	* The template to use when calculating the next version number for the release. Useful for projects that don't use semantic versioning.
-	*/
-	"version-template": string$1().optional().default("$MAJOR.$MINOR.$PATCH$PRERELEASE"),
-	/**
-	* The template for the name of the draft release.
-	*/
-	"name-template": string$1().optional(),
-	/**
-	* A known prefix used to filter release tags. For matching tags, this prefix is stripped before attempting to parse the version.
-	*/
-	"tag-prefix": string$1().optional(),
-	/**
-	* The template for the tag of the draft release.
-	*/
-	"tag-template": string$1().optional(),
-	/**
-	* Exclude changes using labels.
-	*
-	* @deprecated Use a `type: pre-exclude` category with `when.labels` instead.
-	*/
-	"exclude-labels": array(string$1()).optional().default([]),
-	/**
-	* Include only the specified changes using labels.
-	*
-	* @deprecated Use a `type: pre-include` category with `when.labels` instead.
-	*/
-	"include-labels": array(string$1()).optional().default([]),
-	/**
-	* Restrict changes included in the release notes to only the changes that modified any of the paths in this array.
-	* Supports files and directories.
-	*
-	* @deprecated Use a `type: pre-include` category with `when.paths` instead.
-	*/
-	"include-paths": array(string$1()).optional().default([]),
-	/**
-	* Exclude changes from the release notes if they modified any of the paths in this array.
-	* Supports files and directories. If used with `include-paths`, the exclusion takes precedence.
-	*
-	* @deprecated Use a `type: pre-exclude` category with `when.paths` instead.
-	*/
-	"exclude-paths": array(string$1()).optional().default([]),
-	/**
-	* Exclude specific usernames from the generated `$CONTRIBUTORS` variable.
-	*/
-	"exclude-contributors": array(string$1()).optional().default([]),
-	/**
-	* The template to use for each new contributor in `$NEW_CONTRIBUTORS`.
-	*/
-	"new-contributor-template": string$1().optional().default("* $AUTHOR_MENTION made their first contribution in #$NUMBER"),
-	/**
-	* The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list.
-	*/
-	"no-new-contributor-template": string$1().optional().default("* No new contributors"),
-	/**
-	* The template to use for `$CONTRIBUTORS` when there's no contributors to list.
-	*/
-	"no-contributors-template": string$1().optional().default("No contributors"),
-	/**
-	* Sort changelog by merged_at or title.
-	*/
-	"sort-by": _enum(["merged_at", "title"]).optional().default("merged_at"),
-	/**
-	* Sort changelog in ascending or descending order.
-	*/
-	"sort-direction": _enum(["ascending", "descending"]).optional().default("descending"),
-	/**
-	* Filter previous releases to consider only those with the target matching `commitish`.
-	*/
-	"filter-by-commitish": boolean().optional().default(false),
-	"pull-request-limit": number().int().positive().optional().default(5),
-	/**
-	* Size of the pagination window when walking the repo. Can avoid erratic 502s from Github. Default: `15`
-	*/
-	"history-limit": number().int().positive().optional().default(15),
-	/**
-	* Search and replace content in the generated changelog body.
-	*/
-	replacers: array(object({
-		search: string$1().min(1),
-		replace: string$1().min(0)
-	})).optional().default([]),
-	/**
-	* Categorize changes
-	*/
-	categories: array(categorySchema).optional().default([]),
-	/**
-	* Adjust the `$RESOLVED_VERSION` variable using labels.
-	*
-	* @deprecated Use a category with a `semver-increment` instead. Use category[ies] with `type: version-resolver` to separate version resolution from changelog inclusion concerns.
-	*/
-	"version-resolver": object({
-		major: object({ labels: array(string$1().min(1)) }).optional().default({ labels: [] }),
-		minor: object({ labels: array(string$1().min(1)) }).optional().default({ labels: [] }),
-		patch: object({ labels: array(string$1().min(1)) }).optional().default({ labels: [] }),
-		default: _enum([
-			"major",
-			"minor",
-			"patch"
-		]).optional().default("patch")
-	}).optional().default({
-		major: { labels: [] },
-		minor: { labels: [] },
-		patch: { labels: [] },
-		default: "patch"
-	}),
-	/**
-	* The template to use for each category.
-	*/
-	"category-template": string$1().optional().default("## $TITLE"),
-	/**
-	* The template for the body of the draft release.
-	* Optional as it may be inherited via `_extends`.
-	*/
-	template: string$1().optional().default("")
-}).meta({
-	title: "JSON schema for Release Drafter yaml files",
-	id: "https://github.com/release-drafter/release-drafter/blob/main/drafter/schema.json"
-});
-var configSchema = exclusiveConfigSchema.and(commonConfigSchema);
-var configSchemaDefaults = Object.fromEntries(Object.entries({
-	...exclusiveConfigSchema.shape,
-	...commonConfigSchema.shape
-}).map(([key, value]) => {
-	if (value instanceof ZodDefault) return [key, value.def.defaultValue];
-	return [key, void 0];
-}));
-//#endregion
-//#region node_modules/verkit/dist/index.js
-var LETTER_DASH_NUMBER = "[a-zA-Z0-9-]";
-var NUMERIC_IDENTIFIER = String.raw`0|[1-9]\d*`;
-var NUMERIC_IDENTIFIER_LOOSE = String.raw`\d+`;
-var NON_NUMERIC_IDENTIFIER = String.raw`\d*[a-zA-Z-]${LETTER_DASH_NUMBER}*`;
-var MAIN_VERSION = String.raw`(${NUMERIC_IDENTIFIER})\.(${NUMERIC_IDENTIFIER})\.(${NUMERIC_IDENTIFIER})`;
-var MAIN_VERSION_LOOSE = String.raw`(${NUMERIC_IDENTIFIER_LOOSE})\.(${NUMERIC_IDENTIFIER_LOOSE})\.(${NUMERIC_IDENTIFIER_LOOSE})`;
-var PRERELEASE_IDENTIFIER = `(?:${NON_NUMERIC_IDENTIFIER}|${NUMERIC_IDENTIFIER})`;
-var PRERELEASE_IDENTIFIER_LOOSE = `(?:${NON_NUMERIC_IDENTIFIER}|${NUMERIC_IDENTIFIER_LOOSE})`;
-var PRERELEASE = String.raw`(?:-(${PRERELEASE_IDENTIFIER}(?:\.${PRERELEASE_IDENTIFIER})*))`;
-var PRERELEASE_LOOSE = String.raw`(?:-?(${PRERELEASE_IDENTIFIER_LOOSE}(?:\.${PRERELEASE_IDENTIFIER_LOOSE})*))`;
-var BUILD_IDENTIFIER = `${LETTER_DASH_NUMBER}+`;
-var BUILD = String.raw`(?:\+(${BUILD_IDENTIFIER}(?:\.${BUILD_IDENTIFIER})*))`;
-var FULL_PLAIN = `v?${MAIN_VERSION}${PRERELEASE}?${BUILD}?`;
-var LOOSE_PLAIN = String.raw`[v=\s]*${MAIN_VERSION_LOOSE}${PRERELEASE_LOOSE}?${BUILD}?`;
-var GREATER_LESS_THAN = "((?:<|>)?=?)";
-var XRANGE_IDENTIFIER = String.raw`${NUMERIC_IDENTIFIER}|x|X|\*`;
-var XRANGE_IDENTIFIER_LOOSE = String.raw`${NUMERIC_IDENTIFIER_LOOSE}|x|X|\*`;
-var XRANGE_PLAIN = String.raw`[v=\s]*(${XRANGE_IDENTIFIER})(?:\.(${XRANGE_IDENTIFIER})(?:\.(${XRANGE_IDENTIFIER})(?:${PRERELEASE})?${BUILD}?)?)?`;
-var XRANGE_PLAIN_LOOSE = String.raw`[v=\s]*(${XRANGE_IDENTIFIER_LOOSE})(?:\.(${XRANGE_IDENTIFIER_LOOSE})(?:\.(${XRANGE_IDENTIFIER_LOOSE})(?:${PRERELEASE_LOOSE})?${BUILD}?)?)?`;
-var LONE_TILDE = "(?:~>?)";
-var LONE_CARET = String.raw`(?:\^)`;
-var COERCE_PLAIN = String.raw`(^|[^\d])(\d{1,${16}})(?:\.(\d{1,${16}}))?(?:\.(\d{1,${16}}))?`;
-var COERCE = String.raw`${COERCE_PLAIN}(?:$|[^\d])`;
-var COERCE_FULL = String.raw`${COERCE_PLAIN}(?:${PRERELEASE})?(?:${BUILD})?(?:$|[^\d])`;
-function makeSafeRegexSource(source) {
-	const replacements = [
-		[String.raw`\s`, 1],
-		[String.raw`\d`, 256],
-		[LETTER_DASH_NUMBER, 250]
-	];
-	for (const [token, maximum] of replacements) source = source.split(`${token}*`).join(`${token}{0,${maximum}}`).split(`${token}+`).join(`${token}{1,${maximum}}`);
-	return source;
-}
-function safeRegex(source, flags) {
-	return new RegExp(makeSafeRegexSource(source), flags);
-}
-var NUMERIC$1 = /^\d+$/;
-function compareIdentifiers(left, right) {
-	if (typeof left === "number" && typeof right === "number") return left === right ? 0 : left < right ? -1 : 1;
-	const leftNumeric = NUMERIC$1.test(String(left));
-	const rightNumeric = NUMERIC$1.test(String(right));
-	const normalizedLeft = leftNumeric ? Number(left) : left;
-	const normalizedRight = rightNumeric ? Number(right) : right;
-	return normalizedLeft === normalizedRight ? 0 : leftNumeric && !rightNumeric ? -1 : rightNumeric && !leftNumeric ? 1 : normalizedLeft < normalizedRight ? -1 : 1;
-}
-var FULL = safeRegex(`^${FULL_PLAIN}$`);
-var LOOSE = safeRegex(`^${LOOSE_PLAIN}$`);
-var PRERELEASE_EXACT = safeRegex(`^${PRERELEASE}$`);
-var PRERELEASE_LOOSE_EXACT = safeRegex(`^${PRERELEASE_LOOSE}$`);
-var COERCE_EXACT = safeRegex(COERCE);
-var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
-var NUMERIC = /^\d+$/;
-function formatComparableVersion(version) {
-	const base = `${version.major}.${version.minor}.${version.patch}`;
-	return version.prerelease?.length ? `${base}-${version.prerelease.join(".")}` : base;
-}
-function formatFullVersion(version) {
-	const comparable = formatComparableVersion(version);
-	return version.build?.length ? `${comparable}+${version.build.join(".")}` : comparable;
-}
-function parse(version, options = {}) {
-	if (typeof version !== "string") return version;
-	if (version.length > 256) throw new TypeError(`Version exceeds the maximum length of 256 characters`);
-	const match = version.trim().match(options.loose ? LOOSE : FULL);
-	if (!match) throw new TypeError(`Invalid version syntax: ${version}`);
-	const major = Number(match[1]);
-	const minor = Number(match[2]);
-	const patch = Number(match[3]);
-	if (major > Number.MAX_SAFE_INTEGER || major < 0) throw new TypeError(`Invalid major version: ${match[1]}`);
-	if (minor > Number.MAX_SAFE_INTEGER || minor < 0) throw new TypeError(`Invalid minor version: ${match[2]}`);
-	if (patch > Number.MAX_SAFE_INTEGER || patch < 0) throw new TypeError(`Invalid patch version: ${match[3]}`);
-	const prerelease = match[4] ? match[4].split(".").map((identifier) => {
-		if (NUMERIC.test(identifier)) {
-			const numeric = Number(identifier);
-			if (numeric >= 0 && numeric < Number.MAX_SAFE_INTEGER) return numeric;
-		}
-		return identifier;
-	}) : void 0;
-	return {
-		build: match[5]?.split("."),
-		major,
-		minor,
-		patch,
-		prerelease
-	};
-}
-function tryParse(version, options = {}) {
-	try {
-		return parse(version, options);
-	} catch {
-		return null;
-	}
-}
-function compareMainParsed(left, right) {
-	return left.major === right.major ? left.minor === right.minor ? left.patch === right.patch ? 0 : left.patch < right.patch ? -1 : 1 : left.minor < right.minor ? -1 : 1 : left.major < right.major ? -1 : 1;
-}
-function comparePrereleaseParsed(left, right) {
-	const leftPrerelease = left.prerelease;
-	const rightPrerelease = right.prerelease;
-	if (leftPrerelease?.length && !rightPrerelease?.length) return -1;
-	if (!leftPrerelease?.length && rightPrerelease?.length) return 1;
-	if (!leftPrerelease?.length && !rightPrerelease?.length) return 0;
-	for (let index = 0;; index++) {
-		const leftIdentifier = leftPrerelease?.[index];
-		const rightIdentifier = rightPrerelease?.[index];
-		if (leftIdentifier === void 0 && rightIdentifier === void 0) return 0;
-		if (rightIdentifier === void 0) return 1;
-		if (leftIdentifier === void 0) return -1;
-		if (leftIdentifier !== rightIdentifier) return compareIdentifiers(leftIdentifier, rightIdentifier);
-	}
-}
-function compareParsed(left, right) {
-	return compareMainParsed(left, right) || comparePrereleaseParsed(left, right);
-}
-function isPrereleasePrefix(prerelease, identifier) {
-	const identifiers = identifier.split(".");
-	return identifiers.length <= prerelease.length && identifiers.every((part, index) => compareIdentifiers(prerelease[index], part) === 0);
-}
-function incrementPrerelease(version, identifier, identifierBase) {
-	const base = Number(identifierBase) ? 1 : 0;
-	let prerelease = version.prerelease;
-	if (prerelease?.length) {
-		let foundNumeric = false;
-		for (let index = prerelease.length - 1; index >= 0; index--) if (typeof prerelease[index] === "number") {
-			prerelease[index] = Number(prerelease[index]) + 1;
-			foundNumeric = true;
-			break;
-		}
-		if (!foundNumeric) {
-			if (identifier === prerelease.join(".") && identifierBase === false) throw new Error("invalid increment argument: identifier already exists");
-			prerelease.push(base);
-		}
-	} else {
-		prerelease = [base];
-		version.prerelease = prerelease;
-	}
-	if (!identifier) return;
-	const reset = identifierBase === false ? [identifier] : [identifier, base];
-	if (isPrereleasePrefix(prerelease, identifier)) {
-		const next = prerelease[identifier.split(".").length];
-		if (Number.isNaN(Number(next))) version.prerelease = reset;
-	} else version.prerelease = reset;
-}
-function incrementMutable(version, release, identifier, identifierBase) {
-	switch (release) {
-		case "premajor":
-			version.prerelease = void 0;
-			version.patch = 0;
-			version.minor = 0;
-			version.major++;
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		case "preminor":
-			version.prerelease = void 0;
-			version.patch = 0;
-			version.minor++;
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		case "prepatch":
-			version.prerelease = void 0;
-			incrementMutable(version, "patch", identifier, identifierBase);
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		case "prerelease":
-			if (!version.prerelease?.length) incrementMutable(version, "patch", identifier, identifierBase);
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		case "release":
-			if (!version.prerelease?.length) throw new Error(`version ${formatFullVersion(version)} is not a prerelease`);
-			version.prerelease = void 0;
-			break;
-		case "major":
-			if (version.minor !== 0 || version.patch !== 0 || !version.prerelease?.length) version.major++;
-			version.minor = 0;
-			version.patch = 0;
-			version.prerelease = void 0;
-			break;
-		case "minor":
-			if (version.patch !== 0 || !version.prerelease?.length) version.minor++;
-			version.patch = 0;
-			version.prerelease = void 0;
-			break;
-		case "patch":
-			if (!version.prerelease?.length) version.patch++;
-			version.prerelease = void 0;
-			break;
-		case "pre":
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		default: throw new Error(`invalid increment argument: ${release}`);
-	}
-}
-function incrementParsedVersion(parsed, release, identifier, identifierBase, loose = false) {
-	if (release.startsWith("pre")) {
-		if (!identifier && identifierBase === false) throw new Error("invalid increment argument: identifier is empty");
-		if (identifier) {
-			const expression = loose ? PRERELEASE_LOOSE_EXACT : PRERELEASE_EXACT;
-			const match = `-${identifier}`.match(expression);
-			if (!match || match[1] !== identifier) throw new Error(`invalid identifier: ${identifier}`);
-		}
-	}
-	const mutable = {
-		build: parsed.build ? [...parsed.build] : void 0,
-		major: parsed.major,
-		minor: parsed.minor,
-		patch: parsed.patch,
-		prerelease: parsed.prerelease ? [...parsed.prerelease] : void 0
-	};
-	incrementMutable(mutable, release, identifier, identifierBase);
-	return formatComparableVersion(mutable);
-}
-function coerceParsedVersion(value, options = {}) {
-	if (typeof value === "object") return value;
-	const input = typeof value === "number" ? String(value) : value;
-	if (typeof input !== "string") return null;
-	let match = null;
-	if (options.rtl) {
-		const expression = safeRegex(options.includePrerelease ? COERCE_FULL : COERCE, "g");
-		let next;
-		while ((next = expression.exec(input)) && (!match || match.index + match[0].length !== input.length)) {
-			if (!match || next.index + next[0].length !== match.index + match[0].length) match = next;
-			expression.lastIndex = next.index + next[1].length + next[2].length;
-		}
-	} else match = (options.includePrerelease ? COERCE_FULL_EXACT : COERCE_EXACT).exec(input);
-	if (!match) return null;
-	const major = match[2];
-	return tryParse(`${major}.${match[3] || "0"}.${match[4] || "0"}${options.includePrerelease && match[5] ? `-${match[5]}` : ""}${options.includePrerelease && match[6] ? `+${match[6]}` : ""}`, options);
-}
-var STRICT_COMPARATOR = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${FULL_PLAIN})$|^$`);
-var LOOSE_COMPARATOR$1 = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${LOOSE_PLAIN})$|^$`);
-function parseComparator(comparator, options = {}) {
-	const normalized = comparator.trim().replaceAll(/\s+/g, " ");
-	const match = normalized.match(options.loose ? LOOSE_COMPARATOR$1 : STRICT_COMPARATOR);
-	if (!match) throw new TypeError(`Invalid comparator: ${normalized}`);
-	const operator = match[1] === "=" ? "" : match[1] || "";
-	const version = match[2] ? parse(match[2], options) : null;
-	return {
-		operator,
-		options,
-		value: version ? `${operator}${formatComparableVersion(version)}` : "",
-		version
-	};
-}
-function testParsedComparator(comparator, version) {
-	if (!comparator.version) return true;
-	const comparison = compareParsed(version, comparator.version);
-	switch (comparator.operator) {
-		case "": return comparison === 0;
-		case ">": return comparison > 0;
-		case ">=": return comparison >= 0;
-		case "<": return comparison < 0;
-		case "<=": return comparison <= 0;
-	}
-}
-var BUILD_STRIP = new RegExp(BUILD, "g");
-var BUILD_SAFE = safeRegex(BUILD);
-var STRICT_HYPHEN = safeRegex(String.raw`^\s*(${XRANGE_PLAIN})\s+-\s+(${XRANGE_PLAIN})\s*$`);
-var LOOSE_HYPHEN = safeRegex(String.raw`^\s*(${XRANGE_PLAIN_LOOSE})\s+-\s+(${XRANGE_PLAIN_LOOSE})\s*$`);
-var COMPARATOR_TRIM = safeRegex(String.raw`(\s*)${GREATER_LESS_THAN}\s*(${LOOSE_PLAIN}|${XRANGE_PLAIN})`, "g");
-var TILDE_TRIM = safeRegex(String.raw`(\s*)${LONE_TILDE}\s+`, "g");
-var CARET_TRIM = safeRegex(String.raw`(\s*)${LONE_CARET}\s+`, "g");
-var STRICT_TILDE = safeRegex(`^${LONE_TILDE}${XRANGE_PLAIN}$`);
-var LOOSE_TILDE = safeRegex(`^${LONE_TILDE}${XRANGE_PLAIN_LOOSE}$`);
-var STRICT_CARET = safeRegex(`^${LONE_CARET}${XRANGE_PLAIN}$`);
-var LOOSE_CARET = safeRegex(`^${LONE_CARET}${XRANGE_PLAIN_LOOSE}$`);
-var STRICT_XRANGE = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*${XRANGE_PLAIN}$`);
-var LOOSE_XRANGE = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*${XRANGE_PLAIN_LOOSE}$`);
-var STAR = safeRegex(String.raw`(<|>)?=?\s*\*`);
-var GTE_ZERO = /^\s*>=\s*0\.0\.0\s*$/;
-var GTE_ZERO_PRERELEASE = /^\s*>=\s*0\.0\.0-0\s*$/;
-var LOOSE_COMPARATOR = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${LOOSE_PLAIN})$|^$`);
-function isWildcard(value) {
-	return !value || String(value).toLowerCase() === "x" || String(value) === "*";
-}
-function hasInvalidWildcardOrder(major, minor, patch) {
-	return isWildcard(major) && !isWildcard(minor) || isWildcard(minor) && Boolean(patch) && !isWildcard(patch);
-}
-function replaceTilde(comparator, options) {
-	const expression = options.loose ? LOOSE_TILDE : STRICT_TILDE;
-	const lowerPrerelease = options.includePrerelease ? "-0" : "";
-	return comparator.replace(expression, (_match, major, minor, patch, prerelease) => {
-		if (isWildcard(major)) return "";
-		if (isWildcard(minor)) return `>=${major}.0.0${lowerPrerelease} <${Number(major) + 1}.0.0-0`;
-		if (isWildcard(patch)) return `>=${major}.${minor}.0${lowerPrerelease} <${major}.${Number(minor) + 1}.0-0`;
-		return prerelease ? `>=${major}.${minor}.${patch}-${prerelease} <${major}.${Number(minor) + 1}.0-0` : `>=${major}.${minor}.${patch} <${major}.${Number(minor) + 1}.0-0`;
-	});
-}
-function replaceTildes(comparator, options) {
-	return comparator.trim().split(/\s+/).map((part) => replaceTilde(part, options)).join(" ");
-}
-function replaceCaret(comparator, options) {
-	const expression = options.loose ? LOOSE_CARET : STRICT_CARET;
-	const lowerPrerelease = options.includePrerelease ? "-0" : "";
-	return comparator.replace(expression, (_match, major, minor, patch, prerelease) => {
-		if (isWildcard(major)) return "";
-		if (isWildcard(minor)) return `>=${major}.0.0${lowerPrerelease} <${Number(major) + 1}.0.0-0`;
-		if (isWildcard(patch)) return major === "0" ? `>=${major}.${minor}.0${lowerPrerelease} <${major}.${Number(minor) + 1}.0-0` : `>=${major}.${minor}.0${lowerPrerelease} <${Number(major) + 1}.0.0-0`;
-		if (prerelease) return major === "0" ? minor === "0" ? `>=${major}.${minor}.${patch}-${prerelease} <${major}.${minor}.${Number(patch) + 1}-0` : `>=${major}.${minor}.${patch}-${prerelease} <${major}.${Number(minor) + 1}.0-0` : `>=${major}.${minor}.${patch}-${prerelease} <${Number(major) + 1}.0.0-0`;
-		return major === "0" ? minor === "0" ? `>=${major}.${minor}.${patch} <${major}.${minor}.${Number(patch) + 1}-0` : `>=${major}.${minor}.${patch} <${major}.${Number(minor) + 1}.0-0` : `>=${major}.${minor}.${patch} <${Number(major) + 1}.0.0-0`;
-	});
-}
-function replaceCarets(comparator, options) {
-	return comparator.trim().split(/\s+/).map((part) => replaceCaret(part, options)).join(" ");
-}
-function replaceXRange(comparator, options) {
-	const expression = options.loose ? LOOSE_XRANGE : STRICT_XRANGE;
-	return comparator.trim().replace(expression, (match, rawOperator, rawMajor, rawMinor, rawPatch) => {
-		let operator = rawOperator;
-		let major = rawMajor;
-		let minor = rawMinor;
-		let patch = rawPatch;
-		if (hasInvalidWildcardOrder(String(major), minor === void 0 ? void 0 : String(minor), patch === void 0 ? void 0 : String(patch))) return comparator;
-		const wildcardMajor = isWildcard(major);
-		const wildcardMinor = wildcardMajor || isWildcard(minor);
-		const wildcardPatch = wildcardMinor || isWildcard(patch);
-		if (operator === "=" && wildcardPatch) operator = "";
-		if (wildcardMajor) return operator === ">" || operator === "<" ? "<0.0.0-0" : "*";
-		let prerelease = options.includePrerelease ? "-0" : "";
-		if (operator && wildcardPatch) {
-			if (wildcardMinor) minor = 0;
-			patch = 0;
-			if (operator === ">") {
-				operator = ">=";
-				if (wildcardMinor) {
-					major = Number(major) + 1;
-					minor = 0;
-				} else minor = Number(minor) + 1;
-			} else if (operator === "<=") {
-				operator = "<";
-				if (wildcardMinor) major = Number(major) + 1;
-				else minor = Number(minor) + 1;
+	match(f, partial = this.partial) {
+		this.debug("match", f, this.pattern);
+		if (this.comment) return false;
+		if (this.empty) return f === "";
+		if (f === "/" && partial) return true;
+		const options = this.options;
+		if (this.isWindows) f = f.split("\\").join("/");
+		const ff = this.slashSplit(f);
+		this.debug(this.pattern, "split", ff);
+		const set = this.set;
+		this.debug(this.pattern, "set", set);
+		let filename = ff[ff.length - 1];
+		if (!filename) for (let i = ff.length - 2; !filename && i >= 0; i--) filename = ff[i];
+		for (const pattern of set) {
+			let file = ff;
+			if (options.matchBase && pattern.length === 1) file = [filename];
+			if (this.matchOne(file, pattern, partial)) {
+				if (options.flipNegate) return true;
+				return !this.negate;
 			}
-			if (operator === "<") prerelease = "-0";
-			return `${operator}${major}.${minor}.${patch}${prerelease}`;
 		}
-		if (wildcardMinor) return `>=${major}.0.0${prerelease} <${Number(major) + 1}.0.0-0`;
-		if (wildcardPatch) return `>=${major}.${minor}.0${prerelease} <${major}.${Number(minor) + 1}.0-0`;
-		return match;
-	});
-}
-function replaceXRanges(comparator, options) {
-	return comparator.split(/\s+/).map((part) => replaceXRange(part, options)).join(" ");
-}
-function replaceHyphenRange(range, options) {
-	const expression = options.loose ? LOOSE_HYPHEN : STRICT_HYPHEN;
-	return range.replace(expression, (_match, rawFrom, fromMajor, fromMinor, fromPatch, fromPrerelease, _fromBuild, rawTo, toMajor, toMinor, toPatch, toPrerelease) => {
-		let from = rawFrom;
-		let to = rawTo;
-		if (isWildcard(fromMajor)) from = "";
-		else if (isWildcard(fromMinor)) from = `>=${fromMajor}.0.0${options.includePrerelease ? "-0" : ""}`;
-		else if (isWildcard(fromPatch)) from = `>=${fromMajor}.${fromMinor}.0${options.includePrerelease ? "-0" : ""}`;
-		else if (fromPrerelease) from = `>=${from}`;
-		else from = `>=${from}${options.includePrerelease ? "-0" : ""}`;
-		if (isWildcard(toMajor)) to = "";
-		else if (isWildcard(toMinor)) to = `<${Number(toMajor) + 1}.0.0-0`;
-		else if (isWildcard(toPatch)) to = `<${toMajor}.${Number(toMinor) + 1}.0-0`;
-		else if (toPrerelease) to = `<=${toMajor}.${toMinor}.${toPatch}-${toPrerelease}`;
-		else if (options.includePrerelease) to = `<${toMajor}.${toMinor}.${Number(toPatch) + 1}-0`;
-		else to = `<=${to}`;
-		return `${from} ${to}`.trim();
-	});
-}
-function expandComparator(comparator, options) {
-	return replaceXRanges(replaceTildes(replaceCarets(comparator.replace(BUILD_SAFE, ""), options), options), options).trim().replace(STAR, "");
-}
-function parseSimpleRange(input, options) {
-	let parts = replaceHyphenRange(input.replace(BUILD_STRIP, ""), options).replace(COMPARATOR_TRIM, "$1$2$3").replace(TILDE_TRIM, "$1~").replace(CARET_TRIM, "$1^").split(" ").map((part) => expandComparator(part, options)).join(" ").split(/\s+/).map((part) => part.trim().replace(options.includePrerelease ? GTE_ZERO_PRERELEASE : GTE_ZERO, ""));
-	if (options.loose) parts = parts.filter((part) => LOOSE_COMPARATOR.test(part));
-	const unique = /* @__PURE__ */ new Map();
-	for (const comparator of parts.map((part) => parseComparator(part, options))) {
-		if (comparator.value === "<0.0.0-0") return [comparator];
-		unique.set(comparator.value, comparator);
+		if (options.flipNegate) return false;
+		return this.negate;
 	}
-	if (unique.size > 1) unique.delete("");
-	return [...unique.values()];
-}
-function parseRange(range, options = {}) {
-	if (typeof range !== "string") return range;
-	const parsedOptions = { ...options };
-	const raw = range.trim().replaceAll(/\s+/g, " ");
-	let sets = raw.split("||").map((part) => parseSimpleRange(part.trim(), parsedOptions)).filter((set) => set.length);
-	if (!sets.length) throw new TypeError(`Range contains no valid comparator sets: ${raw}`);
-	if (sets.length > 1) {
-		const first = sets[0];
-		sets = sets.filter((set) => set[0]?.value !== "<0.0.0-0");
-		if (!sets.length) sets = [first];
-		else if (sets.length > 1) {
-			const any = sets.find((set) => set.length === 1 && set[0]?.value === "");
-			if (any) sets = [any];
-		}
+	static defaults(def) {
+		return minimatch.defaults(def).Minimatch;
 	}
-	return {
-		normalized: sets.map((set) => set.map((comparator) => comparator.value).join(" ")).join("||"),
-		options: parsedOptions,
-		raw,
-		sets
-	};
-}
-function tryParseRange(range, options = {}) {
-	try {
-		return parseRange(range, options);
-	} catch {
-		return null;
-	}
-}
-function testComparatorSet(set, version, options) {
-	if (set.some((comparator) => !testParsedComparator(comparator, version))) return false;
-	if (!version.prerelease?.length || options.includePrerelease) return true;
-	return set.some((comparator) => {
-		const allowed = comparator.version;
-		return allowed !== null && allowed.prerelease?.length && allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch;
-	});
-}
-function testParsedRange(range, version) {
-	return range.sets.some((set) => testComparatorSet(set, version, range.options));
-}
-function testRangeVersion(range, version) {
-	const parsed = tryParse(version, range.options);
-	return parsed ? testParsedRange(range, parsed) : false;
-}
-function normalizeRange(range, options = {}) {
-	const parsed = tryParseRange(range, options);
-	return parsed ? parsed.normalized || "*" : null;
-}
-function satisfies(version, range, options = {}) {
-	const parsed = tryParseRange(range, options);
-	return parsed ? testRangeVersion(parsed, version) : false;
-}
-function normalize$1(version, options = {}) {
-	const parsed = tryParse(version, options);
-	return parsed ? formatComparableVersion(parsed) : null;
-}
-function coerce(value, options = {}) {
-	const parsed = coerceParsedVersion(value, options);
-	return parsed ? formatFullVersion(parsed) : null;
-}
-function increment(version, release, options = {}) {
-	try {
-		return incrementParsedVersion(parse(version, options), release, options.identifier, options.identifierBase, options.loose);
-	} catch {
-		return null;
-	}
-}
-function getMajor(version, options = {}) {
-	return parse(version, options).major;
-}
-function getMinor(version, options = {}) {
-	return parse(version, options).minor;
-}
-function getPatch(version, options = {}) {
-	return parse(version, options).patch;
-}
-function getPrerelease(version, options = {}) {
-	const parsed = tryParse(version, options);
-	return parsed ? [...parsed.prerelease || []] : null;
-}
+};
+/* c8 ignore stop */
+minimatch.AST = AST;
+minimatch.Minimatch = Minimatch;
+minimatch.escape = escape;
+minimatch.unescape = unescape;
 //#endregion
 //#region node_modules/escape-string-regexp/index.js
 function escapeStringRegexp(string) {
@@ -32670,1174 +32587,12 @@ function escapeStringRegexp(string) {
 	return string.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
 }
 //#endregion
-//#region packages/core/src/string-to-regex.ts
-var regexLiteral = /^\/.+\/[AJUXgimsux]*$/;
-var supportedFlags = /* @__PURE__ */ new Set("gimsuy");
-/** Converts a regex literal or plain text matcher into a regular expression. */
-var stringToRegex = (search) => {
-	if (!regexLiteral.test(search)) return new RegExp(escapeStringRegexp(search), "g");
-	const delimiter = search.lastIndexOf("/");
-	const flags = [...new Set(search.slice(delimiter + 1))].filter((flag) => supportedFlags.has(flag)).join("");
-	return new RegExp(search.slice(1, delimiter), flags);
-};
-//#endregion
-//#region packages/core/src/config/parse-categories.ts
-var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
-var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
-var normalizeConventional = (conventional, logger) => {
-	if (!conventional) return;
-	if (conventional === true) return {
-		types: [],
-		scopes: [],
-		breaking: void 0
-	};
-	if (Object.keys(conventional).length === 0) logger.warning("Use 'conventional: true' instead of 'conventional: {}' to match any conventional title.");
-	return {
-		types: [...conventional.types || [], ...conventional.type ? [conventional.type] : []],
-		scopes: [...conventional.scopes || [], ...conventional.scope ? [conventional.scope] : []],
-		breaking: conventional.breaking
-	};
-};
-/**
-* Parses all categories from the config, normalizing conditions and
-* handling backward compatibility with deprecated fields.
-*
-* This function:
-* - Normalizes a missing `type` to `changelog` to match schema defaults
-* - Normalizes the `when` field to always be an array of conditions
-* - Applies deprecated category-level `label`/`labels` shorthands to every
-*   normalized `when` condition
-* - Warns when deprecated compatibility fields are used
-* - Preserves all other category fields as-is
-*
-* Accepts both fully-typed and partial category objects for flexibility.
-*
-* @param categories - Categories from the raw config
-* @returns Array of fully parsed categories with normalized conditions
-*/
-function parseCategories(categories, deprecatedConfig, logger) {
-	const parsedCategories = structuredClone(categories.categories).map((cat) => {
-		const { labels, label, when: _when, "collapse-after": rawCollapseAfter, "semver-increment": rawSemverIncrement, exclusive: rawExclusive, title, ..._cat } = cat;
-		const collapseAfter = rawCollapseAfter ?? categorySchemaDefaults["collapse-after"];
-		const semverIncrement = rawSemverIncrement ?? categorySchemaDefaults["semver-increment"];
-		const exclusive = rawExclusive ?? categorySchemaDefaults.exclusive;
-		const deprecatedLabels = [...labels || [], ...label ? [label] : []];
-		if (deprecatedLabels.length > 0) logger.warning(withMigrationDocumentationLink(`Use of deprecated 'categories[*].label' or 'categories[*].labels' field detected${title ? ` on category "${title}"` : ""}. Please migrate. This field will be removed in a future release. To migrate, move the labels into the category's 'when' condition.`));
-		const parsedWhenConditions = (_when !== void 0 ? Array.isArray(_when) ? _when.length > 0 || deprecatedLabels.length === 0 ? _when : [{}] : [_when] : deprecatedLabels.length > 0 ? [{}] : []).map((condition) => {
-			const { path, label, conventional, ..._cond } = condition;
-			const normalizedConventional = normalizeConventional(conventional, logger);
-			return {
-				..._cond,
-				"labels-mode": condition["labels-mode"] ?? changeConditionSchemaDefaults["labels-mode"],
-				"paths-mode": condition["paths-mode"] ?? changeConditionSchemaDefaults["paths-mode"],
-				paths: [...condition.paths || [], ...path ? [path] : []],
-				labels: [
-					...deprecatedLabels,
-					...condition.labels || [],
-					...label ? [label] : []
-				],
-				...normalizedConventional ? { conventional: normalizedConventional } : {}
-			};
-		}).filter((condition) => condition.paths.length > 0 || condition.labels.length > 0 || !!condition.conventional);
-		const categoryType = _cat.type ?? categorySchemaDefaults.type;
-		switch (categoryType) {
-			case "changelog": return {
-				type: "changelog",
-				when: parsedWhenConditions,
-				"collapse-after": collapseAfter,
-				"semver-increment": semverIncrement,
-				exclusive,
-				title
-			};
-			case "version-resolver":
-				if (title) logger.warning(`Title "${title}" ignored for category of type "${categoryType}"`);
-				if (collapseAfter !== -1) logger.warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
-				return {
-					type: "version-resolver",
-					when: parsedWhenConditions,
-					"semver-increment": semverIncrement,
-					exclusive
-				};
-			case "pre-exclude":
-			case "pre-include":
-				if (title) logger.warning(`Title "${title}" ignored for category of type "${categoryType}"`);
-				if (collapseAfter !== -1) logger.warning(`"collapse-after" "${collapseAfter}" ignored for category of type "${categoryType}"`);
-				if (exclusive) throw new Error(`"exclusive" can only be set on categories of type "changelog" or "version-resolver"; it cannot be used on category of type "${categoryType}".`);
-				if (semverIncrement !== "patch") logger.warning(`"semver-increment" "${semverIncrement}" ignored for category of type "${categoryType}"`);
-				return {
-					type: categoryType,
-					when: parsedWhenConditions
-				};
-			default: throw new Error(`Unsupported category type: ${categoryType}`);
-		}
-	});
-	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) logger.warning(withMigrationDocumentationLink(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`));
-	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) {
-		if (parsedCategories.findIndex((cat) => cat.type === "pre-exclude") !== -1) throw new Error("A 'pre-exclude' category already exists. Cannot migrate deprecated exclude-labels field. Please either remove the deprecated field or remove the existing 'pre-exclude' category to resolve this conflict.");
-		parsedCategories.push({
-			type: "pre-exclude",
-			when: [{
-				labels: deprecatedConfig["exclude-labels"] || [],
-				"labels-mode": "any",
-				paths: deprecatedConfig["exclude-paths"] || [],
-				"paths-mode": "any"
-			}]
-		});
-	}
-	if (deprecatedConfig["include-labels"] && deprecatedConfig["include-labels"].length > 0 || deprecatedConfig["include-paths"] && deprecatedConfig["include-paths"].length > 0) {
-		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'include-labels' or 'include-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-include"' category.`));
-		if (parsedCategories.findIndex((cat) => cat.type === "pre-include") !== -1) throw new Error("A 'pre-include' category already exists. Cannot migrate deprecated include-labels or include-paths fields. Please either remove the deprecated fields or remove the existing 'pre-include' category to resolve this conflict.");
-		parsedCategories.push({
-			type: "pre-include",
-			when: [{
-				labels: deprecatedConfig["include-labels"] || [],
-				"labels-mode": "any",
-				paths: deprecatedConfig["include-paths"] || [],
-				"paths-mode": "any"
-			}]
-		});
-	}
-	if (deprecatedConfig["version-resolver"].default !== configSchemaDefaults["version-resolver"].default) {
-		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.default' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "${deprecatedConfig["version-resolver"].default}"' to 'type: changelog' category with no 'when' condition (uncategorized changes), or move the default resolver to a new category with type 'version-resolver' and 'semver-increment' set to "${deprecatedConfig["version-resolver"].default}" - also without 'when' conditions.`));
-		if (parsedCategories.findIndex((cat) => cat.type === "version-resolver" && cat.when.length === 0) !== -1) throw new Error("A 'version-resolver' category with no 'when' condition already exists. Cannot migrate deprecated 'version-resolver.default' field. Please either remove the deprecated field or remove the existing 'version-resolver' category to resolve this conflict.");
-		parsedCategories.push({
-			type: "version-resolver",
-			"semver-increment": deprecatedConfig["version-resolver"].default,
-			when: [],
-			exclusive: false
-		});
-	}
-	if (deprecatedConfig["version-resolver"].major.labels !== configSchemaDefaults["version-resolver"].major.labels && deprecatedConfig["version-resolver"].major.labels.length > 0) {
-		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.major.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "major"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.major.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'major'.`));
-		parsedCategories.push({
-			type: "version-resolver",
-			"semver-increment": "major",
-			when: [{
-				labels: deprecatedConfig["version-resolver"].major.labels || [],
-				"labels-mode": "any",
-				paths: [],
-				"paths-mode": "any"
-			}],
-			exclusive: false
-		});
-	}
-	if (deprecatedConfig["version-resolver"].minor.labels !== configSchemaDefaults["version-resolver"].minor.labels && deprecatedConfig["version-resolver"].minor.labels.length > 0) {
-		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.minor.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "minor"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.minor.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'minor'.`));
-		parsedCategories.push({
-			type: "version-resolver",
-			"semver-increment": "minor",
-			when: [{
-				labels: deprecatedConfig["version-resolver"].minor.labels || [],
-				"labels-mode": "any",
-				paths: [],
-				"paths-mode": "any"
-			}],
-			exclusive: false
-		});
-	}
-	if (deprecatedConfig["version-resolver"].patch.labels !== configSchemaDefaults["version-resolver"].patch.labels && deprecatedConfig["version-resolver"].patch.labels.length > 0) {
-		logger.warning(withMigrationDocumentationLink(`Use of deprecated 'version-resolver.patch.labels' field detected. Please migrate. This field will be removed in a future release. To migrate, either add 'semver-increment: "patch"' to a pre-existing 'type: changelog' category, or move the labels from 'version-resolver.patch.labels' to a new category with type 'version-resolver' and 'semver-increment' set to 'patch'.`));
-		parsedCategories.push({
-			type: "version-resolver",
-			"semver-increment": "patch",
-			when: [{
-				labels: deprecatedConfig["version-resolver"].patch.labels || [],
-				"labels-mode": "any",
-				paths: [],
-				"paths-mode": "any"
-			}],
-			exclusive: false
-		});
-	}
-	return parsedCategories;
-}
-//#endregion
-//#region packages/core/src/config/merge-input-and-config.ts
-var mergeInputAndConfig = (params) => {
-	const { config: originalConfig, input, defaultCommitish, logger } = params;
-	const { "exclude-labels": excludeLabels, "include-labels": includeLabels, "include-paths": includePaths, "exclude-paths": excludePaths, "version-resolver": versionResolver, ...config } = structuredClone(originalConfig);
-	const deprecatedCategoryConfig = {
-		"exclude-labels": excludeLabels,
-		"include-labels": includeLabels,
-		"include-paths": includePaths,
-		"exclude-paths": excludePaths,
-		"version-resolver": versionResolver
-	};
-	applyOverrides(config, input, logger);
-	const commitish = config.commitish || defaultCommitish || "";
-	const latest = typeof config.latest !== "boolean" ? true : config.latest;
-	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
-	const replacers = config.replacers.map((replacer) => {
-		try {
-			return {
-				...replacer,
-				search: stringToRegex(replacer.search)
-			};
-		} catch {
-			logger.warning(`Bad replacer regex: '${replacer.search}'`);
-			return false;
-		}
-	}).filter((replacer) => !!replacer);
-	const categories = parseCategories(config, deprecatedCategoryConfig, logger);
-	const parsedConfig = {
-		...config,
-		commitish,
-		latest,
-		prerelease,
-		replacers,
-		categories
-	};
-	validateParsedConfig(parsedConfig);
-	return parsedConfig;
-};
-var applyOverrides = (config, input, logger) => {
-	applyStringOverride(config, input, "commitish", logger);
-	applyStringOverride(config, input, "header", logger);
-	applyStringOverride(config, input, "footer", logger);
-	applyStringOverride(config, input, "prerelease-identifier", logger);
-	applyBooleanOverride(config, input, "prerelease", logger);
-	applyBooleanOverride(config, input, "include-pre-releases", logger);
-	applyBooleanOverride(config, input, "latest", logger);
-	applyStringOverride(config, input, "filter-by-range", logger);
-	applyReleaseModeOverrides(config, input, logger);
-};
-var applyReleaseModeOverrides = (config, input, logger) => {
-	if (config.latest && config.prerelease) {
-		logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
-		config.latest = false;
-	}
-	const hasInputPrerelease = typeof input.prerelease === "boolean";
-	const hasInputPrereleaseIdentifier = !!input["prerelease-identifier"];
-	if (config["prerelease-identifier"] && !config.prerelease && (!hasInputPrerelease || hasInputPrereleaseIdentifier)) {
-		logger.warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
-		config.prerelease = true;
-	}
-};
-var applyBooleanOverride = (config, input, key, logger) => {
-	const inputValue = input[key];
-	if (typeof inputValue !== "boolean") return;
-	const configValue = config[key];
-	if (typeof configValue === "boolean" && configValue !== inputValue) logger.info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
-	config[key] = inputValue;
-};
-var applyStringOverride = (config, input, key, logger) => {
-	const inputValue = input[key];
-	if (!inputValue) return;
-	const configValue = config[key];
-	if (configValue && configValue !== inputValue) logger.info(`Input's ${key} "${inputValue}" overrides config's ${key} "${configValue}"`);
-	config[key] = inputValue;
-};
-var validateParsedConfig = (parsedConfig) => {
-	if (!parsedConfig.commitish) throw new Error("'commitish' is required. Please set 'commitish' to a valid value. (defaults to the current ref, but it seems to be undefined in this context)");
-	if (parsedConfig.categories.some((category) => category.type === "changelog" && !category.title)) throw new Error("Every 'type: \"changelog\"' category must define a non-empty 'title'.");
-	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.");
-	if (parsedConfig["filter-by-range"] && !normalizeRange(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
-};
-//#endregion
 //#region packages/core/src/ports.ts
 var noopLogger = {
 	debug() {},
 	info() {},
 	warning() {},
 	error() {}
-};
-//#endregion
-//#region packages/core/src/release/categorize-pull-requests.ts
-var categorizePullRequests = (params) => {
-	const { pullRequests, config } = params;
-	const changelogCategories = getChangelogCategories(config.categories);
-	const categorizedPullRequests = changelogCategories.map((category) => ({
-		...category,
-		pullRequests: []
-	}));
-	const uncategorizedPullRequests = [];
-	for (const pullRequest of pullRequests) {
-		const evaluation = evaluateCategories(pullRequest, config.categories);
-		if (!evaluation.included) continue;
-		if (evaluation.changelogCategories.length === 0) {
-			uncategorizedPullRequests.push(pullRequest);
-			continue;
-		}
-		for (const matchedCategory of evaluation.changelogCategories) {
-			const index = changelogCategories.indexOf(matchedCategory);
-			if (index !== -1) categorizedPullRequests[index].pullRequests.push(pullRequest);
-		}
-	}
-	return [uncategorizedPullRequests, categorizedPullRequests];
-};
-//#endregion
-//#region packages/core/src/release/render-template/util/charCode.ts
-var CharCode = /* @__PURE__ */ function(CharCode) {
-	CharCode[CharCode["Backslash"] = 92] = "Backslash";
-	CharCode[CharCode["Tab"] = 9] = "Tab";
-	CharCode[CharCode["LineFeed"] = 10] = "LineFeed";
-	CharCode[CharCode["CarriageReturn"] = 13] = "CarriageReturn";
-	CharCode[CharCode["Space"] = 32] = "Space";
-	CharCode[CharCode["Ampersand"] = 38] = "Ampersand";
-	CharCode[CharCode["DollarSign"] = 36] = "DollarSign";
-	CharCode[CharCode["Digit0"] = 48] = "Digit0";
-	CharCode[CharCode["Digit1"] = 49] = "Digit1";
-	CharCode[CharCode["Digit2"] = 50] = "Digit2";
-	CharCode[CharCode["Digit3"] = 51] = "Digit3";
-	CharCode[CharCode["Digit4"] = 52] = "Digit4";
-	CharCode[CharCode["Digit5"] = 53] = "Digit5";
-	CharCode[CharCode["Digit6"] = 54] = "Digit6";
-	CharCode[CharCode["Digit7"] = 55] = "Digit7";
-	CharCode[CharCode["Digit8"] = 56] = "Digit8";
-	CharCode[CharCode["Digit9"] = 57] = "Digit9";
-	CharCode[CharCode["A"] = 65] = "A";
-	CharCode[CharCode["E"] = 69] = "E";
-	CharCode[CharCode["L"] = 76] = "L";
-	CharCode[CharCode["U"] = 85] = "U";
-	CharCode[CharCode["a"] = 97] = "a";
-	CharCode[CharCode["l"] = 108] = "l";
-	CharCode[CharCode["n"] = 110] = "n";
-	CharCode[CharCode["t"] = 116] = "t";
-	CharCode[CharCode["u"] = 117] = "u";
-	return CharCode;
-}({});
-//#endregion
-//#region packages/core/src/release/render-template/util/search.ts
-function containsUppercaseCharacter(target) {
-	if (!target) return false;
-	return target.toLowerCase() !== target;
-}
-function buildReplaceStringWithCasePreserved(matches, pattern) {
-	if (matches && matches[0] !== "") {
-		const containsHyphens = validateSpecificSpecialCharacter(matches, pattern, "-");
-		const containsUnderscores = validateSpecificSpecialCharacter(matches, pattern, "_");
-		if (containsHyphens && !containsUnderscores) return buildReplaceStringForSpecificSpecialCharacter(matches, pattern, "-");
-		else if (!containsHyphens && containsUnderscores) return buildReplaceStringForSpecificSpecialCharacter(matches, pattern, "_");
-		if (matches[0].toUpperCase() === matches[0]) return pattern.toUpperCase();
-		else if (matches[0].toLowerCase() === matches[0]) return pattern.toLowerCase();
-		else if (containsUppercaseCharacter(matches[0][0]) && pattern.length > 0) return pattern[0].toUpperCase() + pattern.substring(1);
-		else if (matches[0][0].toUpperCase() !== matches[0][0] && pattern.length > 0) return pattern[0].toLowerCase() + pattern.substring(1);
-		else return pattern;
-	} else return pattern;
-}
-function validateSpecificSpecialCharacter(matches, pattern, specialCharacter) {
-	return matches[0].indexOf(specialCharacter) !== -1 && pattern.indexOf(specialCharacter) !== -1 && matches[0].split(specialCharacter).length === pattern.split(specialCharacter).length;
-}
-function buildReplaceStringForSpecificSpecialCharacter(matches, pattern, specialCharacter) {
-	const splitPatternAtSpecialCharacter = pattern.split(specialCharacter);
-	const splitMatchAtSpecialCharacter = matches[0].split(specialCharacter);
-	let replaceString = "";
-	splitPatternAtSpecialCharacter.forEach((splitValue, index) => {
-		replaceString += buildReplaceStringWithCasePreserved([splitMatchAtSpecialCharacter[index]], splitValue) + specialCharacter;
-	});
-	return replaceString.slice(0, -1);
-}
-//#endregion
-//#region packages/core/src/release/render-template/util/replacePattern.ts
-/**
-* Assigned when the replace pattern is entirely static.
-*/
-var StaticValueReplacePattern = class {
-	staticValue;
-	kind = 0;
-	constructor(staticValue) {
-		this.staticValue = staticValue;
-	}
-};
-/**
-* Assigned when the replace pattern has replacement patterns.
-*/
-var DynamicPiecesReplacePattern = class {
-	pieces;
-	kind = 1;
-	constructor(pieces) {
-		this.pieces = pieces;
-	}
-};
-var ReplacePattern = class ReplacePattern {
-	static fromStaticValue(value) {
-		return new ReplacePattern([ReplacePiece.staticValue(value)]);
-	}
-	_state;
-	get hasReplacementPatterns() {
-		return this._state.kind === 1;
-	}
-	constructor(pieces) {
-		if (!pieces || pieces.length === 0) this._state = new StaticValueReplacePattern("");
-		else if (pieces.length === 1 && pieces[0].staticValue !== null) this._state = new StaticValueReplacePattern(pieces[0].staticValue);
-		else this._state = new DynamicPiecesReplacePattern(pieces);
-	}
-	buildReplaceString(matches, preserveCase) {
-		if (this._state.kind === 0) if (preserveCase) return buildReplaceStringWithCasePreserved(matches, this._state.staticValue);
-		else return this._state.staticValue;
-		let result = "";
-		for (let i = 0, len = this._state.pieces.length; i < len; i++) {
-			const piece = this._state.pieces[i];
-			if (piece.staticValue !== null) {
-				result += piece.staticValue;
-				continue;
-			}
-			let match = ReplacePattern._substitute(piece.matchIndex, matches);
-			if (piece.caseOps !== null && piece.caseOps.length > 0) {
-				const repl = [];
-				const lenOps = piece.caseOps.length;
-				let opIdx = 0;
-				for (let idx = 0, len = match.length; idx < len; idx++) {
-					if (opIdx >= lenOps) {
-						repl.push(match.slice(idx));
-						break;
-					}
-					switch (piece.caseOps[opIdx]) {
-						case "U":
-							repl.push(match[idx].toUpperCase());
-							break;
-						case "u":
-							repl.push(match[idx].toUpperCase());
-							opIdx++;
-							break;
-						case "L":
-							repl.push(match[idx].toLowerCase());
-							break;
-						case "l":
-							repl.push(match[idx].toLowerCase());
-							opIdx++;
-							break;
-						case "E":
-							repl.push(match.slice(idx));
-							idx = len;
-							break;
-						default: repl.push(match[idx]);
-					}
-				}
-				match = repl.join("");
-			}
-			result += match;
-		}
-		return result;
-	}
-	static _substitute(matchIndex, matches) {
-		if (matches === null) return "";
-		if (matchIndex === 0) return matches[0];
-		let remainder = "";
-		while (matchIndex > 0) {
-			if (matchIndex < matches.length) return (matches[matchIndex] || "") + remainder;
-			remainder = String(matchIndex % 10) + remainder;
-			matchIndex = Math.floor(matchIndex / 10);
-		}
-		return `$${remainder}`;
-	}
-};
-/**
-* A replace piece can either be a static string or an index to a specific match.
-*/
-var ReplacePiece = class ReplacePiece {
-	static staticValue(value) {
-		return new ReplacePiece(value, -1, null);
-	}
-	static matchIndex(index) {
-		return new ReplacePiece(null, index, null);
-	}
-	static caseOps(index, caseOps) {
-		return new ReplacePiece(null, index, caseOps);
-	}
-	staticValue;
-	matchIndex;
-	caseOps;
-	constructor(staticValue, matchIndex, caseOps) {
-		this.staticValue = staticValue;
-		this.matchIndex = matchIndex;
-		if (!caseOps || caseOps.length === 0) this.caseOps = null;
-		else this.caseOps = caseOps.slice(0);
-	}
-};
-var ReplacePieceBuilder = class {
-	_source;
-	_lastCharIndex;
-	_result;
-	_resultLen;
-	_currentStaticPiece;
-	constructor(source) {
-		this._source = source;
-		this._lastCharIndex = 0;
-		this._result = [];
-		this._resultLen = 0;
-		this._currentStaticPiece = "";
-	}
-	emitUnchanged(toCharIndex) {
-		this._emitStatic(this._source.substring(this._lastCharIndex, toCharIndex));
-		this._lastCharIndex = toCharIndex;
-	}
-	emitStatic(value, toCharIndex) {
-		this._emitStatic(value);
-		this._lastCharIndex = toCharIndex;
-	}
-	_emitStatic(value) {
-		if (value.length === 0) return;
-		this._currentStaticPiece += value;
-	}
-	emitMatchIndex(index, toCharIndex, caseOps) {
-		if (this._currentStaticPiece.length !== 0) {
-			this._result[this._resultLen++] = ReplacePiece.staticValue(this._currentStaticPiece);
-			this._currentStaticPiece = "";
-		}
-		this._result[this._resultLen++] = ReplacePiece.caseOps(index, caseOps);
-		this._lastCharIndex = toCharIndex;
-	}
-	finalize() {
-		this.emitUnchanged(this._source.length);
-		if (this._currentStaticPiece.length !== 0) {
-			this._result[this._resultLen++] = ReplacePiece.staticValue(this._currentStaticPiece);
-			this._currentStaticPiece = "";
-		}
-		return new ReplacePattern(this._result);
-	}
-};
-/**
-* \n			=> inserts a LF
-* \t		  => inserts a TAB
-* \\			=> inserts a "\\".
-* \u			=> upper-cases one character in a match.
-* \U			=> upper-cases ALL remaining characters in a match.
-* \l			=> lower-cases one character in a match.
-* \L			=> lower-cases ALL remaining characters in a match.
-* \E			=> ends a \U or \L case-change sequence.
-* $$			=> inserts a "$".
-* $& and $0	=> inserts the matched substring.
-* $n			=> Where n is a non-negative integer lesser than 100, inserts the nth parenthesized submatch string
-* everything else stays untouched
-*
-* Also see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_string_as_a_parameter
-*/
-function parseReplaceString(replaceString) {
-	if (!replaceString || replaceString.length === 0) return new ReplacePattern(null);
-	const caseOps = [];
-	const result = new ReplacePieceBuilder(replaceString);
-	for (let i = 0, len = replaceString.length; i < len; i++) {
-		const chCode = replaceString.charCodeAt(i);
-		if (chCode === CharCode.Backslash) {
-			i++;
-			if (i >= len) break;
-			const nextChCode = replaceString.charCodeAt(i);
-			switch (nextChCode) {
-				case CharCode.Backslash:
-					result.emitUnchanged(i - 1);
-					result.emitStatic("\\", i + 1);
-					break;
-				case CharCode.n:
-					result.emitUnchanged(i - 1);
-					result.emitStatic("\n", i + 1);
-					break;
-				case CharCode.t:
-					result.emitUnchanged(i - 1);
-					result.emitStatic("	", i + 1);
-					break;
-				case CharCode.u:
-				case CharCode.U:
-				case CharCode.l:
-				case CharCode.L:
-				case CharCode.E:
-					result.emitUnchanged(i - 1);
-					result.emitStatic("", i + 1);
-					caseOps.push(String.fromCharCode(nextChCode));
-					break;
-			}
-			continue;
-		}
-		if (chCode === CharCode.DollarSign) {
-			i++;
-			if (i >= len) break;
-			const nextChCode = replaceString.charCodeAt(i);
-			if (nextChCode === CharCode.DollarSign) {
-				result.emitUnchanged(i - 1);
-				result.emitStatic("$", i + 1);
-				continue;
-			}
-			if (nextChCode === CharCode.Digit0 || nextChCode === CharCode.Ampersand) {
-				result.emitUnchanged(i - 1);
-				result.emitMatchIndex(0, i + 1, caseOps);
-				caseOps.length = 0;
-				continue;
-			}
-			if (CharCode.Digit1 <= nextChCode && nextChCode <= CharCode.Digit9) {
-				let matchIndex = nextChCode - CharCode.Digit0;
-				if (i + 1 < len) {
-					const nextNextChCode = replaceString.charCodeAt(i + 1);
-					if (CharCode.Digit0 <= nextNextChCode && nextNextChCode <= CharCode.Digit9) {
-						i++;
-						matchIndex = matchIndex * 10 + (nextNextChCode - CharCode.Digit0);
-						result.emitUnchanged(i - 2);
-						result.emitMatchIndex(matchIndex, i + 1, caseOps);
-						caseOps.length = 0;
-						continue;
-					}
-				}
-				result.emitUnchanged(i - 1);
-				result.emitMatchIndex(matchIndex, i + 1, caseOps);
-				caseOps.length = 0;
-			}
-		}
-	}
-	return result.finalize();
-}
-//#endregion
-//#region packages/core/src/release/render-template/render-template.ts
-var getReplaceMatches = (args) => {
-	const lastArg = args[args.length - 1];
-	const hasGroups = typeof lastArg === "object" && lastArg !== null;
-	const matchCount = args.length - (hasGroups ? 3 : 2);
-	return args.slice(0, matchCount);
-};
-var applyReplacer = (input, replacer) => {
-	const replacePattern = parseReplaceString(replacer.replace);
-	return input.replace(replacer.search, (...args) => {
-		const matches = getReplaceMatches(args);
-		return replacePattern.buildReplaceString(matches);
-	});
-};
-/**
-* replaces all uppercase dollar templates with their string representation from object
-* if replacement is undefined in object the dollar template string is left untouched
-*/
-var renderTemplate = (params) => {
-	const { template, object, replacers } = params;
-	let input = template.replace(/(\$[A-Z_]+)/g, (_, k) => {
-		let result;
-		const isValidKey = (key) => key in object && object[key] !== void 0 && object[key] !== null;
-		if (!isValidKey(k)) result = k;
-		else if (typeof object[k] === "object") {
-			const nested = object[k];
-			result = renderTemplate({
-				template: nested.template,
-				object: nested
-			});
-		} else result = `${object[k]}`;
-		return result;
-	});
-	if (replacers) for (const replacer of replacers) input = applyReplacer(input, replacer);
-	return input;
-};
-//#endregion
-//#region packages/core/src/release/generate-contributors-sentence.ts
-var botSuffix = "[bot]";
-var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
-var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
-var renderAuthorMention = (contributor, serverUrl) => {
-	if ("name" in contributor) return contributor.name;
-	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.botUrl ?? `${serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
-	if (botUrl) return `[@${contributor.login}](${botUrl})`;
-	return `@${contributor.login}`;
-};
-var generateContributorsSentence = (params) => {
-	const { commits, pullRequests, config, serverUrl } = params;
-	return generateAuthorsSentence({
-		commits,
-		pullRequests: filterPullRequestsByPreCategories(pullRequests, config.categories),
-		serverUrl,
-		excludeContributors: config["exclude-contributors"],
-		noAuthorsTemplate: config["no-contributors-template"]
-	});
-};
-var generateAuthorsSentence = (params) => {
-	const { commits, pullRequests } = params;
-	const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey));
-	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
-	const contributors = /* @__PURE__ */ new Map();
-	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
-	for (const commit of commits) {
-		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
-		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) if (author?.login) {
-			const login = normalizeLogin(author.login);
-			contributors.set(`login:${login}`, { login });
-		} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
-	}
-	for (const pullRequest of pullRequests) if (pullRequest.author) {
-		const isBot = pullRequest.author.type === "Bot";
-		const login = normalizeLogin(pullRequest.author.login, isBot);
-		pullRequestAuthorLogins.add(login);
-		contributors.set(`login:${login}`, {
-			login,
-			botUrl: isBot ? pullRequest.author.url : void 0
-		});
-	}
-	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !(params.excludeContributors ?? []).some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
-		const aIsPullRequestAuthor = "login" in a && pullRequestAuthorLogins.has(a.login);
-		if (aIsPullRequestAuthor !== ("login" in b && pullRequestAuthorLogins.has(b.login))) return aIsPullRequestAuthor ? -1 : 1;
-		const aIsBot = "login" in a && (a.botUrl !== void 0 || a.login.endsWith(botSuffix));
-		if (aIsBot !== ("login" in b && (b.botUrl !== void 0 || b.login.endsWith(botSuffix)))) return aIsBot ? 1 : -1;
-		const aName = "name" in a ? a.name : a.login;
-		const bName = "name" in b ? b.name : b.login;
-		return aName.localeCompare(bName);
-	});
-	if (sortedContributors.length === 0) return params.noAuthorsTemplate ?? "";
-	if (params.authorTemplate !== void 0) {
-		const authorTemplate = params.authorTemplate;
-		const authors = sortedContributors.map((contributor) => {
-			const author = "name" in contributor ? contributor.name : contributor.login;
-			return renderTemplate({
-				template: authorTemplate,
-				object: {
-					$AUTHOR: author,
-					$AUTHOR_MENTION: renderAuthorMention(contributor, params.serverUrl)
-				}
-			});
-		});
-		const separator = params.authorsSeparator ?? ", ";
-		if (params.authorsFinalSeparator !== void 0 && authors.length > 1) return `${authors.slice(0, -1).join(separator)}${params.authorsFinalSeparator}${authors.at(-1)}`;
-		return authors.join(separator);
-	}
-	const mentions = sortedContributors.map((contributor) => renderAuthorMention(contributor, params.serverUrl));
-	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
-	return mentions[0];
-};
-var generateNewContributorsList = (params) => {
-	const { pullRequests, newContributorLogins, config } = params;
-	const firstPullRequestByLogin = /* @__PURE__ */ new Map();
-	const includedPullRequestKeys = new Set(filterPullRequestsByPreCategories(pullRequests, config.categories).map(pullRequestKey));
-	for (const pullRequest of pullRequests) {
-		if (!pullRequest.author || !newContributorLogins.has(pullRequest.author.login) || config["exclude-contributors"].includes(pullRequest.author.login)) continue;
-		const previous = firstPullRequestByLogin.get(pullRequest.author.login);
-		if (!previous || (pullRequest.mergedAt ?? "") < (previous.mergedAt ?? "")) firstPullRequestByLogin.set(pullRequest.author.login, pullRequest);
-	}
-	const entries = [...firstPullRequestByLogin.entries()].filter(([, pullRequest]) => includedPullRequestKeys.has(pullRequestKey(pullRequest))).sort(([, a], [, b]) => (a.mergedAt ?? "").localeCompare(b.mergedAt ?? "") || a.number - b.number);
-	if (entries.length === 0) return config["no-new-contributor-template"];
-	return entries.map(([login, pullRequest]) => renderTemplate({
-		template: config["new-contributor-template"],
-		object: {
-			$AUTHOR: login,
-			$AUTHOR_MENTION: `@${login}`,
-			$AUTHOR_URL: pullRequest.author?.url,
-			$NUMBER: pullRequest.number,
-			$URL: pullRequest.url
-		}
-	})).join("\n");
-};
-//#endregion
-//#region packages/core/src/release/pull-request-to-string.ts
-var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
-	let pullAuthor = "ghost";
-	if (pullRequest.author) pullAuthor = pullRequest.author.type === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
-	const authorTemplate = params.config["change-author-template"];
-	return renderTemplate({
-		template: params.config["change-template"],
-		object: {
-			$CATEGORY: params.category ?? "",
-			$TITLE: escapeTitle({
-				title: pullRequest.title,
-				escapes: params.config["change-title-escapes"]
-			}),
-			$NUMBER: pullRequest.number.toString(),
-			$AUTHORS: generateAuthorsSentence({
-				commits: params.commits,
-				pullRequests: [pullRequest],
-				serverUrl: params.serverUrl,
-				noAuthorsTemplate: renderTemplate({
-					template: authorTemplate,
-					object: {
-						$AUTHOR: "ghost",
-						$AUTHOR_MENTION: "@ghost"
-					}
-				}),
-				authorTemplate,
-				authorsSeparator: params.config["change-authors-separator"],
-				authorsFinalSeparator: params.config["change-authors-final-separator"]
-			}),
-			$AUTHOR: pullAuthor,
-			$AUTHOR_URL: pullRequest.author?.url ?? "",
-			$BODY: pullRequest.body,
-			$URL: pullRequest.url,
-			$BASE_REF_NAME: pullRequest.baseRefName,
-			$HEAD_REF_NAME: pullRequest.headRefName
-		}
-	});
-}).join("\n");
-var escapeTitle = (params) => params.title.replace(new RegExp(`[${escapeStringRegexp(params.escapes || "")}]|\`.*?\``, "g"), (match) => {
-	if (match.length > 1) return match;
-	if (match === "@" || match === "#") return `${match}<!---->`;
-	return `\\${match}`;
-});
-//#endregion
-//#region packages/core/src/release/generate-changelog.ts
-var generateChangeLog = (params) => {
-	const { commits = [], pullRequests, serverUrl, config } = params;
-	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
-		pullRequests,
-		config
-	});
-	if (uncategorizedPullRequests.length + categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) === 0) return config["no-changes-template"];
-	const changeLog = [];
-	if (uncategorizedPullRequests.length > 0) changeLog.push(pullRequestToString({
-		commits,
-		pullRequests: uncategorizedPullRequests,
-		serverUrl,
-		config
-	}), "\n\n");
-	const nonEmptyCategories = categorizedPullRequests.filter((category) => category.pullRequests.length > 0);
-	for (const [index, category] of nonEmptyCategories.entries()) {
-		const categoryTitle = renderTemplate({
-			template: config["category-template"],
-			object: { $TITLE: category.title }
-		});
-		if (categoryTitle) changeLog.push(categoryTitle, "\n\n");
-		const pullRequestString = pullRequestToString({
-			category: category.title,
-			commits,
-			pullRequests: category.pullRequests,
-			serverUrl,
-			config
-		});
-		if (category["collapse-after"] !== -1 && category.pullRequests.length > category["collapse-after"]) changeLog.push("<details>", "\n", `<summary>${category.pullRequests.length} change${category.pullRequests.length > 1 ? "s" : ""}</summary>`, "\n\n", pullRequestString, "\n", "</details>");
-		else changeLog.push(pullRequestString);
-		if (index + 1 !== nonEmptyCategories.length) changeLog.push("\n\n");
-	}
-	return changeLog.join("").trim();
-};
-//#endregion
-//#region packages/core/src/release/version-descriptor.ts
-var VersionDescriptor = class VersionDescriptor {
-	version = null;
-	major = null;
-	minor = null;
-	patch = null;
-	prerelease = null;
-	preReleaseIdentifier;
-	tagPrefix;
-	logger;
-	constructor(from, opt) {
-		this.logger = opt.logger;
-		this.preReleaseIdentifier = opt.preReleaseIdentifier;
-		this.tagPrefix = opt.tagPrefix;
-		this.version = this.coerce(from);
-		this.major = this.version ? getMajor(this.version).toString() : null;
-		this.minor = this.version ? getMinor(this.version).toString() : null;
-		this.patch = this.version ? getPatch(this.version).toString() : null;
-		const prerelease = this.version ? getPrerelease(this.version) : null;
-		this.prerelease = this.version ? prerelease?.length ? `-${prerelease.join(".")}` : "" : null;
-	}
-	coerce(from) {
-		if (!from) {
-			this.logger.debug("Building version descriptor without version input. Defaulting coerced version to null.");
-			return null;
-		}
-		const version = typeof from === "object" ? this.isRelease(from) ? this.toSemver(this.stripTag(from.tagName)) || this.toSemver(this.stripTag(from.name)) : this.toSemver(from) : this.toSemver(this.stripTag(from));
-		if (version) return version;
-		this.logger.warning(`Failed to parse version from input ${String(from)}. Defaulting coerced version to null.`);
-		return null;
-	}
-	isRelease(input) {
-		return typeof input === "object" && input !== null && (typeof input.tagName === "string" || typeof input.name === "string");
-	}
-	stripTag(input) {
-		return this.tagPrefix && input?.startsWith(this.tagPrefix) ? input.slice(this.tagPrefix.length) : input;
-	}
-	toSemver(version) {
-		if (!version) return null;
-		const parsedVersion = tryParse(version);
-		if (parsedVersion) return parsedVersion;
-		const coercedVersion = coerce(version);
-		return coercedVersion ? tryParse(coercedVersion) : null;
-	}
-	incremented(incrementType) {
-		if (!this.version || incrementType === "no_increment") return this;
-		const incrementedVersion = increment(this.version, incrementType, {
-			loose: true,
-			identifier: this.preReleaseIdentifier
-		});
-		if (!incrementedVersion) throw new Error(`Failed to increment version ${normalize$1(this.version)} with increment ${incrementType}`);
-		const incrementedSemver = this.toSemver(incrementedVersion);
-		if (!incrementedSemver) throw new Error(`Failed to parse version ${incrementedVersion} after incrementing ${normalize$1(this.version)} with increment ${incrementType}`);
-		return new VersionDescriptor(incrementedSemver, {
-			logger: this.logger,
-			tagPrefix: this.tagPrefix,
-			preReleaseIdentifier: this.preReleaseIdentifier
-		});
-	}
-	rendered(template) {
-		return renderTemplate({
-			template,
-			object: {
-				$MAJOR: this.major ?? void 0,
-				$MINOR: this.minor ?? void 0,
-				$PATCH: this.patch ?? void 0,
-				$PRERELEASE: this.prerelease ?? void 0
-			}
-		});
-	}
-};
-//#endregion
-//#region packages/core/src/release/get-version-info.ts
-var getVersionInfo = (params) => {
-	const { lastRelease, config, input, logger, versionKeyIncrement: _versionKeyIncrement } = params;
-	logger.info(`Resolving version info based on:`);
-	logger.info(`   - last release: ${lastRelease?.tagName || "none"}`);
-	logger.info(`   - version input: ${input.version || input.tag || input.name || "none"}`);
-	logger.info(`   - version key increment: ${_versionKeyIncrement}`);
-	let _localIncrement = structuredClone(_versionKeyIncrement);
-	logger.info(`Coerce and parse versions from last release...`);
-	const versionFromLastRelease = new VersionDescriptor(lastRelease, {
-		logger,
-		tagPrefix: config["tag-prefix"],
-		preReleaseIdentifier: config["prerelease-identifier"]
-	});
-	logger.info(`Parsed version from last release: ${normalize$1(versionFromLastRelease.version ?? "") || "none"}.`);
-	logger.info(`Coerce and parse versions from input...`);
-	const versionFromInput = new VersionDescriptor(input.version || input.tag || input.name, {
-		logger,
-		tagPrefix: config["tag-prefix"],
-		preReleaseIdentifier: config["prerelease-identifier"]
-	});
-	logger.info(`Parsed version from input: ${normalize$1(versionFromInput.version ?? "") || "none"}.`);
-	let referenceVersion;
-	if (versionFromInput.version) {
-		_localIncrement = "no_increment";
-		referenceVersion = versionFromInput;
-	} else if (versionFromLastRelease.version) {
-		referenceVersion = versionFromLastRelease;
-		const incrementsToPrerelease = _localIncrement?.startsWith("pre");
-		const lastReleaseIsPrerelease = referenceVersion?.prerelease?.length;
-		if (incrementsToPrerelease) {
-			if (lastReleaseIsPrerelease) {
-				if (_localIncrement !== "prerelease") {
-					logger.info(`versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${normalize$1(referenceVersion.version ?? "") || "none"}). The version will be incremented as a prerelease instead.`);
-					_localIncrement = "prerelease";
-				}
-			}
-		}
-	} else referenceVersion = new VersionDescriptor("0.0.0", {
-		logger,
-		preReleaseIdentifier: config["prerelease-identifier"],
-		tagPrefix: config["tag-prefix"]
-	});
-	return {
-		$NEXT_MAJOR_VERSION: referenceVersion.incremented("major").rendered(config["version-template"]),
-		$NEXT_MAJOR_VERSION_MAJOR: referenceVersion.incremented("major").major,
-		$NEXT_MAJOR_VERSION_MINOR: referenceVersion.incremented("major").minor,
-		$NEXT_MAJOR_VERSION_PATCH: referenceVersion.incremented("major").patch,
-		$NEXT_MINOR_VERSION: referenceVersion.incremented("minor").rendered(config["version-template"]),
-		$NEXT_MINOR_VERSION_MAJOR: referenceVersion.incremented("minor").major,
-		$NEXT_MINOR_VERSION_MINOR: referenceVersion.incremented("minor").minor,
-		$NEXT_MINOR_VERSION_PATCH: referenceVersion.incremented("minor").patch,
-		$NEXT_PATCH_VERSION: referenceVersion.incremented("patch").rendered(config["version-template"]),
-		$NEXT_PATCH_VERSION_MAJOR: referenceVersion.incremented("patch").major,
-		$NEXT_PATCH_VERSION_MINOR: referenceVersion.incremented("patch").minor,
-		$NEXT_PATCH_VERSION_PATCH: referenceVersion.incremented("patch").patch,
-		$NEXT_PRERELEASE_VERSION: referenceVersion.incremented("prerelease").rendered(config["version-template"]),
-		$NEXT_PRERELEASE_VERSION_PRERELEASE: referenceVersion.incremented("prerelease").prerelease,
-		$RESOLVED_VERSION: referenceVersion.incremented(_localIncrement).rendered(config["version-template"]),
-		$RESOLVED_VERSION_MAJOR: referenceVersion.incremented(_localIncrement).major,
-		$RESOLVED_VERSION_MINOR: referenceVersion.incremented(_localIncrement).minor,
-		$RESOLVED_VERSION_PATCH: referenceVersion.incremented(_localIncrement).patch,
-		$RESOLVED_VERSION_PRERELEASE: referenceVersion.incremented(_localIncrement).prerelease
-	};
-};
-//#endregion
-//#region packages/core/src/release/last-release-not-found.ts
-var lastReleaseNotFoundTemplate = `> [!WARNING]
-> Release Drafter could not find a previous **published release** for \`$OWNER/$REPOSITORY\`. This draft was created **without a comparison baseline**.
-
-> [!IMPORTANT]
-> Treat this draft as a manual starting point.
-> Review the proposed version, tag, and notes before publishing.
-
-If you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).
-`;
-//#endregion
-//#region packages/core/src/release/render-release-name.ts
-/**
-* Renders the release name,
-* based on the input and config.
-*/
-var renderReleaseName = (params) => {
-	let name = structuredClone(params.inputName);
-	const { config, versionInfo, logger } = params;
-	if (name === void 0) name = versionInfo ? renderTemplate({
-		template: config["name-template"] || "",
-		object: versionInfo
-	}) : "";
-	else if (versionInfo) name = renderTemplate({
-		template: name,
-		object: versionInfo
-	});
-	logger.debug(`name: ${name}`);
-	return name;
-};
-//#endregion
-//#region packages/core/src/release/render-tag-name.ts
-/**
-* Renders the tag name for the release,
-* based on the input and config.
-*/
-var renderTagName = (params) => {
-	let tagName = structuredClone(params.inputTagName);
-	const { config, versionInfo, logger } = params;
-	if (tagName === void 0) tagName = versionInfo ? renderTemplate({
-		template: config["tag-template"] || "",
-		object: versionInfo
-	}) : "";
-	else if (versionInfo) tagName = renderTemplate({
-		template: tagName,
-		object: versionInfo
-	});
-	logger.debug(`tag: ${tagName}`);
-	return tagName;
-};
-//#endregion
-//#region packages/core/src/release/resolve-version-increment.ts
-var priority = {
-	patch: 1,
-	minor: 2,
-	major: 3
-};
-var highestIncrement = (increments, fallback = "patch") => increments.reduce((current, increment) => priority[increment] > priority[current] ? increment : current, fallback);
-var resolveVersionKeyIncrement = (params) => {
-	const { pullRequests, config, logger } = params;
-	const changelogIncrements = [];
-	const explicitResolverIncrements = [];
-	for (const pullRequest of pullRequests) {
-		const evaluation = evaluateCategories(pullRequest, config.categories);
-		if (!evaluation.included) continue;
-		for (const category of evaluation.changelogCategories) if (category["semver-increment"] in priority) changelogIncrements.push(category["semver-increment"]);
-		if (!evaluation.usedVersionFallback) {
-			for (const category of evaluation.versionResolverCategories) if (category["semver-increment"] in priority) explicitResolverIncrements.push(category["semver-increment"]);
-		}
-	}
-	const resolverFallback = getVersionResolverCategories(config.categories).find((category) => category.when.length === 0)?.["semver-increment"];
-	const resolverIncrement = highestIncrement(explicitResolverIncrements.length > 0 ? explicitResolverIncrements : resolverFallback && resolverFallback in priority ? [resolverFallback] : ["patch"]);
-	const resolved = highestIncrement([...changelogIncrements, resolverIncrement]);
-	logger.debug(`versionKey: ${resolved}`);
-	let versionKeyIncrement = resolved;
-	if (config.prerelease && config["prerelease-identifier"]) versionKeyIncrement = `pre${versionKeyIncrement}`;
-	logger.info(`Resolved version increment: ${versionKeyIncrement}`);
-	return versionKeyIncrement;
-};
-//#endregion
-//#region packages/core/src/release/sort-pull-requests.ts
-var sortPullRequests = (params) => {
-	const { pullRequests, logger, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
-	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
-	const sort = sortDirection === "ascending" ? sortAscending : sortDescending;
-	return structuredClone(pullRequests).sort((a, b) => {
-		try {
-			return sort(getSortField(a), getSortField(b));
-		} catch (error) {
-			logger.warning(`Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
-			logger.error(error);
-			return 0;
-		}
-	});
-};
-var getTitle = (pr) => pr.title;
-var getMergedAt = (pr) => pr.mergedAt;
-var sortAscending = (a, b) => {
-	if (a == null && b == null) return 0;
-	if (a == null) return 1;
-	if (b == null) return -1;
-	if (a > b) return 1;
-	if (a < b) return -1;
-	return 0;
-};
-var sortDescending = (a, b) => {
-	if (a == null && b == null) return 0;
-	if (a == null) return -1;
-	if (b == null) return 1;
-	if (a > b) return -1;
-	if (a < b) return 1;
-	return 0;
-};
-//#endregion
-//#region packages/core/src/release/build-release-payload.ts
-var buildReleasePayload = async (params) => {
-	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests, repository } = params;
-	logger.info("Building release payload and body...");
-	const sortedPullRequests = sortPullRequests({
-		pullRequests,
-		config,
-		logger
-	});
-	let body = (config.header || "") + config.template + (!lastRelease ? `\n---\n${renderTemplate({
-		template: lastReleaseNotFoundTemplate,
-		object: {
-			$OWNER: repository.owner,
-			$REPOSITORY: repository.name
-		}
-	})}\n---\n` : "") + (config.footer || "");
-	body = renderTemplate({
-		template: body,
-		object: {
-			$PREVIOUS_TAG: lastRelease?.tagName ?? "",
-			$CHANGES: generateChangeLog({
-				commits,
-				pullRequests: sortedPullRequests,
-				serverUrl: repository.serverUrl,
-				config
-			}),
-			$CONTRIBUTORS: generateContributorsSentence({
-				commits,
-				pullRequests: sortedPullRequests,
-				serverUrl: repository.serverUrl,
-				config
-			}),
-			$NEW_CONTRIBUTORS: generateNewContributorsList({
-				pullRequests: sortedPullRequests,
-				newContributorLogins,
-				config
-			}),
-			$OWNER: repository.owner,
-			$REPOSITORY: repository.name
-		},
-		replacers: config.replacers
-	});
-	const versionInfo = getVersionInfo({
-		lastRelease,
-		config,
-		input,
-		versionKeyIncrement: resolveVersionKeyIncrement({
-			pullRequests,
-			config,
-			logger
-		}),
-		logger
-	});
-	logger.debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`);
-	if (versionInfo) body = renderTemplate({
-		template: body,
-		object: versionInfo
-	});
-	const releasePayload = {
-		name: renderReleaseName({
-			inputName: input.name,
-			config,
-			versionInfo,
-			logger
-		}),
-		tag: renderTagName({
-			inputTagName: input.tag,
-			config,
-			versionInfo,
-			logger
-		}),
-		body,
-		targetCommitish: await adapter.resolveCommitish({
-			repository,
-			commitish: config.commitish
-		}),
-		prerelease: config.prerelease,
-		makeLatest: config.latest,
-		draft: !input.publish,
-		resolvedVersion: versionInfo?.$RESOLVED_VERSION,
-		majorVersion: versionInfo?.$RESOLVED_VERSION_MAJOR,
-		minorVersion: versionInfo?.$RESOLVED_VERSION_MINOR,
-		patchVersion: versionInfo?.$RESOLVED_VERSION_PATCH,
-		prereleaseVersion: versionInfo?.$RESOLVED_VERSION_PRERELEASE
-	};
-	logger.info("Release payload built successfully");
-	logger.info(`  name:                        ${releasePayload.name}`);
-	logger.info(`  tag:                         ${releasePayload.tag}`);
-	logger.info(`  body:                        ${releasePayload.body.length} characters long`);
-	logger.info(`  targetCommitish:             ${releasePayload.targetCommitish}`);
-	logger.info(`  prerelease:                  ${releasePayload.prerelease}`);
-	logger.info(`  make_latest:                 ${releasePayload.makeLatest}`);
-	logger.info(`  draft:                       ${releasePayload.draft}${!releasePayload.draft ? " (will be published !)" : ""}`);
-	logger.info(`  RESOLVED_VERSION:            ${releasePayload.resolvedVersion}`);
-	logger.info(`  RESOLVED_VERSION_MAJOR:      ${releasePayload.majorVersion}`);
-	logger.info(`  RESOLVED_VERSION_MINOR:      ${releasePayload.minorVersion}`);
-	logger.info(`  RESOLVED_VERSION_PATCH:      ${releasePayload.patchVersion}`);
-	logger.info(`  RESOLVED_VERSION_PRERELEASE: ${releasePayload.prereleaseVersion}`);
-	return releasePayload;
 };
 //#endregion
 //#region packages/github-adapter/src/types/github.graphql.generated.ts
@@ -58207,7 +56962,7 @@ var getConfigFile = async (configTarget, parentTarget) => {
 	} catch (error) {
 		throw new Error(`Repo load failed. ${error.message}`);
 	}
-	const rawConfig = fileExtension === "json" ? JSON.parse(configRaw) : parse$2(configRaw);
+	const rawConfig = fileExtension === "json" ? JSON.parse(configRaw) : parse$1(configRaw);
 	let config;
 	try {
 		config = configFileSchema.parse(rawConfig);
@@ -58398,4 +57153,4 @@ var sharedInputSchema = object({
 	};
 })))();
 //#endregion
-export { getInput as C, warning as D, setOutput as E, __toESM as O, debug as S, setFailed as T, array as _, getRepository as a, stringbool as b, escapeStringRegexp as c, satisfies as d, configSchema as f, context as g, require_ignore as h, getGitHubAdapter as i, coerce as l, needsPullRequestChangedFiles as m, parseCommitishForRelease as n, buildReleasePayload as o, commonConfigSchema as p, composeConfigGet as r, mergeInputAndConfig as s, sharedInputSchema as t, normalizeRange as u, object as v, info as w, core_exports as x, string$1 as y };
+export { setFailed as C, info as S, warning as T, stringbool as _, getRepository as a, debug as b, context as c, array as d, boolean as f, string$1 as g, object as h, getGitHubAdapter as i, ZodDefault as l, number as m, parseCommitishForRelease as n, escapeStringRegexp as o, literal as p, composeConfigGet as r, Minimatch as s, sharedInputSchema as t, _enum as u, union as v, setOutput as w, getInput as x, core_exports as y };

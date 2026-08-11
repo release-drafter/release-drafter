@@ -1,4 +1,4 @@
-import { C as getInput, E as setOutput, O as __toESM, T as setFailed, _ as array, a as getRepository, c as escapeStringRegexp, g as context, h as require_ignore, i as getGitHubAdapter, r as composeConfigGet, t as sharedInputSchema, v as object, w as info, x as core_exports, y as string } from "../../chunks/common.js";
+import { C as setFailed, S as info, a as getRepository, c as context, d as array, g as string, h as object, i as getGitHubAdapter, o as escapeStringRegexp, r as composeConfigGet, s as Minimatch, t as sharedInputSchema, w as setOutput, x as getInput, y as core_exports } from "../../chunks/common.js";
 //#region src/actions/autolabeler/config/action-input.schema.ts
 var actionInputSchema = object({ 
 /**
@@ -60,16 +60,73 @@ var parseConfig$1 = (params) => {
 	};
 };
 //#endregion
+//#region packages/autolabeler/src/path-matcher.ts
+var trimTrailingUnescapedSpaces = (pattern) => {
+	let end = pattern.length;
+	while (end > 0 && pattern[end - 1] === " ") {
+		let backslashes = 0;
+		for (let index = end - 2; index >= 0 && pattern[index] === "\\"; index--) backslashes++;
+		if (backslashes % 2 === 1) break;
+		end--;
+	}
+	return pattern.slice(0, end);
+};
+var compileRule = (pattern) => {
+	let source = trimTrailingUnescapedSpaces(pattern);
+	if (!source || source.startsWith("#")) return void 0;
+	const negated = source.startsWith("!");
+	if (negated) source = source.slice(1);
+	const directoryOnly = source.endsWith("/");
+	if (directoryOnly) source = source.slice(0, -1);
+	const anchored = source.startsWith("/");
+	if (anchored) source = source.slice(1);
+	if (!source) return void 0;
+	return {
+		directoryOnly,
+		negated,
+		matcher: new Minimatch(source, {
+			dot: true,
+			matchBase: !anchored && !source.includes("/"),
+			nobrace: true,
+			nocomment: true,
+			noext: true,
+			nonegate: true,
+			platform: "linux"
+		})
+	};
+};
+/** Compiles ordered gitignore-style patterns into a path predicate. */
+var createPathMatcher = (patterns) => {
+	const rules = patterns.flatMap((pattern) => {
+		const rule = compileRule(pattern);
+		return rule ? [rule] : [];
+	});
+	return (path) => {
+		const segments = path.split("/").filter(Boolean);
+		for (const [index] of segments.entries()) {
+			const candidate = segments.slice(0, index + 1).join("/");
+			const directory = index < segments.length - 1;
+			let ignored = false;
+			for (const rule of rules) {
+				if (rule.directoryOnly && !directory) continue;
+				if (rule.matcher.match(candidate)) ignored = !rule.negated;
+			}
+			if (directory && ignored) return true;
+			if (!directory) return ignored;
+		}
+		return false;
+	};
+};
+//#endregion
 //#region packages/autolabeler/src/match-labels.ts
-var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
 var test = (matcher, value) => {
 	matcher.lastIndex = 0;
 	return matcher.test(value);
 };
 var matchesFiles = (patterns, files) => {
 	if (patterns.length === 0) return false;
-	const matcher = (0, import_ignore.default)().add(patterns);
-	return files.some((file) => matcher.ignores(file));
+	const matches = createPathMatcher(patterns);
+	return files.some(matches);
 };
 /** Evaluates configured rules in files, branch, title, and body order. */
 var matchLabels = (params) => {
