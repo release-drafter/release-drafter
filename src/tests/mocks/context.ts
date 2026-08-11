@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import * as github from '@actions/github'
 import { expect, vi } from 'vitest'
-import type { GithubActionEnvironment } from '#src/types/index.ts'
+import type { GithubActionEnvironment } from './env.ts'
 
 type WebhookPayload = typeof github.context.payload
 

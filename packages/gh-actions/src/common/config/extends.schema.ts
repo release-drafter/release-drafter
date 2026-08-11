@@ -9,8 +9,8 @@ import {
   null as znull,
 } from 'zod'
 
-export const MERGE_STRATEGIES = ['override', 'append', 'prepend'] as const
-export const mergeStrategySchema = zenum(MERGE_STRATEGIES)
+const MERGE_STRATEGIES = ['override', 'append', 'prepend'] as const
+const mergeStrategySchema = zenum(MERGE_STRATEGIES)
 export type MergeStrategy = z.output<typeof mergeStrategySchema>
 
 const mergeStrategiesSchema = record(string(), mergeStrategySchema)
@@ -49,11 +49,6 @@ export const extendsDeclarationSchema = union([
       strategy: value.strategy ?? {},
     }
   })
-
-export type ExtendsDeclaration = Exclude<
-  z.output<typeof extendsDeclarationSchema>,
-  undefined
->
 
 /**
  * Parses the common envelope of a raw config file while retaining all
