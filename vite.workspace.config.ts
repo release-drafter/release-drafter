@@ -124,23 +124,6 @@ export default defineConfig({
   },
   plugins: [
     {
-      name: 'release-drafter-commonjs-to-esm',
-      enforce: 'pre',
-      transform(source, id) {
-        if (!bundlesCliRuntime) return
-        const normalizedId = id.replaceAll('\\', '/')
-        if (normalizedId.endsWith('/node_modules/ignore/index.js')) {
-          return `${source
-            .replace('module.exports = factory', '')
-            .replaceAll('module.exports.', 'factory.')
-            .replaceAll(
-              'define(module.exports,',
-              'define(factory,',
-            )}\nexport default factory\n`
-        }
-      },
-    },
-    {
       name: 'workspace-declarations',
       async closeBundle() {
         if (packageName === 'release-drafter') {

@@ -1,5 +1,5 @@
-import ignore from 'ignore'
 import type { ParsedConfig } from './config/parse-config.ts'
+import { createPathMatcher } from './path-matcher.ts'
 
 export type PullRequestFacts = {
   files: readonly string[]
@@ -23,8 +23,8 @@ const matchesFiles = (
   files: readonly string[],
 ) => {
   if (patterns.length === 0) return false
-  const matcher = ignore().add(patterns)
-  return files.some((file) => matcher.ignores(file))
+  const matches = createPathMatcher(patterns)
+  return files.some(matches)
 }
 
 /** Evaluates configured rules in files, branch, title, and body order. */
