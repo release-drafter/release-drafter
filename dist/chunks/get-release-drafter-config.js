@@ -1,4 +1,4 @@
-import { E as info, d as configSchema, t as composeConfigGet } from "./config.js";
+import { T as info, t as composeConfigGet, u as configSchema } from "./config.js";
 //#region packages/gh-actions/src/common/config/get-release-drafter-config.ts
 /** Load and validate the standard Release Drafter configuration. */
 var getReleaseDrafterConfig = async (configName, currentContext, token) => {

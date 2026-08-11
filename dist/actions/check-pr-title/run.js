@@ -1,4 +1,4 @@
-import { C as context, D as setFailed, E as info, T as getInput, _ as string, a as getGitHubAdapter, b as evaluateCategories, c as mergeInputAndConfig, g as object, h as number, i as actionLogger, m as array, o as getRepository, p as _enum, r as tokenInputSchema, x as needsPullRequestChangedFiles, y as union } from "../../chunks/config.js";
+import { E as setFailed, S as context, T as info, a as getGitHubAdapter, b as needsPullRequestChangedFiles, c as mergeInputAndConfig, f as _enum, g as string, h as object, i as actionLogger, m as number, o as getRepository, p as array, r as tokenInputSchema, v as union, w as getInput, y as evaluateCategories } from "../../chunks/config.js";
 import { t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
 //#region packages/gh-actions/src/check-pr-title/evaluate-title.ts
 /** Keep only title-aware release categories while retaining their correlated predicates. */

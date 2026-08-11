@@ -1,4 +1,4 @@
-import { C as context, D as setFailed, E as info, O as setOutput, S as require_ignore, T as getInput, _ as string, a as getGitHubAdapter, g as object, k as __toESM, l as require_lib, m as array, n as sharedInputSchema, t as composeConfigGet, u as escapeStringRegexp, w as core_exports } from "../../chunks/config.js";
+import { C as core_exports, D as setOutput, E as setFailed, O as __toESM, S as context, T as info, a as getGitHubAdapter, g as string, h as object, l as escapeStringRegexp, n as sharedInputSchema, p as array, t as composeConfigGet, w as getInput, x as require_ignore } from "../../chunks/config.js";
 import process from "node:process";
 //#region packages/autolabeler/src/config/config.schema.ts
 var configSchema = object({ 
@@ -19,8 +19,15 @@ autolabeler: array(object({
 });
 //#endregion
 //#region packages/autolabeler/src/util.ts
-var import_lib = /* @__PURE__ */ __toESM(require_lib(), 1);
-var stringToRegex = (search) => /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, import_lib.default)(search) : new RegExp(escapeStringRegexp(search), "g");
+var regexLiteral = /^\/.+\/[AJUXgimsux]*$/;
+var supportedFlags = /* @__PURE__ */ new Set("gimsuy");
+/** Converts a regex literal or plain text matcher into a regular expression. */
+var stringToRegex = (search) => {
+	if (!regexLiteral.test(search)) return new RegExp(escapeStringRegexp(search), "g");
+	const delimiter = search.lastIndexOf("/");
+	const flags = [...new Set(search.slice(delimiter + 1))].filter((flag) => supportedFlags.has(flag)).join("");
+	return new RegExp(search.slice(1, delimiter), flags);
+};
 //#endregion
 //#region packages/autolabeler/src/config/parse-config.ts
 /** Compiles configured regex matchers while preserving all other config values. */

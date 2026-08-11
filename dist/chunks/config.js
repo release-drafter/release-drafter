@@ -18050,7 +18050,7 @@ var require_proxy = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 //#endregion
 //#region node_modules/@actions/github/lib/internal/utils.js
-var import_lib$1 = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports) => {
+var import_lib = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports) => {
 	var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
 		if (k2 === void 0) k2 = k;
 		var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -18664,10 +18664,10 @@ var __awaiter = function(thisArg, _arguments, P, generator) {
 	});
 };
 function getProxyAgent(destinationUrl) {
-	return new import_lib$1.HttpClient().getAgent(destinationUrl);
+	return new import_lib.HttpClient().getAgent(destinationUrl);
 }
 function getProxyAgentDispatcher(destinationUrl) {
-	return new import_lib$1.HttpClient().getAgentDispatcher(destinationUrl);
+	return new import_lib.HttpClient().getAgentDispatcher(destinationUrl);
 }
 function getProxyFetch(destinationUrl) {
 	const httpDispatcher = getProxyAgentDispatcher(destinationUrl);
@@ -27017,22 +27017,16 @@ function escapeStringRegexp(string) {
 	return string.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
 }
 //#endregion
-//#region node_modules/regex-parser/lib/index.js
-var require_lib = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	module.exports = function(input) {
-		if (typeof input !== "string") throw new Error("Invalid input. Input must be a string");
-		var m = input.match(/(\/?)(.+)\1([a-z]*)/i);
-		if (!m) throw new Error("Invalid regular expression format.");
-		var validFlags = Array.from(new Set(m[3])).filter(function(flag) {
-			return "gimsuy".includes(flag);
-		}).join("");
-		return new RegExp(m[2], validFlags);
-	};
-}));
-//#endregion
 //#region packages/core/src/string-to-regex.ts
-var import_lib = /* @__PURE__ */ __toESM(require_lib(), 1);
-var stringToRegex = (search) => /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, import_lib.default)(search) : new RegExp(escapeStringRegexp(search), "g");
+var regexLiteral = /^\/.+\/[AJUXgimsux]*$/;
+var supportedFlags = /* @__PURE__ */ new Set("gimsuy");
+/** Converts a regex literal or plain text matcher into a regular expression. */
+var stringToRegex = (search) => {
+	if (!regexLiteral.test(search)) return new RegExp(escapeStringRegexp(search), "g");
+	const delimiter = search.lastIndexOf("/");
+	const flags = [...new Set(search.slice(delimiter + 1))].filter((flag) => supportedFlags.has(flag)).join("");
+	return new RegExp(search.slice(1, delimiter), flags);
+};
 //#endregion
 //#region packages/core/src/config/parse-categories.ts
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
@@ -58685,4 +58679,4 @@ async function composeConfigGet(configFilename, currentContext, token) {
 	return result;
 }
 //#endregion
-export { context as C, setFailed as D, info as E, setOutput as O, require_ignore as S, getInput as T, string$1 as _, getGitHubAdapter as a, evaluateCategories as b, mergeInputAndConfig as c, configSchema as d, commonConfigSchema as f, object as g, number as h, actionLogger as i, __toESM as k, require_lib as l, array as m, sharedInputSchema as n, getRepository as o, _enum as p, tokenInputSchema as r, draftRelease as s, composeConfigGet as t, escapeStringRegexp as u, stringbool as v, core_exports as w, needsPullRequestChangedFiles as x, union as y };
+export { core_exports as C, setOutput as D, setFailed as E, __toESM as O, context as S, info as T, stringbool as _, getGitHubAdapter as a, needsPullRequestChangedFiles as b, mergeInputAndConfig as c, commonConfigSchema as d, _enum as f, string$1 as g, object as h, actionLogger as i, escapeStringRegexp as l, number as m, sharedInputSchema as n, getRepository as o, array as p, tokenInputSchema as r, draftRelease as s, composeConfigGet as t, configSchema as u, union as v, getInput as w, require_ignore as x, evaluateCategories as y };

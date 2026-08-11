@@ -1,4 +1,4 @@
-import { C as context, D as setFailed, E as info, O as setOutput, T as getInput, _ as string, a as getGitHubAdapter, c as mergeInputAndConfig, f as commonConfigSchema, g as object, i as actionLogger, n as sharedInputSchema, o as getRepository, s as draftRelease, v as stringbool } from "../../chunks/config.js";
+import { D as setOutput, E as setFailed, S as context, T as info, _ as stringbool, a as getGitHubAdapter, c as mergeInputAndConfig, d as commonConfigSchema, g as string, h as object, i as actionLogger, n as sharedInputSchema, o as getRepository, s as draftRelease, w as getInput } from "../../chunks/config.js";
 import { t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
 var actionInputSchema = object({
 	"config-name": string().optional().default("release-drafter.yml"),
