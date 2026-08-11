@@ -32765,22 +32765,16 @@ function escapeStringRegexp(string) {
 	return string.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&").replace(/-/g, "\\x2d");
 }
 //#endregion
-//#region node_modules/regex-parser/lib/index.js
-var require_lib = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	module.exports = function(input) {
-		if (typeof input !== "string") throw new Error("Invalid input. Input must be a string");
-		var m = input.match(/(\/?)(.+)\1([a-z]*)/i);
-		if (!m) throw new Error("Invalid regular expression format.");
-		var validFlags = Array.from(new Set(m[3])).filter(function(flag) {
-			return "gimsuy".includes(flag);
-		}).join("");
-		return new RegExp(m[2], validFlags);
-	};
-}));
-//#endregion
 //#region packages/core/src/string-to-regex.ts
-var import_lib = /* @__PURE__ */ __toESM(require_lib(), 1);
-var stringToRegex = (search) => /^\/.+\/[AJUXgimsux]*$/.test(search) ? (0, import_lib.default)(search) : new RegExp(escapeStringRegexp(search), "g");
+var regexLiteral = /^\/.+\/[AJUXgimsux]*$/;
+var supportedFlags = /* @__PURE__ */ new Set("gimsuy");
+/** Converts a regex literal or plain text matcher into a regular expression. */
+var stringToRegex = (search) => {
+	if (!regexLiteral.test(search)) return new RegExp(escapeStringRegexp(search), "g");
+	const delimiter = search.lastIndexOf("/");
+	const flags = [...new Set(search.slice(delimiter + 1))].filter((flag) => supportedFlags.has(flag)).join("");
+	return new RegExp(search.slice(1, delimiter), flags);
+};
 //#endregion
 //#region packages/core/src/config/parse-categories.ts
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
@@ -58515,5 +58509,16 @@ var sharedInputSchema = object({
 		path: ["token"]
 	});
 });
+(/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	module.exports = function(input) {
+		if (typeof input !== "string") throw new Error("Invalid input. Input must be a string");
+		var m = input.match(/(\/?)(.+)\1([a-z]*)/i);
+		if (!m) throw new Error("Invalid regular expression format.");
+		var validFlags = Array.from(new Set(m[3])).filter(function(flag) {
+			return "gimsuy".includes(flag);
+		}).join("");
+		return new RegExp(m[2], validFlags);
+	};
+})))();
 //#endregion
-export { __toESM as A, core_exports as C, setFailed as D, info as E, setOutput as O, stringbool as S, getInput as T, require_ignore as _, getRepository as a, object as b, require_lib as c, normalize$1 as d, normalizeRange as f, needsPullRequestChangedFiles as g, commonConfigSchema as h, getGitHubAdapter as i, warning as k, escapeStringRegexp as l, configSchema as m, parseCommitishForRelease as n, buildReleasePayload as o, satisfies as p, composeConfigGet as r, mergeInputAndConfig as s, sharedInputSchema as t, coerce as u, context as v, debug as w, string$1 as x, array as y };
+export { debug as C, setOutput as D, setFailed as E, warning as O, core_exports as S, info as T, context as _, getRepository as a, string$1 as b, escapeStringRegexp as c, normalizeRange as d, satisfies as f, require_ignore as g, needsPullRequestChangedFiles as h, getGitHubAdapter as i, __toESM as k, coerce as l, commonConfigSchema as m, parseCommitishForRelease as n, buildReleasePayload as o, configSchema as p, composeConfigGet as r, mergeInputAndConfig as s, sharedInputSchema as t, normalize$1 as u, array as v, getInput as w, stringbool as x, object as y };
