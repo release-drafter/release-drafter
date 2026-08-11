@@ -64,12 +64,6 @@ export default defineConfig({
               'define(factory,',
             )}\nexport default factory\n`
         }
-        if (normalizedId.endsWith('/node_modules/regex-parser/lib/index.js')) {
-          return `${source.replace(
-            'var RegexParser = module.exports = function',
-            'var RegexParser = function',
-          )}\nexport default RegexParser\n`
-        }
       },
     },
     {
