@@ -32,4 +32,20 @@ describe('createPathMatcher', () => {
     expect(createPathMatcher(['file+(1).js'])('file1.js')).toBe(false)
     expect(createPathMatcher(['file[0-9].js'])('file1.js')).toBe(true)
   })
+
+  it('ignores empty rules and preserves escaped trailing spaces', () => {
+    const matches = createPathMatcher([
+      '',
+      '# comment',
+      '/',
+      '!',
+      'notes   ',
+      String.raw`escaped\ `,
+    ])
+
+    expect(matches('notes')).toBe(true)
+    expect(matches('escaped ')).toBe(true)
+    expect(matches('')).toBe(false)
+    expect(createPathMatcher(['docs/'])('docs')).toBe(false)
+  })
 })
