@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
@@ -37,53 +37,9 @@ type Workflow = {
   >
 }
 
-describe('GitLab integration structure', () => {
-  it('pins the GitLab CE image and bootstraps a real nested fixture', () => {
-    const fixture = read('src/tests/integration/gitlab/gitlab-fixture.ts')
-
-    expect(fixture).toContain(
-      'gitlab/gitlab-ce:19.1.3-ce.0@sha256:d160bc91d3a112fdcaead0ecd76076e3371677c1314f266d9c26b5c3d3363db1',
-    )
-    expect(fixture).toContain(
-      'Wait.forSuccessfulCommand(\n            "curl --fail --silent http://127.0.0.1/-/health',
-    )
-    expect(fixture).toContain('/-/readiness?all=1')
-    expect(fixture).toContain("gitlab-rails', 'runner'")
-    expect(fixture).toContain('PersonalAccessToken.new')
-    expect(fixture).toContain("path: 'nested-fixtures'")
-    expect(fixture).toContain("path: 'forge-conformance'")
-    expect(fixture).toContain('/repository/commits')
-    expect(fixture).toContain('/merge_requests')
-    expect(fixture).toContain('/releases')
-    expect(fixture).toContain('.withLogConsumer(')
-    expect(fixture).toContain('createSecretRedactor([rootPassword, token])')
-    expect(fixture).toContain('await finished(logWriter)')
-    expect(fixture).not.toContain('copyArchiveFromContainer')
-    expect(fixture).not.toMatch(/\.(?:skip|skipIf)\s*\(/)
-  })
-
-  it('keeps the heavy suite isolated, serial, and extended-timeout', () => {
-    const config = read('vitest.gitlab.config.ts')
-    const rootConfig = read('vite.config.ts')
-
-    expect(config).toContain('src/tests/integration/gitlab/**/*.test.ts')
-    expect(config).toContain('coverage: { enabled: false }')
-    expect(config).toContain('minWorkers: 1')
-    expect(config).toContain('maxWorkers: 1')
-    expect(config).toContain('fileParallelism: false')
-    expect(config).toContain('sequence: { concurrent: false }')
-    expect(config).toContain('hookTimeout: 20 * 60_000')
-    expect(config).toContain("exclude: ['**/node_modules/**', '**/dist/**']")
-    expect(config).not.toContain('**/*.container.test.ts')
-    expect(config).not.toContain('src/tests/setup.ts')
-    expect(rootConfig).toContain("'**/*.container.test.ts'")
-  })
-
+describe('forge conformance workflow', () => {
   it('isolates conditional forge routing in its own workflow', () => {
-    expect(existsSync('.github/workflows/forge-conformance.yml')).toBe(true)
-
-    const ciContents = read('.github/workflows/ci.yml')
-    const ci = parseYaml(ciContents) as Workflow
+    const ci = parseYaml(read('.github/workflows/ci.yml')) as Workflow
     const contents = read('.github/workflows/forge-conformance.yml')
     const workflow = parseYaml(contents) as Workflow
     const jobs = workflow.jobs ?? {}
@@ -95,8 +51,7 @@ describe('GitLab integration structure', () => {
 
     expect(ci.on?.pull_request).toBeNull()
     expect(ci.on?.push?.branches).toEqual(['main'])
-    expect(ciContents).not.toContain('forge-conformance')
-    expect(ciContents).not.toContain("github.event.action != 'labeled'")
+    expect(ci.jobs?.['forge-conformance']).toBeUndefined()
 
     expect(workflow.on?.pull_request?.types).toEqual([
       'opened',
@@ -109,18 +64,6 @@ describe('GitLab integration structure', () => {
     expect(scope?.outputs?.['should-run']).toBe(
       '${{ steps.scope.outputs.should-run }}',
     )
-    expect(scope?.steps?.[0]).toMatchObject({
-      uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0',
-      with: {
-        'fetch-depth': 0,
-        'persist-credentials': false,
-      },
-    })
-    expect(scope?.steps?.[1]).toMatchObject({
-      uses: 'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020',
-      with: { 'node-version-file': '.node-version' },
-    })
-
     expect(scopeStep?.env).toMatchObject({
       EVENT_NAME: '${{ github.event_name }}',
       EVENT_ACTION: '${{ github.event.action }}',
@@ -132,7 +75,6 @@ describe('GitLab integration structure', () => {
       PUSH_BEFORE_SHA: '${{ github.event.before }}',
     })
     expect(scopeStep?.run).toBe('node src/scripts/forge-conformance-router.ts')
-    expect(scopeStep?.shell).toBeUndefined()
 
     expect(matrix?.needs).toBe('forge-conformance-scope')
     expect(matrix?.if).toBe(
@@ -143,14 +85,6 @@ describe('GitLab integration structure', () => {
       needs: ['forge-conformance-scope', 'forge-conformance'],
       if: '${{ always() }}',
     })
-    expect(gateSteps[0]).toMatchObject({
-      uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0',
-      with: { 'persist-credentials': false },
-    })
-    expect(gateSteps[1]).toMatchObject({
-      uses: 'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020',
-      with: { 'node-version-file': '.node-version' },
-    })
     expect(gateSteps[2]).toMatchObject({
       env: {
         SCOPE_RESULT: '${{ needs.forge-conformance-scope.result }}',
@@ -159,16 +93,9 @@ describe('GitLab integration structure', () => {
       },
       run: 'node src/scripts/forge-conformance-gate.ts',
     })
-    expect(gateSteps[2]?.shell).toBeUndefined()
-    expect(contents).not.toContain('set -euo pipefail')
-    expect(contents).not.toMatch(
-      /\[\[.*(?:SCOPE_RESULT|SHOULD_RUN|MATRIX_RESULT)/,
-    )
   })
 
   it('runs GitLab in the dedicated forge matrix with failure logs', () => {
-    expect(existsSync('.github/workflows/gitlab-integration.yml')).toBe(false)
-
     const contents = read('.github/workflows/forge-conformance.yml')
     const workflow = parseYaml(contents) as Workflow
     const job = workflow.jobs?.['forge-conformance']

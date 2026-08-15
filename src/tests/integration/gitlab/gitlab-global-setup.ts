@@ -12,9 +12,9 @@ declare module 'vitest' {
   }
 }
 
-export default async ({ provide }: TestProject) => {
+export default async (project: TestProject) => {
   const fixture = await startGitLabFixture()
-  provide('gitlabFixture', {
+  project.provide('gitlabFixture', {
     token: fixture.token,
     serverUrl: fixture.serverUrl,
     repository: fixture.repository,
@@ -22,5 +22,10 @@ export default async ({ provide }: TestProject) => {
     configPath: fixture.configPath,
   })
   console.log(`GitLab CE ready at ${fixture.serverUrl}`)
-  return () => fixture.stop()
+  return () =>
+    fixture.stop({
+      persistLogs:
+        project.vitest.state.getCountOfFailedTests() > 0 ||
+        project.vitest.state.getUnhandledErrors().length > 0,
+    })
 }

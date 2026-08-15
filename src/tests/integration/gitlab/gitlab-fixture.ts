@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import { createWriteStream, mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { type Readable, Transform } from 'node:stream'
 import { finished } from 'node:stream/promises'
@@ -19,9 +19,10 @@ import type { ForgeConformanceFixture } from '../forge-conformance/contract.ts'
 export const GITLAB_IMAGE =
   'gitlab/gitlab-ce:19.1.3-ce.0@sha256:d160bc91d3a112fdcaead0ecd76076e3371677c1314f266d9c26b5c3d3363db1'
 
-const HTTP_PORT = 80
+const HTTP_PORT = 8181
 const STARTUP_TIMEOUT_MS = 15 * 60_000
 const REQUEST_TIMEOUT_MS = 30_000
+const MAX_CONTAINER_LOG_BYTES = 16 * 1024 * 1024
 const artifactsDirectory = resolve(
   process.env.GITLAB_TEST_ARTIFACTS ?? 'artifacts/gitlab',
 )
@@ -132,26 +133,47 @@ export type GitLabFixture = {
   releaseTag: string
   inspectReleaseBody(release: Release): Promise<string>
   deleteRelease(release: Release): Promise<void>
-  stop(): Promise<void>
+  stop(options?: { persistLogs?: boolean }): Promise<void>
 }
 
-const createAccessToken = async (
-  container: StartedTestContainer,
-  token: string,
-) => {
-  const ruby = [
+const createAccessTokenFixture = (token: string) =>
+  [
     "user = User.find_by_username('root')",
     "token = PersonalAccessToken.new(user: user, name: 'release-drafter-integration', scopes: ['api'], expires_at: 1.day.from_now)",
     `token.set_token('${token}')`,
     'token.save!',
-  ].join('; ')
-  const result = await container.exec(['gitlab-rails', 'runner', ruby])
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `Could not create the GitLab integration token: ${redact(result.output, token)}`,
-    )
-  }
+  ].join('\n')
+
+const createOrGet = async <T extends { id: number }>(
+  api: GitLabApi,
+  createPath: string,
+  body: Record<string, unknown>,
+  lookupPath: string,
+) => {
+  const created = await api.request<T | { message: unknown }>(
+    'POST',
+    createPath,
+    body,
+    [200, 201, 400],
+  )
+  if ('id' in created) return created
+
+  // GitLab can commit the POST while Puma closes its response during warm-up.
+  // The request retry then sees the duplicate, so recover the created resource.
+  return api.request<T>('GET', lookupPath)
 }
+
+const createGroup = (
+  api: GitLabApi,
+  group: { name: string; path: string; parent_id?: number },
+  fullPath: string,
+) =>
+  createOrGet<GitLabGroup>(
+    api,
+    '/groups',
+    group,
+    `/groups/${encodeURIComponent(fullPath)}`,
+  )
 
 const waitForMergedRequest = async (
   api: GitLabApi,
@@ -181,23 +203,33 @@ const waitForMergedRequest = async (
 }
 
 const bootstrapProject = async (api: GitLabApi) => {
-  const parent = await api.request<GitLabGroup>('POST', '/groups', {
-    name: 'Release Drafter Tests',
-    path: 'release-drafter-tests',
-  })
-  const subgroup = await api.request<GitLabGroup>('POST', '/groups', {
-    name: 'Nested Fixtures',
-    path: 'nested-fixtures',
-    parent_id: parent.id,
-  })
-  const project = await api.request<GitLabProject>('POST', '/projects', {
-    name: 'Forge Conformance',
-    path: 'forge-conformance',
-    namespace_id: subgroup.id,
-    initialize_with_readme: true,
-    default_branch: 'main',
-    visibility: 'private',
-  })
+  const parent = await createGroup(
+    api,
+    { name: 'Release Drafter Tests', path: 'release-drafter-tests' },
+    'release-drafter-tests',
+  )
+  const subgroup = await createGroup(
+    api,
+    {
+      name: 'Nested Fixtures',
+      path: 'nested-fixtures',
+      parent_id: parent.id,
+    },
+    'release-drafter-tests/nested-fixtures',
+  )
+  const project = await createOrGet<GitLabProject>(
+    api,
+    '/projects',
+    {
+      name: 'Forge Conformance',
+      path: 'forge-conformance',
+      namespace_id: subgroup.id,
+      initialize_with_readme: true,
+      default_branch: 'main',
+      visibility: 'private',
+    },
+    `/projects/${encodeURIComponent('release-drafter-tests/nested-fixtures/forge-conformance')}`,
+  )
 
   const baseCommit = await api.request<GitLabCommit>(
     'POST',
@@ -281,30 +313,81 @@ const bootstrapProject = async (api: GitLabApi) => {
 export const startGitLabFixture = async (): Promise<GitLabFixture> => {
   mkdirSync(artifactsDirectory, { recursive: true })
   const containerLogPath = join(artifactsDirectory, 'container.log')
-  const logWriter = createWriteStream(containerLogPath, { flags: 'w' })
+  rmSync(containerLogPath, { force: true })
   const rootPassword = `Release-Drafter-${randomBytes(24).toString('hex')}`
   const token = `glpat-${randomBytes(24).toString('hex')}`
   const logRedactor = createSecretRedactor([rootPassword, token])
-  logRedactor.pipe(logWriter)
+  const logChunks: Buffer[] = []
+  let logBytes = 0
+  let logsTruncated = false
+  logRedactor.on('data', (chunk: Buffer) => {
+    let buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+    if (buffer.length >= MAX_CONTAINER_LOG_BYTES) {
+      buffer = buffer.subarray(buffer.length - MAX_CONTAINER_LOG_BYTES)
+      logChunks.length = 0
+      logBytes = 0
+      logsTruncated = true
+    }
+    logChunks.push(buffer)
+    logBytes += buffer.length
+    while (logBytes > MAX_CONTAINER_LOG_BYTES && logChunks.length > 1) {
+      logBytes -= logChunks.shift()?.length ?? 0
+      logsTruncated = true
+    }
+  })
   let containerLogStream: Readable | undefined
   let container: StartedTestContainer | undefined
 
-  const closeLogs = async () => {
+  const closeLogs = async (persistLogs = false) => {
     containerLogStream?.destroy()
     if (!logRedactor.writableEnded) logRedactor.end()
-    await finished(logWriter)
+    await finished(logRedactor)
+    if (persistLogs) {
+      writeFileSync(
+        containerLogPath,
+        Buffer.concat([
+          ...(logsTruncated
+            ? [Buffer.from('[earlier container logs truncated]\n')]
+            : []),
+          ...logChunks,
+        ]),
+      )
+    }
   }
 
   try {
     container = await new GenericContainer(GITLAB_IMAGE)
       .withExposedPorts(HTTP_PORT)
       .withSharedMemorySize(256 * 1024 * 1024)
+      // PostgreSQL is disposable here, and tmpfs removes most initialization I/O.
+      .withTmpFs({
+        '/var/opt/gitlab/postgresql': 'rw,noexec,nosuid,size=1g',
+      })
+      .withCopyContentToContainer([
+        {
+          content: createAccessTokenFixture(token),
+          target:
+            '/opt/gitlab/embedded/service/gitlab-rails/db/fixtures/production/40_release_drafter_access_token.rb',
+        },
+      ])
       .withEnvironment({
+        GITLAB_DISABLE_OPENSSH: 'true',
         GITLAB_ROOT_PASSWORD: rootPassword,
         GITLAB_OMNIBUS_CONFIG: [
-          "external_url 'http://localhost'",
+          `external_url 'http://localhost:${HTTP_PORT}'`,
           "letsencrypt['enable'] = false",
+          // Keep the test-only instance to the capacity exercised by conformance.
+          "gitlab_kas['enable'] = false",
+          "logrotate['enable'] = false",
+          // Workhorse can serve the API fixture directly without bundled NGINX.
+          "nginx['enable'] = false",
           "prometheus_monitoring['enable'] = false",
+          "puma['worker_processes'] = 0",
+          "sidekiq['concurrency'] = 10",
+          "sidekiq['metrics_enabled'] = false",
+          "gitlab_workhorse['listen_network'] = 'tcp'",
+          `gitlab_workhorse['listen_addr'] = '0.0.0.0:${HTTP_PORT}'`,
+          "gitlab_rails['rake_cache_clear'] = false",
           "gitlab_rails['usage_ping_enabled'] = false",
           "gitlab_rails['gitlab_signup_enabled'] = false",
         ].join('; '),
@@ -321,10 +404,10 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
       .withWaitStrategy(
         Wait.forAll([
           Wait.forSuccessfulCommand(
-            "curl --fail --silent http://127.0.0.1/-/health | grep --quiet 'GitLab OK'",
+            `curl --fail --silent http://127.0.0.1:${HTTP_PORT}/-/health | grep --quiet 'GitLab OK'`,
           ),
           Wait.forSuccessfulCommand(
-            "curl --fail --silent 'http://127.0.0.1/-/readiness?all=1' >/dev/null",
+            `curl --fail --silent 'http://127.0.0.1:${HTTP_PORT}/-/readiness?all=1' >/dev/null`,
           ),
         ]),
       )
@@ -332,7 +415,6 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
       .start()
 
     const serverUrl = `http://${container.getHost()}:${container.getMappedPort(HTTP_PORT)}`
-    await createAccessToken(container, token)
     const api = new GitLabApi(serverUrl, token)
     await api.request('GET', '/version')
     const fixture = await bootstrapProject(api)
@@ -471,17 +553,19 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
           [204],
         )
       },
-      async stop() {
+      async stop({ persistLogs = false } = {}) {
         try {
-          await container?.stop({ timeout: 60_000 })
-        } finally {
-          await closeLogs()
+          await container?.stop()
+        } catch (error) {
+          await closeLogs(true)
+          throw error
         }
+        await closeLogs(persistLogs)
       },
     }
   } catch (error) {
-    if (container) await container.stop({ timeout: 60_000 }).catch(() => {})
-    await closeLogs()
+    if (container) await container.stop().catch(() => {})
+    await closeLogs(true)
     throw error
   }
 }
