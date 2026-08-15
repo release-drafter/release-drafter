@@ -271,7 +271,7 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
     }>(`${repoPath}/pulls/${openedPull.number}`)
     await merge(openedPull.number)
     let changedFilesReady = false
-    for (let attempt = 0; attempt < 30; attempt += 1) {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
       const files = await api<Array<{ filename?: string }>>(
         `${repoPath}/pulls/${openedPull.number}/files`,
       )
