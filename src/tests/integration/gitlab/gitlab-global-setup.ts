@@ -24,7 +24,7 @@ export default async (project: TestProject) => {
   console.log(`GitLab CE ready at ${fixture.serverUrl}`)
   return () =>
     fixture.stop({
-      persistLogs:
+      collectLogs:
         project.vitest.state.getCountOfFailedTests() > 0 ||
         project.vitest.state.getUnhandledErrors().length > 0,
     })

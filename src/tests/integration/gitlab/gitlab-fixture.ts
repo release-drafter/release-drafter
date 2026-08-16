@@ -1,8 +1,7 @@
 import { randomBytes } from 'node:crypto'
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { createWriteStream, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { type Readable, Transform } from 'node:stream'
-import { finished } from 'node:stream/promises'
+import { pipeline } from 'node:stream/promises'
 import {
   GenericContainer,
   type StartedTestContainer,
@@ -22,7 +21,6 @@ export const GITLAB_IMAGE =
 const HTTP_PORT = 8181
 const STARTUP_TIMEOUT_MS = 15 * 60_000
 const REQUEST_TIMEOUT_MS = 30_000
-const MAX_CONTAINER_LOG_BYTES = 16 * 1024 * 1024
 const artifactsDirectory = resolve(
   process.env.GITLAB_TEST_ARTIFACTS ?? 'artifacts/gitlab',
 )
@@ -35,27 +33,6 @@ const redact = (value: string, ...secrets: readonly string[]) =>
     (redacted, secret) => redacted.replaceAll(secret, '[REDACTED]'),
     value,
   )
-
-const createSecretRedactor = (secrets: readonly string[]) => {
-  const longestSecret = Math.max(...secrets.map(({ length }) => length))
-  let pending = ''
-
-  return new Transform({
-    transform(chunk, _encoding, callback) {
-      const combined = pending + chunk.toString()
-      let emitLength = Math.max(0, combined.length - longestSecret + 1)
-      for (const secret of secrets) {
-        const start = combined.lastIndexOf(secret, emitLength - 1)
-        if (start >= 0 && start + secret.length > emitLength) emitLength = start
-      }
-      pending = combined.slice(emitLength)
-      callback(null, redact(combined.slice(0, emitLength), ...secrets))
-    },
-    flush(callback) {
-      callback(null, redact(pending, ...secrets))
-    },
-  })
-}
 
 type GitLabProject = {
   id: number
@@ -133,7 +110,7 @@ export type GitLabFixture = {
   releaseTag: string
   inspectReleaseBody(release: Release): Promise<string>
   deleteRelease(release: Release): Promise<void>
-  stop(options?: { persistLogs?: boolean }): Promise<void>
+  stop(options?: { collectLogs?: boolean }): Promise<void>
 }
 
 const createAccessTokenFixture = (token: string) =>
@@ -316,42 +293,24 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
   rmSync(containerLogPath, { force: true })
   const rootPassword = `Release-Drafter-${randomBytes(24).toString('hex')}`
   const token = `glpat-${randomBytes(24).toString('hex')}`
-  const logRedactor = createSecretRedactor([rootPassword, token])
-  const logChunks: Buffer[] = []
-  let logBytes = 0
-  let logsTruncated = false
-  logRedactor.on('data', (chunk: Buffer) => {
-    let buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
-    if (buffer.length >= MAX_CONTAINER_LOG_BYTES) {
-      buffer = buffer.subarray(buffer.length - MAX_CONTAINER_LOG_BYTES)
-      logChunks.length = 0
-      logBytes = 0
-      logsTruncated = true
-    }
-    logChunks.push(buffer)
-    logBytes += buffer.length
-    while (logBytes > MAX_CONTAINER_LOG_BYTES && logChunks.length > 1) {
-      logBytes -= logChunks.shift()?.length ?? 0
-      logsTruncated = true
-    }
-  })
-  let containerLogStream: Readable | undefined
   let container: StartedTestContainer | undefined
 
-  const closeLogs = async (persistLogs = false) => {
-    containerLogStream?.destroy()
-    if (!logRedactor.writableEnded) logRedactor.end()
-    await finished(logRedactor)
-    if (persistLogs) {
-      writeFileSync(
-        containerLogPath,
-        Buffer.concat([
-          ...(logsTruncated
-            ? [Buffer.from('[earlier container logs truncated]\n')]
-            : []),
-          ...logChunks,
-        ]),
-      )
+  const stopContainer = async (collectLogs = false) => {
+    if (!container) return
+    if (!collectLogs) {
+      await container.stop()
+      return
+    }
+
+    const logs = await container.logs()
+    const writeLogs = pipeline(logs, createWriteStream(containerLogPath))
+    try {
+      await container.stop()
+      await writeLogs
+    } catch (error) {
+      logs.destroy()
+      await writeLogs.catch(() => {})
+      throw error
     }
   }
 
@@ -391,15 +350,6 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
           "gitlab_rails['usage_ping_enabled'] = false",
           "gitlab_rails['gitlab_signup_enabled'] = false",
         ].join('; '),
-      })
-      .withLogConsumer((stream) => {
-        containerLogStream = stream
-        stream.pipe(logRedactor, { end: false })
-        stream.on('error', (error) =>
-          logRedactor.write(
-            `${error instanceof Error ? error.stack : error}\n`,
-          ),
-        )
       })
       .withWaitStrategy(
         Wait.forAll([
@@ -553,19 +503,12 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
           [204],
         )
       },
-      async stop({ persistLogs = false } = {}) {
-        try {
-          await container?.stop()
-        } catch (error) {
-          await closeLogs(true)
-          throw error
-        }
-        await closeLogs(persistLogs)
+      async stop({ collectLogs = false } = {}) {
+        await stopContainer(collectLogs)
       },
     }
   } catch (error) {
-    if (container) await container.stop().catch(() => {})
-    await closeLogs(true)
+    await stopContainer(true).catch(() => {})
     throw error
   }
 }
