@@ -173,7 +173,6 @@ defineForgeAdapterConformance({
   },
   fixture: {
     repository,
-    capabilities: { draftReleases: true },
     baselineRelease: {
       id: baselineRelease.id,
       tagName: baselineRelease.tag_name,

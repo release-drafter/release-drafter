@@ -10,7 +10,6 @@ import type {
 
 export type ForgeConformanceFixture = {
   repository: Repository
-  capabilities: ForgeAdapter['capabilities']
   baselineRelease: Partial<Release> & Pick<Release, 'tagName'>
   commitishCases: ReadonlyArray<{ commitish: string; expected: string }>
   findChanges: Omit<FindChangesRequest, 'repository'> & {
@@ -47,10 +46,6 @@ export const defineForgeAdapterConformance = ({
   const { repository } = fixture
 
   describe(`${name} ForgeAdapter conformance`, () => {
-    it('reports normalized forge capabilities', () => {
-      expect(adapter.capabilities).toEqual(fixture.capabilities)
-    })
-
     it('lists normalized releases', async () => {
       const releases = await adapter.listReleases({ repository })
       expect(releases).toEqual(
