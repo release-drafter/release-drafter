@@ -117,8 +117,14 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
       .withExposedPorts(PORT)
       // Match GitHub's public-runner CPU shape during local verification.
       .withResourcesQuota({ cpu: 4 })
+      // Keep PR-check work on overlay storage; only SQLite is safe on tmpfs.
+      .withTmpFs({
+        '/var/lib/forge-test-db':
+          'rw,nosuid,nodev,size=128m,uid=1000,gid=1000,mode=0700',
+      })
       .withEnvironment({
         [`${prefix}__database__DB_TYPE`]: 'sqlite3',
+        [`${prefix}__database__PATH`]: '/var/lib/forge-test-db/gitea.db',
         // Avoid a Gitea race between base-branch rechecks and saving a merge.
         [`${prefix}__repository.pull-request__DELAY_CHECK_FOR_INACTIVE_DAYS`]:
           '0',
