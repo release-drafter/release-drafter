@@ -20,7 +20,7 @@ const flavors = (): RestForgeFlavor[] => {
   )
 }
 
-export default async ({ provide }: TestProject) => {
+export default async (project: TestProject) => {
   const results = await Promise.allSettled(flavors().map(startRestForge))
   const started = results.flatMap((result) =>
     result.status === 'fulfilled' ? [result.value] : [],
@@ -36,7 +36,7 @@ export default async ({ provide }: TestProject) => {
   const fixtures = Object.fromEntries(
     started.map(({ fixture }) => [fixture.flavor, fixture]),
   ) as Partial<Record<RestForgeFlavor, RestForgeFixture>>
-  provide('restForgeFixtures', fixtures)
+  project.provide('restForgeFixtures', fixtures)
 
   for (const fixture of Object.values(fixtures)) {
     if (fixture) {
@@ -47,7 +47,12 @@ export default async ({ provide }: TestProject) => {
   }
 
   return async () => {
-    const results = await Promise.allSettled(started.map(({ stop }) => stop()))
+    const collectLogs =
+      project.vitest.state.getCountOfFailedTests() > 0 ||
+      project.vitest.state.getUnhandledErrors().length > 0
+    const results = await Promise.allSettled(
+      started.map(({ stop }) => stop({ collectLogs })),
+    )
     const failures = results.flatMap((result) =>
       result.status === 'rejected' ? [result.reason] : [],
     )

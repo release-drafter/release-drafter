@@ -1,4 +1,11 @@
-import { GenericContainer, Wait } from 'testcontainers'
+import { createWriteStream, mkdirSync, rmSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { pipeline } from 'node:stream/promises'
+import {
+  GenericContainer,
+  type StartedTestContainer,
+  Wait,
+} from 'testcontainers'
 import type { ForgeConformanceFixture } from './contract.ts'
 
 export type RestForgeFlavor = 'gitea' | 'forgejo'
@@ -78,20 +85,55 @@ const sleep = (milliseconds: number) =>
 export const startRestForge = async (flavor: RestForgeFlavor) => {
   const forge = FORGES[flavor]
   const prefix = forge.environmentPrefix
-  const container = await new GenericContainer(forge.image)
-    .withExposedPorts(PORT)
-    .withEnvironment({
-      [`${prefix}__database__DB_TYPE`]: 'sqlite3',
-      [`${prefix}__security__INSTALL_LOCK`]: 'true',
-      [`${prefix}__server__HTTP_PORT`]: String(PORT),
-      [`${prefix}__log__LEVEL`]: 'warn',
-    })
-    .withWaitStrategy(Wait.forHttp('/api/v1/version', PORT).forStatusCode(200))
-    .withStartupTimeout(180_000)
-    .start()
+  const artifactsDirectory = resolve(
+    process.env.REST_FORGE_TEST_ARTIFACTS ?? `artifacts/${flavor}`,
+  )
+  const containerLogPath = join(artifactsDirectory, 'container.log')
+  mkdirSync(artifactsDirectory, { recursive: true })
+  rmSync(containerLogPath, { force: true })
+
+  let container: StartedTestContainer | undefined
+  const stopContainer = async (collectLogs = false) => {
+    if (!container) return
+    if (!collectLogs) {
+      await container.stop()
+      return
+    }
+
+    const logs = await container.logs()
+    const writeLogs = pipeline(logs, createWriteStream(containerLogPath))
+    try {
+      await container.stop()
+      await writeLogs
+    } catch (error) {
+      logs.destroy()
+      await writeLogs.catch(() => {})
+      throw error
+    }
+  }
 
   try {
-    const serverUrl = `http://${container.getHost()}:${container.getMappedPort(PORT)}`
+    const runningContainer = await new GenericContainer(forge.image)
+      .withExposedPorts(PORT)
+      // Match GitHub's public-runner CPU shape during local verification.
+      .withResourcesQuota({ cpu: 4 })
+      .withEnvironment({
+        [`${prefix}__database__DB_TYPE`]: 'sqlite3',
+        // Avoid a Gitea race between base-branch rechecks and saving a merge.
+        [`${prefix}__repository.pull-request__DELAY_CHECK_FOR_INACTIVE_DAYS`]:
+          '0',
+        [`${prefix}__security__INSTALL_LOCK`]: 'true',
+        [`${prefix}__server__HTTP_PORT`]: String(PORT),
+        [`${prefix}__log__LEVEL`]: 'warn',
+      })
+      .withWaitStrategy(
+        Wait.forHttp('/api/v1/version', PORT).forStatusCode(200),
+      )
+      .withStartupTimeout(180_000)
+      .start()
+    container = runningContainer
+
+    const serverUrl = `http://${runningContainer.getHost()}:${runningContainer.getMappedPort(PORT)}`
     const apiUrl = `${serverUrl}/api/v1`
 
     const createUser = async (username: string, admin: boolean) => {
@@ -106,7 +148,7 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
       ]
         .filter(Boolean)
         .join(' ')
-      const result = await container.exec([
+      const result = await runningContainer.exec([
         '/bin/sh',
         '-c',
         `su git -c "${command}"`,
@@ -154,6 +196,29 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
         method,
         body: JSON.stringify(body),
       })
+
+    const waitForChangedFile = async (
+      pullNumber: number,
+      expectedFile: string,
+    ) => {
+      let lastFiles: Array<{ filename?: string }> = []
+      for (let attempt = 0; attempt < 120; attempt += 1) {
+        lastFiles = await api<Array<{ filename?: string }>>(
+          `${repoPath}/pulls/${pullNumber}/files`,
+        )
+        if (lastFiles.some(({ filename }) => filename === expectedFile)) return
+        await sleep(250)
+      }
+      const pull = await api<{
+        merge_base?: string
+        mergeable?: boolean | null
+        merged?: boolean
+        state?: string
+      }>(`${repoPath}/pulls/${pullNumber}`)
+      throw new Error(
+        `Pull request #${pullNumber} changed files never became available: ${JSON.stringify({ files: lastFiles, pull })}`,
+      )
+    }
 
     const merge = async (pullNumber: number) => {
       for (let attempt = 0; attempt < 60; attempt += 1) {
@@ -222,8 +287,6 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
         message: 'add release drafter config',
       },
     )
-    await sleep(1_500)
-
     const baseline = await api<JsonObject>(`${repoPath}/releases`, {
       tag_name: 'v1.0.0',
       target_commitish: 'main',
@@ -269,26 +332,11 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
     const beforeMerge = await api<{
       head: { sha: string }
     }>(`${repoPath}/pulls/${openedPull.number}`)
+    await waitForChangedFile(openedPull.number, 'feature.txt')
     await merge(openedPull.number)
-    let changedFilesReady = false
-    for (let attempt = 0; attempt < 120; attempt += 1) {
-      const files = await api<Array<{ filename?: string }>>(
-        `${repoPath}/pulls/${openedPull.number}/files`,
-      )
-      if (files.some(({ filename }) => filename === 'feature.txt')) {
-        changedFilesReady = true
-        break
-      }
-      await sleep(500)
-    }
-    if (!changedFilesReady) {
-      throw new Error(
-        `Pull request #${openedPull.number} changed files never became available`,
-      )
-    }
+    await waitForChangedFile(openedPull.number, 'feature.txt')
     const pull = await api<{
       number: number
-      merged_at: string
       merge_commit_sha: string
       html_url: string
     }>(`${repoPath}/pulls/${openedPull.number}`)
@@ -301,7 +349,6 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
       version,
       config: CONFIG,
       repository: { owner: OWNER, name: REPOSITORY, serverUrl },
-      capabilities: { draftReleases: true },
       baselineRelease: {
         id: baseline.id as string | number,
         tagName: 'v1.0.0',
@@ -350,7 +397,6 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
             title: 'Add conformance feature',
             body: 'Conformance pull request body',
             url: pull.html_url,
-            mergedAt: pull.merged_at,
             baseRefName: 'main',
             headRefName: 'feature',
             baseRepository: `${OWNER}/${REPOSITORY}`,
@@ -397,9 +443,13 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
       },
     }
 
-    return { fixture, stop: () => container.stop() }
+    return {
+      fixture,
+      stop: (options: { collectLogs?: boolean } = {}) =>
+        stopContainer(options.collectLogs),
+    }
   } catch (error) {
-    await container.stop()
+    await stopContainer(true).catch(() => {})
     throw error
   }
 }

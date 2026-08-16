@@ -395,7 +395,6 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
       repository,
       conformance: {
         repository,
-        capabilities: { draftReleases: false },
         baselineRelease: {
           id: 'v1.0.0',
           tagName: 'v1.0.0',

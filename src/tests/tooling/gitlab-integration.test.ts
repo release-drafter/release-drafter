@@ -95,7 +95,7 @@ describe('forge conformance workflow', () => {
     })
   })
 
-  it('runs GitLab in the dedicated forge matrix with failure logs', () => {
+  it('runs the dedicated forge matrix with failure logs', () => {
     const contents = read('.github/workflows/forge-conformance.yml')
     const workflow = parseYaml(contents) as Workflow
     const job = workflow.jobs?.['forge-conformance']
@@ -116,9 +116,10 @@ describe('forge conformance workflow', () => {
     const upload = steps.find(({ uses }) =>
       uses?.startsWith('actions/upload-artifact@'),
     )
-    expect(upload?.if).toBe("failure() && matrix.forge == 'gitlab'")
+    expect(upload?.if).toBe('failure()')
     expect(upload?.with).toMatchObject({
-      path: 'artifacts/gitlab',
+      name: '${{ matrix.forge }}-integration-logs',
+      path: 'artifacts/${{ matrix.forge }}',
       'if-no-files-found': 'warn',
       'retention-days': 7,
     })
