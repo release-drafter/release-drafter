@@ -7,7 +7,7 @@ import type {
   WritableStream,
 } from './index.ts'
 import { runCli } from './index.ts'
-import type { LocalConfigFileReader } from './local-config-file.js'
+import type { LocalConfigFileReader } from './local-config-file.ts'
 
 const CONFIG = 'template: "$CHANGES"\n'
 
