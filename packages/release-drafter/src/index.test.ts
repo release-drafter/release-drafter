@@ -1,4 +1,3 @@
-// biome-ignore lint/correctness/noUndeclaredDependencies: Vitest is provided by the root workspace for package-local tests.
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
 
 const { coreDraftRelease } = vi.hoisted(() => ({
