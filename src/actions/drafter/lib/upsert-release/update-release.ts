@@ -1,8 +1,4 @@
-import {
-  getGitHubAdapter,
-  getOctokit,
-  getRepository,
-} from '#src/common/index.ts'
+import { getGitHubAdapter, getRepository } from '#src/common/index.ts'
 import type { buildReleasePayload } from '../build-release-payload/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 
@@ -14,7 +10,7 @@ export const updateRelease = async (params: {
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
 }) => {
   const { draftRelease, releasePayload } = params
-  const release = await getGitHubAdapter(getOctokit()).updateRelease({
+  const release = await getGitHubAdapter().updateRelease({
     repository: getRepository(),
     release: {
       id: draftRelease.id ?? '',

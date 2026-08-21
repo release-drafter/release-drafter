@@ -1,12 +1,9 @@
 import * as core from '@actions/core'
+import type { GitHubAdapter } from '@release-drafter/github-adapter'
 import coerce from 'semver/functions/coerce.js'
 import satisfies from 'semver/functions/satisfies.js'
 import validRange from 'semver/ranges/valid.js'
-import {
-  getGitHubAdapter,
-  getOctokit,
-  getRepository,
-} from '#src/common/index.ts'
+import { getGitHubAdapter, getRepository } from '#src/common/index.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import { sortReleases } from './sort-releases.ts'
 
@@ -34,6 +31,7 @@ export const findPreviousReleases = async (
     | 'include-pre-releases'
     | 'filter-by-range'
   >,
+  adapter: Pick<GitHubAdapter, 'listReleases'> = getGitHubAdapter(),
 ) => {
   const {
     commitish,
@@ -45,7 +43,7 @@ export const findPreviousReleases = async (
   } = params
   core.info('Fetching releases from GitHub...')
   const releases = (
-    await getGitHubAdapter(getOctokit()).listReleases({
+    await adapter.listReleases({
       repository: getRepository(),
     })
   ).map((release) => ({

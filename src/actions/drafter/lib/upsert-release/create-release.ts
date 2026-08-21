@@ -1,15 +1,11 @@
-import {
-  getGitHubAdapter,
-  getOctokit,
-  getRepository,
-} from '#src/common/index.ts'
+import { getGitHubAdapter, getRepository } from '#src/common/index.ts'
 import type { buildReleasePayload } from '../build-release-payload/index.ts'
 
 export const createRelease = async (params: {
   releasePayload: Awaited<ReturnType<typeof buildReleasePayload>>
 }) => {
   const { releasePayload } = params
-  const release = await getGitHubAdapter(getOctokit()).createRelease({
+  const release = await getGitHubAdapter().createRelease({
     repository: getRepository(),
     payload: {
       ...releasePayload,

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { findPreviousReleases } from '#src/actions/drafter/lib/index.ts'
-import type { Octokit } from '#src/common/get-octokit.ts'
+import { findPreviousReleases as findPreviousReleasesWithAdapter } from '#src/actions/drafter/lib/index.ts'
+import { getGitHubAdapter } from '#src/common/get-github-adapter.ts'
+import { getOctokit, type Octokit } from '#src/common/get-octokit.ts'
 import { mockContext, mocks as sharedMocks } from '#tests/mocks/index.ts'
 
 const localMocks = vi.hoisted(() => {
@@ -20,6 +21,10 @@ vi.mock(import('#src/common/get-octokit.ts'), async (iom) => {
     }),
   }
 })
+
+const findPreviousReleases = (
+  params: Parameters<typeof findPreviousReleasesWithAdapter>[0],
+) => findPreviousReleasesWithAdapter(params, getGitHubAdapter(getOctokit()))
 
 describe('find previous releases', () => {
   beforeEach(async () => {

@@ -1,4 +1,4 @@
-import { A as warning, C as stringbool, D as info, E as getInput, O as setFailed, S as string, T as debug, _ as needsPullRequestChangedFiles, a as composeConfigGet, c as require_satisfies, d as mergeInputAndConfig$1, g as commonConfigSchema, h as configSchema, i as getOctokit, j as __toESM, k as setOutput, l as buildReleasePayload$1, m as require_valid, n as parseCommitishForRelease, o as getGitHubAdapter, p as escapeStringRegexp, s as getRepository, t as sharedInputSchema, u as require_coerce, w as core_exports, x as object, y as context } from "../../chunks/common.js";
+import { A as warning, C as stringbool, D as info, E as getInput, O as setFailed, S as string, T as debug, _ as needsPullRequestChangedFiles, a as composeConfigGet, c as require_satisfies, d as mergeInputAndConfig$1, g as commonConfigSchema, h as configSchema, j as __toESM, k as setOutput, l as buildReleasePayload$1, m as require_valid, n as parseCommitishForRelease, o as getGitHubAdapter, p as escapeStringRegexp, s as getRepository, t as sharedInputSchema, u as require_coerce, w as core_exports, x as object, y as context } from "../../chunks/common.js";
 //#region node_modules/compare-versions/lib/esm/utils.js
 var semver = /^[v^~<>=]*?(\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+))?(?:-([\da-z\-]+(?:\.[\da-z\-]+)*))?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?)?)?$/i;
 var validateAndParse = (version) => {
@@ -249,10 +249,10 @@ var sortReleases = (params) => {
 *
 * The draft release is used to determine if we should create a new release or update the existing one.
 */
-var findPreviousReleases = async (params) => {
+var findPreviousReleases = async (params, adapter = getGitHubAdapter()) => {
 	const { commitish, "filter-by-commitish": filterByCommitish, "tag-prefix": tagPrefix, prerelease: isPreRelease, "include-pre-releases": includePreReleases, "filter-by-range": filterByRange } = params;
 	info("Fetching releases from GitHub...");
-	const releases = (await getGitHubAdapter(getOctokit()).listReleases({ repository: getRepository() })).map((release) => ({
+	const releases = (await adapter.listReleases({ repository: getRepository() })).map((release) => ({
 		tag_name: release.tagName,
 		...release.id !== void 0 ? { id: release.id } : {},
 		...release.name !== void 0 ? { name: release.name } : {},
@@ -309,8 +309,80 @@ var findPreviousReleases = async (params) => {
 	};
 };
 //#endregion
+//#region src/actions/drafter/lib/find-pull-requests/core-to-legacy.ts
+var toLegacyPullRequest = (pullRequest) => ({
+	__typename: "PullRequest",
+	title: pullRequest.title,
+	number: pullRequest.number,
+	url: pullRequest.url,
+	body: pullRequest.body,
+	author: pullRequest.author ? {
+		__typename: pullRequest.author.type,
+		login: pullRequest.author.login,
+		url: pullRequest.author.url
+	} : pullRequest.author,
+	baseRepository: pullRequest.baseRepository ? {
+		__typename: "Repository",
+		nameWithOwner: pullRequest.baseRepository
+	} : null,
+	mergedAt: pullRequest.mergedAt,
+	isCrossRepository: pullRequest.isCrossRepository ?? false,
+	labels: {
+		__typename: "LabelConnection",
+		nodes: (pullRequest.labels ?? []).map((name) => ({
+			__typename: "Label",
+			name
+		}))
+	},
+	merged: true,
+	baseRefName: pullRequest.baseRefName,
+	headRefName: pullRequest.headRefName,
+	...pullRequest.mergeCommitOid ? { mergeCommit: {
+		__typename: "Commit",
+		oid: pullRequest.mergeCommitOid
+	} } : {},
+	...pullRequest.changedFiles ? { changedFiles: pullRequest.changedFiles } : {}
+});
+var legacyPullRequestKey = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
+var toLegacyCommit = (commit, pullRequestsByKey) => ({
+	__typename: "Commit",
+	id: commit.id,
+	oid: commit.oid,
+	committedDate: commit.committedAt,
+	message: commit.message,
+	author: commit.author ? {
+		__typename: "GitActor",
+		name: commit.author.name,
+		user: commit.author.login ? {
+			__typename: "User",
+			login: commit.author.login
+		} : null
+	} : commit.author,
+	authors: commit.authors ? {
+		__typename: "GitActorConnection",
+		nodes: commit.authors.map((author) => author ? {
+			__typename: "GitActor",
+			name: author.name,
+			user: author.login ? {
+				__typename: "User",
+				login: author.login
+			} : null
+		} : author)
+	} : commit.authors,
+	associatedPullRequests: commit.associatedPullRequests ? {
+		__typename: "PullRequestConnection",
+		nodes: commit.associatedPullRequests.map((pullRequest) => pullRequest ? pullRequestsByKey.get(legacyPullRequestKey(pullRequest)) ?? {
+			number: pullRequest.number,
+			baseRepository: pullRequest.baseRepository ? {
+				__typename: "Repository",
+				nameWithOwner: pullRequest.baseRepository
+			} : null
+		} : pullRequest)
+	} : commit.associatedPullRequests
+});
+//#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
-var findPullRequests = async (params) => {
+var findPullRequests = async (params, adapter = getGitHubAdapter()) => {
 	if (!params.lastRelease?.tag_name) {
 		warning("A previous (published) release is required to find changes");
 		return {
@@ -321,7 +393,7 @@ var findPullRequests = async (params) => {
 	}
 	const baseRef = `refs/tags/${params.lastRelease.tag_name}`;
 	info(`Finding commits between ${baseRef} and ${params.config.commitish}...`);
-	const changes = await getGitHubAdapter(getOctokit()).findChanges({
+	const changes = await adapter.findChanges({
 		repository: getRepository(),
 		comparison: {
 			baseRef,
@@ -344,77 +416,13 @@ var findPullRequests = async (params) => {
 	});
 	info(`Found ${changes.commits.length} commits.`);
 	info(`Found ${changes.pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${changes.pullRequests.length > 0 ? `: ${changes.pullRequests.map((pullRequest) => `#${pullRequest.number}`).join(", ")}` : "."}`);
-	const rawPullRequests = changes.pullRequests.map((pullRequest) => ({
-		__typename: "PullRequest",
-		title: pullRequest.title,
+	const rawPullRequests = changes.pullRequests.map(toLegacyPullRequest);
+	const pullRequestsByKey = new Map(rawPullRequests.map((pullRequest) => [legacyPullRequestKey({
 		number: pullRequest.number,
-		url: pullRequest.url,
-		body: pullRequest.body,
-		author: pullRequest.author ? {
-			__typename: pullRequest.author.type,
-			login: pullRequest.author.login,
-			url: pullRequest.author.url
-		} : pullRequest.author,
-		baseRepository: pullRequest.baseRepository ? {
-			__typename: "Repository",
-			nameWithOwner: pullRequest.baseRepository
-		} : null,
-		mergedAt: pullRequest.mergedAt,
-		isCrossRepository: pullRequest.isCrossRepository ?? false,
-		labels: {
-			__typename: "LabelConnection",
-			nodes: (pullRequest.labels ?? []).map((name) => ({
-				__typename: "Label",
-				name
-			}))
-		},
-		merged: true,
-		baseRefName: pullRequest.baseRefName,
-		headRefName: pullRequest.headRefName,
-		...pullRequest.mergeCommitOid ? { mergeCommit: {
-			__typename: "Commit",
-			oid: pullRequest.mergeCommitOid
-		} } : {},
-		...pullRequest.changedFiles ? { changedFiles: pullRequest.changedFiles } : {}
-	}));
-	const pullRequestsByKey = new Map(rawPullRequests.map((pullRequest) => [`${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`, pullRequest]));
+		baseRepository: pullRequest.baseRepository?.nameWithOwner
+	}), pullRequest]));
 	return {
-		commits: changes.commits.map((commit) => ({
-			__typename: "Commit",
-			id: commit.id,
-			oid: commit.oid,
-			committedDate: commit.committedAt,
-			message: commit.message,
-			author: commit.author ? {
-				__typename: "GitActor",
-				name: commit.author.name,
-				user: commit.author.login ? {
-					__typename: "User",
-					login: commit.author.login
-				} : null
-			} : commit.author,
-			authors: commit.authors ? {
-				__typename: "GitActorConnection",
-				nodes: commit.authors.map((author) => author ? {
-					__typename: "GitActor",
-					name: author.name,
-					user: author.login ? {
-						__typename: "User",
-						login: author.login
-					} : null
-				} : author)
-			} : commit.authors,
-			associatedPullRequests: commit.associatedPullRequests ? {
-				__typename: "PullRequestConnection",
-				nodes: commit.associatedPullRequests.map((pullRequest) => pullRequest ? pullRequestsByKey.get(`${pullRequest.baseRepository}#${pullRequest.number}`) ?? {
-					number: pullRequest.number,
-					baseRepository: pullRequest.baseRepository ? {
-						__typename: "Repository",
-						nameWithOwner: pullRequest.baseRepository
-					} : null
-				} : pullRequest)
-			} : commit.associatedPullRequests
-		})),
+		commits: changes.commits.map((commit) => toLegacyCommit(commit, pullRequestsByKey)),
 		newContributorLogins: changes.newContributorLogins,
 		pullRequests: rawPullRequests
 	};
@@ -423,7 +431,7 @@ var findPullRequests = async (params) => {
 //#region src/actions/drafter/lib/upsert-release/create-release.ts
 var createRelease = async (params) => {
 	const { releasePayload } = params;
-	const release = await getGitHubAdapter(getOctokit()).createRelease({
+	const release = await getGitHubAdapter().createRelease({
 		repository: getRepository(),
 		payload: {
 			...releasePayload,
@@ -446,7 +454,7 @@ var createRelease = async (params) => {
 //#region src/actions/drafter/lib/upsert-release/update-release.ts
 var updateRelease = async (params) => {
 	const { draftRelease, releasePayload } = params;
-	const release = await getGitHubAdapter(getOctokit()).updateRelease({
+	const release = await getGitHubAdapter().updateRelease({
 		repository: getRepository(),
 		release: {
 			id: draftRelease.id ?? "",
