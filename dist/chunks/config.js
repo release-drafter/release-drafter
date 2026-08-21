@@ -51076,7 +51076,15 @@ var getGitHubAdapterOptions = (token, octokit) => ({
 		...process$1.env.HTTPS_PROXY ?? process$1.env.https_proxy ? { requestAgent: {} } : {}
 	} : {}
 });
-var getGitHubAdapter = (token, octokit, factory = createGitHubAdapter) => factory(getGitHubAdapterOptions(token, octokit));
+var defaultAdapter;
+var getGitHubAdapter = (token, octokit, factory = createGitHubAdapter) => {
+	if (octokit || factory !== createGitHubAdapter) return factory(getGitHubAdapterOptions(token, octokit));
+	if (defaultAdapter?.token !== token) defaultAdapter = {
+		token,
+		adapter: factory(getGitHubAdapterOptions(token))
+	};
+	return defaultAdapter.adapter;
+};
 //#endregion
 //#region packages/gh-actions/src/common/shared-input.schema.ts
 /** Inputs shared by the Drafter and Autolabeler Actions. */
