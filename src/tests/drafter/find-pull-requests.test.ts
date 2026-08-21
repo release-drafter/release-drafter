@@ -1,3 +1,4 @@
+import type { GitHubOctokit } from '@release-drafter/github-adapter'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as z from 'zod'
 import { mergeInputAndConfig } from '#src/actions/drafter/config/index.ts'
@@ -6,7 +7,6 @@ import { configSchema } from '#src/actions/drafter/config/schemas/config.schema.
 import { categorizePullRequests } from '#src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts'
 import { findPullRequests as findPullRequestsWithAdapter } from '#src/actions/drafter/lib/find-pull-requests/index.ts'
 import { getGitHubAdapter } from '#src/common/get-github-adapter.ts'
-import { getOctokit, type Octokit } from '#src/common/get-octokit.ts'
 import { mockContext } from '../mocks/index.ts'
 
 const localMocks = vi.hoisted(() => ({
@@ -16,102 +16,91 @@ const localMocks = vi.hoisted(() => ({
   listFiles: vi.fn(),
 }))
 
-vi.mock(
-  import(
-    '#src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts'
-  ),
-  () => ({
-    findCommitsInComparison: localMocks.findCommitsInComparison,
-  }),
-)
-
-vi.mock('#src/common/get-octokit.ts', () => ({
-  getOctokit: () => {
-    let comparisonCommits:
-      | Promise<Array<{ id?: string; oid: string }>>
-      | undefined
-    const getComparisonCommits = () =>
-      (comparisonCommits ??= localMocks
-        .findCommitsInComparison()
-        .then((commits: Array<{ id?: string; oid?: string }>) =>
-          commits.map((commit: { id?: string; oid?: string }) => ({
-            ...commit,
-            oid: commit.oid ?? commit.id ?? '',
-          })),
-        ))
-    const paginate = Object.assign(localMocks.paginate, {
-      iterator: vi.fn(() =>
-        (async function* () {
-          const commits = await getComparisonCommits()
-          yield {
-            data: {
-              commits: commits.map((commit: { oid: string }) => ({
-                sha: commit.oid,
-              })),
-            },
-          }
-        })(),
-      ),
-    })
-    const graphql = vi.fn(async (query: string, variables: unknown) => {
-      if (query.includes('hydrateComparisonCommits')) {
+const createMockOctokit = (): GitHubOctokit => {
+  let comparisonCommits:
+    | Promise<Array<{ id?: string; oid: string }>>
+    | undefined
+  const getComparisonCommits = () =>
+    (comparisonCommits ??= localMocks
+      .findCommitsInComparison()
+      .then((commits: Array<{ id?: string; oid?: string }>) =>
+        commits.map((commit: { id?: string; oid?: string }) => ({
+          ...commit,
+          oid: commit.oid ?? commit.id ?? '',
+        })),
+      ))
+  const paginate = Object.assign(localMocks.paginate, {
+    iterator: vi.fn(() =>
+      (async function* () {
         const commits = await getComparisonCommits()
-        return {
-          repository: {
-            object: {
-              __typename: 'Commit',
-              history: {
-                pageInfo: { hasNextPage: false, endCursor: null },
-                nodes: commits,
-              },
-            },
+        yield {
+          data: {
+            commits: commits.map((commit: { oid: string }) => ({
+              sha: commit.oid,
+            })),
           },
         }
-      }
-      if (query.includes('findRecentMergedPullRequests')) {
-        return {
-          repository: {
-            pullRequests: {
+      })(),
+    ),
+  })
+  const graphql = vi.fn(async (query: string, variables: unknown) => {
+    if (query.includes('hydrateComparisonCommits')) {
+      const commits = await getComparisonCommits()
+      return {
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
               pageInfo: { hasNextPage: false, endCursor: null },
-              nodes: [],
+              nodes: commits,
             },
           },
-        }
+        },
       }
-      if (query.includes('findPullRequestChangedFiles')) {
-        const paths = await localMocks.paginate()
-        return {
-          repository: {
-            pullRequest: {
-              files: {
-                pageInfo: { hasNextPage: false, endCursor: null },
-                nodes: paths.map((path: string) => ({ path })),
-              },
+    }
+    if (query.includes('findRecentMergedPullRequests')) {
+      return {
+        repository: {
+          pullRequests: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [],
+          },
+        },
+      }
+    }
+    if (query.includes('findPullRequestChangedFiles')) {
+      const paths = await localMocks.paginate()
+      return {
+        repository: {
+          pullRequest: {
+            files: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: paths.map((path: string) => ({ path })),
             },
           },
-        }
+        },
       }
-      return localMocks.graphql(query, variables)
-    })
-    return {
-      graphql: graphql as unknown as Octokit['graphql'],
-      paginate: paginate as unknown as Octokit['paginate'],
-      rest: {
-        repos: {
-          compareCommitsWithBasehead: vi.fn(),
-        },
-        pulls: {
-          listFiles:
-            localMocks.listFiles as unknown as Octokit['rest']['pulls']['listFiles'],
-        },
+    }
+    return localMocks.graphql(query, variables)
+  })
+  return {
+    graphql: graphql as unknown as GitHubOctokit['graphql'],
+    paginate: paginate as unknown as GitHubOctokit['paginate'],
+    rest: {
+      repos: {
+        compareCommitsWithBasehead: vi.fn(),
       },
-    } as unknown as Octokit
-  },
-}))
+      pulls: {
+        listFiles:
+          localMocks.listFiles as unknown as GitHubOctokit['rest']['pulls']['listFiles'],
+      },
+    },
+  } as unknown as GitHubOctokit
+}
 
 const findPullRequests = (
   params: Parameters<typeof findPullRequestsWithAdapter>[0],
-) => findPullRequestsWithAdapter(params, getGitHubAdapter(getOctokit()))
+) => findPullRequestsWithAdapter(params, getGitHubAdapter(createMockOctokit()))
 
 const makeConfig = (
   categories: NonNullable<z.input<typeof configSchema>['categories']>,

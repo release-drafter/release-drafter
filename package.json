@@ -58,9 +58,6 @@
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
-    "@graphql-typed-document-node/core": "^3.2.0",
-    "@octokit/graphql": "^9.0.3",
-    "@octokit/plugin-paginate-graphql": "^6.0.0",
     "@release-drafter/autolabeler": "*",
     "@release-drafter/core": "*",
     "@release-drafter/github-adapter": "*",

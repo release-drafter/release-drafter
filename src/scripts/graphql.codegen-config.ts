@@ -26,10 +26,6 @@ const githubConfig: CodegenConfig = {
     },
   },
   generates: {
-    'src/types/github.graphql.generated.ts': {
-      documents: 'src/**/*.gql',
-      plugins: ['typescript', 'typescript-operations', 'typed-document-node'],
-    },
     'packages/github-adapter/src/types/github.graphql.generated.ts': {
       documents: 'packages/github-adapter/src/graphql/**/*.gql',
       plugins: ['typescript', 'typescript-operations', 'typed-document-node'],
