@@ -1,9 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { builtinModules } from 'node:module'
+import { defaultClientConditions, defaultServerConditions } from 'vite'
 import { defineConfig, type Plugin } from 'vitest/config'
 
 const FROM = 'main: dist/actions/drafter/run.js'
 const TO = 'main: ../dist/actions/drafter/run.js'
+const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
 
 function syncDrafterActionYml(): Plugin {
   return {
@@ -24,7 +26,7 @@ function syncDrafterActionYml(): Plugin {
 export default defineConfig({
   plugins: [syncDrafterActionYml()],
   resolve: {
-    conditions: ['release-drafter-source'],
+    conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
     tsconfigPaths: true,
   },
   // GitHub Actions libraries read inputs and context from process.env at runtime.
@@ -33,6 +35,11 @@ export default defineConfig({
   environments: {
     client: {
       keepProcessEnv: true,
+    },
+    ssr: {
+      resolve: {
+        conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultServerConditions],
+      },
     },
   },
   build: {
