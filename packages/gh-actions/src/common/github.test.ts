@@ -8,6 +8,20 @@ import { getGitHubAdapter } from './github.ts'
 describe('Action GitHub adapter composition', () => {
   afterEach(() => vi.unstubAllEnvs())
 
+  it('reuses the adapter for one Action token', () => {
+    const first = getGitHubAdapter('shared-action-token')
+    const second = getGitHubAdapter('shared-action-token')
+
+    expect(second).toBe(first)
+  })
+
+  it('creates a new adapter when the Action token changes', () => {
+    const first = getGitHubAdapter('first-action-token')
+    const second = getGitHubAdapter('second-action-token')
+
+    expect(second).not.toBe(first)
+  })
+
   it('passes the explicit token and GHES endpoints to createGitHubAdapter', () => {
     vi.stubEnv('GITHUB_SERVER_URL', 'https://github.example.test')
     vi.stubEnv('GITHUB_API_URL', 'https://github.example.test/api/v3')
