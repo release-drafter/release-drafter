@@ -27,8 +27,6 @@ if (typeof workspaceVersion !== 'string')
   throw new Error('workspace package version is required')
 const packageName = process.env.npm_package_name
 if (!packageName) throw new Error('npm_package_name is required')
-const bundlesCliRuntime =
-  packageName === 'release-drafter' || packageName === '@release-drafter/cli'
 const bundlesGitHubActions = packageName === '@release-drafter/gh-actions'
 const declarationPackages = new Set([
   '@release-drafter/core',
