@@ -1,4 +1,3 @@
-// biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
 import type { Repository } from '@release-drafter/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GitHubAdapter, type GitHubOctokit } from './index.ts'

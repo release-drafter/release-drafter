@@ -1,18 +1,23 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import {
-  getGitHubAdapter,
-  getOctokit,
-  getRepository,
-} from '#src/common/index.ts'
+import type { GitHubAdapter } from '@release-drafter/github-adapter'
+import { getGitHubAdapter, getRepository } from '#src/common/index.ts'
 import { needsPullRequestChangedFiles } from '../../common/category-matching.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
+import {
+  legacyPullRequestKey,
+  toLegacyCommit,
+  toLegacyPullRequest,
+} from './core-to-legacy.ts'
 
-export const findPullRequests = async (params: {
-  lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
-  config: ParsedConfig
-}) => {
+export const findPullRequests = async (
+  params: {
+    lastRelease: Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease']
+    config: ParsedConfig
+  },
+  adapter: Pick<GitHubAdapter, 'findChanges'> = getGitHubAdapter(),
+) => {
   if (!params.lastRelease?.tag_name) {
     core.warning('A previous (published) release is required to find changes')
     return {
@@ -26,7 +31,7 @@ export const findPullRequests = async (params: {
   core.info(
     `Finding commits between ${baseRef} and ${params.config.commitish}...`,
   )
-  const changes = await getGitHubAdapter(getOctokit()).findChanges({
+  const changes = await adapter.findChanges({
     repository: getRepository(),
     comparison: {
       baseRef,
@@ -57,109 +62,21 @@ export const findPullRequests = async (params: {
     }`,
   )
 
-  const rawPullRequests = changes.pullRequests.map((pullRequest) => ({
-    __typename: 'PullRequest' as const,
-    title: pullRequest.title,
-    number: pullRequest.number,
-    url: pullRequest.url,
-    body: pullRequest.body,
-    author: pullRequest.author
-      ? {
-          __typename: pullRequest.author.type,
-          login: pullRequest.author.login,
-          url: pullRequest.author.url,
-        }
-      : pullRequest.author,
-    baseRepository: pullRequest.baseRepository
-      ? {
-          __typename: 'Repository' as const,
-          nameWithOwner: pullRequest.baseRepository,
-        }
-      : null,
-    mergedAt: pullRequest.mergedAt,
-    isCrossRepository: pullRequest.isCrossRepository ?? false,
-    labels: {
-      __typename: 'LabelConnection' as const,
-      nodes: (pullRequest.labels ?? []).map((name) => ({
-        __typename: 'Label' as const,
-        name,
-      })),
-    },
-    merged: true,
-    baseRefName: pullRequest.baseRefName,
-    headRefName: pullRequest.headRefName,
-    ...(pullRequest.mergeCommitOid
-      ? {
-          mergeCommit: {
-            __typename: 'Commit' as const,
-            oid: pullRequest.mergeCommitOid,
-          },
-        }
-      : {}),
-    ...(pullRequest.changedFiles
-      ? { changedFiles: pullRequest.changedFiles }
-      : {}),
-  }))
+  const rawPullRequests = changes.pullRequests.map(toLegacyPullRequest)
   const pullRequestsByKey = new Map(
     rawPullRequests.map((pullRequest) => [
-      `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`,
+      legacyPullRequestKey({
+        number: pullRequest.number,
+        baseRepository: pullRequest.baseRepository?.nameWithOwner,
+      }),
       pullRequest,
     ]),
   )
 
   return {
-    commits: changes.commits.map((commit) => ({
-      __typename: 'Commit' as const,
-      id: commit.id,
-      oid: commit.oid,
-      committedDate: commit.committedAt,
-      message: commit.message,
-      author: commit.author
-        ? {
-            __typename: 'GitActor' as const,
-            name: commit.author.name,
-            user: commit.author.login
-              ? { __typename: 'User' as const, login: commit.author.login }
-              : null,
-          }
-        : commit.author,
-      authors: commit.authors
-        ? {
-            __typename: 'GitActorConnection' as const,
-            nodes: commit.authors.map((author) =>
-              author
-                ? {
-                    __typename: 'GitActor' as const,
-                    name: author.name,
-                    user: author.login
-                      ? { __typename: 'User' as const, login: author.login }
-                      : null,
-                  }
-                : author,
-            ),
-          }
-        : commit.authors,
-      associatedPullRequests: commit.associatedPullRequests
-        ? {
-            __typename: 'PullRequestConnection' as const,
-            nodes: commit.associatedPullRequests.map((pullRequest) =>
-              pullRequest
-                ? (pullRequestsByKey.get(
-                    `${pullRequest.baseRepository}#${pullRequest.number}`,
-                  ) ?? {
-                    number: pullRequest.number,
-                    baseRepository: pullRequest.baseRepository
-                      ? {
-                          __typename: 'Repository' as const,
-                          nameWithOwner: pullRequest.baseRepository,
-                        }
-                      : null,
-                  })
-                : pullRequest,
-            ),
-          }
-        : commit.associatedPullRequests,
-    })),
+    commits: changes.commits.map((commit) =>
+      toLegacyCommit(commit, pullRequestsByKey),
+    ),
     newContributorLogins: changes.newContributorLogins,
     pullRequests: rawPullRequests,
   }

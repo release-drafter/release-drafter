@@ -4,8 +4,9 @@ import { mergeInputAndConfig } from '#src/actions/drafter/config/index.ts'
 import { commonConfigSchema } from '#src/actions/drafter/config/schemas/common-config.schema.ts'
 import { configSchema } from '#src/actions/drafter/config/schemas/config.schema.ts'
 import { categorizePullRequests } from '#src/actions/drafter/lib/build-release-payload/categorize-pull-requests.ts'
-import { findPullRequests } from '#src/actions/drafter/lib/find-pull-requests/index.ts'
-import type { Octokit } from '#src/common/get-octokit.ts'
+import { findPullRequests as findPullRequestsWithAdapter } from '#src/actions/drafter/lib/find-pull-requests/index.ts'
+import { getGitHubAdapter } from '#src/common/get-github-adapter.ts'
+import { getOctokit, type Octokit } from '#src/common/get-octokit.ts'
 import { mockContext } from '../mocks/index.ts'
 
 const localMocks = vi.hoisted(() => ({
@@ -107,6 +108,10 @@ vi.mock('#src/common/get-octokit.ts', () => ({
     } as unknown as Octokit
   },
 }))
+
+const findPullRequests = (
+  params: Parameters<typeof findPullRequestsWithAdapter>[0],
+) => findPullRequestsWithAdapter(params, getGitHubAdapter(getOctokit()))
 
 const makeConfig = (
   categories: NonNullable<z.input<typeof configSchema>['categories']>,

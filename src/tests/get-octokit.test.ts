@@ -1,10 +1,16 @@
 import nock from 'nock'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getGitHubAdapter } from '#src/common/get-github-adapter.ts'
 import { getOctokit } from '#src/common/get-octokit.ts'
 
 describe('getOctokit', () => {
   beforeEach(() => {
     vi.stubEnv('GITHUB_TOKEN', 'test')
+  })
+
+  it('reuses one adapter and Octokit client for the Action process', () => {
+    expect(getGitHubAdapter()).toBe(getGitHubAdapter())
+    expect(getOctokit()).toBe(getGitHubAdapter().octokit)
   })
 
   it('does not retry a transient server failure under Vitest', async () => {

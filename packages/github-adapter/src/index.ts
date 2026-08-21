@@ -1,26 +1,16 @@
 import process from 'node:process'
-import { Octokit as OctokitCore } from '@octokit/core'
-import { paginateGraphQL } from '@octokit/plugin-paginate-graphql'
-import { paginateRest } from '@octokit/plugin-paginate-rest'
-import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
-import { retry } from '@octokit/plugin-retry'
 import type {
   ChangeSet,
-  Commit,
   CreateReleaseRequest,
   FindChangesRequest,
   ForgeAdapter,
   Logger,
-  PullRequest,
   Release,
   Repository,
   ResolveCommitishRequest,
   UpdateReleaseRequest,
-  // biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
 } from '@release-drafter/core'
-// biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
 import { noopLogger } from '@release-drafter/core'
-import { EnvHttpProxyAgent, fetch as undiciFetch } from 'undici'
 import {
   FindPullRequestChangedFilesDocument,
   FindRecentMergedPullRequestsDocument,
@@ -28,210 +18,35 @@ import {
   ResolveCommitishDocument,
   ResolvePullRequestCommitishDocument,
 } from './types/github.graphql.generated.ts'
+import type {
+  GitHubAdapterOptions,
+  GraphCommit,
+  GraphPullRequest,
+  RepositoryConfigRequest,
+} from './types/github.ts'
+import { mapConcurrent } from './utils/map-concurrent.ts'
+import {
+  normalizeCommit,
+  normalizePullRequest,
+  normalizeRelease,
+} from './utils/normalize.ts'
+import {
+  createProxyAwareFetch,
+  deriveEndpoints,
+  type GitHubOctokit,
+  GitHubOctokitClient,
+} from './utils/octokit.ts'
 
-const GitHubOctokit = OctokitCore.plugin(
-  restEndpointMethods,
-  paginateRest,
-  paginateGraphQL,
-  retry,
-)
-
-export type GitHubOctokit = InstanceType<typeof GitHubOctokit>
-export type GitHubFetch = typeof globalThis.fetch
-
-export type GitHubAdapterOptions = {
-  token: string
-  serverUrl?: string
-  apiUrl?: string
-  graphqlUrl?: string
-  logger?: Logger
-  octokit?: GitHubOctokit
-  fetch?: GitHubFetch
-  env?: NodeJS.ProcessEnv
-  requestAgent?: object
-  requestRetries?: number
-  changedFilesConcurrency?: number
-  contributorConcurrency?: number
-}
-
-export type RepositoryConfigRequest = {
-  repository: Repository
-  path: string
-  ref?: string
-}
+export type {
+  GitHubAdapterOptions,
+  GitHubFetch,
+  RepositoryConfigRequest,
+} from './types/github.ts'
+export type { GitHubOctokit } from './utils/octokit.ts'
 
 const RELEASE_COUNT_LIMIT = 1000
 const PULL_REQUEST_PAGE_SIZE = 100
 const DEFAULT_CONCURRENCY = 5
-
-const deriveEndpoints = (
-  options: Pick<GitHubAdapterOptions, 'serverUrl' | 'apiUrl' | 'graphqlUrl'>,
-) => {
-  const serverUrl = (options.serverUrl ?? 'https://github.com').replace(
-    /\/$/,
-    '',
-  )
-  const githubDotCom = serverUrl === 'https://github.com'
-  const apiUrl = (
-    options.apiUrl ??
-    (githubDotCom ? 'https://api.github.com' : `${serverUrl}/api/v3`)
-  ).replace(/\/$/, '')
-  const graphqlUrl = (
-    options.graphqlUrl ??
-    (githubDotCom
-      ? 'https://api.github.com/graphql'
-      : `${serverUrl}/api/graphql`)
-  ).replace(/\/$/, '')
-  return { serverUrl, apiUrl, graphqlUrl }
-}
-
-const createProxyAwareFetch = (env: NodeJS.ProcessEnv): GitHubFetch => {
-  const dispatcher = new EnvHttpProxyAgent({
-    httpProxy: env.HTTP_PROXY ?? env.http_proxy,
-    httpsProxy: env.HTTPS_PROXY ?? env.https_proxy,
-    noProxy: env.NO_PROXY ?? env.no_proxy,
-  })
-  const fetchWithDispatcher = undiciFetch as unknown as (
-    input: unknown,
-    init: unknown,
-  ) => ReturnType<GitHubFetch>
-  return ((
-    input: Parameters<GitHubFetch>[0],
-    init?: Parameters<GitHubFetch>[1],
-  ) => fetchWithDispatcher(input, { ...init, dispatcher })) as GitHubFetch
-}
-
-const normalizeRelease = (release: {
-  id: string | number
-  tag_name: string
-  name?: string | null
-  target_commitish?: string
-  created_at?: string
-  draft?: boolean
-  prerelease?: boolean
-  html_url?: string
-  upload_url?: string
-}): Release => ({
-  id: release.id,
-  tagName: release.tag_name,
-  name: release.name,
-  targetCommitish: release.target_commitish,
-  createdAt: release.created_at,
-  draft: release.draft,
-  prerelease: release.prerelease,
-  url: release.html_url,
-  uploadUrl: release.upload_url,
-})
-
-type GraphPullRequest = {
-  number: number
-  title: string
-  body?: string | null
-  url?: string
-  mergedAt?: string | null
-  baseRefName?: string
-  headRefName?: string
-  baseRepository?: { nameWithOwner?: string | null } | null
-  isCrossRepository?: boolean
-  author?: { __typename?: string; login: string; url?: string } | null
-  labels?: { nodes?: Array<{ name?: string | null } | null> | null } | null
-  merged?: boolean
-  mergeCommit?: { oid?: string | null } | null
-}
-
-type GraphCommit = {
-  id?: string
-  oid: string
-  committedDate?: string
-  message?: string
-  author?: {
-    name?: string | null
-    user?: { login?: string | null } | null
-  } | null
-  authors?: {
-    nodes?: Array<{
-      name?: string | null
-      user?: { login?: string | null } | null
-    } | null> | null
-  } | null
-  associatedPullRequests?: {
-    nodes?: Array<GraphPullRequest | null> | null
-  } | null
-}
-
-const normalizePullRequest = (pullRequest: GraphPullRequest): PullRequest => ({
-  number: pullRequest.number,
-  title: pullRequest.title,
-  body: pullRequest.body,
-  url: pullRequest.url,
-  mergedAt: pullRequest.mergedAt,
-  baseRefName: pullRequest.baseRefName,
-  headRefName: pullRequest.headRefName,
-  baseRepository: pullRequest.baseRepository?.nameWithOwner ?? null,
-  isCrossRepository: pullRequest.isCrossRepository,
-  author: pullRequest.author
-    ? {
-        login: pullRequest.author.login,
-        url: pullRequest.author.url,
-        type: pullRequest.author.__typename,
-      }
-    : pullRequest.author,
-  labels: (pullRequest.labels?.nodes ?? []).flatMap((label) =>
-    label?.name ? [label.name] : [],
-  ),
-  mergeCommitOid: pullRequest.mergeCommit?.oid,
-})
-
-const normalizeCommit = (commit: GraphCommit): Commit => ({
-  id: commit.id,
-  oid: commit.oid,
-  committedAt: commit.committedDate,
-  message: commit.message,
-  author: commit.author
-    ? {
-        name: commit.author.name,
-        login: commit.author.user?.login,
-        type: 'User',
-      }
-    : commit.author,
-  authors: commit.authors
-    ? (commit.authors.nodes ?? []).map((author) =>
-        author
-          ? { name: author.name, login: author.user?.login, type: 'User' }
-          : author,
-      )
-    : commit.authors,
-  associatedPullRequests: commit.associatedPullRequests
-    ? (commit.associatedPullRequests.nodes ?? []).map((pullRequest) =>
-        pullRequest
-          ? {
-              number: pullRequest.number,
-              baseRepository: pullRequest.baseRepository?.nameWithOwner ?? null,
-            }
-          : pullRequest,
-      )
-    : commit.associatedPullRequests,
-})
-
-const mapConcurrent = async <T, R>(
-  items: readonly T[],
-  concurrency: number,
-  task: (item: T) => Promise<R>,
-): Promise<R[]> => {
-  const results = new Array<R>(items.length)
-  let next = 0
-  const workers = Array.from(
-    { length: Math.min(Math.max(1, concurrency), items.length) },
-    async () => {
-      while (next < items.length) {
-        const index = next++
-        results[index] = await task(items[index])
-      }
-    },
-  )
-  await Promise.all(workers)
-  return results
-}
 
 export class GitHubAdapter implements ForgeAdapter {
   readonly capabilities = { draftReleases: true } as const
@@ -261,7 +76,7 @@ export class GitHubAdapter implements ForgeAdapter {
     } else {
       const requestFetch =
         options.fetch ?? createProxyAwareFetch(options.env ?? process.env)
-      this.octokit = new GitHubOctokit({
+      this.octokit = new GitHubOctokitClient({
         auth: options.token,
         baseUrl: this.apiUrl,
         log: { ...this.logger, warn: this.logger.warning.bind(this.logger) },
