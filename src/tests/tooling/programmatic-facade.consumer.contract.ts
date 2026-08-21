@@ -127,12 +127,23 @@ describe.sequential('release-drafter packed programmatic facade', () => {
     const manifest = JSON.parse(
       readFileSync(join(installedPackageDirectory, 'package.json'), 'utf8'),
     ) as {
-      exports?: { '.'?: { import?: string; types?: string } }
+      exports?: {
+        '.'?: {
+          import?: string
+          types?: {
+            'release-drafter-source'?: string
+            default?: string
+          }
+        }
+      }
       type?: string
     }
     expect(manifest.type).toBe('module')
     expect(manifest.exports?.['.']).toMatchObject({
-      types: './dist/index.d.ts',
+      types: {
+        'release-drafter-source': './src/index.ts',
+        default: './dist/index.d.ts',
+      },
       import: './dist/index.js',
     })
   })

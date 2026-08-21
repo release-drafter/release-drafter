@@ -307,7 +307,10 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
       exports: {
         '.': {
           import: './dist/index.js',
-          types: './dist/index.d.ts',
+          types: {
+            'release-drafter-source': './src/index.ts',
+            default: './dist/index.d.ts',
+          },
         },
       },
       license: 'ISC',
