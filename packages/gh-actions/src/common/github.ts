@@ -43,10 +43,24 @@ export const getGitHubAdapterOptions = (
     : {}),
 })
 
+let defaultAdapter: { token: string; adapter: GitHubAdapter } | undefined
+
 export const getGitHubAdapter = (
   token: string,
   octokit?: GitHubOctokit,
   factory: (
     options: GitHubAdapterOptions,
   ) => GitHubAdapter = createGitHubAdapter,
-): GitHubAdapter => factory(getGitHubAdapterOptions(token, octokit))
+): GitHubAdapter => {
+  if (octokit || factory !== createGitHubAdapter)
+    return factory(getGitHubAdapterOptions(token, octokit))
+
+  if (defaultAdapter?.token !== token) {
+    defaultAdapter = {
+      token,
+      adapter: factory(getGitHubAdapterOptions(token)),
+    }
+  }
+
+  return defaultAdapter.adapter
+}
