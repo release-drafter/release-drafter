@@ -5,7 +5,7 @@ import {
   type LocalConfigFileHandle,
   type LocalConfigFileIdentity,
   type LocalConfigFileSystem,
-} from './local-config-file.js'
+} from './local-config-file.ts'
 
 const CWD = '/checkout-link'
 const FILE = '/checkout-link/configs/release.yml'

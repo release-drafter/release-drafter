@@ -6,7 +6,7 @@ import type {
   DraftFunction,
   WritableStream,
 } from './index.ts'
-import type { LocalConfigFileReader } from './local-config-file.js'
+import type { LocalConfigFileReader } from './local-config-file.ts'
 
 const BASE_CONFIG = 'template: "$CHANGES"\n'
 
