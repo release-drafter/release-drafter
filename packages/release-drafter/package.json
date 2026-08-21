@@ -25,7 +25,8 @@
     "test:run": "vitest run --config ../../vite.workspace.config.ts"
   },
   "devDependencies": {
-    "@release-drafter/core": "*"
+    "@release-drafter/core": "*",
+    "vitest": "^4.1.10"
   },
   "license": "MIT",
   "publishConfig": {
