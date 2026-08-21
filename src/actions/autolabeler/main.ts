@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import { matchLabels } from '@release-drafter/autolabeler'
-import { getOctokit, getPullRequestChangedFiles } from '#src/common/index.ts'
+import { getGitHubAdapter, getRepository } from '#src/common/index.ts'
 import type { ParsedConfig } from './config/index.ts'
 
 export const main = async (params: {
@@ -21,11 +21,11 @@ export const main = async (params: {
     )
   }
 
-  const octokit = getOctokit()
+  const adapter = getGitHubAdapter()
   const payload = context.payload as PullRequestEvent
-  const changedFiles = await getPullRequestChangedFiles(octokit, {
-    ...context.repo,
-    pull_number: payload.number,
+  const changedFiles = await adapter.findPullRequestChangedFiles({
+    repository: getRepository(),
+    number: payload.number,
   })
   const result = matchLabels({
     config: params.config,
@@ -47,7 +47,7 @@ export const main = async (params: {
         `[dry-run] Would add labels [${result.labels.join(', ')}] to PR #${payload.number}`,
       )
     } else {
-      await octokit.rest.issues.addLabels({
+      await adapter.octokit.rest.issues.addLabels({
         ...context.repo,
         issue_number: payload.number,
         labels: result.labels,

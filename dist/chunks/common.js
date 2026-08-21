@@ -36661,30 +36661,9 @@ async function composeConfigGet(configFilename, currentContext) {
 	return result;
 }
 //#endregion
-//#region src/common/get-octokit.ts
-/**
-* Temporary compatibility seam for legacy Action modules. Octokit construction,
-* endpoints, retry, pagination, and proxy behavior are owned by the GitHub adapter.
-*/
-var getOctokit = () => getGitHubAdapter().octokit;
-//#endregion
-//#region src/common/get-pull-request-changed-files.ts
-var getPullRequestChangedFiles = async (octokit, params) => getGitHubAdapter(octokit).findPullRequestChangedFiles({
-	repository: {
-		owner: params.owner,
-		name: params.repo,
-		serverUrl: process$1.env.GITHUB_SERVER_URL ?? "https://github.com"
-	},
-	number: params.pull_number
-});
-//#endregion
 //#region src/common/parse-commitish.ts
-/**
-* Temporary compatibility wrapper. The GitHub adapter owns commitish resolution;
-* an explicitly supplied Octokit client remains supported for existing tests.
-*/
-var parseCommitishForRelease = async (commitish, octokit) => {
-	return getGitHubAdapter(octokit).resolveCommitish({
+var parseCommitishForRelease = async (commitish) => {
+	return getGitHubAdapter().resolveCommitish({
 		repository: getRepository(),
 		commitish
 	});
@@ -36715,4 +36694,4 @@ var sharedInputSchema = object({
 	});
 });
 //#endregion
-export { warning as A, stringbool as C, info as D, getInput as E, setFailed as O, string$1 as S, debug as T, needsPullRequestChangedFiles as _, composeConfigGet as a, array as b, require_satisfies as c, mergeInputAndConfig as d, require_lib as f, commonConfigSchema as g, configSchema as h, getOctokit as i, __toESM as j, setOutput as k, buildReleasePayload as l, require_valid as m, parseCommitishForRelease as n, getGitHubAdapter as o, escapeStringRegexp as p, getPullRequestChangedFiles as r, getRepository as s, sharedInputSchema as t, require_coerce as u, require_ignore as v, core_exports as w, object as x, context as y };
+export { debug as C, setOutput as D, setFailed as E, warning as O, core_exports as S, info as T, context as _, getRepository as a, string$1 as b, require_coerce as c, escapeStringRegexp as d, require_valid as f, require_ignore as g, needsPullRequestChangedFiles as h, getGitHubAdapter as i, __toESM as k, mergeInputAndConfig as l, commonConfigSchema as m, parseCommitishForRelease as n, require_satisfies as o, configSchema as p, composeConfigGet as r, buildReleasePayload as s, sharedInputSchema as t, require_lib as u, array as v, getInput as w, stringbool as x, object as y };

@@ -1,30 +1,30 @@
+import type { GitHubOctokit } from '@release-drafter/github-adapter'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findPreviousReleases as findPreviousReleasesWithAdapter } from '#src/actions/drafter/lib/index.ts'
 import { getGitHubAdapter } from '#src/common/get-github-adapter.ts'
-import { getOctokit, type Octokit } from '#src/common/get-octokit.ts'
 import { mockContext, mocks as sharedMocks } from '#tests/mocks/index.ts'
 
 const localMocks = vi.hoisted(() => {
   return {
-    releases: vi.fn<Octokit['paginate']>(),
+    releases: vi.fn<GitHubOctokit['paginate']>(),
   }
 })
 
-vi.mock(import('#src/common/get-octokit.ts'), async (iom) => {
-  const om = await iom()
-  process.env.GITHUB_TOKEN = 'test'
-  return {
-    ...om,
-    getOctokit: () => ({
-      ...om.getOctokit(),
-      paginate: localMocks.releases as unknown as Octokit['paginate'],
-    }),
-  }
-})
+const createMockOctokit = () =>
+  ({
+    graphql: vi.fn() as unknown as GitHubOctokit['graphql'],
+    paginate: localMocks.releases,
+    rest: {
+      repos: {
+        listReleases: vi.fn(),
+      },
+    },
+  }) as unknown as GitHubOctokit
 
 const findPreviousReleases = (
   params: Parameters<typeof findPreviousReleasesWithAdapter>[0],
-) => findPreviousReleasesWithAdapter(params, getGitHubAdapter(getOctokit()))
+) =>
+  findPreviousReleasesWithAdapter(params, getGitHubAdapter(createMockOctokit()))
 
 describe('find previous releases', () => {
   beforeEach(async () => {
