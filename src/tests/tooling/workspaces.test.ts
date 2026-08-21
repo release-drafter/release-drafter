@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import {
   mkdirSync,
   mkdtempSync,
@@ -82,9 +82,11 @@ describe('workspace foundation', () => {
       join(tmpdir(), 'release-drafter-workspace-resolution-'),
     )
     try {
-      const scopeDirectory = join(fixtureRoot, 'node_modules/@release-drafter')
-      mkdirSync(scopeDirectory, { recursive: true })
-      symlinkSync(resolve('packages/core'), join(scopeDirectory, 'core'), 'dir')
+      symlinkSync(resolve('node_modules'), join(fixtureRoot, 'node_modules'))
+      writeFileSync(
+        join(fixtureRoot, 'package.json'),
+        JSON.stringify({ type: 'module' }),
+      )
       writeFileSync(
         join(fixtureRoot, 'index.ts'),
         "import { CORE_PACKAGE_NAME } from '@release-drafter/core'\nvoid CORE_PACKAGE_NAME\n",
@@ -93,18 +95,19 @@ describe('workspace foundation', () => {
         join(fixtureRoot, 'tsconfig.json'),
         JSON.stringify({
           compilerOptions: {
+            allowImportingTsExtensions: true,
             customConditions: ['release-drafter-source'],
             module: 'NodeNext',
             moduleResolution: 'NodeNext',
             noEmit: true,
             strict: true,
-            types: [],
+            types: ['node'],
           },
           files: ['index.ts'],
         }),
       )
 
-      const trace = execFileSync(
+      const result = spawnSync(
         process.execPath,
         [
           resolve('node_modules/typescript/lib/tsc.js'),
@@ -112,9 +115,19 @@ describe('workspace foundation', () => {
           join(fixtureRoot, 'tsconfig.json'),
           '--traceResolution',
         ],
-        { encoding: 'utf8' },
+        { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
       )
-      expect(trace).toContain(resolve('packages/core/src/index.ts'))
+      if (result.status !== 0) {
+        const diagnostics = `${result.stdout}\n${result.stderr}`
+          .split('\n')
+          .filter((line) => line.includes('error TS'))
+          .join('\n')
+        throw new Error(
+          diagnostics ||
+            `${result.error?.message ?? 'TypeScript resolution check failed'} (status ${String(result.status)}, signal ${String(result.signal)})`,
+        )
+      }
+      expect(result.stdout).toContain(resolve('packages/core/src/index.ts'))
     } finally {
       rmSync(fixtureRoot, { force: true, recursive: true })
     }
