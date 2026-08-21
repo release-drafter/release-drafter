@@ -9,7 +9,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { collectRuntimeDependencyFailures } from '#src/scripts/guard-boundaries.ts'
 import { collectWorkflowFailures } from '#src/scripts/guard-packages.ts'
@@ -20,7 +20,14 @@ type PackageJson = {
   version?: string
   private?: boolean
   engines?: { node?: string }
-  exports?: unknown
+  exports?: Record<
+    string,
+    {
+      import?: string
+      'release-drafter-source'?: string
+      types?: Record<string, string>
+    }
+  >
 }
 const readJson = (path: string) =>
   JSON.parse(readFileSync(path, 'utf8')) as PackageJson
@@ -51,7 +58,14 @@ describe('workspace foundation', () => {
       const manifest = readJson(join('packages', dir, 'package.json'))
       expect(manifest.engines?.node).toBe('>=24.0.0')
       expect(manifest.version).toBe(root.version)
-      expect(manifest.exports).toBeDefined()
+      expect(manifest.exports?.['.']).toEqual({
+        types: {
+          'release-drafter-source': './src/index.ts',
+          default: './dist/index.d.ts',
+        },
+        'release-drafter-source': './src/index.ts',
+        import: './dist/index.js',
+      })
       if (dir === 'release-drafter') {
         expect(manifest.name).toBe('release-drafter')
         expect(manifest.private).not.toBe(true)
@@ -59,6 +73,49 @@ describe('workspace foundation', () => {
         expect(manifest.name).toBe(`@release-drafter/${dir}`)
         expect(manifest.private).toBe(true)
       }
+    }
+  })
+
+  it('resolves linked workspace packages through their source export', () => {
+    const fixtureRoot = mkdtempSync(
+      join(tmpdir(), 'release-drafter-workspace-resolution-'),
+    )
+    try {
+      const scopeDirectory = join(fixtureRoot, 'node_modules/@release-drafter')
+      mkdirSync(scopeDirectory, { recursive: true })
+      symlinkSync(resolve('packages/core'), join(scopeDirectory, 'core'), 'dir')
+      writeFileSync(
+        join(fixtureRoot, 'index.ts'),
+        "import { CORE_PACKAGE_NAME } from '@release-drafter/core'\nvoid CORE_PACKAGE_NAME\n",
+      )
+      writeFileSync(
+        join(fixtureRoot, 'tsconfig.json'),
+        JSON.stringify({
+          compilerOptions: {
+            customConditions: ['release-drafter-source'],
+            module: 'NodeNext',
+            moduleResolution: 'NodeNext',
+            noEmit: true,
+            strict: true,
+            types: [],
+          },
+          files: ['index.ts'],
+        }),
+      )
+
+      const trace = execFileSync(
+        process.execPath,
+        [
+          resolve('node_modules/typescript/lib/tsc.js'),
+          '--project',
+          join(fixtureRoot, 'tsconfig.json'),
+          '--traceResolution',
+        ],
+        { encoding: 'utf8' },
+      )
+      expect(trace).toContain(resolve('packages/core/src/index.ts'))
+    } finally {
+      rmSync(fixtureRoot, { force: true, recursive: true })
     }
   })
 

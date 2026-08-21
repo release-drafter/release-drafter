@@ -7,6 +7,7 @@
     "lib": ["ES2024"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "customConditions": ["release-drafter-source"],
     "noEmit": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,

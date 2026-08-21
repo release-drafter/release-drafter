@@ -6,6 +6,9 @@ if (!packageJson)
   throw new Error('npm_package_json is required to build a workspace')
 const workspaceRoot = dirname(packageJson)
 export default defineConfig({
+  resolve: {
+    conditions: ['release-drafter-source'],
+  },
   build: {
     emptyOutDir: true,
     lib: {

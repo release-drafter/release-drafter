@@ -24,6 +24,7 @@ function syncDrafterActionYml(): Plugin {
 export default defineConfig({
   plugins: [syncDrafterActionYml()],
   resolve: {
+    conditions: ['release-drafter-source'],
     tsconfigPaths: true,
   },
   // GitHub Actions libraries read inputs and context from process.env at runtime.
