@@ -19,6 +19,7 @@
     "target": "ES2024",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "customConditions": ["release-drafter-source"],
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
