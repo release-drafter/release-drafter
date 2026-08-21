@@ -1,10 +1,8 @@
-// biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
 import { configSchema as autolabelerConfigSchema } from '@release-drafter/autolabeler'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
-  // biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
 } from '@release-drafter/core'
 import { describe, expect, it } from 'vitest'
 import { globalRegistry, object, toJSONSchema } from 'zod'

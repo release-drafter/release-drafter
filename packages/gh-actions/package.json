@@ -19,15 +19,27 @@
       "import": "./dist/index.js"
     },
     "./drafter": {
-      "types": "./dist/drafter/index.d.ts",
+      "types": {
+        "release-drafter-source": "./src/drafter/index.ts",
+        "default": "./dist/drafter/index.d.ts"
+      },
+      "release-drafter-source": "./src/drafter/index.ts",
       "import": "./dist/drafter/index.js"
     },
     "./autolabeler": {
-      "types": "./dist/autolabeler/index.d.ts",
+      "types": {
+        "release-drafter-source": "./src/autolabeler/index.ts",
+        "default": "./dist/autolabeler/index.d.ts"
+      },
+      "release-drafter-source": "./src/autolabeler/index.ts",
       "import": "./dist/autolabeler/index.js"
     },
     "./config": {
-      "types": "./dist/config.d.ts",
+      "types": {
+        "release-drafter-source": "./src/config.ts",
+        "default": "./dist/config.d.ts"
+      },
+      "release-drafter-source": "./src/config.ts",
       "import": "./dist/config.js"
     }
   },
