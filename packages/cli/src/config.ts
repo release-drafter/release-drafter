@@ -15,7 +15,7 @@ import {
 import {
   LocalConfigFileBoundaryError,
   type LocalConfigFileReader,
-} from './local-config-file.js'
+} from './local-config-file.ts'
 
 const SUPPORTED_EXTENSIONS = ['json', 'yml', 'yaml'] as const
 const MAX_EXTENDS_DEPTH = 33

@@ -3,8 +3,8 @@ import {
   type ConfigLogger,
   type LoadConfigOptions,
   loadConfig,
-} from './config.js'
-import { LocalConfigFileBoundaryError } from './local-config-file.js'
+} from './config.ts'
+import { LocalConfigFileBoundaryError } from './local-config-file.ts'
 
 const repository = {
   owner: 'acme',
