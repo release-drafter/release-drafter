@@ -1,15 +1,12 @@
 import { execFileSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-// biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
 import { configSchema as autolabelerConfigSchema } from '@release-drafter/autolabeler'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
-  // biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
 } from '@release-drafter/core'
-// biome-ignore lint/correctness/useImportExtensions: this is a workspace package import.
 import { extendsDeclarationSchema } from '@release-drafter/gh-actions/config'
 import { globalRegistry, object, toJSONSchema } from 'zod'
 
