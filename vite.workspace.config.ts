@@ -1,13 +1,25 @@
 import { dirname, resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import {
+  defaultClientConditions,
+  defaultServerConditions,
+  defineConfig,
+} from 'vite'
 
+const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
 const packageJson = process.env.npm_package_json
 if (!packageJson)
   throw new Error('npm_package_json is required to build a workspace')
 const workspaceRoot = dirname(packageJson)
 export default defineConfig({
   resolve: {
-    conditions: ['release-drafter-source'],
+    conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
+  },
+  environments: {
+    ssr: {
+      resolve: {
+        conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultServerConditions],
+      },
+    },
   },
   build: {
     emptyOutDir: true,
