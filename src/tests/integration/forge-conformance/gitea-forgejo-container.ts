@@ -20,7 +20,7 @@ const FORGES = {
   },
   forgejo: {
     image:
-      'codeberg.org/forgejo/forgejo:16.0.2@sha256:2fdfe28b5c68f82f49580e227b84e2afb43af0250e0631a54a386ef3b1d9b759',
+      'data.forgejo.org/forgejo/forgejo:16.0.2@sha256:2fdfe28b5c68f82f49580e227b84e2afb43af0250e0631a54a386ef3b1d9b759',
     binary: 'forgejo',
     environmentPrefix: 'FORGEJO',
     expectedVersion: '16.0.2',

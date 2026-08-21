@@ -1,7 +1,20 @@
+import { defaultClientConditions, defaultServerConditions } from 'vite'
 import { defineConfig } from 'vitest/config'
 
+const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
+
 export default defineConfig({
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
+    tsconfigPaths: true,
+  },
+  environments: {
+    ssr: {
+      resolve: {
+        conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultServerConditions],
+      },
+    },
+  },
   test: {
     include: ['src/tests/integration/gitlab/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/dist/**'],

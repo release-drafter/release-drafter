@@ -7,12 +7,7 @@ import {
   type StartedTestContainer,
   Wait,
 } from 'testcontainers'
-import {
-  createForgeAdapter,
-  type ForgeAdapter,
-  type Release,
-  type Repository,
-} from '../../../../packages/release-drafter/src/index.ts'
+import type { Repository } from '../../../../packages/core/src/index.ts'
 import type { ForgeConformanceFixture } from '../forge-conformance/contract.ts'
 
 export const GITLAB_IMAGE =
@@ -50,8 +45,6 @@ type GitLabMergeRequest = {
   web_url: string
 }
 type GitLabGroup = { id: number }
-type GitLabRelease = { description: string }
-
 class GitLabApi {
   constructor(
     private readonly baseUrl: string,
@@ -96,20 +89,11 @@ class GitLabApi {
 }
 
 export type GitLabFixture = {
-  adapter: ForgeAdapter
   token: string
   serverUrl: string
   repository: Repository
   conformance: ForgeConformanceFixture
   configPath: string
-  baseTag: string
-  baseCommit: string
-  headCommit: string
-  mergeCommit: string
-  mergeRequestNumber: number
-  releaseTag: string
-  inspectReleaseBody(release: Release): Promise<string>
-  deleteRelease(release: Release): Promise<void>
   stop(options?: { collectLogs?: boolean }): Promise<void>
 }
 
@@ -389,7 +373,6 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
     )
 
     return {
-      adapter: createForgeAdapter({ forge: 'gitlab', token, serverUrl }),
       token,
       serverUrl,
       repository,
@@ -480,28 +463,6 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
         },
       },
       configPath: '.github/release-drafter.yml',
-      baseTag: 'v1.0.0',
-      baseCommit: fixture.baseCommit,
-      headCommit: fixture.headCommit,
-      mergeCommit: fixture.mergeCommit,
-      mergeRequestNumber: fixture.mergeRequestNumber,
-      releaseTag: 'v1.0.0',
-      async inspectReleaseBody(release) {
-        return (
-          await api.request<GitLabRelease>(
-            'GET',
-            `/projects/${fixture.project.id}/releases/${encodeURIComponent(release.tagName)}`,
-          )
-        ).description
-      },
-      async deleteRelease(release) {
-        await api.request(
-          'DELETE',
-          `/projects/${fixture.project.id}/releases/${encodeURIComponent(release.tagName)}`,
-          undefined,
-          [204],
-        )
-      },
       async stop({ collectLogs = false } = {}) {
         await stopContainer(collectLogs)
       },
