@@ -124,8 +124,9 @@ export class GitHubAdapter implements ForgeAdapter {
   async findChanges(params: FindChangesRequest): Promise<ChangeSet> {
     const { repository, comparison } = params
     const comparisonOids: string[] = []
-    // Ref.compare cannot resolve every arbitrary SHA/tag/non-linear range.
-    // REST compare is the correctness oracle; GraphQL hydrates its exact OIDs.
+    // GraphQL Ref.compare cannot resolve all comparisons that use arbitrary
+    // SHAs, tags, or non-linear histories. REST returns the comparison commit
+    // OIDs, and GraphQL loads the data for those OIDs.
     for await (const response of this.octokit.paginate.iterator(
       this.octokit.rest.repos.compareCommitsWithBasehead,
       {
@@ -154,7 +155,7 @@ export class GitHubAdapter implements ForgeAdapter {
     const missingOids = comparisonOids.filter((oid) => !commitsByOid.has(oid))
     if (missingOids.length > 0) {
       throw new Error(
-        `GitHub GraphQL could not hydrate ${missingOids.length} comparison commit(s): ${missingOids.join(', ')}`,
+        `GitHub GraphQL did not return data for ${missingOids.length} comparison commits: ${missingOids.join(', ')}`,
       )
     }
     const orderedGraphCommits = comparisonOids.map(
@@ -429,7 +430,7 @@ export class GitHubAdapter implements ForgeAdapter {
         return await this.resolveObject(repository, `${commitish}^{commit}`)
       } catch {
         this.logger.warning(
-          `${commitish} could not be resolved to a commit SHA, falling back to default branch`,
+          `GitHub could not resolve ${commitish} to a commit SHA. Release Drafter will use the default branch.`,
         )
         return ''
       }
@@ -438,7 +439,7 @@ export class GitHubAdapter implements ForgeAdapter {
       const match = /^refs\/pull\/(\d+)\/(head|merge)$/.exec(commitish)
       if (!match) {
         this.logger.warning(
-          `${commitish} is not a supported pull request ref, falling back to default branch`,
+          `${commitish} is not a supported pull request ref. Release Drafter will use the default branch.`,
         )
         return ''
       }
@@ -469,7 +470,7 @@ export class GitHubAdapter implements ForgeAdapter {
         return oid
       } catch {
         this.logger.warning(
-          `${commitish} could not be resolved to a commit SHA, falling back to default branch`,
+          `GitHub could not resolve ${commitish} to a commit SHA. Release Drafter will use the default branch.`,
         )
         return ''
       }
@@ -558,9 +559,9 @@ export class GitHubAdapter implements ForgeAdapter {
     path,
     ref,
   }: RepositoryConfigRequest): Promise<string> {
-    // Blob.text can be null or truncated and cannot preserve raw media bytes;
-    // REST raw mode also provides the required 404/content-type diagnostics,
-    // with the documented GHES base64 content-object fallback below.
+    // GraphQL Blob.text can be null or truncated. It cannot return the exact raw
+    // bytes. REST raw mode provides the required 404 and content-type checks. It
+    // also supports the GHES base64 fallback below.
     const target = `${repository.owner}/${repository.name}:${path}${ref ? `@${ref}` : ''}`
     const canonicalRef = ref?.replace(/^refs\/heads\//, '')
     let response: Awaited<
