@@ -121,7 +121,7 @@ const drafterOutputs = {
   },
   body: { description: 'The body of the drafted release.' },
   html_url: {
-    description: 'The URL users can navigate to in order to view the release',
+    description: 'The URL for viewing the release.',
   },
   upload_url: {
     description:

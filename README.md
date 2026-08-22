@@ -740,7 +740,7 @@ inputs to other actions in the workflow
 | `name`             | The name of this release.                                                                                                                                                     |
 | `tag_name`         | The name of the tag associated with this release.                                                                                                                             |
 | `body`             | The body of the drafted release, useful if it needs to be included in files.                                                                                                  |
-| `html_url`         | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                    |
+| `html_url`         | The URL for viewing the release. For example, `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                       |
 | `upload_url`       | The URL for uploading release assets. For example, pass this URL to the [`@actions/upload-release-asset` GitHub Action](https://www.github.com/actions/upload-release-asset). |
 | `resolved_version` | Version resolved by [Version Resolver](#version-resolver). i.e. `6.3.1`                                                                                                       |
 | `major_version`    | Major part of resolved version by [Version Resolver](#version-resolver). i.e. `6` for version `6.3.1`                                                                         |
