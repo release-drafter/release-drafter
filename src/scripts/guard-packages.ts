@@ -56,11 +56,17 @@ export function collectWorkflowFailures(rootDir = '.') {
   return failures
 }
 
-function main() {
-  const root = JSON.parse(readFileSync('package.json', 'utf8')) as PackageJson
+export function collectPackageFailures(rootDir = '.') {
+  const root = JSON.parse(
+    readFileSync(join(rootDir, 'package.json'), 'utf8'),
+  ) as PackageJson
   const failures: string[] = []
   if (!root.version) failures.push('root package must declare a version')
-  if (!readFileSync('.node-version', 'utf8').trim().startsWith('24.'))
+  if (
+    !readFileSync(join(rootDir, '.node-version'), 'utf8')
+      .trim()
+      .startsWith('24.')
+  )
     failures.push('.node-version must declare Node 24')
   if (root.private !== true) failures.push('root package must be private')
   if (root.name === 'release-drafter')
@@ -69,7 +75,9 @@ function main() {
     failures.push('root package must declare Node >=24.0.0')
   if (JSON.stringify(root.workspaces) !== JSON.stringify(['packages/*']))
     failures.push('root workspaces must be ["packages/*"]')
-  const packageDirs = readdirSync('packages', { withFileTypes: true })
+  const packageDirs = readdirSync(join(rootDir, 'packages'), {
+    withFileTypes: true,
+  })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort()
@@ -89,7 +97,7 @@ function main() {
     failures.push(`workspace dirs drifted: ${packageDirs.join(', ')}`)
   for (const dir of packageDirs) {
     const manifest = JSON.parse(
-      readFileSync(join('packages', dir, 'package.json'), 'utf8'),
+      readFileSync(join(rootDir, 'packages', dir, 'package.json'), 'utf8'),
     ) as PackageJson
     if (manifest.version !== root.version)
       failures.push(
@@ -127,10 +135,17 @@ function main() {
     'drafter/action.yml',
     'autolabeler/action.yml',
   ]) {
-    if (!readFileSync(actionPath, 'utf8').includes('using: node24'))
+    if (
+      !readFileSync(join(rootDir, actionPath), 'utf8').includes('using: node24')
+    )
       failures.push(`${actionPath} must use the Node 24 Action runtime`)
   }
-  failures.push(...collectWorkflowFailures())
+  failures.push(...collectWorkflowFailures(rootDir))
+  return failures
+}
+
+function main() {
+  const failures = collectPackageFailures()
   if (failures.length > 0) {
     console.error(failures.join('\n'))
     process.exit(1)

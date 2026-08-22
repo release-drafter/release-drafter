@@ -12,14 +12,13 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { collectRuntimeDependencyFailures } from '#src/scripts/guard-boundaries.ts'
-import { collectWorkflowFailures } from '#src/scripts/guard-packages.ts'
+import {
+  collectPackageFailures,
+  collectWorkflowFailures,
+} from '#src/scripts/guard-packages.ts'
 import { syncWorkspaceVersions } from '#src/scripts/sync-workspace-versions.ts'
 
 type PackageJson = {
-  name: string
-  version?: string
-  private?: boolean
-  engines?: { node?: string }
   exports?: Record<
     string,
     {
@@ -33,31 +32,14 @@ const readJson = (path: string) =>
   JSON.parse(readFileSync(path, 'utf8')) as PackageJson
 
 describe('workspace foundation', () => {
-  it('keeps root private and delegates package publication to only the facade', () => {
-    const root = readJson('package.json') as PackageJson & {
-      workspaces: string[]
-    }
-    expect(root.name).not.toBe('release-drafter')
-    expect(root.private).toBe(true)
-    expect(root.workspaces).toEqual(['packages/*'])
-    expect(root.engines?.node).toBe('>=24.0.0')
+  it('satisfies the workspace package guard', () => {
+    expect(collectPackageFailures()).toEqual([])
+  })
+
+  it('keeps workspace package exports aligned', () => {
     const packages = readdirSync('packages').sort()
-    expect(packages).toEqual([
-      'autolabeler',
-      'cli',
-      'core',
-      'forgejo-adapter',
-      'gh-actions',
-      'gitea-adapter',
-      'github-adapter',
-      'gitlab-adapter',
-      'release-drafter',
-      'rest-adapter',
-    ])
     for (const dir of packages) {
       const manifest = readJson(join('packages', dir, 'package.json'))
-      expect(manifest.engines?.node).toBe('>=24.0.0')
-      expect(manifest.version).toBe(root.version)
       expect(manifest.exports?.['.']).toEqual({
         types: {
           'release-drafter-source': './src/index.ts',
@@ -66,13 +48,6 @@ describe('workspace foundation', () => {
         'release-drafter-source': './src/index.ts',
         import: './dist/index.js',
       })
-      if (dir === 'release-drafter') {
-        expect(manifest.name).toBe('release-drafter')
-        expect(manifest.private).not.toBe(true)
-      } else {
-        expect(manifest.name).toBe(`@release-drafter/${dir}`)
-        expect(manifest.private).toBe(true)
-      }
     }
   })
 
@@ -86,7 +61,7 @@ describe('workspace foundation', () => {
       symlinkSync(resolve('packages/core'), join(scopeDirectory, 'core'), 'dir')
       writeFileSync(
         join(fixtureRoot, 'index.ts'),
-        "import { CORE_PACKAGE_NAME } from '@release-drafter/core'\nvoid CORE_PACKAGE_NAME\n",
+        "import '@release-drafter/core'\n",
       )
       writeFileSync(
         join(fixtureRoot, 'tsconfig.json'),
@@ -144,21 +119,6 @@ describe('workspace foundation', () => {
         encoding: 'utf8',
         stdio: 'pipe',
       })
-    }
-  })
-
-  it('keeps CI on Node 24 without enabling npm publication', () => {
-    expect(readFileSync('.node-version', 'utf8').trim()).toMatch(/^24\./)
-    for (const workflow of readdirSync('.github/workflows').filter(
-      (path) => path.endsWith('.yml') || path.endsWith('.yaml'),
-    )) {
-      const contents = readFileSync(join('.github/workflows', workflow), 'utf8')
-      if (contents.includes('actions/setup-node@')) {
-        expect(contents).toContain('node-version-file: .node-version')
-      }
-      expect(contents).not.toMatch(
-        /\bnpm(?:[ \t]+(?!publish\b|token\b)[^\s#]+)*[ \t]+(?:publish|token)\b|registry-url|NODE_AUTH_TOKEN/,
-      )
     }
   })
 
