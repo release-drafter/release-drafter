@@ -33,7 +33,7 @@ const readJson = (path: string) =>
   JSON.parse(readFileSync(path, 'utf8')) as PackageJson
 
 describe('workspace foundation', () => {
-  it('keeps root private and delegates package publication to only the facade skeleton', () => {
+  it('keeps root private and delegates package publication to only the facade', () => {
     const root = readJson('package.json') as PackageJson & {
       workspaces: string[]
     }
