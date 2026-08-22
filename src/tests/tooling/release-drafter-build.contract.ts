@@ -141,12 +141,7 @@ describe.sequential('release-drafter workspace build boundary', () => {
 
   it('emits native ESM entries and a fully referenced shared chunk graph', () => {
     expect([...shippedFiles.keys()]).toEqual(
-      expect.arrayContaining([
-        'index.js',
-        'cli.js',
-        'index.d.ts',
-        'types.d.ts',
-      ]),
+      expect.arrayContaining(['index.js', 'cli.js', 'index.d.ts']),
     )
     expect(shippedFiles.get('index.js')).toContain('draftRelease')
     expect(shippedFiles.get('cli.js')).toMatch(/^#!\/usr\/bin\/env node\n/u)

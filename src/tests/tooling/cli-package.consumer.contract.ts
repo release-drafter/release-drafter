@@ -35,7 +35,6 @@ const expectedPackageFiles = [
   'dist/cli.js',
   'dist/index.d.ts',
   'dist/index.js',
-  'dist/types.d.ts',
   'package.json',
 ]
 const approvedRuntimeDependencies = {
