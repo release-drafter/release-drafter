@@ -467,10 +467,7 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     `,
     )
 
-    const constructed = runNode(
-      ['construct-adapters.mjs'],
-      consumerDirectory,
-    )
+    const constructed = runNode(['construct-adapters.mjs'], consumerDirectory)
     expectExit(constructed, 0)
     expect(constructed.stderr, formatResult(constructed)).toBe('')
     expect(constructed.stdout, formatResult(constructed)).toBe(

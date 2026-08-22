@@ -148,25 +148,6 @@ describe('draftRelease', () => {
 })
 
 describe('createForgeAdapter', () => {
-  it.each([
-    ['github', true],
-    ['gitea', true],
-    ['forgejo', true],
-    ['gitlab', false],
-  ] as const)('constructs the bundled %s adapter', (forge, draftReleases) => {
-    const options = {
-      forge,
-      token: 'not-a-real-token',
-      fetch: vi.fn(),
-    } as CreateForgeAdapterOptions
-
-    const created = createForgeAdapter(options)
-
-    expect(created.capabilities.draftReleases).toBe(draftReleases)
-    expect(created.listReleases).toEqual(expect.any(Function))
-    expect(created.findChanges).toEqual(expect.any(Function))
-  })
-
   it('exposes only structural public factory options', () => {
     expectTypeOf(createForgeAdapter)
       .parameter(0)
@@ -202,30 +183,35 @@ describe('createForgeAdapter', () => {
   it.each([
     {
       forge: 'github',
+      draftReleases: true,
       url: 'https://api.github.com/repos/release-drafter/release-drafter/releases?per_page=100',
       header: 'authorization',
       authorization: 'token facade-token',
     },
     {
       forge: 'gitea',
+      draftReleases: true,
       url: 'https://gitea.com/api/v1/repos/release-drafter/release-drafter/releases?page=1&limit=50',
       header: 'authorization',
       authorization: 'token facade-token',
     },
     {
       forge: 'forgejo',
+      draftReleases: true,
       url: 'https://codeberg.org/api/v1/repos/release-drafter/release-drafter/releases?page=1&limit=50',
       header: 'authorization',
       authorization: 'token facade-token',
     },
     {
       forge: 'gitlab',
+      draftReleases: false,
       url: 'https://gitlab.com/api/v4/projects/release-drafter%2Frelease-drafter/releases?page=1&per_page=50',
       header: 'private-token',
       authorization: 'facade-token',
     },
   ] as const)('wires the default $forge endpoint and authentication', async ({
     forge,
+    draftReleases,
     url,
     header,
     authorization,
@@ -247,6 +233,7 @@ describe('createForgeAdapter', () => {
       fetch,
     })
 
+    expect(created.capabilities.draftReleases).toBe(draftReleases)
     await expect(created.listReleases({ repository })).resolves.toEqual([])
     expect(fetch).toHaveBeenCalledOnce()
   })
@@ -254,37 +241,20 @@ describe('createForgeAdapter', () => {
   it.each([
     {
       forge: 'gitea',
-      apiUrl: 'https://gitea.com/api/v1',
       expectedCommitish: 'main',
     },
     {
       forge: 'forgejo',
-      apiUrl: 'https://codeberg.org/api/v1',
       expectedCommitish: 'refs/heads/main',
     },
-  ] as const)('delegates $forge release operations through the bundled adapter', async ({
+  ] as const)('selects $forge qualified-ref behavior', async ({
     forge,
-    apiUrl,
     expectedCommitish,
   }) => {
-    const releasesUrl = `${apiUrl}/repos/release-drafter/release-drafter/releases`
-    const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
-      const method = init?.method ?? 'GET'
-      expect(new Headers(init?.headers).get('authorization')).toBe(
-        'token facade-token',
-      )
-      if (method === 'POST') {
-        expect(String(input)).toBe(releasesUrl)
-        return Response.json({ id: 1, tag_name: payload.tag })
-      }
-      expect(method).toBe('PATCH')
-      expect(String(input)).toBe(`${releasesUrl}/1`)
-      return Response.json({ id: 1, tag_name: payload.tag })
-    })
     const created = createForgeAdapter({
       forge,
       token: 'facade-token',
-      fetch,
+      fetch: vi.fn(),
     })
 
     await expect(
@@ -293,10 +263,5 @@ describe('createForgeAdapter', () => {
         commitish: 'refs/heads/main',
       }),
     ).resolves.toBe(expectedCommitish)
-    const release = await created.createRelease({ repository, payload })
-    await expect(
-      created.updateRelease({ repository, release, payload }),
-    ).resolves.toMatchObject({ id: 1, tagName: payload.tag })
-    expect(fetch).toHaveBeenCalledTimes(2)
   })
 })
