@@ -233,7 +233,7 @@ describe('GitHubAdapter', () => {
     )
   })
 
-  it('recovers a matching recent pull request from the second page', async () => {
+  it('bounds recent pull request recovery to one small page', async () => {
     const octokit = mockOctokit()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
@@ -270,15 +270,10 @@ describe('GitHubAdapter', () => {
         repository: {
           pullRequests: {
             pageInfo: { hasNextPage: true, endCursor: 'recent-next' },
-            nodes: [pullRequest(2, 'unrelated-oid')],
-          },
-        },
-      })
-      .mockResolvedValueOnce({
-        repository: {
-          pullRequests: {
-            pageInfo: { hasNextPage: false, endCursor: null },
-            nodes: [pullRequest(1, 'matching-oid')],
+            nodes: [
+              pullRequest(2, 'unrelated-oid'),
+              pullRequest(1, 'matching-oid'),
+            ],
           },
         },
       })
@@ -300,10 +295,11 @@ describe('GitHubAdapter', () => {
 
     expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
     expect(octokit.graphql).toHaveBeenNthCalledWith(
-      3,
+      2,
       expect.stringContaining('findRecentMergedPullRequests'),
-      expect.objectContaining({ cursor: 'recent-next', limit: 100 }),
+      expect.objectContaining({ cursor: null, limit: 5 }),
     )
+    expect(octokit.graphql).toHaveBeenCalledTimes(2)
   })
 
   it('paginates changed files through GraphQL without REST file calls', async () => {

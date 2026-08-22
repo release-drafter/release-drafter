@@ -36021,7 +36021,7 @@ var createProxyAwareFetch = (env) => {
 //#endregion
 //#region packages/github-adapter/src/index.ts
 var RELEASE_COUNT_LIMIT = 1e3;
-var PULL_REQUEST_PAGE_SIZE = 100;
+var RECENT_PULL_REQUEST_LOOKBACK = 5;
 var DEFAULT_CONCURRENCY = 5;
 var GitHubAdapter = class {
 	capabilities = { draftReleases: true };
@@ -36160,32 +36160,23 @@ var GitHubAdapter = class {
 		return [...found.values()];
 	}
 	async findRecentPullRequests(params, commitOids, foundKeys, baseRefName) {
-		const recovered = [];
-		let cursor = null;
-		let shouldContinue = true;
-		while (shouldContinue) {
-			const pullRequests = (await this.graphql(FindRecentMergedPullRequestsDocument.toString(), {
-				name: params.repository.name,
-				owner: params.repository.owner,
-				baseRefName,
-				cursor,
-				limit: PULL_REQUEST_PAGE_SIZE,
-				withPullRequestBody: params.pullRequestFields.body,
-				withPullRequestURL: params.pullRequestFields.url,
-				withBaseRefName: params.pullRequestFields.baseRefName,
-				withHeadRefName: params.pullRequestFields.headRefName
-			})).repository?.pullRequests;
-			if (!pullRequests) throw new Error("Query returned no recent pull request connection");
-			recovered.push(...(pullRequests.nodes ?? []).flatMap((pullRequest) => {
-				if (!pullRequest?.mergeCommit?.oid) return [];
-				const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
-				return commitOids.has(pullRequest.mergeCommit.oid) && !foundKeys.has(key) ? [pullRequest] : [];
-			}));
-			if (pullRequests.pageInfo.hasNextPage && !pullRequests.pageInfo.endCursor) throw new Error("Query returned no end cursor for the next recent pull request page");
-			cursor = pullRequests.pageInfo.endCursor ?? null;
-			shouldContinue = pullRequests.pageInfo.hasNextPage;
-		}
-		return recovered;
+		const pullRequests = (await this.graphql(FindRecentMergedPullRequestsDocument.toString(), {
+			name: params.repository.name,
+			owner: params.repository.owner,
+			baseRefName,
+			cursor: null,
+			limit: RECENT_PULL_REQUEST_LOOKBACK,
+			withPullRequestBody: params.pullRequestFields.body,
+			withPullRequestURL: params.pullRequestFields.url,
+			withBaseRefName: params.pullRequestFields.baseRefName,
+			withHeadRefName: params.pullRequestFields.headRefName
+		})).repository?.pullRequests;
+		if (!pullRequests) throw new Error("Query returned no recent pull request connection");
+		return (pullRequests.nodes ?? []).flatMap((pullRequest) => {
+			if (!pullRequest?.mergeCommit?.oid) return [];
+			const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+			return commitOids.has(pullRequest.mergeCommit.oid) && !foundKeys.has(key) ? [pullRequest] : [];
+		});
 	}
 	async loadChangedFiles(repository, pullRequests) {
 		const entries = await mapConcurrent(pullRequests, this.changedFilesConcurrency, async (pullRequest) => {
