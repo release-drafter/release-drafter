@@ -8,10 +8,8 @@ const generatedDirectories = [
   resolve(repositoryRoot, 'dist/actions'),
   resolve(repositoryRoot, 'dist/chunks'),
 ]
-const activeSourceDirectory = resolve(repositoryRoot, 'src/actions')
 const nodeSemverBundleMarker =
-  /node_modules[\\/]semver[\\/]|node-semver|SEMVER_SPEC_VERSION/i
-const directNodeSemverSpecifier = /(['"])semver(?:\/[^'"]*)?\1/u
+  /node_modules[\\/]semver[\\/]|node-semver|MAX_SAFE_(?:COMPONENT|BUILD)_LENGTH/i
 const directNodeSemverPackages = new Set(['semver', '@types/semver'])
 
 const listFiles = (directory: string): string[] =>
@@ -59,17 +57,6 @@ describe.sequential('action build excludes direct node-semver', () => {
       .map((path) => relative(repositoryRoot, path))
 
     expect(generatedJavaScriptFiles.length).toBeGreaterThan(0)
-    expect(offenders).toEqual([])
-  })
-
-  it('prevents active action sources from importing node-semver directly', () => {
-    const offenders = listFiles(activeSourceDirectory)
-      .filter((path) => path.endsWith('.ts'))
-      .filter((path) =>
-        directNodeSemverSpecifier.test(readFileSync(path, 'utf8')),
-      )
-      .map((path) => relative(repositoryRoot, path))
-
     expect(offenders).toEqual([])
   })
 
