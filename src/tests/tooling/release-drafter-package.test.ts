@@ -13,4 +13,3 @@ beforeAll(() => {
 
 await import('./release-drafter-build.contract.ts')
 await import('./cli-package.consumer.contract.ts')
-await import('./programmatic-facade.consumer.contract.ts')

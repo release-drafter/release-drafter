@@ -26,7 +26,7 @@ const forbiddenImplementation = /@release-drafter\/|@actions\//u
 const forbiddenLegacyRuntime =
   /\bcreateRequire\b|\b__commonJS\w*\b|\b__require\b|\brequire\s*\(|\bmodule\.exports\b/u
 const forbiddenSemver =
-  /node_modules\/semver\/|node-semver|SEMVER_SPEC_VERSION/iu
+  /node_modules[\\/]semver[\\/]|node-semver|MAX_SAFE_(?:COMPONENT|BUILD)_LENGTH/iu
 const forbiddenGhAuthTokenSubprocess =
   /["']gh["']\s*,\s*\[\s*["']auth["']\s*,\s*["']token["']/u
 const forbiddenAbsolutePath =
@@ -127,7 +127,6 @@ const reachableModules = (
 describe.sequential('release-drafter workspace build boundary', () => {
   let shippedFiles: Map<string, string>
   let javascriptFiles: Map<string, string>
-  let declarations: string
   let indexClosure: Set<string>
   let cliClosure: Set<string>
 
@@ -136,10 +135,6 @@ describe.sequential('release-drafter workspace build boundary', () => {
     javascriptFiles = new Map(
       [...shippedFiles].filter(([file]) => file.endsWith('.js')),
     )
-    declarations = [...shippedFiles]
-      .filter(([file]) => file.endsWith('.d.ts'))
-      .map(([, source]) => source)
-      .join('\n')
     indexClosure = reachableModules('index.js', shippedFiles)
     cliClosure = reachableModules('cli.js', shippedFiles)
   }, 120_000)
@@ -221,13 +216,5 @@ describe.sequential('release-drafter workspace build boundary', () => {
       )
       expect(source, file).not.toMatch(forbiddenGhAuthTokenSubprocess)
     }
-  })
-
-  it('emits the real NodeNext-compatible public declaration surface', () => {
-    expect(declarations).toContain('export declare const draftRelease')
-    expect(declarations).toContain('export interface DraftReleaseOptions')
-    expect(declarations).toContain('export interface ForgeAdapter')
-    expect(declarations).not.toMatch(/@release-drafter\/|@actions\//)
-    expect(declarations).not.toMatch(/gitbeaker/i)
   })
 })

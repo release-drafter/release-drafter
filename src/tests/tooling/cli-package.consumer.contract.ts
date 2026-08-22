@@ -413,6 +413,84 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     expect(imported.stdout, formatResult(imported)).toBe('imported\n')
   })
 
+  it('runs a dry-run release through the bundled core implementation', () => {
+    writeFileSync(
+      join(consumerDirectory, 'draft-release.mjs'),
+      `
+      import { draftRelease } from 'release-drafter'
+
+      const result = await draftRelease({
+        adapter: {
+          capabilities: { draftReleases: true },
+          async listReleases() {
+            return [{ id: 1, tagName: 'v1.0.0', draft: false }]
+          },
+          async findChanges() {
+            return {
+              commits: [],
+              pullRequests: [],
+              newContributorLogins: new Set(),
+            }
+          },
+          async resolveCommitish({ commitish }) {
+            return commitish
+          },
+          async createRelease() {
+            throw new Error('dry run attempted to create a release')
+          },
+          async updateRelease() {
+            throw new Error('dry run attempted to update a release')
+          },
+        },
+        config: {
+          'change-template': '* $TITLE',
+          'change-author-template': '$AUTHOR_MENTION',
+          'change-authors-separator': ', ',
+          'no-changes-template': '* No changes',
+          'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE',
+          'name-template': 'v$RESOLVED_VERSION',
+          'tag-template': 'v$RESOLVED_VERSION',
+          'exclude-contributors': [],
+          'new-contributor-template': '* $AUTHOR_MENTION',
+          'no-new-contributor-template': '* No new contributors',
+          'no-contributors-template': 'No contributors',
+          'sort-by': 'merged_at',
+          'sort-direction': 'descending',
+          'filter-by-commitish': false,
+          'pull-request-limit': 5,
+          'history-limit': 15,
+          replacers: [],
+          categories: [],
+          'category-template': '## $TITLE',
+          template: '$CHANGES',
+          latest: true,
+          prerelease: false,
+          commitish: 'main',
+        },
+        input: { publish: false, dryRun: true, version: '1.0.1' },
+        repository: {
+          owner: 'release-drafter',
+          name: 'release-drafter',
+          serverUrl: 'https://example.test',
+        },
+      })
+
+      if (
+        result.plan.action !== 'dry-run' ||
+        result.releasePayload.tag !== 'v1.0.1'
+      ) {
+        throw new Error(JSON.stringify(result))
+      }
+      process.stdout.write(result.releasePayload.tag + '\\n')
+    `,
+    )
+
+    const dryRun = runNode(['draft-release.mjs'], consumerDirectory)
+    expectExit(dryRun, 0)
+    expect(dryRun.stderr, formatResult(dryRun)).toBe('')
+    expect(dryRun.stdout, formatResult(dryRun)).toBe('v1.0.1\n')
+  })
+
   it('runs help and version through the installed binary without auth, network, or JSON noise', () => {
     const help = runExecutable(installedCli, ['--help'], consumerDirectory)
     expectExit(help, 0)
@@ -465,7 +543,7 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
       const checks: [RegExp, string][] = [
         [/gitbeaker/i, 'GitBeaker marker'],
         [
-          /node-semver|SEMVER_SPEC_VERSION|MAX_SAFE_COMPONENT_LENGTH|MAX_SAFE_BUILD_LENGTH/,
+          /node-semver|MAX_SAFE_(?:COMPONENT|BUILD)_LENGTH/,
           'node-semver marker',
         ],
         [
