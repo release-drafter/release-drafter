@@ -5,4 +5,6 @@ import { getReleaseDrafterConfig } from '../common/config/get-release-drafter-co
 export const getConfig = async (
   configName: string,
   token?: string,
-): Promise<Config> => getReleaseDrafterConfig(configName, context, token)
+  ref = context.ref,
+): Promise<Config> =>
+  getReleaseDrafterConfig(configName, { ref, repo: context.repo }, token)

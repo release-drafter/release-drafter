@@ -78,7 +78,10 @@ var actionInputNames = defineActionInputNames()(["config-name", "token"]);
 var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
 //#endregion
 //#region packages/gh-actions/src/check-pr/get-config.ts
-var getConfig = async (configName, token) => getReleaseDrafterConfig(configName, context, token);
+var getConfig = async (configName, token, ref = context.ref) => getReleaseDrafterConfig(configName, {
+	ref,
+	repo: context.repo
+}, token);
 //#endregion
 //#region packages/gh-actions/src/check-pr/runner.ts
 var defaultDependencies = () => ({
@@ -93,7 +96,7 @@ async function checkPullRequest(dependencies = defaultDependencies()) {
 	const pullRequest = parsePullRequestEvent(dependencies.eventName, dependencies.payload);
 	const input = dependencies.getInput();
 	const config = mergeInputAndConfig({
-		config: await dependencies.getConfig(input["config-name"], input.token),
+		config: await dependencies.getConfig(input["config-name"], input.token, pullRequest.baseRef),
 		input: {},
 		defaultCommitish: pullRequest.baseRef,
 		logger: actionLogger

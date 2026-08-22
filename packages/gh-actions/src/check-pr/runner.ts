@@ -38,7 +38,11 @@ export async function checkPullRequest(
   )
   const input = dependencies.getInput()
   const config = mergeInputAndConfig({
-    config: await dependencies.getConfig(input['config-name'], input.token),
+    config: await dependencies.getConfig(
+      input['config-name'],
+      input.token,
+      pullRequest.baseRef,
+    ),
     input: {},
     defaultCommitish: pullRequest.baseRef,
     logger: actionLogger,

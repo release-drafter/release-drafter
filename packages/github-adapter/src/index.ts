@@ -5,6 +5,8 @@ import type {
   FindChangesRequest,
   ForgeAdapter,
   Logger,
+  PullRequestReader,
+  PullRequestValidationData,
   Release,
   Repository,
   ResolveCommitishRequest,
@@ -48,7 +50,7 @@ const RELEASE_COUNT_LIMIT = 1000
 const RECENT_PULL_REQUEST_LOOKBACK = 5
 const DEFAULT_CONCURRENCY = 5
 
-export class GitHubAdapter implements ForgeAdapter {
+export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
   readonly capabilities = { draftReleases: true } as const
   readonly serverUrl: string
   readonly apiUrl: string
@@ -374,6 +376,41 @@ export class GitHubAdapter implements ForgeAdapter {
       shouldContinue = files.pageInfo.hasNextPage && Boolean(cursor)
     }
     return paths
+  }
+
+  async getPullRequest({
+    repository,
+    number,
+  }: {
+    repository: Repository
+    number: number
+  }): Promise<PullRequestValidationData> {
+    const response = await this.octokit.rest.pulls.get({
+      owner: repository.owner,
+      repo: repository.name,
+      pull_number: number,
+    })
+    const title = response.data.title?.trim()
+    const baseRefName = response.data.base?.ref?.trim()
+    if (!title)
+      throw new Error(`Pull request #${number} returned a blank title`)
+    if (!baseRefName)
+      throw new Error(`Pull request #${number} returned a blank base branch`)
+
+    return {
+      number,
+      title,
+      baseRefName,
+      labels: response.data.labels.flatMap((label) =>
+        typeof label === 'string'
+          ? label
+            ? [label]
+            : []
+          : label.name
+            ? [label.name]
+            : [],
+      ),
+    }
   }
 
   private async findNewContributorLogins(

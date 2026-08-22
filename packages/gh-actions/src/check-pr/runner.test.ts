@@ -38,6 +38,11 @@ describe('check PR runner', () => {
     ])
 
     await expect(checkPullRequest(value)).resolves.toBeUndefined()
+    expect(value.getConfig).toHaveBeenCalledWith(
+      'release-drafter.yml',
+      'token',
+      'main',
+    )
     expect(core.setOutput).not.toHaveBeenCalled()
     expect(core.setFailed).not.toHaveBeenCalled()
   })
