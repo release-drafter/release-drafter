@@ -14,31 +14,6 @@ permissions:
   contents: read
 
 jobs:
-  lint-pr-title:
-    name: 'Lint PR Title'
-    runs-on: ubuntu-slim
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: 'Validate conventional pull request title'
-        uses: amannn/action-semantic-pull-request@v6.1.1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          types: |
-            build
-            chore
-            ci
-            docs
-            feat
-            fix
-            perf
-            refactor
-            revert
-            style
-            test
-          validateSingleCommit: false
-
   action-smoke-tests:
     name: 'Action smoke tests'
     runs-on: ubuntu-slim
