@@ -1,5 +1,5 @@
 name: 'Release Drafter - Check PR'
-description: 'Checks whether a pull request title or labels match configured categories.'
+description: 'Check whether a pull request title or labels match configured categories.'
 author: release-drafter
 branding:
   icon: check-circle
@@ -10,13 +10,13 @@ runs:
 inputs:
   config-name:
     description: |
-      Release Drafter configuration filename.
-      Store the file in `.github`; Release Drafter searches only that directory.
+      Release Drafter configuration target.
+      A relative path starts in the repository's `.github` directory.
     required: false
     default: release-drafter.yml
   token:
     description: |
-      Access token used to read configuration. Defaults to github.token.
+      Access token for configuration reads. Default: github.token.
     default: ${{ github.token }}
 
 outputs: {}

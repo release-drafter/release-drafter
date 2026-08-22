@@ -24,18 +24,20 @@ permissions:
 
 jobs:
   check-pr:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: release-drafter/release-drafter/check-pr@v7
 ```
 
-The action supports `pull_request` and `pull_request_target`. It reads the
-current title and labels from the event payload and follows `_extends`
-configuration chains. It never modifies the pull request.
+The action supports the `pull_request` and `pull_request_target` events. It
+reads the title and labels from the event payload. It also resolves `_extends`
+configuration chains. The action does not modify the pull request.
 
-A condition with `conventional` validates the title. A condition with labels
-validates current labels. If one condition defines both, title and labels must
-both match. The action ignores path predicates, and a path-only condition cannot
-pass validation. If a `pre-exclude` category excludes the pull request by title
-or label, the action reports it as skipped. An unconditional fallback category
-cannot make the pull request valid by itself.
+A condition that contains `conventional` validates the title. A condition that
+contains `label` or `labels` validates the current labels. If a condition
+contains both types of rule, the title and labels must match.
+
+The action does not evaluate `path` or `paths`. A condition that contains only
+path rules cannot pass validation. A matching `pre-exclude` category skips the
+pull request. A fallback category without a `when` condition does not make the
+pull request valid.
