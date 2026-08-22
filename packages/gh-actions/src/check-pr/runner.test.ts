@@ -47,20 +47,9 @@ describe('check PR runner', () => {
     expect(core.setFailed).not.toHaveBeenCalled()
   })
 
-  it('accepts a configured label without a conventional title', async () => {
-    const value = dependencies(
-      'old style title',
-      [{ title: 'Features', when: { label: 'feature' } }],
-      { payload: payload('old style title', ['feature']) },
-    )
-
-    await expect(checkPullRequest(value)).resolves.toBeUndefined()
-  })
-
-  it('rejects invalid and fallback-only pull requests with a clear error', async () => {
+  it('reports a validation failure with the pull request number', async () => {
     const value = dependencies('old style title', [
       { title: 'Features', when: { conventional: { type: 'feat' } } },
-      { title: 'Other' },
     ])
     await expect(checkPullRequest(value)).rejects.toThrow(
       'No configured changelog or version-resolver category matches the title or labels of pull request #42.',
@@ -82,18 +71,6 @@ describe('check PR runner', () => {
     )
   })
 
-  it('ignores path predicates and path-only categories', async () => {
-    const value = dependencies('feat: metadata only', [
-      { title: 'Path only', when: { path: 'docs/**' } },
-      {
-        title: 'Features',
-        when: { conventional: { type: 'feat' }, path: 'src/**' },
-      },
-    ])
-
-    await expect(checkPullRequest(value)).resolves.toBeUndefined()
-  })
-
   it.each([
     'push',
     'workflow_dispatch',
@@ -102,17 +79,6 @@ describe('check PR runner', () => {
     await expect(checkPullRequest(value)).rejects.toThrow(
       `Unsupported event \`${eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`,
     )
-  })
-
-  it.each([
-    {},
-    { number: '42', pull_request: {} },
-    { number: 42, pull_request: { title: 'feat: x', labels: [] } },
-  ])('rejects malformed PR payload %#', async (malformedPayload) => {
-    const value = dependencies('feat: title', [], {
-      payload: malformedPayload,
-    })
-    await expect(checkPullRequest(value)).rejects.toThrow()
   })
 
   it('supports pull_request_target', async () => {

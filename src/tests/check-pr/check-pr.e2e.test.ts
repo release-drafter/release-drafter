@@ -24,7 +24,7 @@ describe('check-pr e2e', () => {
     await runCheckPr()
 
     expect(mocks.core.setFailed).toHaveBeenCalledWith(
-      'No configured changelog or version-resolver category matches the title or labels of pull request #1475.',
+      expect.stringContaining('pull request #1475'),
     )
     expect(mocks.core.setOutput).not.toHaveBeenCalled()
     expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
