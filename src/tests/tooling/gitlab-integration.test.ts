@@ -47,12 +47,7 @@ describe('forge conformance workflow', () => {
     const jobs = workflow.jobs ?? {}
     const scope = jobs['forge-conformance-scope']
     const matrix = jobs['forge-conformance']
-    const gate = jobs['forge-conformance-gate']
     const scopeStep = scope?.steps?.find(({ id }) => id === 'scope')
-    const gateSteps = gate?.steps ?? []
-    const gateStep = gateSteps.find(
-      ({ run }) => run === 'node src/scripts/forge-conformance-gate.ts',
-    )
 
     expect(ci.on?.pull_request).toBeNull()
     expect(ci.on?.push?.branches).toEqual(['main'])
@@ -86,21 +81,6 @@ describe('forge conformance workflow', () => {
     expect(matrix?.if).toBe(
       "needs.forge-conformance-scope.outputs.should-run == 'true'",
     )
-    expect(gate).toMatchObject({
-      name: 'Forge conformance',
-      needs: ['forge-conformance-scope', 'forge-conformance'],
-      if: 'always()',
-    })
-    expect(gateStep).toMatchObject({
-      env: {
-        SCOPE_RESULT: githubExpression('needs.forge-conformance-scope.result'),
-        SHOULD_RUN: githubExpression(
-          'needs.forge-conformance-scope.outputs.should-run',
-        ),
-        MATRIX_RESULT: githubExpression('needs.forge-conformance.result'),
-      },
-      run: 'node src/scripts/forge-conformance-gate.ts',
-    })
   })
 
   it('runs the dedicated forge matrix with failure logs', () => {

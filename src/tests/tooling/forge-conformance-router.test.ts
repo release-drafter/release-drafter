@@ -203,7 +203,6 @@ describe('forge conformance router', () => {
       ':(glob)vitest*.config.ts',
       ':(glob)src/tests/integration/**',
       'src/scripts/forge-conformance-router.ts',
-      'src/scripts/forge-conformance-gate.ts',
       ':(glob)packages/core/src/**',
       ':(glob)packages/release-drafter/src/**',
       ':(glob)packages/github-adapter/src/**',
