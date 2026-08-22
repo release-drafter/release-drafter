@@ -1,7 +1,7 @@
 import { S as context, T as setFailed, _ as object, a as readActionInputs, b as union, f as _enum, g as number, i as defineActionInputNames, p as array, r as tokenInputSchema, s as actionLogger, v as string, w as info } from "../../chunks/config.js";
 import { g as evaluateCategories, n as mergeInputAndConfig, t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
 //#region packages/core/src/pull-request-validation.ts
-/** Keep title and label predicates while excluding path-only validation. */
+/** Remove path predicates and conditions that contain only path predicates. */
 var projectPullRequestValidationCategories = (categories) => categories.flatMap((category) => {
 	if (category.when.length === 0) return [category];
 	const when = category.when.flatMap((condition) => {
@@ -16,7 +16,7 @@ var projectPullRequestValidationCategories = (categories) => categories.flatMap(
 		when
 	}] : [];
 });
-/** Evaluate whether a PR's title or labels select a non-fallback category. */
+/** Evaluate whether a pull request's title or labels select a non-fallback category. */
 var evaluatePullRequest = (pullRequest, categories) => {
 	const evaluation = evaluateCategories(pullRequest, projectPullRequestValidationCategories(categories));
 	if (!evaluation.included) return {
@@ -92,7 +92,7 @@ var defaultDependencies = () => ({
 });
 /** Check the current pull request without performing any write operation. */
 async function checkPullRequest(dependencies = defaultDependencies()) {
-	if (dependencies.eventName !== "pull_request" && dependencies.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${dependencies.eventName}'`);
+	if (dependencies.eventName !== "pull_request" && dependencies.eventName !== "pull_request_target") throw new Error(`Unsupported event \`${dependencies.eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`);
 	const pullRequest = parsePullRequestEvent(dependencies.eventName, dependencies.payload);
 	const input = dependencies.getInput();
 	const config = mergeInputAndConfig({
@@ -109,7 +109,7 @@ async function checkPullRequest(dependencies = defaultDependencies()) {
 		info(`Skipping excluded pull request #${pullRequest.number}.`);
 		return;
 	}
-	if (!evaluation.valid) throw new Error(`Pull request #${pullRequest.number} does not match any configured conventional or label-based changelog or version-resolver category.`);
+	if (!evaluation.valid) throw new Error(`No configured changelog or version-resolver category matches the title or labels of pull request #${pullRequest.number}.`);
 	info(`Pull request #${pullRequest.number} matches the configuration.`);
 }
 async function run() {

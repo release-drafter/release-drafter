@@ -51017,6 +51017,23 @@ var GitHubAdapter = class {
 		}
 		return paths;
 	}
+	async getPullRequest({ repository, number }) {
+		const response = await this.octokit.rest.pulls.get({
+			owner: repository.owner,
+			repo: repository.name,
+			pull_number: number
+		});
+		const title = response.data.title?.trim();
+		const baseRefName = response.data.base?.ref?.trim();
+		if (!title) throw new Error(`Pull request #${number} returned a blank title`);
+		if (!baseRefName) throw new Error(`Pull request #${number} returned a blank base branch`);
+		return {
+			number,
+			title,
+			baseRefName,
+			labels: response.data.labels.flatMap((label) => typeof label === "string" ? label ? [label] : [] : label.name ? [label.name] : [])
+		};
+	}
 	async findNewContributorLogins(repository, pullRequests) {
 		const firstMergedAtByLogin = /* @__PURE__ */ new Map();
 		for (const pullRequest of pullRequests) {
