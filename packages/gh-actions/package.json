@@ -34,13 +34,13 @@
       "release-drafter-source": "./src/autolabeler/index.ts",
       "import": "./dist/autolabeler/index.js"
     },
-    "./check-pr-title": {
+    "./check-pr": {
       "types": {
-        "release-drafter-source": "./src/check-pr-title/index.ts",
-        "default": "./dist/check-pr-title/index.d.ts"
+        "release-drafter-source": "./src/check-pr/index.ts",
+        "default": "./dist/check-pr/index.d.ts"
       },
-      "release-drafter-source": "./src/check-pr-title/index.ts",
-      "import": "./dist/check-pr-title/index.js"
+      "release-drafter-source": "./src/check-pr/index.ts",
+      "import": "./dist/check-pr/index.js"
     },
     "./config": {
       "types": {

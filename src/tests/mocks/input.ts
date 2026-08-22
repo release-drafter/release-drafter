@@ -1,4 +1,4 @@
-import type { actionInputSchema as checkPrTitleInputSchema } from '@release-drafter/gh-actions/check-pr-title'
+import type { actionInputSchema as checkPrInputSchema } from '@release-drafter/gh-actions/check-pr'
 import type { actionInputSchema } from '@release-drafter/gh-actions/drafter'
 import { expect, vi } from 'vitest'
 import type * as z from 'zod'
@@ -12,7 +12,7 @@ import type * as z from 'zod'
 export const mockInput = async (
   key: Extract<
     | keyof z.input<typeof actionInputSchema>
-    | keyof z.input<typeof checkPrTitleInputSchema>,
+    | keyof z.input<typeof checkPrInputSchema>,
     string
   >,
   value: string,

@@ -109,6 +109,19 @@ export type FindChangesRequest = {
   includeNewContributors: boolean
 }
 
+export type GetPullRequestRequest = {
+  repository: Repository
+  number: number
+}
+
+export type PullRequestValidationData = Pick<
+  PullRequest,
+  'number' | 'title'
+> & {
+  labels: string[]
+  baseRefName: string
+}
+
 export type ListReleasesRequest = {
   repository: Repository
 }

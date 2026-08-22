@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { getConfig } from '#gh-actions/check-pr-title/get-config.ts'
+import { getConfig } from '#gh-actions/check-pr/get-config.ts'
 import { mocks } from '#tests/mocks/index.ts'
 
-describe('get check PR title config', () => {
+describe('get check PR config', () => {
   it('parses conventional categories from the composed _extends result', async () => {
-    mocks.config.mockReturnValue('config-check-pr-title')
+    mocks.config.mockReturnValue('config-check-pr')
     mocks.getContextsConfigWasFetchedFrom.mockReturnValue([
       {
         filepath: '.github/release-drafter.yml',

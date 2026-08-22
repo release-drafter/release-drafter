@@ -1,4 +1,4 @@
-/*! release-drafter-action-entry:check-pr-title */
+/*! release-drafter-action-entry:check-pr */
 /* node:coverage ignore file -- @preserve */
 import { run } from './runner.ts'
 

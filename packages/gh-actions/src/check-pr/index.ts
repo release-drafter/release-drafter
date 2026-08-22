@@ -1,15 +1,15 @@
 export {
+  evaluatePullRequest,
+  type PullRequestEvaluation,
+  projectPullRequestValidationCategories,
+} from '@release-drafter/core'
+export {
   type ActionInput,
   actionInputSchema,
 } from './action-input.schema.ts'
-export {
-  evaluatePullRequestTitle,
-  projectConventionalCategories,
-  type TitleEvaluation,
-} from './evaluate-title.ts'
 export {
   type CheckPullRequest,
   parsePullRequestEvent,
   supportedPullRequestActions,
 } from './event.ts'
-export { checkPullRequestTitle, run } from './runner.ts'
+export { checkPullRequest, run } from './runner.ts'

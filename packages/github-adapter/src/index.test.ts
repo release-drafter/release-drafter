@@ -39,7 +39,7 @@ const mockOctokit = (overrides: Record<string, unknown> = {}) =>
         updateRelease: vi.fn(),
         getContent: vi.fn(),
       },
-      pulls: { listFiles: vi.fn() },
+      pulls: { get: vi.fn(), listFiles: vi.fn() },
     },
     paginate: Object.assign(vi.fn(), { iterator: vi.fn() }),
     graphql: vi.fn(),
@@ -50,6 +50,31 @@ const adapter = (octokit: GitHubOctokit) =>
   new GitHubAdapter({ token: 'token', octokit })
 
 describe('GitHubAdapter', () => {
+  it('reads normalized pull request validation data', async () => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.rest.pulls.get).mockResolvedValue({
+      data: {
+        title: 'feat: validate pull requests',
+        base: { ref: 'main' },
+        labels: [{ name: 'feature' }, { name: '' }, 'approved'],
+      },
+    } as never)
+
+    await expect(
+      adapter(octokit).getPullRequest({ repository, number: 42 }),
+    ).resolves.toEqual({
+      number: 42,
+      title: 'feat: validate pull requests',
+      baseRefName: 'main',
+      labels: ['feature', 'approved'],
+    })
+    expect(octokit.rest.pulls.get).toHaveBeenCalledWith({
+      owner: repository.owner,
+      repo: repository.name,
+      pull_number: 42,
+    })
+  })
+
   it('requires authentication and derives GitHub.com and GHES endpoints', () => {
     expect(() => new GitHubAdapter({ token: '' })).toThrow(
       'GitHub authentication token is required',

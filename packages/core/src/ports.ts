@@ -3,7 +3,9 @@ import type {
   CreateReleaseRequest,
   FindChangesRequest,
   ForgeCapabilities,
+  GetPullRequestRequest,
   ListReleasesRequest,
+  PullRequestValidationData,
   Release,
   ResolveCommitishRequest,
   UpdateReleaseRequest,
@@ -32,4 +34,10 @@ export interface ForgeAdapter {
   resolveCommitish(params: ResolveCommitishRequest): Promise<string>
   createRelease(params: CreateReleaseRequest): Promise<Release>
   updateRelease(params: UpdateReleaseRequest): Promise<Release>
+}
+
+export interface PullRequestReader {
+  getPullRequest(
+    params: GetPullRequestRequest,
+  ): Promise<PullRequestValidationData>
 }

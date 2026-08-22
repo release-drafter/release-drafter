@@ -57,15 +57,22 @@ CLI credentials, pass them through `GH_TOKEN`:
 GH_TOKEN="$(gh auth token)" npx release-drafter owner/repo --dry-run
 ```
 
+The CLI can also validate one pull request with the same category rules as the
+Check PR action:
+
+```sh
+npx release-drafter check-pr owner/repo 123
+```
+
 See the [`release-drafter` package README](./packages/release-drafter/README.md)
 for installation instructions, the complete option reference, config targets,
 JSON output, and exit codes.
 
-## Check pull request titles
+## Check pull requests
 
-The read-only Check PR Title action validates pull request titles using the
-`when.conventional` conditions already defined in Release Drafter categories.
-See [`check-pr-title/README.md`](./check-pr-title/README.md) for the workflow,
+The read-only Check PR action validates pull request titles and labels using the
+conditions already defined in Release Drafter categories.
+See [`check-pr/README.md`](./check-pr/README.md) for the workflow,
 permissions, supported events, and matching behavior.
 
 ## Configuration

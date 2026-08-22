@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parsePullRequestEvent } from './event.ts'
 
-describe('check-pr-title event parsing', () => {
+describe('check-pr event parsing', () => {
   it('uses the current edited title, labels, and number', () => {
     expect(
       parsePullRequestEvent('pull_request', {

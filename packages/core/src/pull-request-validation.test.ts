@@ -1,15 +1,10 @@
-import {
-  configSchema,
-  mergeInputAndConfig,
-  type ParsedConfig,
-} from '@release-drafter/core'
 import { describe, expect, it, vi } from 'vitest'
+import { configSchema, mergeInputAndConfig } from './config/index.ts'
 import {
-  canSkipWithoutChangedFiles,
-  evaluatePullRequestTitle,
-  projectConventionalCategories,
-  projectTitleCategories,
-} from './evaluate-title.ts'
+  evaluatePullRequest,
+  projectPullRequestValidationCategories,
+} from './pull-request-validation.ts'
+import type { ParsedConfig } from './types.ts'
 
 const logger = {
   debug: vi.fn(),
@@ -26,10 +21,10 @@ const categories = (value: unknown[]): ParsedConfig['categories'] =>
     logger,
   }).categories
 
-describe('check-pr-title category evaluation', () => {
+describe('pull request validation', () => {
   it('accepts a title matching a conventional changelog category', () => {
     expect(
-      evaluatePullRequestTitle(
+      evaluatePullRequest(
         { title: 'feat(api): add search' },
         categories([
           {
@@ -43,7 +38,7 @@ describe('check-pr-title category evaluation', () => {
 
   it('rejects a non-conventional or unmatched title', () => {
     expect(
-      evaluatePullRequestTitle(
+      evaluatePullRequest(
         { title: 'Add search' },
         categories([
           { title: 'Features', when: { conventional: { type: 'feat' } } },
@@ -54,7 +49,7 @@ describe('check-pr-title category evaluation', () => {
 
   it('rejects a match that selects only an unconditional fallback', () => {
     expect(
-      evaluatePullRequestTitle(
+      evaluatePullRequest(
         { title: 'Add search' },
         categories([
           { title: 'Features', when: { conventional: { type: 'feat' } } },
@@ -66,7 +61,7 @@ describe('check-pr-title category evaluation', () => {
 
   it('passes an excluded pull request as skipped before projection', () => {
     expect(
-      evaluatePullRequestTitle(
+      evaluatePullRequest(
         { title: 'not conventional', labels: ['skip-changelog'] },
         categories([
           { type: 'pre-exclude', when: { label: 'skip-changelog' } },
@@ -76,7 +71,7 @@ describe('check-pr-title category evaluation', () => {
     ).toEqual({ valid: true, skipped: true })
   })
 
-  it('preserves path correlation in a conventional condition', () => {
+  it('does not use paths to qualify a conventional title', () => {
     const parsed = categories([
       {
         title: 'Documentation',
@@ -84,68 +79,71 @@ describe('check-pr-title category evaluation', () => {
       },
     ])
     expect(
-      evaluatePullRequestTitle(
+      evaluatePullRequest(
         { title: 'docs: update guide', changedFiles: ['src/index.ts'] },
         parsed,
       ).valid,
-    ).toBe(false)
+    ).toBe(true)
     expect(
-      evaluatePullRequestTitle(
+      evaluatePullRequest(
         { title: 'docs: update guide', changedFiles: ['docs/guide.md'] },
         parsed,
       ).valid,
     ).toBe(true)
   })
 
-  it('preserves label correlation and drops label-only branches', () => {
+  it('accepts a configured label without a conventional title', () => {
     const parsed = categories([
       {
         title: 'Features',
-        when: [
-          { label: 'feature' },
-          { conventional: { type: 'feat' }, label: 'approved' },
-        ],
+        when: { label: 'feature' },
       },
     ])
-    const projected = projectConventionalCategories(parsed)
-    expect(projected).toHaveLength(1)
-    expect(projected[0]?.when).toHaveLength(1)
     expect(
-      evaluatePullRequestTitle(
-        { title: 'feat: add search', labels: ['feature'] },
-        parsed,
-      ).valid,
-    ).toBe(false)
+      evaluatePullRequest({ title: 'Add search', labels: ['feature'] }, parsed)
+        .valid,
+    ).toBe(true)
+  })
+
+  it('requires title and label predicates from the same condition', () => {
+    const parsed = categories([
+      {
+        title: 'Approved features',
+        when: { conventional: { type: 'feat' }, label: 'approved' },
+      },
+    ])
     expect(
-      evaluatePullRequestTitle(
+      evaluatePullRequest(
         { title: 'feat: add search', labels: ['approved'] },
         parsed,
       ).valid,
     ).toBe(true)
+    expect(
+      evaluatePullRequest({ title: 'feat: add search', labels: [] }, parsed)
+        .valid,
+    ).toBe(false)
   })
 
-  it('keeps pre-categories while dropping path-only release branches', () => {
+  it('drops path-only branches', () => {
     const parsed = categories([
-      { type: 'pre-exclude', when: { label: 'skip' } },
       { title: 'Path only', when: { path: 'docs/**' } },
       { title: 'Features', when: { conventional: { type: 'feat' } } },
     ])
 
-    expect(projectTitleCategories(parsed)).toEqual([
-      expect.objectContaining({ type: 'pre-exclude' }),
+    expect(projectPullRequestValidationCategories(parsed)).toEqual([
       expect.objectContaining({ title: 'Features' }),
     ])
     expect(
-      canSkipWithoutChangedFiles(
-        { title: 'invalid', labels: ['skip'] },
+      evaluatePullRequest(
+        { title: 'invalid', changedFiles: ['docs/guide.md'] },
         parsed,
-      ),
-    ).toBe(true)
+      ).valid,
+    ).toBe(false)
   })
 
   it('accepts a conventional version-resolver category', () => {
     expect(
-      evaluatePullRequestTitle(
+      evaluatePullRequest(
         { title: 'fix: avoid crash' },
         categories([
           {
