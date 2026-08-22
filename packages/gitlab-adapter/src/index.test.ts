@@ -142,7 +142,7 @@ describe('GitLabAdapter', () => {
     ).rejects.toThrow(expected)
   })
 
-  it('rejects request timeouts, incomplete, oversized, and over-byte-limit comparisons', async () => {
+  it('rejects comparison request timeouts', async () => {
     const timeoutFetch = vi.fn<typeof globalThis.fetch>(
       async (_input, init) =>
         new Promise<Response>((_resolve, reject) => {
@@ -156,11 +156,17 @@ describe('GitLabAdapter', () => {
     await expect(
       adapter(timeoutFetch, { timeoutMs: 1 }).findChanges(request()),
     ).rejects.toThrow('timed out after 1ms')
+  })
+
+  it('rejects comparisons without a complete commits array', async () => {
     await expect(
       adapter(vi.fn(async () => json({ compare_timeout: false }))).findChanges(
         request(),
       ),
     ).rejects.toThrow('complete commits array')
+  })
+
+  it('rejects comparisons above the configured commit limit', async () => {
     await expect(
       adapter(
         vi.fn(async () =>
@@ -172,6 +178,9 @@ describe('GitLabAdapter', () => {
         { maxComparisonCommits: 1 },
       ).findChanges(request()),
     ).rejects.toThrow('above the 1 commit limit')
+  })
+
+  it('rejects comparisons above the configured byte limit', async () => {
     await expect(
       adapter(
         vi.fn(async () => json({ compare_timeout: false, commits: [] })),
@@ -739,44 +748,33 @@ describe('GitLabAdapter', () => {
     ])
   })
 
-  it('rejects prerelease creation before constructing or sending a request', async () => {
+  it.each([
+    'creation',
+    'update',
+  ] as const)('rejects prerelease %s before constructing or sending a request', async (operation) => {
     const fetch = vi.fn<typeof globalThis.fetch>()
     const instance = new GitLabAdapter({ token: '', fetch })
-    await expect(
-      instance.createRelease({
-        repository,
-        payload: {
-          name: 'Two',
-          tag: 'v2',
-          body: 'notes',
-          targetCommitish: 'main',
-          prerelease: true,
-          makeLatest: true,
-          draft: false,
-        },
-      }),
-    ).rejects.toThrow('GitLab does not support prerelease releases')
-    expect(fetch).not.toHaveBeenCalled()
-  })
+    const payload = {
+      name: 'Two',
+      tag: 'v2',
+      body: 'notes',
+      targetCommitish: 'main',
+      prerelease: true,
+      makeLatest: true,
+      draft: false,
+    }
+    const result =
+      operation === 'creation'
+        ? instance.createRelease({ repository, payload })
+        : instance.updateRelease({
+            repository,
+            release: { id: 'v1', tagName: 'v1' },
+            payload,
+          })
 
-  it('rejects prerelease updates before constructing or sending a request', async () => {
-    const fetch = vi.fn<typeof globalThis.fetch>()
-    const instance = new GitLabAdapter({ token: '', fetch })
-    await expect(
-      instance.updateRelease({
-        repository,
-        release: { id: 'v1', tagName: 'v1' },
-        payload: {
-          name: 'One',
-          tag: 'v1',
-          body: 'notes',
-          targetCommitish: 'main',
-          prerelease: true,
-          makeLatest: true,
-          draft: false,
-        },
-      }),
-    ).rejects.toThrow('GitLab does not support prerelease releases')
+    await expect(result).rejects.toThrow(
+      'GitLab does not support prerelease releases',
+    )
     expect(fetch).not.toHaveBeenCalled()
   })
 
