@@ -36100,7 +36100,7 @@ var GitHubAdapter = class {
 		const graphCommits = await this.hydrateComparisonCommits(params, comparisonOids);
 		const commitsByOid = new Map(graphCommits.map((commit) => [commit.oid, commit]));
 		const missingOids = comparisonOids.filter((oid) => !commitsByOid.has(oid));
-		if (missingOids.length > 0) throw new Error(`GitHub GraphQL could not hydrate ${missingOids.length} comparison commit(s): ${missingOids.join(", ")}`);
+		if (missingOids.length > 0) throw new Error(`GitHub GraphQL did not return data for ${missingOids.length} comparison commits: ${missingOids.join(", ")}`);
 		const orderedGraphCommits = comparisonOids.map((oid) => commitsByOid.get(oid));
 		const repositoryName = `${repository.owner}/${repository.name}`;
 		const pullRequestsByKey = /* @__PURE__ */ new Map();
@@ -36233,13 +36233,13 @@ var GitHubAdapter = class {
 		if (commitish.startsWith("refs/tags/")) try {
 			return await this.resolveObject(repository, `${commitish}^{commit}`);
 		} catch {
-			this.logger.warning(`${commitish} could not be resolved to a commit SHA, falling back to default branch`);
+			this.logger.warning(`GitHub could not resolve ${commitish} to a commit SHA. Release Drafter will use the default branch.`);
 			return "";
 		}
 		if (commitish.startsWith("refs/pull/")) {
 			const match = /^refs\/pull\/(\d+)\/(head|merge)$/.exec(commitish);
 			if (!match) {
-				this.logger.warning(`${commitish} is not a supported pull request ref, falling back to default branch`);
+				this.logger.warning(`${commitish} is not a supported pull request ref. Release Drafter will use the default branch.`);
 				return "";
 			}
 			try {
@@ -36252,7 +36252,7 @@ var GitHubAdapter = class {
 				if (!oid) throw new Error(`Pull request #${match[1]} does not have a ${match[2]} commit`);
 				return oid;
 			} catch {
-				this.logger.warning(`${commitish} could not be resolved to a commit SHA, falling back to default branch`);
+				this.logger.warning(`GitHub could not resolve ${commitish} to a commit SHA. Release Drafter will use the default branch.`);
 				return "";
 			}
 		}
