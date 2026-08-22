@@ -80,5 +80,20 @@
         },
       },
     },
+    {
+      "includes": ["packages/release-drafter/src/index.ts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useImportExtensions": {
+              "level": "warn",
+              "options": {
+                "forceJsExtensions": true,
+              },
+            },
+          },
+        },
+      },
+    },
   ],
 }
