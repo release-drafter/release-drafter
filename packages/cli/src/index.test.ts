@@ -296,6 +296,42 @@ describe('check-pr', () => {
     })
   })
 
+  it('supports nested GitLab namespaces when checking a merge request', async () => {
+    const state = createAdapter({
+      getConfig: async () => CONVENTIONAL_CONFIG,
+      pullRequest: {
+        number: 20,
+        title: 'feat: add search',
+        labels: [],
+        baseRefName: 'main',
+      },
+    })
+    const result = await invoke(
+      ['check-pr', 'group/subgroup/project', '20', '--forge', 'gitlab'],
+      { adapter: state.adapter },
+    )
+
+    expect(result.code).toBe(0)
+    expect(result.adapterFactory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        forge: 'gitlab',
+        repository: {
+          owner: 'group/subgroup',
+          name: 'project',
+          serverUrl: 'https://gitlab.com',
+        },
+      }),
+    )
+    expect(state.getPullRequest).toHaveBeenCalledWith({
+      repository: {
+        owner: 'group/subgroup',
+        name: 'project',
+        serverUrl: 'https://gitlab.com',
+      },
+      number: 20,
+    })
+  })
+
   it('returns one when neither the title nor labels match', async () => {
     const state = createAdapter({
       getConfig: async () => CONVENTIONAL_CONFIG,

@@ -48,8 +48,12 @@ GH_TOKEN="$(gh auth token)" release-drafter owner/repo
 ### Options
 
 ```text
-Usage: release-drafter <owner/repo> [options]
-       release-drafter check-pr <owner/repo> <number> [options]
+Usage: release-drafter <repository> [options]
+       release-drafter check-pr <repository> <number> [options]
+
+Repository:
+  owner/name                  GitHub, Gitea, or Forgejo repository
+  namespace/project          GitLab repository; nested namespaces are allowed
 
 Options:
   -f, --from <ref>             Change comparison base

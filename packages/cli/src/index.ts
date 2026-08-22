@@ -472,17 +472,11 @@ const createAdapter = ({
     case 'github':
       return new GitHubAdapter(options as GitHubAdapterOptions)
     case 'gitea':
-      return new GiteaAdapter(
-        options as RestAdapterOptions,
-      ) as unknown as CliAdapter
+      return new GiteaAdapter(options as RestAdapterOptions)
     case 'forgejo':
-      return new ForgejoAdapter(
-        options as RestAdapterOptions,
-      ) as unknown as CliAdapter
+      return new ForgejoAdapter(options as RestAdapterOptions)
     case 'gitlab':
-      return new GitLabAdapter(
-        options as GitLabAdapterOptions,
-      ) as unknown as CliAdapter
+      return new GitLabAdapter(options as GitLabAdapterOptions)
   }
 }
 
