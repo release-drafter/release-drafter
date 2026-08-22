@@ -1,4 +1,4 @@
-import type { ForgeAdapter } from '@release-drafter/core'
+import type { ForgeAdapter, PullRequestReader } from '@release-drafter/core'
 import {
   createGiteaCompatibleRestProfile,
   createGitHubCompatibleRestAdapter,
@@ -10,9 +10,9 @@ export const GITEA_ADAPTER_PACKAGE_NAME =
 /** Explicit Gitea REST protocol profile. */
 export const giteaProfile = createGiteaCompatibleRestProfile('normalize')
 
-export class GiteaAdapter implements ForgeAdapter {
+export class GiteaAdapter implements ForgeAdapter, PullRequestReader {
   readonly capabilities = giteaProfile.capabilities
-  private readonly adapter: ForgeAdapter
+  private readonly adapter: ForgeAdapter & PullRequestReader
 
   constructor(options: RestAdapterOptions) {
     this.adapter = createGitHubCompatibleRestAdapter(giteaProfile, options)
@@ -28,4 +28,6 @@ export class GiteaAdapter implements ForgeAdapter {
     this.adapter.createRelease(params)
   updateRelease: ForgeAdapter['updateRelease'] = (params) =>
     this.adapter.updateRelease(params)
+  getPullRequest: PullRequestReader['getPullRequest'] = (params) =>
+    this.adapter.getPullRequest(params)
 }

@@ -134,6 +134,52 @@ describe('GitHub-compatible REST mechanics', () => {
     )
   })
 
+  it('reads pull request validation data from the shared pull endpoint', async () => {
+    const fetch = routeFetch((url) => {
+      expect(url.pathname).toBe('/api/v1/repos/octo/project/pulls/12')
+      return json(
+        pull(12, {
+          title: '  feat: add search  ',
+          labels: ['feature', { name: 'approved' }, null, { name: null }],
+          base: { ref: '  release/2.x  ' },
+        }),
+      )
+    })
+
+    await expect(
+      createAdapter(fetch).getPullRequest({ repository, number: 12 }),
+    ).resolves.toEqual({
+      number: 12,
+      title: 'feat: add search',
+      labels: ['feature', 'approved'],
+      baseRefName: 'release/2.x',
+    })
+  })
+
+  it.each([
+    {
+      name: 'different number',
+      response: pull(13),
+      expected: 'different number',
+    },
+    {
+      name: 'blank title',
+      response: pull(12, { title: '  ' }),
+      expected: 'blank title',
+    },
+    {
+      name: 'blank base branch',
+      response: pull(12, { base: { ref: '  ' } }),
+      expected: 'blank base branch',
+    },
+  ])('rejects a pull request with a $name', async ({ response, expected }) => {
+    const fetch = routeFetch(() => json(response))
+
+    await expect(
+      createAdapter(fetch).getPullRequest({ repository, number: 12 }),
+    ).rejects.toThrow(expected)
+  })
+
   it('reserves changed-file capacity before commit association fan-out', async () => {
     const commits = Array.from({ length: 499 }, (_, index) =>
       commit(String(index), '2026-01-01T00:00:00Z'),

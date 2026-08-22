@@ -1,4 +1,4 @@
-import type { ForgeAdapter } from '@release-drafter/core'
+import type { ForgeAdapter, PullRequestReader } from '@release-drafter/core'
 import {
   createGiteaCompatibleRestProfile,
   createGitHubCompatibleRestAdapter,
@@ -10,9 +10,9 @@ export const FORGEJO_ADAPTER_PACKAGE_NAME =
 /** Forgejo implements the shared REST profile while accepting full refs. */
 export const forgejoProfile = createGiteaCompatibleRestProfile('preserve')
 
-export class ForgejoAdapter implements ForgeAdapter {
+export class ForgejoAdapter implements ForgeAdapter, PullRequestReader {
   readonly capabilities = forgejoProfile.capabilities
-  private readonly adapter: ForgeAdapter
+  private readonly adapter: ForgeAdapter & PullRequestReader
 
   constructor(options: RestAdapterOptions) {
     this.adapter = createGitHubCompatibleRestAdapter(forgejoProfile, options)
@@ -28,4 +28,6 @@ export class ForgejoAdapter implements ForgeAdapter {
     this.adapter.createRelease(params)
   updateRelease: ForgeAdapter['updateRelease'] = (params) =>
     this.adapter.updateRelease(params)
+  getPullRequest: PullRequestReader['getPullRequest'] = (params) =>
+    this.adapter.getPullRequest(params)
 }

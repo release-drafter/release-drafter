@@ -4,8 +4,11 @@ import type {
   CreateReleaseRequest,
   FindChangesRequest,
   ForgeAdapter,
+  GetPullRequestRequest,
   ListReleasesRequest,
   PullRequest,
+  PullRequestReader,
+  PullRequestValidationData,
   Release,
   Repository,
   ResolveCommitishRequest,
@@ -146,7 +149,7 @@ const stablePullRequestOrder = (left: PullRequest, right: PullRequest) =>
   (left.baseRepository ?? '').localeCompare(right.baseRepository ?? '') ||
   left.number - right.number
 
-class GitHubCompatibleRestAdapter implements ForgeAdapter {
+class GitHubCompatibleRestAdapter implements ForgeAdapter, PullRequestReader {
   readonly capabilities: RestForgeProfile['capabilities']
   private readonly client: RestClient
 
@@ -377,6 +380,36 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
     return releases.map(normalizeRelease)
   }
 
+  async getPullRequest({
+    repository,
+    number,
+  }: GetPullRequestRequest): Promise<PullRequestValidationData> {
+    const response = await this.client.requestJson<RestPullRequest>({
+      repository,
+      path: this.profile.endpoints.pull(repository, number),
+      budget: this.client.newBudget(),
+    })
+    const pullRequest = response?.data
+    const title = pullRequest?.title?.trim()
+    const baseRefName = pullRequest?.base?.ref?.trim()
+    if (pullRequest?.number !== number)
+      throw new Error(`Pull request #${number} returned a different number`)
+    if (!title)
+      throw new Error(`Pull request #${number} returned a blank title`)
+    if (!baseRefName)
+      throw new Error(`Pull request #${number} returned a blank base branch`)
+
+    return {
+      number,
+      title,
+      baseRefName,
+      labels: (pullRequest.labels ?? []).flatMap((label) => {
+        if (typeof label === 'string') return label ? [label] : []
+        return label?.name ? [label.name] : []
+      }),
+    }
+  }
+
   async resolveCommitish({
     repository,
     commitish,
@@ -496,7 +529,8 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter {
 export const createGitHubCompatibleRestAdapter = (
   profile: RestForgeProfile,
   options: RestAdapterOptions,
-): ForgeAdapter => new GitHubCompatibleRestAdapter(profile, options)
+): ForgeAdapter & PullRequestReader =>
+  new GitHubCompatibleRestAdapter(profile, options)
 
 export const createRestEndpoints = () => {
   const repoPath = (repository: Repository) =>
