@@ -12,14 +12,7 @@
       "vite": false,
     },
     "packages/gh-actions": {
-      "entry": [
-        "src/index.ts",
-        "src/config.ts",
-        "src/drafter/index.ts",
-        "src/drafter/run.ts",
-        "src/autolabeler/index.ts",
-        "src/autolabeler/run.ts",
-      ],
+      "entry": ["src/drafter/run.ts", "src/autolabeler/run.ts"],
       "project": ["src/**/*.{ts,tsx}"],
       "vite": false,
     },
