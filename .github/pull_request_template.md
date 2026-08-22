@@ -19,5 +19,5 @@ Allowed types: build, chore, ci, docs, feat, fix, perf, refactor, revert, style,
 ## Checklist
 
 - [ ] My PR title uses the conventional format required by CI.
-- [ ] I ran `npm run all` locally.
+- [ ] I ran `npm run ci` locally.
 - [ ] I updated tests or docs where needed.

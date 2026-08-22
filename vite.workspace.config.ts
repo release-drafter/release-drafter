@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs'
+import { builtinModules } from 'node:module'
 import { dirname, resolve } from 'node:path'
+import { dts } from 'rolldown-plugin-dts'
 import {
   defaultClientConditions,
   defaultServerConditions,
@@ -10,7 +13,21 @@ const packageJson = process.env.npm_package_json
 if (!packageJson)
   throw new Error('npm_package_json is required to build a workspace')
 const workspaceRoot = dirname(packageJson)
+const workspaceManifest = JSON.parse(readFileSync(packageJson, 'utf8')) as {
+  dependencies?: Record<string, unknown>
+}
+const workspaceRuntimeDependencies = new Set(
+  Object.keys(workspaceManifest.dependencies ?? {}),
+)
+const isWorkspaceRuntimeDependency = (id: string) =>
+  [...workspaceRuntimeDependencies].some(
+    (dependency) => id === dependency || id.startsWith(`${dependency}/`),
+  )
+
 export default defineConfig({
+  oxc: {
+    exclude: [/\.js$/, /\.d\.[cm]?ts$/],
+  },
   resolve: {
     conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
   },
@@ -26,26 +43,25 @@ export default defineConfig({
     lib: {
       entry: resolve(workspaceRoot, 'src/index.ts'),
       formats: ['es'],
-      fileName: 'index',
+      fileName: (_format, entryName) => `${entryName}.js`,
     },
     minify: false,
     outDir: resolve(workspaceRoot, 'dist'),
     target: 'node24',
-  },
-  plugins: [
-    {
-      name: 'workspace-declarations',
-      async closeBundle() {
-        const packageName = process.env.npm_package_name
-        if (!packageName) throw new Error('npm_package_name is required')
-        const constantName = `${packageName
-          .replace('@release-drafter/', '')
-          .replaceAll('-', '_')
-          .toUpperCase()}_PACKAGE_NAME`
-        const declaration = `/** Package identity for ${packageName}. */\nexport declare const ${constantName}: "${packageName}";\n`
-        const { writeFile } = await import('node:fs/promises')
-        await writeFile(resolve(workspaceRoot, 'dist/index.d.ts'), declaration)
-      },
+    rolldownOptions: {
+      // Workspace packages target Node, not Vite's browser compatibility layer.
+      platform: 'node',
+      plugins: [
+        dts({
+          cwd: workspaceRoot,
+          sourcemap: false,
+          tsconfig: resolve(workspaceRoot, 'tsconfig.json'),
+        }),
+      ],
+      external: (id) =>
+        id.startsWith('node:') ||
+        builtinModules.includes(id) ||
+        isWorkspaceRuntimeDependency(id),
     },
-  ],
+  },
 })

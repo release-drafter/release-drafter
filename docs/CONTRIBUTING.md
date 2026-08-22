@@ -17,7 +17,7 @@ by its terms.
 1. [Fork][fork] and clone the repository
 2. Configure and install the dependencies: `npm install`
 3. Create a new branch: `git checkout -b my-branch-name`
-4. Make your change and add tests. Before you push, run `npm run all`. This
+4. Make your change and add tests. Before you push, run `npm run ci`. This
    command formats and lints the code, checks types, runs tests, and builds the
    root action bundles and workspace packages. CI fails if the command changes a
    tracked generated file.
@@ -29,7 +29,7 @@ Here are a few things you can do that will increase the likelihood of your pull
 request being accepted:
 
 - Follow the [style guide][style] which is using standard. Any linting errors
-  should be shown when running `npm run all`
+  should be shown when running `npm run ci`
 - Write and update tests.
 - Keep your change as focused as possible. If there are multiple changes you
   would like to make that are not dependent upon each other, consider submitting
@@ -60,7 +60,7 @@ packs a package.
 
 Common commands:
 
-- `npm run all` runs all repository checks and builds generated files. It
+- `npm run ci` runs all repository checks and builds generated files. It
   formats and lints the code, checks dependencies and boundaries, checks types,
   runs tests, generates schemas, and builds action bundles and workspaces.
   Tooling tests also run Node's `--check` against each `src/scripts/*.ts` entry.
@@ -69,15 +69,15 @@ Common commands:
   dependencies. It does not check for unused files or exports.
 - `npm run check:boundaries` uses dependency-cruiser's SWC parser to validate
   internal imports in workspace source, generated JavaScript, and declarations.
-- `npm run guard:packages` checks that the root and scoped workspaces are
+- `npm run check:packages` checks that the root and scoped workspaces are
   private. It also checks that each package requires Node 24 and that only
   `release-drafter` can be published.
-- `npm run guard:boundaries` reports runtime imports whose packages are listed
-  only in `devDependencies`. Dependency-cruiser checks the source and generated
-  dependency graphs. The SWC check separately identifies type-only imports
-  because dependency-cruiser does not preserve that information.
+- `npm run check:package-boundaries` reports runtime imports whose packages are
+  listed only in `devDependencies`. Dependency-cruiser checks the source and
+  generated dependency graphs. The SWC check separately identifies type-only
+  imports because dependency-cruiser does not preserve that information.
 - Run `npm run build:workspaces` before `npm run check:boundaries` outside
-  `npm run all` so generated JavaScript and declaration files are available.
+  `npm run ci` so generated JavaScript and declaration files are available.
 - `npm run check:clean` fails if generation leaves unstaged or untracked changes
   relative to the staged tree.
 - `npm run build --workspaces --if-present` builds workspace packages after the

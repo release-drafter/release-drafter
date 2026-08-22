@@ -56,21 +56,21 @@ Before pushing, run the full pipeline so formatting, linting, type checks,
 tests, and generated files are all up to date:
 
 ```bash
-npm run all
+npm run ci
 ```
 
 CI will fail if generated files are stale.
 
 Biome formats every language it supports. Markdown is not one of them, so
-Prettier formats `.md` files via `npm run format:md:write` (already included in
-`npm run all`). Do not point Prettier at any other file type.
+Prettier formats `.md` files via `npm run format:docs` (already included in
+`npm run ci`). Do not point Prettier at any other file type.
 
 ## Testing
 
 Type-check with:
 
 ```bash
-npm run tsc:check
+npm run typecheck
 ```
 
 Run unit tests with:

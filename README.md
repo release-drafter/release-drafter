@@ -741,7 +741,7 @@ Third-party contributions are welcome! 🙏🏼 See
 
 > [!IMPORTANT]
 >
-> Before pushing, run `npm run all` to format, lint, type-check, test, and
+> Before pushing, run `npm run ci` to format, lint, type-check, test, and
 > regenerate all build artifacts. The CI pipeline enforces that no uncommitted
 > changes remain after these steps.
 

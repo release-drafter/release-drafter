@@ -25,7 +25,7 @@ jobs:
       - run: npm ci
 
       - name: Run all checks and rebuild artifacts
-        run: npm run all
+        run: npm run ci
 
       - name: Check for clean working directory
         run: npm run check:clean

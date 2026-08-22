@@ -129,12 +129,14 @@ var main = async (params) => {
 			}
 		}
 	}
-	if (labels.size > 0) if (params.dryRun) info(`[dry-run] Would add labels [${Array.from(labels).join(", ")}] to PR #${payload.number}`);
-	else await octokit.rest.issues.addLabels({
-		...context.repo,
-		issue_number: payload.number,
-		labels: Array.from(labels)
-	});
+	if (labels.size > 0) {
+		if (params.dryRun) info(`[dry-run] Would add labels [${Array.from(labels).join(", ")}] to PR #${payload.number}`);
+		else await octokit.rest.issues.addLabels({
+			...context.repo,
+			issue_number: payload.number,
+			labels: Array.from(labels)
+		});
+	}
 	return {
 		pr_number: payload.number.toString(),
 		labels: labels.size ? Array.from(labels).join(",") : void 0
