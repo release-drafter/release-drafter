@@ -22,11 +22,11 @@ type ParsedPackageResult = PackageResult & { files: PackedFile[] }
 export const expectedPackageFiles = [
   'LICENSE',
   'README.md',
+  'THIRD_PARTY_NOTICES',
   'dist/chunks/src-[content-hash].js',
   'dist/cli.js',
   'dist/index.d.ts',
   'dist/index.js',
-  'dist/types.d.ts',
   'package.json',
 ]
 

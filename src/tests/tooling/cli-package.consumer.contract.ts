@@ -36,11 +36,23 @@ const npxCli = join(dirname(npmCli), 'npx-cli.js')
 const expectedPackageFiles = [
   'LICENSE',
   'README.md',
+  'THIRD_PARTY_NOTICES',
   'dist/chunks/src-[content-hash].js',
   'dist/cli.js',
   'dist/index.d.ts',
   'dist/index.js',
   'package.json',
+]
+const expectedBundledDependencyNotices = [
+  'balanced-match',
+  'brace-expansion',
+  'compare-versions',
+  'conventional-commits-parser',
+  'escape-string-regexp',
+  'minimatch',
+  'verkit',
+  'yaml',
+  'zod',
 ]
 const approvedRuntimeDependencies = {
   '@gitbeaker/rest': '43.8.0',
@@ -293,13 +305,23 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     rmSync(temporaryDirectory, { force: true, recursive: true })
   })
 
-  it('ships exactly the public package inventory with the ISC license', () => {
+  it('ships exactly the public package inventory with its license notices', () => {
     expect(
       packResult.files.map(({ path }) => normalizePackageFile(path)).sort(),
     ).toEqual(expectedPackageFiles)
     expect(
       readFileSync(join(installedPackageDirectory, 'LICENSE'), 'utf8'),
     ).toBe(readFileSync(join(repositoryRoot, 'LICENSE'), 'utf8'))
+    const thirdPartyNotices = readFileSync(
+      join(installedPackageDirectory, 'THIRD_PARTY_NOTICES'),
+      'utf8',
+    )
+    expect(thirdPartyNotices).toBe(
+      readFileSync(join(packageDirectory, 'THIRD_PARTY_NOTICES'), 'utf8'),
+    )
+    for (const dependency of expectedBundledDependencyNotices) {
+      expect(thirdPartyNotices).toContain(`\n${dependency}\n`)
+    }
     const installedPackageFiles = listFiles(installedPackageDirectory)
       .map((path) => path.slice(installedPackageDirectory.length + 1))
       .filter((path) => !path.startsWith('node_modules/'))
