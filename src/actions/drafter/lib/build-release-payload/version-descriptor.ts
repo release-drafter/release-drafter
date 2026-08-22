@@ -103,10 +103,7 @@ export class VersionDescriptor {
 
   private _toSemver(version?: string | SemVer | null | undefined) {
     if (!version) return null
-    const parsedVersion = tryParse(version)
-    if (parsedVersion) return parsedVersion
-    const coercedVersion = coerce(version)
-    return coercedVersion ? tryParse(coercedVersion) : null
+    return tryParse(version) ?? coerce(version)
   }
 
   /**

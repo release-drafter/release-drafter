@@ -32295,7 +32295,7 @@ var configSchemaDefaults = Object.fromEntries(Object.entries({
 	return [key, void 0];
 }));
 //#endregion
-//#region node_modules/verkit/dist/index.js
+//#region node_modules/verkit/dist/comparison-DenM3wCn.js
 var LETTER_DASH_NUMBER = "[a-zA-Z0-9-]";
 var NUMERIC_IDENTIFIER = String.raw`0|[1-9]\d*`;
 var NUMERIC_IDENTIFIER_LOOSE = String.raw`\d+`;
@@ -32332,22 +32332,9 @@ function makeSafeRegexSource(source) {
 function safeRegex(source, flags) {
 	return new RegExp(makeSafeRegexSource(source), flags);
 }
-var NUMERIC$1 = /^\d+$/;
-function compareIdentifiers(left, right) {
-	if (typeof left === "number" && typeof right === "number") return left === right ? 0 : left < right ? -1 : 1;
-	const leftNumeric = NUMERIC$1.test(String(left));
-	const rightNumeric = NUMERIC$1.test(String(right));
-	const normalizedLeft = leftNumeric ? Number(left) : left;
-	const normalizedRight = rightNumeric ? Number(right) : right;
-	return normalizedLeft === normalizedRight ? 0 : leftNumeric && !rightNumeric ? -1 : rightNumeric && !leftNumeric ? 1 : normalizedLeft < normalizedRight ? -1 : 1;
-}
 var FULL = safeRegex(`^${FULL_PLAIN}$`);
 var LOOSE = safeRegex(`^${LOOSE_PLAIN}$`);
-var PRERELEASE_EXACT = safeRegex(`^${PRERELEASE}$`);
-var PRERELEASE_LOOSE_EXACT = safeRegex(`^${PRERELEASE_LOOSE}$`);
-var COERCE_EXACT = safeRegex(COERCE);
-var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
-var NUMERIC = /^\d+$/;
+var NUMERIC$1 = /^\d+$/;
 function formatComparableVersion(version) {
 	const base = `${version.major}.${version.minor}.${version.patch}`;
 	return version.prerelease?.length ? `${base}-${version.prerelease.join(".")}` : base;
@@ -32368,7 +32355,7 @@ function parse(version, options = {}) {
 	if (minor > Number.MAX_SAFE_INTEGER || minor < 0) throw new TypeError(`Invalid minor version: ${match[2]}`);
 	if (patch > Number.MAX_SAFE_INTEGER || patch < 0) throw new TypeError(`Invalid patch version: ${match[3]}`);
 	const prerelease = match[4] ? match[4].split(".").map((identifier) => {
-		if (NUMERIC.test(identifier)) {
+		if (NUMERIC$1.test(identifier)) {
 			const numeric = Number(identifier);
 			if (numeric >= 0 && numeric < Number.MAX_SAFE_INTEGER) return numeric;
 		}
@@ -32388,6 +32375,15 @@ function tryParse(version, options = {}) {
 	} catch {
 		return null;
 	}
+}
+var NUMERIC = /^\d+$/;
+function compareIdentifiers(left, right) {
+	if (typeof left === "number" && typeof right === "number") return left === right ? 0 : left < right ? -1 : 1;
+	const leftNumeric = NUMERIC.test(String(left));
+	const rightNumeric = NUMERIC.test(String(right));
+	const normalizedLeft = leftNumeric ? Number(left) : left;
+	const normalizedRight = rightNumeric ? Number(right) : right;
+	return normalizedLeft === normalizedRight ? 0 : leftNumeric && !rightNumeric ? -1 : rightNumeric && !leftNumeric ? 1 : normalizedLeft < normalizedRight ? -1 : 1;
 }
 function compareMainParsed(left, right) {
 	return left.major === right.major ? left.minor === right.minor ? left.patch === right.patch ? 0 : left.patch < right.patch ? -1 : 1 : left.minor < right.minor ? -1 : 1 : left.major < right.major ? -1 : 1;
@@ -32410,123 +32406,15 @@ function comparePrereleaseParsed(left, right) {
 function compareParsed(left, right) {
 	return compareMainParsed(left, right) || comparePrereleaseParsed(left, right);
 }
-function isPrereleasePrefix(prerelease, identifier) {
-	const identifiers = identifier.split(".");
-	return identifiers.length <= prerelease.length && identifiers.every((part, index) => compareIdentifiers(prerelease[index], part) === 0);
-}
-function incrementPrerelease(version, identifier, identifierBase) {
-	const base = Number(identifierBase) ? 1 : 0;
-	let prerelease = version.prerelease;
-	if (prerelease?.length) {
-		let foundNumeric = false;
-		for (let index = prerelease.length - 1; index >= 0; index--) if (typeof prerelease[index] === "number") {
-			prerelease[index] = Number(prerelease[index]) + 1;
-			foundNumeric = true;
-			break;
-		}
-		if (!foundNumeric) {
-			if (identifier === prerelease.join(".") && identifierBase === false) throw new Error("invalid increment argument: identifier already exists");
-			prerelease.push(base);
-		}
-	} else {
-		prerelease = [base];
-		version.prerelease = prerelease;
-	}
-	if (!identifier) return;
-	const reset = identifierBase === false ? [identifier] : [identifier, base];
-	if (isPrereleasePrefix(prerelease, identifier)) {
-		const next = prerelease[identifier.split(".").length];
-		if (Number.isNaN(Number(next))) version.prerelease = reset;
-	} else version.prerelease = reset;
-}
-function incrementMutable(version, release, identifier, identifierBase) {
-	switch (release) {
-		case "premajor":
-			version.prerelease = void 0;
-			version.patch = 0;
-			version.minor = 0;
-			version.major++;
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		case "preminor":
-			version.prerelease = void 0;
-			version.patch = 0;
-			version.minor++;
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		case "prepatch":
-			version.prerelease = void 0;
-			incrementMutable(version, "patch", identifier, identifierBase);
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		case "prerelease":
-			if (!version.prerelease?.length) incrementMutable(version, "patch", identifier, identifierBase);
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		case "release":
-			if (!version.prerelease?.length) throw new Error(`version ${formatFullVersion(version)} is not a prerelease`);
-			version.prerelease = void 0;
-			break;
-		case "major":
-			if (version.minor !== 0 || version.patch !== 0 || !version.prerelease?.length) version.major++;
-			version.minor = 0;
-			version.patch = 0;
-			version.prerelease = void 0;
-			break;
-		case "minor":
-			if (version.patch !== 0 || !version.prerelease?.length) version.minor++;
-			version.patch = 0;
-			version.prerelease = void 0;
-			break;
-		case "patch":
-			if (!version.prerelease?.length) version.patch++;
-			version.prerelease = void 0;
-			break;
-		case "pre":
-			incrementPrerelease(version, identifier, identifierBase);
-			break;
-		default: throw new Error(`invalid increment argument: ${release}`);
-	}
-}
-function incrementParsedVersion(parsed, release, identifier, identifierBase, loose = false) {
-	if (release.startsWith("pre")) {
-		if (!identifier && identifierBase === false) throw new Error("invalid increment argument: identifier is empty");
-		if (identifier) {
-			const expression = loose ? PRERELEASE_LOOSE_EXACT : PRERELEASE_EXACT;
-			const match = `-${identifier}`.match(expression);
-			if (!match || match[1] !== identifier) throw new Error(`invalid identifier: ${identifier}`);
-		}
-	}
-	const mutable = {
-		build: parsed.build ? [...parsed.build] : void 0,
-		major: parsed.major,
-		minor: parsed.minor,
-		patch: parsed.patch,
-		prerelease: parsed.prerelease ? [...parsed.prerelease] : void 0
-	};
-	incrementMutable(mutable, release, identifier, identifierBase);
-	return formatComparableVersion(mutable);
-}
-function coerceParsedVersion(value, options = {}) {
-	if (typeof value === "object") return value;
-	const input = typeof value === "number" ? String(value) : value;
-	if (typeof input !== "string") return null;
-	let match = null;
-	if (options.rtl) {
-		const expression = safeRegex(options.includePrerelease ? COERCE_FULL : COERCE, "g");
-		let next;
-		while ((next = expression.exec(input)) && (!match || match.index + match[0].length !== input.length)) {
-			if (!match || next.index + next[0].length !== match.index + match[0].length) match = next;
-			expression.lastIndex = next.index + next[1].length + next[2].length;
-		}
-	} else match = (options.includePrerelease ? COERCE_FULL_EXACT : COERCE_EXACT).exec(input);
-	if (!match) return null;
-	const major = match[2];
-	return tryParse(`${major}.${match[3] || "0"}.${match[4] || "0"}${options.includePrerelease && match[5] ? `-${match[5]}` : ""}${options.includePrerelease && match[6] ? `+${match[6]}` : ""}`, options);
-}
+//#endregion
+//#region node_modules/verkit/dist/set-CC5YeoYX.js
 var STRICT_COMPARATOR = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${FULL_PLAIN})$|^$`);
 var LOOSE_COMPARATOR$1 = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${LOOSE_PLAIN})$|^$`);
+function formatComparator(comparator) {
+	return comparator.version ? `${comparator.operator}${formatComparableVersion(comparator.version)}` : "";
+}
 function parseComparator(comparator, options = {}) {
+	if (typeof comparator !== "string") return comparator;
 	const normalized = comparator.trim().replaceAll(/\s+/g, " ");
 	const match = normalized.match(options.loose ? LOOSE_COMPARATOR$1 : STRICT_COMPARATOR);
 	if (!match) throw new TypeError(`Invalid comparator: ${normalized}`);
@@ -32549,6 +32437,19 @@ function testParsedComparator(comparator, version) {
 		case "<": return comparison < 0;
 		case "<=": return comparison <= 0;
 	}
+}
+function comparatorAllowsPrerelease(comparator, version) {
+	const allowed = comparator.version;
+	return allowed !== null && !!allowed.prerelease?.length && allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch;
+}
+function testComparatorSet(set, version, options) {
+	if (set.some((comparator) => !testParsedComparator(comparator, version))) return false;
+	return !version.prerelease?.length || !!options.includePrerelease || set.some((comparator) => comparatorAllowsPrerelease(comparator, version));
+}
+//#endregion
+//#region node_modules/verkit/dist/range-DvX-Y6iv.js
+function formatRange(range) {
+	return range.sets.map((set) => set.map(formatComparator).join(" ")).join("||");
 }
 var BUILD_STRIP = new RegExp(BUILD, "g");
 var BUILD_SAFE = safeRegex(BUILD);
@@ -32675,9 +32576,9 @@ function parseSimpleRange(input, options) {
 function parseRange(range, options = {}) {
 	if (typeof range !== "string") return range;
 	const parsedOptions = { ...options };
-	const raw = range.trim().replaceAll(/\s+/g, " ");
-	let sets = raw.split("||").map((part) => parseSimpleRange(part.trim(), parsedOptions)).filter((set) => set.length);
-	if (!sets.length) throw new TypeError(`Range contains no valid comparator sets: ${raw}`);
+	const normalizedRange = range.trim().replaceAll(/\s+/g, " ");
+	let sets = normalizedRange.split("||").map((part) => parseSimpleRange(part.trim(), parsedOptions)).filter((set) => set.length);
+	if (!sets.length) throw new TypeError(`Range contains no valid comparator sets: ${normalizedRange}`);
 	if (sets.length > 1) {
 		const first = sets[0];
 		sets = sets.filter((set) => set[0]?.value !== "<0.0.0-0");
@@ -32688,9 +32589,7 @@ function parseRange(range, options = {}) {
 		}
 	}
 	return {
-		normalized: sets.map((set) => set.map((comparator) => comparator.value).join(" ")).join("||"),
 		options: parsedOptions,
-		raw,
 		sets
 	};
 }
@@ -32701,14 +32600,6 @@ function tryParseRange(range, options = {}) {
 		return null;
 	}
 }
-function testComparatorSet(set, version, options) {
-	if (set.some((comparator) => !testParsedComparator(comparator, version))) return false;
-	if (!version.prerelease?.length || options.includePrerelease) return true;
-	return set.some((comparator) => {
-		const allowed = comparator.version;
-		return allowed !== null && allowed.prerelease?.length && allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch;
-	});
-}
 function testParsedRange(range, version) {
 	return range.sets.some((set) => testComparatorSet(set, version, range.options));
 }
@@ -32718,19 +32609,134 @@ function testRangeVersion(range, version) {
 }
 function normalizeRange(range, options = {}) {
 	const parsed = tryParseRange(range, options);
-	return parsed ? parsed.normalized || "*" : null;
+	return parsed ? formatRange(parsed) || "*" : null;
 }
 function satisfies(version, range, options = {}) {
 	const parsed = tryParseRange(range, options);
 	return parsed ? testRangeVersion(parsed, version) : false;
 }
+//#endregion
+//#region node_modules/verkit/dist/version-CQ98ZBpL.js
+var COERCE_EXACT = safeRegex(COERCE);
+var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
+var PRERELEASE_EXACT = safeRegex(`^${PRERELEASE}$`);
+var PRERELEASE_LOOSE_EXACT = safeRegex(`^${PRERELEASE_LOOSE}$`);
 function normalize$1(version, options = {}) {
 	const parsed = tryParse(version, options);
 	return parsed ? formatComparableVersion(parsed) : null;
 }
 function coerce(value, options = {}) {
-	const parsed = coerceParsedVersion(value, options);
-	return parsed ? formatFullVersion(parsed) : null;
+	if (typeof value === "object") return value;
+	const input = typeof value === "number" ? String(value) : value;
+	let match = null;
+	if (options.rtl) {
+		const expression = safeRegex(options.includePrerelease ? COERCE_FULL : COERCE, "g");
+		let next;
+		while ((next = expression.exec(input)) && (!match || match.index + match[0].length !== input.length)) {
+			if (!match || next.index + next[0].length !== match.index + match[0].length) match = next;
+			expression.lastIndex = next.index + next[1].length + next[2].length;
+		}
+	} else match = (options.includePrerelease ? COERCE_FULL_EXACT : COERCE_EXACT).exec(input);
+	if (!match) return null;
+	const major = match[2];
+	return tryParse(`${major}.${match[3] || "0"}.${match[4] || "0"}${options.includePrerelease && match[5] ? `-${match[5]}` : ""}${options.includePrerelease && match[6] ? `+${match[6]}` : ""}`, options);
+}
+function isPrereleasePrefix(prerelease, identifier) {
+	const identifiers = identifier.split(".");
+	return identifiers.length <= prerelease.length && identifiers.every((part, index) => compareIdentifiers(prerelease[index], part) === 0);
+}
+function incrementPrerelease(version, identifier, identifierBase) {
+	const base = Number(identifierBase) ? 1 : 0;
+	let prerelease = version.prerelease;
+	if (prerelease?.length) {
+		let foundNumeric = false;
+		for (let index = prerelease.length - 1; index >= 0; index--) if (typeof prerelease[index] === "number") {
+			prerelease[index] = Number(prerelease[index]) + 1;
+			foundNumeric = true;
+			break;
+		}
+		if (!foundNumeric) {
+			if (identifier === prerelease.join(".") && identifierBase === false) throw new Error("invalid increment argument: identifier already exists");
+			prerelease.push(base);
+		}
+	} else {
+		prerelease = [base];
+		version.prerelease = prerelease;
+	}
+	if (!identifier) return;
+	const reset = identifierBase === false ? [identifier] : [identifier, base];
+	if (isPrereleasePrefix(prerelease, identifier)) {
+		const next = prerelease[identifier.split(".").length];
+		if (Number.isNaN(Number(next))) version.prerelease = reset;
+	} else version.prerelease = reset;
+}
+function incrementMutable(version, release, identifier, identifierBase) {
+	switch (release) {
+		case "premajor":
+			version.prerelease = void 0;
+			version.patch = 0;
+			version.minor = 0;
+			version.major++;
+			incrementPrerelease(version, identifier, identifierBase);
+			break;
+		case "preminor":
+			version.prerelease = void 0;
+			version.patch = 0;
+			version.minor++;
+			incrementPrerelease(version, identifier, identifierBase);
+			break;
+		case "prepatch":
+			version.prerelease = void 0;
+			incrementMutable(version, "patch", identifier, identifierBase);
+			incrementPrerelease(version, identifier, identifierBase);
+			break;
+		case "prerelease":
+			if (!version.prerelease?.length) incrementMutable(version, "patch", identifier, identifierBase);
+			incrementPrerelease(version, identifier, identifierBase);
+			break;
+		case "release":
+			if (!version.prerelease?.length) throw new Error(`version ${formatFullVersion(version)} is not a prerelease`);
+			version.prerelease = void 0;
+			break;
+		case "major":
+			if (version.minor !== 0 || version.patch !== 0 || !version.prerelease?.length) version.major++;
+			version.minor = 0;
+			version.patch = 0;
+			version.prerelease = void 0;
+			break;
+		case "minor":
+			if (version.patch !== 0 || !version.prerelease?.length) version.minor++;
+			version.patch = 0;
+			version.prerelease = void 0;
+			break;
+		case "patch":
+			if (!version.prerelease?.length) version.patch++;
+			version.prerelease = void 0;
+			break;
+		case "pre":
+			incrementPrerelease(version, identifier, identifierBase);
+			break;
+		default: throw new Error(`invalid increment argument: ${release}`);
+	}
+}
+function incrementParsedVersion(parsed, release, identifier, identifierBase, loose = false) {
+	if (release.startsWith("pre")) {
+		if (!identifier && identifierBase === false) throw new Error("invalid increment argument: identifier is empty");
+		if (identifier) {
+			const expression = loose ? PRERELEASE_LOOSE_EXACT : PRERELEASE_EXACT;
+			const match = `-${identifier}`.match(expression);
+			if (!match || match[1] !== identifier) throw new Error(`invalid identifier: ${identifier}`);
+		}
+	}
+	const mutable = {
+		build: parsed.build ? [...parsed.build] : void 0,
+		major: parsed.major,
+		minor: parsed.minor,
+		patch: parsed.patch,
+		prerelease: parsed.prerelease ? [...parsed.prerelease] : void 0
+	};
+	incrementMutable(mutable, release, identifier, identifierBase);
+	return formatComparableVersion(mutable);
 }
 function increment(version, release, options = {}) {
 	try {
@@ -33622,10 +33628,7 @@ var VersionDescriptor = class VersionDescriptor {
 	}
 	toSemver(version) {
 		if (!version) return null;
-		const parsedVersion = tryParse(version);
-		if (parsedVersion) return parsedVersion;
-		const coercedVersion = coerce(version);
-		return coercedVersion ? tryParse(coercedVersion) : null;
+		return tryParse(version) ?? coerce(version);
 	}
 	incremented(incrementType) {
 		if (!this.version || incrementType === "no_increment") return this;
@@ -58513,4 +58516,4 @@ var sharedInputSchema = object({
 	});
 });
 //#endregion
-export { debug as C, setOutput as D, setFailed as E, warning as O, core_exports as S, info as T, context as _, getRepository as a, string$1 as b, require_lib as c, normalizeRange as d, satisfies as f, require_ignore as g, needsPullRequestChangedFiles as h, getGitHubAdapter as i, __toESM as k, escapeStringRegexp as l, commonConfigSchema as m, parseCommitishForRelease as n, buildReleasePayload as o, configSchema as p, composeConfigGet as r, mergeInputAndConfig as s, sharedInputSchema as t, coerce as u, array as v, getInput as w, stringbool as x, object as y };
+export { __toESM as A, core_exports as C, setFailed as D, info as E, setOutput as O, stringbool as S, getInput as T, require_ignore as _, getRepository as a, object as b, require_lib as c, normalize$1 as d, normalizeRange as f, needsPullRequestChangedFiles as g, commonConfigSchema as h, getGitHubAdapter as i, warning as k, escapeStringRegexp as l, configSchema as m, parseCommitishForRelease as n, buildReleasePayload as o, satisfies as p, composeConfigGet as r, mergeInputAndConfig as s, sharedInputSchema as t, coerce as u, context as v, debug as w, string$1 as x, array as y };

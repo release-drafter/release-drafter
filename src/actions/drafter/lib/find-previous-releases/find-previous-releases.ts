@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import type { GitHubAdapter } from '@release-drafter/github-adapter'
-import { coerce, normalizeRange, satisfies } from 'verkit'
+import { coerce, normalize, normalizeRange, satisfies } from 'verkit'
 import { getGitHubAdapter, getRepository } from '#src/common/index.ts'
 import type { ParsedConfig } from '../../config/index.ts'
 import { sortReleases } from './sort-releases.ts'
@@ -97,7 +97,7 @@ export const findPreviousReleases = async (
           core.debug(
             `Range "${parsedRange}" ${
               doesSatisfy ? 'satisfies' : 'does not satisfy'
-            } version "${parsedVersion}" `,
+            } version "${normalize(parsedVersion)}" `,
           )
 
           return doesSatisfy

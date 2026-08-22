@@ -1,11 +1,11 @@
 ---
 name: verkit
-version: 0.3.1
+version: 0.4.0
 type: npm
-summary: Fast, zero-dependency SemVer for ESM and TypeScript, with functional,
-  tree-shakeable APIs.
+summary: Fast, zero-dependency SemVer for ESM and TypeScript, with functional, tree-shakeable
+  APIs.
 homepage: https://github.com/sxzz/verkit#readme
-license: mit
+license: other
 licenses:
 - sources: LICENSE
   text: |
@@ -30,4 +30,19 @@ licenses:
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
+- sources: README.md
+  text: |-
+    [MIT](./LICENSE) © 2026-PRESENT [Kevin Deng](https://github.com/sxzz).
+
+    Parts of the implementation and test fixtures are derived from [node-semver]
+    under the ISC license; see [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+
+    <!-- Badges -->
+
+    [npmx-version-src]: https://npmx.dev/api/registry/badge/version/verkit
+    [npmx-downloads-src]: https://npmx.dev/api/registry/badge/downloads-month/verkit
+    [npmx-href]: https://npmx.dev/verkit
+    [node-semver]: https://github.com/npm/node-semver
+    [unit-test-src]: https://github.com/sxzz/verkit/actions/workflows/unit-test.yml/badge.svg
+    [unit-test-href]: https://github.com/sxzz/verkit/actions/workflows/unit-test.yml
 notices: []

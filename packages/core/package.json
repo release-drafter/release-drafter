@@ -30,7 +30,7 @@
     "escape-string-regexp": "^5.0.0",
     "ignore": "^7.0.6",
     "regex-parser": "^2.3.1",
-    "verkit": "0.3.1",
+    "verkit": "0.4.0",
     "zod": "^4.4.3"
   },
   "license": "MIT",
