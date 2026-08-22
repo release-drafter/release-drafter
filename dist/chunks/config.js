@@ -51168,6 +51168,19 @@ var getGitHubAdapter = (token, octokit, factory = createGitHubAdapter) => {
 	return defaultAdapter.adapter;
 };
 //#endregion
+//#region packages/gh-actions/src/common/action-contract.ts
+/** Define every action input name exactly once and require complete coverage. */
+var defineActionInputNames = () => (names, ..._missing) => names;
+/** Read the inputs declared by an action contract. */
+var readActionInputs = (names) => Object.fromEntries(names.map((name) => [name, getInput(name) || void 0]));
+/** Write every defined output through the names declared by the contract. */
+var writeActionOutputs = (names, values) => {
+	for (const name of names) {
+		const value = values[name];
+		if (value !== void 0) setOutput(name, value);
+	}
+};
+//#endregion
 //#region packages/gh-actions/src/common/shared-input.schema.ts
 /** Read-only token input shared by GitHub Actions. */
 var tokenInputSchema = object({ token: string$1().min(1).default(() => process$1.env.GITHUB_TOKEN || "") }).superRefine((data, context) => {
@@ -57241,4 +57254,4 @@ async function composeConfigGet(configFilename, currentContext, token) {
 	return result;
 }
 //#endregion
-export { setFailed as C, info as S, union as _, getGitHubAdapter as a, core_exports as b, ZodDefault as c, boolean as d, literal as f, stringbool as g, string$1 as h, actionLogger as i, _enum as l, object as m, sharedInputSchema as n, getRepository as o, number as p, tokenInputSchema as r, escapeStringRegexp as s, composeConfigGet as t, array as u, Minimatch as v, setOutput as w, getInput as x, context as y };
+export { core_exports as C, context as S, setFailed as T, object as _, readActionInputs as a, union as b, getGitHubAdapter as c, ZodDefault as d, _enum as f, number as g, literal as h, defineActionInputNames as i, getRepository as l, boolean as m, sharedInputSchema as n, writeActionOutputs as o, array as p, tokenInputSchema as r, actionLogger as s, composeConfigGet as t, escapeStringRegexp as u, string$1 as v, info as w, Minimatch as x, stringbool as y };

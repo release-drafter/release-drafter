@@ -1,4 +1,5 @@
 import type { ActionInput as AutolabelerActionInput } from '#gh-actions/autolabeler/action-input.schema.ts'
+import type { ActionInput as CheckPrActionInput } from '#gh-actions/check-pr/action-input.schema.ts'
 import type { ActionInput as DrafterActionInput } from '#gh-actions/drafter/action-input.schema.ts'
 
 export type ActionParameterMetadata = {
@@ -172,6 +173,19 @@ const autolabelerOutputs = {
   },
 }
 
+const checkPrInputs = defineActionInputs<CheckPrActionInput>()({
+  'config-name': {
+    description: 'The Release Drafter config file under `.github` to use.\n',
+    required: false,
+    default: 'release-drafter.yml',
+  },
+  token: {
+    description:
+      'Access token used to read configuration. Defaults to github.token.\n',
+    default: `\${{ github.token }}`,
+  },
+})
+
 export const actionManifests = {
   drafter: {
     paths: ['action.yml', 'drafter/action.yml'],
@@ -182,5 +196,10 @@ export const actionManifests = {
     paths: ['autolabeler/action.yml'],
     inputs: autolabelerInputs,
     outputs: autolabelerOutputs,
+  },
+  checkPr: {
+    paths: ['check-pr/action.yml'],
+    inputs: checkPrInputs,
+    outputs: {},
   },
 } as const

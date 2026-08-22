@@ -1,4 +1,4 @@
-import { C as setFailed, S as info, _ as union, h as string, i as actionLogger, l as _enum, m as object, p as number, r as tokenInputSchema, u as array, x as getInput, y as context } from "../../chunks/config.js";
+import { S as context, T as setFailed, _ as object, a as readActionInputs, b as union, f as _enum, g as number, i as defineActionInputNames, p as array, r as tokenInputSchema, s as actionLogger, v as string, w as info } from "../../chunks/config.js";
 import { g as evaluateCategories, n as mergeInputAndConfig, t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
 //#region packages/core/src/pull-request-validation.ts
 /** Keep title and label predicates while excluding path-only validation. */
@@ -71,11 +71,11 @@ var parsePullRequestEvent = (eventName, payload) => {
 //#region packages/gh-actions/src/check-pr/action-input.schema.ts
 var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(tokenInputSchema);
 //#endregion
+//#region packages/gh-actions/src/check-pr/action-metadata.ts
+var actionInputNames = defineActionInputNames()(["config-name", "token"]);
+//#endregion
 //#region packages/gh-actions/src/check-pr/get-action-inputs.ts
-var getActionInput = () => actionInputSchema.parse({
-	"config-name": getInput("config-name") || void 0,
-	token: getInput("token") || void 0
-});
+var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
 //#endregion
 //#region packages/gh-actions/src/check-pr/get-config.ts
 var getConfig = async (configName, token) => getReleaseDrafterConfig(configName, context, token);

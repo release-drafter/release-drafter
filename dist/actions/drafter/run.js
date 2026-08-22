@@ -1,6 +1,5 @@
-import { C as setFailed, S as info, a as getGitHubAdapter, g as stringbool, h as string, i as actionLogger, m as object, n as sharedInputSchema, o as getRepository, s as escapeStringRegexp, y as context } from "../../chunks/config.js";
+import { S as context, T as setFailed, _ as object, a as readActionInputs, c as getGitHubAdapter, i as defineActionInputNames, l as getRepository, n as sharedInputSchema, o as writeActionOutputs, s as actionLogger, u as escapeStringRegexp, v as string, w as info, y as stringbool } from "../../chunks/config.js";
 import { _ as filterPullRequestsByPreCategories, a as COERCE, b as needsPullRequestChangedFiles, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
-import { n as readActionInputs, r as writeActionOutputs, t as defineActionInputNames } from "../../chunks/action-contract.js";
 //#region node_modules/verkit/dist/version-CQ98ZBpL.js
 var COERCE_EXACT = safeRegex(COERCE);
 var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);

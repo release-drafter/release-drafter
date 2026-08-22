@@ -1,8 +1,6 @@
-import * as core from '@actions/core'
-import { type ActionInput, actionInputSchema } from './action-input.schema.ts'
+import { readActionInputs } from '../common/action-contract.ts'
+import { actionInputSchema } from './action-input.schema.ts'
+import { actionInputNames } from './action-metadata.ts'
 
-export const getActionInput = (): ActionInput =>
-  actionInputSchema.parse({
-    'config-name': core.getInput('config-name') || undefined,
-    token: core.getInput('token') || undefined,
-  })
+export const getActionInput = () =>
+  actionInputSchema.parse(readActionInputs(actionInputNames))

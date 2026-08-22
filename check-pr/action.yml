@@ -12,9 +12,9 @@ inputs:
     description: |
       The Release Drafter config file under `.github` to use.
     required: false
-    default: 'release-drafter.yml'
+    default: release-drafter.yml
   token:
-    description: >
+    description: |
       Access token used to read configuration. Defaults to github.token.
     default: ${{ github.token }}
 

@@ -17,6 +17,10 @@ import {
   actionOutputNames as autolabelerOutputNames,
 } from '#gh-actions/autolabeler/action-metadata.ts'
 import {
+  actionInputNames as checkPrInputNames,
+  actionOutputNames as checkPrOutputNames,
+} from '#gh-actions/check-pr/action-metadata.ts'
+import {
   actionInputNames as drafterInputNames,
   actionOutputNames as drafterOutputNames,
 } from '#gh-actions/drafter/action-metadata.ts'
@@ -160,6 +164,8 @@ describe('workspace foundation', () => {
     expect(autolabelerAction.outputs).toEqual(
       actionManifests.autolabeler.outputs,
     )
+    expect(checkPrAction.inputs).toEqual(actionManifests.checkPr.inputs)
+    expect(checkPrAction.outputs).toEqual(actionManifests.checkPr.outputs)
     expect(Object.keys(rootAction.inputs).sort()).toEqual(
       [...drafterInputNames].sort(),
     )
@@ -172,11 +178,12 @@ describe('workspace foundation', () => {
     expect(Object.keys(autolabelerAction.outputs ?? {}).sort()).toEqual(
       [...autolabelerOutputNames].sort(),
     )
-    expect(Object.keys(checkPrAction.inputs).sort()).toEqual([
-      'config-name',
-      'token',
-    ])
-    expect(checkPrAction.outputs ?? {}).toEqual({})
+    expect(Object.keys(checkPrAction.inputs).sort()).toEqual(
+      [...checkPrInputNames].sort(),
+    )
+    expect(Object.keys(checkPrAction.outputs ?? {}).sort()).toEqual(
+      [...checkPrOutputNames].sort(),
+    )
   })
 
   it('routes Action input and output access through metadata contracts', () => {
