@@ -4,8 +4,11 @@ import type {
   CreateReleaseRequest,
   FindChangesRequest,
   ForgeAdapter,
+  GetPullRequestRequest,
   ListReleasesRequest,
   PullRequest,
+  PullRequestReader,
+  PullRequestValidationData,
   Release,
   ResolveCommitishRequest,
   UpdateReleaseRequest,
@@ -154,7 +157,7 @@ const stableMergeRequestOrder = (left: PullRequest, right: PullRequest) =>
   (left.mergedAt ?? '').localeCompare(right.mergedAt ?? '') ||
   left.number - right.number
 
-export class GitLabAdapter implements ForgeAdapter {
+export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
   readonly capabilities = { draftReleases: false } as const
 
   constructor(private readonly options: GitLabAdapterOptions) {}
@@ -370,6 +373,43 @@ export class GitLabAdapter implements ForgeAdapter {
     return releases
       .filter((release) => release.upcoming_release !== true)
       .map(normalizeRelease)
+  }
+
+  async getPullRequest({
+    repository,
+    number,
+  }: GetPullRequestRequest): Promise<PullRequestValidationData> {
+    const client = this.client(repository)
+    const mergeRequest = (
+      await client.mergeRequest(
+        client.project(repository),
+        number,
+        client.budget(),
+      )
+    ).data
+    const title = mergeRequest.title?.trim()
+    const baseRefName = mergeRequest.target_branch?.trim()
+    if (mergeRequest.iid !== number)
+      throw new Error(`Merge request !${number} returned a different iid`)
+    if (!title)
+      throw new Error(`Merge request !${number} returned a blank title`)
+    if (!baseRefName)
+      throw new Error(`Merge request !${number} returned a blank target branch`)
+
+    return {
+      number,
+      title,
+      baseRefName,
+      labels: (mergeRequest.labels ?? []).flatMap((label) =>
+        typeof label === 'string'
+          ? label
+            ? [label]
+            : []
+          : label.name
+            ? [label.name]
+            : [],
+      ),
+    }
   }
 
   async resolveCommitish({

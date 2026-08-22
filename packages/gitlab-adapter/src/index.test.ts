@@ -94,6 +94,54 @@ describe('GitLabAdapter', () => {
     expect(fetch).toHaveBeenCalledOnce()
   })
 
+  it('reads merge request validation data from the project endpoint', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      expect(pathOf(input)).toBe(
+        '/api/v4/projects/group%2Fsubgroup%2Fproject/merge_requests/12',
+      )
+      return json(
+        mergeRequest(12, {
+          title: '  feat: add search  ',
+          target_branch: '  release/2.x  ',
+          labels: ['feature', { name: 'approved' }, '', {}],
+        }),
+      )
+    })
+
+    await expect(
+      adapter(fetch).getPullRequest({ repository, number: 12 }),
+    ).resolves.toEqual({
+      number: 12,
+      title: 'feat: add search',
+      labels: ['feature', 'approved'],
+      baseRefName: 'release/2.x',
+    })
+  })
+
+  it.each([
+    {
+      name: 'different iid',
+      response: mergeRequest(13),
+      expected: 'different iid',
+    },
+    {
+      name: 'blank title',
+      response: mergeRequest(12, { title: '  ' }),
+      expected: 'blank title',
+    },
+    {
+      name: 'blank target branch',
+      response: mergeRequest(12, { target_branch: '  ' }),
+      expected: 'blank target branch',
+    },
+  ])('rejects a merge request with a $name', async ({ response, expected }) => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () => json(response))
+
+    await expect(
+      adapter(fetch).getPullRequest({ repository, number: 12 }),
+    ).rejects.toThrow(expected)
+  })
+
   it('rejects request timeouts, incomplete, oversized, and over-byte-limit comparisons', async () => {
     const timeoutFetch = vi.fn<typeof globalThis.fetch>(
       async (_input, init) =>
