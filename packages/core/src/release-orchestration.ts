@@ -187,7 +187,7 @@ export const draftRelease = async (params: {
   if (!adapter.capabilities.draftReleases && !input.publish) {
     if (!input.dryRun) {
       logger.info(
-        'The forge does not support draft releases; calculating the release without writes because publish is false.',
+        'This forge does not support draft releases. Because publish is false, Release Drafter will calculate the release but will not write it.',
       )
     }
     input = { ...input, dryRun: true }
