@@ -125,9 +125,6 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
       .withEnvironment({
         [`${prefix}__database__DB_TYPE`]: 'sqlite3',
         [`${prefix}__database__PATH`]: '/var/lib/forge-test-db/gitea.db',
-        // Avoid a Gitea race between base-branch rechecks and saving a merge.
-        [`${prefix}__repository.pull-request__DELAY_CHECK_FOR_INACTIVE_DAYS`]:
-          '0',
         [`${prefix}__security__INSTALL_LOCK`]: 'true',
         [`${prefix}__server__HTTP_PORT`]: String(PORT),
         [`${prefix}__log__LEVEL`]: 'warn',
@@ -233,7 +230,10 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
           `/repos/${OWNER}/${REPOSITORY}/pulls/${pullNumber}/merge`,
           {
             method: 'POST',
-            body: JSON.stringify({ Do: 'merge' }),
+            // Keep the PR head out of the base history. Gitea 1.27.1 can
+            // otherwise race a post-merge check and persist the head as its
+            // merge base, making the changed-file API permanently empty.
+            body: JSON.stringify({ Do: 'squash' }),
           },
         )
         if (response.ok) return
@@ -396,7 +396,7 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
         historyLimit: 20,
         includeChangedFiles: true,
         includeNewContributors: true,
-        expectedCommitOids: [beforeMerge.head.sha, pull.merge_commit_sha],
+        expectedCommitOids: [pull.merge_commit_sha],
         expectedPullRequests: [
           {
             number: pull.number,
