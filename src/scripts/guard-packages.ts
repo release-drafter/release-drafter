@@ -71,8 +71,8 @@ export function collectPackageFailures(rootDir = '.') {
   if (root.private !== true) failures.push('root package must be private')
   if (root.name === 'release-drafter')
     failures.push('root package must not use the public facade name')
-  if (root.engines?.node !== '>=24.0.0')
-    failures.push('root package must declare Node >=24.0.0')
+  if (root.engines?.node !== '^24.11.0 || >=26.0.0')
+    failures.push('root package must declare Node ^24.11.0 || >=26.0.0')
   if (JSON.stringify(root.workspaces) !== JSON.stringify(['packages/*']))
     failures.push('root workspaces must be ["packages/*"]')
   const packageDirs = readdirSync(join(rootDir, 'packages'), {

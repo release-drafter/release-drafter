@@ -44,11 +44,10 @@ export default defineConfig({
   },
   build: {
     target: 'node24',
-    rollupOptions: {
+    rolldownOptions: {
       // platform: 'node' makes rolldown generate a createRequire-based __require
       // for CJS modules (e.g. undici via @actions/github) instead of the default
       // stub that throws in ESM environments without a global `require`.
-      // @ts-expect-error remove this when vite support for rolldown is stable
       platform: 'node',
       external: (id) => id.startsWith('node:') || builtinModules.includes(id),
       input: {
