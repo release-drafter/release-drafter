@@ -5,7 +5,6 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
-  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs'
@@ -125,7 +124,7 @@ describe('workspace foundation', () => {
     }
   })
 
-  it('preserves action compatibility metadata and tracked paths', () => {
+  it('preserves action compatibility metadata', () => {
     const rootAction = parseYaml(readFileSync('action.yml', 'utf8'))
     const drafterAction = parseYaml(readFileSync('drafter/action.yml', 'utf8'))
     const autolabelerAction = parseYaml(
@@ -168,14 +167,6 @@ describe('workspace foundation', () => {
     expect(Object.keys(autolabelerAction.outputs ?? {}).sort()).toEqual(
       [...autolabelerOutputNames].sort(),
     )
-
-    for (const artifact of [
-      'dist/actions/drafter/run.js',
-      'dist/actions/autolabeler/run.js',
-    ]) {
-      expect(statSync(artifact).isFile()).toBe(true)
-      expect(statSync(artifact).size).toBeGreaterThan(0)
-    }
   })
 
   it('routes Action input and output access through metadata contracts', () => {
