@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "noResolve": true,
-    "rootDir": "src"
-  },
-  "files": ["src/index.ts", "src/types.ts"],
-  "include": []
-}

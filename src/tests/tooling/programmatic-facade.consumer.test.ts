@@ -82,9 +82,7 @@ describe.sequential('release-drafter packed programmatic facade', () => {
 
     execNpm(['run', 'build', '--workspace', 'release-drafter'])
     javascript = readFileSync(join(facadeDist, 'index.js'), 'utf8')
-    declarations = ['index.d.ts', 'types.d.ts']
-      .map((file) => readFileSync(join(facadeDist, file), 'utf8'))
-      .join('\n')
+    declarations = readFileSync(join(facadeDist, 'index.d.ts'), 'utf8')
     const packOutput = execNpm(
       [
         'pack',
@@ -138,8 +136,11 @@ describe.sequential('release-drafter packed programmatic facade', () => {
 
   it('emits the real NodeNext-compatible public declaration surface', () => {
     expect(declarations).toContain('export declare const draftRelease')
-    expect(declarations).toContain('export interface DraftReleaseOptions')
-    expect(declarations).toContain('export interface ForgeAdapter')
+    expect(declarations).toContain('interface DraftReleaseOptions')
+    expect(declarations).toContain('interface ForgeAdapter')
+    expect(declarations).toMatch(
+      /export type \{[^}]*DraftReleaseOptions[^}]*ForgeAdapter/u,
+    )
     expect(declarations).not.toMatch(/@release-drafter\/|@actions\//)
     expect(declarations).not.toMatch(/gitbeaker/i)
   })
