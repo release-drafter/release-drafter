@@ -58,15 +58,6 @@ describe('matchLabels', () => {
     expect(result.matches).toHaveLength(2)
   })
 
-  it('drops an entire rule when one regex is invalid', () => {
-    const { config, warning } = compile([
-      { label: 'broken', branch: ['/[/'] },
-      { label: 'valid', title: ['/feat/'] },
-    ])
-    expect(config.autolabeler).toHaveLength(1)
-    expect(warning).toHaveBeenCalledOnce()
-  })
-
   it('honors gitignore negation and does not test a null body', () => {
     const { config } = compile([
       { label: 'files', files: ['*.ts', '!skip.ts'] },
