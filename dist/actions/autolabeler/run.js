@@ -176,7 +176,7 @@ var getConfig = async (configName, token) => {
 };
 //#endregion
 //#region packages/gh-actions/src/autolabeler/runner.ts
-/** Run the Autolabeler Action using package-owned config and matching logic. */
+/** Run the Autolabeler action using package-owned config and matching logic. */
 async function run() {
 	try {
 		const input = getActionInput();

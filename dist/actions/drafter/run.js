@@ -2868,7 +2868,7 @@ var getConfig = async (configName, token) => {
 };
 //#endregion
 //#region packages/gh-actions/src/drafter/set-action-output.ts
-/** Set every declared Drafter Action output from the release result. */
+/** Set every declared Drafter action output from the release result. */
 var setActionOutput = ({ release, releasePayload }) => {
 	info("Set action outputs...");
 	const outputName = release?.name ?? releasePayload.name;
@@ -2897,7 +2897,7 @@ var toReleaseInput = (input) => ({
 	publish: input.publish,
 	...input["dry-run"] !== void 0 ? { dryRun: input["dry-run"] } : {}
 });
-/** Run the Drafter Action using core orchestration and the GitHub adapter. */
+/** Run the Drafter action using core orchestration and the GitHub adapter. */
 async function run() {
 	try {
 		info("Parsing inputs and configuration...");

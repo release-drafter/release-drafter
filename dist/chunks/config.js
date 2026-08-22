@@ -51169,9 +51169,9 @@ var getGitHubAdapter = (token, octokit, factory = createGitHubAdapter) => {
 };
 //#endregion
 //#region packages/gh-actions/src/common/action-contract.ts
-/** Define every Action input name exactly once and require complete coverage. */
+/** Define every action input name exactly once and require complete coverage. */
 var defineActionInputNames = () => (names, ..._missing) => names;
-/** Read the inputs declared by an Action contract. */
+/** Read the inputs declared by an action contract. */
 var readActionInputs = (names) => Object.fromEntries(names.map((name) => [name, getInput(name) || void 0]));
 /** Write every defined output through the names declared by the contract. */
 var writeActionOutputs = (names, values) => {
