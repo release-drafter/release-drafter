@@ -195,6 +195,7 @@ describe('forge conformance router', () => {
       '.github/workflows/ci.yml',
       '.github/workflows/forge-conformance.yml',
       '.node-version',
+      '.npmrc',
       'package.json',
       'package-lock.json',
       ':(glob)tsconfig*.json',

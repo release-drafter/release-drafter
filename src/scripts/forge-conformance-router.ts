@@ -6,6 +6,7 @@ export const FORGE_CONFORMANCE_PATHSPECS = [
   '.github/workflows/ci.yml',
   '.github/workflows/forge-conformance.yml',
   '.node-version',
+  '.npmrc',
   'package.json',
   'package-lock.json',
   ':(glob)tsconfig*.json',
