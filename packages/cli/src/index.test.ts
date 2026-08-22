@@ -678,23 +678,23 @@ describe('authentication and default branch resolution', () => {
     )
   })
 
-  it('prefers GITHUB_TOKEN over GH_TOKEN for github.com', async () => {
+  it('prefers GH_TOKEN over GITHUB_TOKEN for github.com', async () => {
     const result = await invoke(['acme/widgets', '--to', 'main'], {
       env: { GITHUB_TOKEN: 'github-first', GH_TOKEN: 'gh-second' },
     })
 
     expect(result.adapterFactory).toHaveBeenCalledWith(
-      expect.objectContaining({ token: 'github-first' }),
+      expect.objectContaining({ token: 'gh-second' }),
     )
   })
 
-  it('uses GH_TOKEN when GITHUB_TOKEN is blank', async () => {
+  it('uses GITHUB_TOKEN when GH_TOKEN is blank', async () => {
     const result = await invoke(['acme/widgets', '--to', 'main'], {
-      env: { GITHUB_TOKEN: '  ', GH_TOKEN: 'gh-token' },
+      env: { GH_TOKEN: '  ', GITHUB_TOKEN: 'github-token' },
     })
 
     expect(result.adapterFactory).toHaveBeenCalledWith(
-      expect.objectContaining({ token: 'gh-token' }),
+      expect.objectContaining({ token: 'github-token' }),
     )
   })
 
@@ -702,7 +702,7 @@ describe('authentication and default branch resolution', () => {
     const result = await invoke(['acme/widgets', '--to', 'main'], { env: {} })
 
     expect(result.code).toBe(2)
-    expect(result.stderr.text()).toContain('Set GITHUB_TOKEN or GH_TOKEN')
+    expect(result.stderr.text()).toContain('Set GH_TOKEN or GITHUB_TOKEN')
     expect(result.stderr.text()).toContain('pass --token')
     expect(result.stderr.text()).toContain(
       'GH_TOKEN="$(gh auth token)" release-drafter ...',

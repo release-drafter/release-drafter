@@ -323,6 +323,25 @@ const parseRepository = (
   return { owner, name, serverUrl }
 }
 
+const getGitHubHostedApiOrigin = (
+  forge: ForgeName,
+  serverUrl: string,
+): string | undefined => {
+  if (forge !== 'github') return undefined
+  const server = new URL(serverUrl)
+  if (
+    server.protocol !== 'https:' ||
+    server.port !== '' ||
+    server.pathname.replace(/\/+$/, '') !== ''
+  )
+    return undefined
+
+  const hostname = server.hostname.toLowerCase()
+  if (hostname === 'github.com') return 'https://api.github.com'
+  if (hostname.endsWith('.ghe.com')) return `https://api.${hostname}`
+  return undefined
+}
+
 const parsePullRequestNumber = (value: string | undefined) => {
   if (!value || !/^\d+$/u.test(value))
     throw new UsageError('Pull request number must be a positive integer.')
@@ -419,12 +438,11 @@ const resolveToken = (params: {
   if (explicitToken) return explicitToken
 
   const server = new URL(params.serverUrl)
-  const isGitHubDotCom =
-    params.forge === 'github' &&
-    server.origin.toLowerCase() === 'https://github.com'
-  const expectedEndpointOrigin = isGitHubDotCom
-    ? 'https://api.github.com'
-    : server.origin.toLowerCase()
+  const hostedApiOrigin = getGitHubHostedApiOrigin(
+    params.forge,
+    params.serverUrl,
+  )
+  const expectedEndpointOrigin = hostedApiOrigin ?? server.origin.toLowerCase()
   const endpointsMatchCredentialOrigin = [params.apiUrl, params.graphqlUrl]
     .filter((endpoint): endpoint is string => endpoint !== undefined)
     .every(
@@ -439,8 +457,8 @@ const resolveToken = (params: {
 
   const environmentToken =
     params.forge === 'github'
-      ? isGitHubDotCom
-        ? params.env.GITHUB_TOKEN?.trim() || params.env.GH_TOKEN?.trim()
+      ? hostedApiOrigin
+        ? params.env.GH_TOKEN?.trim() || params.env.GITHUB_TOKEN?.trim()
         : params.env.GH_ENTERPRISE_TOKEN?.trim() ||
           params.env.GITHUB_ENTERPRISE_TOKEN?.trim()
       : params.forge === 'gitea'
@@ -452,8 +470,8 @@ const resolveToken = (params: {
 
   throw new UsageError(
     params.forge === 'github'
-      ? isGitHubDotCom
-        ? 'No GitHub token is available. Set GITHUB_TOKEN or GH_TOKEN, or pass --token. To use GitHub CLI credentials safely, run `GH_TOKEN="$(gh auth token)" release-drafter ...`.'
+      ? hostedApiOrigin
+        ? 'No GitHub token is available. Set GH_TOKEN or GITHUB_TOKEN, or pass --token. To use GitHub CLI credentials safely, run `GH_TOKEN="$(gh auth token)" release-drafter ...`.'
         : 'No GitHub Enterprise Server token is available. Set GH_ENTERPRISE_TOKEN or GITHUB_ENTERPRISE_TOKEN, or pass --token.'
       : `No ${params.forge} token is available. Set ${params.forge.toUpperCase()}_TOKEN or pass --token.`,
   )
@@ -605,15 +623,29 @@ export async function runCli(
       graphqlUrl: options.graphqlUrl,
       token: options.token,
     })
+    const hostedGitHubApiOrigin = getGitHubHostedApiOrigin(
+      options.forge,
+      options.serverUrl,
+    )
+    const isGheCom =
+      hostedGitHubApiOrigin !== undefined &&
+      new URL(options.serverUrl).hostname.toLowerCase() !== 'github.com'
+    const adapterApiUrl =
+      options.apiUrl ?? (isGheCom ? hostedGitHubApiOrigin : undefined)
+    const adapterGraphqlUrl =
+      options.graphqlUrl ??
+      (isGheCom && hostedGitHubApiOrigin
+        ? `${hostedGitHubApiOrigin}/graphql`
+        : undefined)
     const adapter = adapterFactory({
       forge: options.forge,
       repository: options.repository,
       options: {
         token,
         serverUrl: options.serverUrl,
-        apiUrl: options.apiUrl,
+        apiUrl: adapterApiUrl,
         ...(options.forge === 'github'
-          ? { graphqlUrl: options.graphqlUrl, env }
+          ? { graphqlUrl: adapterGraphqlUrl, env }
           : {}),
         logger,
       },

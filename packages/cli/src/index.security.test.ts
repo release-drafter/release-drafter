@@ -235,6 +235,72 @@ describe('CLI runtime security', () => {
     expect(result.adapterFactory).not.toHaveBeenCalled()
   })
 
+  it('uses GitHub-hosted tokens and API endpoints for GHE.com', async () => {
+    const result = await invoke(
+      [
+        'acme/widgets',
+        '--to',
+        'main',
+        '--server-url',
+        'https://octocorp.ghe.com',
+      ],
+      {
+        env: {
+          GH_TOKEN: 'github-hosted-primary',
+          GITHUB_TOKEN: 'github-hosted-secondary',
+          GH_ENTERPRISE_TOKEN: 'ghes-only',
+        },
+      },
+    )
+
+    expect(result.code).toBe(0)
+    expect(result.adapterFactory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: 'github-hosted-primary',
+        serverUrl: 'https://octocorp.ghe.com',
+        apiUrl: 'https://api.octocorp.ghe.com',
+        graphqlUrl: 'https://api.octocorp.ghe.com/graphql',
+      }),
+    )
+  })
+
+  it('does not reuse GHES tokens for GHE.com', async () => {
+    const result = await invoke(
+      [
+        'acme/widgets',
+        '--to',
+        'main',
+        '--server-url',
+        'https://octocorp.ghe.com',
+      ],
+      { env: { GH_ENTERPRISE_TOKEN: 'ghes-only' } },
+    )
+
+    expect(result.code).toBe(2)
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
+  it('rejects a GHE.com API endpoint on the web origin', async () => {
+    const result = await invoke(
+      [
+        'acme/widgets',
+        '--to',
+        'main',
+        '--server-url',
+        'https://octocorp.ghe.com',
+        '--api-url',
+        'https://octocorp.ghe.com/api/v3',
+      ],
+      { env: { GH_TOKEN: 'github-hosted-token' } },
+    )
+
+    expect(result.code).toBe(2)
+    expect(result.stderr.text()).toContain(
+      'Automatic environment credentials cannot be used',
+    )
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+
   it.each([
     ['--api-url', 'https://other.example/api/v3'],
     ['--graphql-url', 'https://other.example/api/graphql'],

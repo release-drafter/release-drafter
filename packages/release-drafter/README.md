@@ -27,15 +27,16 @@ For GitHub, Gitea, and Forgejo, use `owner/repo`. For GitLab, use
 
 The CLI selects credentials for the target host in this order:
 
-- GitHub.com: `--token`, then `GITHUB_TOKEN`, then `GH_TOKEN`
+- GitHub.com and GitHub Enterprise Cloud on `*.ghe.com`: `--token`, then
+  `GH_TOKEN`, then `GITHUB_TOKEN`
 - GitHub Enterprise Server: `--token`, then `GH_ENTERPRISE_TOKEN`, then
   `GITHUB_ENTERPRISE_TOKEN`
 - Gitea: `--token`, then `GITEA_TOKEN`
 - Forgejo: `--token`, then `FORGEJO_TOKEN`
 - GitLab: `--token`, then `GITLAB_TOKEN`
 
-GitHub.com token variables are not reused for a GitHub Enterprise Server host.
-Tokens are never reused across forge families. Automatic environment
+GitHub-hosted token variables are not reused for a GitHub Enterprise Server
+host. Tokens are never reused across forge families. Automatic environment
 credentials are rejected when an explicit API endpoint uses another origin;
 use `--token` to authorize that combination deliberately.
 Release Drafter never invokes `gh`. If you manage credentials with GitHub CLI,
@@ -252,12 +253,12 @@ npx release-drafter owner/repo \
 
 The CLI identifies GitHub.com and GitHub Enterprise Server endpoints that use
 the standard `/api/v3` path. Other endpoint paths, including `/api/v1`, require
-an explicit `--forge` selection. `--graphql-url` is supported only for GitHub.
-Endpoint URLs must be absolute HTTP(S) URLs without credentials, query
-parameters, or fragments. Environment credentials are used only when
-configured API endpoints stay on the expected credential origin. The expected
-origin is `api.github.com` for GitHub.com and the configured server origin for
-other targets. Cross-origin endpoints require an explicit `--token`.
+an explicit `--forge` selection. For GitHub Enterprise Cloud on `*.ghe.com`, the
+CLI uses `api.<subdomain>.ghe.com` for REST and GraphQL requests. `--graphql-url`
+is supported only for GitHub. Endpoint URLs must be absolute HTTP(S) URLs
+without credentials, query parameters, or fragments. Environment credentials
+are used only when configured API endpoints stay on the expected credential
+origin. Cross-origin endpoints require an explicit `--token`.
 
 ### Exit codes
 
