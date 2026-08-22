@@ -63,7 +63,7 @@ describe('check PR runner', () => {
       { title: 'Other' },
     ])
     await expect(checkPullRequest(value)).rejects.toThrow(
-      'does not match any configured conventional or label-based changelog or version-resolver category',
+      'No configured changelog or version-resolver category matches the title or labels of pull request #42.',
     )
   })
 
@@ -100,7 +100,7 @@ describe('check PR runner', () => {
   ])('rejects non-PR event %s', async (eventName) => {
     const value = dependencies('feat: title', [], { eventName })
     await expect(checkPullRequest(value)).rejects.toThrow(
-      "Expected 'pull_request' or 'pull_request_target'",
+      `Unsupported event \`${eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`,
     )
   })
 

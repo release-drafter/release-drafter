@@ -6,7 +6,7 @@ import type { ParsedConfig } from './types.ts'
 
 type Categories = ParsedConfig['categories']
 
-/** Keep title and label predicates while excluding path-only validation. */
+/** Remove path predicates and conditions that contain only path predicates. */
 export const projectPullRequestValidationCategories = (
   categories: Categories,
 ): Categories =>
@@ -29,7 +29,7 @@ export type PullRequestEvaluation =
       selectedCategoryCount: number
     }
 
-/** Evaluate whether a PR's title or labels select a non-fallback category. */
+/** Evaluate whether a pull request's title or labels select a non-fallback category. */
 export const evaluatePullRequest = (
   pullRequest: PullRequestLike,
   categories: Categories,

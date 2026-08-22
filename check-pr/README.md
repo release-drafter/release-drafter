@@ -1,7 +1,7 @@
 # Check PR
 
-Checks the current pull request title and labels against the changelog and
-version resolver categories in your normal Release Drafter configuration.
+The Check PR action validates the current pull request against categories in the
+repository's Release Drafter configuration.
 
 ```yaml
 name: Check PR
@@ -33,9 +33,9 @@ The action supports `pull_request` and `pull_request_target`. It reads the
 current title and labels from the event payload and follows `_extends`
 configuration chains. It never modifies the pull request.
 
-Conditions containing `conventional` validate the title, while conditions with
-configured labels validate the current labels. Both predicates are required
-when they appear in the same condition. Path predicates are ignored, and
-path-only conditions do not count. Pull requests excluded by title or label
-pre-categories pass as skipped. Pull requests that select only an unconditional
-fallback category fail validation.
+A condition with `conventional` validates the title. A condition with labels
+validates current labels. If one condition defines both, title and labels must
+both match. The action ignores path predicates, and a path-only condition cannot
+pass validation. If a `pre-exclude` category excludes the pull request by title
+or label, the action reports it as skipped. An unconditional fallback category
+cannot make the pull request valid by itself.

@@ -175,7 +175,8 @@ const autolabelerOutputs = {
 
 const checkPrInputs = defineActionInputs<CheckPrActionInput>()({
   'config-name': {
-    description: 'The Release Drafter config file under `.github` to use.\n',
+    description:
+      'Release Drafter configuration filename.\nStore the file in `.github`; Release Drafter searches only that directory.\n',
     required: false,
     default: 'release-drafter.yml',
   },

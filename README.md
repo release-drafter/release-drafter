@@ -70,10 +70,10 @@ JSON output, and exit codes.
 
 ## Check pull requests
 
-The read-only Check PR action validates pull request titles and labels using the
-conditions already defined in Release Drafter categories.
-See [`check-pr/README.md`](./check-pr/README.md) for the workflow,
-permissions, supported events, and matching behavior.
+The read-only Check PR action validates a pull request against the title or
+label conditions in Release Drafter categories. See
+[`check-pr/README.md`](./check-pr/README.md) for the workflow, permissions,
+supported events, and matching behavior.
 
 ## Configuration
 

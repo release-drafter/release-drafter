@@ -120,12 +120,15 @@ npx release-drafter check-pr owner/repo 123
 ```
 
 The command loads configuration from the pull request's base branch. A
-condition with `conventional` checks the title, and a condition with labels
-checks the current labels. If one condition has both, both must match. Path
-predicates are ignored and path-only conditions do not count.
+condition with `conventional` validates the title. A condition with labels
+validates current labels. If one condition defines both, title and labels must
+both match. The command ignores path predicates, and a path-only condition
+cannot pass validation. If a `pre-exclude` category excludes the pull request by
+title or label, the command reports it as skipped. An unconditional fallback
+category cannot make the pull request valid by itself.
 
 The command exits with `0` for valid or excluded pull requests and `1` for an
-invalid pull request. In JSON mode, it returns the PR number, title, status,
+invalid pull request. In JSON mode, it returns the pull request number, title, status,
 valid and skipped flags, and the number of selected categories:
 
 ```sh

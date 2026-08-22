@@ -29,7 +29,7 @@ export async function checkPullRequest(
     dependencies.eventName !== 'pull_request_target'
   )
     throw new Error(
-      `Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${dependencies.eventName}'`,
+      `Unsupported event \`${dependencies.eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`,
     )
 
   const pullRequest = parsePullRequestEvent(
@@ -61,7 +61,7 @@ export async function checkPullRequest(
   }
   if (!evaluation.valid)
     throw new Error(
-      `Pull request #${pullRequest.number} does not match any configured conventional or label-based changelog or version-resolver category.`,
+      `No configured changelog or version-resolver category matches the title or labels of pull request #${pullRequest.number}.`,
     )
 
   core.info(`Pull request #${pullRequest.number} matches the configuration.`)

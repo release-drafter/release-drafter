@@ -10,7 +10,8 @@ runs:
 inputs:
   config-name:
     description: |
-      The Release Drafter config file under `.github` to use.
+      Release Drafter configuration filename.
+      Store the file in `.github`; Release Drafter searches only that directory.
     required: false
     default: release-drafter.yml
   token:
