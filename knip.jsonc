@@ -8,7 +8,6 @@
       "project": ["src/**/*.{ts,tsx}", "*.{ts,mts,cts,js,mjs,cjs}"],
     },
     "packages/*": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.{ts,tsx}"],
       "vite": false,
     },
