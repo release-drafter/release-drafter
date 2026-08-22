@@ -720,7 +720,7 @@ describe('GitLabAdapter', () => {
       targetCommitish: 'main',
       prerelease: false,
       makeLatest: true,
-      draft: true,
+      draft: false,
     }
     await expect(
       instance.createRelease({ repository, payload }),
@@ -777,6 +777,32 @@ describe('GitLabAdapter', () => {
         },
       }),
     ).rejects.toThrow('GitLab does not support prerelease releases')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('rejects draft creation and updates before constructing or sending a request', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>()
+    const instance = new GitLabAdapter({ token: '', fetch })
+    const payload = {
+      name: 'Two',
+      tag: 'v2',
+      body: 'notes',
+      targetCommitish: 'main',
+      prerelease: false,
+      makeLatest: true,
+      draft: true,
+    }
+
+    await expect(
+      instance.createRelease({ repository, payload }),
+    ).rejects.toThrow('GitLab does not support draft releases')
+    await expect(
+      instance.updateRelease({
+        repository,
+        release: { id: 'v1', tagName: 'v1' },
+        payload,
+      }),
+    ).rejects.toThrow('GitLab does not support draft releases')
     expect(fetch).not.toHaveBeenCalled()
   })
 

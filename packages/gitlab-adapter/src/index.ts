@@ -474,6 +474,7 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
   async createRelease({ repository, payload }: CreateReleaseRequest) {
     if (payload.prerelease)
       throw new Error('GitLab does not support prerelease releases')
+    if (payload.draft) throw new Error('GitLab does not support draft releases')
     const client = this.client(repository)
     const response = await client.createRelease(
       client.project(repository),
@@ -491,6 +492,7 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
   async updateRelease({ repository, release, payload }: UpdateReleaseRequest) {
     if (payload.prerelease)
       throw new Error('GitLab does not support prerelease releases')
+    if (payload.draft) throw new Error('GitLab does not support draft releases')
     const client = this.client(repository)
     const response = await client.updateRelease(
       client.project(repository),
