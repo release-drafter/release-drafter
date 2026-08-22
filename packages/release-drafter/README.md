@@ -155,8 +155,8 @@ For example:
 ### Config targets
 
 `--config` accepts YAML or JSON from the local filesystem, a repository, or a
-GitHub/GitHub Enterprise blob URL. Repository paths without `.github/` are
-resolved beneath `.github/`.
+GitHub.com or GitHub Enterprise Server blob URL. Repository paths without
+`.github/` are resolved beneath `.github/`.
 
 ```sh
 # Local file. The path is relative to the current working directory.
@@ -170,7 +170,7 @@ npx release-drafter owner/repo \
   --config github:shared/release-config:.github/release-drafter.yml@main \
   --dry-run
 
-# GitHub or GitHub Enterprise blob URL on the selected server.
+# GitHub.com or GitHub Enterprise Server blob URL.
 npx release-drafter owner/repo \
   --config https://github.com/owner/repo/blob/main/.github/release-drafter.yml \
   --dry-run
@@ -178,18 +178,18 @@ npx release-drafter owner/repo \
 
 Repository targets use the form
 `[github:][[owner/]repo:]filepath[@ref]`. Local targets use
-`file:relative/path`, are resolved relative to the process's current working
-directory, and both the lexical path and its canonical symlink or junction
-target must remain within that directory.
+`file:relative/path`. The CLI resolves local targets from the current working
+directory. The lexical path and the final symlink or junction target must stay
+in that directory.
 
 CLI config loading supports Release Drafter's `_extends` chains, including
 `override`, `append`, and `prepend` merge strategies. Relative inherited paths
 are resolved from the config that declares `_extends`. A repository config
 cannot extend a local `file:` target.
 
-### GitHub Enterprise and forge selection
+### GitHub Enterprise Server and forge selection
 
-The CLI supports GitHub and GitHub Enterprise:
+The CLI supports GitHub.com and GitHub Enterprise Server:
 
 ```sh
 npx release-drafter owner/repo \
@@ -200,14 +200,14 @@ npx release-drafter owner/repo \
   --dry-run
 ```
 
-GitHub.com and conventional GitHub Enterprise `/api/v3` endpoints can be
-identified as GitHub. A custom ambiguous endpoint, including an `/api/v1`
-endpoint, requires an explicit `--forge` selection. Only `--forge github` is
-accepted. Selecting `gitea`, `forgejo`, `gitlab`, or another unsupported forge
-fails instead of guessing. Endpoint URLs must be absolute HTTP(S) URLs without
-credentials, query parameters, or fragments. Environment credentials are used
-only when REST and GraphQL endpoints stay on the expected credential origin:
-`api.github.com` for GitHub.com, or the configured server origin for GitHub
+The CLI identifies GitHub.com and GitHub Enterprise Server endpoints that use
+the standard `/api/v3` path. Other endpoint paths, including `/api/v1`, require
+an explicit `--forge` selection. Only `--forge github` is accepted in this
+version. Selecting `gitea`, `forgejo`, `gitlab`, or another unsupported forge
+fails. Endpoint URLs must be absolute HTTP(S) URLs without credentials, query
+parameters, or fragments. Environment credentials are used only when REST and
+GraphQL endpoints stay on the expected credential origin. The expected origin
+is `api.github.com` for GitHub.com and the configured server origin for GitHub
 Enterprise Server. Cross-origin endpoints require an explicit `--token`.
 
 ### Exit codes

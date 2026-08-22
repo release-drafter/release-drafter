@@ -49,9 +49,13 @@ npx release-drafter owner/repo --dry-run
 ```
 
 For GitHub.com, authenticate with `GITHUB_TOKEN` or `GH_TOKEN`. For GitHub
-Enterprise, use `GH_ENTERPRISE_TOKEN` or `GITHUB_ENTERPRISE_TOKEN`. If the
-matching variables are unset, the CLI uses the token from the authenticated
-[`gh`](https://cli.github.com/) CLI for the selected host.
+Enterprise Server, use `GH_ENTERPRISE_TOKEN` or `GITHUB_ENTERPRISE_TOKEN`.
+Release Drafter does not invoke [`gh`](https://cli.github.com/). To use GitHub
+CLI credentials, pass them through `GH_TOKEN`:
+
+```sh
+GH_TOKEN="$(gh auth token)" npx release-drafter owner/repo --dry-run
+```
 
 See the [`release-drafter` package README](./packages/release-drafter/README.md)
 for installation instructions, the complete option reference, config targets,

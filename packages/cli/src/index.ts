@@ -282,7 +282,9 @@ const parseCommandLine = (argv: readonly string[]) => {
   }
   const repositoryName = parsed.positionals[0]
   if (!REPOSITORY_PATTERN.test(repositoryName)) {
-    throw new UsageError('Repository must be exactly nonblank owner/name.')
+    throw new UsageError(
+      'Repository must use the form owner/name. Owner and name cannot be blank.',
+    )
   }
   const [owner, name] = repositoryName.split('/')
 
