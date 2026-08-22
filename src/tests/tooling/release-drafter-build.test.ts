@@ -31,7 +31,9 @@ describe.sequential('release-drafter workspace build boundary', () => {
   beforeAll(() => {
     buildFacade()
     javascript = readFileSync(resolve(facadeDist, 'index.js'), 'utf8')
-    declarations = readFileSync(resolve(facadeDist, 'index.d.ts'), 'utf8')
+    declarations = ['index.d.ts', 'types.d.ts']
+      .map((file) => readFileSync(resolve(facadeDist, file), 'utf8'))
+      .join('\n')
   }, 60_000)
 
   it('bundles private runtime implementation without forbidden imports or loaders', () => {
