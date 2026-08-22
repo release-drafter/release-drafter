@@ -9,6 +9,15 @@ describe('createPathMatcher', () => {
     expect(createPathMatcher(['.*'])('nested/.env')).toBe(true)
   })
 
+  it('matches direct and nested children below a trailing globstar', () => {
+    const matches = createPathMatcher(['generated/**/'])
+
+    expect(matches('generated/file.ts')).toBe(true)
+    expect(matches('generated/nested/file.ts')).toBe(true)
+    expect(matches('generated')).toBe(false)
+    expect(matches('other/file.ts')).toBe(false)
+  })
+
   it('applies ordered negation without reopening ignored parents', () => {
     expect(createPathMatcher(['*.ts', '!skip.ts'])('skip.ts')).toBe(false)
     expect(

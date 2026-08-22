@@ -24,8 +24,9 @@ const compileRule = (pattern: string): PathRule | undefined => {
 
   const negated = source.startsWith('!')
   if (negated) source = source.slice(1)
-  const directoryOnly = source.endsWith('/')
+  const directoryOnly = source.endsWith('/') && !source.endsWith('/**/')
   if (directoryOnly) source = source.slice(0, -1)
+  else if (source.endsWith('/**/')) source = source.slice(0, -1)
   const anchored = source.startsWith('/')
   if (anchored) source = source.slice(1)
   if (!source) return undefined
