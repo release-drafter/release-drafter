@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
 const read = (path: string) => readFileSync(path, 'utf8')
+const githubExpression = (expression: string) =>
+  ['$', `{{ ${expression} }}`].join('')
 
 type Workflow = {
   on?: {
@@ -62,17 +64,18 @@ describe('forge conformance workflow', () => {
     expect(workflow.on?.push?.branches).toEqual(['main'])
     expect(workflow.permissions).toEqual({ contents: 'read' })
     expect(scope?.outputs?.['should-run']).toBe(
-      '${{ steps.scope.outputs.should-run }}',
+      githubExpression('steps.scope.outputs.should-run'),
     )
     expect(scopeStep?.env).toMatchObject({
-      EVENT_NAME: '${{ github.event_name }}',
-      EVENT_ACTION: '${{ github.event.action }}',
-      LABEL_NAME: '${{ github.event.label.name }}',
+      EVENT_NAME: githubExpression('github.event_name'),
+      EVENT_ACTION: githubExpression('github.event.action'),
+      LABEL_NAME: githubExpression('github.event.label.name'),
       OVERRIDE_LABEL: 'ci:forge-conformance',
-      HAS_OVERRIDE_LABEL:
-        "${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:forge-conformance') }}",
-      PR_BASE_SHA: '${{ github.event.pull_request.base.sha }}',
-      PUSH_BEFORE_SHA: '${{ github.event.before }}',
+      HAS_OVERRIDE_LABEL: githubExpression(
+        "github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:forge-conformance')",
+      ),
+      PR_BASE_SHA: githubExpression('github.event.pull_request.base.sha'),
+      PUSH_BEFORE_SHA: githubExpression('github.event.before'),
     })
     expect(scopeStep?.run).toBe('node src/scripts/forge-conformance-router.ts')
 
@@ -83,13 +86,15 @@ describe('forge conformance workflow', () => {
     expect(gate).toMatchObject({
       name: 'Forge conformance',
       needs: ['forge-conformance-scope', 'forge-conformance'],
-      if: '${{ always() }}',
+      if: 'always()',
     })
     expect(gateSteps[2]).toMatchObject({
       env: {
-        SCOPE_RESULT: '${{ needs.forge-conformance-scope.result }}',
-        SHOULD_RUN: '${{ needs.forge-conformance-scope.outputs.should-run }}',
-        MATRIX_RESULT: '${{ needs.forge-conformance.result }}',
+        SCOPE_RESULT: githubExpression('needs.forge-conformance-scope.result'),
+        SHOULD_RUN: githubExpression(
+          'needs.forge-conformance-scope.outputs.should-run',
+        ),
+        MATRIX_RESULT: githubExpression('needs.forge-conformance.result'),
       },
       run: 'node src/scripts/forge-conformance-gate.ts',
     })
@@ -107,19 +112,15 @@ describe('forge conformance workflow', () => {
     expect(contents).not.toMatch(/secrets\./)
     expect(contents).not.toMatch(/continue-on-error:\s*true/)
 
-    const matrixCommand = [
-      'npm run test:conformance:',
-      '$',
-      '{{ matrix.forge }}',
-    ].join('')
+    const matrixCommand = `npm run test:conformance:${githubExpression('matrix.forge')}`
     expect(steps.find(({ run }) => run === matrixCommand)).toBeDefined()
     const upload = steps.find(({ uses }) =>
       uses?.startsWith('actions/upload-artifact@'),
     )
     expect(upload?.if).toBe('failure()')
     expect(upload?.with).toMatchObject({
-      name: '${{ matrix.forge }}-integration-logs',
-      path: 'artifacts/${{ matrix.forge }}',
+      name: `${githubExpression('matrix.forge')}-integration-logs`,
+      path: `artifacts/${githubExpression('matrix.forge')}`,
       'if-no-files-found': 'warn',
       'retention-days': 7,
     })
