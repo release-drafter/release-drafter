@@ -31,22 +31,23 @@ const result = await draftRelease({
 console.log(result.plan.action, result.releasePayload)
 ```
 
-`draftRelease(options)` delegates release calculation and writes to the Release
-Drafter core. The public boundary is forge-neutral:
+`draftRelease(options)` uses the Release Drafter core to calculate a release. It
+calls the adapter when the selected operation writes a release. The public API
+is forge-neutral:
 
 - `adapter` is an injected `ForgeAdapter`. It supplies repository, change, ref,
   and release operations for the forge.
-- `config` is a fully parsed `DraftReleaseConfig`. Loading YAML, applying config
-  inheritance, and normalizing raw configuration are runtime concerns and are
-  not performed by this facade.
-- `input` controls the comparison base and whether the resulting release is a
-  dry run, draft, or published release.
-- `repository` identifies the target without relying on ambient Actions state.
+- `config` must be a fully parsed `DraftReleaseConfig`. The caller or runtime
+  must load YAML, apply config inheritance, and normalize the raw configuration.
+- `input` selects the comparison base and the operation mode: dry run, draft, or
+  publish.
+- `repository` identifies the target. The package does not read the target from
+  GitHub Actions state.
 - `logger` is optional. Omitting it uses a no-op logger.
 
-The returned `DraftReleaseResult` contains the forge-neutral release plan,
-normalized release payload, and the created or updated release when a write was
-performed.
+`DraftReleaseResult` contains the forge-neutral release plan and normalized
+release payload. If the adapter writes a release, the result also contains the
+created or updated release.
 
 Importing this package does not read environment variables or perform network
 requests.

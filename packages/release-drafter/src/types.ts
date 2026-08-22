@@ -1,4 +1,4 @@
-/** Receives lifecycle messages emitted while calculating or writing a release. */
+/** Receives log messages while Release Drafter calculates or writes a release. */
 export interface Logger {
   debug(message: string): void
   info(message: string): void
@@ -126,8 +126,8 @@ export interface UpdateReleaseRequest {
 /**
  * Forge operations required by Release Drafter.
  *
- * Implementations can target any forge whose release model can be normalized to
- * this interface.
+ * An implementation can support a forge if it can map the forge's release model
+ * to this interface.
  */
 export interface ForgeAdapter {
   readonly capabilities: {
@@ -178,8 +178,8 @@ export interface ParsedReplacer {
 }
 
 /**
- * Fully parsed Release Drafter configuration accepted by the orchestration
- * core. Config loading and normalization belong to the caller or its runtime.
+ * Fully parsed Release Drafter configuration for the orchestration core. The
+ * caller or runtime must load and normalize the configuration.
  */
 export interface DraftReleaseConfig {
   'change-template': string
