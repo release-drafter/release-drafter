@@ -6,6 +6,7 @@ import type {
 import { describe, expect, it, vi } from 'vitest'
 import { mapConcurrent, RequestBudget } from './client.ts'
 import {
+  createGiteaCompatibleRestProfile,
   createGitHubCompatibleRestAdapter,
   createRestEndpoints,
   defaultRestAdapterLimits,
@@ -122,6 +123,28 @@ const createAdapter = (
   })
 
 describe('GitHub-compatible REST mechanics', () => {
+  it('defines the shared Gitea-compatible endpoint map', () => {
+    const endpoints = createGiteaCompatibleRestProfile('normalize').endpoints
+
+    expect({
+      commitPull: endpoints.commitPull(repository, 'a/b'),
+      pullFiles: endpoints.pullFiles(repository, 7),
+      pulls: endpoints.pulls(repository),
+      gitCommit: endpoints.gitCommit(repository, 'refs/tags/v1'),
+      pull: endpoints.pull(repository, 7),
+      releases: endpoints.releases(repository),
+      release: endpoints.release(repository, 9),
+    }).toEqual({
+      commitPull: '/repos/octo/project/commits/a%2Fb/pull',
+      pullFiles: '/repos/octo/project/pulls/7/files',
+      pulls: '/repos/octo/project/pulls',
+      gitCommit: '/repos/octo/project/git/commits/refs%2Ftags%2Fv1',
+      pull: '/repos/octo/project/pulls/7',
+      releases: '/repos/octo/project/releases',
+      release: '/repos/octo/project/releases/9',
+    })
+  })
+
   it('keeps default comparison, request, item, and pagination limits coherent', () => {
     expect(
       defaultRestAdapterLimits.maxComparisonCommits + 1,

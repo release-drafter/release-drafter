@@ -23,23 +23,6 @@ describe('Gitea profile', () => {
     expect(adapter.capabilities).toEqual({ draftReleases: true })
     expect(giteaProfile.qualifiedRefMode).toBe('normalize')
     expect(giteaProfile.response.pullRequestList.authorParameter).toBe('poster')
-    expect({
-      commitPull: giteaProfile.endpoints.commitPull(repository, 'a/b'),
-      pullFiles: giteaProfile.endpoints.pullFiles(repository, 7),
-      pulls: giteaProfile.endpoints.pulls(repository),
-      gitCommit: giteaProfile.endpoints.gitCommit(repository, 'refs/tags/v1'),
-      pull: giteaProfile.endpoints.pull(repository, 7),
-      releases: giteaProfile.endpoints.releases(repository),
-      release: giteaProfile.endpoints.release(repository, 9),
-    }).toEqual({
-      commitPull: '/repos/owner/repo/commits/a%2Fb/pull',
-      pullFiles: '/repos/owner/repo/pulls/7/files',
-      pulls: '/repos/owner/repo/pulls',
-      gitCommit: '/repos/owner/repo/git/commits/refs%2Ftags%2Fv1',
-      pull: '/repos/owner/repo/pulls/7',
-      releases: '/repos/owner/repo/releases',
-      release: '/repos/owner/repo/releases/9',
-    })
     await expect(
       adapter.findChanges({
         repository,
