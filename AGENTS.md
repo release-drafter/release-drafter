@@ -7,12 +7,15 @@ the TypeScript sources and the generated JavaScript code are contained in this
 repository.
 
 - `src/`: TypeScript source code
-- `dist/`: tracked generated JavaScript used directly by the GitHub Actions
+- `dist/`: tracked generated JavaScript used directly by the actions
 - `packages/*/dist/`: generated, ignored workspace package output
 
-Do not review changes to the root `dist/` in isolation. It is expected to closely
-mirror the code generated from `src/`, and CI checks that it is up to date. Do
-not commit workspace package output beneath `packages/*/dist/`.
+Do not review changes to the root `dist/` in isolation. The root `dist/` must
+closely match the code generated from `src/`. CI checks for drift. Do not commit
+workspace package output beneath `packages/*/dist/`.
+
+See [Workspace development](docs/CONTRIBUTING.md#workspace-development) for the
+workspace commands and package-development rules.
 
 ## Repository Structure
 

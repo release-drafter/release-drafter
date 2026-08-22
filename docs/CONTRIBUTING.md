@@ -17,11 +17,10 @@ by its terms.
 1. [Fork][fork] and clone the repository
 2. Configure and install the dependencies: `npm install`
 3. Create a new branch: `git checkout -b my-branch-name`
-4. Make your change, add tests, and run `npm run all` before pushing — this runs
-   formatting, linting, type checking, tests, and builds the root Action bundles
-   and workspace packages. The CI pipeline enforces that tracked generated files
-   have no uncommitted changes after these steps, so **you must run `npm run all`
-   locally before pushing** to avoid build failures.
+4. Make your change and add tests. Before you push, run `npm run all`. This
+   command formats and lints the code, checks types, runs tests, and builds the
+   root action bundles and workspace packages. CI fails if the command changes a
+   tracked generated file.
 5. Push to your fork and [submit a pull request][pr]
 6. Give yourself a high five, and wait for your pull request to be reviewed and
    merged.
@@ -46,47 +45,46 @@ there is something blocked you.
 
 ## Workspace development
 
-Release Drafter uses a private npm-workspaces root. Install dependencies from the
-repository root with `npm install` so npm can link every workspace declared under
-`packages/*` and update `package-lock.json` deterministically.
+Release Drafter uses npm workspaces. Run `npm install` from the repository root.
+npm links each workspace under `packages/*` and updates `package-lock.json`.
 
-The GitHub Action entrypoints live at the repository root:
+The action entrypoints are at the repository root:
 `action.yml`, `drafter/action.yml`, `autolabeler/action.yml`, and the tracked
 bundles under `dist/actions/*/run.js`. Workspace packages provide internal code
-boundaries without changing those public Action paths.
+boundaries without changing these public action paths.
 
-Only the root `dist/` directory is tracked because GitHub Actions execute those
+Only the root `dist/` directory is tracked. The JavaScript actions run these
 bundles directly from the repository. Builds under `packages/*/dist/` are
-generated, ignored artifacts; package manifests include them when packing after
-a workspace build.
+generated and ignored. After a workspace build, npm includes these files when it
+packs a package.
 
 Common commands:
 
-- `npm run all` formats, lints, validates dependency hygiene, workspace
-  publication and dependency boundaries, type-checks, tests, regenerates
-  schemas, and rebuilds bundles. Tooling tests also run Node's `--check` against
-  every `src/scripts/*.ts` entry so they remain directly runnable on Node 24
-  without a compile step.
-- `npm run check:dependencies` runs Knip's complementary unused and unlisted
-  dependency checks without enabling its broader unused-file/export analysis.
+- `npm run all` runs all repository checks and builds generated files. It
+  formats and lints the code, checks dependencies and boundaries, checks types,
+  runs tests, generates schemas, and builds action bundles and workspaces.
+  Tooling tests also run Node's `--check` against each `src/scripts/*.ts` entry.
+  This verifies that Node 24 can run the scripts without a compile step.
+- `npm run check:dependencies` uses Knip to find unused and unlisted
+  dependencies. It does not check for unused files or exports.
 - `npm run check:boundaries` uses dependency-cruiser's SWC parser to validate
-  internal imports in workspace source and generated JavaScript/declarations.
-- `npm run guard:packages` verifies the private root, private scoped workspaces,
-  Node 24 declarations, and the sole structurally publishable `release-drafter`
-  facade package.
-- `npm run guard:boundaries` keeps the focused source-level check that runtime
-  imports are not satisfied only by `devDependencies`. Dependency-cruiser owns
-  the general source and emitted-output graph checks, while the focused SWC AST
-  pass retains the type-only distinction its extracted edges do not expose.
+  internal imports in workspace source, generated JavaScript, and declarations.
+- `npm run guard:packages` checks that the root and scoped workspaces are
+  private. It also checks that each package requires Node 24 and that only
+  `release-drafter` can be published.
+- `npm run guard:boundaries` reports runtime imports whose packages are listed
+  only in `devDependencies`. Dependency-cruiser checks the source and generated
+  dependency graphs. The SWC check separately identifies type-only imports
+  because dependency-cruiser does not preserve that information.
 - Run `npm run build:workspaces` before `npm run check:boundaries` outside
   `npm run all` so generated JavaScript and declaration files are available.
-- `npm run check:clean` verifies generation left no unstaged or untracked drift
-  relative to the intended staged tree.
+- `npm run check:clean` fails if generation leaves unstaged or untracked changes
+  relative to the staged tree.
 - `npm run build --workspaces --if-present` builds workspace packages after the
-  root Vite Action bundle build.
+  root Vite action bundle build.
 
 Do not add npm publication workflows or make scoped `@release-drafter/*`
-workspaces publishable without a dedicated maintainer-approved release plan.
+workspaces publishable unless the maintainers approve a release plan.
 
 ## Issue Management Policy
 
@@ -131,14 +129,13 @@ npm version [major | minor | patch] --ignore-scripts=false
 
 The command does the following:
 
-- Run tests (`preversion` script)
+- Runs tests (`preversion` script)
 - Bumps the private root version in [package.json](../package.json)
 - Synchronizes that version to every workspace manifest, including the public
   `packages/release-drafter/package.json` facade, refreshes `package-lock.json`,
   and stages all versioned manifests (`version` script)
-- Creates the corresponding tag
-- Commit and tag
-- Push & push tag (`postversion` script)
+- Commits the changes and creates the corresponding tag
+- Pushes the commit and tag (`postversion` script)
 
 After pushing, the `release.yml` workflow will trigger (`on: push: tag`), and :
 
