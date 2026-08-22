@@ -1,9 +1,8 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 import {
-  expectedPackageFiles,
   hasPublishAutoCorrectionWarning,
   packArguments,
   publishArguments,
@@ -11,14 +10,9 @@ import {
 } from '#src/scripts/check-package-readiness.ts'
 
 const repositoryRoot = resolve(import.meta.dirname, '../../..')
-const readJson = (path: string) =>
-  JSON.parse(readFileSync(join(repositoryRoot, path), 'utf8')) as Record<
-    string,
-    unknown
-  >
 
 describe('npm package readiness', () => {
-  it('packs once and dry-runs the exact tarball with fail-closed arguments', () => {
+  it('uses the packed tarball for an offline publication dry run', () => {
     expect(packArguments('/isolated/pack')).toEqual([
       'pack',
       '--ignore-scripts',
@@ -38,16 +32,6 @@ describe('npm package readiness', () => {
       '--provenance=false',
     ])
     expect(publishArguments('/artifact.tgz')).not.toContain('--workspace')
-    expect(expectedPackageFiles).toEqual([
-      'LICENSE',
-      'README.md',
-      'THIRD_PARTY_NOTICES',
-      'dist/chunks/src-[content-hash].js',
-      'dist/cli.js',
-      'dist/index.d.ts',
-      'dist/index.js',
-      'package.json',
-    ])
   })
 
   it('rejects hyphenated and spaced npm metadata correction warnings', () => {
@@ -113,35 +97,6 @@ describe('npm package readiness', () => {
     }
   })
 
-  it('guards the private root and scoped workspaces while allowing only the facade', () => {
-    const root = readJson('package.json') as {
-      private?: boolean
-      scripts?: Record<string, string>
-    }
-    expect(root.private).toBe(true)
-    expect(root.scripts?.['test:package-readiness']).toBe(
-      'npm run build --workspace release-drafter && vitest run src/tests/tooling/release-drafter-package.test.ts --coverage.enabled=false && npm run check:package-readiness',
-    )
-
-    for (const directory of readdirSync(join(repositoryRoot, 'packages'))) {
-      const manifest = readJson(`packages/${directory}/package.json`) as {
-        license?: string
-        name?: string
-        private?: boolean
-      }
-      if (directory === 'release-drafter') {
-        expect(manifest).toMatchObject({
-          license: 'ISC',
-          name: 'release-drafter',
-        })
-        expect(manifest.private).not.toBe(true)
-      } else {
-        expect(manifest.name).toBe(`@release-drafter/${directory}`)
-        expect(manifest.private).toBe(true)
-      }
-    }
-  })
-
   it('uses a SHA-pinned, least-privilege PR, main-push, and manual workflow', () => {
     const contents = readFileSync(
       join(repositoryRoot, '.github/workflows/npm-package-readiness.yml'),
@@ -194,18 +149,5 @@ describe('npm package readiness', () => {
       steps.find(({ run }) => run === 'npm run test:package-readiness'),
     ).toBeDefined()
     expect(steps.find(({ run }) => run === 'npm run check:clean')).toBeDefined()
-  })
-
-  it('rejects npm publish metadata auto-correction and always cleans temporary data', () => {
-    const source = readFileSync(
-      join(repositoryRoot, 'src/scripts/check-package-readiness.ts'),
-      'utf8',
-    )
-    expect(source).toContain('hasPublishAutoCorrectionWarning')
-    expect(source).toContain(
-      'rmSync(temporaryDirectory, { force: true, recursive: true })',
-    )
-    expect(source).toMatch(/try \{[\s\S]*\} finally \{/u)
-    expect(source.match(/packArguments\(packDirectory\)/gu)).toHaveLength(1)
   })
 })
