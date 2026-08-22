@@ -12,7 +12,7 @@
       "vite": false,
     },
     "packages/release-drafter": {
-      "entry": ["src/index.ts", "src/cli.ts"],
+      "entry": ["src/cli.ts"],
       "project": ["src/**/*.{ts,tsx}"],
       "ignoreDependencies": [
         "@octokit/core",
