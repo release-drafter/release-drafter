@@ -1,10 +1,10 @@
-import { inject } from 'vitest'
 import {
   createForgeAdapter,
   type ForgeAdapter,
   type Release,
   type Repository,
-} from '../../../../packages/release-drafter/src/index.ts'
+} from 'release-drafter'
+import { inject } from 'vitest'
 import { defineForgeAdapterConformance } from '../forge-conformance/contract.ts'
 import type { ProvidedGitLabFixture } from './gitlab-global-setup.ts'
 

@@ -1,4 +1,3 @@
-import { describe, expect, it } from 'vitest'
 import type {
   FindChangesRequest,
   ForgeAdapter,
@@ -6,7 +5,8 @@ import type {
   Release,
   ReleasePayload,
   Repository,
-} from '../../../../packages/core/src/index.ts'
+} from '@release-drafter/core'
+import { describe, expect, it } from 'vitest'
 
 export type ForgeConformanceFixture = {
   repository: Repository

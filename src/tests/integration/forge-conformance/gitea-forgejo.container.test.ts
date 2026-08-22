@@ -1,10 +1,6 @@
+import type { ForgeAdapter, Release, Repository } from '@release-drafter/core'
+import { createForgeAdapter } from 'release-drafter'
 import { inject } from 'vitest'
-import type {
-  ForgeAdapter,
-  Release,
-  Repository,
-} from '../../../../packages/core/src/index.ts'
-import { createForgeAdapter } from '../../../../packages/release-drafter/src/index.ts'
 import { defineForgeAdapterConformance } from './contract.ts'
 import { forgeApi, type RestForgeFixture } from './gitea-forgejo-container.ts'
 

@@ -2,12 +2,12 @@ import { randomBytes } from 'node:crypto'
 import { createWriteStream, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
+import type { Repository } from '@release-drafter/core'
 import {
   GenericContainer,
   type StartedTestContainer,
   Wait,
 } from 'testcontainers'
-import type { Repository } from '../../../../packages/core/src/index.ts'
 import type { ForgeConformanceFixture } from '../forge-conformance/contract.ts'
 
 export const GITLAB_IMAGE =
