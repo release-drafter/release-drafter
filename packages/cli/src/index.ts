@@ -132,7 +132,6 @@ Options:
       --version                Show version
 `
 
-const REPOSITORY_ARGUMENT_PATTERN = /^[^/\s]+(?:\/[^/\s]+)+$/
 const REPOSITORY_SEGMENT_PATTERN = /^[^/\s]+$/
 const DEFAULT_SERVER_URLS: Record<ForgeName, string> = {
   github: 'https://github.com',
@@ -455,7 +454,7 @@ const resolveToken = (params: {
     params.forge === 'github'
       ? isGitHubDotCom
         ? 'No GitHub token is available. Set GITHUB_TOKEN or GH_TOKEN, or pass --token. To use GitHub CLI credentials safely, run `GH_TOKEN="$(gh auth token)" release-drafter ...`.'
-        : 'No GitHub Enterprise token is available. Set GH_ENTERPRISE_TOKEN or GITHUB_ENTERPRISE_TOKEN, or pass --token.'
+        : 'No GitHub Enterprise Server token is available. Set GH_ENTERPRISE_TOKEN or GITHUB_ENTERPRISE_TOKEN, or pass --token.'
       : `No ${params.forge} token is available. Set ${params.forge.toUpperCase()}_TOKEN or pass --token.`,
   )
 }
@@ -559,12 +558,9 @@ export async function runCli(
       : versionOrDependencies
   const stdout = injected.stdout ?? process.stdout
   const stderr = injected.stderr ?? process.stderr
-  const cliArgv =
-    argv[0] === 'check-pr' ||
-    REPOSITORY_ARGUMENT_PATTERN.test(argv[0] ?? '') ||
-    argv[0]?.startsWith('-')
-      ? argv
-      : argv.slice(2)
+  const cliArgv = /(?:^|[/\\])node(?:\.exe)?$/iu.test(argv[0] ?? '')
+    ? argv.slice(2)
+    : argv
 
   let command: ReturnType<typeof parseCommandLine>
   try {

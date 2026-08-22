@@ -590,7 +590,9 @@ describe('forge and endpoint selection', () => {
     const result = await invoke([repository, '--forge', 'gitlab'])
 
     expect(result.code).toBe(2)
-    expect(result.stderr.text()).toContain('Repository must be nonblank')
+    expect(result.stderr.text()).toContain(
+      'Repository must use the form namespace/project.',
+    )
     expect(result.adapterFactory).not.toHaveBeenCalled()
   })
 
@@ -602,7 +604,9 @@ describe('forge and endpoint selection', () => {
     const result = await invoke(['group/subgroup/project', '--forge', forge])
 
     expect(result.code).toBe(2)
-    expect(result.stderr.text()).toContain('Repository must be nonblank')
+    expect(result.stderr.text()).toContain(
+      'Repository must use the form owner/name.',
+    )
     expect(result.adapterFactory).not.toHaveBeenCalled()
   })
 
