@@ -85,39 +85,41 @@ Common commands:
 
 ### Forge conformance tests
 
-The normal `npm run test:run` and `npm run all` commands remain container-free.
-Real-forge compatibility is an opt-in Docker-backed layer:
+`npm run test:run` and `npm run all` do not start containers. Use these commands
+to run Docker-backed forge conformance tests:
 
-- `npm run test:conformance:gitea` and `npm run test:conformance:forgejo` run
-  one immutable image. Use
-  `npm run test:conformance:gitea-forgejo` to run both images through the shared
+- `npm run test:conformance:gitea` runs the Gitea image.
+- `npm run test:conformance:forgejo` runs the Forgejo image.
+- `npm run test:conformance:gitea-forgejo` runs both images through the shared
   `ForgeAdapter` contract.
-- `npm run test:conformance:gitlab` runs the heavier GitLab suite serially with
+- `npm run test:conformance:gitlab` runs the GitLab suite serially and uses
   extended startup and teardown timeouts.
 
-Gitea, Forgejo, and GitLab all run in the normal forge-conformance CI matrix.
-Failed GitLab jobs upload their redacted container logs and fixture metadata.
+The CI matrix includes Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
+redacted container logs and fixture metadata.
 
-The dedicated forge-conformance workflow runs this Docker-backed matrix on pull
-requests when changes touch either forge or normal CI workflow, the Node version,
-root package manifest or lockfile, root TypeScript/Vite/Vitest configuration, any
-`src/**` file, or workspace source, manifest, or TypeScript configuration under
-`packages/*`. The scope job runs the checked-in TypeScript router with the
-repository's pinned Node version and passes fixed pathspec arguments directly to
-Git without shell interpolation. Missing or invalid base commits and unexpected
-Git failures fail open by running the matrix. Maintainers can also apply the
-exact `ci:forge-conformance` label to request the matrix explicitly without
-running changed-file detection. Other label events still use the same relevant
-path detection, so they run the matrix only when the pull request changed a
-covered path. The final gate runs checked-in TypeScript on Node.js 24 rather than
-embedding result logic in the workflow. Pushes to `main` run the matrix only when
-one of the same relevant paths changed.
+The forge-conformance workflow runs the matrix in these cases:
+
+- A pull request changes `ci.yml`, `forge-conformance.yml`, `.node-version`, a
+  root package manifest or lockfile, root TypeScript, Vite, or Vitest
+  configuration, any file under `src`, or workspace source, manifests, or
+  TypeScript configuration under `packages/*`.
+- A maintainer applies the exact `ci:forge-conformance` label. This label skips
+  changed-file detection.
+- A push to `main` changes one of the same paths.
+
+Other pull request label events still use changed-file detection. If the base
+commit is missing or invalid, or if Git fails, the workflow runs the matrix.
+
+The scope job runs the checked-in TypeScript router with the repository's pinned
+Node version. It passes fixed pathspec arguments directly to Git without shell
+interpolation. The final gate also uses checked-in TypeScript and runs on Node.js 24.
 
 The shared contract exercises the public facade and normalized release listing,
 change discovery, commitish resolution, release creation, and release updates.
-Forge-specific fixtures may additionally verify default-branch and repository
-config loading. These suites require a working Docker-compatible daemon and fail
-rather than silently skipping when explicitly invoked.
+Some forge fixtures also verify default-branch and repository configuration
+loading. These commands require a working Docker-compatible daemon. They fail if
+the daemon is not available.
 
 Do not add npm publication workflows or make scoped `@release-drafter/*`
 workspaces publishable unless the maintainers approve a release plan.
