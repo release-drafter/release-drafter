@@ -9,7 +9,7 @@ import { actionOutputNames } from './action-metadata.ts'
 import { getActionInput } from './get-action-inputs.ts'
 import { getConfig } from './get-config.ts'
 
-/** Run the Autolabeler Action using package-owned config and matching logic. */
+/** Run the Autolabeler action using package-owned config and matching logic. */
 export async function run(): Promise<void> {
   try {
     const input = getActionInput()

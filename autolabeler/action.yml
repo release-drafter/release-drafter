@@ -14,8 +14,8 @@ inputs:
     default: ${{ github.token }}
   config-name:
     description: |
-      If your workflow requires multiple autolabeler configs it can be helpful to override the config-name.
-      The config should still be located inside `.github` as that's where we are looking for config files.
+      Configuration filename to use when the workflow has more than one Autolabeler configuration.
+      Store the file in `.github`; Release Drafter searches only that directory.
     required: false
     default: release-drafter.yml
   dry-run:

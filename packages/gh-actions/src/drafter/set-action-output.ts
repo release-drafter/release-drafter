@@ -3,7 +3,7 @@ import type { DraftReleaseResult } from '@release-drafter/core'
 import { writeActionOutputs } from '../common/action-contract.ts'
 import { actionOutputNames } from './action-metadata.ts'
 
-/** Set every declared Drafter Action output from the release result. */
+/** Set every declared Drafter action output from the release result. */
 export const setActionOutput = ({
   release,
   releasePayload,

@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 
 type StringKeyOf<Value> = Extract<keyof Value, string>
 
-/** Define every Action input name exactly once and require complete coverage. */
+/** Define every action input name exactly once and require complete coverage. */
 export const defineActionInputNames =
   <Input>() =>
   <const Names extends readonly StringKeyOf<Input>[]>(
@@ -18,7 +18,7 @@ type InputValues<Names extends readonly string[]> = Record<
   string | undefined
 >
 
-/** Read the inputs declared by an Action contract. */
+/** Read the inputs declared by an action contract. */
 export const readActionInputs = <const Names extends readonly string[]>(
   names: Names,
 ): InputValues<Names> =>

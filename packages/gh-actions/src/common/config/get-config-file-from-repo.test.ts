@@ -12,7 +12,7 @@ vi.mock(import('../github.ts'), () => ({
   ),
 }))
 
-describe('remote Action config authentication', () => {
+describe('remote action config authentication', () => {
   afterEach(() => {
     vi.clearAllMocks()
     vi.unstubAllEnvs()

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { ActionInput } from './action-input.schema.ts'
 import { toReleaseInput } from './runner.ts'
 
-describe('Drafter Action input mapping', () => {
+describe('Drafter action input mapping', () => {
   it('maps from only to the core comparison baseline', () => {
     const releaseInput = toReleaseInput({
       'config-name': 'release-drafter.yml',

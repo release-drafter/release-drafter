@@ -11,8 +11,8 @@ runs:
 inputs:
   config-name:
     description: |
-      If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
-      The config should still be located inside `.github` as that's where we are looking for config files.
+      Configuration filename to use when the workflow has more than one Release Drafter configuration.
+      Store the file in `.github`; Release Drafter searches only that directory.
     required: false
     default: release-drafter.yml
   token:
@@ -66,20 +66,21 @@ inputs:
     default: ''
   commitish:
     description: |
-      The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to.
-      Tag and pull request refs are resolved to commit SHAs.
+      The release target.
+      Use a branch, commit SHA, fully qualified tag, or pull request ref.
+      Release Drafter resolves tag and pull request refs to commit SHAs.
       Pull request merge refs force dry-run mode and disable publishing because they point to ephemeral merge commits.
-      Defaults to the branch that release-drafter runs for, e.g. `main` when configured to run on pushes to `main`.
+      Defaults to the branch where Release Drafter runs, such as `main` when the workflow runs on pushes to `main`.
     required: false
     default: ''
   header:
     description: |
-      A string that would be added before the template body.
+      Text to add before the template body.
     required: false
     default: ''
   footer:
     description: |
-      A string that would be added after the template body.
+      Text to add after the template body.
     required: false
     default: ''
   dry-run:
@@ -106,7 +107,7 @@ outputs:
   html_url:
     description: The URL users can navigate to in order to view the release
   upload_url:
-    description: The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.
+    description: The URL for uploading release assets. For example, pass this URL to the `@actions/upload-release-asset` GitHub Action.
   major_version:
     description: The next major version number. For example, if the last tag or release was v1.2.3, the value would be v2.0.0.
   minor_version:

@@ -711,7 +711,7 @@ specified in your `release-drafter.yml` config.
 
 | Input                   | Description                                                                                                                                                                                                                                                                                                                                                        |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config-name`           | If your workflow requires multiple release-drafter configs it be helpful to override the config-name. The config should still be located inside `.github` as that's where we are looking for config files.                                                                                                                                                         |
+| `config-name`           | Configuration filename to use when the workflow has more than one Release Drafter configuration. Store the file in `.github`; Release Drafter searches only that directory.                                                                                                                                                                                        |
 | `token`                 | Access token used to make requests against the GitHub API. Defaults to `${{ github.token }}`                                                                                                                                                                                                                                                                       |
 | `dry-run`               | When enabled, no write operations (creating/updating releases or adding labels) are performed. Instead, the action logs what it would have done. Default : `false`                                                                                                                                                                                                 |
 | `name`                  | The name that will be used in the GitHub release that's created or updated. This will override any `name-template` specified in your `release-drafter.yml` if defined.                                                                                                                                                                                             |
@@ -724,36 +724,37 @@ specified in your `release-drafter.yml` config.
 | `prerelease-identifier` | A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` when both options come from the same config location; explicit action inputs still take precedence. Default `''`.                                                                                                           |
 | `include-pre-releases`  | When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.                                                                                                                                                                                             |
 | `latest`                | A string indicating whether the release being created or updated should be marked as latest.                                                                                                                                                                                                                                                                       |
-| `commitish`             | The release target: a branch, commit SHA, or fully qualified tag or pull request ref. Tag and pull request refs are resolved to commit SHAs. Pull request merge refs force output-only dry-run mode and disable publishing.                                                                                                                                        |
-| `header`                | A string that would be added before the template body.                                                                                                                                                                                                                                                                                                             |
-| `footer`                | A string that would be added after the template body.                                                                                                                                                                                                                                                                                                              |
+| `commitish`             | The release target. Use a branch, commit SHA, fully qualified tag, or pull request ref. Release Drafter resolves tag and pull request refs to commit SHAs. Pull request merge refs force output-only dry-run mode and disable publishing.                                                                                                                          |
+| `header`                | Text to add before the template body.                                                                                                                                                                                                                                                                                                                              |
+| `footer`                | Text to add after the template body.                                                                                                                                                                                                                                                                                                                               |
 
 ## Action Outputs
 
 The Release Drafter GitHub Action sets a couple of outputs which can be used as
-inputs to other Actions in the workflow
+inputs to other actions in the workflow
 ([example](https://github.com/actions/upload-release-asset#example-workflow---upload-a-release-asset)).
 
-| Output             | Description                                                                                                                                                                                                                   |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | The ID of the release that was created or updated.                                                                                                                                                                            |
-| `name`             | The name of this release.                                                                                                                                                                                                     |
-| `tag_name`         | The name of the tag associated with this release.                                                                                                                                                                             |
-| `body`             | The body of the drafted release, useful if it needs to be included in files.                                                                                                                                                  |
-| `html_url`         | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                                                                    |
-| `upload_url`       | The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the [`@actions/upload-release-asset GitHub Action`](https://www.github.com/actions/upload-release-asset). |
-| `resolved_version` | Version resolved by [Version Resolver](#version-resolver). i.e. `6.3.1`                                                                                                                                                       |
-| `major_version`    | Major part of resolved version by [Version Resolver](#version-resolver). i.e. `6` for version `6.3.1`                                                                                                                         |
-| `minor_version`    | Minor part of resolved version by [Version Resolver](#version-resolver). i.e. `3` for version `6.3.1`                                                                                                                         |
-| `patch_version`    | Patch part of resolved version by [Version Resolver](#version-resolver). i.e. `1` for version `6.3.1`                                                                                                                         |
+| Output             | Description                                                                                                                                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | The ID of the release that was created or updated.                                                                                                                            |
+| `name`             | The name of this release.                                                                                                                                                     |
+| `tag_name`         | The name of the tag associated with this release.                                                                                                                             |
+| `body`             | The body of the drafted release, useful if it needs to be included in files.                                                                                                  |
+| `html_url`         | The URL users can navigate to in order to view the release. i.e. `https://github.com/octocat/Hello-World/releases/v1.0.0`.                                                    |
+| `upload_url`       | The URL for uploading release assets. For example, pass this URL to the [`@actions/upload-release-asset` GitHub Action](https://www.github.com/actions/upload-release-asset). |
+| `resolved_version` | Version resolved by [Version Resolver](#version-resolver). i.e. `6.3.1`                                                                                                       |
+| `major_version`    | Major part of resolved version by [Version Resolver](#version-resolver). i.e. `6` for version `6.3.1`                                                                         |
+| `minor_version`    | Minor part of resolved version by [Version Resolver](#version-resolver). i.e. `3` for version `6.3.1`                                                                         |
+| `patch_version`    | Patch part of resolved version by [Version Resolver](#version-resolver). i.e. `1` for version `6.3.1`                                                                         |
 
 ## GitHub Enterprise Server (GHES)
 
 Release Drafter composes its GitHub client through the private GitHub Actions
-runtime and GitHub adapter. It passes the Action token together with the runtime
-`GITHUB_SERVER_URL`, `GITHUB_API_URL`, and `GITHUB_GRAPHQL_URL` values, so the
-same workflow can target GHES without `github.com`-specific configuration,
-assuming the required REST and GraphQL APIs are available on the instance.
+runtime and GitHub adapter. It passes the action token and the runtime
+`GITHUB_SERVER_URL`, `GITHUB_API_URL`, and `GITHUB_GRAPHQL_URL` values to the
+GitHub adapter. If the GitHub Enterprise Server instance supports the required
+REST and GraphQL APIs, the same workflow can target it without
+`github.com`-specific configuration.
 
 ## Contributing
 

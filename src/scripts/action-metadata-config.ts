@@ -25,7 +25,7 @@ const defineActionInputs =
 const drafterInputs = defineActionInputs<DrafterActionInput>()({
   'config-name': {
     description:
-      "If your workflow requires multiple release-drafter configs it be helpful to override the config-name.\nThe config should still be located inside `.github` as that's where we are looking for config files.\n",
+      'Configuration filename to use when the workflow has more than one Release Drafter configuration.\nStore the file in `.github`; Release Drafter searches only that directory.\n',
     required: false,
     default: 'release-drafter.yml',
   },
@@ -86,17 +86,17 @@ const drafterInputs = defineActionInputs<DrafterActionInput>()({
   },
   commitish: {
     description:
-      'The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to.\nTag and pull request refs are resolved to commit SHAs.\nPull request merge refs force dry-run mode and disable publishing because they point to ephemeral merge commits.\nDefaults to the branch that release-drafter runs for, e.g. `main` when configured to run on pushes to `main`.\n',
+      'The release target.\nUse a branch, commit SHA, fully qualified tag, or pull request ref.\nRelease Drafter resolves tag and pull request refs to commit SHAs.\nPull request merge refs force dry-run mode and disable publishing because they point to ephemeral merge commits.\nDefaults to the branch where Release Drafter runs, such as `main` when the workflow runs on pushes to `main`.\n',
     required: false,
     default: '',
   },
   header: {
-    description: 'A string that would be added before the template body.\n',
+    description: 'Text to add before the template body.\n',
     required: false,
     default: '',
   },
   footer: {
-    description: 'A string that would be added after the template body.\n',
+    description: 'Text to add after the template body.\n',
     required: false,
     default: '',
   },
@@ -125,7 +125,7 @@ const drafterOutputs = {
   },
   upload_url: {
     description:
-      'The URL for uploading assets to the release, which could be used by GitHub Actions for additional uses, for example the @actions/upload-release-asset GitHub Action.',
+      'The URL for uploading release assets. For example, pass this URL to the `@actions/upload-release-asset` GitHub Action.',
   },
   major_version: {
     description:
@@ -152,7 +152,7 @@ const autolabelerInputs = defineActionInputs<AutolabelerActionInput>()({
   },
   'config-name': {
     description:
-      "If your workflow requires multiple autolabeler configs it can be helpful to override the config-name.\nThe config should still be located inside `.github` as that's where we are looking for config files.\n",
+      'Configuration filename to use when the workflow has more than one Autolabeler configuration.\nStore the file in `.github`; Release Drafter searches only that directory.\n',
     required: false,
     default: 'release-drafter.yml',
   },

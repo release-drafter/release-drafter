@@ -8,14 +8,14 @@ import { getGitHubAdapter } from './github.ts'
 describe('Action GitHub adapter composition', () => {
   afterEach(() => vi.unstubAllEnvs())
 
-  it('reuses the adapter for one Action token', () => {
+  it('reuses the adapter for one action token', () => {
     const first = getGitHubAdapter('shared-action-token')
     const second = getGitHubAdapter('shared-action-token')
 
     expect(second).toBe(first)
   })
 
-  it('creates a new adapter when the Action token changes', () => {
+  it('creates a new adapter when the action token changes', () => {
     const first = getGitHubAdapter('first-action-token')
     const second = getGitHubAdapter('second-action-token')
 

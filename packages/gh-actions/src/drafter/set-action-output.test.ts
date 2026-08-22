@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { describe, expect, it, vi } from 'vitest'
 import { setActionOutput } from './set-action-output.ts'
 
-describe('Drafter Action outputs', () => {
+describe('Drafter action outputs', () => {
   it('preserves the complete output contract from a normalized core result', () => {
     setActionOutput({
       plan: {

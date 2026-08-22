@@ -24,7 +24,7 @@ export const toReleaseInput = (input: ActionInput): ReleaseInput => ({
   ...(input['dry-run'] !== undefined ? { dryRun: input['dry-run'] } : {}),
 })
 
-/** Run the Drafter Action using core orchestration and the GitHub adapter. */
+/** Run the Drafter action using core orchestration and the GitHub adapter. */
 export async function run(): Promise<void> {
   try {
     core.info('Parsing inputs and configuration...')
