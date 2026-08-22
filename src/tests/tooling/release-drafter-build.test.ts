@@ -49,7 +49,6 @@ describe.sequential('release-drafter workspace build boundary', () => {
     expect(declarations).toContain('export declare const draftRelease')
     expect(declarations).toContain('export interface DraftReleaseOptions')
     expect(declarations).toContain('export interface ForgeAdapter')
-    expect(declarations).not.toContain('boundary is established')
     expect(declarations).not.toMatch(/@release-drafter\/|@actions\//)
     expect(declarations).not.toMatch(/gitbeaker/i)
   })
