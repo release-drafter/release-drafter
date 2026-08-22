@@ -118,7 +118,7 @@ function main() {
         )
     } else if (manifest.publishConfig) {
       failures.push(
-        `${manifest.name} must not enable publication config in #1692`,
+        `${manifest.name} must not declare publishConfig; only release-drafter is publishable`,
       )
     }
   }

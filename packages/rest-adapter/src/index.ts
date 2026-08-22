@@ -1,3 +1,3 @@
-/** Package identity used while the @release-drafter/rest-adapter boundary is established. */
+/** Package identity for @release-drafter/rest-adapter. */
 export const REST_ADAPTER_PACKAGE_NAME =
   '@release-drafter/rest-adapter' as const

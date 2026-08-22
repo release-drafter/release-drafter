@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/gh-actions",
   "version": "7.7.0",
-  "description": "GitHub Actions package boundary skeleton.",
+  "description": "GitHub Actions runtime workspace package.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"

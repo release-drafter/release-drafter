@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/rest-adapter",
   "version": "7.7.0",
-  "description": "GitHub-compatible REST mechanics boundary skeleton.",
+  "description": "Shared GitHub-compatible REST adapter mechanics.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"

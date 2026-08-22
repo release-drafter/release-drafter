@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/cli",
   "version": "7.7.0",
-  "description": "Command-line package boundary skeleton.",
+  "description": "Release Drafter command-line workspace package.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"

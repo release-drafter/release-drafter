@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/gitea-adapter",
   "version": "7.7.0",
-  "description": "Gitea adapter package boundary skeleton.",
+  "description": "Gitea adapter workspace package.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"

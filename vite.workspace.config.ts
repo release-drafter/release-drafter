@@ -42,7 +42,7 @@ export default defineConfig({
           .replace('@release-drafter/', '')
           .replaceAll('-', '_')
           .toUpperCase()}_PACKAGE_NAME`
-        const declaration = `/** Package identity used while the ${packageName} boundary is established. */\nexport declare const ${constantName}: "${packageName}";\n`
+        const declaration = `/** Package identity for ${packageName}. */\nexport declare const ${constantName}: "${packageName}";\n`
         const { writeFile } = await import('node:fs/promises')
         await writeFile(resolve(workspaceRoot, 'dist/index.d.ts'), declaration)
       },

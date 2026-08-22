@@ -1,2 +1,2 @@
-/** Package identity used while the release-drafter boundary is established. */
+/** Package identity for release-drafter. */
 export const RELEASE_DRAFTER_PACKAGE_NAME = 'release-drafter' as const

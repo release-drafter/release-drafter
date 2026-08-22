@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/forgejo-adapter",
   "version": "7.7.0",
-  "description": "Forgejo adapter package boundary skeleton.",
+  "description": "Forgejo adapter workspace package.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"

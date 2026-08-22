@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/core",
   "version": "7.7.0",
-  "description": "Forge-neutral release drafting core skeleton.",
+  "description": "Forge-neutral Release Drafter core workspace package.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"

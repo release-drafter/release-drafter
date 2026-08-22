@@ -50,10 +50,10 @@ Release Drafter uses a private npm-workspaces root. Install dependencies from th
 repository root with `npm install` so npm can link every workspace declared under
 `packages/*` and update `package-lock.json` deterministically.
 
-The current GitHub Action entrypoints remain at the repository root:
+The GitHub Action entrypoints live at the repository root:
 `action.yml`, `drafter/action.yml`, `autolabeler/action.yml`, and the tracked
-bundles under `dist/actions/*/run.js`. Workspace skeletons are buildable package
-boundaries only and do not move existing Action behavior.
+bundles under `dist/actions/*/run.js`. Workspace packages provide internal code
+boundaries without changing those public Action paths.
 
 Only the root `dist/` directory is tracked because GitHub Actions execute those
 bundles directly from the repository. Builds under `packages/*/dist/` are
@@ -82,7 +82,7 @@ Common commands:
   `npm run all` so generated JavaScript and declaration files are available.
 - `npm run check:clean` verifies generation left no unstaged or untracked drift
   relative to the intended staged tree.
-- `npm run build --workspaces --if-present` builds package skeletons after the
+- `npm run build --workspaces --if-present` builds workspace packages after the
   root Vite Action bundle build.
 
 Do not add npm publication workflows or make scoped `@release-drafter/*`

@@ -1,7 +1,7 @@
 {
   "name": "release-drafter",
   "version": "7.7.0",
-  "description": "Public Release Drafter facade package skeleton.",
+  "description": "Public Release Drafter facade package.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
