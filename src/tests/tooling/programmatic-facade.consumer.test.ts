@@ -29,6 +29,7 @@ const parsePackResult = (output: string): PackResult => {
 
 const repositoryRoot = resolve(import.meta.dirname, '../../..')
 const facadeDirectory = join(repositoryRoot, 'packages/release-drafter')
+const facadeDist = join(facadeDirectory, 'dist')
 const typescriptCli = join(repositoryRoot, 'node_modules/typescript/lib/tsc.js')
 
 const listFiles = (directory: string): string[] =>
@@ -67,6 +68,8 @@ describe.sequential('release-drafter packed programmatic facade', () => {
   let consumerDirectory: string
   let installedPackageDirectory: string
   let packedFiles: string[]
+  let javascript: string
+  let declarations: string
 
   beforeAll(() => {
     temporaryDirectory = mkdtempSync(
@@ -78,6 +81,10 @@ describe.sequential('release-drafter packed programmatic facade', () => {
     mkdirSync(consumerDirectory)
 
     execNpm(['run', 'build', '--workspace', 'release-drafter'])
+    javascript = readFileSync(join(facadeDist, 'index.js'), 'utf8')
+    declarations = ['index.d.ts', 'types.d.ts']
+      .map((file) => readFileSync(join(facadeDist, file), 'utf8'))
+      .join('\n')
     const packOutput = execNpm(
       [
         'pack',
@@ -118,6 +125,23 @@ describe.sequential('release-drafter packed programmatic facade', () => {
 
   afterAll(() => {
     rmSync(temporaryDirectory, { force: true, recursive: true })
+  })
+
+  it('bundles private runtime implementation without forbidden imports or loaders', () => {
+    expect(javascript).toContain('draftRelease')
+    expect(javascript).not.toMatch(/@release-drafter\/|@actions\//)
+    expect(javascript).not.toMatch(/gitbeaker/i)
+    expect(javascript).not.toMatch(
+      /\bcreateRequire\b|\b__commonJS\w*\b|\b__require\b|\brequire\s*\(/,
+    )
+  })
+
+  it('emits the real NodeNext-compatible public declaration surface', () => {
+    expect(declarations).toContain('export declare const draftRelease')
+    expect(declarations).toContain('export interface DraftReleaseOptions')
+    expect(declarations).toContain('export interface ForgeAdapter')
+    expect(declarations).not.toMatch(/@release-drafter\/|@actions\//)
+    expect(declarations).not.toMatch(/gitbeaker/i)
   })
 
   it('ships the ESM entrypoint and NodeNext declarations in the tarball', () => {

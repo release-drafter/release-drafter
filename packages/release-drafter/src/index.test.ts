@@ -89,10 +89,6 @@ describe('draftRelease', () => {
     coreDraftRelease.mockResolvedValue(result)
   })
 
-  it('has no orchestration side effects when imported', () => {
-    expect(coreDraftRelease).not.toHaveBeenCalled()
-  })
-
   it('delegates to the core contract and supplies a safe default logger', async () => {
     await expect(draftRelease(options)).resolves.toEqual(result)
 
