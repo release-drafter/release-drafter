@@ -35,6 +35,7 @@ const expectedPackageFiles = [
   'dist/cli.js',
   'dist/index.d.ts',
   'dist/index.js',
+  'dist/types.d.ts',
   'package.json',
 ]
 const approvedRuntimeDependencies = {
@@ -307,7 +308,10 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
       exports: {
         '.': {
           import: './dist/index.js',
-          types: './dist/index.d.ts',
+          types: {
+            default: './dist/index.d.ts',
+            'release-drafter-source': './src/index.ts',
+          },
         },
       },
       license: 'ISC',

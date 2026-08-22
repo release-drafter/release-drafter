@@ -136,14 +136,22 @@ describe.sequential('release-drafter workspace build boundary', () => {
     javascriptFiles = new Map(
       [...shippedFiles].filter(([file]) => file.endsWith('.js')),
     )
-    declarations = shippedFiles.get('index.d.ts') ?? ''
+    declarations = [...shippedFiles]
+      .filter(([file]) => file.endsWith('.d.ts'))
+      .map(([, source]) => source)
+      .join('\n')
     indexClosure = reachableModules('index.js', shippedFiles)
     cliClosure = reachableModules('cli.js', shippedFiles)
   }, 120_000)
 
   it('emits native ESM entries and a fully referenced shared chunk graph', () => {
     expect([...shippedFiles.keys()]).toEqual(
-      expect.arrayContaining(['index.js', 'cli.js', 'index.d.ts']),
+      expect.arrayContaining([
+        'index.js',
+        'cli.js',
+        'index.d.ts',
+        'types.d.ts',
+      ]),
     )
     expect(shippedFiles.get('index.js')).toContain('draftRelease')
     expect(shippedFiles.get('cli.js')).toMatch(/^#!\/usr\/bin\/env node\n/u)
