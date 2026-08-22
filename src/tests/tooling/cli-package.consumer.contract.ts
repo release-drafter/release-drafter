@@ -51,7 +51,7 @@ const nodeBuiltins = new Set(
 )
 
 const normalizePackageFile = (path: string): string =>
-  /^dist\/chunks\/src-[A-Za-z0-9_-]+\.js$/.test(path)
+  /^dist\/chunks\/[A-Za-z0-9_-]+-[A-Za-z0-9_-]+\.js$/.test(path)
     ? 'dist/chunks/src-[content-hash].js'
     : path
 
