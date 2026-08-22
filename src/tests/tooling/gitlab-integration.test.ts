@@ -50,6 +50,9 @@ describe('forge conformance workflow', () => {
     const gate = jobs['forge-conformance-gate']
     const scopeStep = scope?.steps?.find(({ id }) => id === 'scope')
     const gateSteps = gate?.steps ?? []
+    const gateStep = gateSteps.find(
+      ({ run }) => run === 'node src/scripts/forge-conformance-gate.ts',
+    )
 
     expect(ci.on?.pull_request).toBeNull()
     expect(ci.on?.push?.branches).toEqual(['main'])
@@ -88,7 +91,7 @@ describe('forge conformance workflow', () => {
       needs: ['forge-conformance-scope', 'forge-conformance'],
       if: 'always()',
     })
-    expect(gateSteps[2]).toMatchObject({
+    expect(gateStep).toMatchObject({
       env: {
         SCOPE_RESULT: githubExpression('needs.forge-conformance-scope.result'),
         SHOULD_RUN: githubExpression(
