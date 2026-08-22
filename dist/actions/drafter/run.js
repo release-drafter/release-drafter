@@ -1,4 +1,4 @@
-import { C as setOutput, S as setFailed, _ as Minimatch, a as getRepository, b as getInput, c as _enum, d as literal, f as number, g as union, h as stringbool, i as getGitHubAdapter, l as array, m as string, n as sharedInputSchema, o as escapeStringRegexp, p as object, r as actionLogger, s as ZodDefault, t as composeConfigGet, u as boolean, v as context, x as info } from "../../chunks/config.js";
+import { C as info, _ as string, a as writeActionOutputs, b as Minimatch, c as getRepository, d as _enum, f as array, g as object, h as number, i as readActionInputs, l as escapeStringRegexp, m as literal, n as sharedInputSchema, o as actionLogger, p as boolean, r as defineActionInputNames, s as getGitHubAdapter, t as composeConfigGet, u as ZodDefault, v as stringbool, w as setFailed, x as context, y as union } from "../../chunks/config.js";
 //#region node_modules/conventional-commits-parser/dist/regex.js
 var nomatchRegex = /(?!.*)/;
 function escape(string) {
@@ -2821,29 +2821,40 @@ var actionInputSchema = object({
 	publish: stringbool().optional().default(false)
 }).and(sharedInputSchema).and(commonConfigSchema);
 //#endregion
+//#region packages/gh-actions/src/drafter/action-metadata.ts
+var actionInputNames = defineActionInputNames()([
+	"config-name",
+	"token",
+	"name",
+	"tag",
+	"version",
+	"from",
+	"publish",
+	"latest",
+	"prerelease",
+	"prerelease-identifier",
+	"include-pre-releases",
+	"commitish",
+	"header",
+	"footer",
+	"dry-run",
+	"filter-by-range"
+]);
+var actionOutputNames = [
+	"id",
+	"html_url",
+	"upload_url",
+	"tag_name",
+	"name",
+	"resolved_version",
+	"major_version",
+	"minor_version",
+	"patch_version",
+	"body"
+];
+//#endregion
 //#region packages/gh-actions/src/drafter/get-action-inputs.ts
-var getActionInput = () => {
-	const getInput$1 = (name) => getInput(name) || void 0;
-	const input = {
-		"config-name": getInput$1("config-name"),
-		from: getInput$1("from"),
-		name: getInput$1("name"),
-		tag: getInput$1("tag"),
-		version: getInput$1("version"),
-		publish: getInput$1("publish"),
-		token: getInput$1("token"),
-		latest: getInput$1("latest"),
-		prerelease: getInput$1("prerelease"),
-		"prerelease-identifier": getInput$1("prerelease-identifier"),
-		"include-pre-releases": getInput$1("include-pre-releases"),
-		commitish: getInput$1("commitish"),
-		header: getInput$1("header"),
-		footer: getInput$1("footer"),
-		"dry-run": getInput$1("dry-run"),
-		"filter-by-range": getInput$1("filter-by-range")
-	};
-	return actionInputSchema.parse(input);
-};
+var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
 //#endregion
 //#region packages/gh-actions/src/drafter/get-config.ts
 var getConfig = async (configName, token) => {
@@ -2862,18 +2873,18 @@ var setActionOutput = ({ release, releasePayload }) => {
 	info("Set action outputs...");
 	const outputName = release?.name ?? releasePayload.name;
 	const outputTagName = release?.tagName ?? releasePayload.tag;
-	if (release) {
-		if (release.id && Number.isInteger(release.id)) setOutput("id", release.id.toString());
-		if (release.url) setOutput("html_url", release.url);
-		if (release.uploadUrl) setOutput("upload_url", release.uploadUrl);
-	}
-	if (outputTagName) setOutput("tag_name", outputTagName);
-	if (outputName) setOutput("name", outputName);
-	if (releasePayload.resolvedVersion) setOutput("resolved_version", releasePayload.resolvedVersion);
-	if (releasePayload.majorVersion) setOutput("major_version", releasePayload.majorVersion);
-	if (releasePayload.minorVersion) setOutput("minor_version", releasePayload.minorVersion);
-	if (releasePayload.patchVersion) setOutput("patch_version", releasePayload.patchVersion);
-	setOutput("body", releasePayload.body);
+	writeActionOutputs(actionOutputNames, {
+		id: release?.id && Number.isInteger(release.id) ? release.id.toString() : void 0,
+		html_url: release?.url || void 0,
+		upload_url: release?.uploadUrl || void 0,
+		tag_name: outputTagName || void 0,
+		name: outputName || void 0,
+		resolved_version: releasePayload.resolvedVersion || void 0,
+		major_version: releasePayload.majorVersion || void 0,
+		minor_version: releasePayload.minorVersion || void 0,
+		patch_version: releasePayload.patchVersion || void 0,
+		body: releasePayload.body
+	});
 	info("Outputs set!");
 };
 //#endregion

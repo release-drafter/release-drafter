@@ -13,6 +13,15 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
+import {
+  actionInputNames as autolabelerInputNames,
+  actionOutputNames as autolabelerOutputNames,
+} from '#gh-actions/autolabeler/action-metadata.ts'
+import {
+  actionInputNames as drafterInputNames,
+  actionOutputNames as drafterOutputNames,
+} from '#gh-actions/drafter/action-metadata.ts'
+import { actionManifests } from '#src/scripts/action-metadata-config.ts'
 import { collectRuntimeDependencyFailures } from '#src/scripts/guard-boundaries.ts'
 import {
   collectPackageFailures,
@@ -33,6 +42,12 @@ type PackageJson = {
 }
 const readJson = (path: string) =>
   JSON.parse(readFileSync(path, 'utf8')) as PackageJson
+
+const listFiles = (directory: string): string[] =>
+  readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name)
+    return entry.isDirectory() ? listFiles(path) : [path]
+  })
 
 describe('workspace foundation', () => {
   it('satisfies the workspace package guard', () => {
@@ -135,46 +150,24 @@ describe('workspace foundation', () => {
       main: '../dist/actions/autolabeler/run.js',
     })
     expect(rootAction.inputs.from).toMatchObject({ required: false })
+    expect(rootAction.inputs).toEqual(actionManifests.drafter.inputs)
+    expect(rootAction.outputs).toEqual(actionManifests.drafter.outputs)
+    expect(autolabelerAction.inputs).toEqual(actionManifests.autolabeler.inputs)
+    expect(autolabelerAction.outputs).toEqual(
+      actionManifests.autolabeler.outputs,
+    )
     expect(Object.keys(rootAction.inputs).sort()).toEqual(
-      [
-        'commitish',
-        'config-name',
-        'dry-run',
-        'filter-by-range',
-        'footer',
-        'from',
-        'header',
-        'include-pre-releases',
-        'latest',
-        'name',
-        'prerelease',
-        'prerelease-identifier',
-        'publish',
-        'tag',
-        'token',
-        'version',
-      ].sort(),
+      [...drafterInputNames].sort(),
     )
     expect(Object.keys(rootAction.outputs).sort()).toEqual(
-      [
-        'body',
-        'html_url',
-        'id',
-        'major_version',
-        'minor_version',
-        'name',
-        'patch_version',
-        'resolved_version',
-        'tag_name',
-        'upload_url',
-      ].sort(),
+      [...drafterOutputNames].sort(),
     )
-    expect(Object.keys(autolabelerAction.inputs).sort()).toEqual([
-      'config-name',
-      'dry-run',
-      'token',
-    ])
-    expect(autolabelerAction.outputs ?? {}).toEqual({})
+    expect(Object.keys(autolabelerAction.inputs).sort()).toEqual(
+      [...autolabelerInputNames].sort(),
+    )
+    expect(Object.keys(autolabelerAction.outputs ?? {}).sort()).toEqual(
+      [...autolabelerOutputNames].sort(),
+    )
 
     for (const artifact of [
       'dist/actions/drafter/run.js',
@@ -183,6 +176,22 @@ describe('workspace foundation', () => {
       expect(statSync(artifact).isFile()).toBe(true)
       expect(statSync(artifact).size).toBeGreaterThan(0)
     }
+  })
+
+  it('routes Action input and output access through metadata contracts', () => {
+    const contractPath = resolve(
+      'packages/gh-actions/src/common/action-contract.ts',
+    )
+    const directAccess = /\bcore\.(?:getInput|setOutput)\s*\(/gu
+    const offenders = listFiles(resolve('packages/gh-actions/src'))
+      .filter((path) => path.endsWith('.ts') && path !== contractPath)
+      .flatMap((path) =>
+        [...readFileSync(path, 'utf8').matchAll(directAccess)].map(
+          ({ 0: call }) => `${path}:${call}`,
+        ),
+      )
+
+    expect(offenders).toEqual([])
   })
 
   it('keeps gh-actions runtime exports and workspace artifacts split by product', () => {
@@ -229,6 +238,7 @@ describe('workspace foundation', () => {
   it('builds workspace dependencies before generating schemas', () => {
     const scripts = readJson('package.json').scripts
 
+    expect(scripts?.ci).toContain('npm run generate:action-metadata')
     expect(scripts?.['generate:schemas']).toBe(
       'npm run build:workspaces && node src/scripts/json-schema.ts',
     )

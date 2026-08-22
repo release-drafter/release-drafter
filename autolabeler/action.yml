@@ -9,16 +9,15 @@ runs:
   main: ../dist/actions/autolabeler/run.js
 inputs:
   token:
-    description: >
-      Access token used to make requests against the GitHub API. Defaults to
-      github.token.
+    description: |
+      Access token used to make requests against the GitHub API. Defaults to github.token.
     default: ${{ github.token }}
   config-name:
     description: |
       If your workflow requires multiple autolabeler configs it can be helpful to override the config-name.
       The config should still be located inside `.github` as that's where we are looking for config files.
     required: false
-    default: 'release-drafter.yml'
+    default: release-drafter.yml
   dry-run:
     description: |
       A boolean indicating whether to run without performing any write operations.
@@ -26,4 +25,8 @@ inputs:
     required: false
     default: ''
 
-outputs: {}
+outputs:
+  number:
+    description: The pull request number that was evaluated.
+  labels:
+    description: A comma-separated list of labels matched by the configuration.

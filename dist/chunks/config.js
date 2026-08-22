@@ -51168,6 +51168,19 @@ var getGitHubAdapter = (token, octokit, factory = createGitHubAdapter) => {
 	return defaultAdapter.adapter;
 };
 //#endregion
+//#region packages/gh-actions/src/common/action-contract.ts
+/** Define every Action input name exactly once and require complete coverage. */
+var defineActionInputNames = () => (names, ..._missing) => names;
+/** Read the inputs declared by an Action contract. */
+var readActionInputs = (names) => Object.fromEntries(names.map((name) => [name, getInput(name) || void 0]));
+/** Write every defined output through the names declared by the contract. */
+var writeActionOutputs = (names, values) => {
+	for (const name of names) {
+		const value = values[name];
+		if (value !== void 0) setOutput(name, value);
+	}
+};
+//#endregion
 //#region packages/gh-actions/src/common/shared-input.schema.ts
 /** Inputs shared by the Drafter and Autolabeler Actions. */
 var sharedInputSchema = object({
@@ -57240,4 +57253,4 @@ async function composeConfigGet(configFilename, currentContext, token) {
 	return result;
 }
 //#endregion
-export { setOutput as C, setFailed as S, Minimatch as _, getRepository as a, getInput as b, _enum as c, literal as d, number as f, union as g, stringbool as h, getGitHubAdapter as i, array as l, string$1 as m, sharedInputSchema as n, escapeStringRegexp as o, object as p, actionLogger as r, ZodDefault as s, composeConfigGet as t, boolean as u, context as v, info as x, core_exports as y };
+export { info as C, core_exports as S, string$1 as _, writeActionOutputs as a, Minimatch as b, getRepository as c, _enum as d, array as f, object as g, number as h, readActionInputs as i, escapeStringRegexp as l, literal as m, sharedInputSchema as n, actionLogger as o, boolean as p, defineActionInputNames as r, getGitHubAdapter as s, composeConfigGet as t, ZodDefault as u, stringbool as v, setFailed as w, context as x, union as y };

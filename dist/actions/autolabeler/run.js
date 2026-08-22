@@ -1,4 +1,4 @@
-import { C as setOutput, S as setFailed, _ as Minimatch, b as getInput, i as getGitHubAdapter, l as array, m as string, n as sharedInputSchema, o as escapeStringRegexp, p as object, t as composeConfigGet, v as context, x as info, y as core_exports } from "../../chunks/config.js";
+import { C as info, S as core_exports, _ as string, a as writeActionOutputs, b as Minimatch, f as array, g as object, i as readActionInputs, l as escapeStringRegexp, n as sharedInputSchema, r as defineActionInputNames, s as getGitHubAdapter, t as composeConfigGet, w as setFailed, x as context } from "../../chunks/config.js";
 import process from "node:process";
 //#region packages/autolabeler/src/config/config.schema.ts
 var configSchema = object({ 
@@ -147,18 +147,19 @@ var matchLabels = (params) => {
 	};
 };
 //#endregion
+//#region packages/gh-actions/src/autolabeler/action-metadata.ts
+var actionInputNames = defineActionInputNames()([
+	"token",
+	"config-name",
+	"dry-run"
+]);
+var actionOutputNames = ["number", "labels"];
+//#endregion
 //#region packages/gh-actions/src/autolabeler/action-input.schema.ts
 var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
 //#endregion
 //#region packages/gh-actions/src/autolabeler/get-action-inputs.ts
-var getActionInput = () => {
-	const getInput$1 = (name) => getInput(name) || void 0;
-	return actionInputSchema.parse({
-		"config-name": getInput$1("config-name"),
-		token: getInput$1("token"),
-		"dry-run": getInput$1("dry-run")
-	});
-};
+var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
 //#endregion
 //#region packages/gh-actions/src/autolabeler/get-config.ts
 var getConfig = async (configName, token) => {
@@ -209,8 +210,10 @@ async function run() {
 				labels: result.labels
 			});
 		}
-		setOutput("number", payload.number.toString());
-		if (result.labels.length > 0) setOutput("labels", result.labels.join(","));
+		writeActionOutputs(actionOutputNames, {
+			number: payload.number.toString(),
+			labels: result.labels.length > 0 ? result.labels.join(",") : void 0
+		});
 	} catch (error) {
 		if (error instanceof Error) setFailed(error.message);
 	}

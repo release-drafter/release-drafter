@@ -3,7 +3,9 @@ import * as core from '@actions/core'
 import { context } from '@actions/github'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import { matchLabels } from '@release-drafter/autolabeler'
+import { writeActionOutputs } from '../common/action-contract.ts'
 import { getGitHubAdapter } from '../common/github.ts'
+import { actionOutputNames } from './action-metadata.ts'
 import { getActionInput } from './get-action-inputs.ts'
 import { getConfig } from './get-config.ts'
 
@@ -60,9 +62,10 @@ export async function run(): Promise<void> {
         })
       }
     }
-    core.setOutput('number', payload.number.toString())
-    if (result.labels.length > 0)
-      core.setOutput('labels', result.labels.join(','))
+    writeActionOutputs(actionOutputNames, {
+      number: payload.number.toString(),
+      labels: result.labels.length > 0 ? result.labels.join(',') : undefined,
+    })
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
