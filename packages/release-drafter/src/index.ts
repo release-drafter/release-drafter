@@ -4,12 +4,41 @@ import { GiteaAdapter } from '@release-drafter/gitea-adapter'
 import { GitHubAdapter } from '@release-drafter/github-adapter'
 import { GitLabAdapter } from '@release-drafter/gitlab-adapter'
 import type {
+  CreateForgeAdapterOptions,
   DraftReleaseOptions,
   DraftReleaseResult,
+  ForgeAdapter,
+  ForgeName,
   Logger,
 } from './types.js'
 
 export type * from './types.js'
+
+/** Constructs a bundled forge adapter from a stable structural option shape. */
+export const createForgeAdapter = (
+  options: CreateForgeAdapterOptions,
+): ForgeAdapter => {
+  const defaults: Record<ForgeName, string> = {
+    github: 'https://github.com',
+    gitea: 'https://gitea.com',
+    forgejo: 'https://codeberg.org',
+    gitlab: 'https://gitlab.com',
+  }
+  const adapterOptions = {
+    ...options,
+    serverUrl: options.serverUrl ?? defaults[options.forge],
+  }
+  switch (options.forge) {
+    case 'github':
+      return new GitHubAdapter(adapterOptions)
+    case 'gitea':
+      return new GiteaAdapter(adapterOptions)
+    case 'forgejo':
+      return new ForgejoAdapter(adapterOptions)
+    case 'gitlab':
+      return new GitLabAdapter(adapterOptions)
+  }
+}
 
 const defaultLogger: Logger = {
   debug() {},

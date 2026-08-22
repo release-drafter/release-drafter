@@ -140,6 +140,69 @@ export interface ForgeAdapter {
   updateRelease(params: UpdateReleaseRequest): Promise<Release>
 }
 
+export type ForgeName = 'github' | 'gitea' | 'forgejo' | 'gitlab'
+
+export type ForgeFetch = typeof globalThis.fetch
+
+interface CommonForgeAdapterOptions {
+  token: string
+  serverUrl?: string
+  apiUrl?: string
+  logger?: Logger
+  fetch?: ForgeFetch
+}
+
+export interface RestForgeAdapterLimits {
+  timeoutMs: number
+  maxResponseBytes: number
+  maxComparisonBytes: number
+  maxComparisonCommits: number
+  maxPages: number
+  pageSize: number
+  maxItemsPerList: number
+  maxChangedFiles: number
+  maxRequestsPerOperation: number
+  concurrency: number
+}
+
+export interface GitLabForgeAdapterLimits extends RestForgeAdapterLimits {
+  maxAssociatedMergeRequests: number
+  retries: number
+  retryBaseDelayMs: number
+  maxRetryDelayMs: number
+}
+
+export interface GitHubForgeAdapterOptions extends CommonForgeAdapterOptions {
+  forge: 'github'
+  graphqlUrl?: string
+  env?: Record<string, string | undefined>
+  requestAgent?: object
+  requestRetries?: number
+  changedFilesConcurrency?: number
+  contributorConcurrency?: number
+}
+
+export interface GiteaForgeAdapterOptions extends CommonForgeAdapterOptions {
+  forge: 'gitea'
+  limits?: Partial<RestForgeAdapterLimits>
+}
+
+export interface ForgejoForgeAdapterOptions extends CommonForgeAdapterOptions {
+  forge: 'forgejo'
+  limits?: Partial<RestForgeAdapterLimits>
+}
+
+export interface GitLabForgeAdapterOptions extends CommonForgeAdapterOptions {
+  forge: 'gitlab'
+  limits?: Partial<GitLabForgeAdapterLimits>
+}
+
+export type CreateForgeAdapterOptions =
+  | GitHubForgeAdapterOptions
+  | GiteaForgeAdapterOptions
+  | ForgejoForgeAdapterOptions
+  | GitLabForgeAdapterOptions
+
 export interface ParsedChangeCondition {
   labels: string[]
   paths: string[]
