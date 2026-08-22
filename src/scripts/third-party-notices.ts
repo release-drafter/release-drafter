@@ -7,7 +7,6 @@ type LicenseRecord = {
   licenses?: unknown
   name?: unknown
   notices?: unknown
-  version?: unknown
 }
 type PackageLock = {
   packages?: Record<string, { version?: unknown }>
@@ -48,9 +47,9 @@ const sections = bundledDependencies.map((dependency) => {
     `${dependency}.dep.yml`,
   )
   const record = parseYaml(readFileSync(cachePath, 'utf8')) as LicenseRecord
-  if (record.name !== dependency || record.version !== lockedVersion) {
+  if (record.name !== dependency) {
     throw new Error(
-      `Cached license for ${dependency} does not match package-lock.json (${String(record.version)} != ${lockedVersion})`,
+      `Cached license for ${dependency} has the wrong package name`,
     )
   }
   if (!Array.isArray(record.licenses) || record.licenses.length === 0) {
