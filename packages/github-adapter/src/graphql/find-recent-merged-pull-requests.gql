@@ -2,6 +2,7 @@ query findRecentMergedPullRequests(
   $name: String!
   $owner: String!
   $baseRefName: String
+  $cursor: String
   $limit: Int!
   $withPullRequestBody: Boolean!
   $withPullRequestURL: Boolean!
@@ -14,12 +15,15 @@ query findRecentMergedPullRequests(
       baseRefName: $baseRefName
       orderBy: { field: UPDATED_AT, direction: DESC }
       first: $limit
+      after: $cursor
     ) {
-      __typename
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
-        ...PullRequestFields
+        ...AdapterPullRequestFields
         mergeCommit {
-          __typename
           oid
         }
       }

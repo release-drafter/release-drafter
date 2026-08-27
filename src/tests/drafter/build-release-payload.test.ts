@@ -400,7 +400,7 @@ describe('build release payload', () => {
 
     expect(releasePayload.targetCommitish).toBe('')
     expect(sharedMocks.core.warning).toHaveBeenCalledWith(
-      'refs/tags/missing could not be resolved to a commit SHA, falling back to default branch',
+      'GitHub could not resolve refs/tags/missing to a commit SHA. Release Drafter will use the default branch.',
     )
     expect(scope.pendingMocks()).toHaveLength(0)
   })
@@ -482,7 +482,7 @@ describe('build release payload', () => {
 
     expect(releasePayload.targetCommitish).toBe('')
     expect(sharedMocks.core.warning).toHaveBeenCalledWith(
-      'refs/pull/123/merge could not be resolved to a commit SHA, falling back to default branch',
+      'GitHub could not resolve refs/pull/123/merge to a commit SHA. Release Drafter will use the default branch.',
     )
     expect(scope.pendingMocks()).toHaveLength(0)
   })

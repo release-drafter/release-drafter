@@ -1,4 +1,4 @@
-import { A as setOutput, D as getInput, N as __toESM, O as info, S as string, T as core_exports, _ as array, f as composeConfigGet, i as sharedInputSchema, k as setFailed, m as context, n as require_lib, p as getOctokit, r as escapeStringRegexp, t as require_ignore, u as getPullRequestChangedFiles, x as object } from "../../chunks/ignore.js";
+import { D as setOutput, E as setFailed, S as core_exports, T as info, _ as context, a as getRepository, b as string, d as escapeStringRegexp, g as require_ignore, i as getGitHubAdapter, k as __toESM, r as composeConfigGet, t as sharedInputSchema, u as require_lib, v as array, w as getInput, y as object } from "../../chunks/common.js";
 //#region src/actions/autolabeler/config/action-input.schema.ts
 var actionInputSchema = object({ 
 /**
@@ -118,11 +118,11 @@ var parseConfig = ({ config }) => parseConfig$1({
 var main = async (params) => {
 	info(`Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`);
 	if (context.eventName !== "pull_request" && context.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`);
-	const octokit = getOctokit();
+	const adapter = getGitHubAdapter();
 	const payload = context.payload;
-	const changedFiles = await getPullRequestChangedFiles(octokit, {
-		...context.repo,
-		pull_number: payload.number
+	const changedFiles = await adapter.findPullRequestChangedFiles({
+		repository: getRepository(),
+		number: payload.number
 	});
 	const result = matchLabels({
 		config: params.config,
@@ -136,7 +136,7 @@ var main = async (params) => {
 	for (const match of result.matches) info(`Found label for ${match.matcher}: '${match.label}'`);
 	if (result.labels.length > 0) {
 		if (params.dryRun) info(`[dry-run] Would add labels [${result.labels.join(", ")}] to PR #${payload.number}`);
-		else await octokit.rest.issues.addLabels({
+		else await adapter.octokit.rest.issues.addLabels({
 			...context.repo,
 			issue_number: payload.number,
 			labels: result.labels

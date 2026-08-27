@@ -12,7 +12,6 @@ const githubConfig: CodegenConfig = {
       },
     },
   },
-  documents: 'src/**/*.gql',
   config: {
     // GitHub's published schema has deprecation mismatches between interfaces
     // and their implementations that GraphQL 17 rejects during schema validation.
@@ -27,8 +26,12 @@ const githubConfig: CodegenConfig = {
     },
   },
   generates: {
-    'src/types/github.graphql.generated.ts': {
+    'packages/github-adapter/src/types/github.graphql.generated.ts': {
+      documents: 'packages/github-adapter/src/graphql/**/*.gql',
       plugins: ['typescript', 'typescript-operations', 'typed-document-node'],
+      config: {
+        onlyOperationTypes: true,
+      },
     },
   },
 }

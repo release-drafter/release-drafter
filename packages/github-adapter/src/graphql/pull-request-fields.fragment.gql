@@ -1,5 +1,4 @@
-fragment PullRequestFields on PullRequest {
-  __typename
+fragment AdapterPullRequestFields on PullRequest {
   title
   number
   url @include(if: $withPullRequestURL)
@@ -10,15 +9,12 @@ fragment PullRequestFields on PullRequest {
     url
   }
   baseRepository {
-    __typename
     nameWithOwner
   }
-  mergedAt
   isCrossRepository
+  mergedAt
   labels(first: 100) {
-    __typename
     nodes {
-      __typename
       name
     }
   }
