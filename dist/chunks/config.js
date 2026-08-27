@@ -56924,6 +56924,8 @@ function parse(src, reviver, options) {
 	}
 	return doc.toJS(Object.assign({ reviver: _reviver }, options));
 }
+//#endregion
+//#region packages/gh-actions/src/common/config/extends.schema.ts
 var mergeStrategySchema = _enum([
 	"override",
 	"append",

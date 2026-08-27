@@ -1,8 +1,4 @@
-/**
- * All values are strings exposed by the GitHub Actions runtime.
- *
- * @note AI Generated, prone to errors
- */
+/** Environment values used by the GitHub Actions test fixtures. */
 export interface GithubActionEnvironment extends Record<string, string> {
   /**
    * Always set to `true` in GitHub Actions to indicate a CI environment.
