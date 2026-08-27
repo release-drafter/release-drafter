@@ -9,7 +9,7 @@
 import nock from 'nock'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import type * as z from 'zod'
-import type { sharedInputSchema } from '#src/common/shared-input.schema.ts'
+import type { sharedInputSchema } from '#gh-actions/common/shared-input.schema.ts'
 import { mocks } from '#tests/mocks/index.ts'
 
 /**
@@ -17,7 +17,7 @@ import { mocks } from '#tests/mocks/index.ts'
  * @see https://vitest.dev/api/vi.html#vi-mock
  */
 vi.mock(
-  import('#src/common/config/index.ts'),
+  import('#gh-actions/common/config/index.ts'),
   (await import('#tests/mocks/index.ts')).mockedConfigModule,
 )
 /**

@@ -19,6 +19,7 @@ if (typeof workspaceVersion !== 'string')
   throw new Error('workspace package version is required')
 const packageName = process.env.npm_package_name
 if (!packageName) throw new Error('npm_package_name is required')
+const bundlesGitHubActions = packageName === '@release-drafter/gh-actions'
 const workspaceRuntimeDependencies = new Set(
   Object.keys(workspaceManifest.dependencies ?? {}),
 )
@@ -58,7 +59,17 @@ export default defineConfig({
               index: resolve(workspaceRoot, 'src/index.ts'),
               cli: resolve(workspaceRoot, 'src/cli.ts'),
             }
-          : resolve(workspaceRoot, 'src/index.ts'),
+          : bundlesGitHubActions
+            ? {
+                index: resolve(workspaceRoot, 'src/index.ts'),
+                'drafter/index': resolve(workspaceRoot, 'src/drafter/index.ts'),
+                'autolabeler/index': resolve(
+                  workspaceRoot,
+                  'src/autolabeler/index.ts',
+                ),
+                config: resolve(workspaceRoot, 'src/config.ts'),
+              }
+            : resolve(workspaceRoot, 'src/index.ts'),
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.js`,
     },

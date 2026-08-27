@@ -1,30 +1,10 @@
-import { readFile, writeFile } from 'node:fs/promises'
 import { builtinModules } from 'node:module'
 import { defaultClientConditions, defaultServerConditions } from 'vite'
-import { defineConfig, type Plugin } from 'vitest/config'
+import { defineConfig } from 'vitest/config'
 
-const FROM = 'main: dist/actions/drafter/run.js'
-const TO = 'main: ../dist/actions/drafter/run.js'
 const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
 
-function syncDrafterActionYml(): Plugin {
-  return {
-    name: 'sync-drafter-action-yml',
-    async closeBundle() {
-      const [src, dest] = await Promise.all([
-        readFile('action.yml', 'utf8'),
-        readFile('drafter/action.yml', 'utf8'),
-      ])
-      const expected = src.includes(FROM) ? src.replace(FROM, TO) : src
-      if (dest !== expected) {
-        await writeFile('drafter/action.yml', expected)
-      }
-    },
-  }
-}
-
 export default defineConfig({
-  plugins: [syncDrafterActionYml()],
   resolve: {
     conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
     tsconfigPaths: true,
@@ -51,8 +31,8 @@ export default defineConfig({
       platform: 'node',
       external: (id) => id.startsWith('node:') || builtinModules.includes(id),
       input: {
-        'actions/drafter/run': 'src/actions/drafter/run.ts',
-        'actions/autolabeler/run': 'src/actions/autolabeler/run.ts',
+        'actions/drafter/run': 'packages/gh-actions/src/drafter/run.ts',
+        'actions/autolabeler/run': 'packages/gh-actions/src/autolabeler/run.ts',
       },
       output: {
         format: 'es',

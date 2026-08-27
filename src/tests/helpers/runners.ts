@@ -1,7 +1,9 @@
-import type { run as actionRun } from '#src/actions/drafter/runner.ts'
+import type { run as actionRun } from '@release-drafter/gh-actions/drafter'
 
-export const runDrafter = async (...args: Parameters<typeof actionRun>) =>
-  await (await import(`#src/actions/drafter/runner.ts`)).run(...args)
+export const runDrafter = async (...args: Parameters<typeof actionRun>) => {
+  await (await import('@release-drafter/gh-actions/drafter')).run(...args)
+}
 
-export const runAutolabeler = async (...args: Parameters<typeof actionRun>) =>
-  await (await import(`#src/actions/autolabeler/runner.ts`)).run(...args)
+export const runAutolabeler = async (...args: Parameters<typeof actionRun>) => {
+  await (await import('@release-drafter/gh-actions/autolabeler')).run(...args)
+}

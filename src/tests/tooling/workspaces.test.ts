@@ -11,6 +11,16 @@ import {
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { parse as parseYaml } from 'yaml'
+import {
+  actionInputNames as autolabelerInputNames,
+  actionOutputNames as autolabelerOutputNames,
+} from '#gh-actions/autolabeler/action-metadata.ts'
+import {
+  actionInputNames as drafterInputNames,
+  actionOutputNames as drafterOutputNames,
+} from '#gh-actions/drafter/action-metadata.ts'
+import { actionManifests } from '#src/scripts/action-metadata-config.ts'
 import { collectRuntimeDependencyFailures } from '#src/scripts/guard-boundaries.ts'
 import {
   collectPackageFailures,
@@ -31,6 +41,12 @@ type PackageJson = {
 }
 const readJson = (path: string) =>
   JSON.parse(readFileSync(path, 'utf8')) as PackageJson
+
+const listFiles = (directory: string): string[] =>
+  readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name)
+    return entry.isDirectory() ? listFiles(path) : [path]
+  })
 
 describe('workspace foundation', () => {
   it('satisfies the workspace package guard', () => {
@@ -108,18 +124,92 @@ describe('workspace foundation', () => {
     }
   })
 
-  it('preserves action compatibility metadata and tracked paths', () => {
-    const rootAction = readFileSync('action.yml', 'utf8')
-    const drafterAction = readFileSync('drafter/action.yml', 'utf8')
-    const autolabelerAction = readFileSync('autolabeler/action.yml', 'utf8')
-    expect(rootAction).toContain('using: node24')
-    expect(rootAction).toContain('main: dist/actions/drafter/run.js')
-    expect(drafterAction).toContain('using: node24')
-    expect(drafterAction).toContain('main: ../dist/actions/drafter/run.js')
-    expect(autolabelerAction).toContain('using: node24')
-    expect(autolabelerAction).toContain(
-      'main: ../dist/actions/autolabeler/run.js',
+  it('preserves action compatibility metadata', () => {
+    const rootAction = parseYaml(readFileSync('action.yml', 'utf8'))
+    const drafterAction = parseYaml(readFileSync('drafter/action.yml', 'utf8'))
+    const autolabelerAction = parseYaml(
+      readFileSync('autolabeler/action.yml', 'utf8'),
     )
+    const normalizeMain = (metadata: Record<string, unknown>) => ({
+      ...metadata,
+      runs: { ...(metadata.runs as object), main: '<normalized>' },
+    })
+
+    expect(normalizeMain(rootAction)).toEqual(normalizeMain(drafterAction))
+    expect(rootAction.runs).toMatchObject({
+      using: 'node24',
+      main: 'dist/actions/drafter/run.js',
+    })
+    expect(drafterAction.runs).toMatchObject({
+      using: 'node24',
+      main: '../dist/actions/drafter/run.js',
+    })
+    expect(autolabelerAction.runs).toMatchObject({
+      using: 'node24',
+      main: '../dist/actions/autolabeler/run.js',
+    })
+    expect(rootAction.inputs.from).toMatchObject({ required: false })
+    expect(rootAction.inputs).toEqual(actionManifests.drafter.inputs)
+    expect(rootAction.outputs).toEqual(actionManifests.drafter.outputs)
+    expect(autolabelerAction.inputs).toEqual(actionManifests.autolabeler.inputs)
+    expect(autolabelerAction.outputs).toEqual(
+      actionManifests.autolabeler.outputs,
+    )
+    expect(Object.keys(rootAction.inputs).sort()).toEqual(
+      [...drafterInputNames].sort(),
+    )
+    expect(Object.keys(rootAction.outputs).sort()).toEqual(
+      [...drafterOutputNames].sort(),
+    )
+    expect(Object.keys(autolabelerAction.inputs).sort()).toEqual(
+      [...autolabelerInputNames].sort(),
+    )
+    expect(Object.keys(autolabelerAction.outputs ?? {}).sort()).toEqual(
+      [...autolabelerOutputNames].sort(),
+    )
+  })
+
+  it('routes Action input and output access through metadata contracts', () => {
+    const contractPath = resolve(
+      'packages/gh-actions/src/common/action-contract.ts',
+    )
+    const directAccess = /\bcore\.(?:getInput|setOutput)\s*\(/gu
+    const offenders = listFiles(resolve('packages/gh-actions/src'))
+      .filter((path) => path.endsWith('.ts') && path !== contractPath)
+      .flatMap((path) =>
+        [...readFileSync(path, 'utf8').matchAll(directAccess)].map(
+          ({ 0: call }) => `${path}:${call}`,
+        ),
+      )
+
+    expect(offenders).toEqual([])
+  })
+
+  it('keeps gh-actions runtime exports and workspace artifacts split by product', () => {
+    const manifest = readJson(
+      'packages/gh-actions/package.json',
+    ) as PackageJson & {
+      exports: Record<string, { import: string; types: string }>
+    }
+    expect(Object.keys(manifest.exports)).toEqual([
+      '.',
+      './drafter',
+      './autolabeler',
+      './config',
+    ])
+    expect(manifest.exports['./drafter'].import).toBe('./dist/drafter/index.js')
+    expect(manifest.exports['./autolabeler'].import).toBe(
+      './dist/autolabeler/index.js',
+    )
+    const identitySource = readFileSync(
+      'packages/gh-actions/src/index.ts',
+      'utf8',
+    )
+    expect(identitySource).not.toContain("from './drafter/")
+    expect(identitySource).not.toContain("from './autolabeler/")
+    const workspaceBuild = readFileSync('vite.workspace.config.ts', 'utf8')
+    expect(workspaceBuild).toContain("'drafter/index'")
+    expect(workspaceBuild).toContain("'autolabeler/index'")
   })
 
   it('keeps TypeScript scripts directly parseable by Node without compilation', () => {
@@ -139,6 +229,7 @@ describe('workspace foundation', () => {
   it('builds workspace dependencies before generating schemas', () => {
     const scripts = readJson('package.json').scripts
 
+    expect(scripts?.ci).toContain('npm run generate:action-metadata')
     expect(scripts?.['generate:schemas']).toBe(
       'npm run build:workspaces && node src/scripts/json-schema.ts',
     )
@@ -314,6 +405,12 @@ describe('workspace foundation', () => {
         declaration: "export * from '@release-drafter/core'",
       })
       writeWorkspace({
+        directory: 'gh-actions',
+        name: '@release-drafter/gh-actions',
+        dependencies: { 'release-drafter': 'workspace:*' },
+        source: "import 'release-drafter'",
+      })
+      writeWorkspace({
         directory: 'rest-adapter',
         name: '@release-drafter/rest-adapter',
       })
@@ -337,6 +434,7 @@ describe('workspace foundation', () => {
       expect(output).toContain('workspace-source-dependencies-core')
       expect(output).toContain('workspace-output-dependencies-core')
       expect(output).toContain('public-facade-must-bundle-private-workspaces')
+      expect(output).toContain('gh-actions-must-not-use-public-facades')
     } finally {
       rmSync(fixtureRoot, { force: true, recursive: true })
     }

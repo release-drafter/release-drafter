@@ -1,14 +1,14 @@
 import { execFileSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { globalRegistry, object, toJSONSchema } from 'zod'
-import { configSchema as autolabelerConfigSchema } from '#src/actions/autolabeler/config/index.ts'
+import { configSchema as autolabelerConfigSchema } from '@release-drafter/autolabeler'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
-} from '#src/actions/drafter/config/index.ts'
-import { extendsDeclarationSchema } from '#src/common/config/extends.schema.ts'
+} from '@release-drafter/core'
+import { extendsDeclarationSchema } from '@release-drafter/gh-actions/config'
+import { globalRegistry, object, toJSONSchema } from 'zod'
 
 // `_extends` is normalized by the raw config-file schema and stripped while
 // the config chain is composed. Add the same input schema here so editors

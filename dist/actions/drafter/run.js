@@ -1,4 +1,4 @@
-import { C as setFailed, S as info, T as warning, _ as stringbool, a as getRepository, b as debug, c as context, d as array, f as boolean, g as string, h as object, i as getGitHubAdapter, l as ZodDefault, m as number, n as parseCommitishForRelease, o as escapeStringRegexp, p as literal, r as composeConfigGet, s as Minimatch, t as sharedInputSchema, u as _enum, v as union, w as setOutput, x as getInput, y as core_exports } from "../../chunks/common.js";
+import { C as info, _ as string, a as writeActionOutputs, b as Minimatch, c as getRepository, d as _enum, f as array, g as object, h as number, i as readActionInputs, l as escapeStringRegexp, m as literal, n as sharedInputSchema, o as actionLogger, p as boolean, r as defineActionInputNames, s as getGitHubAdapter, t as composeConfigGet, u as ZodDefault, v as stringbool, w as setFailed, x as context, y as union } from "../../chunks/config.js";
 //#region node_modules/conventional-commits-parser/dist/regex.js
 var nomatchRegex = /(?!.*)/;
 function escape(string) {
@@ -1611,7 +1611,7 @@ function parseCategories(categories, deprecatedConfig, logger) {
 }
 //#endregion
 //#region packages/core/src/config/merge-input-and-config.ts
-var mergeInputAndConfig$1 = (params) => {
+var mergeInputAndConfig = (params) => {
 	const { config: originalConfig, input, defaultCommitish, logger } = params;
 	const { "exclude-labels": excludeLabels, "include-labels": includeLabels, "include-paths": includePaths, "exclude-paths": excludePaths, "version-resolver": versionResolver, ...config } = structuredClone(originalConfig);
 	const deprecatedCategoryConfig = {
@@ -2488,7 +2488,7 @@ var sortDescending = (a, b) => {
 };
 //#endregion
 //#region packages/core/src/release/build-release-payload.ts
-var buildReleasePayload$1 = async (params) => {
+var buildReleasePayload = async (params) => {
 	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests, repository } = params;
 	logger.info("Building release payload and body...");
 	const sortedPullRequests = sortPullRequests({
@@ -2637,60 +2637,228 @@ var compareVersions = (v1, v2) => {
 	else if (p1 || p2) return p1 ? -1 : 1;
 	return 0;
 };
+//#endregion
+//#region packages/core/src/release-orchestration.ts
+var stripHeadRef = (commitish) => commitish.replace(/^refs\/heads\//, "");
+var sortReleases = (params) => {
+	const stripTagPrefix = (tagName) => params.tagPrefix && tagName.startsWith(params.tagPrefix) ? tagName.slice(params.tagPrefix.length) : tagName;
+	return [...params.releases].sort((first, second) => {
+		try {
+			const semverOrder = compareVersions(stripTagPrefix(first.tagName), stripTagPrefix(second.tagName));
+			if (semverOrder !== 0) return semverOrder;
+		} catch {
+			const firstCreatedAt = new Date(first.createdAt ?? "").getTime();
+			const secondCreatedAt = new Date(second.createdAt ?? "").getTime();
+			if (Number.isFinite(firstCreatedAt) && Number.isFinite(secondCreatedAt) && firstCreatedAt !== secondCreatedAt) return firstCreatedAt - secondCreatedAt;
+		}
+		return first.tagName.localeCompare(second.tagName) || String(first.id).localeCompare(String(second.id));
+	});
+};
+var selectPreviousReleases = (params) => {
+	const { config, logger } = params;
+	const targetCommitish = stripHeadRef(config.commitish ?? "");
+	const filterByRange = config["filter-by-range"];
+	const shouldFilterByRange = Boolean(filterByRange) && filterByRange !== "*";
+	const parsedRange = shouldFilterByRange && filterByRange ? normalizeRange(filterByRange) : null;
+	const releases = params.releases.filter((release) => {
+		if (config["filter-by-commitish"] && targetCommitish !== stripHeadRef(release.targetCommitish ?? "")) return false;
+		if (config["tag-prefix"] && !release.tagName.startsWith(config["tag-prefix"])) return false;
+		if (shouldFilterByRange) {
+			if (!parsedRange) return false;
+			const coercedVersion = coerce(release.tagName, { loose: true });
+			if (!coercedVersion) {
+				logger.warning(`Failed to coerce semver version for "${release.tagName}" : will be excluded from releases considered for drafting.`);
+				return false;
+			}
+			return satisfies(coercedVersion, parsedRange, { loose: true });
+		}
+		return true;
+	});
+	const draftReleases = releases.filter((release) => config.prerelease ? release.prerelease : !release.prerelease);
+	const publishedReleases = releases.filter((release) => !release.draft && (config.prerelease || config["include-pre-releases"] || !release.prerelease));
+	return {
+		draftRelease: draftReleases.find((release) => release.draft),
+		lastRelease: sortReleases({
+			releases: publishedReleases,
+			tagPrefix: config["tag-prefix"]
+		}).at(-1)
+	};
+};
+var protectReleaseInput = (params) => {
+	const { commitish, input, logger } = params;
+	if (!/^refs\/pull\/\d+\/merge$/.test(commitish)) return input;
+	if (!input.dryRun) logger.warning(`${commitish} points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.`);
+	return {
+		...input,
+		dryRun: true,
+		publish: false
+	};
+};
+var executeReleasePlan = async (params) => {
+	const { adapter, logger, plan, repository } = params;
+	if (plan.action === "dry-run") {
+		logger.info(plan.draftRelease ? `[dry-run] Would update existing release (id: ${plan.draftRelease.id}) with payload: ${JSON.stringify(plan.releasePayload, null, 2)}` : `[dry-run] Would create a new release with payload: ${JSON.stringify(plan.releasePayload, null, 2)}`);
+		return;
+	}
+	if (plan.action === "update") {
+		logger.info("Updating existing release...");
+		const release = await adapter.updateRelease({
+			repository,
+			release: plan.draftRelease,
+			payload: plan.releasePayload
+		});
+		logger.info("Release updated!");
+		return release;
+	}
+	logger.info("Creating new release...");
+	const release = await adapter.createRelease({
+		repository,
+		payload: plan.releasePayload
+	});
+	logger.info("Release created!");
+	return release;
+};
+var buildReleasePlan = (params) => {
+	const { draftRelease, input, releasePayload } = params;
+	if (input.dryRun) return {
+		action: "dry-run",
+		draftRelease,
+		releasePayload
+	};
+	return draftRelease ? {
+		action: "update",
+		draftRelease,
+		releasePayload
+	} : {
+		action: "create",
+		releasePayload
+	};
+};
+var draftRelease = async (params) => {
+	const { adapter, config, logger, repository } = params;
+	let input = protectReleaseInput({
+		commitish: config.commitish,
+		input: params.input,
+		logger
+	});
+	if (!adapter.capabilities.draftReleases && !input.publish) {
+		if (!input.dryRun) logger.info("This forge does not support draft releases. Because publish is false, Release Drafter will calculate the release but will not write it.");
+		input = {
+			...input,
+			dryRun: true
+		};
+	}
+	const releases = await adapter.listReleases({ repository });
+	const { draftRelease, lastRelease } = selectPreviousReleases({
+		config,
+		logger,
+		releases
+	});
+	const comparisonBase = input.from ?? (lastRelease ? `refs/tags/${lastRelease.tagName}` : void 0);
+	const { commits, newContributorLogins, pullRequests } = comparisonBase ? await adapter.findChanges({
+		repository,
+		comparison: {
+			baseRef: comparisonBase,
+			headRef: config.commitish
+		},
+		pullRequestFields: {
+			body: config["change-template"].includes("$BODY"),
+			url: config["change-template"].includes("$URL"),
+			baseRefName: config["change-template"].includes("$BASE_REF_NAME"),
+			headRefName: config["change-template"].includes("$HEAD_REF_NAME")
+		},
+		pullRequestLimit: config["pull-request-limit"],
+		historyLimit: config["history-limit"],
+		includeChangedFiles: needsPullRequestChangedFiles(config.categories),
+		includeNewContributors: [
+			config.header,
+			config.template,
+			config.footer
+		].some((template) => template?.includes("$NEW_CONTRIBUTORS"))
+	}) : (() => {
+		logger.warning("A previous (published) release is required to find changes");
+		return {
+			commits: [],
+			newContributorLogins: /* @__PURE__ */ new Set(),
+			pullRequests: []
+		};
+	})();
+	if (pullRequests.length > 0) logger.info(`Found ${pullRequests.length} merged pull requests targeting ${repository.owner}/${repository.name}: ${pullRequests.map(({ number }) => `#${number}`).join(", ")}`);
+	const releasePayload = await buildReleasePayload({
+		adapter,
+		commits,
+		config,
+		input,
+		lastRelease,
+		logger,
+		newContributorLogins,
+		pullRequests,
+		repository
+	});
+	const plan = buildReleasePlan({
+		draftRelease: adapter.capabilities.draftReleases ? draftRelease : releases.find((release) => !release.draft && release.tagName === releasePayload.tag),
+		input,
+		releasePayload
+	});
+	return {
+		plan,
+		release: await executeReleasePlan({
+			adapter,
+			logger,
+			plan,
+			repository
+		}),
+		releasePayload
+	};
+};
 var actionInputSchema = object({
-	/**
-	* If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
-	* The config should still be located inside `.github` as that's where we are looking for config files.
-	* @default 'release-drafter.yml'
-	*/
 	"config-name": string().optional().default("release-drafter.yml"),
-	/**
-	* The name that will be used in the GitHub release that's created or updated.
-	* This will override any `name-template` specified in your `release-drafter.yml` if defined.
-	*/
+	/** Ref, tag, branch, or commit SHA used only as the change comparison base. */
+	from: string().optional(),
 	name: string().optional(),
-	/**
-	* The tag name to be associated with the GitHub release that's created or updated.
-	* This will override any `tag-template` specified in your `release-drafter.yml` if defined.
-	*/
 	tag: string().optional(),
-	/**
-	* The version to be associated with the GitHub release that's created or updated.
-	* This will override any version calculated by the release-drafter.
-	*/
 	version: string().optional(),
-	/**
-	* A boolean indicating whether the release being created or updated should be immediately published.
-	*/
 	publish: stringbool().optional().default(false)
 }).and(sharedInputSchema).and(commonConfigSchema);
 //#endregion
-//#region src/actions/drafter/config/get-action-inputs.ts
-var getActionInput = () => {
-	const getInput$1 = (name) => getInput(name) || void 0;
-	const actionInput = {
-		"config-name": getInput$1("config-name"),
-		name: getInput$1("name"),
-		tag: getInput$1("tag"),
-		version: getInput$1("version"),
-		publish: getInput$1("publish"),
-		token: getInput$1("token"),
-		latest: getInput$1("latest"),
-		prerelease: getInput$1("prerelease"),
-		"prerelease-identifier": getInput$1("prerelease-identifier"),
-		"include-pre-releases": getInput$1("include-pre-releases"),
-		commitish: getInput$1("commitish"),
-		header: getInput$1("header"),
-		footer: getInput$1("footer"),
-		"dry-run": getInput$1("dry-run"),
-		"filter-by-range": getInput$1("filter-by-range")
-	};
-	return actionInputSchema.parse(actionInput);
-};
+//#region packages/gh-actions/src/drafter/action-metadata.ts
+var actionInputNames = defineActionInputNames()([
+	"config-name",
+	"token",
+	"name",
+	"tag",
+	"version",
+	"from",
+	"publish",
+	"latest",
+	"prerelease",
+	"prerelease-identifier",
+	"include-pre-releases",
+	"commitish",
+	"header",
+	"footer",
+	"dry-run",
+	"filter-by-range"
+]);
+var actionOutputNames = [
+	"id",
+	"html_url",
+	"upload_url",
+	"tag_name",
+	"name",
+	"resolved_version",
+	"major_version",
+	"minor_version",
+	"patch_version",
+	"body"
+];
 //#endregion
-//#region src/actions/drafter/config/get-config.ts
-var getConfig = async (configName) => {
-	const { config, contexts } = await composeConfigGet(configName, context);
+//#region packages/gh-actions/src/drafter/get-action-inputs.ts
+var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
+//#endregion
+//#region packages/gh-actions/src/drafter/get-config.ts
+var getConfig = async (configName, token) => {
+	const { config, contexts } = await composeConfigGet(configName, context, token);
 	contexts.forEach(({ filepath, ref, repo, scheme }) => {
 		const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ""}`;
 		const location = scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`;
@@ -2699,481 +2867,62 @@ var getConfig = async (configName) => {
 	return configSchema.parse(config);
 };
 //#endregion
-//#region src/actions/drafter/config/merge-input-and-config.ts
-var mergeInputAndConfig = (params) => mergeInputAndConfig$1({
-	...params,
-	defaultCommitish: context.ref || context.payload.ref,
-	logger: core_exports
-});
-//#endregion
-//#region src/actions/drafter/config/set-action-output.ts
-var setActionOutput = (params) => {
-	const { releasePayload, upsertedRelease } = params;
+//#region packages/gh-actions/src/drafter/set-action-output.ts
+/** Set every declared Drafter action output from the release result. */
+var setActionOutput = ({ release, releasePayload }) => {
 	info("Set action outputs...");
-	const { resolvedVersion, majorVersion, minorVersion, patchVersion, body, name: releaseName, tag: releaseTagName } = releasePayload;
-	const outputName = upsertedRelease?.data.name ?? releaseName;
-	const outputTagName = upsertedRelease?.data.tag_name ?? releaseTagName;
-	if (upsertedRelease) {
-		const { data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl } } = upsertedRelease;
-		if (releaseId && Number.isInteger(releaseId)) setOutput("id", releaseId.toString());
-		if (htmlUrl) setOutput("html_url", htmlUrl);
-		if (uploadUrl) setOutput("upload_url", uploadUrl);
-	}
-	if (outputTagName) setOutput("tag_name", outputTagName);
-	if (outputName) setOutput("name", outputName);
-	if (resolvedVersion) setOutput("resolved_version", resolvedVersion);
-	if (majorVersion) setOutput("major_version", majorVersion);
-	if (minorVersion) setOutput("minor_version", minorVersion);
-	if (patchVersion) setOutput("patch_version", patchVersion);
-	setOutput("body", body);
+	const outputName = release?.name ?? releasePayload.name;
+	const outputTagName = release?.tagName ?? releasePayload.tag;
+	writeActionOutputs(actionOutputNames, {
+		id: release?.id && Number.isInteger(release.id) ? release.id.toString() : void 0,
+		html_url: release?.url || void 0,
+		upload_url: release?.uploadUrl || void 0,
+		tag_name: outputTagName || void 0,
+		name: outputName || void 0,
+		resolved_version: releasePayload.resolvedVersion || void 0,
+		major_version: releasePayload.majorVersion || void 0,
+		minor_version: releasePayload.minorVersion || void 0,
+		patch_version: releasePayload.patchVersion || void 0,
+		body: releasePayload.body
+	});
 	info("Outputs set!");
 };
 //#endregion
-//#region src/actions/drafter/lib/core-compat.ts
-var toCorePullRequest = (pullRequest) => ({
-	number: pullRequest.number,
-	title: pullRequest.title,
-	body: pullRequest.body,
-	url: pullRequest.url,
-	mergedAt: pullRequest.mergedAt,
-	baseRefName: pullRequest.baseRefName,
-	headRefName: pullRequest.headRefName,
-	baseRepository: pullRequest.baseRepository?.nameWithOwner,
-	author: pullRequest.author ? {
-		login: pullRequest.author.login,
-		url: pullRequest.author.url,
-		type: pullRequest.author.__typename
-	} : pullRequest.author,
-	labels: (pullRequest.labels?.nodes ?? []).map((label) => label?.name).filter((name) => Boolean(name)),
-	changedFiles: "changedFiles" in pullRequest ? pullRequest.changedFiles : void 0,
-	mergeCommitOid: "mergeCommit" in pullRequest && pullRequest.mergeCommit ? pullRequest.mergeCommit.oid : void 0
+//#region packages/gh-actions/src/drafter/runner.ts
+var toReleaseInput = (input) => ({
+	...input.from !== void 0 ? { from: input.from } : {},
+	...input.name !== void 0 ? { name: input.name } : {},
+	...input.tag !== void 0 ? { tag: input.tag } : {},
+	...input.version !== void 0 ? { version: input.version } : {},
+	publish: input.publish,
+	...input["dry-run"] !== void 0 ? { dryRun: input["dry-run"] } : {}
 });
-var toCoreCommit = (commit) => ({
-	oid: commit.oid,
-	author: commit.author ? {
-		name: commit.author.name,
-		login: commit.author.user?.login
-	} : commit.author,
-	authors: commit.authors ? (commit.authors.nodes ?? []).map((author) => author ? {
-		name: author.name,
-		login: author.user?.login
-	} : author) : commit.authors,
-	associatedPullRequests: commit.associatedPullRequests ? (commit.associatedPullRequests.nodes ?? []).map((pullRequest) => pullRequest ? {
-		number: pullRequest.number,
-		baseRepository: pullRequest.baseRepository?.nameWithOwner
-	} : pullRequest) : commit.associatedPullRequests
-});
-var toCoreRelease = (release) => ({
-	id: release.id ?? "",
-	tagName: release.tag_name,
-	name: release.name,
-	targetCommitish: release.target_commitish,
-	createdAt: release.created_at,
-	draft: release.draft,
-	prerelease: release.prerelease,
-	url: release.html_url,
-	uploadUrl: release.upload_url
-});
-var toLegacyReleasePayload = (payload) => {
-	const { makeLatest, ...legacyPayload } = payload;
-	return {
-		...legacyPayload,
-		make_latest: makeLatest
-	};
-};
-//#endregion
-//#region src/actions/drafter/lib/build-release-payload/build-release-payload.ts
-var buildReleasePayload = async (params) => {
-	return toLegacyReleasePayload(await buildReleasePayload$1({
-		adapter: { resolveCommitish: ({ commitish }) => parseCommitishForRelease(commitish) },
-		commits: params.commits.map(toCoreCommit),
-		config: params.config,
-		input: {
-			name: params.input.name,
-			tag: params.input.tag,
-			version: params.input.version,
-			publish: params.input.publish,
-			dryRun: params.input["dry-run"]
-		},
-		lastRelease: params.lastRelease ? toCoreRelease(params.lastRelease) : void 0,
-		logger: core_exports,
-		newContributorLogins: params.newContributorLogins,
-		pullRequests: params.pullRequests.map(toCorePullRequest),
-		repository: {
-			owner: context.repo.owner,
-			name: context.repo.repo,
-			serverUrl: context.serverUrl
-		}
-	}));
-};
-//#endregion
-//#region src/actions/drafter/lib/find-previous-releases/sort-releases.ts
-var sortReleases = (params) => {
-	const tagPrefixRexExp = params.tagPrefix ? new RegExp(`^${escapeStringRegexp(params.tagPrefix)}`) : void 0;
-	return params.releases.sort((r1, r2) => {
-		const tag_name_1 = tagPrefixRexExp ? r1.tag_name.replace(tagPrefixRexExp, "") : r1.tag_name;
-		const tag_name_2 = tagPrefixRexExp ? r2.tag_name.replace(tagPrefixRexExp, "") : r2.tag_name;
-		try {
-			return compareVersions(tag_name_1, tag_name_2);
-		} catch {
-			return new Date(r1.created_at ?? "").getTime() - new Date(r2.created_at ?? "").getTime();
-		}
-	});
-};
-//#endregion
-//#region src/actions/drafter/lib/find-previous-releases/find-previous-releases.ts
-/**
-* Lists every release and :
-* - filters by commitish if specified
-* - filters by tag-prefix if specified
-* - filters out pre-releases unless specified
-* - extracts the first draft releases (according to return-order of GitHub API)
-* - get latest published release according to ./sort-releases.ts implementation
-*
-* Returns one of (or both) draft release and latest published release
-* The last stable release is used to determine the range of commits to include in the changelog,
-* and to resolve the next version number.
-*
-* The draft release is used to determine if we should create a new release or update the existing one.
-*/
-var findPreviousReleases = async (params, adapter = getGitHubAdapter()) => {
-	const { commitish, "filter-by-commitish": filterByCommitish, "tag-prefix": tagPrefix, prerelease: isPreRelease, "include-pre-releases": includePreReleases, "filter-by-range": filterByRange } = params;
-	info("Fetching releases from GitHub...");
-	const releases = (await adapter.listReleases({ repository: getRepository() })).map((release) => ({
-		tag_name: release.tagName,
-		...release.id !== void 0 ? { id: release.id } : {},
-		...release.name !== void 0 ? { name: release.name } : {},
-		...release.targetCommitish !== void 0 ? { target_commitish: release.targetCommitish } : {},
-		...release.createdAt !== void 0 ? { created_at: release.createdAt } : {},
-		...release.draft !== void 0 ? { draft: release.draft } : {},
-		...release.prerelease !== void 0 ? { prerelease: release.prerelease } : {},
-		...release.url !== void 0 ? { html_url: release.url } : {},
-		...release.uploadUrl !== void 0 ? { upload_url: release.uploadUrl } : {}
-	}));
-	info(`Found ${releases.length} releases`);
-	const headRefRegex = /^refs\/heads\//;
-	const targetCommitishName = commitish.replace(headRefRegex, "");
-	const commitishFilteredReleases = filterByCommitish ? releases.filter((r) => targetCommitishName === (r.target_commitish ?? "").replace(headRefRegex, "")) : releases;
-	const semverRangeFilteredReleases = filterByRange && filterByRange !== "*" ? commitishFilteredReleases.filter((r) => {
-		const parsedRange = normalizeRange(filterByRange);
-		if (!parsedRange) return false;
-		const parsedVersion = coerce(r.tag_name, { loose: true });
-		if (!parsedVersion) {
-			warning(`Failed to coerce semver version for "${r.tag_name}" : will be excluded from releases considered for drafting.`);
-			return false;
-		}
-		const doesSatisfy = !!satisfies(parsedVersion, parsedRange, { loose: true });
-		debug(`Range "${parsedRange}" ${doesSatisfy ? "satisfies" : "does not satisfy"} version "${normalize(parsedVersion)}" `);
-		return doesSatisfy;
-	}) : commitishFilteredReleases;
-	const filteredReleases = tagPrefix ? semverRangeFilteredReleases.filter((r) => r.tag_name.startsWith(tagPrefix)) : semverRangeFilteredReleases;
-	let publishedReleases = filteredReleases.filter((r) => !r.draft);
-	let draftReleases = filteredReleases.filter((r) => r.draft);
-	publishedReleases = publishedReleases.filter((publishedRelease) => isPreRelease || includePreReleases ? publishedRelease.prerelease || !publishedRelease.prerelease : !publishedRelease.prerelease);
-	draftReleases = draftReleases.filter((draftRelease) => isPreRelease ? draftRelease.prerelease : !draftRelease.prerelease);
-	const draftRelease = draftReleases[0];
-	const lastRelease = sortReleases({
-		releases: publishedReleases,
-		tagPrefix
-	})?.at(-1);
-	if (draftRelease) {
-		if (draftReleases.length > 1) {
-			warning(`Multiple draft releases found : ${draftReleases.map((r) => r.tag_name).join(", ")}`);
-			warning(`Using the first one returned by GitHub API: ${draftRelease.tag_name}`);
-		}
-		info(`Draft release${isPreRelease ? " (which is a prerelease)" : ""}:`);
-		info(`  tag_name:  ${draftRelease.tag_name}`);
-		info(`  name:      ${draftRelease.name}`);
-	} else info(`No draft release found${isPreRelease ? " (among prerelease drafts)" : ""}`);
-	if (lastRelease) {
-		info(`Last release${isPreRelease ? " (including prerelease)" : ""}:`);
-		info(`  tag_name:  ${lastRelease.tag_name}`);
-		info(`  name:      ${lastRelease.name}`);
-	} else warning(`No published release found${isPreRelease ? " (including prerelease)" : ""}`);
-	return {
-		draftRelease,
-		lastRelease
-	};
-};
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/core-to-legacy.ts
-var toLegacyPullRequest = (pullRequest) => ({
-	__typename: "PullRequest",
-	title: pullRequest.title,
-	number: pullRequest.number,
-	url: pullRequest.url,
-	body: pullRequest.body,
-	author: pullRequest.author ? {
-		__typename: pullRequest.author.type,
-		login: pullRequest.author.login,
-		url: pullRequest.author.url
-	} : pullRequest.author,
-	baseRepository: pullRequest.baseRepository ? {
-		__typename: "Repository",
-		nameWithOwner: pullRequest.baseRepository
-	} : null,
-	mergedAt: pullRequest.mergedAt,
-	isCrossRepository: pullRequest.isCrossRepository ?? false,
-	labels: {
-		__typename: "LabelConnection",
-		nodes: (pullRequest.labels ?? []).map((name) => ({
-			__typename: "Label",
-			name
-		}))
-	},
-	merged: true,
-	baseRefName: pullRequest.baseRefName,
-	headRefName: pullRequest.headRefName,
-	...pullRequest.mergeCommitOid ? { mergeCommit: {
-		__typename: "Commit",
-		oid: pullRequest.mergeCommitOid
-	} } : {},
-	...pullRequest.changedFiles ? { changedFiles: pullRequest.changedFiles } : {}
-});
-var legacyPullRequestKey = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
-var toLegacyCommit = (commit, pullRequestsByKey) => ({
-	__typename: "Commit",
-	id: commit.id,
-	oid: commit.oid,
-	committedDate: commit.committedAt,
-	message: commit.message,
-	author: commit.author ? {
-		__typename: "GitActor",
-		name: commit.author.name,
-		user: commit.author.login ? {
-			__typename: "User",
-			login: commit.author.login
-		} : null
-	} : commit.author,
-	authors: commit.authors ? {
-		__typename: "GitActorConnection",
-		nodes: commit.authors.map((author) => author ? {
-			__typename: "GitActor",
-			name: author.name,
-			user: author.login ? {
-				__typename: "User",
-				login: author.login
-			} : null
-		} : author)
-	} : commit.authors,
-	associatedPullRequests: commit.associatedPullRequests ? {
-		__typename: "PullRequestConnection",
-		nodes: commit.associatedPullRequests.map((pullRequest) => pullRequest ? pullRequestsByKey.get(legacyPullRequestKey(pullRequest)) ?? {
-			number: pullRequest.number,
-			baseRepository: pullRequest.baseRepository ? {
-				__typename: "Repository",
-				nameWithOwner: pullRequest.baseRepository
-			} : null
-		} : pullRequest)
-	} : commit.associatedPullRequests
-});
-//#endregion
-//#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
-var findPullRequests = async (params, adapter = getGitHubAdapter()) => {
-	if (!params.lastRelease?.tag_name) {
-		warning("A previous (published) release is required to find changes");
-		return {
-			commits: [],
-			newContributorLogins: /* @__PURE__ */ new Set(),
-			pullRequests: []
-		};
-	}
-	const baseRef = `refs/tags/${params.lastRelease.tag_name}`;
-	info(`Finding commits between ${baseRef} and ${params.config.commitish}...`);
-	const changes = await adapter.findChanges({
-		repository: getRepository(),
-		comparison: {
-			baseRef,
-			headRef: params.config.commitish
-		},
-		pullRequestFields: {
-			body: params.config["change-template"].includes("$BODY"),
-			url: params.config["change-template"].includes("$URL"),
-			baseRefName: params.config["change-template"].includes("$BASE_REF_NAME"),
-			headRefName: params.config["change-template"].includes("$HEAD_REF_NAME")
-		},
-		pullRequestLimit: params.config["pull-request-limit"],
-		historyLimit: params.config["history-limit"],
-		includeChangedFiles: needsPullRequestChangedFiles(params.config.categories),
-		includeNewContributors: [
-			params.config.header,
-			params.config.template,
-			params.config.footer
-		].some((template) => template?.includes("$NEW_CONTRIBUTORS"))
-	});
-	info(`Found ${changes.commits.length} commits.`);
-	info(`Found ${changes.pullRequests.length} merged pull requests targeting ${context.repo.owner}/${context.repo.repo}${changes.pullRequests.length > 0 ? `: ${changes.pullRequests.map((pullRequest) => `#${pullRequest.number}`).join(", ")}` : "."}`);
-	const rawPullRequests = changes.pullRequests.map(toLegacyPullRequest);
-	const pullRequestsByKey = new Map(rawPullRequests.map((pullRequest) => [legacyPullRequestKey({
-		number: pullRequest.number,
-		baseRepository: pullRequest.baseRepository?.nameWithOwner
-	}), pullRequest]));
-	return {
-		commits: changes.commits.map((commit) => toLegacyCommit(commit, pullRequestsByKey)),
-		newContributorLogins: changes.newContributorLogins,
-		pullRequests: rawPullRequests
-	};
-};
-//#endregion
-//#region src/actions/drafter/lib/upsert-release/create-release.ts
-var createRelease = async (params) => {
-	const { releasePayload } = params;
-	const release = await getGitHubAdapter().createRelease({
-		repository: getRepository(),
-		payload: {
-			...releasePayload,
-			makeLatest: releasePayload.make_latest
-		}
-	});
-	return { data: {
-		id: release.id,
-		tag_name: release.tagName,
-		name: release.name ?? null,
-		target_commitish: release.targetCommitish ?? "",
-		created_at: release.createdAt ?? "",
-		draft: release.draft ?? false,
-		prerelease: release.prerelease ?? false,
-		html_url: release.url ?? "",
-		upload_url: release.uploadUrl ?? ""
-	} };
-};
-//#endregion
-//#region src/actions/drafter/lib/upsert-release/update-release.ts
-var updateRelease = async (params) => {
-	const { draftRelease, releasePayload } = params;
-	const release = await getGitHubAdapter().updateRelease({
-		repository: getRepository(),
-		release: {
-			id: draftRelease.id ?? "",
-			tagName: draftRelease.tag_name,
-			name: draftRelease.name,
-			targetCommitish: draftRelease.target_commitish,
-			createdAt: draftRelease.created_at,
-			draft: draftRelease.draft,
-			prerelease: draftRelease.prerelease,
-			url: draftRelease.html_url,
-			uploadUrl: draftRelease.upload_url
-		},
-		payload: {
-			...releasePayload,
-			makeLatest: releasePayload.make_latest
-		}
-	});
-	return { data: {
-		id: release.id,
-		tag_name: release.tagName,
-		name: release.name ?? null,
-		target_commitish: release.targetCommitish ?? "",
-		created_at: release.createdAt ?? "",
-		draft: release.draft ?? false,
-		prerelease: release.prerelease ?? false,
-		html_url: release.url ?? "",
-		upload_url: release.uploadUrl ?? ""
-	} };
-};
-//#endregion
-//#region src/actions/drafter/lib/upsert-release/upsert-release.ts
-var upsertRelease = async (params) => {
-	const { draftRelease, releasePayload, dryRun } = params;
-	if (dryRun) {
-		if (!draftRelease) info(`[dry-run] Would create a new release with payload: ${JSON.stringify(releasePayload, null, 2)}`);
-		else info(`[dry-run] Would update existing release (id: ${draftRelease.id}) with payload: ${JSON.stringify(releasePayload, null, 2)}`);
-		return;
-	}
-	if (!draftRelease) {
-		info("Creating new release...");
-		const res = await createRelease({ releasePayload });
-		info("Release created!");
-		return res;
-	} else {
-		info("Updating existing release...");
-		const res = await updateRelease({
-			draftRelease,
-			releasePayload
-		});
-		info("Release updated!");
-		return res;
-	}
-};
-//#endregion
-//#region src/actions/drafter/main.ts
-var main = async (params) => {
-	/**
-	* 1. find previous releases - returns latest release
-	* 2. find commits since latest release, with their associated pull-requests
-	* 3. sort those pull-requests according to the desired config (for release-body)
-	* 4. generate release info
-	* 5. create a release (may be a draft) or update previous draft
-	* 6. set action outputs
-	*/
-	const { config, input } = params;
-	const isPullRequestMergeRef = /^refs\/pull\/\d+\/merge$/.test(config.commitish);
-	const effectiveInput = isPullRequestMergeRef ? {
-		...input,
-		"dry-run": true,
-		publish: false
-	} : input;
-	if (isPullRequestMergeRef && !input["dry-run"]) warning(`${config.commitish} points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.`);
-	const { draftRelease, lastRelease } = await findPreviousReleases(config);
-	const { commits, newContributorLogins, pullRequests } = await findPullRequests({
-		lastRelease,
-		config
-	});
-	const releasePayload = await buildReleasePayload({
-		commits,
-		config,
-		input: effectiveInput,
-		lastRelease,
-		newContributorLogins,
-		pullRequests
-	});
-	return {
-		upsertedRelease: await upsertRelease({
-			draftRelease,
-			releasePayload,
-			dryRun: effectiveInput["dry-run"]
-		}),
-		releasePayload
-	};
-};
-//#endregion
-//#region src/actions/drafter/runner.ts
-/**
-* The main function for the action.
-*
-* @returns Resolves when the action is complete.
-*/
+/** Run the Drafter action using core orchestration and the GitHub adapter. */
 async function run() {
 	try {
 		info("Parsing inputs and configuration...");
 		const input = getActionInput();
-		const { upsertedRelease, releasePayload } = await main({
+		const config = mergeInputAndConfig({
+			config: await getConfig(input["config-name"], input.token),
 			input,
-			config: mergeInputAndConfig({
-				config: await getConfig(input["config-name"]),
-				input
-			})
+			defaultCommitish: context.ref || context.payload.ref,
+			logger: actionLogger
 		});
-		setActionOutput({
-			upsertedRelease,
-			releasePayload
-		});
+		setActionOutput(await draftRelease({
+			adapter: getGitHubAdapter(input.token),
+			config,
+			input: toReleaseInput(input),
+			logger: actionLogger,
+			repository: getRepository()
+		}));
 	} catch (error) {
 		if (error instanceof Error) setFailed(error.message);
 	}
 }
 //#endregion
-//#region src/actions/drafter/run.ts
+//#region packages/gh-actions/src/drafter/run.ts
+/*! release-drafter-action-entry:drafter */
 /* node:coverage ignore file -- @preserve */
-/**
-* The entrypoint for the action. This file simply imports and runs the action's
-* main logic.
-*
-* Do not add any logic to this file; instead, add it to `runner.ts`.
-*
-* `runner.ts` is the entrypoint for tests and should contain all the action's
-* main logic.
-*/
 await run();
 //#endregion
 export {};
