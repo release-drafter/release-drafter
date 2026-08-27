@@ -1,4 +1,7 @@
-import type { DraftReleaseResult } from '@release-drafter/core'
+import type {
+  DraftReleaseResult,
+  PullRequestValidationData,
+} from '@release-drafter/core'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import type {
   CliAdapter,
@@ -9,6 +12,8 @@ import type {
 import type { LocalConfigFileReader } from './local-config-file.ts'
 
 const BASE_CONFIG = 'template: "$CHANGES"\n'
+const CONVENTIONAL_CONFIG = `${BASE_CONFIG}categories:\n  - title: Features\n    when:\n      conventional:\n        type: feat\n`
+const LABEL_CONFIG = `${BASE_CONFIG}categories:\n  - title: Features\n    when:\n      label: feature\n`
 
 const localConfigReader = (contents = BASE_CONFIG): LocalConfigFileReader =>
   vi.fn(async (path, cwd) => ({
@@ -55,6 +60,7 @@ const capture = () => {
 
 const createAdapter = (options?: {
   defaultBranch?: string
+  pullRequest?: PullRequestValidationData
   getConfig?: (request: {
     repository: { owner: string; name: string; serverUrl: string }
     path: string
@@ -67,17 +73,27 @@ const createAdapter = (options?: {
   const getRepositoryConfig = vi.fn(
     options?.getConfig ?? (async () => BASE_CONFIG),
   )
+  const getPullRequest = vi.fn(
+    async () =>
+      options?.pullRequest ?? {
+        number: 42,
+        title: 'feat: add search',
+        labels: [],
+        baseRefName: 'main',
+      },
+  )
   const adapter = {
     capabilities: { draftReleases: true },
     octokit: { rest: { repos: { get } } },
     getRepositoryConfig,
+    getPullRequest,
     listReleases: vi.fn(),
     findChanges: vi.fn(),
     resolveCommitish: vi.fn(),
     createRelease: vi.fn(),
     updateRelease: vi.fn(),
   } as unknown as CliAdapter
-  return { adapter, get, getRepositoryConfig }
+  return { adapter, get, getPullRequest, getRepositoryConfig }
 }
 
 let runCli: typeof import('./index.ts').runCli
@@ -195,6 +211,123 @@ describe('usage and informational commands', () => {
 
     expect(result.code).toBe(2)
     expect(result.stdout.text()).toBe('')
+    expect(result.stderr.text()).toContain('error:')
+    expect(result.stderr.text()).toContain('Usage: release-drafter')
+    expect(result.adapterFactory).not.toHaveBeenCalled()
+  })
+})
+
+describe('check-pr', () => {
+  it('checks the title against config loaded from the pull request base branch', async () => {
+    const state = createAdapter({
+      getConfig: async () => CONVENTIONAL_CONFIG,
+      pullRequest: {
+        number: 17,
+        title: 'feat(api): add search',
+        labels: [],
+        baseRefName: 'release/2.x',
+      },
+    })
+    const result = await invoke(['check-pr', 'acme/widgets', '17'], {
+      adapter: state.adapter,
+    })
+
+    expect(result.code).toBe(0)
+    expect(state.getPullRequest).toHaveBeenCalledWith({
+      repository: {
+        owner: 'acme',
+        name: 'widgets',
+        serverUrl: 'https://github.com',
+      },
+      number: 17,
+    })
+    expect(state.getRepositoryConfig).toHaveBeenCalledWith(
+      expect.objectContaining({ ref: 'release/2.x' }),
+    )
+    expect(state.get).not.toHaveBeenCalled()
+    expect(result.draft).not.toHaveBeenCalled()
+    expect(result.stdout.text()).toBe('')
+    expect(result.stderr.text()).toBe('valid: pull request #17\n')
+  })
+
+  it('checks labels and writes a single JSON result document', async () => {
+    const state = createAdapter({
+      getConfig: async () => LABEL_CONFIG,
+      pullRequest: {
+        number: 18,
+        title: 'Add search',
+        labels: ['feature'],
+        baseRefName: 'main',
+      },
+    })
+    const result = await invoke(
+      ['node', 'release-drafter', 'check-pr', 'acme/widgets', '18', '--json'],
+      { adapter: state.adapter },
+    )
+
+    expect(result.code).toBe(0)
+    expect(result.stderr.text()).toBe('')
+    expect(result.stdout.chunks).toHaveLength(1)
+    expect(JSON.parse(result.stdout.text())).toEqual({
+      action: 'check-pr',
+      number: 18,
+      title: 'Add search',
+      status: 'valid',
+      valid: true,
+      skipped: false,
+      selected_category_count: 1,
+    })
+  })
+
+  it('returns one when neither the title nor labels match', async () => {
+    const state = createAdapter({
+      getConfig: async () => CONVENTIONAL_CONFIG,
+      pullRequest: {
+        number: 19,
+        title: 'Add search',
+        labels: ['feature'],
+        baseRefName: 'main',
+      },
+    })
+    const result = await invoke(['check-pr', 'acme/widgets', '19', '--json'], {
+      adapter: state.adapter,
+    })
+
+    expect(result.code).toBe(1)
+    expect(JSON.parse(result.stdout.text())).toEqual(
+      expect.objectContaining({
+        action: 'check-pr',
+        number: 19,
+        status: 'invalid',
+        valid: false,
+        skipped: false,
+        selected_category_count: 0,
+      }),
+    )
+    expect(result.draft).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    {
+      name: 'missing pull request number',
+      argv: ['check-pr', 'acme/widgets'],
+    },
+    {
+      name: 'zero pull request number',
+      argv: ['check-pr', 'acme/widgets', '0'],
+    },
+    {
+      name: 'non-numeric pull request number',
+      argv: ['check-pr', 'acme/widgets', 'abc'],
+    },
+    {
+      name: 'release drafting option',
+      argv: ['check-pr', 'acme/widgets', '17', '--dry-run'],
+    },
+  ])('rejects $name before creating an adapter', async ({ argv }) => {
+    const result = await invoke(argv)
+
+    expect(result.code).toBe(2)
     expect(result.stderr.text()).toContain('error:')
     expect(result.stderr.text()).toContain('Usage: release-drafter')
     expect(result.adapterFactory).not.toHaveBeenCalled()

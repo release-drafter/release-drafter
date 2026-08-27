@@ -9,10 +9,12 @@ import {
   type CommonConfig,
   type DraftReleaseResult,
   draftRelease,
+  evaluatePullRequest,
   type ForgeAdapter,
   type Logger,
   mergeInputAndConfig,
   type ParsedConfig,
+  type PullRequestReader,
   type ReleaseInput,
   type Repository,
 } from '@release-drafter/core'
@@ -33,6 +35,7 @@ export interface WritableStream {
 }
 
 export type CliAdapter = ForgeAdapter &
+  PullRequestReader &
   Pick<GitHubAdapter, 'getRepositoryConfig' | 'octokit'>
 
 export type DraftFunction = (params: {
@@ -56,6 +59,7 @@ export type CliDependencies = {
 
 type ParsedOptions = {
   repository: Repository
+  pullRequestNumber?: number
   from?: string
   name?: string
   tag?: string
@@ -76,6 +80,7 @@ type ParsedOptions = {
 class UsageError extends Error {}
 
 const USAGE = `Usage: release-drafter <owner/repo> [options]
+       release-drafter check-pr <owner/repo> <number> [options]
 
 Options:
   -f, --from <ref>             Change comparison base
@@ -256,6 +261,25 @@ const selectForge = (params: {
   )
 }
 
+const parseRepository = (value: string | undefined, serverUrl: string) => {
+  if (!value || !REPOSITORY_PATTERN.test(value)) {
+    throw new UsageError(
+      'Repository must use the form owner/name. Owner and name cannot be blank.',
+    )
+  }
+  const [owner, name] = value.split('/')
+  return { owner, name, serverUrl }
+}
+
+const parsePullRequestNumber = (value: string | undefined) => {
+  if (!value || !/^\d+$/u.test(value))
+    throw new UsageError('Pull request number must be a positive integer.')
+  const number = Number(value)
+  if (!Number.isSafeInteger(number) || number <= 0)
+    throw new UsageError('Pull request number must be a positive integer.')
+  return number
+}
+
 const parseCommandLine = (argv: readonly string[]) => {
   let parsed: ReturnType<typeof parseArguments>
   try {
@@ -277,19 +301,39 @@ const parseCommandLine = (argv: readonly string[]) => {
     apiUrl,
     graphqlUrl,
   })
-  if (parsed.positionals.length !== 1) {
-    throw new UsageError('Exactly one repository argument is required.')
-  }
-  const repositoryName = parsed.positionals[0]
-  if (!REPOSITORY_PATTERN.test(repositoryName)) {
+  const checkPr = parsed.positionals[0] === 'check-pr'
+  const expectedPositionals = checkPr ? 3 : 1
+  if (parsed.positionals.length !== expectedPositionals)
     throw new UsageError(
-      'Repository must use the form owner/name. Owner and name cannot be blank.',
+      checkPr
+        ? 'The check-pr command requires a repository and pull request number.'
+        : 'Exactly one repository argument is required.',
     )
-  }
-  const [owner, name] = repositoryName.split('/')
+  if (
+    checkPr &&
+    (values.from !== undefined ||
+      values.name !== undefined ||
+      values.tag !== undefined ||
+      values['release-version'] !== undefined ||
+      values.to !== undefined ||
+      values['dry-run'] ||
+      values.publish !== undefined ||
+      values.prerelease !== undefined ||
+      values.latest !== undefined)
+  )
+    throw new UsageError(
+      'Release drafting options cannot be used with check-pr.',
+    )
+  const repository = parseRepository(
+    parsed.positionals[checkPr ? 1 : 0],
+    serverUrl,
+  )
 
   const options: ParsedOptions = {
-    repository: { owner, name, serverUrl },
+    repository,
+    ...(checkPr
+      ? { pullRequestNumber: parsePullRequestNumber(parsed.positionals[2]) }
+      : {}),
     from: values.from,
     name: values.name,
     tag: values.tag,
@@ -306,7 +350,7 @@ const parseCommandLine = (argv: readonly string[]) => {
     graphqlUrl,
     token: values.token,
   }
-  return { kind: 'run' as const, options }
+  return { kind: checkPr ? ('check-pr' as const) : ('run' as const), options }
 }
 
 const resolveToken = (params: {
@@ -391,6 +435,25 @@ const resultDocument = (result: DraftReleaseResult) => {
   }
 }
 
+const pullRequestResultDocument = (
+  pullRequest: Awaited<ReturnType<PullRequestReader['getPullRequest']>>,
+  evaluation: ReturnType<typeof evaluatePullRequest>,
+) => ({
+  action: 'check-pr' as const,
+  number: pullRequest.number,
+  title: pullRequest.title,
+  status: evaluation.skipped
+    ? ('skipped' as const)
+    : evaluation.valid
+      ? ('valid' as const)
+      : ('invalid' as const),
+  valid: evaluation.valid,
+  skipped: evaluation.skipped,
+  ...(!evaluation.skipped
+    ? { selected_category_count: evaluation.selectedCategoryCount }
+    : {}),
+})
+
 /**
  * Runs the private Release Drafter CLI without terminating the process.
  *
@@ -423,7 +486,9 @@ export async function runCli(
   const stdout = injected.stdout ?? process.stdout
   const stderr = injected.stderr ?? process.stderr
   const cliArgv =
-    REPOSITORY_PATTERN.test(argv[0] ?? '') || argv[0]?.startsWith('-')
+    argv[0] === 'check-pr' ||
+    REPOSITORY_PATTERN.test(argv[0] ?? '') ||
+    argv[0]?.startsWith('-')
       ? argv
       : argv.slice(2)
 
@@ -480,8 +545,22 @@ export async function runCli(
       logger,
       env,
     })
+    let pullRequest:
+      | Awaited<ReturnType<PullRequestReader['getPullRequest']>>
+      | undefined
+    if (command.kind === 'check-pr') {
+      const number = options.pullRequestNumber
+      if (number === undefined)
+        throw new Error('Pull request number was not parsed.')
+      pullRequest = await adapter.getPullRequest({
+        repository: options.repository,
+        number,
+      })
+    }
     const branch =
-      options.to ?? (await defaultBranch(adapter, options.repository))
+      pullRequest?.baseRefName ??
+      options.to ??
+      (await defaultBranch(adapter, options.repository))
     const validatedConfig = await loadConfig({
       target: options.config,
       repository: options.repository,
@@ -504,6 +583,19 @@ export async function runCli(
       defaultCommitish: branch,
       logger,
     })
+    if (pullRequest) {
+      const evaluation = evaluatePullRequest(pullRequest, config.categories)
+      const document = pullRequestResultDocument(pullRequest, evaluation)
+      if (options.json) {
+        writeLine(stdout, JSON.stringify(document))
+      } else {
+        writeLine(
+          stderr,
+          `${document.status}: pull request #${pullRequest.number}`,
+        )
+      }
+      return evaluation.valid ? 0 : 1
+    }
     const input: ReleaseInput = {
       publish: options.publish,
       dryRun: options.dryRun,

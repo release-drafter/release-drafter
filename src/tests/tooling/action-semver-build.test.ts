@@ -92,6 +92,7 @@ describe.sequential('action build excludes direct node-semver', () => {
         .sort(),
     ).toEqual([
       'dist/actions/autolabeler/run.js',
+      'dist/actions/check-pr/run.js',
       'dist/actions/drafter/run.js',
     ])
 
@@ -102,12 +103,23 @@ describe.sequential('action build excludes direct node-semver', () => {
     )
     const drafter = readFileSync(drafterPath, 'utf8')
     const autolabeler = readFileSync(autolabelerPath, 'utf8')
+    const checkPr = readFileSync(
+      resolve(repositoryRoot, 'dist/actions/check-pr/run.js'),
+      'utf8',
+    )
 
     expect(drafter).toContain('release-drafter-action-entry:drafter')
     expect(drafter).not.toContain('release-drafter-action-entry:autolabeler')
+    expect(drafter).not.toContain('release-drafter-action-entry:check-pr')
     expect(autolabeler).toContain('release-drafter-action-entry:autolabeler')
     expect(autolabeler).not.toContain('release-drafter-action-entry:drafter')
+    expect(autolabeler).not.toContain('release-drafter-action-entry:check-pr')
+    expect(checkPr).toContain('release-drafter-action-entry:check-pr')
+    expect(checkPr).not.toContain('release-drafter-action-entry:drafter')
+    expect(checkPr).not.toContain('release-drafter-action-entry:autolabeler')
     expect(drafter).not.toBe(autolabeler)
+    expect(checkPr).not.toBe(drafter)
+    expect(checkPr).not.toBe(autolabeler)
   })
 
   it('keeps private facades, sibling entries, and public CLI sources out of bundles', () => {
@@ -115,7 +127,7 @@ describe.sequential('action build excludes direct node-semver', () => {
       /@release-drafter\//u,
       /packages[\\/](?:release-drafter|cli)[\\/]/u,
       /src[\\/]actions[\\/]/u,
-      /dist[\\/]actions[\\/](?:drafter|autolabeler)[\\/]run\.js/u,
+      /dist[\\/]actions[\\/](?:drafter|autolabeler|check-pr)[\\/]run\.js/u,
     ]
     const offenders = generatedJavaScriptFiles.flatMap((path) => {
       const contents = readFileSync(path, 'utf8')

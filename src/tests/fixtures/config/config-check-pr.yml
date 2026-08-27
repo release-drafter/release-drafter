@@ -1,0 +1,5 @@
+categories:
+  - title: Features
+    when:
+      conventional:
+        type: feat

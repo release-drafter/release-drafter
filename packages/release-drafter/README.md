@@ -42,6 +42,7 @@ GH_TOKEN="$(gh auth token)" release-drafter owner/repo
 
 ```text
 Usage: release-drafter <owner/repo> [options]
+       release-drafter check-pr <owner/repo> <number> [options]
 
 Options:
   -f, --from <ref>             Change comparison base
@@ -107,6 +108,31 @@ npx release-drafter owner/repo \
   --publish false \
   --prerelease false \
   --latest true
+```
+
+### Check a pull request
+
+Use `check-pr` to validate a pull request with the same category rules as the
+Check PR action:
+
+```sh
+npx release-drafter check-pr owner/repo 123
+```
+
+The command loads configuration from the pull request's base branch. A
+condition with `conventional` validates the title. A condition with labels
+validates current labels. If one condition defines both, title and labels must
+both match. The command ignores path predicates, and a path-only condition
+cannot pass validation. If a `pre-exclude` category excludes the pull request by
+title or label, the command reports it as skipped. An unconditional fallback
+category cannot make the pull request valid by itself.
+
+The command exits with `0` for valid or excluded pull requests and `1` for an
+invalid pull request. In JSON mode, it returns the pull request number, title, status,
+valid and skipped flags, and the number of selected categories:
+
+```sh
+npx release-drafter check-pr owner/repo 123 --json
 ```
 
 ### JSON automation
@@ -212,11 +238,11 @@ Enterprise Server. Cross-origin endpoints require an explicit `--token`.
 
 ### Exit codes
 
-| Code | Meaning                                                                                                    |
-| ---- | ---------------------------------------------------------------------------------------------------------- |
-| `0`  | The command completed successfully, or help/version was displayed.                                         |
-| `1`  | Authentication with resolved credentials, config loading, network access, validation, or execution failed. |
-| `2`  | Command-line usage was invalid, or no credential could be resolved.                                        |
+| Code | Meaning                                                                                                   |
+| ---- | --------------------------------------------------------------------------------------------------------- |
+| `0`  | The command completed successfully, a pull request passed or was skipped, or help/version was displayed.  |
+| `1`  | A pull request failed validation, or authentication, config loading, network access, or execution failed. |
+| `2`  | Command-line usage was invalid, or no credential could be resolved.                                       |
 
 ## Programmatic API
 

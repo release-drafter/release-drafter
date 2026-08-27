@@ -17,6 +17,10 @@ import {
   actionOutputNames as autolabelerOutputNames,
 } from '#gh-actions/autolabeler/action-metadata.ts'
 import {
+  actionInputNames as checkPrInputNames,
+  actionOutputNames as checkPrOutputNames,
+} from '#gh-actions/check-pr/action-metadata.ts'
+import {
   actionInputNames as drafterInputNames,
   actionOutputNames as drafterOutputNames,
 } from '#gh-actions/drafter/action-metadata.ts'
@@ -130,6 +134,7 @@ describe('workspace foundation', () => {
     const autolabelerAction = parseYaml(
       readFileSync('autolabeler/action.yml', 'utf8'),
     )
+    const checkPrAction = parseYaml(readFileSync('check-pr/action.yml', 'utf8'))
     const normalizeMain = (metadata: Record<string, unknown>) => ({
       ...metadata,
       runs: { ...(metadata.runs as object), main: '<normalized>' },
@@ -148,6 +153,10 @@ describe('workspace foundation', () => {
       using: 'node24',
       main: '../dist/actions/autolabeler/run.js',
     })
+    expect(checkPrAction.runs).toMatchObject({
+      using: 'node24',
+      main: '../dist/actions/check-pr/run.js',
+    })
     expect(rootAction.inputs.from).toMatchObject({ required: false })
     expect(rootAction.inputs).toEqual(actionManifests.drafter.inputs)
     expect(rootAction.outputs).toEqual(actionManifests.drafter.outputs)
@@ -155,6 +164,8 @@ describe('workspace foundation', () => {
     expect(autolabelerAction.outputs).toEqual(
       actionManifests.autolabeler.outputs,
     )
+    expect(checkPrAction.inputs).toEqual(actionManifests.checkPr.inputs)
+    expect(checkPrAction.outputs).toEqual(actionManifests.checkPr.outputs)
     expect(Object.keys(rootAction.inputs).sort()).toEqual(
       [...drafterInputNames].sort(),
     )
@@ -166,6 +177,12 @@ describe('workspace foundation', () => {
     )
     expect(Object.keys(autolabelerAction.outputs ?? {}).sort()).toEqual(
       [...autolabelerOutputNames].sort(),
+    )
+    expect(Object.keys(checkPrAction.inputs).sort()).toEqual(
+      [...checkPrInputNames].sort(),
+    )
+    expect(Object.keys(checkPrAction.outputs ?? {}).sort()).toEqual(
+      [...checkPrOutputNames].sort(),
     )
   })
 
@@ -195,11 +212,15 @@ describe('workspace foundation', () => {
       '.',
       './drafter',
       './autolabeler',
+      './check-pr',
       './config',
     ])
     expect(manifest.exports['./drafter'].import).toBe('./dist/drafter/index.js')
     expect(manifest.exports['./autolabeler'].import).toBe(
       './dist/autolabeler/index.js',
+    )
+    expect(manifest.exports['./check-pr'].import).toBe(
+      './dist/check-pr/index.js',
     )
     const identitySource = readFileSync(
       'packages/gh-actions/src/index.ts',
@@ -207,9 +228,11 @@ describe('workspace foundation', () => {
     )
     expect(identitySource).not.toContain("from './drafter/")
     expect(identitySource).not.toContain("from './autolabeler/")
+    expect(identitySource).not.toContain("from './check-pr/")
     const workspaceBuild = readFileSync('vite.workspace.config.ts', 'utf8')
     expect(workspaceBuild).toContain("'drafter/index'")
     expect(workspaceBuild).toContain("'autolabeler/index'")
+    expect(workspaceBuild).toContain("'check-pr/index'")
   })
 
   it('keeps TypeScript scripts directly parseable by Node without compilation', () => {

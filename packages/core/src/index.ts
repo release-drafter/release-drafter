@@ -1,6 +1,7 @@
 export * from './category-matching.ts'
 export * from './config/index.ts'
 export * from './ports.ts'
+export * from './pull-request-validation.ts'
 export { buildReleasePayload } from './release/build-release-payload.ts'
 export { categorizePullRequests } from './release/categorize-pull-requests.ts'
 export { generateChangeLog } from './release/generate-changelog.ts'

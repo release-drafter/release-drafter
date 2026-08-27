@@ -51017,6 +51017,23 @@ var GitHubAdapter = class {
 		}
 		return paths;
 	}
+	async getPullRequest({ repository, number }) {
+		const response = await this.octokit.rest.pulls.get({
+			owner: repository.owner,
+			repo: repository.name,
+			pull_number: number
+		});
+		const title = response.data.title?.trim();
+		const baseRefName = response.data.base?.ref?.trim();
+		if (!title) throw new Error(`Pull request #${number} returned a blank title`);
+		if (!baseRefName) throw new Error(`Pull request #${number} returned a blank base branch`);
+		return {
+			number,
+			title,
+			baseRefName,
+			labels: response.data.labels.flatMap((label) => typeof label === "string" ? label ? [label] : [] : label.name ? [label.name] : [])
+		};
+	}
 	async findNewContributorLogins(repository, pullRequests) {
 		const firstMergedAtByLogin = /* @__PURE__ */ new Map();
 		for (const pullRequest of pullRequests) {
@@ -51182,11 +51199,8 @@ var writeActionOutputs = (names, values) => {
 };
 //#endregion
 //#region packages/gh-actions/src/common/shared-input.schema.ts
-/** Inputs shared by the Drafter and Autolabeler Actions. */
-var sharedInputSchema = object({
-	token: string$1().min(1).default(() => process$1.env.GITHUB_TOKEN || ""),
-	"dry-run": stringbool().or(boolean()).optional()
-}).superRefine((data, context) => {
+/** Read-only token input shared by GitHub Actions. */
+var tokenInputSchema = object({ token: string$1().min(1).default(() => process$1.env.GITHUB_TOKEN || "") }).superRefine((data, context) => {
 	if (data.token && !process$1.env.GITHUB_TOKEN) process$1.env.GITHUB_TOKEN = data.token;
 	if (!process$1.env.GITHUB_TOKEN) context.addIssue({
 		code: "custom",
@@ -51194,6 +51208,8 @@ var sharedInputSchema = object({
 		path: ["token"]
 	});
 });
+/** Inputs shared by the Drafter and Autolabeler Actions. */
+var sharedInputSchema = tokenInputSchema.and(object({ "dry-run": stringbool().or(boolean()).optional() }));
 //#endregion
 //#region node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
@@ -57255,4 +57271,4 @@ async function composeConfigGet(configFilename, currentContext, token) {
 	return result;
 }
 //#endregion
-export { info as C, core_exports as S, string$1 as _, writeActionOutputs as a, Minimatch as b, getRepository as c, _enum as d, array as f, object as g, number as h, readActionInputs as i, escapeStringRegexp as l, literal as m, sharedInputSchema as n, actionLogger as o, boolean as p, defineActionInputNames as r, getGitHubAdapter as s, composeConfigGet as t, ZodDefault as u, stringbool as v, setFailed as w, context as x, union as y };
+export { core_exports as C, context as S, setFailed as T, object as _, readActionInputs as a, union as b, getGitHubAdapter as c, ZodDefault as d, _enum as f, number as g, literal as h, defineActionInputNames as i, getRepository as l, boolean as m, sharedInputSchema as n, writeActionOutputs as o, array as p, tokenInputSchema as r, actionLogger as s, composeConfigGet as t, escapeStringRegexp as u, string$1 as v, info as w, Minimatch as x, stringbool as y };
