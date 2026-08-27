@@ -1,0 +1,88 @@
+name: Forge conformance
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  forge-conformance-scope:
+    name: Forge conformance scope
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.scope.outputs.should-run }}
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+
+      - name: Detect forge conformance scope
+        id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          LABEL_NAME: ${{ github.event.label.name }}
+          OVERRIDE_LABEL: ci:forge-conformance
+          HAS_OVERRIDE_LABEL: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:forge-conformance') }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: node src/scripts/forge-conformance-router.ts
+
+  forge-conformance:
+    name: Forge conformance (${{ matrix.forge }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: forge-conformance-scope
+    if: needs.forge-conformance-scope.outputs.should-run == 'true'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        forge:
+          - gitea
+          - forgejo
+          - gitlab
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run pinned real-forge conformance suite
+        env:
+          GITLAB_TEST_ARTIFACTS: artifacts/gitlab
+          REST_FORGE_TEST_ARTIFACTS: artifacts/${{ matrix.forge }}
+        run: npm run test:conformance:${{ matrix.forge }}
+
+      - name: Upload forge failure logs
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ matrix.forge }}-integration-logs
+          path: artifacts/${{ matrix.forge }}
+          if-no-files-found: warn
+          retention-days: 7

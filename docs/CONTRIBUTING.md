@@ -83,6 +83,44 @@ Common commands:
 - `npm run build --workspaces --if-present` builds workspace packages after the
   root Vite action bundle build.
 
+### Forge conformance tests
+
+`npm run test:run` and `npm run all` do not start containers. Use these commands
+to run Docker-backed forge conformance tests:
+
+- `npm run test:conformance:gitea` runs the Gitea image.
+- `npm run test:conformance:forgejo` runs the Forgejo image.
+- `npm run test:conformance:gitea-forgejo` runs both images through the shared
+  `ForgeAdapter` contract.
+- `npm run test:conformance:gitlab` runs the GitLab suite serially and uses
+  extended startup and teardown timeouts.
+
+The CI matrix includes Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
+redacted container logs and fixture metadata.
+
+The forge-conformance workflow runs the matrix in these cases:
+
+- A pull request changes `ci.yml`, `forge-conformance.yml`, `.node-version`, a
+  root package manifest or lockfile, root TypeScript, Vite, or Vitest
+  configuration, any file under `src`, or workspace source, manifests, or
+  TypeScript configuration under `packages/*`.
+- A maintainer applies the exact `ci:forge-conformance` label. This label skips
+  changed-file detection.
+- A push to `main` changes one of the same paths.
+
+Other pull request label events still use changed-file detection. If the base
+commit is missing or invalid, or if Git fails, the workflow runs the matrix.
+
+The scope job runs the checked-in TypeScript router with the repository's pinned
+Node version. It passes fixed pathspec arguments directly to Git without shell
+interpolation. The final gate also uses checked-in TypeScript and runs on Node.js 24.
+
+The shared contract exercises the public facade and normalized release listing,
+change discovery, commitish resolution, release creation, and release updates.
+Some forge fixtures also verify default-branch and repository configuration
+loading. These commands require a working Docker-compatible daemon. They fail if
+the daemon is not available.
+
 Do not add npm publication workflows or make scoped `@release-drafter/*`
 workspaces publishable unless the maintainers approve a release plan.
 

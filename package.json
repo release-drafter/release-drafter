@@ -34,6 +34,10 @@
     "build:workspaces": "npm run build --workspaces --if-present",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:conformance:gitea": "FORGE_CONFORMANCE_TARGET=gitea vitest run --config vitest.forge.config.ts",
+    "test:conformance:forgejo": "FORGE_CONFORMANCE_TARGET=forgejo vitest run --config vitest.forge.config.ts",
+    "test:conformance:gitea-forgejo": "vitest run --config vitest.forge.config.ts",
+    "test:conformance:gitlab": "vitest run --config vitest.gitlab.config.ts",
     "coverage": "node src/scripts/coverage-summary.ts",
     "typecheck": "tsc --noEmit && npm run typecheck --workspaces --if-present",
     "format": "biome format --write .",
@@ -63,7 +67,9 @@
     "@release-drafter/autolabeler": "*",
     "@release-drafter/core": "*",
     "@release-drafter/gh-actions": "*",
+    "@release-drafter/github-adapter": "*",
     "graphql": "^17.0.2",
+    "release-drafter": "*",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"
   },
@@ -81,6 +87,7 @@
     "nock": "^14.0.16",
     "prettier": "^3.9.6",
     "rolldown-plugin-dts": "^0.28.2",
+    "testcontainers": "12.0.4",
     "typescript": "^7.0.2",
     "vite": "^8.2.1",
     "vitest": "^4.1.10"
