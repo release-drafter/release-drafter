@@ -20,17 +20,25 @@ You can also run it without a permanent installation:
 npx release-drafter owner/repo --dry-run
 ```
 
-The repository argument must be exactly `owner/repo`.
+For GitHub, Gitea, and Forgejo, use `owner/repo`. For GitLab, use
+`namespace/project`. A GitLab namespace can contain multiple segments.
 
 ### Authentication
 
 The CLI selects credentials for the target host in this order:
 
-- GitHub.com: `--token`, then `GITHUB_TOKEN`, then `GH_TOKEN`
+- GitHub.com and GitHub Enterprise Cloud on `*.ghe.com`: `--token`, then
+  `GH_TOKEN`, then `GITHUB_TOKEN`
 - GitHub Enterprise Server: `--token`, then `GH_ENTERPRISE_TOKEN`, then
   `GITHUB_ENTERPRISE_TOKEN`
+- Gitea: `--token`, then `GITEA_TOKEN`
+- Forgejo: `--token`, then `FORGEJO_TOKEN`
+- GitLab: `--token`, then `GITLAB_TOKEN`
 
-GitHub.com token variables are not reused for a GitHub Enterprise Server host.
+GitHub-hosted token variables are not reused for a GitHub Enterprise Server
+host. Tokens are never reused across forge families. Automatic environment
+credentials are rejected when an explicit API endpoint uses another origin;
+use `--token` to authorize that combination deliberately.
 Release Drafter never invokes `gh`. If you manage credentials with GitHub CLI,
 you can explicitly pass them to Release Drafter from your shell:
 
@@ -41,8 +49,12 @@ GH_TOKEN="$(gh auth token)" release-drafter owner/repo
 ### Options
 
 ```text
-Usage: release-drafter <owner/repo> [options]
-       release-drafter check-pr <owner/repo> <number> [options]
+Usage: release-drafter <repository> [options]
+       release-drafter check-pr <repository> <number> [options]
+
+Repository:
+  owner/name                  GitHub, Gitea, or Forgejo repository
+  namespace/project          GitLab repository; nested namespaces are allowed
 
 Options:
   -f, --from <ref>             Change comparison base
@@ -52,21 +64,31 @@ Options:
   -t, --to <ref>               Target commitish
   -c, --config <target>        Config target (default: release-drafter.yml)
       --dry-run                Calculate without writing
-      --publish [true|false]   Publish instead of drafting (default: false)
+      --publish [true|false]   Publish the release when true (default: false)
       --prerelease [true|false]
       --latest [true|false]
       --json                   Write one JSON result document to stdout
-      --forge <name>           Forge implementation (github only)
+      --forge <name>           github, gitea, forgejo, or gitlab
       --server-url <url>       Forge web URL
       --api-url <url>          Forge REST API URL
       --graphql-url <url>      Forge GraphQL API URL
-      --token <token>          GitHub token (overrides environment variables)
+      --token <token>          Forge token (overrides environment variables)
       --help                   Show help
       --version                Show version
 ```
 
 `--publish`, `--prerelease`, and `--latest` accept an explicit `true` or
 `false`. Omitting the value is equivalent to `true`.
+
+GitHub remains the default forge. Explicit Gitea, Forgejo, and GitLab selection
+defaults to `https://gitea.com`, `https://codeberg.org`, and
+`https://gitlab.com`, respectively. Pass `--server-url` for a self-hosted
+instance and `--api-url` only when its REST endpoint is nonstandard.
+
+GitLab Releases do not support drafts or prerelease semantics. For GitLab,
+`--publish false` calculates and returns the proposed release without writing
+it. `--publish true` creates or updates a non-prerelease release. A prerelease
+payload is rejected before any GitLab request is sent.
 
 ### Examples
 
@@ -180,9 +202,9 @@ For example:
 
 ### Config targets
 
-`--config` accepts YAML or JSON from the local filesystem, a repository, or a
-GitHub.com or GitHub Enterprise Server blob URL. Repository paths without
-`.github/` are resolved beneath `.github/`.
+`--config` accepts YAML or JSON from the local filesystem or the selected forge
+repository. GitHub.com and GitHub Enterprise Server blob URLs are also
+accepted. Repository paths without `.github/` are resolved beneath `.github/`.
 
 ```sh
 # Local file. The path is relative to the current working directory.
@@ -213,9 +235,12 @@ CLI config loading supports Release Drafter's `_extends` chains, including
 are resolved from the config that declares `_extends`. A repository config
 cannot extend a local `file:` target.
 
-### GitHub Enterprise Server and forge selection
+### Forge selection and custom endpoints
 
-The CLI supports GitHub.com and GitHub Enterprise Server:
+The CLI supports GitHub, Gitea, Forgejo, and GitLab. GitHub is the default.
+Select the other forges with `--forge`. GitLab repository arguments use
+`namespace/project`. The namespace can contain multiple segments, such as
+`group/subgroup/project`.
 
 ```sh
 npx release-drafter owner/repo \
@@ -228,13 +253,12 @@ npx release-drafter owner/repo \
 
 The CLI identifies GitHub.com and GitHub Enterprise Server endpoints that use
 the standard `/api/v3` path. Other endpoint paths, including `/api/v1`, require
-an explicit `--forge` selection. Only `--forge github` is accepted in this
-version. Selecting `gitea`, `forgejo`, `gitlab`, or another unsupported forge
-fails. Endpoint URLs must be absolute HTTP(S) URLs without credentials, query
-parameters, or fragments. Environment credentials are used only when REST and
-GraphQL endpoints stay on the expected credential origin. The expected origin
-is `api.github.com` for GitHub.com and the configured server origin for GitHub
-Enterprise Server. Cross-origin endpoints require an explicit `--token`.
+an explicit `--forge` selection. For GitHub Enterprise Cloud on `*.ghe.com`, the
+CLI uses `api.<subdomain>.ghe.com` for REST and GraphQL requests. `--graphql-url`
+is supported only for GitHub. Endpoint URLs must be absolute HTTP(S) URLs
+without credentials, query parameters, or fragments. Environment credentials
+are used only when configured API endpoints stay on the expected credential
+origin. Cross-origin endpoints require an explicit `--token`.
 
 ### Exit codes
 
@@ -248,12 +272,16 @@ Enterprise Server. Cross-origin endpoints require an explicit `--token`.
 
 ```ts
 import {
+  createForgeAdapter,
   draftRelease,
   type DraftReleaseConfig,
   type ForgeAdapter,
 } from 'release-drafter'
 
-const adapter: ForgeAdapter = createForgeAdapter()
+const adapter: ForgeAdapter = createForgeAdapter({
+  forge: 'github',
+  token: process.env.GITHUB_TOKEN,
+})
 const config: DraftReleaseConfig = loadAndNormalizeReleaseDrafterConfig()
 
 const result = await draftRelease({
@@ -293,3 +321,7 @@ created or updated release.
 
 Importing `release-drafter` does not start the CLI, read environment variables,
 or perform network requests.
+
+`createForgeAdapter(options)` constructs bundled `github`, `gitea`, `forgejo`,
+and `gitlab` adapters without exposing private workspace packages. The
+programmatic API always requires an explicit token.

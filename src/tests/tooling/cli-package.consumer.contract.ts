@@ -38,6 +38,7 @@ const expectedPackageFiles = [
   'package.json',
 ]
 const approvedRuntimeDependencies = {
+  '@gitbeaker/rest': '43.8.0',
   '@octokit/core': '^7.0.6',
   '@octokit/plugin-paginate-graphql': '^6.0.0',
   '@octokit/plugin-paginate-rest': '^14.0.0',
@@ -89,6 +90,7 @@ const isolatedEnvironment = (): NodeJS.ProcessEnv => {
   for (const name of [
     'ACTIONS_RUNTIME_TOKEN',
     'FORGEJO_TOKEN',
+    'GITEA_TOKEN',
     'GH_ENTERPRISE_TOKEN',
     'GH_TOKEN',
     'GITHUB_TOKEN',
@@ -343,11 +345,16 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     writeFileSync(
       join(consumerDirectory, 'consumer.mts'),
       `
-      import { draftRelease } from 'release-drafter'
+      import { createForgeAdapter, draftRelease } from 'release-drafter'
       import type {
+        CreateForgeAdapterOptions,
         DraftReleaseOptions,
         DraftReleaseResult,
         ForgeAdapter,
+        ForgejoForgeAdapterOptions,
+        GiteaForgeAdapterOptions,
+        GitHubForgeAdapterOptions,
+        GitLabForgeAdapterOptions,
         Logger,
       } from 'release-drafter'
 
@@ -359,6 +366,36 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
       const injectable = { adapter, logger } satisfies Partial<DraftReleaseOptions>
       void invoke
       void injectable
+      const factoryOptions = {
+        forge: 'gitlab',
+        token: 'token',
+        limits: { retries: 0, maxAssociatedMergeRequests: 5 },
+      } satisfies CreateForgeAdapterOptions
+      const githubOptions = {
+        forge: 'github',
+        token: 'token',
+        requestRetries: 1,
+      } satisfies GitHubForgeAdapterOptions
+      const giteaOptions = {
+        forge: 'gitea',
+        token: 'token',
+        limits: { maxPages: 2 },
+      } satisfies GiteaForgeAdapterOptions
+      const forgejoOptions = {
+        forge: 'forgejo',
+        token: 'token',
+        limits: { maxRequestsPerOperation: 3 },
+      } satisfies ForgejoForgeAdapterOptions
+      const gitlabOptions = {
+        forge: 'gitlab',
+        token: 'token',
+        limits: { retries: 0 },
+      } satisfies GitLabForgeAdapterOptions
+      // @ts-expect-error GitHub must reject ignored adapter limits.
+      createForgeAdapter({ forge: 'github', token: 'token', limits: {} })
+      void createForgeAdapter
+      void factoryOptions
+      void [githubOptions, giteaOptions, forgejoOptions, gitlabOptions]
     `,
     )
     writeFileSync(
@@ -410,6 +447,32 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     expectExit(imported, 0)
     expect(imported.stderr, formatResult(imported)).toBe('')
     expect(imported.stdout, formatResult(imported)).toBe('imported\n')
+  })
+
+  it('constructs all bundled forge adapters without private workspace packages', () => {
+    writeFileSync(
+      join(consumerDirectory, 'construct-adapters.mjs'),
+      `
+      import { createForgeAdapter } from 'release-drafter'
+
+      const results = ['github', 'gitea', 'forgejo', 'gitlab'].map((forge) => {
+        const adapter = createForgeAdapter({
+          forge,
+          token: 'not-a-real-token',
+          fetch: async () => new Response('{}', { status: 200 }),
+        })
+        return [forge, adapter.capabilities.draftReleases]
+      })
+      process.stdout.write(JSON.stringify(results) + '\\n')
+    `,
+    )
+
+    const constructed = runNode(['construct-adapters.mjs'], consumerDirectory)
+    expectExit(constructed, 0)
+    expect(constructed.stderr, formatResult(constructed)).toBe('')
+    expect(constructed.stdout, formatResult(constructed)).toBe(
+      '[["github",true],["gitea",true],["forgejo",true],["gitlab",false]]\n',
+    )
   })
 
   it('runs a dry-run release through the bundled core implementation', () => {
@@ -540,7 +603,6 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
       const relativePath = path.slice(installedPackageDirectory.length + 1)
       const problems: string[] = []
       const checks: [RegExp, string][] = [
-        [/gitbeaker/i, 'GitBeaker marker'],
         [
           /node-semver|MAX_SAFE_(?:COMPONENT|BUILD)_LENGTH/,
           'node-semver marker',

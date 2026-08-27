@@ -22,6 +22,8 @@ import type {
   RestForgeProfile,
   RestPullRequest,
   RestRelease,
+  RestRepository,
+  RestRepositoryContents,
   RestUser,
 } from './types.ts'
 export const REST_ADAPTER_PACKAGE_NAME =
@@ -149,7 +151,20 @@ const stablePullRequestOrder = (left: PullRequest, right: PullRequest) =>
   (left.baseRepository ?? '').localeCompare(right.baseRepository ?? '') ||
   left.number - right.number
 
-class GitHubCompatibleRestAdapter implements ForgeAdapter, PullRequestReader {
+export interface GitHubCompatibleRestAdapterRuntime
+  extends ForgeAdapter,
+    PullRequestReader {
+  getDefaultBranch(repository: Repository): Promise<string>
+  getRepositoryConfig(options: {
+    repository: Repository
+    path: string
+    ref?: string
+  }): Promise<string>
+}
+
+class GitHubCompatibleRestAdapter
+  implements GitHubCompatibleRestAdapterRuntime
+{
   readonly capabilities: RestForgeProfile['capabilities']
   private readonly client: RestClient
 
@@ -410,6 +425,41 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter, PullRequestReader {
     }
   }
 
+  async getDefaultBranch(repository: Repository): Promise<string> {
+    const response = await this.client.requestJson<RestRepository>({
+      repository,
+      path: this.profile.endpoints.repository(repository),
+      budget: this.client.newBudget(),
+    })
+    const branch = response?.data.default_branch?.trim()
+    if (!branch) throw new Error('Forge returned a blank default branch')
+    return branch
+  }
+
+  async getRepositoryConfig({
+    repository,
+    path,
+    ref,
+  }: {
+    repository: Repository
+    path: string
+    ref?: string
+  }): Promise<string> {
+    const response = await this.client.requestJson<RestRepositoryContents>({
+      repository,
+      path: this.profile.endpoints.contents(repository, path),
+      budget: this.client.newBudget(),
+      query: ref ? { ref } : undefined,
+    })
+    if (response?.data.encoding !== 'base64' || !response.data.content) {
+      throw new Error('Forge repository config response was not base64 content')
+    }
+    return Buffer.from(
+      response.data.content.replace(/\s/gu, ''),
+      'base64',
+    ).toString('utf8')
+  }
+
   async resolveCommitish({
     repository,
     commitish,
@@ -529,13 +579,19 @@ class GitHubCompatibleRestAdapter implements ForgeAdapter, PullRequestReader {
 export const createGitHubCompatibleRestAdapter = (
   profile: RestForgeProfile,
   options: RestAdapterOptions,
-): ForgeAdapter & PullRequestReader =>
+): GitHubCompatibleRestAdapterRuntime =>
   new GitHubCompatibleRestAdapter(profile, options)
 
 export const createRestEndpoints = () => {
   const repoPath = (repository: Repository) =>
     `/repos/${encoded(repository.owner)}/${encoded(repository.name)}`
   return {
+    repository: (repository: Repository) => repoPath(repository),
+    contents: (repository: Repository, path: string) =>
+      `${repoPath(repository)}/contents/${path
+        .split('/')
+        .map(encoded)
+        .join('/')}`,
     compare: (repository: Repository, baseHead: string) =>
       `${repoPath(repository)}/compare/${encoded(baseHead)}`,
     commitPull: (repository: Repository, sha: string) =>

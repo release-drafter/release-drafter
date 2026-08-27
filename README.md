@@ -48,8 +48,9 @@ Node.js 24 or later.
 npx release-drafter owner/repo --dry-run
 ```
 
-For GitHub.com, authenticate with `GITHUB_TOKEN` or `GH_TOKEN`. For GitHub
-Enterprise Server, use `GH_ENTERPRISE_TOKEN` or `GITHUB_ENTERPRISE_TOKEN`.
+For GitHub.com or GitHub Enterprise Cloud on `*.ghe.com`, authenticate with
+`GH_TOKEN` or `GITHUB_TOKEN`. For GitHub Enterprise Server, use
+`GH_ENTERPRISE_TOKEN` or `GITHUB_ENTERPRISE_TOKEN`.
 Release Drafter does not invoke [`gh`](https://cli.github.com/). To use GitHub
 CLI credentials, pass them through `GH_TOKEN`:
 

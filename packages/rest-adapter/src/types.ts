@@ -3,6 +3,8 @@ import type { Logger, PullRequest, Repository } from '@release-drafter/core'
 export type Fetch = typeof globalThis.fetch
 
 export type RestEndpointProfile = {
+  repository(repository: Repository): string
+  contents(repository: Repository, path: string): string
   compare(repository: Repository, baseHead: string): string
   commitPull(repository: Repository, sha: string): string
   pullFiles(repository: Repository, number: number): string
@@ -123,6 +125,15 @@ export type RestRelease = {
   html_url?: string | null
   url?: string | null
   upload_url?: string | null
+}
+
+export type RestRepository = {
+  default_branch?: string | null
+}
+
+export type RestRepositoryContents = {
+  content?: string | null
+  encoding?: string | null
 }
 
 export type PullRequestEntry = {
