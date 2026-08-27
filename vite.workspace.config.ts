@@ -10,8 +10,6 @@ const packageJson = process.env.npm_package_json
 if (!packageJson)
   throw new Error('npm_package_json is required to build a workspace')
 const workspaceRoot = dirname(packageJson)
-const packageName = process.env.npm_package_name
-if (!packageName) throw new Error('npm_package_name is required')
 const workspaceManifest = JSON.parse(readFileSync(packageJson, 'utf8')) as {
   dependencies?: Record<string, unknown>
 }
@@ -73,23 +71,4 @@ export default defineConfig({
       exclude: ['src/**/*.test.ts', 'src/**/*.generated.ts'],
     },
   },
-  plugins: [
-    {
-      name: 'release-drafter-commonjs-to-esm',
-      enforce: 'pre',
-      transform(source, id) {
-        if (packageName !== 'release-drafter') return
-        const normalizedId = id.replaceAll('\\', '/')
-        if (normalizedId.endsWith('/node_modules/ignore/index.js')) {
-          return `${source
-            .replace('module.exports = factory', '')
-            .replaceAll('module.exports.', 'factory.')
-            .replaceAll(
-              'define(module.exports,',
-              'define(factory,',
-            )}\nexport default factory\n`
-        }
-      },
-    },
-  ],
 })

@@ -1,6 +1,6 @@
 import { CommitParser } from 'conventional-commits-parser'
-import ignore from 'ignore'
 import type { IncrementType } from 'verkit'
+import { createPathMatcher } from './path-matcher.ts'
 import type { ParsedConfig, PullRequest } from './types.ts'
 
 type ReleaseType = Exclude<IncrementType, 'release'>
@@ -61,12 +61,14 @@ const matchesPullRequestPaths = (
   if (condition.paths.length === 0) return true
   const changedFiles = unique(pullRequest.changedFiles ?? [])
   if (changedFiles.length === 0) return false
-  const matchers = unique(condition.paths).map((path) => ignore().add(path))
+  const matchers = unique(condition.paths).map((path) =>
+    createPathMatcher([path]),
+  )
   const allPatternsMatch = matchers.every((matcher) =>
-    changedFiles.some((file) => matcher.ignores(file)),
+    changedFiles.some(matcher),
   )
   const onlyPatternsMatch = changedFiles.every((file) =>
-    matchers.some((matcher) => matcher.ignores(file)),
+    matchers.some((matcher) => matcher(file)),
   )
 
   switch (condition['paths-mode']) {
@@ -78,7 +80,7 @@ const matchesPullRequestPaths = (
       return allPatternsMatch && onlyPatternsMatch
     default:
       return changedFiles.some((file) =>
-        matchers.some((matcher) => matcher.ignores(file)),
+        matchers.some((matcher) => matcher(file)),
       )
   }
 }
