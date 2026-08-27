@@ -1,12 +1,11 @@
 # Drafter action
 
-This folder only serves as an alias when users reference the action, which
-requires the presence of the [`action.yml`](./action.yml) file
+This directory contains an alternative public entrypoint for the Drafter
+action. The repository root runs the same action.
 
 ```yaml
 steps:
-  # targets root `action.yaml` - runs drafter
-  - uses: release-drafter/release-drafter@latest
-  # also runs drafter
-  - uses: release-drafter/release-drafter/drafter@latest
+  - uses: release-drafter/release-drafter@v7
+  # This entrypoint is equivalent to the repository root.
+  - uses: release-drafter/release-drafter/drafter@v7
 ```

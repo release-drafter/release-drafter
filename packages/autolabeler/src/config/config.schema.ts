@@ -3,9 +3,9 @@ import { array, object, string } from 'zod'
 
 export const configSchema = object({
   /**
-   * You can add automatically a label into a pull request.
-   * Available matchers are `files` (glob), `branch` (regex), `title` (regex) and `body` (regex).
-   * Matchers are evaluated independently; the label will be set if at least one of the matchers meets the criteria.
+   * Defines pull request label rules.
+   * `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.
+   * A rule matches when at least one configured matcher succeeds.
    */
   autolabeler: array(
     object({

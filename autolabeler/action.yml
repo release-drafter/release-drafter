@@ -1,5 +1,5 @@
-name: 'Release Drafter - Auto Labeler'
-description: 'Automatically labels pull requests based on your configuration.'
+name: 'Release Drafter - Autolabeler'
+description: 'Add pull request labels from the Autolabeler configuration.'
 author: release-drafter
 branding:
   icon: edit-2
@@ -10,18 +10,17 @@ runs:
 inputs:
   token:
     description: |
-      Access token used to make requests against the GitHub API. Defaults to github.token.
+      Access token for GitHub API requests. Default: github.token.
     default: ${{ github.token }}
   config-name:
     description: |
-      Configuration filename to use when the workflow has more than one Autolabeler configuration.
-      Store the file in `.github`; Release Drafter searches only that directory.
+      Autolabeler configuration target.
+      A relative path starts in the repository's `.github` directory.
     required: false
     default: release-drafter.yml
   dry-run:
     description: |
-      A boolean indicating whether to run without performing any write operations.
-      When enabled, the action logs what it would have done instead of adding labels.
+      Prevents label updates. The action logs the labels that it would add.
     required: false
     default: ''
 

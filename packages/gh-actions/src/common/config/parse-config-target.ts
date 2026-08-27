@@ -10,7 +10,7 @@ export const describeConfigTarget = (target: ConfigTarget) =>
 
 /**
  * Parses a config target string into its components
- * @param target - Target string in format `[github:][[owner/]repo]:filepath[@ref]` or `file:filepath`
+ * @param target - Target string in format `[github:][[owner/]repo:]filepath[@ref]` or `file:filepath`
  * @param currentContext - Current runtime context (repo owner, name, and ref)
  * @returns Parsed config target with resolved components
  */

@@ -1,8 +1,7 @@
 # release-drafter
 
-Release Drafter's public package provides both a forge-neutral programmatic API
-and the `release-drafter` command-line interface. Node.js 24 or later is
-required.
+The public `release-drafter` package provides a forge-neutral programmatic API
+and a command-line interface. It requires Node.js 24 or later.
 
 ## CLI
 
@@ -14,7 +13,7 @@ npm install --global release-drafter
 npm install --save-dev release-drafter
 ```
 
-You can also run it without a permanent installation:
+Run the CLI without installing it:
 
 ```sh
 npx release-drafter owner/repo --dry-run
@@ -35,12 +34,12 @@ The CLI selects credentials for the target host in this order:
 - Forgejo: `--token`, then `FORGEJO_TOKEN`
 - GitLab: `--token`, then `GITLAB_TOKEN`
 
-GitHub-hosted token variables are not reused for a GitHub Enterprise Server
-host. Tokens are never reused across forge families. Automatic environment
-credentials are rejected when an explicit API endpoint uses another origin;
-use `--token` to authorize that combination deliberately.
-Release Drafter never invokes `gh`. If you manage credentials with GitHub CLI,
-you can explicitly pass them to Release Drafter from your shell:
+Release Drafter does not use GitHub-hosted token variables for a GitHub
+Enterprise Server host. It does not reuse tokens between forge types. An
+explicit API endpoint on a different origin requires an explicit `--token`.
+
+Release Drafter does not run `gh`. If GitHub CLI manages your credentials, pass
+its token to Release Drafter from the shell:
 
 ```sh
 GH_TOKEN="$(gh auth token)" release-drafter owner/repo
@@ -77,13 +76,13 @@ Options:
       --version                Show version
 ```
 
-`--publish`, `--prerelease`, and `--latest` accept an explicit `true` or
-`false`. Omitting the value is equivalent to `true`.
+`--publish`, `--prerelease`, and `--latest` accept `true` or `false`. If you omit
+the value, the CLI uses `true`.
 
-GitHub remains the default forge. Explicit Gitea, Forgejo, and GitLab selection
-defaults to `https://gitea.com`, `https://codeberg.org`, and
-`https://gitlab.com`, respectively. Pass `--server-url` for a self-hosted
-instance and `--api-url` only when its REST endpoint is nonstandard.
+GitHub is the default forge. Gitea defaults to `https://gitea.com`, Forgejo
+defaults to `https://codeberg.org`, and GitLab defaults to
+`https://gitlab.com`. Pass `--server-url` for a self-hosted instance. Pass
+`--api-url` only when its REST endpoint is nonstandard.
 
 GitLab Releases do not support drafts or prerelease semantics. For GitLab,
 `--publish false` calculates and returns the proposed release without writing
@@ -114,7 +113,7 @@ npx release-drafter owner/repo \
   --dry-run
 ```
 
-Publish a prerelease and control GitHub's latest-release flag:
+Publish a prerelease and control GitHub's latest release setting:
 
 ```sh
 npx release-drafter owner/repo \
@@ -123,7 +122,7 @@ npx release-drafter owner/repo \
   --latest false
 ```
 
-The booleans can also be explicitly disabled:
+Set each Boolean option explicitly:
 
 ```sh
 npx release-drafter owner/repo \
@@ -142,16 +141,18 @@ npx release-drafter check-pr owner/repo 123
 ```
 
 The command loads configuration from the pull request's base branch. A
-condition with `conventional` validates the title. A condition with labels
-validates current labels. If one condition defines both, title and labels must
-both match. The command ignores path predicates, and a path-only condition
-cannot pass validation. If a `pre-exclude` category excludes the pull request by
-title or label, the command reports it as skipped. An unconditional fallback
-category cannot make the pull request valid by itself.
+condition that contains `conventional` validates the title. A condition that
+contains `label` or `labels` validates the current labels. If a condition
+contains both types of rule, the title and labels must match.
+
+The command does not evaluate `path` or `paths`. A condition that contains only
+path rules cannot pass validation. A matching `pre-exclude` category skips the
+pull request. A fallback category without a `when` condition does not make the
+pull request valid.
 
 The command exits with `0` for valid or excluded pull requests and `1` for an
-invalid pull request. In JSON mode, it returns the pull request number, title, status,
-valid and skipped flags, and the number of selected categories:
+invalid pull request. In JSON mode, it returns the pull request number, title,
+status, validity, skip status, and number of selected categories:
 
 ```sh
 npx release-drafter check-pr owner/repo 123 --json
@@ -165,10 +166,10 @@ Use `--json` for scripts and CI:
 npx release-drafter owner/repo --dry-run --json >release.json
 ```
 
-JSON mode emits exactly one JSON document on stdout. Progress, warnings,
-diagnostics, and errors are written to stderr, so stdout can be parsed directly.
+JSON mode writes one JSON document to standard output. It writes progress,
+warnings, diagnostics, and errors to standard error.
 
-The document's primary fields are:
+The result contains these fields:
 
 - `action`: `create`, `update`, or `dry-run`
 - `id`: release ID, when an existing or written release is available
@@ -200,11 +201,12 @@ For example:
 }
 ```
 
-### Config targets
+### Configuration targets
 
-`--config` accepts YAML or JSON from the local filesystem or the selected forge
+`--config` accepts YAML or JSON from the local file system or the selected forge
 repository. GitHub.com and GitHub Enterprise Server blob URLs are also
-accepted. Repository paths without `.github/` are resolved beneath `.github/`.
+accepted. Release Drafter resolves repository paths without `.github/` from the
+repository's `.github/` directory.
 
 ```sh
 # Local file. The path is relative to the current working directory.
@@ -230,9 +232,9 @@ Repository targets use the form
 directory. The lexical path and the final symlink or junction target must stay
 in that directory.
 
-CLI config loading supports Release Drafter's `_extends` chains, including
+CLI configuration loading supports Release Drafter's `_extends` chains, including
 `override`, `append`, and `prepend` merge strategies. Relative inherited paths
-are resolved from the config that declares `_extends`. A repository config
+start at the configuration that declares `_extends`. A repository configuration
 cannot extend a local `file:` target.
 
 ### Forge selection and custom endpoints
@@ -254,19 +256,20 @@ npx release-drafter owner/repo \
 The CLI identifies GitHub.com and GitHub Enterprise Server endpoints that use
 the standard `/api/v3` path. Other endpoint paths, including `/api/v1`, require
 an explicit `--forge` selection. For GitHub Enterprise Cloud on `*.ghe.com`, the
-CLI uses `api.<subdomain>.ghe.com` for REST and GraphQL requests. `--graphql-url`
-is supported only for GitHub. Endpoint URLs must be absolute HTTP(S) URLs
-without credentials, query parameters, or fragments. Environment credentials
-are used only when configured API endpoints stay on the expected credential
-origin. Cross-origin endpoints require an explicit `--token`.
+CLI uses `api.<subdomain>.ghe.com` for REST and GraphQL requests.
+
+Only GitHub supports `--graphql-url`. Endpoint URLs must be absolute HTTP or
+HTTPS URLs without credentials, query parameters, or fragments. The CLI uses an
+environment token only when the configured API endpoint has the expected
+origin. A cross-origin endpoint requires an explicit `--token`.
 
 ### Exit codes
 
-| Code | Meaning                                                                                                   |
-| ---- | --------------------------------------------------------------------------------------------------------- |
-| `0`  | The command completed successfully, a pull request passed or was skipped, or help/version was displayed.  |
-| `1`  | A pull request failed validation, or authentication, config loading, network access, or execution failed. |
-| `2`  | Command-line usage was invalid, or no credential could be resolved.                                       |
+| Code | Meaning                                                                                                  |
+| ---- | -------------------------------------------------------------------------------------------------------- |
+| `0`  | The command succeeded, pull request validation passed or skipped, or the command displayed help/version. |
+| `1`  | Pull request validation, authentication, configuration loading, network access, or execution failed.     |
+| `2`  | Command-line usage was invalid or credential resolution failed.                                          |
 
 ## Programmatic API
 
@@ -280,8 +283,11 @@ import {
 
 const adapter: ForgeAdapter = createForgeAdapter({
   forge: 'github',
-  token: process.env.GITHUB_TOKEN,
+  token: process.env.GITHUB_TOKEN!,
 })
+
+// The application must implement configuration loading and normalization.
+declare function loadAndNormalizeReleaseDrafterConfig(): DraftReleaseConfig
 const config: DraftReleaseConfig = loadAndNormalizeReleaseDrafterConfig()
 
 const result = await draftRelease({
@@ -302,15 +308,16 @@ console.log(result.plan.action, result.releasePayload)
 ```
 
 `draftRelease(options)` uses the Release Drafter core to calculate a release. It
-calls the adapter when the selected operation writes a release. The public API
-is forge-neutral:
+calls the adapter when the selected operation writes a release. The API is
+forge-neutral:
 
 - `adapter` is an injected `ForgeAdapter`. It supplies repository, change, ref,
   and release operations for the forge.
 - `config` must be a fully parsed `DraftReleaseConfig`. The caller or runtime
-  must load YAML, apply config inheritance, and normalize the raw configuration.
-- `input` selects the comparison base and the operation mode: dry run, draft, or
-  publish.
+  must load YAML, apply configuration inheritance, and normalize the raw
+  configuration.
+- `input` selects the comparison base and the operation mode. The modes are dry
+  run, draft, and publish.
 - `repository` identifies the target. The package does not read the target from
   GitHub Actions state.
 - `logger` is optional. Omitting it uses a no-op logger.
@@ -322,6 +329,5 @@ created or updated release.
 Importing `release-drafter` does not start the CLI, read environment variables,
 or perform network requests.
 
-`createForgeAdapter(options)` constructs bundled `github`, `gitea`, `forgejo`,
-and `gitlab` adapters without exposing private workspace packages. The
-programmatic API always requires an explicit token.
+`createForgeAdapter(options)` creates the bundled `github`, `gitea`, `forgejo`,
+and `gitlab` adapters. The programmatic API requires an explicit token.
