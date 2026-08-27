@@ -39,6 +39,28 @@ jobs:
           config-name: release-drafter.yml # the default, loads '.github/release-drafter.yml'
 ```
 
+## Command-line interface
+
+Release Drafter also provides a CLI for local runs and automation. It requires
+Node.js 24 or later.
+
+```sh
+npx release-drafter owner/repo --dry-run
+```
+
+For GitHub.com, authenticate with `GITHUB_TOKEN` or `GH_TOKEN`. For GitHub
+Enterprise Server, use `GH_ENTERPRISE_TOKEN` or `GITHUB_ENTERPRISE_TOKEN`.
+Release Drafter does not invoke [`gh`](https://cli.github.com/). To use GitHub
+CLI credentials, pass them through `GH_TOKEN`:
+
+```sh
+GH_TOKEN="$(gh auth token)" npx release-drafter owner/repo --dry-run
+```
+
+See the [`release-drafter` package README](./packages/release-drafter/README.md)
+for installation instructions, the complete option reference, config targets,
+JSON output, and exit codes.
+
 ## Configuration
 
 The action requires a configuration file. Default location is
