@@ -7,10 +7,15 @@ the TypeScript sources and the generated JavaScript code are contained in this
 repository.
 
 - `src/`: TypeScript source code
-- `dist/`: generated JavaScript code
+- `dist/`: tracked generated JavaScript used directly by the actions
+- `packages/*/dist/`: generated, ignored workspace package output
 
-Do not review changes to `dist/` in isolation. It is expected to closely mirror
-the code generated from `src/`. CI checks that `dist/` is up to date.
+Do not review changes to the root `dist/` in isolation. The root `dist/` must
+closely match the code generated from `src/`. CI checks for drift. Do not commit
+workspace package output beneath `packages/*/dist/`.
+
+See [Workspace development](docs/CONTRIBUTING.md#workspace-development) for the
+workspace commands and package-development rules.
 
 ## Repository Structure
 
@@ -51,21 +56,21 @@ Before pushing, run the full pipeline so formatting, linting, type checks,
 tests, and generated files are all up to date:
 
 ```bash
-npm run all
+npm run ci
 ```
 
 CI will fail if generated files are stale.
 
 Biome formats every language it supports. Markdown is not one of them, so
-Prettier formats `.md` files via `npm run format:md:write` (already included in
-`npm run all`). Do not point Prettier at any other file type.
+Prettier formats `.md` files via `npm run format:docs` (already included in
+`npm run ci`). Do not point Prettier at any other file type.
 
 ## Testing
 
 Type-check with:
 
 ```bash
-npm run tsc:check
+npm run typecheck
 ```
 
 Run unit tests with:

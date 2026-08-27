@@ -17,11 +17,10 @@ by its terms.
 1. [Fork][fork] and clone the repository
 2. Configure and install the dependencies: `npm install`
 3. Create a new branch: `git checkout -b my-branch-name`
-4. Make your change, add tests, and run `npm run all` before pushing — this runs
-   formatting, linting, type checking, tests, and builds the `dist/` directory.
-   The CI pipeline enforces that the repository has no uncommitted changes after
-   these steps, so **you must run `npm run all` locally before pushing** to
-   avoid build failures.
+4. Make your change and add tests. Before you push, run `npm run ci`. This
+   command formats and lints the code, checks types, runs tests, and builds the
+   root action bundles and workspace packages. CI fails if the command changes a
+   tracked generated file.
 5. Push to your fork and [submit a pull request][pr]
 6. Give yourself a high five, and wait for your pull request to be reviewed and
    merged.
@@ -30,7 +29,7 @@ Here are a few things you can do that will increase the likelihood of your pull
 request being accepted:
 
 - Follow the [style guide][style] which is using standard. Any linting errors
-  should be shown when running `npm run all`
+  should be shown when running `npm run ci`
 - Write and update tests.
 - Keep your change as focused as possible. If there are multiple changes you
   would like to make that are not dependent upon each other, consider submitting
@@ -43,6 +42,49 @@ request being accepted:
 
 Work in Progress pull requests are also welcome to get feedback early on, or if
 there is something blocked you.
+
+## Workspace development
+
+Release Drafter uses npm workspaces. Run `npm install` from the repository root.
+npm links each workspace under `packages/*` and updates `package-lock.json`.
+
+The action entrypoints are at the repository root:
+`action.yml`, `drafter/action.yml`, `autolabeler/action.yml`, and the tracked
+bundles under `dist/actions/*/run.js`. Workspace packages provide internal code
+boundaries without changing these public action paths.
+
+Only the root `dist/` directory is tracked. The JavaScript actions run these
+bundles directly from the repository. Builds under `packages/*/dist/` are
+generated and ignored. After a workspace build, npm includes these files when it
+packs a package.
+
+Common commands:
+
+- `npm run ci` runs all repository checks and builds generated files. It
+  formats and lints the code, checks dependencies and boundaries, checks types,
+  runs tests, generates schemas, and builds action bundles and workspaces.
+  Tooling tests also run Node's `--check` against each `src/scripts/*.ts` entry.
+  This verifies that Node 24 can run the scripts without a compile step.
+- `npm run check:dependencies` uses Knip to find unused and unlisted
+  dependencies. It does not check for unused files or exports.
+- `npm run check:boundaries` uses dependency-cruiser's SWC parser to validate
+  internal imports in workspace source, generated JavaScript, and declarations.
+- `npm run check:packages` checks that the root and scoped workspaces are
+  private. It also checks that each package requires Node 24 and that only
+  `release-drafter` can be published.
+- `npm run check:package-boundaries` reports runtime imports whose packages are
+  listed only in `devDependencies`. Dependency-cruiser checks the source and
+  generated dependency graphs. The SWC check separately identifies type-only
+  imports because dependency-cruiser does not preserve that information.
+- Run `npm run build:workspaces` before `npm run check:boundaries` outside
+  `npm run ci` so generated JavaScript and declaration files are available.
+- `npm run check:clean` fails if generation leaves unstaged or untracked changes
+  relative to the staged tree.
+- `npm run build --workspaces --if-present` builds workspace packages after the
+  root Vite action bundle build.
+
+Do not add npm publication workflows or make scoped `@release-drafter/*`
+workspaces publishable unless the maintainers approve a release plan.
 
 ## Issue Management Policy
 
@@ -87,12 +129,13 @@ npm version [major | minor | patch] --ignore-scripts=false
 
 The command does the following:
 
-- Run tests (`preversion` script)
-- Bumps the version number in [package.json](../package.json) and create
-  corresponding tag
-- Stage changes for git (`version` script)
-- Commit and tag
-- Push & push tag (`postversion` script)
+- Runs tests (`preversion` script)
+- Bumps the private root version in [package.json](../package.json)
+- Synchronizes that version to every workspace manifest, including the public
+  `packages/release-drafter/package.json` facade, refreshes `package-lock.json`,
+  and stages all versioned manifests (`version` script)
+- Commits the changes and creates the corresponding tag
+- Pushes the commit and tag (`postversion` script)
 
 After pushing, the `release.yml` workflow will trigger (`on: push: tag`), and :
 

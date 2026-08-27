@@ -1,3 +1,9 @@
 * text=auto eol=lf
 
+.licenses/** -diff linguist-generated=true
+autolabeler/schema.json -diff linguist-generated=true
 dist/** -diff linguist-generated=true
+drafter/schema.json -diff linguist-generated=true
+package-lock.json linguist-generated=true
+packages/github-adapter/src/types/*.generated.ts -diff linguist-generated=true
+schema.json -diff linguist-generated=true

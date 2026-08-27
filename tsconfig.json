@@ -19,6 +19,7 @@
     "target": "ES2024",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "customConditions": ["release-drafter-source"],
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -29,5 +30,5 @@
     "skipLibCheck": true
   },
   "exclude": ["coverage", "dist", "node_modules", "**/*.generated.ts"],
-  "include": ["src"]
+  "include": ["src", "packages/*/src"]
 }

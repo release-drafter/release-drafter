@@ -1,0 +1,28 @@
+{
+  "name": "@release-drafter/rest-adapter",
+  "version": "7.7.0",
+  "description": "Shared GitHub-compatible REST adapter mechanics.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": {
+        "release-drafter-source": "./src/index.ts",
+        "default": "./dist/index.d.ts"
+      },
+      "release-drafter-source": "./src/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build --config ../../vite.workspace.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "license": "MIT",
+  "private": true
+}

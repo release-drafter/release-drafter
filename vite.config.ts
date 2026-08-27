@@ -1,9 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { builtinModules } from 'node:module'
+import { defaultClientConditions, defaultServerConditions } from 'vite'
 import { defineConfig, type Plugin } from 'vitest/config'
 
 const FROM = 'main: dist/actions/drafter/run.js'
 const TO = 'main: ../dist/actions/drafter/run.js'
+const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
 
 function syncDrafterActionYml(): Plugin {
   return {
@@ -24,6 +26,7 @@ function syncDrafterActionYml(): Plugin {
 export default defineConfig({
   plugins: [syncDrafterActionYml()],
   resolve: {
+    conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
     tsconfigPaths: true,
   },
   // GitHub Actions libraries read inputs and context from process.env at runtime.
@@ -33,14 +36,18 @@ export default defineConfig({
     client: {
       keepProcessEnv: true,
     },
+    ssr: {
+      resolve: {
+        conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultServerConditions],
+      },
+    },
   },
   build: {
     target: 'node24',
-    rollupOptions: {
+    rolldownOptions: {
       // platform: 'node' makes rolldown generate a createRequire-based __require
       // for CJS modules (e.g. undici via @actions/github) instead of the default
       // stub that throws in ESM environments without a global `require`.
-      // @ts-expect-error remove this when vite support for rolldown is stable
       platform: 'node',
       external: (id) => id.startsWith('node:') || builtinModules.includes(id),
       input: {
@@ -57,17 +64,19 @@ export default defineConfig({
     minify: false,
   },
   test: {
-    include: ['src/tests/**/*.test.ts'],
+    include: ['src/tests/**/*.test.ts', 'packages/*/src/**/*.test.ts'],
     testTimeout: 60000,
     setupFiles: ['src/tests/setup.ts'],
     coverage: {
       enabled: true,
       reporter: ['json-summary'],
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.ts', 'packages/*/src/**/*.ts'],
       exclude: [
         'src/tests/**/*.ts',
+        'packages/*/src/**/*.test.ts',
         'src/scripts/**/*',
         'src/**/*.generated.ts',
+        'packages/*/src/**/*.generated.ts',
       ],
     },
   },

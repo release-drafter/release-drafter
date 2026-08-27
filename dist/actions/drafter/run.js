@@ -471,7 +471,8 @@ var getConfig = async (configName) => {
 	const { config, contexts } = await composeConfigGet(configName, context);
 	contexts.forEach(({ filepath, ref, repo, scheme }) => {
 		const remotePath = `${repo.owner}/${repo.repo}/${filepath}${ref ? `@${ref}` : ""}`;
-		info(`Config fetched ${scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`}.`);
+		const location = scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`;
+		info(`Config fetched ${location}.`);
 	});
 	return configSchema.parse(config);
 };
@@ -523,14 +524,12 @@ var require_parse_options = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 //#endregion
 //#region node_modules/semver/internal/constants.js
 var require_constants = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var SEMVER_SPEC_VERSION = "2.0.0";
-	var MAX_LENGTH = 256;
-	var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
 	module.exports = {
-		MAX_LENGTH,
+		MAX_LENGTH: 256,
 		MAX_SAFE_COMPONENT_LENGTH: 16,
-		MAX_SAFE_BUILD_LENGTH: MAX_LENGTH - 6,
-		MAX_SAFE_INTEGER,
+		MAX_SAFE_BUILD_LENGTH: 250,
+		MAX_SAFE_INTEGER: Number.MAX_SAFE_INTEGER || 
+		/* istanbul ignore next */ 9007199254740991,
 		RELEASE_TYPES: [
 			"major",
 			"premajor",
@@ -540,7 +539,7 @@ var require_constants = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			"prepatch",
 			"prerelease"
 		],
-		SEMVER_SPEC_VERSION,
+		SEMVER_SPEC_VERSION: "2.0.0",
 		FLAG_INCLUDE_PRERELEASE: 1,
 		FLAG_LOOSE: 2
 	};
@@ -666,9 +665,10 @@ var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = class SemVer {
 		constructor(version, options) {
 			options = parseOptions(options);
-			if (version instanceof SemVer) if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) return version;
-			else version = version.version;
-			else if (typeof version !== "string") throw new TypeError(`Invalid version. Must be a string. Got type "${typeof version}".`);
+			if (version instanceof SemVer) {
+				if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) return version;
+				else version = version.version;
+			} else if (typeof version !== "string") throw new TypeError(`Invalid version. Must be a string. Got type "${typeof version}".`);
 			if (version.length > MAX_LENGTH) throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
 			debug("SemVer", version, options);
 			this.options = options;
@@ -925,8 +925,10 @@ var require_comparator = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		}
 		constructor(comp, options) {
 			options = parseOptions(options);
-			if (comp instanceof Comparator) if (comp.loose === !!options.loose) return comp;
-			else comp = comp.value;
+			if (comp instanceof Comparator) {
+				if (comp.loose === !!options.loose) return comp;
+				else comp = comp.value;
+			}
 			comp = comp.trim().split(/\s+/).join(" ");
 			debug("comparator", comp, options);
 			this.options = options;
@@ -992,8 +994,10 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = class Range {
 		constructor(range, options) {
 			options = parseOptions(options);
-			if (range instanceof Range) if (range.loose === !!options.loose && range.includePrerelease === !!options.includePrerelease) return range;
-			else return new Range(range.raw, options);
+			if (range instanceof Range) {
+				if (range.loose === !!options.loose && range.includePrerelease === !!options.includePrerelease) return range;
+				else return new Range(range.raw, options);
+			}
 			if (range instanceof Comparator) {
 				this.raw = range.value;
 				this.set = [[range]];
@@ -1163,18 +1167,21 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			let ret;
 			if (isX(M)) ret = "";
 			else if (isX(m)) ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
-			else if (isX(p)) if (M === "0") ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
-			else ret = `>=${M}.${m}.0${z} <${+M + 1}.0.0-0`;
-			else if (pr) {
+			else if (isX(p)) {
+				if (M === "0") ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
+				else ret = `>=${M}.${m}.0${z} <${+M + 1}.0.0-0`;
+			} else if (pr) {
 				debug("replaceCaret pr", pr);
-				if (M === "0") if (m === "0") ret = `>=${M}.${m}.${p}-${pr} <${M}.${m}.${+p + 1}-0`;
-				else ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
-				else ret = `>=${M}.${m}.${p}-${pr} <${+M + 1}.0.0-0`;
+				if (M === "0") {
+					if (m === "0") ret = `>=${M}.${m}.${p}-${pr} <${M}.${m}.${+p + 1}-0`;
+					else ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
+				} else ret = `>=${M}.${m}.${p}-${pr} <${+M + 1}.0.0-0`;
 			} else {
 				debug("no pr");
-				if (M === "0") if (m === "0") ret = `>=${M}.${m}.${p} <${M}.${m}.${+p + 1}-0`;
-				else ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
-				else ret = `>=${M}.${m}.${p} <${+M + 1}.0.0-0`;
+				if (M === "0") {
+					if (m === "0") ret = `>=${M}.${m}.${p} <${M}.${m}.${+p + 1}-0`;
+					else ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
+				} else ret = `>=${M}.${m}.${p} <${+M + 1}.0.0-0`;
 			}
 			debug("caret return", ret);
 			return ret;
@@ -1196,9 +1203,10 @@ var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 			const anyX = xp;
 			if (gtlt === "=" && anyX) gtlt = "";
 			pr = options.includePrerelease ? "-0" : "";
-			if (xM) if (gtlt === ">" || gtlt === "<") ret = "<0.0.0-0";
-			else ret = "*";
-			else if (gtlt && anyX) {
+			if (xM) {
+				if (gtlt === ">" || gtlt === "<") ret = "<0.0.0-0";
+				else ret = "*";
+			} else if (gtlt && anyX) {
 				if (xm) m = 0;
 				p = 0;
 				if (gtlt === ">") {
@@ -2040,8 +2048,10 @@ var categorizePullRequests = (params) => {
 				if (category.exclusive) break;
 			}
 		}
-		if (!matchedAnyCategory) if (uncategorizedCategoryIndex === -1) uncategorizedPullRequests.push(pullRequest);
-		else categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(pullRequest);
+		if (!matchedAnyCategory) {
+			if (uncategorizedCategoryIndex === -1) uncategorizedPullRequests.push(pullRequest);
+			else categorizedPullRequests[uncategorizedCategoryIndex].pullRequests.push(pullRequest);
+		}
 	}
 	return [uncategorizedPullRequests, categorizedPullRequests];
 };
@@ -2143,8 +2153,10 @@ var ReplacePattern = class ReplacePattern {
 		else this._state = new DynamicPiecesReplacePattern(pieces);
 	}
 	buildReplaceString(matches, preserveCase) {
-		if (this._state.kind === 0) if (preserveCase) return buildReplaceStringWithCasePreserved(matches, this._state.staticValue);
-		else return this._state.staticValue;
+		if (this._state.kind === 0) {
+			if (preserveCase) return buildReplaceStringWithCasePreserved(matches, this._state.staticValue);
+			else return this._state.staticValue;
+		}
 		let result = "";
 		for (let i = 0, len = this._state.pieces.length; i < len; i++) {
 			const piece = this._state.pieces[i];
@@ -2314,7 +2326,6 @@ function parseReplaceString(replaceString) {
 					result.emitUnchanged(i - 1);
 					result.emitStatic("", i + 1);
 					caseOps.push(String.fromCharCode(nextChCode));
-					break;
 			}
 			continue;
 		}
@@ -3173,7 +3184,8 @@ var findPreviousReleases = async (params) => {
 //#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-commits-in-comparison.ts
 var findCommitsInComparison = async (params) => {
-	const data = await paginateGraphql(getOctokit().graphql, FindCommitsInComparisonDocument, params);
+	const octokit = getOctokit();
+	const data = await paginateGraphql(octokit.graphql, FindCommitsInComparisonDocument, params);
 	if (!data.repository?.ref?.compare) throw new Error("Query returned an unexpected result: ref or comparison not found");
 	return (data.repository.ref.compare.commits.nodes || []).filter((commit) => commit != null);
 };

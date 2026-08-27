@@ -7,7 +7,6 @@
 <p align="center">Drafts your next release notes as pull requests are merged into your branch(es).</p>
 
 ![CI](https://github.com/release-drafter/release-drafter/actions/workflows/ci.yml/badge.svg)
-![CodeQL](https://github.com/release-drafter/release-drafter/actions/workflows/codeql-analysis.yml/badge.svg)
 
 ## Usage
 
@@ -741,7 +740,7 @@ Third-party contributions are welcome! 🙏🏼 See
 
 > [!IMPORTANT]
 >
-> Before pushing, run `npm run all` to format, lint, type-check, test, and
+> Before pushing, run `npm run ci` to format, lint, type-check, test, and
 > regenerate all build artifacts. The CI pipeline enforces that no uncommitted
 > changes remain after these steps.
 
