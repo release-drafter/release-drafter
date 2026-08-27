@@ -56,6 +56,10 @@ packages/*/dist/
 # Generated from the repository license cache for the public npm package.
 packages/release-drafter/THIRD_PARTY_NOTICES
 
+# Source must override global ignore files that commonly exclude Release/.
+!packages/core/src/release/
+!packages/core/src/release/**
+
 # Optional npm cache directory
 .npm
 

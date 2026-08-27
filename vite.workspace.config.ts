@@ -2,11 +2,8 @@ import { readFileSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { dirname, resolve } from 'node:path'
 import { dts } from 'rolldown-plugin-dts'
-import {
-  defaultClientConditions,
-  defaultServerConditions,
-  defineConfig,
-} from 'vite'
+import { defaultClientConditions, defaultServerConditions } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
 const packageJson = process.env.npm_package_json
@@ -62,6 +59,16 @@ export default defineConfig({
         id.startsWith('node:') ||
         builtinModules.includes(id) ||
         isWorkspaceRuntimeDependency(id),
+    },
+  },
+  test: {
+    include: ['src/**/*.test.ts'],
+    testTimeout: 60000,
+    coverage: {
+      enabled: true,
+      reporter: ['json-summary'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/**/*.generated.ts'],
     },
   },
 })
