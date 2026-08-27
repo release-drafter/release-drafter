@@ -126,11 +126,23 @@ describe.sequential('release-drafter packed programmatic facade', () => {
   })
 
   it('bundles private runtime implementation without forbidden imports or loaders', () => {
+    const moduleSpecifiers = [
+      ...javascript.matchAll(
+        /\b(?:from|import)\s*(?:\(\s*)?(['"])([^'"]+)\1/gu,
+      ),
+    ].map((match) => match[2])
+
     expect(javascript).toContain('draftRelease')
+    expect(
+      moduleSpecifiers.filter((specifier) => !specifier?.startsWith('node:')),
+    ).toEqual([])
     expect(javascript).not.toMatch(/@release-drafter\/|@actions\//)
     expect(javascript).not.toMatch(/gitbeaker/i)
     expect(javascript).not.toMatch(
-      /\bcreateRequire\b|\b__commonJS\w*\b|\b__require\b|\brequire\s*\(/,
+      /node_modules[\\/]semver[\\/]|node-semver|MAX_SAFE_(?:COMPONENT|BUILD)_LENGTH/i,
+    )
+    expect(javascript).not.toMatch(
+      /\bcreateRequire\b|\b__commonJS\w*\b|\b__require\b|\brequire\s*\(|\bmodule\.exports\b/,
     )
   })
 

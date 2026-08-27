@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import type { ReleaseType } from 'semver'
+import { type IncrementType, normalize } from 'verkit'
 import type { Config, ExclusiveInput } from '../../config/index.ts'
 import type { findPreviousReleases } from '../find-previous-releases/index.ts'
 import type { resolveVersionKeyIncrement } from './resolve-version-increment.ts'
@@ -9,6 +9,8 @@ type Release = Exclude<
   Awaited<ReturnType<typeof findPreviousReleases>>['lastRelease'],
   undefined
 >
+
+type ReleaseType = Exclude<IncrementType, 'release'>
 
 export const getVersionInfo = (params: {
   lastRelease: Pick<Release, 'tag_name' | 'name'> | undefined
@@ -42,7 +44,7 @@ export const getVersionInfo = (params: {
     preReleaseIdentifier: config['prerelease-identifier'],
   })
   core.info(
-    `Parsed version from last release: ${versionFromLastRelease.version?.format() || 'none'}.`,
+    `Parsed version from last release: ${normalize(versionFromLastRelease.version ?? '') || 'none'}.`,
   )
 
   core.info(`Coerce and parse versions from input...`)
@@ -54,7 +56,7 @@ export const getVersionInfo = (params: {
     },
   )
   core.info(
-    `Parsed version from input: ${versionFromInput.version?.format() || 'none'}.`,
+    `Parsed version from input: ${normalize(versionFromInput.version ?? '') || 'none'}.`,
   )
 
   let referenceVersion: VersionDescriptor
@@ -82,7 +84,7 @@ export const getVersionInfo = (params: {
         //    - 1.2.3-beta.1 --(premajor)--> ??????
         if (_localIncrement !== 'prerelease') {
           core.info(
-            `versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${referenceVersion.version?.format() || 'none'}). The version will be incremented as a prerelease instead.`,
+            `versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${normalize(referenceVersion.version ?? '') || 'none'}). The version will be incremented as a prerelease instead.`,
           )
           _localIncrement = 'prerelease'
         }
