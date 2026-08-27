@@ -10,7 +10,7 @@ import {
 } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
@@ -28,14 +28,31 @@ type CommandResult = {
 const repositoryRoot = resolve(import.meta.dirname, '../../..')
 const packageDirectory = join(repositoryRoot, 'packages/release-drafter')
 const typescriptCli = join(repositoryRoot, 'node_modules/typescript/lib/tsc.js')
+const npmCli = resolve(
+  repositoryRoot,
+  process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
+)
+const npxCli = join(dirname(npmCli), 'npx-cli.js')
 const expectedPackageFiles = [
   'LICENSE',
   'README.md',
+  'THIRD_PARTY_NOTICES',
   'dist/chunks/src-[content-hash].js',
   'dist/cli.js',
   'dist/index.d.ts',
   'dist/index.js',
   'package.json',
+]
+const expectedBundledDependencyNotices = [
+  'balanced-match',
+  'brace-expansion',
+  'compare-versions',
+  'conventional-commits-parser',
+  'escape-string-regexp',
+  'minimatch',
+  'verkit',
+  'yaml',
+  'zod',
 ]
 const approvedRuntimeDependencies = {
   '@gitbeaker/rest': '43.8.0',
@@ -194,11 +211,7 @@ const expectExit = (result: CommandResult, status: number): void => {
 }
 
 const runNpm = (args: string[], cwd = repositoryRoot): CommandResult =>
-  runNode(
-    [process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js', ...args],
-    cwd,
-    packageManagerEnvironment(),
-  )
+  runNode([npmCli, ...args], cwd, packageManagerEnvironment())
 
 const expectSuccessfulNpm = (args: string[], cwd = repositoryRoot): string => {
   const result = runNpm(args, cwd)
@@ -222,10 +235,14 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
   let installedCli: string
   let manifest: {
     bin?: Record<string, string> | string
+    bugs?: { url?: string } | string
     dependencies?: Record<string, string>
     exports?: { '.'?: { import?: string; types?: string } | string }
+    homepage?: string
+    keywords?: string[]
     license?: string
     name?: string
+    repository?: { type?: string; url?: string } | string
     type?: string
     version?: string
   }
@@ -288,13 +305,23 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     rmSync(temporaryDirectory, { force: true, recursive: true })
   })
 
-  it('ships exactly the public package inventory with the ISC license', () => {
+  it('ships exactly the public package inventory with its license notices', () => {
     expect(
       packResult.files.map(({ path }) => normalizePackageFile(path)).sort(),
     ).toEqual(expectedPackageFiles)
     expect(
       readFileSync(join(installedPackageDirectory, 'LICENSE'), 'utf8'),
     ).toBe(readFileSync(join(repositoryRoot, 'LICENSE'), 'utf8'))
+    const thirdPartyNotices = readFileSync(
+      join(installedPackageDirectory, 'THIRD_PARTY_NOTICES'),
+      'utf8',
+    )
+    expect(thirdPartyNotices).toBe(
+      readFileSync(join(packageDirectory, 'THIRD_PARTY_NOTICES'), 'utf8'),
+    )
+    for (const dependency of expectedBundledDependencyNotices) {
+      expect(thirdPartyNotices).toContain(`\n${dependency}\n`)
+    }
     const installedPackageFiles = listFiles(installedPackageDirectory)
       .map((path) => path.slice(installedPackageDirectory.length + 1))
       .filter((path) => !path.startsWith('node_modules/'))
@@ -305,7 +332,7 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
 
   it('publishes the ESM API, executable CLI, and approved public dependencies', () => {
     expect(manifest).toMatchObject({
-      bin: { 'release-drafter': './dist/cli.js' },
+      bin: { 'release-drafter': 'dist/cli.js' },
       exports: {
         '.': {
           import: './dist/index.js',
@@ -315,8 +342,17 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
           },
         },
       },
+      bugs: {
+        url: 'https://github.com/release-drafter/release-drafter/issues',
+      },
+      homepage: 'https://github.com/release-drafter/release-drafter',
+      keywords: ['actions', 'release', 'release-notes', 'release-automation'],
       license: 'ISC',
       name: 'release-drafter',
+      repository: {
+        type: 'git',
+        url: 'git+https://github.com/release-drafter/release-drafter.git',
+      },
       type: 'module',
     })
     expect(manifest.dependencies).toEqual(approvedRuntimeDependencies)
@@ -449,20 +485,35 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     expect(imported.stdout, formatResult(imported)).toBe('imported\n')
   })
 
-  it('constructs all bundled forge adapters without private workspace packages', () => {
+  it('constructs and exercises all bundled forge adapters without private workspace packages', () => {
     writeFileSync(
       join(consumerDirectory, 'construct-adapters.mjs'),
       `
       import { createForgeAdapter } from 'release-drafter'
 
-      const results = ['github', 'gitea', 'forgejo', 'gitlab'].map((forge) => {
-        const adapter = createForgeAdapter({
-          forge,
-          token: 'not-a-real-token',
-          fetch: async () => new Response('{}', { status: 200 }),
-        })
-        return [forge, adapter.capabilities.draftReleases]
-      })
+      const repository = {
+        owner: 'release-drafter',
+        name: 'release-drafter',
+        serverUrl: 'https://example.test',
+      }
+      const results = await Promise.all(
+        ['github', 'gitea', 'forgejo', 'gitlab'].map(async (forge) => {
+          const adapter = createForgeAdapter({
+            forge,
+            token: 'not-a-real-token',
+            fetch: async () =>
+              new Response('[]', {
+                status: 200,
+                headers: {
+                  'content-type': 'application/json',
+                  'x-total': '0',
+                },
+              }),
+          })
+          const releases = await adapter.listReleases({ repository })
+          return [forge, adapter.capabilities.draftReleases, releases.length]
+        }),
+      )
       process.stdout.write(JSON.stringify(results) + '\\n')
     `,
     )
@@ -471,7 +522,7 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
     expectExit(constructed, 0)
     expect(constructed.stderr, formatResult(constructed)).toBe('')
     expect(constructed.stdout, formatResult(constructed)).toBe(
-      '[["github",true],["gitea",true],["forgejo",true],["gitlab",false]]\n',
+      '[["github",true,0],["gitea",true,0],["forgejo",true,0],["gitlab",false,0]]\n',
     )
   })
 
@@ -565,6 +616,30 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
       installedCli,
       ['--version'],
       consumerDirectory,
+    )
+    expectExit(version, 0)
+    expect(version.stderr, formatResult(version)).toBe('')
+    expect(version.stdout, formatResult(version)).toBe(
+      `release-drafter ${manifest.version}\n`,
+    )
+    expect(containsJsonOutput(version.stdout)).toBe(false)
+  })
+
+  it('resolves the packed-installed CLI through actual offline npx execution', () => {
+    const npxHome = join(temporaryDirectory, 'npx-home')
+    const npxCache = join(temporaryDirectory, 'npx-cache')
+    mkdirSync(npxHome)
+    mkdirSync(npxCache)
+    const version = runNode(
+      [npxCli, '--offline', '--no-install', 'release-drafter', '--version'],
+      consumerDirectory,
+      {
+        ...isolatedEnvironment(),
+        HOME: npxHome,
+        npm_config_cache: npxCache,
+        npm_config_loglevel: 'error',
+        npm_config_yes: 'false',
+      },
     )
     expectExit(version, 0)
     expect(version.stderr, formatResult(version)).toBe('')

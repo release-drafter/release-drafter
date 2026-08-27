@@ -72,6 +72,10 @@ Common commands:
 - `npm run check:packages` checks that the root and scoped workspaces are
   private. It also checks that each package requires Node 24 and that only
   `release-drafter` can be published.
+- `npm run check:package-readiness` builds and packs the public
+  `release-drafter` package. It runs the ESM, NodeNext, CLI, and isolated `npx`
+  consumer contracts. It checks the package contents and metadata, then runs an
+  offline `npm publish --dry-run` against the same tarball.
 - `npm run check:package-boundaries` reports runtime imports whose packages are
   listed only in `devDependencies`. Dependency-cruiser checks the source and
   generated dependency graphs. The SWC check separately identifies type-only
@@ -85,7 +89,7 @@ Common commands:
 
 ### Forge conformance tests
 
-`npm run test:run` and `npm run all` do not start containers. Use these commands
+`npm run test:run` and `npm run ci` do not start containers. Use these commands
 to run Docker-backed forge conformance tests:
 
 - `npm run test:conformance:gitea` runs the Gitea image.
@@ -121,7 +125,12 @@ Some forge fixtures also verify default-branch and repository configuration
 loading. These commands require a working Docker-compatible daemon. They fail if
 the daemon is not available.
 
-Do not add npm publication workflows or make scoped `@release-drafter/*`
+The package-readiness workflow checks packaging only. It receives no
+credentials and runs npm in offline and dry-run modes. It disables provenance
+and grants only `contents: read`. It does not configure a registry or trusted
+publisher.
+
+Do not add a live npm publication step or make scoped `@release-drafter/*`
 workspaces publishable unless the maintainers approve a release plan.
 
 ## Issue Management Policy
