@@ -3319,6 +3319,49 @@ export type IssueFieldSingleSelectOptionInput = {
   priority: Scalars['Int']['input'];
 };
 
+/** Updates an issue field using its user-facing name. */
+export type IssueFieldUpdateInput = {
+  /** The name of the issue field. */
+  fieldName: Scalars['String']['input'];
+  /** The operation to perform. */
+  operation: IssueFieldUpdateOperation;
+  /** The value or comma-separated option names for the operation. */
+  value?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The operation to perform on an issue field value. */
+export type IssueFieldUpdateOperation =
+  /** Sets a scalar field or adds options to a multi-select field. */
+  | 'ADD'
+  /** Clears the field value. */
+  | 'CLEAR'
+  /** Removes options from a multi-select field. */
+  | 'REMOVE'
+  /** Replaces the field value. */
+  | 'SET';
+
+/** A filter for matching an issue field value. Exactly one value argument should be provided. */
+export type IssueFieldValueFilter = {
+  /** Matches a date issue field value (YYYY-MM-DD). */
+  dateValue?: InputMaybe<Scalars['String']['input']>;
+  /** The ID of the issue field to filter by. Exactly one of `fieldId` or `fieldName` must be provided. */
+  fieldId?: InputMaybe<Scalars['ID']['input']>;
+  /** The name of the issue field to filter by. Exactly one of `fieldId` or `fieldName` must be provided. */
+  fieldName?: InputMaybe<Scalars['String']['input']>;
+  /** Matches issues containing all of the multi-select issue field option IDs. */
+  multiSelectOptionIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  /** Matches issues containing all of the multi-select issue field option names. */
+  multiSelectOptionValues?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Matches a numeric issue field value. */
+  numberValue?: InputMaybe<Scalars['Float']['input']>;
+  /** Matches a single-select issue field option by ID. */
+  singleSelectOptionId?: InputMaybe<Scalars['ID']['input']>;
+  /** Matches a single-select issue field option by name. */
+  singleSelectOptionValue?: InputMaybe<Scalars['String']['input']>;
+  /** Matches a text issue field value. */
+  textValue?: InputMaybe<Scalars['String']['input']>;
+};
+
 /** The visibility of an issue field. */
 export type IssueFieldVisibility =
   /** All */
@@ -3335,6 +3378,8 @@ export type IssueFilters = {
   assignee?: InputMaybe<Scalars['String']['input']>;
   /** List issues created by given name. */
   createdBy?: InputMaybe<Scalars['String']['input']>;
+  /** List issues where each supplied issue field value filter matches. */
+  issueFieldValues?: InputMaybe<Array<IssueFieldValueFilter>>;
   /** List issues where the list of label names exist on the issue. */
   labels?: InputMaybe<Array<Scalars['String']['input']>>;
   /** List issues where the given name is mentioned in the issue. */
@@ -4899,9 +4944,7 @@ export type ProofOfPresenceRequirement =
   /** Proof of presence is not required. */
   | 'NO_POLICY'
   /** Members must complete a fresh re-authentication against the enterprise identity provider. */
-  | 'REAUTH'
-  /** Members must satisfy a phishing-resistant security key re-authentication (Microsoft Entra only). */
-  | 'SECURITY_KEY';
+  | 'REAUTH';
 
 /** A property that must match */
 export type PropertyTargetDefinitionInput = {
@@ -8058,6 +8101,8 @@ export type UpdateIssueInput = {
   clientMutationId?: InputMaybe<Scalars['String']['input']>;
   /** The ID of the Issue to modify. */
   id: Scalars['ID']['input'];
+  /** Issue field updates resolved by field and option names. */
+  issueFieldUpdates?: InputMaybe<Array<IssueFieldUpdateInput>>;
   /** The Issue Type to set on this issue, with optional rationale. Mutually exclusive with `issueTypeId`. */
   issueType?: InputMaybe<IssueTypeUpdateInput>;
   /** The ID of the Issue Type for this issue. */
