@@ -734,6 +734,12 @@ In GitHub Actions, that client uses the runtime API base URL from
 `github.com`-specific configuration, assuming the required REST and GraphQL APIs
 are available on the instance.
 
+## Adopters
+
+A non-exhaustive list of the projects and organizations using Release Drafter
+lives in [ADOPTERS.md](ADOPTERS.md). If you use Release Drafter, please add
+yourself.
+
 ## Contributing
 
 Third-party contributions are welcome! 🙏🏼 See
