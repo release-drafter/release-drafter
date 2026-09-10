@@ -1,0 +1,69 @@
+{
+  "name": "release-drafter",
+  "version": "7.7.0",
+  "description": "Programmatic API and command-line interface for Release Drafter.",
+  "type": "module",
+  "homepage": "https://github.com/release-drafter/release-drafter",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/release-drafter/release-drafter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/release-drafter/release-drafter/issues"
+  },
+  "keywords": [
+    "actions",
+    "release",
+    "release-notes",
+    "release-automation"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES"
+  ],
+  "bin": {
+    "release-drafter": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": {
+        "release-drafter-source": "./src/index.ts",
+        "default": "./dist/index.d.ts"
+      },
+      "release-drafter-source": "./src/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build --config ../../vite.workspace.config.ts && node ../../src/scripts/third-party-notices.ts",
+    "prepack": "node ../../src/scripts/third-party-notices.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts"
+  },
+  "dependencies": {
+    "@gitbeaker/rest": "43.8.0",
+    "@octokit/core": "^7.0.6",
+    "@octokit/plugin-paginate-graphql": "^6.0.0",
+    "@octokit/plugin-paginate-rest": "^14.0.0",
+    "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
+    "@octokit/plugin-retry": "^8.1.0",
+    "undici": "^7.29.0"
+  },
+  "devDependencies": {
+    "@release-drafter/cli": "*",
+    "@release-drafter/core": "*",
+    "@release-drafter/forgejo-adapter": "*",
+    "@release-drafter/gitea-adapter": "*",
+    "@release-drafter/github-adapter": "*",
+    "@release-drafter/gitlab-adapter": "*",
+    "vitest": "^4.1.10"
+  },
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  }
+}

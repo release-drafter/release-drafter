@@ -1,0 +1,73 @@
+{
+  "name": "@release-drafter/gh-actions",
+  "version": "7.7.0",
+  "description": "Private runtime composition for Release Drafter GitHub Actions.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": {
+        "release-drafter-source": "./src/index.ts",
+        "default": "./dist/index.d.ts"
+      },
+      "release-drafter-source": "./src/index.ts",
+      "import": "./dist/index.js"
+    },
+    "./drafter": {
+      "types": {
+        "release-drafter-source": "./src/drafter/index.ts",
+        "default": "./dist/drafter/index.d.ts"
+      },
+      "release-drafter-source": "./src/drafter/index.ts",
+      "import": "./dist/drafter/index.js"
+    },
+    "./autolabeler": {
+      "types": {
+        "release-drafter-source": "./src/autolabeler/index.ts",
+        "default": "./dist/autolabeler/index.d.ts"
+      },
+      "release-drafter-source": "./src/autolabeler/index.ts",
+      "import": "./dist/autolabeler/index.js"
+    },
+    "./check-pr": {
+      "types": {
+        "release-drafter-source": "./src/check-pr/index.ts",
+        "default": "./dist/check-pr/index.d.ts"
+      },
+      "release-drafter-source": "./src/check-pr/index.ts",
+      "import": "./dist/check-pr/index.js"
+    },
+    "./config": {
+      "types": {
+        "release-drafter-source": "./src/config.ts",
+        "default": "./dist/config.d.ts"
+      },
+      "release-drafter-source": "./src/config.ts",
+      "import": "./dist/config.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build --config ../../vite.workspace.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "@release-drafter/autolabeler": "*",
+    "@release-drafter/core": "*",
+    "@release-drafter/github-adapter": "*",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@octokit/webhooks-types": "^7.6.1",
+    "vitest": "^4.1.10"
+  },
+  "license": "MIT",
+  "private": true
+}

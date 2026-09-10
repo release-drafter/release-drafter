@@ -1,0 +1,36 @@
+{
+  "name": "@release-drafter/gitlab-adapter",
+  "version": "7.7.0",
+  "description": "Private GitLab forge adapter for Release Drafter.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": {
+        "release-drafter-source": "./src/index.ts",
+        "default": "./dist/index.d.ts"
+      },
+      "release-drafter-source": "./src/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build --config ../../vite.workspace.config.ts",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@gitbeaker/rest": "43.8.0",
+    "@release-drafter/core": "*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
+  "license": "MIT",
+  "private": true
+}

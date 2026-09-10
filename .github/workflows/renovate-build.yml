@@ -24,7 +24,7 @@ jobs:
       - run: npm ci
 
       - name: Run all checks and rebuild artifacts
-        run: npm run all
+        run: npm run ci
 
       - name: Commit updated artifacts
         run: |

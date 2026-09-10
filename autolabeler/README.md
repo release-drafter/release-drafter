@@ -1,12 +1,12 @@
 # Autolabeler action
 
-This folder only serves as an alias when users reference the action, which
-requires the presence of the [`action.yml`](./action.yml) file
+This directory contains the public action entrypoint for Autolabeler. Use the
+repository root to run the Drafter action.
 
 ```yaml
 steps:
-  # runs autolabeler
-  - uses: release-drafter/release-drafter/autolabeler@latest
-  # ⚠️ targets root `action.yaml` - runs drafter
-  - uses: release-drafter/release-drafter@latest
+  # Runs Autolabeler.
+  - uses: release-drafter/release-drafter/autolabeler@v7
+  # Runs Drafter.
+  - uses: release-drafter/release-drafter@v7
 ```

@@ -2,74 +2,153 @@
 
 [fork]: https://github.com/release-drafter/release-drafter/fork
 [pr]: https://github.com/release-drafter/release-drafter/compare
-[style]: https://standardjs.com/
 [code-of-conduct]: CODE_OF_CONDUCT.md
 
-Hi there! We are thrilled that you'd like to contribute to this project. Your
-help is essential for keeping it great.
+Thank you for contributing to Release Drafter.
 
-Please note that this project is released with a [Contributor Code of
-Conduct][code-of-conduct]. By participating in this project you agree to abide
-by its terms.
+This project uses a [Contributor Code of Conduct][code-of-conduct]. All
+contributors must follow it.
 
 ## Submitting a pull request
 
-1. [Fork][fork] and clone the repository
-2. Configure and install the dependencies: `npm install`
-3. Create a new branch: `git checkout -b my-branch-name`
-4. Make your change, add tests, and run `npm run all` before pushing — this runs
-   formatting, linting, type checking, tests, and builds the `dist/` directory.
-   The CI pipeline enforces that the repository has no uncommitted changes after
-   these steps, so **you must run `npm run all` locally before pushing** to
-   avoid build failures.
-5. Push to your fork and [submit a pull request][pr]
-6. Give yourself a high five, and wait for your pull request to be reviewed and
-   merged.
+1. [Fork][fork] and clone the repository.
+2. Install the dependencies with `npm install`.
+3. Create a branch with `git checkout -b my-branch-name`.
+4. Make your change and add tests. Before you push, run `npm run ci`. This
+   command formats and lints the code, checks types, runs tests, and builds the
+   root action bundles and workspace packages. CI fails if the command changes a
+   tracked generated file.
+5. Push the branch to your fork and [submit a pull request][pr].
 
-Here are a few things you can do that will increase the likelihood of your pull
-request being accepted:
+Follow these rules when you prepare a pull request:
 
-- Follow the [style guide][style] which is using standard. Any linting errors
-  should be shown when running `npm run all`
+- Run `npm run ci` and fix each reported error.
 - Write and update tests.
-- Keep your change as focused as possible. If there are multiple changes you
-  would like to make that are not dependent upon each other, consider submitting
-  them as separate pull requests.
+- Keep the change focused. Submit independent changes as separate pull requests.
 - Use a
   [conventional pull request title](https://www.conventionalcommits.org/en/v1.0.0/),
   such as `feat: add category matching` or `fix(config): handle missing input`.
-  Release Drafter now uses the pull request title to categorize changes and
-  determine version bumps.
+  Release Drafter uses the pull request title to categorize changes and select
+  the version increment.
 
-Work in Progress pull requests are also welcome to get feedback early on, or if
-there is something blocked you.
+Open a draft pull request to request early feedback or report a blocker.
 
-## Issue Management Policy
+## Workspace development
 
-To maintain project health and keep issues actionable, we automatically manage
-stale issues using the following policy:
+Release Drafter uses npm workspaces. Run `npm install` from the repository root.
+npm links each workspace under `packages/*` and updates `package-lock.json`.
 
-**Stale Issue Closure**: Issues labeled with `info-needed` that remain inactive
-for 30 days will be automatically marked as stale. After an additional 7-day
-grace period, the issue will be closed if no response is provided.
+The public action entrypoints are `action.yml`, `drafter/action.yml`,
+`autolabeler/action.yml`, and `check-pr/action.yml`. The tracked bundles are
+under `dist/actions/*/run.js`. Workspace packages provide internal code
+boundaries without changing the public action paths.
 
-When an issue is marked as stale, we'll post a comment asking you to provide the
-requested information. If you respond with the information or show continued
-interest, the stale label will be removed and the issue will remain open.
+Only the root `dist/` directory is tracked. GitHub runs these JavaScript bundles
+directly from the repository. Builds generate `packages/*/dist/`, but Git
+ignores these directories. npm includes the generated files when it packs a
+workspace package.
 
-This policy helps us:
+Common commands:
 
-- Keep the issue tracker focused on active issues
-- Encourage timely responses to information requests
-- Ensure discussions don't get lost in an ever-growing issue backlog
+- `npm run ci` runs all repository checks and builds generated files. It
+  formats and lints the code, checks dependencies, package boundaries, and
+  types, runs tests, generates schemas, and builds action bundles and workspace
+  packages.
+  Tooling tests also run Node's `--check` against each `src/scripts/*.ts` entry.
+  This verifies that Node 24 can run the scripts without a compile step.
+- `npm run check:dependencies` uses Knip to find unused files, unused
+  dependencies, and unlisted dependencies. It does not report unused exports.
+- `npm run check:boundaries` uses dependency-cruiser's SWC parser to validate
+  internal imports in workspace source, generated JavaScript, and declarations.
+- `npm run check:packages` checks package publication settings and the required
+  Node.js version. Only the `release-drafter` package can be published.
+- `npm run test:package-readiness` builds and packs the public
+  `release-drafter` package. It runs the ESM, NodeNext, CLI, and isolated `npx`
+  consumer contracts. It checks the package contents and metadata, then runs an
+  offline `npm publish --dry-run` against the same tarball.
+- `npm run check:package-boundaries` reports runtime imports whose packages are
+  listed only in `devDependencies`. Dependency-cruiser checks the source and
+  generated dependency graphs. The SWC check separately identifies type-only
+  imports because dependency-cruiser does not preserve that information.
+- Run `npm run build:workspaces` before `npm run check:boundaries` outside
+  `npm run ci` so generated JavaScript and declaration files are available.
+- `npm run check:clean` fails if generation leaves unstaged or untracked changes
+  relative to the staged tree.
+- `npm run build --workspaces --if-present` builds workspace packages after the
+  root Vite action bundle build.
 
-If your issue was closed due to inactivity but you still have relevant
-information or context, please feel free to reopen it by commenting on the issue
-or opening a new one.
+### Forge conformance tests
+
+`npm run test:run` and `npm run ci` do not start containers. Use these commands
+to run Docker-backed forge conformance tests:
+
+- `npm run test:conformance:gitea` runs the Gitea image.
+- `npm run test:conformance:forgejo` runs the Forgejo image.
+- `npm run test:conformance:gitea-forgejo` runs both images through the shared
+  `ForgeAdapter` contract.
+- `npm run test:conformance:gitlab` runs the GitLab suite serially and uses
+  extended startup and teardown timeouts.
+
+The CI matrix tests Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
+redacted container logs and fixture metadata.
+
+The forge conformance workflow runs the matrix in these cases:
+
+- A pull request changes one of these paths:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/forge-conformance.yml`
+  - `.node-version`, `package.json`, or `package-lock.json`
+  - Root TypeScript, Vite, or Vitest configuration files
+  - `src/**`
+  - Package source, manifests, or TypeScript configuration files
+- A maintainer applies the exact `ci:forge-conformance` label. This label skips
+  changed-file detection.
+- A push to `main` changes one of the same paths.
+
+Other pull request label events use changed file detection. The workflow also
+runs the matrix if the base commit is missing or invalid, or if Git fails.
+
+The scope job runs the checked-in TypeScript router with the repository's pinned
+Node version. It passes fixed pathspec arguments directly to Git without shell
+interpolation. The final gate also uses checked-in TypeScript and runs on
+Node.js 24.
+
+The shared contract tests the public API, normalized release listing, change
+discovery, commitish resolution, release creation, and release updates.
+Some forge fixtures also verify default-branch and repository configuration
+loading. These commands require a working Docker-compatible daemon. They fail if
+the daemon is not available.
+
+The package-readiness workflow checks packaging only. It receives no
+credentials and runs npm in offline and dry-run modes. It disables provenance
+and grants only `contents: read`. It does not configure a registry or trusted
+publisher.
+
+Do not add a live npm publication step. Do not make a scoped
+`@release-drafter/*` workspace publishable without an approved release plan.
+
+## Issue management policy
+
+A bot manages stale issues with this policy:
+
+Issues with the `info-needed` label become stale after 30 days without activity.
+The repository closes the issue after a further 7 days without a response.
+
+The stale bot asks for the missing information. A response removes the stale
+label and keeps the issue open.
+
+The policy has these purposes:
+
+- Keep the issue tracker focused on active issues.
+- Request missing information within a defined time.
+- Close inactive discussions.
+
+If the bot closes your issue, add the requested information in a comment or open
+a new issue.
 
 ## Releasing
 
-Run the following command:
+Run this command:
 
 ```bash
 git checkout main
@@ -79,25 +158,27 @@ npm version [major | minor | patch] --ignore-scripts=false
 
 > [!IMPORTANT]
 >
-> - You may want the version increment to correspond to the last drafted
->   release.
-> - You can use a version number instead of `major | minor | patch` if needed.
-> - This repository sets `ignore-scripts=true` in `.npmrc`, so the flag above is
->   required when you want `npm version` to run the release lifecycle scripts.
+> - Select the version increment for the last drafted release.
+> - Use a version number instead of `major | minor | patch` if needed.
+> - This repository sets `ignore-scripts=true` in `.npmrc`. Use
+>   `--ignore-scripts=false` to run the release lifecycle scripts.
 
-The command does the following:
+The command performs these tasks:
 
-- Run tests (`preversion` script)
-- Bumps the version number in [package.json](../package.json) and create
-  corresponding tag
-- Stage changes for git (`version` script)
-- Commit and tag
-- Push & push tag (`postversion` script)
+- Runs tests (`preversion` script).
+- Bumps the private root version in [package.json](../package.json).
+- Synchronizes that version to every workspace manifest, including the public
+  `packages/release-drafter/package.json`, refreshes `package-lock.json`, and
+  stages all versioned manifests (`version` script).
+- Commits the changes and creates the corresponding tag.
+- Pushes the commit and tag (`postversion` script).
 
-After pushing, the `release.yml` workflow will trigger (`on: push: tag`), and :
+After the push, the `release.yml` workflow runs for the new tag. It performs
+these tasks:
 
-- publish the release draft
-- update major tag (ex: pushing `v6.2.1` bumps `v6` to the same commit)
+- Publishes the release draft.
+- Updates the major version tag. For example, a `v6.2.1` tag moves `v6` to the
+  same commit.
 
 ## Resources
 

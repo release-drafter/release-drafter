@@ -1,18 +1,22 @@
 # AGENTS.md
 
-## Repository Overview
+## Repository overview
 
-This GitHub Action is written in TypeScript and transpiled to JavaScript. Both
-the TypeScript sources and the generated JavaScript code are contained in this
-repository.
+The GitHub Actions use TypeScript source files and generated JavaScript bundles.
+The repository contains both forms.
 
 - `src/`: TypeScript source code
-- `dist/`: generated JavaScript code
+- `dist/`: tracked generated JavaScript used directly by the actions
+- `packages/*/dist/`: generated, ignored workspace package output
 
-Do not review changes to `dist/` in isolation. It is expected to closely mirror
-the code generated from `src/`. CI checks that `dist/` is up to date.
+Do not review changes to the root `dist/` in isolation. The root `dist/` must
+closely match the code generated from `src/`. CI checks for drift. Do not commit
+workspace package output beneath `packages/*/dist/`.
 
-## Repository Structure
+See [Workspace development](docs/CONTRIBUTING.md#workspace-development) for the
+workspace commands and package-development rules.
+
+## Repository structure
 
 | Path              | Description                                 |
 | ----------------- | ------------------------------------------- |
@@ -33,7 +37,7 @@ the code generated from `src/`. CI checks that `dist/` is up to date.
 | `action.yml`      | Entrypoint to the Drafter action            |
 | `vite.config.ts`  | Vite configuration for bundling and testing |
 | `LICENSE`         | License file                                |
-| `package.json`    | NPM package configuration                   |
+| `package.json`    | npm package configuration                   |
 | `README.md`       | Project documentation                       |
 | `tsconfig.json`   | TypeScript configuration                    |
 
@@ -45,27 +49,27 @@ Install dependencies:
 npm install
 ```
 
-## Required Checks
+## Required checks
 
 Before pushing, run the full pipeline so formatting, linting, type checks,
 tests, and generated files are all up to date:
 
 ```bash
-npm run all
+npm run ci
 ```
 
-CI will fail if generated files are stale.
+CI fails if generated files are stale.
 
 Biome formats every language it supports. Markdown is not one of them, so
-Prettier formats `.md` files via `npm run format:md:write` (already included in
-`npm run all`). Do not point Prettier at any other file type.
+Prettier formats `.md` files via `npm run format:docs` (already included in
+`npm run ci`). Do not point Prettier at any other file type.
 
 ## Testing
 
 Type-check with:
 
 ```bash
-npm run tsc:check
+npm run typecheck
 ```
 
 Run unit tests with:
@@ -81,15 +85,15 @@ Tests live in `src/tests` and use `vitest`.
 
 ## Bundling
 
-Before pushing changes, ensure `dist/` is regenerated from `src/`:
+Before you push changes, regenerate `dist/` from the source files:
 
 ```bash
 npm run build
 ```
 
-## Coding Guidelines
+## Coding guidelines
 
-- Follow existing TypeScript and JavaScript conventions in the repo.
+- Follow existing TypeScript and JavaScript conventions in the repository.
 - Keep changes minimal and consistent with surrounding patterns.
 - Update documentation and comments when behavior changes.
 - Avoid comments that restate obvious code; explain why when needed.
@@ -104,7 +108,7 @@ npm run build
 - Use `@actions/core` for logging instead of `console`.
 - Do not use Zod `refine` or `superRefine` on schemas that are converted to JSON
   schema. Keep those schemas JSON-schema-compatible and perform semantic
-  validation at runtime parsing or config validation time instead.
+  validation during runtime parsing or configuration validation instead.
 
 ## Versioning
 
@@ -112,21 +116,21 @@ GitHub Actions are versioned using branch and tag names. Keep the version in
 `package.json` aligned with codebase changes and follow
 [Semantic Versioning](https://semver.org/).
 
-## Pull Requests
+## Pull requests
 
 - Keep changes focused and minimal.
 - Ensure formatting, linting, and unit tests pass.
 - Ensure `dist/` is up to date with the latest source changes.
 - Update `README.md` when functionality or usage changes.
 
-PR bodies should include:
+Pull request bodies should include:
 
 - A summary of the changes.
 - Any dependency changes.
 - Links to relevant issues or discussions.
 - Extra reviewer context when helpful.
 
-## Code Review
+## Code review
 
 - If a change modifies functionality or usage, confirm that `README.md` was
   updated accordingly.

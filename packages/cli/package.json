@@ -1,0 +1,42 @@
+{
+  "name": "@release-drafter/cli",
+  "version": "7.7.0",
+  "description": "Private command-line runtime for Release Drafter.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": {
+        "release-drafter-source": "./src/index.ts",
+        "default": "./dist/index.d.ts"
+      },
+      "release-drafter-source": "./src/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build --config ../../vite.workspace.config.ts",
+    "test:run": "vitest run --config ../../vite.workspace.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@release-drafter/core": "*",
+    "@release-drafter/forgejo-adapter": "*",
+    "@release-drafter/gitea-adapter": "*",
+    "@release-drafter/gitlab-adapter": "*",
+    "@release-drafter/github-adapter": "*",
+    "@release-drafter/rest-adapter": "*",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
+  "license": "MIT",
+  "private": true
+}

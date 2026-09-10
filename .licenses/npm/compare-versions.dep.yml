@@ -1,6 +1,6 @@
 ---
 name: compare-versions
-version: 4.1.3
+version: 6.1.1
 type: npm
 summary: Compare semver version strings to find greater, equal or lesser.
 homepage: https://github.com/omichelsen/compare-versions#readme

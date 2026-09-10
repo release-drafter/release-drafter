@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest'
-import { globalRegistry, object, toJSONSchema } from 'zod'
-import { configSchema as autolabelerConfigSchema } from '#src/actions/autolabeler/config/index.ts'
+import { configSchema as autolabelerConfigSchema } from '@release-drafter/autolabeler'
 import {
   commonConfigSchema,
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
-} from '#src/actions/drafter/config/index.ts'
-import { extendsDeclarationSchema } from '#src/common/config/extends.schema.ts'
+} from '@release-drafter/core'
+import { describe, expect, it } from 'vitest'
+import { globalRegistry, object, toJSONSchema } from 'zod'
+import { extendsDeclarationSchema } from '#gh-actions/common/config/extends.schema.ts'
 
 /**
  * Mirrors the schema generation in src/scripts/json-schema.ts

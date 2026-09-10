@@ -1,7 +1,5 @@
 name: 'Release Drafter'
-description:
-  'Drafts your next release notes as pull requests are merged into your
-  branch(es).'
+description: 'Draft release notes when pull requests merge into a branch.'
 author: release-drafter
 branding:
   icon: edit-2
@@ -13,82 +11,84 @@ runs:
 inputs:
   config-name:
     description: |
-      If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
-      The config should still be located inside `.github` as that's where we are looking for config files.
+      Release Drafter configuration target.
+      A relative path starts in the repository's `.github` directory.
     required: false
-    default: 'release-drafter.yml'
+    default: release-drafter.yml
   token:
-    description: >
-      Access token used to make requests against the GitHub API. Defaults to
-      github.token.
+    description: |
+      Access token for GitHub API requests. Default: github.token.
     default: ${{ github.token }}
   name:
     description: |
-      The name that will be used in the GitHub release that's created or updated.
-      This will override any `name-template` specified in your `release-drafter.yml` if defined.
+      Release name. This value overrides `name-template`.
     required: false
   tag:
     description: |
-      The tag name to be associated with the GitHub release that's created or updated.
-      This will override any `tag-template` specified in your `release-drafter.yml` if defined.
+      Release tag. This value overrides `tag-template`.
     required: false
   version:
     description: |
-      The version to be associated with the GitHub release that's created or updated.
-      This will override any version calculated by the release-drafter.
+      Release version. This value overrides the calculated version.
+    required: false
+  from:
+    description: |
+      Ref, tag, branch, or commit SHA to use as the change comparison baseline.
+      This value does not select the release version or the draft release to update.
     required: false
   publish:
     description: |
-      A boolean indicating whether the release being created or updated should be immediately published.
+      Publishes the created or updated release immediately.
     required: false
     default: ''
   latest:
     description: |
-      A boolean indicating whether the release being created or updated should be marked as latest.
+      Marks the created or updated release as latest.
     required: false
     default: ''
   prerelease:
     description: |
-      Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
+      Creates a prerelease and includes changes since the previous prerelease when one exists. Default: `false`.
     required: false
     default: ''
   prerelease-identifier:
     description: |
-      A string indicating an identifier (alpha, beta, rc, etc), to increment the prerelease version. This automatically enables `prerelease` when both values come from the same config location; explicit action inputs still take precedence.
+      Prerelease identifier, such as `alpha`, `beta`, or `rc`.
+      This input enables `prerelease`.
     required: false
     default: ''
-  'include-pre-releases':
+  include-pre-releases:
     description: |
-      When looking for the last published release to scan changes up-to, include pre-releases. Has no effect if using `prerelease: true` (already enabled). Default `false`.
+      Includes prereleases when Release Drafter selects the last published release.
+      This input has no effect when `prerelease` is `true`. Default: `false`.
     required: false
     default: ''
   commitish:
     description: |
-      The release target, i.e. branch, commit SHA, or fully qualified tag or pull request ref it should point to.
-      Tag and pull request refs are resolved to commit SHAs.
-      Pull request merge refs force dry-run mode and disable publishing because they point to ephemeral merge commits.
-      Defaults to the branch that release-drafter runs for, e.g. `main` when configured to run on pushes to `main`.
+      Release target. Use a branch, commit SHA, fully qualified tag, or pull request ref.
+      Release Drafter resolves tag and pull request refs to commit SHAs.
+      A pull request merge ref forces dry-run mode because its merge commit is temporary.
+      Default: the workflow branch.
     required: false
     default: ''
   header:
     description: |
-      A string that would be added before the template body.
+      Text to add before the template body.
     required: false
     default: ''
   footer:
     description: |
-      A string that would be added after the template body.
+      Text to add after the template body.
     required: false
     default: ''
   dry-run:
     description: |
-      A boolean indicating whether to run without performing any write operations.
-      When enabled, the action logs what it would have done instead of creating or updating releases.
+      Prevents write operations. The action logs the proposed release operation.
     required: false
     default: ''
   filter-by-range:
     description: |
-      Filter releases that satisfies this semver range. Evaluates the tag name againts node's semver.satisfies().
+      Filter releases whose tag names satisfy this SemVer range.
     required: false
     default: ''
 
@@ -96,29 +96,20 @@ outputs:
   id:
     description: The ID of the release that was created or updated.
   name:
-    description: The name of the release
+    description: The name of the release.
   tag_name:
     description: The name of the tag associated with the release.
   body:
     description: The body of the drafted release.
   html_url:
-    description: The URL users can navigate to in order to view the release
+    description: The URL for viewing the release.
   upload_url:
-    description:
-      The URL for uploading assets to the release, which could be used by GitHub
-      Actions for additional uses, for example the @actions/upload-release-asset
-      GitHub Action.
+    description: The URL for uploading release assets.
   major_version:
-    description:
-      The next major version number. For example, if the last tag or release was
-      v1.2.3, the value would be v2.0.0.
+    description: The major component of the resolved version.
   minor_version:
-    description:
-      The next minor version number. For example, if the last tag or release was
-      v1.2.3, the value would be v1.3.0.
+    description: The minor component of the resolved version.
   patch_version:
-    description:
-      The next patch version number. For example, if the last tag or release was
-      v1.2.3, the value would be v1.2.4.
+    description: The patch component of the resolved version.
   resolved_version:
-    description: The next resolved version number, based on GitHub labels.
+    description: The resolved version number.

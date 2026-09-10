@@ -1,19 +1,11 @@
-import { A as setOutput, D as getInput, N as __toESM, O as info, S as string, _ as array, f as composeConfigGet, i as sharedInputSchema, j as warning, k as setFailed, m as context, n as stringToRegex, p as getOctokit, t as require_ignore, u as getPullRequestChangedFiles, x as object } from "../../chunks/ignore.js";
-//#region src/actions/autolabeler/config/action-input.schema.ts
-var actionInputSchema = object({ 
-/**
-* If your workflow requires multiple release-drafter configs it be helpful to override the config-name.
-* The config should still be located inside `.github` as that's where we are looking for config files.
-* @default 'release-drafter.yml'
-*/
-"config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
-//#endregion
-//#region src/actions/autolabeler/config/config.schema.ts
+import { C as core_exports, S as context, T as setFailed, _ as object, a as readActionInputs, c as getGitHubAdapter, i as defineActionInputNames, n as sharedInputSchema, o as writeActionOutputs, p as array, t as composeConfigGet, u as escapeStringRegexp, v as string, w as info, x as Minimatch } from "../../chunks/config.js";
+import process from "node:process";
+//#region packages/autolabeler/src/config/config.schema.ts
 var configSchema = object({ 
 /**
-* You can add automatically a label into a pull request.
-* Available matchers are `files` (glob), `branch` (regex), `title` (regex) and `body` (regex).
-* Matchers are evaluated independently; the label will be set if at least one of the matchers meets the criteria.
+* Defines pull request label rules.
+* `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.
+* A rule matches when at least one configured matcher succeeds.
 */
 autolabeler: array(object({
 	label: string().min(1),
@@ -26,152 +18,210 @@ autolabeler: array(object({
 	id: "https://github.com/release-drafter/release-drafter/blob/main/autolabeler/schema.json"
 });
 //#endregion
-//#region src/actions/autolabeler/config/get-action-inputs.ts
-var getActionInput = () => {
-	const getInput$1 = (name) => getInput(name) || void 0;
-	return actionInputSchema.parse({
-		"config-name": getInput$1("config-name"),
-		token: getInput$1("token"),
-		"dry-run": getInput$1("dry-run")
-	});
+//#region packages/autolabeler/src/util.ts
+var regexLiteral = /^\/.+\/[AJUXgimsux]*$/;
+var supportedFlags = /* @__PURE__ */ new Set("gimsuy");
+/** Converts a regex literal or plain text matcher into a regular expression. */
+var stringToRegex = (search) => {
+	if (!regexLiteral.test(search)) return new RegExp(escapeStringRegexp(search), "g");
+	const delimiter = search.lastIndexOf("/");
+	const flags = [...new Set(search.slice(delimiter + 1))].filter((flag) => supportedFlags.has(flag)).join("");
+	return new RegExp(search.slice(1, delimiter), flags);
 };
 //#endregion
-//#region src/actions/autolabeler/config/get-config.ts
-var getConfig = async (configName) => {
-	const { config, contexts } = await composeConfigGet(configName, context);
-	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
-	else if (contexts.length === 1) info(`Config fetched ${contexts[0].scheme === "file" ? "locally" : `on remote "${contexts[0].repo.owner}/${contexts[0].repo.repo}${contexts[0].ref ? `@${contexts[0].ref}` : ""}"${!contexts[0].ref ? " on the default branch" : ""}`}.`);
-	return configSchema.parse(config);
-};
-//#endregion
-//#region src/actions/autolabeler/config/parse-config.ts
-/**
-* Returns a copy of `config`, updated with values from `input`.
-*
-* Also performs some validation.
-*
-* Input takes precedence, because it's more easy to change at runtime
-*/
-var parseConfig = ({ config: originalConfig }) => {
-	const config = structuredClone(originalConfig);
-	const autolabeler = config.autolabeler.map((autolabel) => {
+//#region packages/autolabeler/src/config/parse-config.ts
+/** Compiles configured regex matchers while preserving all other config values. */
+var parseConfig = (params) => {
+	const config = structuredClone(params.config);
+	const autolabeler = config.autolabeler.map((rule) => {
 		try {
 			return {
-				...autolabel,
-				branch: autolabel.branch.map((reg) => {
-					return stringToRegex(reg);
-				}),
-				title: autolabel.title.map((reg) => {
-					return stringToRegex(reg);
-				}),
-				body: autolabel.body.map((reg) => {
-					return stringToRegex(reg);
-				})
+				...rule,
+				branch: rule.branch.map(stringToRegex),
+				title: rule.title.map(stringToRegex),
+				body: rule.body.map(stringToRegex)
 			};
 		} catch {
-			warning(`Bad autolabeler regex: '${autolabel.branch}', '${autolabel.title}' or '${autolabel.body}'`);
+			params.logger.warning(`Bad autolabeler regex: '${rule.branch}', '${rule.title}' or '${rule.body}'`);
 			return false;
 		}
-	}).filter((a) => !!a);
+	}).filter((rule) => !!rule);
 	return {
 		...config,
 		autolabeler
 	};
 };
 //#endregion
-//#region src/actions/autolabeler/main.ts
-var import_ignore = /* @__PURE__ */ __toESM(require_ignore(), 1);
-var main = async (params) => {
-	info(`Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`);
-	if (context.eventName !== "pull_request" && context.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`);
-	const octokit = getOctokit();
-	/**
-	* @see https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request
-	*/
-	const payload = context.payload;
-	const changedFiles = await getPullRequestChangedFiles(octokit, {
-		...context.repo,
-		pull_number: payload.number
-	});
-	const labels = /* @__PURE__ */ new Set();
-	for (const autolabel of params.config.autolabeler) {
-		let found = false;
-		if (!found && autolabel.files.length > 0) {
-			const matcher = (0, import_ignore.default)().add(autolabel.files);
-			if (changedFiles.some((file) => matcher.ignores(file))) {
-				labels.add(autolabel.label);
-				found = true;
-				info(`Found label for files: '${autolabel.label}'`);
-			}
-		}
-		if (!found && autolabel.branch.length > 0) {
-			for (const matcher of autolabel.branch) if (matcher.test(payload.pull_request.head.ref)) {
-				labels.add(autolabel.label);
-				found = true;
-				info(`Found label for branch: '${autolabel.label}'`);
-				break;
-			}
-		}
-		if (!found && autolabel.title.length > 0) {
-			for (const matcher of autolabel.title) if (matcher.test(payload.pull_request.title)) {
-				labels.add(autolabel.label);
-				found = true;
-				info(`Found label for title: '${autolabel.label}'`);
-				break;
-			}
-		}
-		if (!found && payload.pull_request.body != null && autolabel.body.length > 0) {
-			for (const matcher of autolabel.body) if (matcher.test(payload.pull_request.body)) {
-				labels.add(autolabel.label);
-				found = true;
-				info(`Found label for body: '${autolabel.label}'`);
-				break;
-			}
-		}
+//#region packages/autolabeler/src/path-matcher.ts
+var trimTrailingUnescapedSpaces = (pattern) => {
+	let end = pattern.length;
+	while (end > 0 && pattern[end - 1] === " ") {
+		let backslashes = 0;
+		for (let index = end - 2; index >= 0 && pattern[index] === "\\"; index--) backslashes++;
+		if (backslashes % 2 === 1) break;
+		end--;
 	}
-	if (labels.size > 0) if (params.dryRun) info(`[dry-run] Would add labels [${Array.from(labels).join(", ")}] to PR #${payload.number}`);
-	else await octokit.rest.issues.addLabels({
-		...context.repo,
-		issue_number: payload.number,
-		labels: Array.from(labels)
-	});
+	return pattern.slice(0, end);
+};
+var compileRule = (pattern) => {
+	let source = trimTrailingUnescapedSpaces(pattern);
+	if (!source || source.startsWith("#")) return void 0;
+	const negated = source.startsWith("!");
+	if (negated) source = source.slice(1);
+	const directoryOnly = source.endsWith("/") && !source.endsWith("/**/");
+	if (directoryOnly) source = source.slice(0, -1);
+	else if (source.endsWith("/**/")) source = source.slice(0, -1);
+	const anchored = source.startsWith("/");
+	if (anchored) source = source.slice(1);
+	if (!source) return void 0;
 	return {
-		pr_number: payload.number.toString(),
-		labels: labels.size ? Array.from(labels).join(",") : void 0
+		directoryOnly,
+		negated,
+		matcher: new Minimatch(source, {
+			dot: true,
+			matchBase: !anchored && !source.includes("/"),
+			nobrace: true,
+			nocomment: true,
+			noext: true,
+			nonegate: true,
+			platform: "linux"
+		})
+	};
+};
+/** Compiles ordered gitignore-style patterns into a path predicate. */
+var createPathMatcher = (patterns) => {
+	const rules = patterns.flatMap((pattern) => {
+		const rule = compileRule(pattern);
+		return rule ? [rule] : [];
+	});
+	return (path) => {
+		const segments = path.split("/").filter(Boolean);
+		for (const [index] of segments.entries()) {
+			const candidate = segments.slice(0, index + 1).join("/");
+			const directory = index < segments.length - 1;
+			let ignored = false;
+			for (const rule of rules) {
+				if (rule.directoryOnly && !directory) continue;
+				if (rule.matcher.match(candidate)) ignored = !rule.negated;
+			}
+			if (directory && ignored) return true;
+			if (!directory) return ignored;
+		}
+		return false;
 	};
 };
 //#endregion
-//#region src/actions/autolabeler/runner.ts
-/**
-* The main function for the action.
-*
-* @returns Resolves when the action is complete.
-*/
+//#region packages/autolabeler/src/match-labels.ts
+var test = (matcher, value) => {
+	matcher.lastIndex = 0;
+	return matcher.test(value);
+};
+var matchesFiles = (patterns, files) => {
+	if (patterns.length === 0) return false;
+	const matches = createPathMatcher(patterns);
+	return files.some(matches);
+};
+/** Evaluates configured rules in files, branch, title, and body order. */
+var matchLabels = (params) => {
+	const { config, pullRequest } = params;
+	const labels = /* @__PURE__ */ new Set();
+	const matches = [];
+	for (const rule of config.autolabeler) {
+		const body = pullRequest.body;
+		let matcher;
+		if (matchesFiles(rule.files, pullRequest.files)) matcher = "files";
+		else if (rule.branch.some((regex) => test(regex, pullRequest.branch))) matcher = "branch";
+		else if (rule.title.some((regex) => test(regex, pullRequest.title))) matcher = "title";
+		else if (body != null && rule.body.some((regex) => test(regex, body))) matcher = "body";
+		if (matcher) {
+			labels.add(rule.label);
+			matches.push({
+				label: rule.label,
+				matcher
+			});
+		}
+	}
+	return {
+		labels: [...labels],
+		matches
+	};
+};
+//#endregion
+//#region packages/gh-actions/src/autolabeler/action-metadata.ts
+var actionInputNames = defineActionInputNames()([
+	"token",
+	"config-name",
+	"dry-run"
+]);
+var actionOutputNames = ["number", "labels"];
+//#endregion
+//#region packages/gh-actions/src/autolabeler/action-input.schema.ts
+var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
+//#endregion
+//#region packages/gh-actions/src/autolabeler/get-action-inputs.ts
+var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
+//#endregion
+//#region packages/gh-actions/src/autolabeler/get-config.ts
+var getConfig = async (configName, token) => {
+	const { config, contexts } = await composeConfigGet(configName, context, token);
+	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
+	else if (contexts.length === 1) {
+		const source = contexts[0];
+		info(`Config fetched ${source.scheme === "file" ? "locally" : `on remote "${source.repo.owner}/${source.repo.repo}${source.ref ? `@${source.ref}` : ""}"${source.ref ? "" : " on the default branch"}`}.`);
+	}
+	return parseConfig({
+		config: configSchema.parse(config),
+		logger: core_exports
+	});
+};
+//#endregion
+//#region packages/gh-actions/src/autolabeler/runner.ts
+/** Run the Autolabeler action using package-owned config and matching logic. */
 async function run() {
 	try {
 		const input = getActionInput();
-		const { labels, pr_number } = await main({
-			config: parseConfig({ config: await getConfig(input["config-name"]) }),
-			dryRun: input["dry-run"]
+		const config = await getConfig(input["config-name"], input.token);
+		info(`Running for event "${context.eventName || "[undefined]"}.${context.payload.action || "[undefined]"}"`);
+		if (context.eventName !== "pull_request" && context.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`);
+		const adapter = getGitHubAdapter(input.token);
+		const payload = context.payload;
+		const result = matchLabels({
+			config,
+			pullRequest: {
+				files: await adapter.findPullRequestChangedFiles({
+					repository: {
+						owner: context.repo.owner,
+						name: context.repo.repo,
+						serverUrl: process.env.GITHUB_SERVER_URL ?? "https://github.com"
+					},
+					number: payload.number
+				}),
+				branch: payload.pull_request.head.ref,
+				title: payload.pull_request.title,
+				body: payload.pull_request.body
+			}
 		});
-		if (pr_number) setOutput("number", pr_number);
-		if (labels) setOutput("labels", labels);
+		for (const match of result.matches) info(`Found label for ${match.matcher}: '${match.label}'`);
+		if (result.labels.length > 0) {
+			if (input["dry-run"]) info(`[dry-run] Would add labels [${result.labels.join(", ")}] to PR #${payload.number}`);
+			else await adapter.octokit.rest.issues.addLabels({
+				...context.repo,
+				issue_number: payload.number,
+				labels: result.labels
+			});
+		}
+		writeActionOutputs(actionOutputNames, {
+			number: payload.number.toString(),
+			labels: result.labels.length > 0 ? result.labels.join(",") : void 0
+		});
 	} catch (error) {
 		if (error instanceof Error) setFailed(error.message);
 	}
 }
 //#endregion
-//#region src/actions/autolabeler/run.ts
+//#region packages/gh-actions/src/autolabeler/run.ts
+/*! release-drafter-action-entry:autolabeler */
 /* node:coverage ignore file -- @preserve */
-/**
-* The entrypoint for the action. This file simply imports and runs the action's
-* main logic.
-*
-* Do not add any logic to this file; instead, add it to `runner.ts`.
-*
-* `runner.ts` is the entrypoint for tests and should contain all the action's
-* main logic.
-*/
 await run();
 //#endregion
 export {};

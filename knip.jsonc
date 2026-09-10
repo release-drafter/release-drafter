@@ -1,0 +1,45 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "include": ["files", "dependencies", "devDependencies", "unlisted"],
+  "vite": false,
+  "workspaces": {
+    ".": {
+      "entry": [
+        "src/scripts/*.ts",
+        "src/tests/setup.ts",
+        "src/tests/**/*.test.ts",
+        "src/tests/**/*.contract.ts",
+        "vite.config.ts",
+        "vitest.*.config.ts",
+      ],
+      "project": ["src/**/*.{ts,tsx}", "*.{ts,mts,cts,js,mjs,cjs}"],
+    },
+    "packages/*": {
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": false,
+    },
+    "packages/gh-actions": {
+      "entry": [
+        "src/drafter/run.ts",
+        "src/autolabeler/run.ts",
+        "src/check-pr/run.ts",
+      ],
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": false,
+    },
+    "packages/release-drafter": {
+      "entry": ["src/cli.ts"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": [
+        "@gitbeaker/rest",
+        "@octokit/core",
+        "@octokit/plugin-paginate-graphql",
+        "@octokit/plugin-paginate-rest",
+        "@octokit/plugin-rest-endpoint-methods",
+        "@octokit/plugin-retry",
+        "undici",
+      ],
+      "vite": false,
+    },
+  },
+}
