@@ -742,6 +742,12 @@ GitHub adapter. If the GitHub Enterprise Server instance supports the required
 REST and GraphQL APIs, the same workflow can target it without
 `github.com`-specific configuration.
 
+## Adopters
+
+A non-exhaustive list of the projects and organizations using Release Drafter
+lives in [ADOPTERS.md](ADOPTERS.md). If you use Release Drafter, please add
+yourself.
+
 ## Contributing
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for contribution instructions.
