@@ -500,15 +500,31 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     params: FindChangesRequest,
     commits: ChangeSet['commits'],
   ): Promise<Set<string>> {
-    const candidates = new Set(
-      commits.flatMap((commit) =>
-        commit.associationStatus === 'none' && commit.author?.login
-          ? [commit.author.login]
-          : [],
-      ),
+    const earliestCommitByLogin = new Map<string, string>()
+    for (const commit of commits) {
+      if (
+        commit.associationStatus !== 'none' ||
+        !commit.author?.login ||
+        !commit.committedAt
+      ) {
+        continue
+      }
+      const previous = earliestCommitByLogin.get(commit.author.login)
+      if (!previous || commit.committedAt < previous) {
+        earliestCommitByLogin.set(commit.author.login, commit.committedAt)
+      }
+    }
+    const noPriorPullRequest = await this.findNewContributorLogins(
+      params.repository,
+      [...earliestCommitByLogin].map(([login, committedAt]) => ({
+        number: 0,
+        title: '',
+        mergedAt: committedAt,
+        author: { __typename: 'User', login },
+      })),
     )
     const results = await mapConcurrent(
-      [...candidates],
+      [...noPriorPullRequest],
       this.contributorConcurrency,
       async (login) => {
         try {

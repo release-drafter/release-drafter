@@ -164,6 +164,7 @@ const validateParsedConfig = (parsedConfig: {
   'change-template': string
   'pr-template'?: string
   'commit-template'?: string
+  'new-contributor-template': string
 }) => {
   if (!parsedConfig.commitish) {
     throw new Error(
@@ -213,5 +214,13 @@ const validateParsedConfig = (parsedConfig: {
         `'${key}' uses removed change variables: ${[...new Set(legacyVariables)].join(', ')}. Use the namespaced $CHANGE_*, $PR_*, or $COMMIT_* variables instead.`,
       )
     }
+  }
+  const legacyNewContributorVariables = [
+    ...parsedConfig['new-contributor-template'].matchAll(/\$(?:NUMBER|URL)\b/g),
+  ].map(([variable]) => variable)
+  if (legacyNewContributorVariables.length > 0) {
+    throw new Error(
+      `'new-contributor-template' uses removed variables: ${[...new Set(legacyNewContributorVariables)].join(', ')}. Use $CHANGE_REFERENCE or $CHANGE_URL instead.`,
+    )
   }
 }

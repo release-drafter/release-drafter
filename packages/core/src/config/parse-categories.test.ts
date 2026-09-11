@@ -587,4 +587,15 @@ describe('parseCategories', () => {
       `'${key}' uses removed change variables`,
     )
   })
+
+  it('rejects removed pull-request variables in new-contributor-template', () => {
+    const config = configSchema.parse({
+      commitish: 'main',
+      'new-contributor-template': '* $AUTHOR in #$NUMBER at $URL',
+    })
+
+    expect(() => mergeInputAndConfig({ config, input: {}, logger })).toThrow(
+      "'new-contributor-template' uses removed variables: $NUMBER, $URL",
+    )
+  })
 })

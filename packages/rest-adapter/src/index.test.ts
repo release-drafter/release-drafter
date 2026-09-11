@@ -899,6 +899,10 @@ describe('GitHub-compatible REST mechanics', () => {
         expect(url.searchParams.get('sha')).toBe('v1')
         return json([], {}, { 'x-total-count': '0' })
       }
+      if (url.pathname.endsWith('/pulls')) {
+        expect(url.searchParams.get('poster')).toBe('new-user')
+        return json([], {}, { 'x-total-count': '0' })
+      }
       throw new Error(`Unexpected ${url}`)
     })
 
