@@ -114,7 +114,9 @@ const isolatedEnvironment = (): NodeJS.ProcessEnv => {
     'GITLAB_TOKEN',
     'NODE_AUTH_TOKEN',
     'NPM_TOKEN',
+    'NPM_CONFIG_ALLOW_SCRIPTS',
     'RELEASE_DRAFTER_TOKEN',
+    'npm_config_allow_scripts',
   ]) {
     delete environment[name]
   }

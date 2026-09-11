@@ -31,9 +31,11 @@ export const commitAuthors = (commit: Commit): CommitAuthor[] => {
   if (commit.authors) return commit.authors.filter((author) => author != null)
 
   const authors = commit.author ? [commit.author] : []
-  for (const match of (commit.message ?? '').matchAll(
-    /^Co-authored-by:\s*(.+?)\s*<([^>]+)>\s*$/gim,
-  )) {
+  const coauthorPattern = new RegExp(
+    ['^Co-authored-by:', String.raw`\s*(.+?)\s*<([^>]+)>\s*$`].join(''),
+    'gim',
+  )
+  for (const match of (commit.message ?? '').matchAll(coauthorPattern)) {
     const [, name, email] = match
     if (
       !authors.some(
