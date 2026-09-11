@@ -39,7 +39,8 @@ const repository = {
 }
 
 const config = {
-  'change-template': '* $TITLE',
+  'include-commits': false,
+  'change-template': '* $CHANGE_TITLE',
   'change-author-template': '$AUTHOR_MENTION',
   'change-authors-separator': ', ',
   'no-changes-template': '* No changes',
@@ -48,7 +49,7 @@ const config = {
   'new-contributor-template': '* $AUTHOR_MENTION',
   'no-new-contributor-template': '* No new contributors',
   'no-contributors-template': 'No contributors',
-  'sort-by': 'merged_at',
+  'sort-by': 'date',
   'sort-direction': 'descending',
   'filter-by-commitish': false,
   'pull-request-limit': 5,
