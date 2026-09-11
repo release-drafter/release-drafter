@@ -1,3 +1,4 @@
+import { selectChanges } from '../change.ts'
 import type { ForgeAdapter, Logger, Repository } from '../ports.ts'
 import type {
   Commit,
@@ -18,7 +19,7 @@ import { renderReleaseName } from './render-release-name.ts'
 import { renderTagName } from './render-tag-name.ts'
 import { renderTemplate } from './render-template/index.ts'
 import { resolveVersionKeyIncrement } from './resolve-version-increment.ts'
-import { sortPullRequests } from './sort-pull-requests.ts'
+import { sortChanges } from './sort-changes.ts'
 
 export const buildReleasePayload = async (params: {
   adapter: Pick<ForgeAdapter, 'resolveCommitish'>
@@ -43,7 +44,14 @@ export const buildReleasePayload = async (params: {
     repository,
   } = params
   logger.info('Building release payload and body...')
-  const sortedPullRequests = sortPullRequests({ pullRequests, config, logger })
+  const changes = sortChanges({
+    changes: selectChanges({ commits, pullRequests, config, logger }),
+    config,
+    logger,
+  })
+  const sortedPullRequests = changes.flatMap((change) =>
+    change.type === 'pull-request' ? [change.pullRequest] : [],
+  )
   let body =
     (config.header || '') +
     config.template +
@@ -58,13 +66,13 @@ export const buildReleasePayload = async (params: {
       $PREVIOUS_TAG: lastRelease?.tagName ?? '',
       $CHANGES: generateChangeLog({
         commits,
-        pullRequests: sortedPullRequests,
+        changes,
         serverUrl: repository.serverUrl,
         config,
       }),
       $CONTRIBUTORS: generateContributorsSentence({
         commits,
-        pullRequests: sortedPullRequests,
+        changes,
         serverUrl: repository.serverUrl,
         config,
       }),
@@ -80,7 +88,7 @@ export const buildReleasePayload = async (params: {
   })
 
   const versionKeyIncrement = resolveVersionKeyIncrement({
-    pullRequests,
+    changes,
     config,
     logger,
   })
