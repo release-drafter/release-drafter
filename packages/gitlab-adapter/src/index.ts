@@ -57,17 +57,38 @@ const mapConcurrent = async <Input, Output>(
   return outputs
 }
 
-const normalizeCommit = (commit: GitLabCommit): Commit => {
+const normalizeCommit = (
+  repository: FindChangesRequest['repository'],
+  commit: GitLabCommit,
+): Commit => {
   if (!commit.id)
     throw new Error('GitLab comparison contained a commit without an id')
-  const committedAt =
-    commit.committed_date ?? commit.authored_date ?? commit.created_at
+  const committedAt = commit.committed_date ?? commit.created_at
+  const serverUrl = repository.serverUrl.replace(/\/$/, '')
+  const repositoryPath = `${repository.owner}/${repository.name}`
   return {
     id: commit.id,
     oid: commit.id,
-    ...(commit.message ? { message: commit.message } : {}),
+    url:
+      commit.web_url ??
+      `${serverUrl}/${repositoryPath
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')}/-/commit/${encodeURIComponent(commit.id)}`,
+    ...(commit.authored_date ? { authoredAt: commit.authored_date } : {}),
+    ...(commit.message || commit.title
+      ? { message: commit.message ?? commit.title }
+      : {}),
     ...(committedAt ? { committedAt } : {}),
-    ...(commit.author_name ? { author: { name: commit.author_name } } : {}),
+    ...(commit.author_name || commit.author_email
+      ? {
+          author: {
+            ...(commit.author_name ? { name: commit.author_name } : {}),
+            ...(commit.author_email ? { email: commit.author_email } : {}),
+          },
+        }
+      : {}),
+    associationStatus: 'unknown',
   }
 }
 
@@ -243,7 +264,7 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
       )
     }
     const commits = comparison.commits
-      .map(normalizeCommit)
+      .map((commit) => normalizeCommit(request.repository, commit))
       .sort(stableCommitOrder)
     if (commits.length === 0) {
       return { commits: [], pullRequests: [], newContributorLogins: new Set() }
@@ -266,6 +287,20 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
     const mergeRequests = new Map<string, GitLabMergeRequest>()
     const keysByCommit = new Map<string, string[]>()
     for (const [index, candidates] of associated.entries()) {
+      const commit = commits[index]
+      if (commit) {
+        commit.associationStatus = candidates.length > 0 ? 'associated' : 'none'
+        commit.associatedPullRequests = candidates.flatMap((candidate) =>
+          Number.isSafeInteger(candidate.iid) && (candidate.iid ?? 0) > 0
+            ? [
+                {
+                  number: candidate.iid as number,
+                  baseRepository: repositoryKey(request),
+                },
+              ]
+            : [],
+        )
+      }
       const keys: string[] = []
       for (const candidate of candidates) {
         if (
@@ -357,23 +392,6 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
       })
       if (associatedPullRequests.length > 0) {
         commit.associatedPullRequests = associatedPullRequests
-        const logins = associatedPullRequests.flatMap(({ number }) => {
-          const mergeRequest = normalizedByKey.get(
-            mergeRequestKey(repositoryKey(request), number),
-          )
-          return mergeRequest?.author
-            ? [
-                {
-                  login: mergeRequest.author.login,
-                  type: mergeRequest.author.type,
-                },
-              ]
-            : []
-        })
-        commit.authors = [
-          ...new Map(logins.map((author) => [author.login, author])).values(),
-          ...(commit.author ? [commit.author] : []),
-        ]
       }
     }
 

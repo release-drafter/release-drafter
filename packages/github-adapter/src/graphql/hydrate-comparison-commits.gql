@@ -22,23 +22,34 @@ query hydrateComparisonCommits(
           nodes {
             id
             oid
+            url
+            authoredDate
             committedDate
             message
             author {
               name
+              email
+              avatarUrl
               user {
+                __typename
                 login
+                url
               }
             }
             authors(first: 100) {
               nodes {
                 name
+                email
+                avatarUrl
                 user {
+                  __typename
                   login
+                  url
                 }
               }
             }
             associatedPullRequests(first: $pullRequestLimit) {
+              totalCount
               nodes {
                 ...AdapterPullRequestFields
               }
