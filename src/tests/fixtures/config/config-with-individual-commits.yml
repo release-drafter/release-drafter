@@ -1,0 +1,9 @@
+include-commits: true
+template: |
+  # What's Changed
+
+  $CHANGES
+
+  ## Contributors
+
+  $CONTRIBUTORS

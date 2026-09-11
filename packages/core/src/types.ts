@@ -70,6 +70,7 @@ export type ChangeSet = {
   commits: Commit[]
   pullRequests: PullRequest[]
   newContributorLogins: ReadonlySet<string>
+  newCommitContributorKeys?: ReadonlySet<string>
 }
 
 export type PreviousReleases = {
@@ -117,6 +118,7 @@ export type FindChangesRequest = {
   historyLimit: number
   includeChangedFiles: boolean
   includeNewContributors: boolean
+  includeCommits?: boolean
 }
 
 export type GetPullRequestRequest = {
