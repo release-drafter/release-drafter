@@ -14,6 +14,7 @@ import type {
   ResolveCommitishRequest,
   UpdateReleaseRequest,
 } from '@release-drafter/core'
+import { commitAuthorKey } from '@release-drafter/core'
 import { mapConcurrent, RestClient } from './client.ts'
 import type {
   PullRequestEntry,
@@ -328,7 +329,64 @@ class GitHubCompatibleRestAdapter
     const newContributorLogins = params.includeNewContributors
       ? await this.findNewContributors(params, entries, budget)
       : new Set<string>()
-    return { commits, pullRequests, newContributorLogins }
+    const newCommitContributorKeys =
+      params.includeCommits && params.includeNewContributors
+        ? await this.findNewCommitContributors(params, commits, budget)
+        : new Set<string>()
+    return {
+      commits,
+      pullRequests,
+      newContributorLogins,
+      newCommitContributorKeys,
+    }
+  }
+
+  private async findNewCommitContributors(
+    params: FindChangesRequest,
+    commits: Commit[],
+    budget: ReturnType<RestClient['newBudget']>,
+  ) {
+    const candidates = new Set(
+      commits.flatMap((commit) => {
+        const key =
+          commit.associationStatus === 'none'
+            ? commitAuthorKey(commit.author)
+            : undefined
+        return key ? [key] : []
+      }),
+    )
+    if (candidates.size === 0) return candidates
+
+    try {
+      const history = await this.client.paginate<RestCommit>({
+        repository: params.repository,
+        path: this.profile.endpoints.commits(params.repository),
+        budget,
+        pageSize: params.historyLimit,
+        query: {
+          sha: params.comparison.baseRef,
+          stat: false,
+          verification: false,
+          files: false,
+        },
+      })
+      const priorKeys = new Set(
+        history.flatMap((commit) => {
+          try {
+            const key = commitAuthorKey(normalizeCommit(commit).author)
+            return key ? [key] : []
+          } catch {
+            return []
+          }
+        }),
+      )
+      return new Set([...candidates].filter((key) => !priorKeys.has(key)))
+    } catch (error) {
+      this.client.logger.warning(
+        `Could not prove whether direct commit authors are new contributors within the bounded commit history. They will not be labeled new. ${error instanceof Error ? error.message : String(error)}`,
+      )
+      return new Set<string>()
+    }
   }
 
   private async findNewContributors(
@@ -595,6 +653,7 @@ export const createRestEndpoints = () => {
         .join('/')}`,
     compare: (repository: Repository, baseHead: string) =>
       `${repoPath(repository)}/compare/${encoded(baseHead)}`,
+    commits: (repository: Repository) => `${repoPath(repository)}/commits`,
     commitPull: (repository: Repository, sha: string) =>
       `${repoPath(repository)}/commits/${encoded(sha)}/pull`,
     pullFiles: (repository: Repository, number: number) =>

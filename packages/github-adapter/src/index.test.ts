@@ -34,6 +34,7 @@ const mockOctokit = (overrides: Record<string, unknown> = {}) =>
     rest: {
       repos: {
         listReleases: vi.fn(),
+        listCommits: vi.fn(),
         compareCommitsWithBasehead: vi.fn(),
         createRelease: vi.fn(),
         updateRelease: vi.fn(),
@@ -297,7 +298,66 @@ describe('GitHubAdapter', () => {
     )
   })
 
-  it('bounds recent pull request recovery to one small page', async () => {
+  it('finds direct commit authors with no history before the comparison base', async () => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield { data: { commits: [{ sha: 'direct' }] } }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  oid: 'direct',
+                  author: { user: { login: 'new-user' } },
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: { pullRequests: { nodes: [] } },
+      })
+    vi.mocked(octokit.rest.repos.listCommits).mockResolvedValue({
+      data: [],
+    } as never)
+
+    const result = await adapter(octokit).findChanges({
+      repository,
+      comparison: { baseRef: 'v1', headRef: 'main' },
+      pullRequestFields: {
+        body: false,
+        url: false,
+        baseRefName: false,
+        headRefName: false,
+      },
+      pullRequestLimit: 20,
+      historyLimit: 100,
+      includeChangedFiles: false,
+      includeNewContributors: true,
+      includeCommits: true,
+    })
+
+    expect(result.commits[0]?.associationStatus).toBe('none')
+    expect(result.newCommitContributorKeys).toEqual(new Set(['login:new-user']))
+    expect(octokit.rest.repos.listCommits).toHaveBeenCalledWith({
+      owner: repository.owner,
+      repo: repository.name,
+      sha: 'v1',
+      author: 'new-user',
+      per_page: 1,
+    })
+  })
+
+  it('bounds recent pull request recovery to one page and backfills association evidence', async () => {
     const octokit = mockOctokit()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
@@ -358,11 +418,16 @@ describe('GitHubAdapter', () => {
     })
 
     expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
-    expect(result.commits[0]?.associationStatus).toBe('unknown')
+    expect(result.commits[0]).toMatchObject({
+      associationStatus: 'associated',
+      associatedPullRequests: [
+        { number: 1, baseRepository: 'release-drafter/release-drafter' },
+      ],
+    })
     expect(octokit.graphql).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining('findRecentMergedPullRequests'),
-      expect.objectContaining({ cursor: null, limit: 5 }),
+      expect.objectContaining({ cursor: null, limit: 100 }),
     )
     expect(octokit.graphql).toHaveBeenCalledTimes(2)
   })

@@ -29,6 +29,7 @@ export const buildReleasePayload = async (params: {
   lastRelease?: Release
   logger: Logger
   newContributorLogins?: ReadonlySet<string>
+  newCommitContributorKeys?: ReadonlySet<string>
   pullRequests: PullRequest[]
   repository: Repository
 }): Promise<ReleasePayload> => {
@@ -40,6 +41,7 @@ export const buildReleasePayload = async (params: {
     lastRelease,
     logger,
     newContributorLogins = new Set<string>(),
+    newCommitContributorKeys = new Set<string>(),
     pullRequests,
     repository,
   } = params
@@ -49,9 +51,6 @@ export const buildReleasePayload = async (params: {
     config,
     logger,
   })
-  const sortedPullRequests = changes.flatMap((change) =>
-    change.type === 'pull-request' ? [change.pullRequest] : [],
-  )
   let body =
     (config.header || '') +
     config.template +
@@ -77,8 +76,9 @@ export const buildReleasePayload = async (params: {
         config,
       }),
       $NEW_CONTRIBUTORS: generateNewContributorsList({
-        pullRequests: sortedPullRequests,
+        changes,
         newContributorLogins,
+        newCommitContributorKeys,
         config,
       }),
       $OWNER: repository.owner,

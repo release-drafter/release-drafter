@@ -6,6 +6,7 @@ import { noopLogger } from '../ports.ts'
 import type { Commit, PullRequest } from '../types.ts'
 import { buildReleasePayload } from './build-release-payload.ts'
 import { changeToString } from './change-to-string.ts'
+import { generateNewContributorsList } from './generate-contributors-sentence.ts'
 import { sortChanges } from './sort-changes.ts'
 
 const directCommit = (overrides: Partial<Commit> = {}): Commit => ({
@@ -162,6 +163,21 @@ describe('individual commit changes', () => {
         config: config({ 'commit-template': '$CHANGE_AUTHORS' }),
       }),
     ).toBe('@commit-author, Grace Hopper')
+  })
+
+  it('renders a primary direct commit author as a new contributor', () => {
+    const commit = directCommit()
+
+    expect(
+      generateNewContributorsList({
+        changes: [{ type: 'commit', commit }],
+        newContributorLogins: new Set(),
+        newCommitContributorKeys: new Set(['login:commit-author']),
+        config: config(),
+      }),
+    ).toBe(
+      '* @commit-author made their first contribution in [`1234567`](https://example.test/owner/repo/commit/1234567890abcdef)',
+    )
   })
 
   it('uses the same selected changes for changelog, versioning, and contributors', async () => {

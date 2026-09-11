@@ -78,6 +78,7 @@ export interface ChangeSet {
   commits: Commit[]
   pullRequests: PullRequest[]
   newContributorLogins: ReadonlySet<string>
+  newCommitContributorKeys?: ReadonlySet<string>
 }
 
 export interface ReleasePayload {
@@ -111,6 +112,7 @@ export interface FindChangesRequest {
   historyLimit: number
   includeChangedFiles: boolean
   includeNewContributors: boolean
+  includeCommits?: boolean
 }
 
 export interface ListReleasesRequest {

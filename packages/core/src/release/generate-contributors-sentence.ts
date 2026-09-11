@@ -1,8 +1,5 @@
-import {
-  filterChangesByPreCategories,
-  filterPullRequestsByPreCategories,
-} from '../category-matching.ts'
-import { commitAuthors } from '../change.ts'
+import { filterChangesByPreCategories } from '../category-matching.ts'
+import { changeDate, commitAuthorKey, commitAuthors } from '../change.ts'
 import type {
   Change,
   Commit,
@@ -201,8 +198,9 @@ export const generateAuthorsSentence = (params: {
 }
 
 export const generateNewContributorsList = (params: {
-  pullRequests: PullRequest[]
+  changes: Change[]
   newContributorLogins: ReadonlySet<string>
+  newCommitContributorKeys?: ReadonlySet<string>
   config: Pick<
     ParsedConfig,
     | 'categories'
@@ -211,52 +209,82 @@ export const generateNewContributorsList = (params: {
     | 'no-new-contributor-template'
   >
 }) => {
-  const { pullRequests, newContributorLogins, config } = params
-  const firstPullRequestByLogin = new Map<string, PullRequest>()
-  const includedPullRequestKeys = new Set(
-    filterPullRequestsByPreCategories(pullRequests, config.categories).map(
-      pullRequestKey,
-    ),
+  const {
+    changes,
+    newContributorLogins,
+    newCommitContributorKeys = new Set<string>(),
+    config,
+  } = params
+  const includedChanges = filterChangesByPreCategories(
+    changes,
+    config.categories,
   )
+  const firstChangeByContributor = new Map<
+    string,
+    { change: Change; author: CommitAuthor }
+  >()
 
-  for (const pullRequest of pullRequests) {
+  for (const change of includedChanges) {
+    const author =
+      change.type === 'pull-request'
+        ? change.pullRequest.author
+        : change.commit.author
+    if (!author) continue
+    const key = commitAuthorKey(author)
+    if (!key) continue
+    const isNew =
+      change.type === 'pull-request'
+        ? Boolean(author.login && newContributorLogins.has(author.login))
+        : newCommitContributorKeys.has(key)
+    if (!isNew) continue
+    const identity =
+      author.login ?? ('name' in author ? author.name : undefined)
+    if (identity && config['exclude-contributors'].includes(identity)) continue
+
+    const previous = firstChangeByContributor.get(key)
     if (
-      !pullRequest.author ||
-      !newContributorLogins.has(pullRequest.author.login) ||
-      config['exclude-contributors'].includes(pullRequest.author.login)
+      !previous ||
+      (changeDate(change) ?? '') < (changeDate(previous.change) ?? '')
     ) {
-      continue
-    }
-
-    const previous = firstPullRequestByLogin.get(pullRequest.author.login)
-    if (!previous || (pullRequest.mergedAt ?? '') < (previous.mergedAt ?? '')) {
-      firstPullRequestByLogin.set(pullRequest.author.login, pullRequest)
+      firstChangeByContributor.set(key, { change, author })
     }
   }
 
-  const entries = [...firstPullRequestByLogin.entries()]
-    .filter(([, pullRequest]) =>
-      includedPullRequestKeys.has(pullRequestKey(pullRequest)),
-    )
-    .sort(
-      ([, a], [, b]) =>
-        (a.mergedAt ?? '').localeCompare(b.mergedAt ?? '') ||
-        a.number - b.number,
-    )
+  const entries = [...firstChangeByContributor.values()].sort((a, b) =>
+    (changeDate(a.change) ?? '').localeCompare(changeDate(b.change) ?? ''),
+  )
   if (entries.length === 0) return config['no-new-contributor-template']
 
   return entries
-    .map(([login, pullRequest]) =>
-      renderTemplate({
+    .map(({ change, author }) => {
+      const login = author.login
+      const title =
+        change.type === 'pull-request'
+          ? change.pullRequest.title
+          : (change.commit.message?.split(/\r?\n/, 1)[0] ?? change.commit.oid)
+      const url =
+        change.type === 'pull-request'
+          ? (change.pullRequest.url ?? '')
+          : (change.commit.url ?? '')
+      const reference =
+        change.type === 'pull-request'
+          ? `#${change.pullRequest.number}`
+          : change.commit.url
+            ? `[\`${change.commit.oid.slice(0, 7)}\`](${change.commit.url})`
+            : `\`${change.commit.oid.slice(0, 7)}\``
+      return renderTemplate({
         template: config['new-contributor-template'],
         object: {
-          $AUTHOR: login,
-          $AUTHOR_MENTION: `@${login}`,
-          $AUTHOR_URL: pullRequest.author?.url,
-          $NUMBER: pullRequest.number,
-          $URL: pullRequest.url,
+          $AUTHOR: login ?? author.name ?? 'ghost',
+          $AUTHOR_MENTION: login ? `@${login}` : (author.name ?? 'ghost'),
+          $AUTHOR_URL: author.url ?? '',
+          $CHANGE_TYPE: change.type,
+          $CHANGE_TITLE: title,
+          $CHANGE_URL: url,
+          $CHANGE_REFERENCE: reference,
+          $CHANGE_DATE: changeDate(change) ?? '',
         },
-      }),
-    )
+      })
+    })
     .join('\n')
 }

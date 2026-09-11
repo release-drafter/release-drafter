@@ -138,6 +138,7 @@ describe('GitHub-compatible REST mechanics', () => {
 
     expect({
       commitPull: endpoints.commitPull(repository, 'a/b'),
+      commits: endpoints.commits(repository),
       pullFiles: endpoints.pullFiles(repository, 7),
       pulls: endpoints.pulls(repository),
       gitCommit: endpoints.gitCommit(repository, 'refs/tags/v1'),
@@ -146,6 +147,7 @@ describe('GitHub-compatible REST mechanics', () => {
       release: endpoints.release(repository, 9),
     }).toEqual({
       commitPull: '/repos/octo/project/commits/a%2Fb/pull',
+      commits: '/repos/octo/project/commits',
       pullFiles: '/repos/octo/project/pulls/7/files',
       pulls: '/repos/octo/project/pulls',
       gitCommit: '/repos/octo/project/git/commits/refs%2Ftags%2Fv1',
@@ -880,6 +882,31 @@ describe('GitHub-compatible REST mechanics', () => {
     )
     expect(result.newContributorLogins).toEqual(new Set())
     expect(historyPages).toEqual([1, 2])
+  })
+
+  it('finds direct commit authors with no history before the comparison base', async () => {
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({
+          total_commits: 1,
+          commits: [commit('direct', '2026-01-02T00:00:00Z', 'new-user')],
+        })
+      }
+      if (url.pathname.endsWith('/commits/direct/pull')) {
+        return json({ message: 'not found' }, { status: 404 })
+      }
+      if (url.pathname.endsWith('/commits')) {
+        expect(url.searchParams.get('sha')).toBe('v1')
+        return json([], {}, { 'x-total-count': '0' })
+      }
+      throw new Error(`Unexpected ${url}`)
+    })
+
+    const result = await createAdapter(fetch).findChanges(
+      request({ includeCommits: true, includeNewContributors: true }),
+    )
+
+    expect(result.newCommitContributorKeys).toEqual(new Set(['login:new-user']))
   })
 })
 

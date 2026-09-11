@@ -47,7 +47,7 @@ export type {
 export type { GitHubOctokit } from './utils/octokit.ts'
 
 const RELEASE_COUNT_LIMIT = 1000
-const RECENT_PULL_REQUEST_LOOKBACK = 5
+const RECENT_PULL_REQUEST_LOOKBACK = 100
 const DEFAULT_CONCURRENCY = 5
 
 export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
@@ -187,8 +187,9 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     const isUnsupportedRecentRef =
       comparison.headRef.startsWith('refs/tags/') ||
       comparison.headRef.startsWith('refs/pull/')
+    let recovered: GraphPullRequest[] = []
     if (!isUnsupportedRecentRef) {
-      const recovered = await this.findRecentPullRequests(
+      recovered = await this.findRecentPullRequests(
         params,
         new Set(comparisonOids),
         new Set(pullRequestsByKey.keys()),
@@ -197,6 +198,22 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
       for (const pullRequest of recovered) {
         const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
         if (!pullRequestsByKey.has(key)) pullRequestsByKey.set(key, pullRequest)
+      }
+      if (recovered.length > 0) {
+        const recoveredMergeOids = new Set(
+          recovered.flatMap((pullRequest) =>
+            pullRequest.mergeCommit?.oid ? [pullRequest.mergeCommit.oid] : [],
+          ),
+        )
+        for (const commit of orderedGraphCommits) {
+          if (!recoveredMergeOids.has(commit.oid)) continue
+          commit.associatedPullRequests = {
+            totalCount: 1,
+            nodes: recovered.filter(
+              (pullRequest) => pullRequest.mergeCommit?.oid === commit.oid,
+            ),
+          }
+        }
       }
     }
 
@@ -220,11 +237,24 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     const newContributorLogins = params.includeNewContributors
       ? await this.findNewContributorLogins(repository, graphPullRequests)
       : new Set<string>()
+    const commits = orderedGraphCommits.map(normalizeCommit)
+    if (!isUnsupportedRecentRef && recovered.length === 0) {
+      for (const commit of commits) {
+        if (commit.associationStatus === 'unknown') {
+          commit.associationStatus = 'none'
+        }
+      }
+    }
+    const newCommitContributorKeys =
+      params.includeCommits && params.includeNewContributors
+        ? await this.findNewCommitContributorKeys(params, commits)
+        : new Set<string>()
 
     return {
-      commits: orderedGraphCommits.map(normalizeCommit),
+      commits,
       pullRequests,
       newContributorLogins,
+      newCommitContributorKeys,
     }
   }
 
@@ -464,6 +494,43 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
       },
     )
     return new Set(results.flat())
+  }
+
+  private async findNewCommitContributorKeys(
+    params: FindChangesRequest,
+    commits: ChangeSet['commits'],
+  ): Promise<Set<string>> {
+    const candidates = new Set(
+      commits.flatMap((commit) =>
+        commit.associationStatus === 'none' && commit.author?.login
+          ? [commit.author.login]
+          : [],
+      ),
+    )
+    const results = await mapConcurrent(
+      [...candidates],
+      this.contributorConcurrency,
+      async (login) => {
+        try {
+          const response = await this.octokit.rest.repos.listCommits({
+            owner: params.repository.owner,
+            repo: params.repository.name,
+            sha: params.comparison.baseRef,
+            author: login,
+            per_page: 1,
+          })
+          return response.data.length === 0
+            ? `login:${login.toLowerCase()}`
+            : ''
+        } catch (error) {
+          this.logger.warning(
+            `Could not determine whether ${login} is a new commit contributor. The contributor will not be labeled new. ${error instanceof Error ? error.message : String(error)}`,
+          )
+          return ''
+        }
+      },
+    )
+    return new Set(results.filter(Boolean))
   }
 
   async resolveCommitish({

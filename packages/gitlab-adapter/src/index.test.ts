@@ -503,6 +503,35 @@ describe('GitLabAdapter', () => {
     expect(warning).not.toHaveBeenCalled()
   })
 
+  it('finds direct commit authors with no history before the comparison base', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const url = new URL(String(input))
+      if (url.pathname.includes('/repository/compare')) {
+        return json({
+          compare_timeout: false,
+          commits: [commit('direct', '2026-01-02', 'New User')],
+        })
+      }
+      if (url.pathname.includes('/commits/direct/merge_requests')) {
+        return json([])
+      }
+      if (url.pathname.endsWith('/repository/commits')) {
+        expect(url.searchParams.get('ref_name')).toBe('v1')
+        expect(url.searchParams.get('author')).toBe('direct@example.com')
+        return json([])
+      }
+      throw new Error(`Unexpected ${url}`)
+    })
+
+    const result = await adapter(fetch).findChanges(
+      request({ includeCommits: true, includeNewContributors: true }),
+    )
+
+    expect(result.newCommitContributorKeys).toEqual(
+      new Set(['email:direct@example.com']),
+    )
+  })
+
   it('bounds pagination, associated MRs, requests, and retries', async () => {
     const pageFetch = vi.fn<typeof globalThis.fetch>(async () =>
       json([], {}, { 'x-next-page': '2' }),
