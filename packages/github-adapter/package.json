@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/github-adapter",
-  "version": "7.7.0",
+  "version": "8.0.0",
   "description": "Authentication-bound GitHub adapter for Release Drafter core.",
   "type": "module",
   "engines": {

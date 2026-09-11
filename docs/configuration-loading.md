@@ -41,7 +41,7 @@ the repository, run `actions/checkout@v6` before Release Drafter.
 > `github:` scheme. You do not need `actions/checkout`.
 >
 > ```yaml
-> uses: release-drafter/release-drafter@v7
+> uses: release-drafter/release-drafter@v8
 > with:
 >   config-name: relative/path/to/my/config.yaml
 > ```
@@ -93,7 +93,7 @@ jobs:
             .github/release-drafter-template.yml \
             > .github/release-drafter-parsed.yml
       - name: Use generated Release Drafter configuration
-        uses: release-drafter/release-drafter@v7
+        uses: release-drafter/release-drafter@v8
         with:
           config-name: file:release-drafter-parsed.yml
 ```
@@ -116,7 +116,7 @@ tag-template: 'backend/v$RESOLVED_VERSION'
 
 ```yaml
 steps:
-  - uses: release-drafter/release-drafter@v7
+  - uses: release-drafter/release-drafter@v8
     with:
       config-name: release-drafter/backend.yml
 ```
@@ -256,7 +256,7 @@ jobs:
   release-drafter:
     runs-on: ubuntu-slim
     steps:
-      - uses: release-drafter/release-drafter@v7
+      - uses: release-drafter/release-drafter@v8
         with:
           config-name: release-drafter.yaml
 ```

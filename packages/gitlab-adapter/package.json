@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/gitlab-adapter",
-  "version": "7.7.0",
+  "version": "8.0.0",
   "description": "Private GitLab forge adapter for Release Drafter.",
   "type": "module",
   "engines": {

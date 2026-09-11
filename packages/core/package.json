@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/core",
-  "version": "7.7.0",
+  "version": "8.0.0",
   "description": "Forge-neutral release drafting and orchestration.",
   "type": "module",
   "sideEffects": false,

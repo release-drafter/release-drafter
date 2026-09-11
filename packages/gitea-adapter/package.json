@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/gitea-adapter",
-  "version": "7.7.0",
+  "version": "8.0.0",
   "description": "Private Gitea REST forge adapter for Release Drafter core.",
   "type": "module",
   "engines": {

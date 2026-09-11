@@ -26,7 +26,7 @@ jobs:
   check-pr:
     runs-on: ubuntu-slim
     steps:
-      - uses: release-drafter/release-drafter/check-pr@v7
+      - uses: release-drafter/release-drafter/check-pr@v8
 ```
 
 The action supports the `pull_request` and `pull_request_target` events. It

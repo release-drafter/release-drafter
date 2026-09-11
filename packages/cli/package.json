@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/cli",
-  "version": "7.7.0",
+  "version": "8.0.0",
   "description": "Private command-line runtime for Release Drafter.",
   "type": "module",
   "engines": {

@@ -27128,23 +27128,34 @@ var HydrateComparisonCommitsDocument = new TypedDocumentString(`
           nodes {
             id
             oid
+            url
+            authoredDate
             committedDate
             message
             author {
               name
+              email
+              avatarUrl
               user {
+                __typename
                 login
+                url
               }
             }
             authors(first: 100) {
               nodes {
                 name
+                email
+                avatarUrl
                 user {
+                  __typename
                   login
+                  url
                 }
               }
             }
             associatedPullRequests(first: $pullRequestLimit) {
+              totalCount
               nodes {
                 ...AdapterPullRequestFields
               }
@@ -27252,18 +27263,27 @@ var normalizePullRequest = (pullRequest) => ({
 var normalizeCommit = (commit) => ({
 	id: commit.id,
 	oid: commit.oid,
+	url: commit.url,
+	authoredAt: commit.authoredDate,
 	committedAt: commit.committedDate,
 	message: commit.message,
 	author: commit.author ? {
 		name: commit.author.name,
 		login: commit.author.user?.login,
-		type: "User"
+		email: commit.author.email,
+		avatarUrl: commit.author.avatarUrl,
+		url: commit.author.user?.url,
+		type: commit.author.user?.__typename
 	} : commit.author,
 	authors: commit.authors ? (commit.authors.nodes ?? []).map((author) => author ? {
 		name: author.name,
 		login: author.user?.login,
-		type: "User"
+		email: author.email,
+		avatarUrl: author.avatarUrl,
+		url: author.user?.url,
+		type: author.user?.__typename
 	} : author) : commit.authors,
+	associationStatus: (commit.associatedPullRequests?.totalCount ?? 0) > 0 || (commit.associatedPullRequests?.nodes?.length ?? 0) > 0 ? "associated" : "unknown",
 	associatedPullRequests: commit.associatedPullRequests ? (commit.associatedPullRequests.nodes ?? []).map((pullRequest) => pullRequest ? {
 		number: pullRequest.number,
 		baseRepository: pullRequest.baseRepository?.nameWithOwner ?? null
@@ -50923,7 +50943,7 @@ var createProxyAwareFetch = (env) => {
 //#endregion
 //#region packages/github-adapter/src/index.ts
 var RELEASE_COUNT_LIMIT = 1e3;
-var RECENT_PULL_REQUEST_LOOKBACK = 5;
+var RECENT_PULL_REQUEST_LOOKBACK = 100;
 var DEFAULT_CONCURRENCY = 5;
 var GitHubAdapter = class {
 	capabilities = { draftReleases: true };
@@ -51020,11 +51040,23 @@ var GitHubAdapter = class {
 			if (!pullRequestsByKey.has(key)) pullRequestsByKey.set(key, pullRequest);
 		}
 		const isBranchRef = comparison.headRef.startsWith("refs/heads/");
-		if (!(comparison.headRef.startsWith("refs/tags/") || comparison.headRef.startsWith("refs/pull/"))) {
-			const recovered = await this.findRecentPullRequests(params, new Set(comparisonOids), new Set(pullRequestsByKey.keys()), isBranchRef ? comparison.headRef.replace(/^refs\/heads\//, "") : null);
+		const isUnsupportedRecentRef = comparison.headRef.startsWith("refs/tags/") || comparison.headRef.startsWith("refs/pull/");
+		let recovered = [];
+		if (!isUnsupportedRecentRef) {
+			recovered = await this.findRecentPullRequests(params, new Set(comparisonOids), new Set(pullRequestsByKey.keys()), isBranchRef ? comparison.headRef.replace(/^refs\/heads\//, "") : null);
 			for (const pullRequest of recovered) {
 				const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
 				if (!pullRequestsByKey.has(key)) pullRequestsByKey.set(key, pullRequest);
+			}
+			if (recovered.length > 0) {
+				const recoveredMergeOids = new Set(recovered.flatMap((pullRequest) => pullRequest.mergeCommit?.oid ? [pullRequest.mergeCommit.oid] : []));
+				for (const commit of orderedGraphCommits) {
+					if (!recoveredMergeOids.has(commit.oid)) continue;
+					commit.associatedPullRequests = {
+						totalCount: 1,
+						nodes: recovered.filter((pullRequest) => pullRequest.mergeCommit?.oid === commit.oid)
+					};
+				}
 			}
 		}
 		const graphPullRequests = [...pullRequestsByKey.values()].filter((pullRequest) => pullRequest.baseRepository?.nameWithOwner === repositoryName && pullRequest.merged);
@@ -51034,10 +51066,15 @@ var GitHubAdapter = class {
 			...params.includeChangedFiles ? { changedFiles: changedFiles.get(`${repositoryName}#${pullRequest.number}`) ?? [] } : {}
 		}));
 		const newContributorLogins = params.includeNewContributors ? await this.findNewContributorLogins(repository, graphPullRequests) : /* @__PURE__ */ new Set();
+		const commits = orderedGraphCommits.map(normalizeCommit);
+		if (!isUnsupportedRecentRef && recovered.length === 0) {
+			for (const commit of commits) if (commit.associationStatus === "unknown") commit.associationStatus = "none";
+		}
 		return {
-			commits: orderedGraphCommits.map(normalizeCommit),
+			commits,
 			pullRequests,
-			newContributorLogins
+			newContributorLogins,
+			newCommitContributorKeys: params.includeCommits && params.includeNewContributors ? await this.findNewCommitContributorKeys(params, commits) : /* @__PURE__ */ new Set()
 		};
 	}
 	async hydrateComparisonCommits(params, comparisonOids) {
@@ -51154,6 +51191,37 @@ var GitHubAdapter = class {
 			return chunk.flatMap(([login], index) => data[`author${index}`]?.issueCount === 0 ? [login] : []);
 		});
 		return new Set(results.flat());
+	}
+	async findNewCommitContributorKeys(params, commits) {
+		const earliestCommitByLogin = /* @__PURE__ */ new Map();
+		for (const commit of commits) {
+			if (commit.associationStatus !== "none" || !commit.author?.login || !commit.committedAt) continue;
+			const previous = earliestCommitByLogin.get(commit.author.login);
+			if (!previous || commit.committedAt < previous) earliestCommitByLogin.set(commit.author.login, commit.committedAt);
+		}
+		const results = await mapConcurrent([...await this.findNewContributorLogins(params.repository, [...earliestCommitByLogin].map(([login, committedAt]) => ({
+			number: 0,
+			title: "",
+			mergedAt: committedAt,
+			author: {
+				__typename: "User",
+				login
+			}
+		})))], this.contributorConcurrency, async (login) => {
+			try {
+				return (await this.octokit.rest.repos.listCommits({
+					owner: params.repository.owner,
+					repo: params.repository.name,
+					sha: params.comparison.baseRef,
+					author: login,
+					per_page: 1
+				})).data.length === 0 ? `login:${login.toLowerCase()}` : "";
+			} catch (error) {
+				this.logger.warning(`Could not determine whether ${login} is a new commit contributor. The contributor will not be labeled new. ${error instanceof Error ? error.message : String(error)}`);
+				return "";
+			}
+		});
+		return new Set(results.filter(Boolean));
 	}
 	async resolveCommitish({ repository, commitish }) {
 		if (commitish.startsWith("refs/heads/")) return commitish.replace(/^refs\/heads\//, "");

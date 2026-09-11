@@ -4,7 +4,7 @@
   <img src="docs/design/logo.svg" alt="Release Drafter Logo" width="450" />
 </h1>
 
-<p align="center">Draft the next release notes as pull requests merge into a branch.</p>
+<p align="center">Draft release notes from pull requests and individual commits.</p>
 
 ![CI](https://github.com/release-drafter/release-drafter/actions/workflows/ci.yml/badge.svg)
 
@@ -33,7 +33,7 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-slim
     steps:
-      - uses: release-drafter/release-drafter@v7
+      - uses: release-drafter/release-drafter@v8
         with:
           # This default loads .github/release-drafter.yml.
           config-name: release-drafter.yml
@@ -132,7 +132,7 @@ categories:
       label: 'major'
   - type: 'version-resolver'
     semver-increment: 'patch'
-change-template: '- $TITLE (#$NUMBER) $AUTHORS'
+change-template: '- $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS'
 # Add # and @ to prevent mentions. Add ` to prevent code blocks.
 change-title-escapes: '\<*_&'
 template: |
@@ -155,19 +155,22 @@ The `.github/release-drafter.yml` file supports these keys:
 | `tag-template`                   | Optional | The template for the tag of the draft release. For example: `"v$NEXT_PATCH_VERSION"`.                                                                                                                                                                                                                                                                                |
 | `tag-prefix`                     | Optional | A prefix for release tag filtering. Release Drafter removes the prefix before it parses a matching version. Default: `""`.                                                                                                                                                                                                                                           |
 | `version-template`               | Optional | The template for the next version number. Use it for projects that do not use Semantic Versioning. Default: `"$MAJOR.$MINOR.$PATCH$PRERELEASE"`.                                                                                                                                                                                                                     |
-| `change-template`                | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) $AUTHORS"`.                                                                                                                                                                                           |
-| `change-author-template`         | Optional | The template to use for each author in `$AUTHORS`. Supports `$AUTHOR` for the raw login/name and `$AUTHOR_MENTION` for a GitHub-formatted mention. Default: `"$AUTHOR_MENTION"`.                                                                                                                                                                                     |
-| `change-authors-separator`       | Optional | The separator between authors in `$AUTHORS`. Default: `", "`. Use `"\n"` with a list-style `change-author-template` for multiline output.                                                                                                                                                                                                                            |
-| `change-authors-final-separator` | Optional | The separator before the final author in `$AUTHORS`. For example, `" and "` produces `@octocat, @cchanche and @jetersen`. Default: the value of `change-authors-separator`.                                                                                                                                                                                          |
-| `change-title-escapes`           | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                                                                                                                                 |
+| `include-commits`                | Optional | Includes commits that are not associated with any pull request. Default: `false`. See [Include individual commits](#include-individual-commits).                                                                                                                                                                                                                     |
+| `change-template`                | Optional | The generic fallback template for pull requests and commits. Use [change template variables](#change-template-variables). Default: `"* $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS"`.                                                                                                                                                                          |
+| `pr-template`                    | Optional | Overrides `change-template` for pull requests. Supports generic `$CHANGE_*` and pull-request-specific `$PR_*` variables.                                                                                                                                                                                                                                             |
+| `commit-template`                | Optional | Overrides `change-template` for commits. Supports generic `$CHANGE_*` and commit-specific `$COMMIT_*` variables.                                                                                                                                                                                                                                                     |
+| `change-author-template`         | Optional | The template to use for each author in `$CHANGE_AUTHORS`. Supports `$AUTHOR`, `$AUTHOR_MENTION`, and `$AUTHOR_URL`. Default: `"$AUTHOR_MENTION"`.                                                                                                                                                                                                                    |
+| `change-authors-separator`       | Optional | The separator between authors in `$CHANGE_AUTHORS`. Default: `", "`. Use `"\n"` with a list-style `change-author-template` for multiline output.                                                                                                                                                                                                                     |
+| `change-authors-final-separator` | Optional | The separator before the final author in `$CHANGE_AUTHORS`. For example, `" and "` produces `@octocat, @cchanche and @jetersen`. Default: the value of `change-authors-separator`.                                                                                                                                                                                   |
+| `change-title-escapes`           | Optional | Characters to escape in `$CHANGE_TITLE`, `$PR_TITLE`, and `$COMMIT_TITLE` so that they are not interpreted as Markdown formatting. Default: `""`.                                                                                                                                                                                                                    |
 | `no-changes-template`            | Optional | The template to use when there are no changes. Default: `"* No changes"`.                                                                                                                                                                                                                                                                                            |
 | `categories`                     | Optional | Defines how Release Drafter filters and groups changes and selects version increments. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. See [Categorize changes](#categorize-changes).                                                                                                                                      |
-| `exclude-contributors`           | Optional | Excludes specified usernames from `$CONTRIBUTORS`. See [Exclude contributors](#exclude-contributors).                                                                                                                                                                                                                                                                |
-| `new-contributor-template`       | Optional | The template to use for each new contributor in `$NEW_CONTRIBUTORS`. Use [new contributor template variables](#new-contributor-template-variables) to insert values. Default: `"* $AUTHOR_MENTION made their first contribution in #$NUMBER"`.                                                                                                                       |
+| `exclude-contributors`           | Optional | Excludes specified usernames or exact Git author names from `$CONTRIBUTORS`. See [Exclude contributors](#exclude-contributors).                                                                                                                                                                                                                                      |
+| `new-contributor-template`       | Optional | The template to use for each new contributor in `$NEW_CONTRIBUTORS`. Use [new contributor template variables](#new-contributor-template-variables) to insert values. Default: `"* $AUTHOR_MENTION made their first contribution in $CHANGE_REFERENCE"`.                                                                                                              |
 | `no-new-contributor-template`    | Optional | The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list. Default: `"* No new contributors"`.                                                                                                                                                                                                                                          |
 | `no-contributors-template`       | Optional | The template to use when `$CONTRIBUTORS` has no entries. Default: `"No contributors"`.                                                                                                                                                                                                                                                                               |
 | `replacers`                      | Optional | Searches and replaces content in the generated changelog body. See [Replacers](#replacers).                                                                                                                                                                                                                                                                          |
-| `sort-by`                        | Optional | Sorts the changelog by `merged_at` or `title`. Default: `merged_at`.                                                                                                                                                                                                                                                                                                 |
+| `sort-by`                        | Optional | Sorts changes by `date` or `title`. `date` uses the pull request merge date or commit committed date. Default: `date`.                                                                                                                                                                                                                                               |
 | `sort-direction`                 | Optional | Sorts the changelog in `ascending` or `descending` order. Default: `descending`.                                                                                                                                                                                                                                                                                     |
 | `prerelease`                     | Optional | Creates a prerelease and includes changes since the previous prerelease when one exists. Default: `false`.                                                                                                                                                                                                                                                           |
 | `prerelease-identifier`          | Optional | The prerelease identifier, such as `alpha`, `beta`, or `rc`. This option increments the prerelease version. A configuration-file identifier enables `prerelease` unless the workflow has a `prerelease: false` action input. Default: `''`.                                                                                                                          |
@@ -183,14 +186,14 @@ The `.github/release-drafter.yml` file supports these keys:
 
 Use these variables in `template`, `header`, and `footer`:
 
-| Variable            | Description                                                                                                 |
-| ------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `$CHANGES`          | The Markdown list of merged pull requests.                                                                  |
-| `$CONTRIBUTORS`     | A comma-separated list of pull request authors, commit authors, and commit committers for the release.      |
-| `$NEW_CONTRIBUTORS` | A Markdown list of pull request authors making their first contribution and the corresponding pull request. |
-| `$PREVIOUS_TAG`     | The previous release tag.                                                                                   |
-| `$REPOSITORY`       | The current repository.                                                                                     |
-| `$OWNER`            | The current repository owner.                                                                               |
+| Variable            | Description                                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `$CHANGES`          | The Markdown list of included pull requests and individual commits.                                              |
+| `$CONTRIBUTORS`     | A comma-separated list of included pull request authors and commit authors/coauthors.                            |
+| `$NEW_CONTRIBUTORS` | A Markdown list of primary authors making their first pull request or direct-commit contribution to the project. |
+| `$PREVIOUS_TAG`     | The previous release tag.                                                                                        |
+| `$REPOSITORY`       | The current repository.                                                                                          |
+| `$OWNER`            | The current repository owner.                                                                                    |
 
 ## Category template variables
 
@@ -267,10 +270,10 @@ Any category with `semver-increment` contributes to `$RESOLVED_VERSION`. Use
 do not also render a changelog section.
 
 Before version resolution runs, any `pre-include` and `pre-exclude` categories
-filter the candidate pull requests. After that:
+filter the candidate changes. After that:
 
-- `type: changelog` categories contribute only for pull requests assigned to
-  that changelog category.
+- `type: changelog` categories contribute only for changes assigned to that
+  changelog category.
 - `type: version-resolver` categories contribute from their own matches without
   rendering a changelog section.
 - The highest matching increment wins across both category types.
@@ -304,32 +307,52 @@ This example:
 
 ## New contributor template variables
 
-Use these variables in `new-contributor-template`:
+Use these variables in `new-contributor-template`. The `$CHANGE_*` values refer
+to the contributor's first included pull request or direct commit:
 
-| Variable          | Description                                                                                          |
-| ----------------- | ---------------------------------------------------------------------------------------------------- |
-| `$AUTHOR`         | The new contributor's username. Example: `gracehopper`.                                              |
-| `$AUTHOR_MENTION` | The new contributor's GitHub mention. Example: `@gracehopper`.                                       |
-| `$AUTHOR_URL`     | The URL of the new contributor's GitHub profile. Example: `https://github.com/gracehopper`.          |
-| `$NUMBER`         | The number of the contributor's first pull request. Example: `42`.                                   |
-| `$URL`            | The URL of the contributor's first pull request. Example: `https://github.com/octocat/repo/pull/42`. |
+| Variable            | Description                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
+| `$AUTHOR`           | The new contributor's username or Git author name.                                              |
+| `$AUTHOR_MENTION`   | The new contributor's mention when a forge account is known, otherwise the Git author name.     |
+| `$AUTHOR_URL`       | The contributor profile URL when the forge associates the Git author with an account.           |
+| `$CHANGE_TYPE`      | `pull-request` or `commit`.                                                                     |
+| `$CHANGE_TITLE`     | The pull request title or commit headline.                                                      |
+| `$CHANGE_URL`       | The pull request or commit URL.                                                                 |
+| `$CHANGE_REFERENCE` | `#42` for a pull request or a linked short SHA such as ``[`abc1234`](https://example/commit)``. |
+| `$CHANGE_DATE`      | The pull request merge date or commit committed date.                                           |
 
 ## Change template variables
 
-Use these variables in `change-template`:
+Use generic `$CHANGE_*` variables in `change-template`, `pr-template`, and
+`commit-template`:
 
-| Variable         | Description                                                                                                                                                                                                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `$NUMBER`        | The pull request number. Example: `42`.                                                                                                                                                                                                                                                    |
-| `$CATEGORY`      | The title of the category that matched the pull request, preserving its configured case. Empty for uncategorized pull requests.                                                                                                                                                            |
-| `$TITLE`         | The pull request title. Example: `Add alien technology`. Release Drafter prefixes characters in `change-title-escapes`, except `@` and `#`, with a backslash. Markdown then displays these characters as text. For `@` and `#`, Release Drafter adds an HTML comment to prevent a mention. |
-| `$AUTHOR`        | The pull request author's username. Example: `gracehopper`.                                                                                                                                                                                                                                |
-| `$AUTHOR_URL`    | The pull request author's GitHub profile URL. Example: `https://github.com/gracehopper`.                                                                                                                                                                                                   |
-| `$AUTHORS`       | The pull request author and associated commit authors, rendered with `change-author-template` and joined with `change-authors-separator`. The pull request author is first.                                                                                                                |
-| `$BODY`          | The pull request body. Example: `Fixed spelling mistake`.                                                                                                                                                                                                                                  |
-| `$URL`           | The pull request URL. Example: `https://github.com/octocat/repo/pull/42`.                                                                                                                                                                                                                  |
-| `$BASE_REF_NAME` | The name of the pull request base ref. Example: `main`.                                                                                                                                                                                                                                    |
-| `$HEAD_REF_NAME` | The name of the pull request head ref. Example: `my-bug-fix`.                                                                                                                                                                                                                              |
+| Variable             | Description                                                                                         |
+| -------------------- | --------------------------------------------------------------------------------------------------- |
+| `$CHANGE_TYPE`       | `pull-request` or `commit`.                                                                         |
+| `$CHANGE_CATEGORY`   | The matched category title, or an empty string for uncategorized changes.                           |
+| `$CHANGE_TITLE`      | The pull request title or commit headline.                                                          |
+| `$CHANGE_BODY`       | The pull request body or commit message body.                                                       |
+| `$CHANGE_URL`        | The pull request or commit URL.                                                                     |
+| `$CHANGE_REFERENCE`  | `#42` for a pull request or a linked short commit SHA.                                              |
+| `$CHANGE_AUTHOR`     | The primary author's username or Git author name.                                                   |
+| `$CHANGE_AUTHOR_URL` | The primary author's profile URL when the forge supplies one.                                       |
+| `$CHANGE_AUTHORS`    | All change authors, rendered with `change-author-template` and joined by the configured separators. |
+| `$CHANGE_DATE`       | The pull request merge date or commit committed date.                                               |
+
+`pr-template` also supports `$PR_NUMBER`, `$PR_TITLE`, `$PR_BODY`, `$PR_URL`,
+`$PR_AUTHOR`, `$PR_AUTHOR_URL`, `$PR_BASE_REF_NAME`, `$PR_HEAD_REF_NAME`, and
+`$PR_MERGED_DATE`.
+
+`commit-template` also supports `$COMMIT_SHA`, `$COMMIT_SHA_SHORT`,
+`$COMMIT_TITLE`, `$COMMIT_BODY`, `$COMMIT_MESSAGE`, `$COMMIT_URL`,
+`$COMMIT_AUTHOR`, `$COMMIT_AUTHOR_URL`, `$COMMIT_AUTHORED_DATE`, and
+`$COMMIT_COMMITTED_DATE`.
+
+Version 8 removes the old unprefixed change variables, including `$TITLE`,
+`$NUMBER`, `$BODY`, `$URL`, and `$AUTHORS`. These names remain valid in their
+separate category, author, and version template contexts where documented.
+`new-contributor-template` also replaces `$NUMBER` and `$URL` with
+`$CHANGE_REFERENCE` and `$CHANGE_URL`.
 
 For a multiline author list, render each author with `$AUTHOR` and join them
 with a newline:
@@ -342,12 +365,12 @@ categories:
   - title: todo
 category-template: ''
 change-template: |-
-  - type: $CATEGORY
+  - type: $CHANGE_CATEGORY
     message: |-
-      $TITLE
-    pull: $NUMBER
+      $CHANGE_TITLE
+    reference: $CHANGE_REFERENCE
     authors:
-      $AUTHORS
+      $CHANGE_AUTHORS
 change-author-template: '- $AUTHOR'
 change-authors-separator: "\n    "
 ```
@@ -355,8 +378,28 @@ change-authors-separator: "\n    "
 Use `$AUTHOR_MENTION` instead of `$AUTHOR` in `change-author-template` to create
 GitHub mentions. Release Drafter renders GitHub App bots as linked
 mentions, for example `[@dependabot[bot]](https://github.com/apps/dependabot)`.
-`$CATEGORY` preserves `categories[].title`; configure the title with the casing
-required by the output.
+`$CHANGE_CATEGORY` preserves `categories[].title`; configure the title with the
+casing required by the output.
+
+## Include individual commits
+
+Set `include-commits: true` to render commits that are not associated with a
+pull request. Release Drafter suppresses a commit when the forge reports any
+pull request association, even if that pull request is later excluded from the
+changelog. If the forge cannot determine the association safely, the commit is
+omitted with a warning rather than risk rendering both the pull request and its
+commit.
+
+Individual commits use the same categories and version resolution as pull
+requests. `when.conventional` parses the commit message. Label and path
+predicates apply only to pull requests, so a condition combining conventional
+syntax with a label or path does not match commits.
+
+With `sort-by: date`, Release Drafter orders pull requests by merge date and
+commits by **committed date**. It intentionally does not use authored date:
+rebases and cherry-picks can preserve an old authored date even though the
+commit entered the release branch later. `$COMMIT_AUTHORED_DATE` remains
+available when that original metadata is useful in output.
 
 ## Categorize changes
 
@@ -371,10 +414,10 @@ The `categories` option defines the change classification sequence:
 `pre-include` always runs before `pre-exclude`, and both category types affect
 both changelog generation and version resolution.
 
-Release Drafter evaluates categories in configuration order. By default, a pull
-request can match multiple categories of the same type. Setting
+Release Drafter evaluates categories in configuration order. By default, a
+change can match multiple categories of the same type. Setting
 `exclusive: true` on a `changelog` or `version-resolver` category stops later
-categories of that same type from also matching the same pull request.
+categories of that same type from also matching the same change.
 
 Each category supports these keys:
 
@@ -383,7 +426,7 @@ Each category supports these keys:
 | `type`             | All categories                  | Category behavior. Defaults to `changelog`.                                                                                                               |
 | `title`            | `changelog`                     | Required for changelog categories because `category-template` renders it. Ignored for `pre-include`, `pre-exclude`, and `version-resolver`.               |
 | `when`             | All categories                  | Match conditions. Omit it or use an empty array to match all changes.                                                                                     |
-| `exclusive`        | `changelog`, `version-resolver` | Prevents later categories of the same type from also matching the same pull request. Defaults to `false`.                                                 |
+| `exclusive`        | `changelog`, `version-resolver` | Prevents later categories of the same type from also matching the same change. Defaults to `false`.                                                       |
 | `collapse-after`   | `changelog`                     | Collapses long changelog sections into `<details>`. `0` always collapses, `-1` disables collapsing. Defaults to `-1`.                                     |
 | `semver-increment` | `changelog`, `version-resolver` | Version increment contributed by matching changes. Can be `major`, `minor`, or `patch`. Defaults to `patch`. Ignored for `pre-include` and `pre-exclude`. |
 
@@ -440,8 +483,9 @@ The `labels-mode` and `paths-mode` options control the comparison of configured
 labels and path patterns. `any` is the default. Path matching uses the
 pull request's changed files.
 
-The `conventional` option parses the pull request title as a conventional commit
-header. Set it to `true` to match any conventional title, or configure
+The `conventional` option parses the pull request title or commit message as a
+conventional commit header. Set it to `true` to match any conventional change,
+or configure
 `type`/`types`, `scope`/`scopes`, and `breaking`:
 
 ```yml
@@ -544,8 +588,8 @@ draft.
 ## Exclude contributors
 
 By default, `$CONTRIBUTORS` contains the names or usernames of all release
-contributors. Use `exclude-contributors` to remove specified usernames from the
-list.
+contributors. Use `exclude-contributors` to remove specified usernames or exact
+Git author names from the list.
 
 ```yml
 exclude-contributors:
@@ -595,7 +639,7 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       # Runs Autolabeler.
-      - uses: release-drafter/release-drafter/autolabeler@v7
+      - uses: release-drafter/release-drafter/autolabeler@v8
 ```
 
 The available matchers are `files` for glob patterns and `branch`, `title`, and
@@ -643,14 +687,14 @@ jobs:
   update_full_release_draft:
     runs-on: ubuntu-slim
     steps:
-      - uses: release-drafter/release-drafter@v7
+      - uses: release-drafter/release-drafter@v8
         with:
           prerelease: false # the default
           # Add the remaining configuration here.
   update_prerelease_draft:
     runs-on: ubuntu-slim
     steps:
-      - uses: release-drafter/release-drafter@v7
+      - uses: release-drafter/release-drafter@v8
         with:
           prerelease: true
           # Use a Semantic Versioning identifier such as alpha, beta, or rc.

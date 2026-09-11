@@ -1,6 +1,6 @@
 {
   "name": "release-drafter",
-  "version": "7.7.0",
+  "version": "8.0.0",
   "description": "Programmatic API and command-line interface for Release Drafter.",
   "type": "module",
   "homepage": "https://github.com/release-drafter/release-drafter",

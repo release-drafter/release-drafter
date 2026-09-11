@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/gh-actions",
-  "version": "7.7.0",
+  "version": "8.0.0",
   "description": "Private runtime composition for Release Drafter GitHub Actions.",
   "type": "module",
   "engines": {
