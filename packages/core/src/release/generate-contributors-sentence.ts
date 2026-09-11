@@ -1,8 +1,20 @@
-import { filterPullRequestsByPreCategories } from '../category-matching.ts'
-import type { Commit, ParsedConfig, PullRequest } from '../types.ts'
+import {
+  filterChangesByPreCategories,
+  filterPullRequestsByPreCategories,
+} from '../category-matching.ts'
+import { commitAuthors } from '../change.ts'
+import type {
+  Change,
+  Commit,
+  CommitAuthor,
+  ParsedConfig,
+  PullRequest,
+} from '../types.ts'
 import { renderTemplate } from './render-template/index.ts'
 
-type Contributor = { login: string; botUrl?: string } | { name: string }
+type Contributor =
+  | { login: string; url?: string; isBot?: boolean }
+  | { name: string; url?: string }
 
 const botSuffix = '[bot]'
 const pullRequestKey = (
@@ -13,7 +25,7 @@ const normalizeLogin = (login: string, isBot = false) =>
 const renderAuthorMention = (contributor: Contributor, serverUrl: string) => {
   if ('name' in contributor) return contributor.name
   const botUrl = contributor.login.endsWith(botSuffix)
-    ? (contributor.botUrl ??
+    ? (contributor.url ??
       `${serverUrl.replace(/\/$/, '')}/apps/${contributor.login.slice(0, -botSuffix.length)}`)
     : undefined
   if (botUrl) {
@@ -24,22 +36,26 @@ const renderAuthorMention = (contributor: Contributor, serverUrl: string) => {
 
 export const generateContributorsSentence = (params: {
   commits: Commit[]
-  pullRequests: PullRequest[]
+  changes: Change[]
   serverUrl: string
   config: Pick<
     ParsedConfig,
     'categories' | 'exclude-contributors' | 'no-contributors-template'
   >
 }) => {
-  const { commits, pullRequests, config, serverUrl } = params
-
-  const includedPullRequests = filterPullRequestsByPreCategories(
-    pullRequests,
+  const { commits, changes, config, serverUrl } = params
+  const includedChanges = filterChangesByPreCategories(
+    changes,
     config.categories,
   )
   return generateAuthorsSentence({
     commits,
-    pullRequests: includedPullRequests,
+    pullRequests: includedChanges.flatMap((change) =>
+      change.type === 'pull-request' ? [change.pullRequest] : [],
+    ),
+    directCommits: includedChanges.flatMap((change) =>
+      change.type === 'commit' ? [change.commit] : [],
+    ),
     serverUrl,
     excludeContributors: config['exclude-contributors'],
     noAuthorsTemplate: config['no-contributors-template'],
@@ -49,6 +65,7 @@ export const generateContributorsSentence = (params: {
 export const generateAuthorsSentence = (params: {
   commits: Commit[]
   pullRequests: PullRequest[]
+  directCommits?: Commit[]
   serverUrl: string
   excludeContributors?: string[]
   excludeBots?: boolean
@@ -57,7 +74,7 @@ export const generateAuthorsSentence = (params: {
   authorsSeparator?: string
   authorsFinalSeparator?: string
 }) => {
-  const { commits, pullRequests } = params
+  const { commits, pullRequests, directCommits = [] } = params
   const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey))
   const includedMergeCommitOids = new Set(
     pullRequests.flatMap((pullRequest) =>
@@ -66,6 +83,27 @@ export const generateAuthorsSentence = (params: {
   )
   const contributors = new Map<string, Contributor>()
   const pullRequestAuthorLogins = new Set<string>()
+
+  const addAuthor = (author: CommitAuthor | null | undefined) => {
+    if (
+      params.excludeBots &&
+      (author?.type === 'Bot' || author?.login?.endsWith(botSuffix))
+    ) return
+    if (author?.login) {
+      const isBot = author.type === 'Bot'
+      const login = normalizeLogin(author.login, isBot)
+      contributors.set(`login:${login}`, {
+        login,
+        url: author.url,
+        isBot,
+      })
+    } else if (author?.name) {
+      contributors.set(`name:${author.name}`, {
+        name: author.name,
+        url: author.url,
+      })
+    }
+  }
 
   // Add from commits belonging to included pull requests
   for (const commit of commits) {
@@ -82,18 +120,13 @@ export const generateAuthorsSentence = (params: {
 
     for (const author of commit.authors ??
       (commit.author ? [commit.author] : [])) {
-      if (
-        params.excludeBots &&
-        (author?.type === 'Bot' || author?.login?.endsWith(botSuffix))
-      ) {
-        continue
-      }
-      if (author?.login) {
-        const login = normalizeLogin(author.login)
-        contributors.set(`login:${login}`, { login })
-      } else if (author?.name) {
-        contributors.set(`name:${author.name}`, { name: author.name })
-      }
+      addAuthor(author)
+    }
+  }
+
+  for (const commit of directCommits) {
+    for (const author of commitAuthors(commit)) {
+      addAuthor(author)
     }
   }
 
@@ -105,7 +138,8 @@ export const generateAuthorsSentence = (params: {
       pullRequestAuthorLogins.add(login)
       contributors.set(`login:${login}`, {
         login,
-        botUrl: isBot ? pullRequest.author.url : undefined,
+        url: pullRequest.author.url,
+        isBot,
       })
     }
   }
@@ -113,11 +147,11 @@ export const generateAuthorsSentence = (params: {
   const sortedContributors = [...contributors.values()]
     .filter(
       (contributor) =>
-        'name' in contributor ||
-        !(params.excludeContributors ?? []).some(
-          (excluded) =>
-            excluded === contributor.login ||
-            `${excluded}${botSuffix}` === contributor.login,
+        !(params.excludeContributors ?? []).some((excluded) =>
+          'name' in contributor
+            ? excluded === contributor.name
+            : excluded === contributor.login ||
+              `${excluded}${botSuffix}` === contributor.login,
         ),
     )
     .sort((a, b) => {
@@ -129,10 +163,8 @@ export const generateAuthorsSentence = (params: {
         return aIsPullRequestAuthor ? -1 : 1
       }
 
-      const aIsBot =
-        'login' in a && (a.botUrl !== undefined || a.login.endsWith(botSuffix))
-      const bIsBot =
-        'login' in b && (b.botUrl !== undefined || b.login.endsWith(botSuffix))
+      const aIsBot = 'login' in a && (a.isBot || a.login.endsWith(botSuffix))
+      const bIsBot = 'login' in b && (b.isBot || b.login.endsWith(botSuffix))
       if (aIsBot !== bIsBot) return aIsBot ? 1 : -1
 
       const aName = 'name' in a ? a.name : a.login
@@ -153,6 +185,7 @@ export const generateAuthorsSentence = (params: {
         object: {
           $AUTHOR: author,
           $AUTHOR_MENTION: renderAuthorMention(contributor, params.serverUrl),
+          $AUTHOR_URL: contributor.url ?? '',
         },
       })
     })
