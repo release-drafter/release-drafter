@@ -6,7 +6,10 @@ import { noopLogger } from '../ports.ts'
 import type { Commit, PullRequest } from '../types.ts'
 import { buildReleasePayload } from './build-release-payload.ts'
 import { changeToString } from './change-to-string.ts'
-import { generateNewContributorsList } from './generate-contributors-sentence.ts'
+import {
+  generateContributorsSentence,
+  generateNewContributorsList,
+} from './generate-contributors-sentence.ts'
 import { sortChanges } from './sort-changes.ts'
 
 const directCommit = (overrides: Partial<Commit> = {}): Commit => ({
@@ -133,6 +136,34 @@ describe('individual commit changes', () => {
     ).toEqual(['pull-request', 'commit'])
   })
 
+  it('sorts missing and invalid dates last', () => {
+    const warning = vi.fn()
+    const changes = [
+      {
+        type: 'commit' as const,
+        commit: directCommit({ committedAt: undefined }),
+      },
+      {
+        type: 'commit' as const,
+        commit: directCommit({ oid: 'bad', committedAt: 'bad' }),
+      },
+      { type: 'pull-request' as const, pullRequest },
+    ]
+
+    expect(
+      sortChanges({
+        changes,
+        config: config(),
+        logger: { ...noopLogger, warning },
+      }).map((change) =>
+        change.type === 'pull-request' ? 'pr' : change.commit.oid,
+      ),
+    ).toEqual(['pr', '1234567890abcdef', 'bad'])
+    expect(warning).toHaveBeenCalledWith(
+      'Failed to parse change date "bad". Sorting it last.',
+    )
+  })
+
   it('renders generic and commit-specific variables', () => {
     expect(
       changeToString({
@@ -165,6 +196,29 @@ describe('individual commit changes', () => {
     ).toBe('@commit-author, Grace Hopper')
   })
 
+  it('deduplicates direct contributors by email when their names change', () => {
+    const first = directCommit({
+      oid: 'first',
+      author: { name: 'J. Doe', email: 'person@example.com' },
+    })
+    const second = directCommit({
+      oid: 'second',
+      author: { name: 'Jane Doe', email: 'person@example.com' },
+    })
+
+    expect(
+      generateContributorsSentence({
+        commits: [first, second],
+        changes: [
+          { type: 'commit', commit: first },
+          { type: 'commit', commit: second },
+        ],
+        serverUrl: 'https://example.test',
+        config: config(),
+      }),
+    ).toBe('Jane Doe')
+  })
+
   it('renders a primary direct commit author as a new contributor', () => {
     const commit = directCommit()
 
@@ -172,7 +226,7 @@ describe('individual commit changes', () => {
       generateNewContributorsList({
         changes: [{ type: 'commit', commit }],
         newContributorLogins: new Set(),
-        newCommitContributorKeys: new Set(['login:commit-author']),
+        newCommitContributors: [{ login: 'commit-author' }],
         config: config(),
       }),
     ).toBe(

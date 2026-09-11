@@ -27,6 +27,10 @@ export const changeForCategory = (change: Change) =>
     ? change.pullRequest
     : { title: change.commit.message }
 
+export const hasPullRequestAssociation = (commit: Commit) =>
+  commit.associationStatus === 'associated' ||
+  Boolean(commit.associatedPullRequests?.some(Boolean))
+
 export const commitAuthors = (commit: Commit): CommitAuthor[] => {
   if (commit.authors) return commit.authors.filter((author) => author != null)
 
@@ -63,14 +67,19 @@ export const selectChanges = (params: {
   config: Pick<ParsedConfig, 'include-commits'>
   logger?: Logger
 }) => {
-  const changes: Change[] = params.pullRequests.map((pullRequest) => ({
+  const pullRequests = new Map<string, PullRequest>()
+  for (const pullRequest of params.pullRequests) {
+    const key = `${pullRequest.baseRepository ?? ''}#${pullRequest.number}`
+    if (!pullRequests.has(key)) pullRequests.set(key, pullRequest)
+  }
+  const changes: Change[] = [...pullRequests.values()].map((pullRequest) => ({
     type: 'pull-request',
     pullRequest,
   }))
   if (!params.config['include-commits']) return changes
 
   const mergeCommitOids = new Set(
-    params.pullRequests.flatMap((pullRequest) =>
+    [...pullRequests.values()].flatMap((pullRequest) =>
       pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : [],
     ),
   )
@@ -83,11 +92,7 @@ export const selectChanges = (params: {
       unknownCount += 1
       continue
     }
-    if (
-      commit.associationStatus === 'associated' ||
-      commit.associatedPullRequests?.some(Boolean) ||
-      mergeCommitOids.has(commit.oid)
-    ) {
+    if (hasPullRequestAssociation(commit) || mergeCommitOids.has(commit.oid)) {
       continue
     }
     changes.push({ type: 'commit', commit })
