@@ -6,6 +6,7 @@ export type RestEndpointProfile = {
   repository(repository: Repository): string
   contents(repository: Repository, path: string): string
   compare(repository: Repository, baseHead: string): string
+  commits(repository: Repository): string
   commitPull(repository: Repository, sha: string): string
   pullFiles(repository: Repository, number: number): string
   pulls(repository: Repository): string
