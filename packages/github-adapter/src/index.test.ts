@@ -453,6 +453,7 @@ describe('GitHubAdapter', () => {
               nodes: [
                 {
                   oid: 'direct',
+                  committedDate: '2026-01-02T00:00:00Z',
                   author: { user: { login: 'new-user' } },
                   associatedPullRequests: { totalCount: 0, nodes: [] },
                 },
@@ -464,6 +465,7 @@ describe('GitHubAdapter', () => {
       .mockResolvedValueOnce({
         repository: { pullRequests: { nodes: [] } },
       })
+      .mockResolvedValueOnce({ author0: { issueCount: 0 } })
     vi.mocked(octokit.rest.repos.listCommits).mockResolvedValue({
       data: [],
     } as never)
@@ -493,6 +495,13 @@ describe('GitHubAdapter', () => {
       author: 'new-user',
       per_page: 1,
     })
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('query findPreviousContributions'),
+      expect.objectContaining({
+        query0: expect.stringContaining('author:new-user merged:<'),
+      }),
+    )
   })
 
   it('bounds recent pull request recovery to one page and backfills association evidence', async () => {

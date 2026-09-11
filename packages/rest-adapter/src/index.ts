@@ -234,7 +234,9 @@ class GitHubCompatibleRestAdapter
     }
 
     budget.ensureAvailable(
-      commits.length + (params.includeChangedFiles ? 1 : 0),
+      commits.length +
+        (params.includeChangedFiles ? 1 : 0) +
+        (params.includeCommits && params.includeNewContributors ? 2 : 0),
     )
     const associated = await mapConcurrent(
       commits,
@@ -346,16 +348,26 @@ class GitHubCompatibleRestAdapter
     commits: Commit[],
     budget: ReturnType<RestClient['newBudget']>,
   ) {
-    const candidates = new Set(
-      commits.flatMap((commit) => {
-        const key =
-          commit.associationStatus === 'none'
-            ? commitAuthorKey(commit.author)
-            : undefined
-        return key ? [key] : []
-      }),
-    )
-    if (candidates.size === 0) return candidates
+    const candidates = new Map<
+      string,
+      { author: NonNullable<Commit['author']>; committedAt?: string }
+    >()
+    for (const commit of commits) {
+      if (commit.associationStatus !== 'none' || !commit.author) continue
+      const key = commitAuthorKey(commit.author)
+      if (!key) continue
+      const previous = candidates.get(key)
+      if (
+        !previous ||
+        (commit.committedAt ?? '') < (previous.committedAt ?? '')
+      ) {
+        candidates.set(key, {
+          author: commit.author,
+          committedAt: commit.committedAt,
+        })
+      }
+    }
+    if (candidates.size === 0) return new Set<string>()
 
     try {
       const history = await this.client.paginate<RestCommit>({
@@ -380,7 +392,35 @@ class GitHubCompatibleRestAdapter
           }
         }),
       )
-      return new Set([...candidates].filter((key) => !priorKeys.has(key)))
+      const commitFirst = [...candidates].filter(([key]) => !priorKeys.has(key))
+      const verified = await mapConcurrent(
+        commitFirst,
+        this.client.limits.concurrency,
+        async ([key, candidate]) => {
+          if (!candidate.author.login) return key
+          const list = this.profile.response.pullRequestList
+          const pullRequests =
+            await this.client.paginate<RestPullRequest | null>({
+              repository: params.repository,
+              path: this.profile.endpoints.pulls(params.repository),
+              budget,
+              pageSize: params.historyLimit,
+              query: {
+                [list.authorParameter]: candidate.author.login,
+                [list.stateParameter]: list.closedState,
+                [list.sortParameter]: list.oldestSort,
+              },
+            })
+          return pullRequests.some(
+            (pullRequest) =>
+              pullRequest?.merged_at &&
+              pullRequest.merged_at < (candidate.committedAt ?? ''),
+          )
+            ? ''
+            : key
+        },
+      )
+      return new Set(verified.filter(Boolean))
     } catch (error) {
       this.client.logger.warning(
         `Could not prove whether direct commit authors are new contributors within the bounded commit history. They will not be labeled new. ${error instanceof Error ? error.message : String(error)}`,
