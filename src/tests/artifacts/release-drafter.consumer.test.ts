@@ -453,7 +453,8 @@ describe('release-drafter packed CLI and package consumer', {
           },
         },
         config: {
-          'change-template': '$BODY',
+          'include-commits': false,
+          'change-template': '$CHANGE_BODY',
           'change-body-escapes': '<',
           'change-author-template': '$AUTHOR_MENTION',
           'change-authors-separator': ', ',
@@ -465,7 +466,7 @@ describe('release-drafter packed CLI and package consumer', {
           'new-contributor-template': '* $AUTHOR_MENTION',
           'no-new-contributor-template': '* No new contributors',
           'no-contributors-template': 'No contributors',
-          'sort-by': 'merged_at',
+          'sort-by': 'date',
           'sort-direction': 'descending',
           'filter-by-commitish': false,
           'pull-request-limit': 5,
