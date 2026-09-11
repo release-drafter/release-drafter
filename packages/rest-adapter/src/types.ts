@@ -78,11 +78,13 @@ export type RestUser = {
 export type RestCommit = {
   sha?: string
   created?: string | null
+  html_url?: string | null
   author?: RestUser | null
   commit?: {
     message?: string | null
     author?: {
       name?: string | null
+      email?: string | null
       date?: string | null
     } | null
     committer?: {
