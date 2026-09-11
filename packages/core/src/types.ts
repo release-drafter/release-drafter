@@ -29,16 +29,22 @@ export type PullRequest = {
 export type CommitAuthor = {
   name?: string | null
   login?: string | null
+  email?: string | null
+  avatarUrl?: string
+  url?: string
   type?: string
 }
 
 export type Commit = {
   id?: string
   oid: string
+  url?: string
+  authoredAt?: string
   committedAt?: string
   message?: string
   author?: CommitAuthor | null
   authors?: (CommitAuthor | null)[] | null
+  associationStatus: 'associated' | 'none' | 'unknown'
   associatedPullRequests?:
     | (Pick<PullRequest, 'number' | 'baseRepository'> | null)[]
     | null
