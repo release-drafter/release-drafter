@@ -1,3 +1,3 @@
 template: '$CHANGES'
 no-changes-template: '* No changes mmkay'
-change-template: "* Change: $URL '$TITLE' @$AUTHOR"
+change-template: "* Change: $CHANGE_URL '$CHANGE_TITLE' @$CHANGE_AUTHOR"

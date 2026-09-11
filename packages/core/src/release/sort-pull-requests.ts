@@ -13,7 +13,7 @@ export const sortPullRequests = (params: {
     config: { 'sort-by': sortBy, 'sort-direction': sortDirection },
   } = params
 
-  const getSortField = sortBy === 'title' ? getTitle : getMergedAt
+  const getSortField = sortBy === 'title' ? getTitle : getDate
 
   const sort = sortDirection === 'ascending' ? sortAscending : sortDescending
 
@@ -31,9 +31,9 @@ export const sortPullRequests = (params: {
 }
 
 const getTitle = (pr: PullRequest) => pr.title
-const getMergedAt = (pr: PullRequest) => pr.mergedAt
+const getDate = (pr: PullRequest) => pr.mergedAt
 
-type TData = ReturnType<typeof getTitle> | ReturnType<typeof getMergedAt>
+type TData = ReturnType<typeof getTitle> | ReturnType<typeof getDate>
 
 const sortAscending = (a: TData, b: TData) => {
   if (a == null && b == null) return 0

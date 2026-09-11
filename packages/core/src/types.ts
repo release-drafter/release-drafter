@@ -44,6 +44,10 @@ export type Commit = {
     | null
 }
 
+export type Change =
+  | { type: 'pull-request'; pullRequest: PullRequest }
+  | { type: 'commit'; commit: Commit }
+
 export type Release = {
   id: string | number
   tagName: string

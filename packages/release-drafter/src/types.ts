@@ -91,6 +91,10 @@ export interface Commit {
     | null
 }
 
+export type Change =
+  | { type: 'pull-request'; pullRequest: PullRequest }
+  | { type: 'commit'; commit: Commit }
+
 export interface Release {
   id: string | number
   tagName: string
@@ -308,7 +312,10 @@ export interface ParsedGroupChange {
  * their own parsed configuration.
  */
 export interface DraftReleaseConfig {
+  'include-commits': boolean
   'change-template': string
+  'pr-template'?: string
+  'commit-template'?: string
   'change-author-template': string
   'change-authors-exclude-bots'?: boolean
   'change-authors-separator': string
@@ -324,7 +331,7 @@ export interface DraftReleaseConfig {
   'new-contributor-template': string
   'no-new-contributor-template': string
   'no-contributors-template': string
-  'sort-by': 'merged_at' | 'title'
+  'sort-by': 'date' | 'title'
   'sort-direction': 'ascending' | 'descending'
   'filter-by-commitish': boolean
   'pull-request-limit': number
