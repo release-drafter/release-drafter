@@ -70,7 +70,7 @@ export type ChangeSet = {
   commits: Commit[]
   pullRequests: PullRequest[]
   newContributorLogins: ReadonlySet<string>
-  newCommitContributorKeys?: ReadonlySet<string>
+  newCommitContributors?: readonly CommitAuthor[]
 }
 
 export type PreviousReleases = {

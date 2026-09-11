@@ -430,6 +430,14 @@ describe('GitHubAdapter', () => {
           },
         },
       })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [],
+          },
+        },
+      })
 
     const result = await adapter(octokit).findChanges({
       repository,
@@ -452,7 +460,7 @@ describe('GitHubAdapter', () => {
       authoredAt: '2026-01-01T00:00:00Z',
       committedAt: '2026-01-02T00:00:00Z',
       message: 'feat: direct change',
-      associationStatus: 'unknown',
+      associationStatus: 'none',
       author: {
         name: 'Commit Author',
         login: 'author',
@@ -462,7 +470,7 @@ describe('GitHubAdapter', () => {
         type: 'User',
       },
     })
-    expect(octokit.graphql).toHaveBeenCalledTimes(2)
+    expect(octokit.graphql).toHaveBeenCalledTimes(3)
     expect(octokit.graphql).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('hydrateComparisonCommits'),
@@ -521,7 +529,7 @@ describe('GitHubAdapter', () => {
     })
 
     expect(result.commits[0]?.associationStatus).toBe('none')
-    expect(result.newCommitContributorKeys).toEqual(new Set(['login:new-user']))
+    expect(result.newCommitContributors).toEqual([{ login: 'new-user' }])
     expect(octokit.rest.repos.listCommits).toHaveBeenCalledWith({
       owner: repository.owner,
       repo: repository.name,
@@ -646,14 +654,6 @@ describe('GitHubAdapter', () => {
                 },
               ],
             },
-          },
-        },
-      })
-      .mockResolvedValueOnce({
-        repository: {
-          pullRequests: {
-            pageInfo: { hasNextPage: false, endCursor: null },
-            nodes: [],
           },
         },
       })
