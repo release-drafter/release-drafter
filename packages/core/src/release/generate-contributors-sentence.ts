@@ -95,10 +95,15 @@ export const generateAuthorsSentence = (params: {
         isBot,
       })
     } else if (author?.name) {
-      contributors.set(`name:${author.name}`, {
-        name: author.name,
-        url: author.url,
-      })
+      contributors.set(
+        author.email
+          ? `email:${author.email.toLowerCase()}`
+          : `name:${author.name}`,
+        {
+          name: author.name,
+          url: author.url,
+        },
+      )
     }
   }
 
@@ -205,7 +210,7 @@ export const generateAuthorsSentence = (params: {
 export const generateNewContributorsList = (params: {
   changes: Change[]
   newContributorLogins: ReadonlySet<string>
-  newCommitContributorKeys?: ReadonlySet<string>
+  newCommitContributors?: readonly CommitAuthor[]
   config: Pick<
     ParsedConfig,
     | 'categories'
@@ -217,7 +222,7 @@ export const generateNewContributorsList = (params: {
   const {
     changes,
     newContributorLogins,
-    newCommitContributorKeys = new Set<string>(),
+    newCommitContributors = [],
     config,
   } = params
   const includedChanges = filterChangesByPreCategories(
@@ -228,6 +233,12 @@ export const generateNewContributorsList = (params: {
     string,
     { change: Change; author: CommitAuthor }
   >()
+  const newCommitContributorKeys = new Set(
+    newCommitContributors.flatMap((author) => {
+      const key = commitAuthorKey(author)
+      return key ? [key] : []
+    }),
+  )
 
   for (const change of includedChanges) {
     const author =
