@@ -12,6 +12,7 @@ export const pullRequestToString = (params: {
   config: Pick<
     Config,
     | 'change-template'
+    | 'pr-template'
     | 'change-title-escapes'
     | 'change-author-template'
     | 'change-authors-separator'
@@ -28,17 +29,20 @@ export const pullRequestToString = (params: {
             : pullRequest.author.login
       }
       const authorTemplate = params.config['change-author-template']
+      const title = escapeTitle({
+        title: pullRequest.title,
+        escapes: params.config['change-title-escapes'],
+      })
 
       return renderTemplate({
-        template: params.config['change-template'],
+        template:
+          params.config['pr-template'] ?? params.config['change-template'],
         object: {
-          $CATEGORY: params.category ?? '',
-          $TITLE: escapeTitle({
-            title: pullRequest.title,
-            escapes: params.config['change-title-escapes'],
-          }),
-          $NUMBER: pullRequest.number.toString(),
-          $AUTHORS: generateAuthorsSentence({
+          $CHANGE_TYPE: 'pull-request',
+          $CHANGE_CATEGORY: params.category ?? '',
+          $CHANGE_TITLE: title,
+          $CHANGE_REFERENCE: `#${pullRequest.number}`,
+          $CHANGE_AUTHORS: generateAuthorsSentence({
             commits: params.commits,
             pullRequests: [pullRequest],
             serverUrl: params.serverUrl,
@@ -54,12 +58,20 @@ export const pullRequestToString = (params: {
             authorsFinalSeparator:
               params.config['change-authors-final-separator'],
           }),
-          $AUTHOR: pullAuthor,
-          $AUTHOR_URL: pullRequest.author?.url ?? '',
-          $BODY: pullRequest.body,
-          $URL: pullRequest.url,
-          $BASE_REF_NAME: pullRequest.baseRefName,
-          $HEAD_REF_NAME: pullRequest.headRefName,
+          $CHANGE_AUTHOR: pullAuthor,
+          $CHANGE_AUTHOR_URL: pullRequest.author?.url ?? '',
+          $CHANGE_BODY: pullRequest.body ?? '',
+          $CHANGE_URL: pullRequest.url ?? '',
+          $CHANGE_DATE: pullRequest.mergedAt ?? '',
+          $PR_NUMBER: pullRequest.number.toString(),
+          $PR_TITLE: title,
+          $PR_BODY: pullRequest.body ?? '',
+          $PR_URL: pullRequest.url ?? '',
+          $PR_AUTHOR: pullAuthor,
+          $PR_AUTHOR_URL: pullRequest.author?.url ?? '',
+          $PR_BASE_REF_NAME: pullRequest.baseRefName ?? '',
+          $PR_HEAD_REF_NAME: pullRequest.headRefName ?? '',
+          $PR_MERGED_DATE: pullRequest.mergedAt ?? '',
         },
       })
     })

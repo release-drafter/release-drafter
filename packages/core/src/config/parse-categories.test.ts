@@ -559,4 +559,32 @@ describe('parseCategories', () => {
 
     expect(parsed[0]?.when).toEqual([])
   })
+
+  it('defaults to generic change templates and date sorting', () => {
+    const config = configSchema.parse({})
+
+    expect(config).toMatchObject({
+      'include-commits': false,
+      'change-template': '* $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS',
+      'sort-by': 'date',
+      'sort-direction': 'descending',
+    })
+    expect(config['pr-template']).toBeUndefined()
+    expect(config['commit-template']).toBeUndefined()
+  })
+
+  it.each([
+    ['change-template', '* $TITLE'],
+    ['pr-template', '* #$NUMBER'],
+    ['commit-template', '* $AUTHOR'],
+  ] as const)('rejects legacy variables in %s', (key, template) => {
+    const config = configSchema.parse({
+      commitish: 'main',
+      [key]: template,
+    })
+
+    expect(() => mergeInputAndConfig({ config, input: {}, logger })).toThrow(
+      `'${key}' uses removed change variables`,
+    )
+  })
 })

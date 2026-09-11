@@ -13,6 +13,7 @@ export const generateChangeLog = (params: {
     | 'no-changes-template'
     | 'categories'
     | 'change-template'
+    | 'pr-template'
     | 'change-author-template'
     | 'change-authors-separator'
     | 'change-authors-final-separator'

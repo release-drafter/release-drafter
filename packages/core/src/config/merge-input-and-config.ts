@@ -161,6 +161,9 @@ const validateParsedConfig = (parsedConfig: {
   commitish: string
   categories: ReturnType<typeof parseCategories>
   'filter-by-range'?: string
+  'change-template': string
+  'pr-template'?: string
+  'commit-template'?: string
 }) => {
   if (!parsedConfig.commitish) {
     throw new Error(
@@ -192,5 +195,23 @@ const validateParsedConfig = (parsedConfig: {
     throw new Error(
       `'filter-by-range' value "${parsedConfig['filter-by-range']}" could not be parsed as a valid semver range.`,
     )
+  }
+  for (const key of [
+    'change-template',
+    'pr-template',
+    'commit-template',
+  ] as const) {
+    const template = parsedConfig[key]
+    if (!template) continue
+    const legacyVariables = [
+      ...template.matchAll(
+        /\$(?:CATEGORY|TITLE|NUMBER|AUTHORS|AUTHOR|AUTHOR_URL|BODY|URL|BASE_REF_NAME|HEAD_REF_NAME)\b/g,
+      ),
+    ].map(([variable]) => variable)
+    if (legacyVariables.length > 0) {
+      throw new Error(
+        `'${key}' uses removed change variables: ${[...new Set(legacyVariables)].join(', ')}. Use the namespaced $CHANGE_*, $PR_*, or $COMMIT_* variables instead.`,
+      )
+    }
   }
 }

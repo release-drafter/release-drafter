@@ -239,11 +239,23 @@ export type CategoryConfig = z.input<typeof categorySchema>
 
 export const exclusiveConfigSchema = object({
   /**
-   * The template to use for each merged change.
+   * Include commits that are not associated with a pull request as changes.
+   */
+  'include-commits': boolean().optional().default(false),
+  /**
+   * The generic fallback template for every change.
    */
   'change-template': string()
     .optional()
-    .default('* $TITLE (#$NUMBER) $AUTHORS'),
+    .default('* $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS'),
+  /**
+   * An optional pull-request-specific template. Falls back to change-template.
+   */
+  'pr-template': string().optional(),
+  /**
+   * An optional commit-specific template. Falls back to change-template.
+   */
+  'commit-template': string().optional(),
   /**
    * The template to use for each author in `$AUTHORS`.
    */
@@ -329,9 +341,9 @@ export const exclusiveConfigSchema = object({
    */
   'no-contributors-template': string().optional().default('No contributors'),
   /**
-   * Sort changelog by merged_at or title.
+   * Sort changelog by change date or title.
    */
-  'sort-by': zenum(['merged_at', 'title']).optional().default('merged_at'),
+  'sort-by': zenum(['date', 'title']).optional().default('date'),
   /**
    * Sort changelog in ascending or descending order.
    */

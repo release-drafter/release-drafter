@@ -197,6 +197,7 @@ export const draftRelease = async (params: {
   })
   const comparisonBase =
     input.from ?? (lastRelease ? `refs/tags/${lastRelease.tagName}` : undefined)
+  const pullRequestTemplate = config['pr-template'] ?? config['change-template']
   const { commits, newContributorLogins, pullRequests } = comparisonBase
     ? await adapter.findChanges({
         repository,
@@ -205,10 +206,14 @@ export const draftRelease = async (params: {
           headRef: config.commitish,
         },
         pullRequestFields: {
-          body: config['change-template'].includes('$BODY'),
-          url: config['change-template'].includes('$URL'),
-          baseRefName: config['change-template'].includes('$BASE_REF_NAME'),
-          headRefName: config['change-template'].includes('$HEAD_REF_NAME'),
+          body:
+            pullRequestTemplate.includes('$CHANGE_BODY') ||
+            pullRequestTemplate.includes('$PR_BODY'),
+          url:
+            pullRequestTemplate.includes('$CHANGE_URL') ||
+            pullRequestTemplate.includes('$PR_URL'),
+          baseRefName: pullRequestTemplate.includes('$PR_BASE_REF_NAME'),
+          headRefName: pullRequestTemplate.includes('$PR_HEAD_REF_NAME'),
         },
         pullRequestLimit: config['pull-request-limit'],
         historyLimit: config['history-limit'],
