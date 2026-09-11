@@ -269,23 +269,23 @@ export const exclusiveConfigSchema = object({
    */
   'commit-template': string().optional(),
   /**
-   * The template to use for each author in `$AUTHORS`.
+   * The template to use for each author in `$CHANGE_AUTHORS`.
    */
   'change-author-template': string().optional().default('$AUTHOR_MENTION'),
   /**
-   * Exclude bot co-authors from `$AUTHORS`. Pull request authors are always retained.
+   * Exclude bot co-authors from `$CHANGE_AUTHORS`. Pull request authors are always retained.
    */
   'change-authors-exclude-bots': boolean().optional().default(false),
   /**
-   * The separator to use between authors in `$AUTHORS`.
+   * The separator to use between authors in `$CHANGE_AUTHORS`.
    */
   'change-authors-separator': string().optional().default(', '),
   /**
-   * An optional separator to use before the final author in `$AUTHORS`.
+   * An optional separator to use before the final author in `$CHANGE_AUTHORS`.
    */
   'change-authors-final-separator': string().optional(),
   /**
-   * Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters.
+   * Characters to escape in change titles when inserting them into a change template so that they are not interpreted as Markdown format characters.
    */
   'change-title-escapes': string().optional(),
   /**
