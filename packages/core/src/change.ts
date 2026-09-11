@@ -1,3 +1,4 @@
+import type { Logger } from './ports.ts'
 import type {
   Change,
   Commit,
@@ -5,7 +6,6 @@ import type {
   ParsedConfig,
   PullRequest,
 } from './types.ts'
-import type { Logger } from './ports.ts'
 
 export const splitCommitMessage = (message = '') => {
   const [title = '', ...body] = message.replaceAll('\r\n', '\n').split('\n')
@@ -46,6 +46,13 @@ export const commitAuthors = (commit: Commit): CommitAuthor[] => {
     }
   }
   return authors
+}
+
+export const commitAuthorKey = (author: CommitAuthor | null | undefined) => {
+  if (author?.login) return `login:${author.login.toLowerCase()}`
+  if (author?.email) return `email:${author.email.toLowerCase()}`
+  if (author?.name) return `name:${author.name}`
+  return undefined
 }
 
 export const selectChanges = (params: {
