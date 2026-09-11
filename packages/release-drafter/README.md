@@ -365,6 +365,12 @@ successful configuration conditions on included PRs, including in dry-run mode.
 It respects compound title/path predicates and category exclusivity. It is an
 empty array when no configured labels match.
 
+The v8 `DraftReleaseConfig` uses generic change templates. Set
+`include-commits: true` to include commits without pull request associations,
+use `sort-by: date` or `title`, and use `$CHANGE_*`, `$PR_*`, and `$COMMIT_*`
+variables. The removed unprefixed per-change variables and `sort-by: merged_at`
+are not accepted.
+
 Importing `release-drafter` does not start the CLI, read environment variables,
 or perform network requests.
 
