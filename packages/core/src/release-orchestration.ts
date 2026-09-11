@@ -201,7 +201,7 @@ export const draftRelease = async (params: {
   const {
     commits,
     newContributorLogins,
-    newCommitContributorKeys = new Set<string>(),
+    newCommitContributors = [],
     pullRequests,
   } = comparisonBase
     ? await adapter.findChanges({
@@ -237,7 +237,7 @@ export const draftRelease = async (params: {
         return {
           commits: [],
           newContributorLogins: new Set<string>(),
-          newCommitContributorKeys: new Set<string>(),
+          newCommitContributors: [],
           pullRequests: [],
         }
       })()
@@ -264,7 +264,7 @@ export const draftRelease = async (params: {
     lastRelease,
     logger,
     newContributorLogins,
-    newCommitContributorKeys,
+    newCommitContributors,
     pullRequests,
     repository,
   })

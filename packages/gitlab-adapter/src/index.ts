@@ -13,7 +13,6 @@ import type {
   ResolveCommitishRequest,
   UpdateReleaseRequest,
 } from '@release-drafter/core'
-import { commitAuthorKey } from '@release-drafter/core'
 import {
   GitLabClient,
   type GitLabCommit,
@@ -426,35 +425,11 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
         },
       )
     }
-    const newCommitContributorKeys = new Set<string>()
-    if (request.includeCommits && request.includeNewContributors) {
-      await mapConcurrent(
-        commits.filter((commit) => commit.associationStatus === 'none'),
-        client.limits.concurrency,
-        async (commit) => {
-          const key = commitAuthorKey(commit.author)
-          const author = commit.author?.email ?? commit.author?.name
-          if (!key || !author) return
-          try {
-            const prior = await client.commits(
-              project,
-              { refName: request.comparison.baseRef, author },
-              budget,
-            )
-            if (prior.data.length === 0) newCommitContributorKeys.add(key)
-          } catch (error) {
-            client.logger.warning(
-              `Could not determine whether ${author} is a new commit contributor. The contributor will not be labeled new. ${error instanceof Error ? error.message : String(error)}`,
-            )
-          }
-        },
-      )
-    }
     return {
       commits,
       pullRequests,
       newContributorLogins,
-      newCommitContributorKeys,
+      newCommitContributors: [],
     }
   }
 

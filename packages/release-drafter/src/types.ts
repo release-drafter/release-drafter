@@ -78,7 +78,7 @@ export interface ChangeSet {
   commits: Commit[]
   pullRequests: PullRequest[]
   newContributorLogins: ReadonlySet<string>
-  newCommitContributorKeys?: ReadonlySet<string>
+  newCommitContributors?: readonly CommitAuthor[]
 }
 
 export interface ReleasePayload {

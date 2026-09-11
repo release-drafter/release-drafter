@@ -910,7 +910,9 @@ describe('GitHub-compatible REST mechanics', () => {
       request({ includeCommits: true, includeNewContributors: true }),
     )
 
-    expect(result.newCommitContributorKeys).toEqual(new Set(['login:new-user']))
+    expect(result.newCommitContributors).toEqual([
+      expect.objectContaining({ login: 'new-user' }),
+    ])
   })
 })
 

@@ -184,24 +184,32 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     }
 
     const isBranchRef = comparison.headRef.startsWith('refs/heads/')
-    const isUnsupportedRecentRef =
-      comparison.headRef.startsWith('refs/tags/') ||
-      comparison.headRef.startsWith('refs/pull/')
-    let recovered: GraphPullRequest[] = []
-    if (!isUnsupportedRecentRef) {
-      recovered = await this.findRecentPullRequests(
+    const isUnsupportedRecentRef = comparison.headRef.startsWith('refs/pull/')
+    const needsRecentRecovery = orderedGraphCommits.some(
+      (commit) =>
+        (commit.associatedPullRequests?.totalCount ?? 0) === 0 &&
+        (commit.associatedPullRequests?.nodes?.length ?? 0) === 0,
+    )
+    let recent = {
+      complete: false,
+      lagging: false,
+      pullRequests: [] as GraphPullRequest[],
+    }
+    if (!isUnsupportedRecentRef && needsRecentRecovery) {
+      recent = await this.findRecentPullRequests(
         params,
         new Set(comparisonOids),
         new Set(pullRequestsByKey.keys()),
+        orderedGraphCommits,
         isBranchRef ? comparison.headRef.replace(/^refs\/heads\//, '') : null,
       )
-      for (const pullRequest of recovered) {
+      for (const pullRequest of recent.pullRequests) {
         const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
         if (!pullRequestsByKey.has(key)) pullRequestsByKey.set(key, pullRequest)
       }
-      if (recovered.length > 0) {
+      if (recent.pullRequests.length > 0) {
         const recoveredMergeOids = new Set(
-          recovered.flatMap((pullRequest) =>
+          recent.pullRequests.flatMap((pullRequest) =>
             pullRequest.mergeCommit?.oid ? [pullRequest.mergeCommit.oid] : [],
           ),
         )
@@ -209,7 +217,7 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
           if (!recoveredMergeOids.has(commit.oid)) continue
           commit.associatedPullRequests = {
             totalCount: 1,
-            nodes: recovered.filter(
+            nodes: recent.pullRequests.filter(
               (pullRequest) => pullRequest.mergeCommit?.oid === commit.oid,
             ),
           }
@@ -238,23 +246,28 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
       ? await this.findNewContributorLogins(repository, graphPullRequests)
       : new Set<string>()
     const commits = orderedGraphCommits.map(normalizeCommit)
-    if (!isUnsupportedRecentRef && recovered.length === 0) {
+    if (
+      !isUnsupportedRecentRef &&
+      needsRecentRecovery &&
+      recent.complete &&
+      !recent.lagging
+    ) {
       for (const commit of commits) {
         if (commit.associationStatus === 'unknown') {
           commit.associationStatus = 'none'
         }
       }
     }
-    const newCommitContributorKeys =
+    const newCommitContributors =
       params.includeCommits && params.includeNewContributors
         ? await this.findNewCommitContributorKeys(params, commits)
-        : new Set<string>()
+        : []
 
     return {
       commits,
       pullRequests,
       newContributorLogins,
-      newCommitContributorKeys,
+      newCommitContributors,
     }
   }
 
@@ -312,11 +325,17 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     params: FindChangesRequest,
     commitOids: Set<string>,
     foundKeys: Set<string>,
+    commits: GraphCommit[],
     baseRefName: string | null,
-  ): Promise<GraphPullRequest[]> {
+  ): Promise<{
+    complete: boolean
+    lagging: boolean
+    pullRequests: GraphPullRequest[]
+  }> {
     const data: {
       repository?: {
         pullRequests?: {
+          pageInfo?: { hasNextPage?: boolean }
           nodes?: Array<GraphPullRequest | null> | null
         } | null
       } | null
@@ -335,13 +354,27 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     if (!pullRequests) {
       throw new Error('Query returned no recent pull request connection')
     }
-    return (pullRequests.nodes ?? []).flatMap((pullRequest) => {
+    const matches = (pullRequests.nodes ?? []).flatMap((pullRequest) => {
       if (!pullRequest?.mergeCommit?.oid) return []
-      const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
-      return commitOids.has(pullRequest.mergeCommit.oid) && !foundKeys.has(key)
-        ? [pullRequest]
-        : []
+      return commitOids.has(pullRequest.mergeCommit.oid) ? [pullRequest] : []
     })
+    const commitsByOid = new Map(commits.map((commit) => [commit.oid, commit]))
+    return {
+      complete: !pullRequests.pageInfo?.hasNextPage,
+      lagging: matches.some((pullRequest) => {
+        const commit = pullRequest.mergeCommit?.oid
+          ? commitsByOid.get(pullRequest.mergeCommit.oid)
+          : undefined
+        return (
+          commit !== undefined &&
+          (commit.associatedPullRequests?.totalCount ?? 0) === 0
+        )
+      }),
+      pullRequests: matches.filter((pullRequest) => {
+        const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`
+        return !foundKeys.has(key)
+      }),
+    }
   }
 
   private async loadChangedFiles(
@@ -499,7 +532,7 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
   private async findNewCommitContributorKeys(
     params: FindChangesRequest,
     commits: ChangeSet['commits'],
-  ): Promise<Set<string>> {
+  ): Promise<NonNullable<ChangeSet['newCommitContributors']>> {
     const earliestCommitByLogin = new Map<string, string>()
     for (const commit of commits) {
       if (
@@ -523,8 +556,14 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
         author: { __typename: 'User', login },
       })),
     )
+    const candidates = [...noPriorPullRequest].slice(0, params.historyLimit)
+    if (noPriorPullRequest.size > candidates.length) {
+      this.logger.warning(
+        `Skipped new-contributor checks for ${noPriorPullRequest.size - candidates.length} direct commit authors beyond the history-limit of ${params.historyLimit}.`,
+      )
+    }
     const results = await mapConcurrent(
-      [...noPriorPullRequest],
+      candidates,
       this.contributorConcurrency,
       async (login) => {
         try {
@@ -535,18 +574,16 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
             author: login,
             per_page: 1,
           })
-          return response.data.length === 0
-            ? `login:${login.toLowerCase()}`
-            : ''
+          return response.data.length === 0 ? { login } : undefined
         } catch (error) {
           this.logger.warning(
             `Could not determine whether ${login} is a new commit contributor. The contributor will not be labeled new. ${error instanceof Error ? error.message : String(error)}`,
           )
-          return ''
+          return undefined
         }
       },
     )
-    return new Set(results.filter(Boolean))
+    return results.filter((author) => author !== undefined)
   }
 
   async resolveCommitish({

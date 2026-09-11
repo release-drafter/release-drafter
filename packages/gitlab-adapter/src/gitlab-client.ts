@@ -106,7 +106,6 @@ type GitLabApi = {
     ): Promise<GitLabComparison>
   }
   Commits: {
-    all(project: string, options?: object): Promise<GitLabCommit[]>
     allMergeRequests(
       project: string,
       sha: string,
@@ -542,16 +541,6 @@ export class GitLabClient {
   commit(project: string, ref: string, budget: RequestBudget) {
     return this.transport.response(budget, () =>
       this.api.Commits.show(project, ref),
-    )
-  }
-
-  commits(
-    project: string,
-    options: { refName: string; author: string },
-    budget: RequestBudget,
-  ) {
-    return this.transport.response(budget, () =>
-      this.api.Commits.all(project, { ...options, page: 1, perPage: 1 }),
     )
   }
 

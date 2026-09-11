@@ -2,6 +2,7 @@ import { selectChanges } from '../change.ts'
 import type { ForgeAdapter, Logger, Repository } from '../ports.ts'
 import type {
   Commit,
+  CommitAuthor,
   ParsedConfig,
   PullRequest,
   Release,
@@ -29,7 +30,7 @@ export const buildReleasePayload = async (params: {
   lastRelease?: Release
   logger: Logger
   newContributorLogins?: ReadonlySet<string>
-  newCommitContributorKeys?: ReadonlySet<string>
+  newCommitContributors?: readonly CommitAuthor[]
   pullRequests: PullRequest[]
   repository: Repository
 }): Promise<ReleasePayload> => {
@@ -41,7 +42,7 @@ export const buildReleasePayload = async (params: {
     lastRelease,
     logger,
     newContributorLogins = new Set<string>(),
-    newCommitContributorKeys = new Set<string>(),
+    newCommitContributors = [],
     pullRequests,
     repository,
   } = params
@@ -78,7 +79,7 @@ export const buildReleasePayload = async (params: {
       $NEW_CONTRIBUTORS: generateNewContributorsList({
         changes,
         newContributorLogins,
-        newCommitContributorKeys,
+        newCommitContributors,
         config,
       }),
       $OWNER: repository.owner,

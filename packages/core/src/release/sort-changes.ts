@@ -62,7 +62,7 @@ const sortAscending = (a: TData, b: TData) => {
 
 const sortDescending = (a: TData, b: TData) => {
   if (a == null && b == null) return 0
-  if (a == null) return -1
-  if (b == null) return 1
+  if (a == null) return 1
+  if (b == null) return -1
   return sortAscending(a, b) * -1
 }

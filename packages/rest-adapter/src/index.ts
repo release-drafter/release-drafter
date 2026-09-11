@@ -234,9 +234,7 @@ class GitHubCompatibleRestAdapter
     }
 
     budget.ensureAvailable(
-      commits.length +
-        (params.includeChangedFiles ? 1 : 0) +
-        (params.includeCommits && params.includeNewContributors ? 2 : 0),
+      commits.length + (params.includeChangedFiles ? 1 : 0),
     )
     const associated = await mapConcurrent(
       commits,
@@ -331,15 +329,15 @@ class GitHubCompatibleRestAdapter
     const newContributorLogins = params.includeNewContributors
       ? await this.findNewContributors(params, entries, budget)
       : new Set<string>()
-    const newCommitContributorKeys =
+    const newCommitContributors =
       params.includeCommits && params.includeNewContributors
         ? await this.findNewCommitContributors(params, commits, budget)
-        : new Set<string>()
+        : []
     return {
       commits,
       pullRequests,
       newContributorLogins,
-      newCommitContributorKeys,
+      newCommitContributors,
     }
   }
 
@@ -367,7 +365,7 @@ class GitHubCompatibleRestAdapter
         })
       }
     }
-    if (candidates.size === 0) return new Set<string>()
+    if (candidates.size === 0) return []
 
     try {
       const history = await this.client.paginate<RestCommit>({
@@ -420,12 +418,15 @@ class GitHubCompatibleRestAdapter
             : key
         },
       )
-      return new Set(verified.filter(Boolean))
+      return verified.flatMap((key) => {
+        const author = candidates.get(key)?.author
+        return key && author ? [author] : []
+      })
     } catch (error) {
       this.client.logger.warning(
         `Could not prove whether direct commit authors are new contributors within the bounded commit history. They will not be labeled new. ${error instanceof Error ? error.message : String(error)}`,
       )
-      return new Set<string>()
+      return []
     }
   }
 
