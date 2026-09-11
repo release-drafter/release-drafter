@@ -32,11 +32,16 @@ type GitLabUser = {
 }
 export type GitLabCommit = {
   id?: string
+  title?: string
   message?: string
   author_name?: string
+  author_email?: string
   authored_date?: string
+  committer_name?: string
+  committer_email?: string
   committed_date?: string
   created_at?: string
+  web_url?: string
 }
 export type GitLabMergeRequest = {
   iid?: number

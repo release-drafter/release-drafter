@@ -43,18 +43,32 @@ const normalizeCommit = (commit: RestCommit): Commit => {
     throw new Error('Comparison contained a commit without a SHA')
   const login = loginOf(commit.author)
   const name = commit.commit?.author?.name ?? undefined
-  const committedAt =
-    commit.commit?.committer?.date ??
-    commit.commit?.author?.date ??
-    commit.created
+  const email = commit.commit?.author?.email ?? undefined
+  const committedAt = commit.commit?.committer?.date ?? commit.created
   return {
     id: commit.sha,
     oid: commit.sha,
+    ...(commit.html_url ? { url: commit.html_url } : {}),
+    ...(commit.commit?.author?.date
+      ? { authoredAt: commit.commit.author.date }
+      : {}),
     ...(committedAt ? { committedAt } : {}),
     ...(commit.commit?.message ? { message: commit.commit.message } : {}),
-    ...(login || name
-      ? { author: { ...(name ? { name } : {}), ...(login ? { login } : {}) } }
+    ...(login || name || email
+      ? {
+          author: {
+            ...(name ? { name } : {}),
+            ...(login ? { login } : {}),
+            ...(email ? { email } : {}),
+            ...(commit.author?.avatar_url
+              ? { avatarUrl: commit.author.avatar_url }
+              : {}),
+            ...(commit.author?.html_url ? { url: commit.author.html_url } : {}),
+            ...(commit.author?.type ? { type: commit.author.type } : {}),
+          },
+        }
       : {}),
+    associationStatus: 'unknown',
   }
 }
 
@@ -240,6 +254,8 @@ class GitHubCompatibleRestAdapter
     const entriesByKey = new Map<string, PullRequestEntry>()
     const entryByCommit = new Map<string, PullRequestEntry>()
     for (const [index, pullRequest] of associated.entries()) {
+      const commit = commits[index]
+      if (commit) commit.associationStatus = pullRequest ? 'associated' : 'none'
       if (!pullRequest) continue
       if (pullRequest.merged === false || !pullRequest.merged_at) continue
       const entry = normalizePullRequest(
@@ -303,21 +319,6 @@ class GitHubCompatibleRestAdapter
           number: entry.normalized.number,
           baseRepository: entry.normalized.baseRepository,
         },
-      ]
-      const pullAuthor = entry.normalized.author
-      const commitAuthor = commit.author
-      commit.authors = [
-        ...(pullAuthor
-          ? [
-              {
-                login: pullAuthor.login,
-                type: pullAuthor.type,
-              },
-            ]
-          : []),
-        ...(commitAuthor?.login !== pullAuthor?.login && commitAuthor
-          ? [commitAuthor]
-          : []),
       ]
     }
 

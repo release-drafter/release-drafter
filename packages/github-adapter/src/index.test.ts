@@ -217,7 +217,12 @@ describe('GitHubAdapter', () => {
             __typename: 'Commit',
             history: {
               pageInfo: { hasNextPage: true, endCursor: 'next' },
-              nodes: [{ oid: 'a', associatedPullRequests: { nodes: [] } }],
+              nodes: [
+                {
+                  oid: 'a',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
             },
           },
         },
@@ -228,7 +233,26 @@ describe('GitHubAdapter', () => {
             __typename: 'Commit',
             history: {
               pageInfo: { hasNextPage: false, endCursor: null },
-              nodes: [{ oid: 'b', associatedPullRequests: { nodes: [] } }],
+              nodes: [
+                {
+                  oid: 'b',
+                  url: 'https://github.example/commit/b',
+                  authoredDate: '2026-01-01T00:00:00Z',
+                  committedDate: '2026-01-02T00:00:00Z',
+                  message: 'feat: direct change',
+                  author: {
+                    name: 'Commit Author',
+                    email: 'author@example.com',
+                    avatarUrl: 'https://github.example/avatar',
+                    user: {
+                      __typename: 'User',
+                      login: 'author',
+                      url: 'https://github.example/author',
+                    },
+                  },
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
             },
           },
         },
@@ -250,6 +274,21 @@ describe('GitHubAdapter', () => {
     })
 
     expect(result.commits.map((commit) => commit.oid)).toEqual(['b', 'a'])
+    expect(result.commits[0]).toMatchObject({
+      url: 'https://github.example/commit/b',
+      authoredAt: '2026-01-01T00:00:00Z',
+      committedAt: '2026-01-02T00:00:00Z',
+      message: 'feat: direct change',
+      associationStatus: 'unknown',
+      author: {
+        name: 'Commit Author',
+        login: 'author',
+        email: 'author@example.com',
+        avatarUrl: 'https://github.example/avatar',
+        url: 'https://github.example/author',
+        type: 'User',
+      },
+    })
     expect(octokit.graphql).toHaveBeenCalledTimes(2)
     expect(octokit.graphql).toHaveBeenNthCalledWith(
       1,
@@ -284,7 +323,7 @@ describe('GitHubAdapter', () => {
               nodes: [
                 {
                   oid: 'matching-oid',
-                  associatedPullRequests: { nodes: [] },
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
                 },
               ],
             },
@@ -319,6 +358,7 @@ describe('GitHubAdapter', () => {
     })
 
     expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
+    expect(result.commits[0]?.associationStatus).toBe('unknown')
     expect(octokit.graphql).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining('findRecentMergedPullRequests'),
@@ -353,7 +393,10 @@ describe('GitHubAdapter', () => {
               nodes: [
                 {
                   oid: 'commit',
-                  associatedPullRequests: { nodes: [pullRequest] },
+                  associatedPullRequests: {
+                    totalCount: 1,
+                    nodes: [pullRequest],
+                  },
                 },
               ],
             },

@@ -54,7 +54,17 @@ const json = (
 
 const commit = (sha: string, date: string, login?: string) => ({
   sha,
-  ...(login ? { author: { login } } : {}),
+  html_url: `https://forge.example/octo/project/commit/${sha}`,
+  ...(login
+    ? {
+        author: {
+          login,
+          html_url: `https://forge.example/${login}`,
+          avatar_url: `https://forge.example/${login}.png`,
+          type: 'User',
+        },
+      }
+    : {}),
   commit: {
     message: `commit ${sha}`,
     author: { name: `Git ${sha}`, email: `${sha}@example.com`, date },
@@ -265,6 +275,7 @@ describe('GitHub-compatible REST mechanics', () => {
       apiUrl: 'https://api.example/custom',
     }).findChanges(request())
     expect(result.commits).toHaveLength(1)
+    expect(result.commits[0]?.associationStatus).toBe('none')
     expect(result.pullRequests).toEqual([])
     expect(fetch.mock.calls.map(([input]) => String(input))).toEqual([
       'https://api.example/custom/repos/octo/project/compare/v1...main',
@@ -310,6 +321,14 @@ describe('GitHub-compatible REST mechanics', () => {
     expect(result.commits[1]?.associatedPullRequests).toEqual([
       { number: 2, baseRepository: 'octo/project' },
     ])
+    expect(result.commits[0]).toMatchObject({
+      url: 'https://forge.example/octo/project/commit/a',
+      authoredAt: '2026-01-01T00:00:00Z',
+      committedAt: '2026-01-01T00:00:00Z',
+      associationStatus: 'associated',
+      author: { name: 'Git a', email: 'a@example.com' },
+    })
+    expect(result.commits[0]?.authors).toBeUndefined()
   })
 
   it.each([
@@ -790,8 +809,11 @@ describe('GitHub-compatible REST mechanics', () => {
       request({ includeNewContributors: true, historyLimit: 2 }),
     )
     expect(proven.newContributorLogins).toEqual(new Set(['pr-user']))
-    expect(proven.commits[0]?.authors?.[0]?.login).toBe('pr-user')
-    expect(JSON.stringify(proven)).not.toContain('@example.com')
+    expect(proven.commits[0]?.authors).toBeUndefined()
+    expect(proven.commits[0]?.author).toEqual({
+      name: 'Git a',
+      email: 'a@example.com',
+    })
 
     bounded = true
     const uncertain = await adapter.findChanges(
