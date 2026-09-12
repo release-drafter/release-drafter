@@ -1,0 +1,200 @@
+{
+  "data": {
+    "repository": {
+      "ref": {
+        "compare": {
+          "commits": {
+            "__typename": "ComparisonCommitConnection",
+            "pageInfo": {
+              "__typename": "PageInfo",
+              "hasNextPage": false,
+              "endCursor": "MDY6Q29tbWl0MzE2 3"
+            },
+            "nodes": [
+              {
+                "__typename": "Commit",
+                "id": "MDY6Q29tbWl0308",
+                "oid": "3083083083083083083083083083083083083080",
+                "committedDate": "2025-09-01T10:00:00Z",
+                "message": "Merge pull request #308 from dependabot/maven/njord-0.9.2\n\nBump njord.version from 0.9.1 to 0.9.2",
+                "author": {
+                  "__typename": "GitActor",
+                  "name": "dependabot[bot]",
+                  "user": {
+                    "__typename": "Bot",
+                    "login": "dependabot[bot]"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bump njord.version from 0.9.1 to 0.9.2",
+                      "number": 308,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/308",
+                      "body": "Bumps the dependency to the latest version.",
+                      "author": {
+                        "login": "dependabot",
+                        "__typename": "Bot",
+                        "url": "https://github.com/apps/dependabot"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
+                      "mergedAt": "2025-09-01T10:00:01Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "dependencies"
+                          }
+                        ]
+                      },
+                      "merged": true,
+                      "baseRefName": "master",
+                      "headRefName": "dependabot/maven/njord-0.9.2"
+                    }
+                  ]
+                }
+              },
+              {
+                "__typename": "Commit",
+                "id": "MDY6Q29tbWl0309",
+                "oid": "3093093093093093093093093093093093093091",
+                "committedDate": "2025-09-02T10:00:00Z",
+                "message": "Merge pull request #309 from dependabot/maven/versions-maven-plugin-2.21.0\n\nBump org.codehaus.mojo:versions-maven-plugin from 2.20.1 to 2.21.0",
+                "author": {
+                  "__typename": "GitActor",
+                  "name": "dependabot[bot]",
+                  "user": {
+                    "__typename": "Bot",
+                    "login": "dependabot[bot]"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bump org.codehaus.mojo:versions-maven-plugin from 2.20.1 to 2.21.0",
+                      "number": 309,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/309",
+                      "body": "Bumps the dependency to the latest version.",
+                      "author": {
+                        "login": "dependabot",
+                        "__typename": "Bot",
+                        "url": "https://github.com/apps/dependabot"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
+                      "mergedAt": "2025-09-02T10:00:01Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "dependencies"
+                          }
+                        ]
+                      },
+                      "merged": true,
+                      "baseRefName": "master",
+                      "headRefName": "dependabot/maven/versions-maven-plugin-2.21.0"
+                    }
+                  ]
+                }
+              },
+              {
+                "__typename": "Commit",
+                "id": "MDY6Q29tbWl0310",
+                "oid": "3103103103103103103103103103103103103102",
+                "committedDate": "2025-09-03T10:00:00Z",
+                "message": "Merge pull request #310 from dependabot/maven/njord-0.9.3\n\nBump njord.version from 0.9.2 to 0.9.3",
+                "author": {
+                  "__typename": "GitActor",
+                  "name": "dependabot[bot]",
+                  "user": {
+                    "__typename": "Bot",
+                    "login": "dependabot[bot]"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bump njord.version from 0.9.2 to 0.9.3",
+                      "number": 310,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/310",
+                      "body": "Bumps the dependency to the latest version.",
+                      "author": {
+                        "login": "dependabot",
+                        "__typename": "Bot",
+                        "url": "https://github.com/apps/dependabot"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
+                      "mergedAt": "2025-09-03T10:00:01Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "dependencies"
+                          }
+                        ]
+                      },
+                      "merged": true,
+                      "baseRefName": "master",
+                      "headRefName": "dependabot/maven/njord-0.9.3"
+                    }
+                  ]
+                }
+              },
+              {
+                "__typename": "Commit",
+                "id": "MDY6Q29tbWl0316",
+                "oid": "3163163163163163163163163163163163163163",
+                "committedDate": "2025-09-04T10:00:00Z",
+                "message": "Merge pull request #316 from dependabot/maven/njord-0.9.5\n\nBump njord.version from 0.9.3 to 0.9.5",
+                "author": {
+                  "__typename": "GitActor",
+                  "name": "dependabot[bot]",
+                  "user": {
+                    "__typename": "Bot",
+                    "login": "dependabot[bot]"
+                  }
+                },
+                "associatedPullRequests": {
+                  "nodes": [
+                    {
+                      "title": "Bump njord.version from 0.9.3 to 0.9.5",
+                      "number": 316,
+                      "url": "https://github.com/toolmantim/release-drafter-test-project/pull/316",
+                      "body": "Bumps the dependency to the latest version.",
+                      "author": {
+                        "login": "dependabot",
+                        "__typename": "Bot",
+                        "url": "https://github.com/apps/dependabot"
+                      },
+                      "baseRepository": {
+                        "nameWithOwner": "toolmantim/release-drafter-test-project"
+                      },
+                      "mergedAt": "2025-09-04T10:00:01Z",
+                      "isCrossRepository": false,
+                      "labels": {
+                        "nodes": [
+                          {
+                            "name": "dependencies"
+                          }
+                        ]
+                      },
+                      "merged": true,
+                      "baseRefName": "master",
+                      "headRefName": "dependabot/maven/njord-0.9.5"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

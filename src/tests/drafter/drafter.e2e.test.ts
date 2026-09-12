@@ -379,6 +379,41 @@ describe('drafter e2e', () => {
         })
       })
 
+      describe('with group-changes config', () => {
+        it('creates a new draft with matching changes merged into one entry', async () => {
+          await mockContext('push')
+          mocks.config.mockReturnValue('config-with-group-changes')
+
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release'],
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-comparison-dependabot-bumps',
+          })
+
+          await runDrafter()
+
+          expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot(`
+            [
+              {
+                "body": "* Bump njord.version from 0.9.1 to 0.9.5 (#308, #310, #316) [@dependabot[bot]](https://github.com/apps/dependabot)
+            * Bump org.codehaus.mojo:versions-maven-plugin from 2.20.1 to 2.21.0 (#309) [@dependabot[bot]](https://github.com/apps/dependabot)",
+                "draft": true,
+                "make_latest": "true",
+                "name": "",
+                "prerelease": false,
+                "tag_name": "",
+                "target_commitish": "master",
+              },
+            ]
+          `)
+
+          expect(scope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(gqlScope.isDone()).toBe(true) // should call the mocked endpoints
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        })
+      })
+
       describe('with custom changes-template config that includes a pull request body', () => {
         it('creates a new draft using the template', async () => {
           await mockContext('push')

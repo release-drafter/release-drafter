@@ -19,6 +19,7 @@ type Payload =
   | 'graphql-include-path-src-5.md-overlapping-label'
   | 'graphql-include-path-src-5.md-squash-merging'
   | 'graphql-comparison-merge-commit'
+  | 'graphql-comparison-dependabot-bumps'
   | 'graphql-comparison-no-prs'
   | 'graphql-comparison-empty'
   | 'graphql-comparison-overlapping-label'

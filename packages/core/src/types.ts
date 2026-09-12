@@ -181,6 +181,17 @@ export type ParsedReplacer = Omit<Config['replacers'][number], 'search'> & {
   search: RegExp
 }
 
+export type ParsedGroupChange = Omit<
+  Config['group-changes'][number],
+  'pattern'
+> & {
+  pattern: RegExp
+  /** Names of the capture groups that build the grouping key: `group` and every `group_<name>`. */
+  groupNames: string[]
+  /** Names of the capture groups exposed as `$FIRST_<NAME>` and `$LAST_<NAME>`, without the grouping ones. */
+  captureNames: string[]
+}
+
 export type ParsedConfig = Omit<
   Config,
   | 'exclude-labels'
@@ -193,12 +204,14 @@ export type ParsedConfig = Omit<
   | 'prerelease'
   | 'replacers'
   | 'categories'
+  | 'group-changes'
 > & {
   commitish: string
   latest: boolean
   prerelease: boolean
   replacers: ParsedReplacer[]
   categories: ParsedCategory[]
+  'group-changes'?: ParsedGroupChange[]
 }
 
 export type ReleaseInput = {

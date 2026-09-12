@@ -2,12 +2,16 @@ import regexEscape from 'escape-string-regexp'
 import type { Config } from '../config/config.schema.ts'
 import type { Commit, PullRequest } from '../types.ts'
 import { generateAuthorsSentence } from './generate-contributors-sentence.ts'
+import type { ChangeGroup } from './group-changes.ts'
 import { renderTemplate } from './render-template/index.ts'
+
+/** Separator between the pull request numbers of `$NUMBERS`. */
+const numbersSeparator = ', '
 
 export const pullRequestToString = (params: {
   category?: string
+  changes: ChangeGroup[]
   commits: Commit[]
-  pullRequests: PullRequest[]
   serverUrl: string
   config: Pick<
     Config,
@@ -18,8 +22,9 @@ export const pullRequestToString = (params: {
     | 'change-authors-final-separator'
   >
 }) =>
-  params.pullRequests
-    .map((pullRequest) => {
+  params.changes
+    .map((change) => {
+      const pullRequest = change.representative
       let pullAuthor = 'ghost'
       if (pullRequest.author) {
         pullAuthor =
@@ -34,13 +39,16 @@ export const pullRequestToString = (params: {
         object: {
           $CATEGORY: params.category ?? '',
           $TITLE: escapeTitle({
-            title: pullRequest.title,
+            title: change.title,
             escapes: params.config['change-title-escapes'],
           }),
           $NUMBER: pullRequest.number.toString(),
+          $NUMBERS: change.pullRequests
+            .map(({ number }) => `#${number}`)
+            .join(numbersSeparator),
           $AUTHORS: generateAuthorsSentence({
             commits: params.commits,
-            pullRequests: [pullRequest],
+            pullRequests: change.pullRequests,
             serverUrl: params.serverUrl,
             noAuthorsTemplate: renderTemplate({
               template: authorTemplate,

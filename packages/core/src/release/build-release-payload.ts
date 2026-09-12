@@ -58,6 +58,7 @@ export const buildReleasePayload = async (params: {
       $PREVIOUS_TAG: lastRelease?.tagName ?? '',
       $CHANGES: generateChangeLog({
         commits,
+        logger,
         pullRequests: sortedPullRequests,
         serverUrl: repository.serverUrl,
         config,

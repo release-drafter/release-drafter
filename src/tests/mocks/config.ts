@@ -40,6 +40,7 @@ export type AvailableConfigs =
   | 'config-with-exclude-labels'
   | 'config-with-exclude-paths'
   | 'config-with-footer-template'
+  | 'config-with-group-changes'
   | 'config-with-header-and-footer-no-nl-no-space-template'
   | 'config-with-header-and-footer-template'
   | 'config-with-header-template'
