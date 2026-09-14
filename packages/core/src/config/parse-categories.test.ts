@@ -584,8 +584,23 @@ describe('parseCategories', () => {
     })
 
     expect(() => mergeInputAndConfig({ config, input: {}, logger })).toThrow(
-      `'${key}' uses removed change variables`,
+      `'${key}' uses variables removed from change-entry templates`,
     )
+  })
+
+  it('accepts variables that remain valid outside change-entry templates', () => {
+    const config = configSchema.parse({
+      commitish: 'main',
+      'category-template': '$TITLE',
+      'change-author-template': '$AUTHOR $AUTHOR_MENTION $AUTHOR_URL',
+      'new-contributor-template':
+        '$AUTHOR $AUTHOR_MENTION $AUTHOR_URL $CHANGE_REFERENCE',
+      'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE',
+    })
+
+    expect(() =>
+      mergeInputAndConfig({ config, input: {}, logger }),
+    ).not.toThrow()
   })
 
   it('rejects removed pull-request variables in new-contributor-template', () => {

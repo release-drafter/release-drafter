@@ -57,7 +57,7 @@ export const generateChangeLog = (params: {
     })
     if (categoryTitle) changeLog.push(categoryTitle, '\n\n')
     const changeString = changeToString({
-      category: category.title,
+      categoryTitle: category.title,
       commits,
       changes: category.changes,
       serverUrl,

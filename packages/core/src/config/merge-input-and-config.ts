@@ -211,7 +211,7 @@ const validateParsedConfig = (parsedConfig: {
     ].map(([variable]) => variable)
     if (legacyVariables.length > 0) {
       throw new Error(
-        `'${key}' uses removed change variables: ${[...new Set(legacyVariables)].join(', ')}. Use the namespaced $CHANGE_*, $PR_*, or $COMMIT_* variables instead.`,
+        `'${key}' uses variables removed from change-entry templates: ${[...new Set(legacyVariables)].join(', ')}. Use the namespaced $CHANGE_* variables, plus $PR_* in 'pr-template' or $COMMIT_* in 'commit-template'.`,
       )
     }
   }

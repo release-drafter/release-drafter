@@ -32,7 +32,7 @@ const commitAuthorName = (author: CommitAuthor | null | undefined) => {
 }
 
 export const changeToString = (params: {
-  category?: string
+  categoryTitle?: string
   changes: Change[]
   commits: Commit[]
   serverUrl: string
@@ -77,7 +77,7 @@ export const changeToString = (params: {
             params.config['pr-template'] ?? params.config['change-template'],
           object: {
             $CHANGE_TYPE: 'pull-request',
-            $CHANGE_CATEGORY: params.category ?? '',
+            $CHANGE_CATEGORY: params.categoryTitle ?? '',
             $CHANGE_TITLE: title,
             $CHANGE_BODY: pullRequest.body ?? '',
             $CHANGE_URL: pullRequest.url ?? '',
@@ -116,7 +116,7 @@ export const changeToString = (params: {
           params.config['commit-template'] ?? params.config['change-template'],
         object: {
           $CHANGE_TYPE: 'commit',
-          $CHANGE_CATEGORY: params.category ?? '',
+          $CHANGE_CATEGORY: params.categoryTitle ?? '',
           $CHANGE_TITLE: title,
           $CHANGE_BODY: message.body,
           $CHANGE_URL: commit.url ?? '',

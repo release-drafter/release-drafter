@@ -1,4 +1,3 @@
-import { selectChanges } from '../change.ts'
 import type { ForgeAdapter, Logger, Repository } from '../ports.ts'
 import type {
   Commit,
@@ -20,6 +19,7 @@ import { renderReleaseName } from './render-release-name.ts'
 import { renderTagName } from './render-tag-name.ts'
 import { renderTemplate } from './render-template/index.ts'
 import { resolveVersionKeyIncrement } from './resolve-version-increment.ts'
+import { selectChanges } from './select-changes.ts'
 import { sortChanges } from './sort-changes.ts'
 
 export const buildReleasePayload = async (params: {

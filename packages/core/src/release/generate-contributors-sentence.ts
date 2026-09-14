@@ -220,6 +220,8 @@ export const generateNewContributorsList = (params: {
     newCommitContributors = [],
     config,
   } = params
+  // Selection removes duplicate and associated commits; each release-body
+  // renderer still applies pre-categories to decide which changes contribute.
   const includedChanges = filterChangesByPreCategories(
     changes,
     config.categories,
