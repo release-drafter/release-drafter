@@ -37,8 +37,6 @@ export type GitLabCommit = {
   author_name?: string
   author_email?: string
   authored_date?: string
-  committer_name?: string
-  committer_email?: string
   committed_date?: string
   created_at?: string
   web_url?: string
