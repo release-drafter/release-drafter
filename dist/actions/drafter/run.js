@@ -1,5 +1,5 @@
 import { S as context, T as setFailed, _ as object, a as readActionInputs, c as getGitHubAdapter, i as defineActionInputNames, l as getRepository, n as sharedInputSchema, o as writeActionOutputs, s as actionLogger, u as escapeStringRegexp, v as string, w as info, y as stringbool } from "../../chunks/config.js";
-import { C as changeTitle, D as splitCommitMessage, E as selectChanges, S as changeForCategory, T as commitAuthors, _ as filterChangesByPreCategories, a as COERCE, b as needsPullRequestChangedFiles, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, w as commitAuthorKey, x as changeDate, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
+import { C as changeTitle, E as splitCommitMessage, S as changeForCategory, T as commitAuthors, _ as filterChangesByPreCategories, a as COERCE, b as needsPullRequestChangedFiles, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, w as commitAuthorKey, x as changeDate, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
 //#region node_modules/verkit/dist/version-CQ98ZBpL.js
 var COERCE_EXACT = safeRegex(COERCE);
 var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
@@ -556,7 +556,7 @@ var generateAuthorsSentence = (params) => {
 				url: author.url,
 				isBot
 			});
-		} else if (author?.name) contributors.set(`name:${author.name}`, {
+		} else if (author?.name) contributors.set(author.email ? `email:${author.email.toLowerCase()}` : `name:${author.name}`, {
 			name: author.name,
 			url: author.url
 		});
@@ -608,9 +608,13 @@ var generateAuthorsSentence = (params) => {
 	return mentions[0];
 };
 var generateNewContributorsList = (params) => {
-	const { changes, newContributorLogins, newCommitContributorKeys = /* @__PURE__ */ new Set(), config } = params;
+	const { changes, newContributorLogins, newCommitContributors = [], config } = params;
 	const includedChanges = filterChangesByPreCategories(changes, config.categories);
 	const firstChangeByContributor = /* @__PURE__ */ new Map();
+	const newCommitContributorKeys = new Set(newCommitContributors.flatMap((author) => {
+		const key = commitAuthorKey(author);
+		return key ? [key] : [];
+	}));
 	for (const change of includedChanges) {
 		const author = change.type === "pull-request" ? change.pullRequest.author : change.commit.author;
 		if (!author) continue;
@@ -686,7 +690,7 @@ var changeToString = (params) => params.changes.map((change) => {
 			template: params.config["pr-template"] ?? params.config["change-template"],
 			object: {
 				$CHANGE_TYPE: "pull-request",
-				$CHANGE_CATEGORY: params.category ?? "",
+				$CHANGE_CATEGORY: params.categoryTitle ?? "",
 				$CHANGE_TITLE: title,
 				$CHANGE_BODY: pullRequest.body ?? "",
 				$CHANGE_URL: pullRequest.url ?? "",
@@ -718,7 +722,7 @@ var changeToString = (params) => params.changes.map((change) => {
 		template: params.config["commit-template"] ?? params.config["change-template"],
 		object: {
 			$CHANGE_TYPE: "commit",
-			$CHANGE_CATEGORY: params.category ?? "",
+			$CHANGE_CATEGORY: params.categoryTitle ?? "",
 			$CHANGE_TITLE: title,
 			$CHANGE_BODY: message.body,
 			$CHANGE_URL: commit.url ?? "",
@@ -764,7 +768,7 @@ var generateChangeLog = (params) => {
 		});
 		if (categoryTitle) changeLog.push(categoryTitle, "\n\n");
 		const changeString = changeToString({
-			category: category.title,
+			categoryTitle: category.title,
 			commits,
 			changes: category.changes,
 			serverUrl,
@@ -992,6 +996,40 @@ var resolveVersionKeyIncrement = (params) => {
 	return versionKeyIncrement;
 };
 //#endregion
+//#region packages/core/src/release/select-changes.ts
+var hasPullRequestAssociation = (commit) => commit.associationStatus === "associated" || Boolean(commit.associatedPullRequests?.some(Boolean));
+/** Selects the deduplicated release entries, omitting commits represented by PRs. */
+var selectChanges = (params) => {
+	const pullRequests = /* @__PURE__ */ new Map();
+	for (const pullRequest of params.pullRequests) {
+		const key = `${pullRequest.baseRepository ?? ""}#${pullRequest.number}`;
+		if (!pullRequests.has(key)) pullRequests.set(key, pullRequest);
+	}
+	const changes = [...pullRequests.values()].map((pullRequest) => ({
+		type: "pull-request",
+		pullRequest
+	}));
+	if (!params.config["include-commits"]) return changes;
+	const mergeCommitOids = new Set([...pullRequests.values()].flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
+	const seen = /* @__PURE__ */ new Set();
+	let unknownCount = 0;
+	for (const commit of params.commits) {
+		if (seen.has(commit.oid)) continue;
+		seen.add(commit.oid);
+		if (commit.associationStatus === "unknown") {
+			unknownCount += 1;
+			continue;
+		}
+		if (hasPullRequestAssociation(commit) || mergeCommitOids.has(commit.oid)) continue;
+		changes.push({
+			type: "commit",
+			commit
+		});
+	}
+	if (unknownCount > 0) params.logger?.warning(`Skipped ${unknownCount} commit${unknownCount === 1 ? "" : "s"} because pull request association could not be determined.`);
+	return changes;
+};
+//#endregion
 //#region packages/core/src/release/sort-changes.ts
 var sortChanges = (params) => {
 	const { changes, logger, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
@@ -1028,14 +1066,14 @@ var sortAscending = (a, b) => {
 };
 var sortDescending = (a, b) => {
 	if (a == null && b == null) return 0;
-	if (a == null) return -1;
-	if (b == null) return 1;
+	if (a == null) return 1;
+	if (b == null) return -1;
 	return sortAscending(a, b) * -1;
 };
 //#endregion
 //#region packages/core/src/release/build-release-payload.ts
 var buildReleasePayload = async (params) => {
-	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = /* @__PURE__ */ new Set(), newCommitContributorKeys = /* @__PURE__ */ new Set(), pullRequests, repository } = params;
+	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = /* @__PURE__ */ new Set(), newCommitContributors = [], pullRequests, repository } = params;
 	logger.info("Building release payload and body...");
 	const changes = sortChanges({
 		changes: selectChanges({
@@ -1073,7 +1111,7 @@ var buildReleasePayload = async (params) => {
 			$NEW_CONTRIBUTORS: generateNewContributorsList({
 				changes,
 				newContributorLogins,
-				newCommitContributorKeys,
+				newCommitContributors,
 				config
 			}),
 			$OWNER: repository.owner,
@@ -1308,7 +1346,7 @@ var draftRelease = async (params) => {
 	});
 	const comparisonBase = input.from ?? (lastRelease ? `refs/tags/${lastRelease.tagName}` : void 0);
 	const pullRequestTemplate = config["pr-template"] ?? config["change-template"];
-	const { commits, newContributorLogins, newCommitContributorKeys = /* @__PURE__ */ new Set(), pullRequests } = comparisonBase ? await adapter.findChanges({
+	const { commits, newContributorLogins, newCommitContributors = [], pullRequests } = comparisonBase ? await adapter.findChanges({
 		repository,
 		comparison: {
 			baseRef: comparisonBase,
@@ -1334,7 +1372,7 @@ var draftRelease = async (params) => {
 		return {
 			commits: [],
 			newContributorLogins: /* @__PURE__ */ new Set(),
-			newCommitContributorKeys: /* @__PURE__ */ new Set(),
+			newCommitContributors: [],
 			pullRequests: []
 		};
 	})();
@@ -1351,7 +1389,7 @@ var draftRelease = async (params) => {
 		lastRelease,
 		logger,
 		newContributorLogins,
-		newCommitContributorKeys,
+		newCommitContributors,
 		pullRequests,
 		repository
 	});

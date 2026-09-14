@@ -395,6 +395,7 @@ var splitCommitMessage = (message = "") => {
 var changeTitle = (change) => change.type === "pull-request" ? change.pullRequest.title : splitCommitMessage(change.commit.message).title || change.commit.oid;
 var changeDate = (change) => change.type === "pull-request" ? change.pullRequest.mergedAt : change.commit.committedAt;
 var changeForCategory = (change) => change.type === "pull-request" ? change.pullRequest : { title: change.commit.message };
+/** Uses adapter-provided authors when available, falling back to commit trailers. */
 var commitAuthors = (commit) => {
 	if (commit.authors) return commit.authors.filter((author) => author != null);
 	const authors = commit.author ? [commit.author] : [];
@@ -408,35 +409,11 @@ var commitAuthors = (commit) => {
 	}
 	return authors;
 };
+/** Returns the strongest available stable identity: login, then email, then name. */
 var commitAuthorKey = (author) => {
 	if (author?.login) return `login:${author.login.toLowerCase()}`;
 	if (author?.email) return `email:${author.email.toLowerCase()}`;
 	if (author?.name) return `name:${author.name}`;
-};
-var selectChanges = (params) => {
-	const changes = params.pullRequests.map((pullRequest) => ({
-		type: "pull-request",
-		pullRequest
-	}));
-	if (!params.config["include-commits"]) return changes;
-	const mergeCommitOids = new Set(params.pullRequests.flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
-	const seen = /* @__PURE__ */ new Set();
-	let unknownCount = 0;
-	for (const commit of params.commits) {
-		if (seen.has(commit.oid)) continue;
-		seen.add(commit.oid);
-		if (commit.associationStatus === "unknown") {
-			unknownCount += 1;
-			continue;
-		}
-		if (commit.associationStatus === "associated" || commit.associatedPullRequests?.some(Boolean) || mergeCommitOids.has(commit.oid)) continue;
-		changes.push({
-			type: "commit",
-			commit
-		});
-	}
-	if (unknownCount > 0) params.logger?.warning(`Skipped ${unknownCount} commit${unknownCount === 1 ? "" : "s"} because pull request association could not be determined.`);
-	return changes;
 };
 //#endregion
 //#region packages/core/src/path-matcher.ts
@@ -1622,7 +1599,7 @@ var validateParsedConfig = (parsedConfig) => {
 		const template = parsedConfig[key];
 		if (!template) continue;
 		const legacyVariables = [...template.matchAll(/\$(?:CATEGORY|TITLE|NUMBER|AUTHORS|AUTHOR|AUTHOR_URL|BODY|URL|BASE_REF_NAME|HEAD_REF_NAME)\b/g)].map(([variable]) => variable);
-		if (legacyVariables.length > 0) throw new Error(`'${key}' uses removed change variables: ${[...new Set(legacyVariables)].join(", ")}. Use the namespaced $CHANGE_*, $PR_*, or $COMMIT_* variables instead.`);
+		if (legacyVariables.length > 0) throw new Error(`'${key}' uses variables removed from change-entry templates: ${[...new Set(legacyVariables)].join(", ")}. Use the namespaced $CHANGE_* variables, plus $PR_* in 'pr-template' or $COMMIT_* in 'commit-template'.`);
 	}
 	const legacyNewContributorVariables = [...parsedConfig["new-contributor-template"].matchAll(/\$(?:NUMBER|URL)\b/g)].map(([variable]) => variable);
 	if (legacyNewContributorVariables.length > 0) throw new Error(`'new-contributor-template' uses removed variables: ${[...new Set(legacyNewContributorVariables)].join(", ")}. Use $CHANGE_REFERENCE or $CHANGE_URL instead.`);
@@ -1640,4 +1617,4 @@ var getReleaseDrafterConfig = async (configName, currentContext, token) => {
 	return configSchema.parse(config);
 };
 //#endregion
-export { changeTitle as C, splitCommitMessage as D, selectChanges as E, changeForCategory as S, commitAuthors as T, filterChangesByPreCategories as _, COERCE as a, needsPullRequestChangedFiles as b, PRERELEASE_LOOSE as c, formatFullVersion as d, parse as f, evaluateCategories as g, commonConfigSchema as h, satisfies as i, compareIdentifiers as l, tryParse as m, mergeInputAndConfig as n, COERCE_FULL as o, safeRegex as p, normalizeRange as r, PRERELEASE as s, getReleaseDrafterConfig as t, formatComparableVersion as u, getChangelogCategories as v, commitAuthorKey as w, changeDate as x, getVersionResolverCategories as y };
+export { changeTitle as C, splitCommitMessage as E, changeForCategory as S, commitAuthors as T, filterChangesByPreCategories as _, COERCE as a, needsPullRequestChangedFiles as b, PRERELEASE_LOOSE as c, formatFullVersion as d, parse as f, evaluateCategories as g, commonConfigSchema as h, satisfies as i, compareIdentifiers as l, tryParse as m, mergeInputAndConfig as n, COERCE_FULL as o, safeRegex as p, normalizeRange as r, PRERELEASE as s, getReleaseDrafterConfig as t, formatComparableVersion as u, getChangelogCategories as v, commitAuthorKey as w, changeDate as x, getVersionResolverCategories as y };
