@@ -374,6 +374,99 @@ describe('GitHubAdapter', () => {
     )
   })
 
+  it.each([
+    {
+      name: 'an earlier merged pull request exists',
+      issueCount: 1,
+      previousCommits: [] as unknown[],
+      historyError: undefined,
+      warning: false,
+    },
+    {
+      name: 'an earlier commit is reachable from the base',
+      issueCount: 0,
+      previousCommits: [{ sha: 'earlier' }],
+      historyError: undefined,
+      warning: false,
+    },
+    {
+      name: 'commit history cannot be loaded',
+      issueCount: 0,
+      previousCommits: [] as unknown[],
+      historyError: new Error('history unavailable'),
+      warning: true,
+    },
+  ])('does not label a direct commit author new when $name', async ({
+    issueCount,
+    previousCommits,
+    historyError,
+    warning: shouldWarn,
+  }) => {
+    const octokit = mockOctokit()
+    const warning = vi.fn()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield { data: { commits: [{ sha: 'direct' }] } }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  oid: 'direct',
+                  committedDate: '2026-01-02T00:00:00Z',
+                  author: { user: { login: 'candidate' } },
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: { pullRequests: { nodes: [] } },
+      })
+      .mockResolvedValueOnce({ author0: { issueCount } })
+    if (historyError) {
+      vi.mocked(octokit.rest.repos.listCommits).mockRejectedValue(historyError)
+    } else {
+      vi.mocked(octokit.rest.repos.listCommits).mockResolvedValue({
+        data: previousCommits,
+      } as never)
+    }
+
+    const result = await new GitHubAdapter({
+      token: 'token',
+      octokit,
+      logger: { debug() {}, info() {}, error() {}, warning },
+    }).findChanges({
+      repository,
+      comparison: { baseRef: 'v1', headRef: 'main' },
+      pullRequestFields: {
+        body: false,
+        url: false,
+        baseRefName: false,
+        headRefName: false,
+      },
+      pullRequestLimit: 20,
+      historyLimit: 100,
+      includeChangedFiles: false,
+      includeNewContributors: true,
+      includeCommits: true,
+    })
+
+    expect(result.newCommitContributors).toEqual([])
+    expect(octokit.rest.repos.listCommits).toHaveBeenCalledTimes(
+      issueCount > 0 ? 0 : 1,
+    )
+    expect(warning).toHaveBeenCalledTimes(shouldWarn ? 1 : 0)
+  })
+
   it('bounds recent pull request recovery to one page and backfills association evidence', async () => {
     const octokit = mockOctokit()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(

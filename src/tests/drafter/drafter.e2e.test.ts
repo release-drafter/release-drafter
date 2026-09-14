@@ -148,7 +148,6 @@ describe('drafter e2e', () => {
 
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-comparison-merge-commit',
-          suppressRecentPullRequestMock: true,
         })
 
         const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
