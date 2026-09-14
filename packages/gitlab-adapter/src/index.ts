@@ -285,23 +285,23 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
         ),
     )
     const mergeRequests = new Map<string, GitLabMergeRequest>()
-    const keysByCommit = new Map<string, string[]>()
     for (const [index, candidates] of associated.entries()) {
       const commit = commits[index]
       if (commit) {
         commit.associationStatus = candidates.length > 0 ? 'associated' : 'none'
-        commit.associatedPullRequests = candidates.flatMap((candidate) =>
-          Number.isSafeInteger(candidate.iid) && (candidate.iid ?? 0) > 0
-            ? [
-                {
-                  number: candidate.iid as number,
-                  baseRepository: repositoryKey(request),
-                },
-              ]
-            : [],
-        )
+        commit.associatedPullRequests = candidates
+          .flatMap((candidate) =>
+            Number.isSafeInteger(candidate.iid) && (candidate.iid ?? 0) > 0
+              ? [
+                  {
+                    number: candidate.iid as number,
+                    baseRepository: repositoryKey(request),
+                  },
+                ]
+              : [],
+          )
+          .sort((a, b) => a.number - b.number)
       }
-      const keys: string[] = []
       for (const candidate of candidates) {
         if (
           candidate.state !== 'merged' ||
@@ -318,9 +318,7 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
         }
         const key = mergeRequestKey(repositoryKey(request), candidate.iid)
         mergeRequests.set(key, candidate)
-        keys.push(key)
       }
-      keysByCommit.set(commits[index]?.oid ?? '', [...new Set(keys)].sort())
     }
 
     const normalizedByKey = new Map(
@@ -375,24 +373,6 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
           mergeRequest.changedFiles = files
         },
       )
-    }
-
-    for (const commit of commits) {
-      const keys = keysByCommit.get(commit.oid) ?? []
-      const associatedPullRequests = keys.flatMap((key) => {
-        const mergeRequest = normalizedByKey.get(key)
-        return mergeRequest
-          ? [
-              {
-                number: mergeRequest.number,
-                baseRepository: mergeRequest.baseRepository,
-              },
-            ]
-          : []
-      })
-      if (associatedPullRequests.length > 0) {
-        commit.associatedPullRequests = associatedPullRequests
-      }
     }
 
     const pullRequests = [...normalizedByKey.values()].sort(
