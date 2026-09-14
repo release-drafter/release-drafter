@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { selectChanges, splitCommitMessage } from '../change.ts'
+import { splitCommitMessage } from '../change.ts'
 import { configSchema } from '../config/config.schema.ts'
 import { mergeInputAndConfig } from '../config/merge-input-and-config.ts'
 import { noopLogger } from '../ports.ts'
@@ -10,6 +10,7 @@ import {
   generateContributorsSentence,
   generateNewContributorsList,
 } from './generate-contributors-sentence.ts'
+import { selectChanges } from './select-changes.ts'
 import { sortChanges } from './sort-changes.ts'
 
 const directCommit = (overrides: Partial<Commit> = {}): Commit => ({
@@ -232,6 +233,26 @@ describe('individual commit changes', () => {
     ).toBe(
       '* @commit-author made their first contribution in [`1234567`](https://example.test/owner/repo/commit/1234567890abcdef)',
     )
+  })
+
+  it('excludes pre-filtered changes from new contributors', () => {
+    const commit = directCommit({ message: 'docs: excluded change' })
+
+    expect(
+      generateNewContributorsList({
+        changes: [{ type: 'commit', commit }],
+        newContributorLogins: new Set(),
+        newCommitContributors: [{ login: 'commit-author' }],
+        config: config({
+          categories: [
+            {
+              type: 'pre-exclude',
+              when: { conventional: { type: 'docs' } },
+            },
+          ],
+        }),
+      }),
+    ).toBe('* No new contributors')
   })
 
   it('uses the same selected changes for changelog, versioning, and contributors', async () => {

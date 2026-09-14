@@ -83,7 +83,7 @@ export const generateChangeLog = (params: {
     if (categoryTitle) changeLog.push(categoryTitle, '\n\n')
     const groupedChanges = toGroupedChanges(category.changes)
     const changeString = changeToString({
-      category: category.title,
+      categoryTitle: category.title,
       changes: groupedChanges,
       commits,
       serverUrl,
