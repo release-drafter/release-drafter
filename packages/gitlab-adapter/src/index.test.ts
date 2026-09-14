@@ -365,6 +365,36 @@ describe('GitLabAdapter', () => {
     })
   })
 
+  it('keeps non-renderable merge requests as commit association evidence', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const path = pathOf(input)
+      if (path.includes('/repository/compare')) {
+        return json({
+          compare_timeout: false,
+          commits: [commit('a', '2026-01-01')],
+        })
+      }
+      if (path.includes('/commits/a/merge_requests')) {
+        return json([
+          mergeRequest(1),
+          mergeRequest(2, { state: 'opened', merged_at: null }),
+        ])
+      }
+      throw new Error(`Unexpected ${path}`)
+    })
+
+    const result = await adapter(fetch).findChanges(request())
+
+    expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
+    expect(result.commits[0]).toMatchObject({
+      associationStatus: 'associated',
+      associatedPullRequests: [
+        { number: 1, baseRepository: 'group/subgroup/project' },
+        { number: 2, baseRepository: 'group/subgroup/project' },
+      ],
+    })
+  })
+
   it("paginates associated merge requests above GitLab's 100-item page cap", async () => {
     const mergeRequests = Array.from({ length: 150 }, (_, index) =>
       mergeRequest(index + 1),
