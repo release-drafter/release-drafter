@@ -256,7 +256,7 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     }
     const newCommitContributors =
       params.includeCommits && params.includeNewContributors
-        ? await this.findNewCommitContributorKeys(params, commits)
+        ? await this.findNewCommitContributors(params, commits)
         : []
 
     return {
@@ -525,7 +525,12 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     return new Set(results.flat())
   }
 
-  private async findNewCommitContributorKeys(
+  /**
+   * Checks only proven direct commits with linked users and dates, using each
+   * login's earliest commit as the cutoff. Prior merged PRs and commits reachable
+   * from the base disqualify candidates; limits and failed checks omit them.
+   */
+  private async findNewCommitContributors(
     params: FindChangesRequest,
     commits: ChangeSet['commits'],
   ): Promise<NonNullable<ChangeSet['newCommitContributors']>> {
@@ -543,6 +548,8 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
         earliestCommitByLogin.set(commit.author.login, commit.committedAt)
       }
     }
+    // Reuse the PR-history lookup with each author's first direct commit as
+    // the contribution cutoff.
     const noPriorPullRequest = await this.findNewContributorLogins(
       params.repository,
       [...earliestCommitByLogin].map(([login, committedAt]) => ({
