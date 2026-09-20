@@ -29,20 +29,35 @@ export type PullRequest = {
 export type CommitAuthor = {
   name?: string | null
   login?: string | null
+  email?: string | null
+  avatarUrl?: string
+  url?: string
   type?: string
 }
 
 export type Commit = {
   id?: string
   oid: string
+  url?: string
+  authoredAt?: string
   committedAt?: string
   message?: string
   author?: CommitAuthor | null
   authors?: (CommitAuthor | null)[] | null
+  /**
+   * `associated`: positive forge evidence links this commit to a pull request.
+   * `unassociated`: a completed forge lookup found no pull request.
+   * `unresolved`: the forge could not safely decide, so the commit is omitted.
+   */
+  associationStatus: 'associated' | 'unassociated' | 'unresolved'
   associatedPullRequests?:
     | (Pick<PullRequest, 'number' | 'baseRepository'> | null)[]
     | null
 }
+
+export type Change =
+  | { type: 'pull-request'; pullRequest: PullRequest }
+  | { type: 'commit'; commit: Commit }
 
 export type Release = {
   id: string | number
@@ -60,6 +75,7 @@ export type ChangeSet = {
   commits: Commit[]
   pullRequests: PullRequest[]
   newContributorLogins: ReadonlySet<string>
+  newCommitContributors?: readonly CommitAuthor[]
 }
 
 export type PreviousReleases = {
@@ -107,6 +123,7 @@ export type FindChangesRequest = {
   historyLimit: number
   includeChangedFiles: boolean
   includeNewContributors: boolean
+  includeCommits?: boolean
 }
 
 export type GetPullRequestRequest = {

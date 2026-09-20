@@ -117,12 +117,27 @@ export const mockGraphqlQuery = (
                   __typename: 'Commit',
                   history: {
                     ...history,
-                    nodes: history.nodes
-                      .filter(Boolean)
-                      .map((commit: { id?: string; oid?: string }) => ({
+                    nodes: history.nodes.filter(Boolean).map(
+                      (commit: {
+                        id?: string
+                        oid?: string
+                        associatedPullRequests?: {
+                          nodes?: unknown[] | null
+                        } | null
+                      }) => ({
                         ...commit,
                         oid: commitOid(commit),
-                      })),
+                        associatedPullRequests: commit.associatedPullRequests
+                          ? {
+                              ...commit.associatedPullRequests,
+                              totalCount:
+                                commit.associatedPullRequests.nodes?.filter(
+                                  Boolean,
+                                ).length ?? 0,
+                            }
+                          : commit.associatedPullRequests,
+                      }),
+                    ),
                   },
                 },
               },

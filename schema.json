@@ -40,8 +40,18 @@
         }
       ]
     },
+    "include-commits": {
+      "default": false,
+      "type": "boolean"
+    },
     "change-template": {
-      "default": "* $TITLE (#$NUMBER) $AUTHORS",
+      "default": "* $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS",
+      "type": "string"
+    },
+    "pr-template": {
+      "type": "string"
+    },
+    "commit-template": {
       "type": "string"
     },
     "change-author-template": {
@@ -111,7 +121,7 @@
       }
     },
     "new-contributor-template": {
-      "default": "* $AUTHOR_MENTION made their first contribution in #$NUMBER",
+      "default": "* $AUTHOR_MENTION made their first contribution in $CHANGE_REFERENCE",
       "type": "string"
     },
     "no-new-contributor-template": {
@@ -123,9 +133,9 @@
       "type": "string"
     },
     "sort-by": {
-      "default": "merged_at",
+      "default": "date",
       "type": "string",
-      "enum": ["merged_at", "title"]
+      "enum": ["date", "title"]
     },
     "sort-direction": {
       "default": "descending",

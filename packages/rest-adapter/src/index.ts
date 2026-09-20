@@ -14,6 +14,7 @@ import type {
   ResolveCommitishRequest,
   UpdateReleaseRequest,
 } from '@release-drafter/core'
+import { commitAuthorKey } from '@release-drafter/core'
 import { mapConcurrent, RestClient } from './client.ts'
 import type {
   PullRequestEntry,
@@ -43,18 +44,32 @@ const normalizeCommit = (commit: RestCommit): Commit => {
     throw new Error('Comparison contained a commit without a SHA')
   const login = loginOf(commit.author)
   const name = commit.commit?.author?.name ?? undefined
-  const committedAt =
-    commit.commit?.committer?.date ??
-    commit.commit?.author?.date ??
-    commit.created
+  const email = commit.commit?.author?.email ?? undefined
+  const committedAt = commit.commit?.committer?.date ?? commit.created
   return {
     id: commit.sha,
     oid: commit.sha,
+    ...(commit.html_url ? { url: commit.html_url } : {}),
+    ...(commit.commit?.author?.date
+      ? { authoredAt: commit.commit.author.date }
+      : {}),
     ...(committedAt ? { committedAt } : {}),
     ...(commit.commit?.message ? { message: commit.commit.message } : {}),
-    ...(login || name
-      ? { author: { ...(name ? { name } : {}), ...(login ? { login } : {}) } }
+    ...(login || name || email
+      ? {
+          author: {
+            ...(name ? { name } : {}),
+            ...(login ? { login } : {}),
+            ...(email ? { email } : {}),
+            ...(commit.author?.avatar_url
+              ? { avatarUrl: commit.author.avatar_url }
+              : {}),
+            ...(commit.author?.html_url ? { url: commit.author.html_url } : {}),
+            ...(commit.author?.type ? { type: commit.author.type } : {}),
+          },
+        }
       : {}),
+    associationStatus: 'unresolved',
   }
 }
 
@@ -240,6 +255,9 @@ class GitHubCompatibleRestAdapter
     const entriesByKey = new Map<string, PullRequestEntry>()
     const entryByCommit = new Map<string, PullRequestEntry>()
     for (const [index, pullRequest] of associated.entries()) {
+      const commit = commits[index]
+      if (commit)
+        commit.associationStatus = pullRequest ? 'associated' : 'unassociated'
       if (!pullRequest) continue
       if (pullRequest.merged === false || !pullRequest.merged_at) continue
       const entry = normalizePullRequest(
@@ -304,21 +322,6 @@ class GitHubCompatibleRestAdapter
           baseRepository: entry.normalized.baseRepository,
         },
       ]
-      const pullAuthor = entry.normalized.author
-      const commitAuthor = commit.author
-      commit.authors = [
-        ...(pullAuthor
-          ? [
-              {
-                login: pullAuthor.login,
-                type: pullAuthor.type,
-              },
-            ]
-          : []),
-        ...(commitAuthor?.login !== pullAuthor?.login && commitAuthor
-          ? [commitAuthor]
-          : []),
-      ]
     }
 
     const pullRequests = entries
@@ -327,7 +330,106 @@ class GitHubCompatibleRestAdapter
     const newContributorLogins = params.includeNewContributors
       ? await this.findNewContributors(params, entries, budget)
       : new Set<string>()
-    return { commits, pullRequests, newContributorLogins }
+    const newCommitContributors =
+      params.includeCommits && params.includeNewContributors
+        ? await this.findNewCommitContributors(params, commits, budget)
+        : []
+    return {
+      commits,
+      pullRequests,
+      newContributorLogins,
+      newCommitContributors,
+    }
+  }
+
+  private async findNewCommitContributors(
+    params: FindChangesRequest,
+    commits: Commit[],
+    budget: ReturnType<RestClient['newBudget']>,
+  ) {
+    const candidates = new Map<
+      string,
+      { author: NonNullable<Commit['author']>; committedAt?: string }
+    >()
+    for (const commit of commits) {
+      if (commit.associationStatus !== 'unassociated' || !commit.author)
+        continue
+      const key = commitAuthorKey(commit.author)
+      if (!key) continue
+      const previous = candidates.get(key)
+      if (
+        !previous ||
+        (commit.committedAt ?? '') < (previous.committedAt ?? '')
+      ) {
+        candidates.set(key, {
+          author: commit.author,
+          committedAt: commit.committedAt,
+        })
+      }
+    }
+    if (candidates.size === 0) return []
+
+    try {
+      const history = await this.client.paginate<RestCommit>({
+        repository: params.repository,
+        path: this.profile.endpoints.commits(params.repository),
+        budget,
+        pageSize: params.historyLimit,
+        query: {
+          sha: params.comparison.baseRef,
+          stat: false,
+          verification: false,
+          files: false,
+        },
+      })
+      const priorKeys = new Set(
+        history.flatMap((commit) => {
+          try {
+            const key = commitAuthorKey(normalizeCommit(commit).author)
+            return key ? [key] : []
+          } catch {
+            return []
+          }
+        }),
+      )
+      const commitFirst = [...candidates].filter(([key]) => !priorKeys.has(key))
+      const verified = await mapConcurrent(
+        commitFirst,
+        this.client.limits.concurrency,
+        async ([key, candidate]) => {
+          if (!candidate.author.login) return key
+          const list = this.profile.response.pullRequestList
+          const pullRequests =
+            await this.client.paginate<RestPullRequest | null>({
+              repository: params.repository,
+              path: this.profile.endpoints.pulls(params.repository),
+              budget,
+              pageSize: params.historyLimit,
+              query: {
+                [list.authorParameter]: candidate.author.login,
+                [list.stateParameter]: list.closedState,
+                [list.sortParameter]: list.oldestSort,
+              },
+            })
+          return pullRequests.some(
+            (pullRequest) =>
+              pullRequest?.merged_at &&
+              pullRequest.merged_at < (candidate.committedAt ?? ''),
+          )
+            ? ''
+            : key
+        },
+      )
+      return verified.flatMap((key) => {
+        const author = candidates.get(key)?.author
+        return key && author ? [author] : []
+      })
+    } catch (error) {
+      this.client.logger.warning(
+        `Could not prove whether direct commit authors are new contributors within the bounded commit history. They will not be labeled new. ${error instanceof Error ? error.message : String(error)}`,
+      )
+      return []
+    }
   }
 
   private async findNewContributors(
@@ -594,6 +696,7 @@ export const createRestEndpoints = () => {
         .join('/')}`,
     compare: (repository: Repository, baseHead: string) =>
       `${repoPath(repository)}/compare/${encoded(baseHead)}`,
+    commits: (repository: Repository) => `${repoPath(repository)}/commits`,
     commitPull: (repository: Repository, sha: string) =>
       `${repoPath(repository)}/commits/${encoded(sha)}/pull`,
     pullFiles: (repository: Repository, number: number) =>

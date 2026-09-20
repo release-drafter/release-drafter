@@ -326,6 +326,12 @@ forge-neutral:
 release payload. If the adapter writes a release, the result also contains the
 created or updated release.
 
+The v8 `DraftReleaseConfig` uses generic change templates. Set
+`include-commits: true` to include commits without pull request associations,
+use `sort-by: date` or `title`, and use `$CHANGE_*`, `$PR_*`, and `$COMMIT_*`
+variables. The removed unprefixed per-change variables and `sort-by: merged_at`
+are not accepted.
+
 Importing `release-drafter` does not start the CLI, read environment variables,
 or perform network requests.
 

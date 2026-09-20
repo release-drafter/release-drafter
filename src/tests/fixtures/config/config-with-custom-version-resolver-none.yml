@@ -11,7 +11,7 @@ categories:
     label: 'documentation'
   - title: '🧰 Maintenance'
     label: 'maintenance'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-template: '- $CHANGE_TITLE @$CHANGE_AUTHOR ($CHANGE_REFERENCE)'
 template: dummy
 version-resolver:
   major:

@@ -1,6 +1,11 @@
-import type { Repository } from '@release-drafter/core'
+import type { FindChangesRequest, Repository } from '@release-drafter/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GitHubAdapter, type GitHubOctokit } from './index.ts'
+import { sleep } from './utils/sleep.ts'
+
+vi.mock('./utils/sleep.ts', () => ({
+  sleep: vi.fn().mockResolvedValue(undefined),
+}))
 
 const undiciMocks = vi.hoisted(() => {
   class MockEnvHttpProxyAgent {}
@@ -21,6 +26,7 @@ beforeEach(() => {
     undiciMocks.MockEnvHttpProxyAgent,
   )
   undiciMocks.fetch.mockReset()
+  vi.mocked(sleep).mockClear()
 })
 
 const repository: Repository = {
@@ -34,6 +40,7 @@ const mockOctokit = (overrides: Record<string, unknown> = {}) =>
     rest: {
       repos: {
         listReleases: vi.fn(),
+        listCommits: vi.fn(),
         compareCommitsWithBasehead: vi.fn(),
         createRelease: vi.fn(),
         updateRelease: vi.fn(),
@@ -48,6 +55,34 @@ const mockOctokit = (overrides: Record<string, unknown> = {}) =>
 
 const adapter = (octokit: GitHubOctokit) =>
   new GitHubAdapter({ token: 'token', octokit })
+
+const findChangesRequest = (
+  overrides: Partial<FindChangesRequest> = {},
+): FindChangesRequest => ({
+  repository,
+  comparison: { baseRef: 'base', headRef: 'main' },
+  pullRequestFields: {
+    body: false,
+    url: false,
+    baseRefName: false,
+    headRefName: false,
+  },
+  pullRequestLimit: 20,
+  historyLimit: 100,
+  includeChangedFiles: false,
+  includeNewContributors: false,
+  ...overrides,
+})
+
+const pullRequest = (number: number, oid: string) => ({
+  number,
+  title: `Pull request ${number}`,
+  merged: true,
+  baseRepository: {
+    nameWithOwner: `${repository.owner}/${repository.name}`,
+  },
+  mergeCommit: { oid },
+})
 
 describe('GitHubAdapter', () => {
   it('reads normalized pull request validation data', async () => {
@@ -217,7 +252,12 @@ describe('GitHubAdapter', () => {
             __typename: 'Commit',
             history: {
               pageInfo: { hasNextPage: true, endCursor: 'next' },
-              nodes: [{ oid: 'a', associatedPullRequests: { nodes: [] } }],
+              nodes: [
+                {
+                  oid: 'a',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
             },
           },
         },
@@ -228,8 +268,35 @@ describe('GitHubAdapter', () => {
             __typename: 'Commit',
             history: {
               pageInfo: { hasNextPage: false, endCursor: null },
-              nodes: [{ oid: 'b', associatedPullRequests: { nodes: [] } }],
+              nodes: [
+                {
+                  oid: 'b',
+                  url: 'https://github.example/commit/b',
+                  authoredDate: '2026-01-01T00:00:00Z',
+                  committedDate: '2026-01-02T00:00:00Z',
+                  message: 'feat: direct change',
+                  author: {
+                    name: 'Commit Author',
+                    email: 'author@example.com',
+                    avatarUrl: 'https://github.example/avatar',
+                    user: {
+                      __typename: 'User',
+                      login: 'author',
+                      url: 'https://github.example/author',
+                    },
+                  },
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
             },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [],
           },
         },
       })
@@ -250,7 +317,22 @@ describe('GitHubAdapter', () => {
     })
 
     expect(result.commits.map((commit) => commit.oid)).toEqual(['b', 'a'])
-    expect(octokit.graphql).toHaveBeenCalledTimes(2)
+    expect(result.commits[0]).toMatchObject({
+      url: 'https://github.example/commit/b',
+      authoredAt: '2026-01-01T00:00:00Z',
+      committedAt: '2026-01-02T00:00:00Z',
+      message: 'feat: direct change',
+      associationStatus: 'unassociated',
+      author: {
+        name: 'Commit Author',
+        login: 'author',
+        email: 'author@example.com',
+        avatarUrl: 'https://github.example/avatar',
+        url: 'https://github.example/author',
+        type: 'User',
+      },
+    })
+    expect(octokit.graphql).toHaveBeenCalledTimes(3)
     expect(octokit.graphql).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('hydrateComparisonCommits'),
@@ -258,22 +340,13 @@ describe('GitHubAdapter', () => {
     )
   })
 
-  it('bounds recent pull request recovery to one small page', async () => {
+  it('finds direct commit authors with no history before the comparison base', async () => {
     const octokit = mockOctokit()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
-        yield { data: { commits: [{ sha: 'matching-oid' }] } }
+        yield { data: { commits: [{ sha: 'direct' }] } }
       })() as never,
     )
-    const pullRequest = (number: number, oid: string) => ({
-      number,
-      title: `Pull request ${number}`,
-      merged: true,
-      baseRepository: {
-        nameWithOwner: `${repository.owner}/${repository.name}`,
-      },
-      mergeCommit: { oid },
-    })
     vi.mocked(octokit.graphql)
       .mockResolvedValueOnce({
         repository: {
@@ -283,8 +356,333 @@ describe('GitHubAdapter', () => {
               pageInfo: { hasNextPage: false, endCursor: null },
               nodes: [
                 {
+                  oid: 'direct',
+                  committedDate: '2026-01-02T00:00:00Z',
+                  author: { user: { login: 'new-user' } },
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: { pullRequests: { nodes: [] } },
+      })
+      .mockResolvedValueOnce({ author0: { issueCount: 0 } })
+    vi.mocked(octokit.rest.repos.listCommits).mockResolvedValue({
+      data: [],
+    } as never)
+
+    const result = await adapter(octokit).findChanges({
+      repository,
+      comparison: { baseRef: 'v1', headRef: 'main' },
+      pullRequestFields: {
+        body: false,
+        url: false,
+        baseRefName: false,
+        headRefName: false,
+      },
+      pullRequestLimit: 20,
+      historyLimit: 100,
+      includeChangedFiles: false,
+      includeNewContributors: true,
+      includeCommits: true,
+    })
+
+    expect(result.commits[0]?.associationStatus).toBe('unassociated')
+    expect(result.newCommitContributors).toEqual([{ login: 'new-user' }])
+    expect(octokit.rest.repos.listCommits).toHaveBeenCalledWith({
+      owner: repository.owner,
+      repo: repository.name,
+      sha: 'v1',
+      author: 'new-user',
+      per_page: 1,
+    })
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('query findPreviousContributions'),
+      expect.objectContaining({
+        query0: expect.stringContaining('author:new-user merged:<'),
+      }),
+    )
+  })
+
+  it.each([
+    {
+      name: 'an earlier merged pull request exists',
+      issueCount: 1,
+      previousCommits: [] as unknown[],
+      historyError: undefined,
+      warning: false,
+    },
+    {
+      name: 'an earlier commit is reachable from the base',
+      issueCount: 0,
+      previousCommits: [{ sha: 'earlier' }],
+      historyError: undefined,
+      warning: false,
+    },
+    {
+      name: 'commit history cannot be loaded',
+      issueCount: 0,
+      previousCommits: [] as unknown[],
+      historyError: new Error('history unavailable'),
+      warning: true,
+    },
+  ])('does not label a direct commit author new when $name', async ({
+    issueCount,
+    previousCommits,
+    historyError,
+    warning: shouldWarn,
+  }) => {
+    const octokit = mockOctokit()
+    const warning = vi.fn()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield { data: { commits: [{ sha: 'direct' }] } }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  oid: 'direct',
+                  committedDate: '2026-01-02T00:00:00Z',
+                  author: { user: { login: 'candidate' } },
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: { pullRequests: { nodes: [] } },
+      })
+      .mockResolvedValueOnce({ author0: { issueCount } })
+    if (historyError) {
+      vi.mocked(octokit.rest.repos.listCommits).mockRejectedValue(historyError)
+    } else {
+      vi.mocked(octokit.rest.repos.listCommits).mockResolvedValue({
+        data: previousCommits,
+      } as never)
+    }
+
+    const result = await new GitHubAdapter({
+      token: 'token',
+      octokit,
+      logger: { debug() {}, info() {}, error() {}, warning },
+    }).findChanges({
+      repository,
+      comparison: { baseRef: 'v1', headRef: 'main' },
+      pullRequestFields: {
+        body: false,
+        url: false,
+        baseRefName: false,
+        headRefName: false,
+      },
+      pullRequestLimit: 20,
+      historyLimit: 100,
+      includeChangedFiles: false,
+      includeNewContributors: true,
+      includeCommits: true,
+    })
+
+    expect(result.newCommitContributors).toEqual([])
+    expect(octokit.rest.repos.listCommits).toHaveBeenCalledTimes(
+      issueCount > 0 ? 0 : 1,
+    )
+    expect(warning).toHaveBeenCalledTimes(shouldWarn ? 1 : 0)
+  })
+
+  it('checks recent pull requests even when commit associations are already populated', async () => {
+    const octokit = mockOctokit()
+    const associatedPullRequest = pullRequest(1, 'matching-oid')
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield { data: { commits: [{ sha: 'matching-oid' }] } }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: 'commit-id',
                   oid: 'matching-oid',
-                  associatedPullRequests: { nodes: [] },
+                  associatedPullRequests: {
+                    totalCount: 1,
+                    nodes: [associatedPullRequest],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: { pullRequests: { nodes: [] } },
+      })
+
+    const result = await adapter(octokit).findChanges(findChangesRequest())
+
+    expect(result.commits[0]?.associationStatus).toBe('associated')
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('findRecentMergedPullRequests'),
+      expect.objectContaining({ limit: 5 }),
+    )
+  })
+
+  it('skips recent pull request recovery for ephemeral pull request refs', async () => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield { data: { commits: [{ sha: 'pull-ref-oid' }] } }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql).mockResolvedValueOnce({
+      repository: {
+        object: {
+          __typename: 'Commit',
+          history: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [
+              {
+                id: 'pull-ref-id',
+                oid: 'pull-ref-oid',
+                associatedPullRequests: { totalCount: 0, nodes: [] },
+              },
+            ],
+          },
+        },
+      },
+    })
+
+    const result = await adapter(octokit).findChanges(
+      findChangesRequest({
+        comparison: {
+          baseRef: 'base',
+          headRef: 'refs/pull/42/merge',
+        },
+        includeCommits: true,
+      }),
+    )
+
+    expect(result.commits[0]?.associationStatus).toBe('unresolved')
+    expect(octokit.graphql).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps polling until the expected pull request association appears', async () => {
+    const octokit = mockOctokit()
+    const otherPullRequest = pullRequest(99, 'other-oid')
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield { data: { commits: [{ sha: 'matching-oid' }] } }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: 'commit-id',
+                  oid: 'matching-oid',
+                  associatedPullRequests: {
+                    totalCount: 1,
+                    nodes: [otherPullRequest],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: { nodes: [pullRequest(1, 'matching-oid')] },
+        },
+      })
+      .mockResolvedValueOnce({
+        nodes: [
+          {
+            id: 'commit-id',
+            associatedPullRequests: {
+              totalCount: 1,
+              nodes: [otherPullRequest],
+            },
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        nodes: [
+          {
+            id: 'commit-id',
+            associatedPullRequests: {
+              totalCount: 1,
+              nodes: [pullRequest(1, 'matching-oid')],
+            },
+          },
+        ],
+      })
+
+    const result = await adapter(octokit).findChanges(
+      findChangesRequest({ includeCommits: true }),
+    )
+
+    expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('pollCommitAssociations'),
+      expect.objectContaining({
+        ids: ['commit-id'],
+        request: { signal: expect.any(AbortSignal) },
+      }),
+    )
+  })
+
+  it('polls a contradictory merge commit and performs a final sibling refresh', async () => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield {
+          data: {
+            commits: [{ sha: 'matching-oid' }, { sha: 'sibling-oid' }],
+          },
+        }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: 'commit-id',
+                  oid: 'matching-oid',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+                {
+                  id: 'sibling-id',
+                  oid: 'sibling-oid',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
                 },
               ],
             },
@@ -294,13 +692,38 @@ describe('GitHubAdapter', () => {
       .mockResolvedValueOnce({
         repository: {
           pullRequests: {
-            pageInfo: { hasNextPage: true, endCursor: 'recent-next' },
             nodes: [
               pullRequest(2, 'unrelated-oid'),
               pullRequest(1, 'matching-oid'),
             ],
           },
         },
+      })
+      .mockResolvedValueOnce({
+        nodes: [
+          {
+            id: 'commit-id',
+            associatedPullRequests: {
+              totalCount: 1,
+              nodes: [pullRequest(1, 'matching-oid')],
+            },
+          },
+          {
+            id: 'sibling-id',
+            associatedPullRequests: { totalCount: 0, nodes: [] },
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        nodes: [
+          {
+            id: 'sibling-id',
+            associatedPullRequests: {
+              totalCount: 1,
+              nodes: [pullRequest(1, 'matching-oid')],
+            },
+          },
+        ],
       })
 
     const result = await adapter(octokit).findChanges({
@@ -316,15 +739,263 @@ describe('GitHubAdapter', () => {
       historyLimit: 100,
       includeChangedFiles: false,
       includeNewContributors: false,
+      includeCommits: true,
     })
 
     expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
+    expect(result.commits[0]).toMatchObject({
+      associationStatus: 'associated',
+      associatedPullRequests: [
+        { number: 1, baseRepository: 'release-drafter/release-drafter' },
+      ],
+    })
     expect(octokit.graphql).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining('findRecentMergedPullRequests'),
-      expect.objectContaining({ cursor: null, limit: 5 }),
+      expect.objectContaining({ limit: 5 }),
     )
-    expect(octokit.graphql).toHaveBeenCalledTimes(2)
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('pollCommitAssociations'),
+      expect.objectContaining({
+        ids: ['commit-id'],
+        request: { signal: expect.any(AbortSignal) },
+      }),
+    )
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      4,
+      expect.stringContaining('pollCommitAssociations'),
+      expect.objectContaining({ ids: ['sibling-id'] }),
+    )
+    expect(octokit.graphql).toHaveBeenCalledTimes(4)
+    expect(result.commits[1]).toMatchObject({
+      associationStatus: 'associated',
+      associatedPullRequests: [
+        { number: 1, baseRepository: 'release-drafter/release-drafter' },
+      ],
+    })
+    expect(sleep).toHaveBeenNthCalledWith(1, 15_000)
+    expect(sleep).toHaveBeenNthCalledWith(2, 2_500)
+  })
+
+  it('leaves commits unresolved when a poll response omits a contradictory merge commit', async () => {
+    const octokit = mockOctokit()
+    const warning = vi.fn()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield {
+          data: {
+            commits: [{ sha: 'matching-oid' }, { sha: 'direct-oid' }],
+          },
+        }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: 'commit-id',
+                  oid: 'matching-oid',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+                {
+                  id: 'direct-id',
+                  oid: 'direct-oid',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: { nodes: [pullRequest(1, 'matching-oid')] },
+        },
+      })
+      .mockResolvedValueOnce({ nodes: [] })
+
+    const result = await new GitHubAdapter({
+      token: 'token',
+      octokit,
+      logger: { debug() {}, info() {}, error() {}, warning },
+    }).findChanges(findChangesRequest({ includeCommits: true }))
+
+    expect(result.commits[1]?.associationStatus).toBe('unresolved')
+    expect(warning).toHaveBeenCalledWith(
+      'GitHub omitted 1 contradictory merge commit from the association response. Release Drafter cannot continue polling safely.',
+    )
+  })
+
+  it('leaves commits unresolved when the final sibling refresh is incomplete', async () => {
+    const octokit = mockOctokit()
+    const warning = vi.fn()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield {
+          data: {
+            commits: [{ sha: 'matching-oid' }, { sha: 'sibling-oid' }],
+          },
+        }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: 'commit-id',
+                  oid: 'matching-oid',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+                {
+                  id: 'sibling-id',
+                  oid: 'sibling-oid',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: { nodes: [pullRequest(1, 'matching-oid')] },
+        },
+      })
+      .mockResolvedValueOnce({
+        nodes: [
+          {
+            id: 'commit-id',
+            associatedPullRequests: {
+              totalCount: 1,
+              nodes: [pullRequest(1, 'matching-oid')],
+            },
+          },
+        ],
+      })
+      .mockResolvedValueOnce({ nodes: [] })
+
+    const result = await new GitHubAdapter({
+      token: 'token',
+      octokit,
+      logger: { debug() {}, info() {}, error() {}, warning },
+    }).findChanges(findChangesRequest({ includeCommits: true }))
+
+    expect(result.commits[1]?.associationStatus).toBe('unresolved')
+    expect(warning).toHaveBeenCalledWith(
+      'GitHub omitted 1 commit from the final association response. Release Drafter cannot safely classify their empty associations.',
+    )
+  })
+
+  it('leaves unresolved commits unresolved after polling timeout', async () => {
+    const octokit = mockOctokit()
+    const debug = vi.fn()
+    const info = vi.fn()
+    const warning = vi.fn()
+    vi.mocked(octokit.paginate.iterator).mockReturnValue(
+      (async function* () {
+        yield {
+          data: { commits: [{ sha: 'matching-oid' }, { sha: 'direct-oid' }] },
+        }
+      })() as never,
+    )
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce({
+        repository: {
+          object: {
+            __typename: 'Commit',
+            history: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: 'commit-id',
+                  oid: 'matching-oid',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+                {
+                  id: 'direct-id',
+                  oid: 'direct-oid',
+                  associatedPullRequests: { totalCount: 0, nodes: [] },
+                },
+              ],
+            },
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        repository: {
+          pullRequests: {
+            nodes: [pullRequest(1, 'matching-oid')],
+          },
+        },
+      })
+      .mockResolvedValue({
+        nodes: [
+          {
+            id: 'commit-id',
+            oid: 'matching-oid',
+            associatedPullRequests: { totalCount: 0, nodes: [] },
+          },
+          {
+            id: 'direct-id',
+            oid: 'direct-oid',
+            associatedPullRequests: { totalCount: 0, nodes: [] },
+          },
+        ],
+      })
+
+    const result = await new GitHubAdapter({
+      token: 'token',
+      octokit,
+      logger: { debug, info, error() {}, warning },
+    }).findChanges({
+      repository,
+      comparison: { baseRef: 'base', headRef: 'main' },
+      pullRequestFields: {
+        body: false,
+        url: false,
+        baseRefName: false,
+        headRefName: false,
+      },
+      pullRequestLimit: 20,
+      historyLimit: 100,
+      includeChangedFiles: false,
+      includeNewContributors: false,
+      includeCommits: true,
+    })
+
+    // It still backfills the exact match despite the timeout
+    expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
+    expect(result.commits[0]).toMatchObject({
+      associationStatus: 'associated',
+      associatedPullRequests: [
+        { number: 1, baseRepository: 'release-drafter/release-drafter' },
+      ],
+    })
+    // The direct commit stays unresolved while GitHub returns contradictory data.
+    expect(result.commits[1]?.associationStatus).toBe('unresolved')
+    expect(sleep).toHaveBeenCalledTimes(9)
+    expect(sleep).toHaveBeenNthCalledWith(1, 15_000)
+    expect(sleep).toHaveBeenLastCalledWith(5_000)
+    expect(info).toHaveBeenCalledWith(
+      'GitHub returned contradictory pull request data for 1 merge commit. Polling commit associations for up to 60 seconds before classifying individual commits.',
+    )
+    expect(warning).toHaveBeenCalledWith(
+      'GitHub still returned contradictory pull request data after 60 seconds. Release Drafter will leave commits with empty associations unresolved and omit them to prevent duplicate release entries.',
+    )
+    expect(debug).toHaveBeenCalledWith(
+      'Refreshing 1 contradictory merge commit association (attempt 9).',
+    )
   })
 
   it('paginates changed files through GraphQL without REST file calls', async () => {
@@ -353,7 +1024,10 @@ describe('GitHubAdapter', () => {
               nodes: [
                 {
                   oid: 'commit',
-                  associatedPullRequests: { nodes: [pullRequest] },
+                  associatedPullRequests: {
+                    totalCount: 1,
+                    nodes: [pullRequest],
+                  },
                 },
               ],
             },
@@ -361,12 +1035,7 @@ describe('GitHubAdapter', () => {
         },
       })
       .mockResolvedValueOnce({
-        repository: {
-          pullRequests: {
-            pageInfo: { hasNextPage: false, endCursor: null },
-            nodes: [],
-          },
-        },
+        repository: { pullRequests: { nodes: [] } },
       })
       .mockResolvedValueOnce({
         repository: {

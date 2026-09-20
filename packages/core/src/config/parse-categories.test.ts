@@ -559,4 +559,58 @@ describe('parseCategories', () => {
 
     expect(parsed[0]?.when).toEqual([])
   })
+
+  it('defaults to generic change templates and date sorting', () => {
+    const config = configSchema.parse({})
+
+    expect(config).toMatchObject({
+      'include-commits': false,
+      'change-template': '* $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS',
+      'sort-by': 'date',
+      'sort-direction': 'descending',
+    })
+    expect(config['pr-template']).toBeUndefined()
+    expect(config['commit-template']).toBeUndefined()
+  })
+
+  it.each([
+    ['change-template', '* $TITLE'],
+    ['pr-template', '* #$NUMBER'],
+    ['commit-template', '* $AUTHOR'],
+  ] as const)('rejects legacy variables in %s', (key, template) => {
+    const config = configSchema.parse({
+      commitish: 'main',
+      [key]: template,
+    })
+
+    expect(() => mergeInputAndConfig({ config, input: {}, logger })).toThrow(
+      `'${key}' uses variables removed from change-entry templates`,
+    )
+  })
+
+  it('accepts variables that remain valid outside change-entry templates', () => {
+    const config = configSchema.parse({
+      commitish: 'main',
+      'category-template': '$TITLE',
+      'change-author-template': '$AUTHOR $AUTHOR_MENTION $AUTHOR_URL',
+      'new-contributor-template':
+        '$AUTHOR $AUTHOR_MENTION $AUTHOR_URL $CHANGE_REFERENCE',
+      'version-template': '$MAJOR.$MINOR.$PATCH$PRERELEASE',
+    })
+
+    expect(() =>
+      mergeInputAndConfig({ config, input: {}, logger }),
+    ).not.toThrow()
+  })
+
+  it('rejects removed pull-request variables in new-contributor-template', () => {
+    const config = configSchema.parse({
+      commitish: 'main',
+      'new-contributor-template': '* $AUTHOR in #$NUMBER at $URL',
+    })
+
+    expect(() => mergeInputAndConfig({ config, input: {}, logger })).toThrow(
+      "'new-contributor-template' uses removed variables: $NUMBER, $URL",
+    )
+  })
 })

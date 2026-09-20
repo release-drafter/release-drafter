@@ -45,9 +45,13 @@ const adapter = (
 
 const commit = (id: string, date: string, name = 'Commit Person') => ({
   id,
+  title: `commit ${id}`,
   message: `commit ${id}`,
   author_name: name,
+  author_email: `${id}@example.com`,
+  authored_date: date,
   committed_date: date,
+  web_url: `https://gitlab.example/group/subgroup/project/-/commit/${id}`,
 })
 const mergeRequest = (
   iid: number,
@@ -324,24 +328,70 @@ describe('GitLabAdapter', () => {
     expect(result.commits.map(({ oid }) => oid)).toEqual(['a', 'b', 'c'])
     expect(result.pullRequests.map(({ number }) => number)).toEqual([1, 2, 3])
     expect(
-      result.commits.map(
-        ({ associatedPullRequests }) => associatedPullRequests,
-      ),
+      result.commits.map(({ associationStatus, associatedPullRequests }) => ({
+        associationStatus,
+        associatedPullRequests,
+      })),
     ).toEqual([
-      undefined,
-      [{ number: 2, baseRepository: 'group/subgroup/project' }],
-      [
-        { number: 1, baseRepository: 'group/subgroup/project' },
-        { number: 2, baseRepository: 'group/subgroup/project' },
-        { number: 3, baseRepository: 'group/subgroup/project' },
-      ],
+      { associationStatus: 'unassociated', associatedPullRequests: [] },
+      {
+        associationStatus: 'associated',
+        associatedPullRequests: [
+          { number: 2, baseRepository: 'group/subgroup/project' },
+        ],
+      },
+      {
+        associationStatus: 'associated',
+        associatedPullRequests: [
+          { number: 1, baseRepository: 'group/subgroup/project' },
+          { number: 2, baseRepository: 'group/subgroup/project' },
+          { number: 3, baseRepository: 'group/subgroup/project' },
+        ],
+      },
     ])
+    expect(result.commits[0]).toMatchObject({
+      url: 'https://gitlab.example/group/subgroup/project/-/commit/a',
+      authoredAt: '2026-01-01',
+      committedAt: '2026-01-01',
+      author: { name: 'Commit Person', email: 'a@example.com' },
+    })
+    expect(result.commits[1]?.authors).toBeUndefined()
     expect(result.pullRequests[0]).toMatchObject({
       body: 'body 1',
       url: expect.stringContaining('/merge_requests/1'),
       baseRefName: 'main',
       headRefName: 'feature-1',
       author: { login: 'user1' },
+    })
+  })
+
+  it('keeps non-renderable merge requests as commit association evidence', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const path = pathOf(input)
+      if (path.includes('/repository/compare')) {
+        return json({
+          compare_timeout: false,
+          commits: [commit('a', '2026-01-01')],
+        })
+      }
+      if (path.includes('/commits/a/merge_requests')) {
+        return json([
+          mergeRequest(1),
+          mergeRequest(2, { state: 'opened', merged_at: null }),
+        ])
+      }
+      throw new Error(`Unexpected ${path}`)
+    })
+
+    const result = await adapter(fetch).findChanges(request())
+
+    expect(result.pullRequests.map(({ number }) => number)).toEqual([1])
+    expect(result.commits[0]).toMatchObject({
+      associationStatus: 'associated',
+      associatedPullRequests: [
+        { number: 1, baseRepository: 'group/subgroup/project' },
+        { number: 2, baseRepository: 'group/subgroup/project' },
+      ],
     })
   })
 
@@ -475,11 +525,11 @@ describe('GitLabAdapter', () => {
       logger: { debug() {}, info() {}, error() {}, warning },
     }).findChanges(request({ includeNewContributors: true }))
     expect(result.newContributorLogins).toEqual(new Set(['actual-user']))
-    expect(result.commits[0]?.author).toEqual({ name: 'shared-name' })
-    expect(result.commits[0]?.authors).toContainEqual({
-      login: 'actual-user',
-      type: undefined,
+    expect(result.commits[0]?.author).toEqual({
+      name: 'shared-name',
+      email: 'a@example.com',
     })
+    expect(result.commits[0]?.authors).toBeUndefined()
     expect(warning).not.toHaveBeenCalled()
   })
 

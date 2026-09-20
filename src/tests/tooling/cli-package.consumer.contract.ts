@@ -114,7 +114,9 @@ const isolatedEnvironment = (): NodeJS.ProcessEnv => {
     'GITLAB_TOKEN',
     'NODE_AUTH_TOKEN',
     'NPM_TOKEN',
+    'NPM_CONFIG_ALLOW_SCRIPTS',
     'RELEASE_DRAFTER_TOKEN',
+    'npm_config_allow_scripts',
   ]) {
     delete environment[name]
   }
@@ -556,7 +558,8 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
           },
         },
         config: {
-          'change-template': '* $TITLE',
+          'include-commits': false,
+          'change-template': '* $CHANGE_TITLE',
           'change-author-template': '$AUTHOR_MENTION',
           'change-authors-separator': ', ',
           'no-changes-template': '* No changes',
@@ -567,7 +570,7 @@ describe.sequential('release-drafter packed CLI and package consumer', () => {
           'new-contributor-template': '* $AUTHOR_MENTION',
           'no-new-contributor-template': '* No new contributors',
           'no-contributors-template': 'No contributors',
-          'sort-by': 'merged_at',
+          'sort-by': 'date',
           'sort-direction': 'descending',
           'filter-by-commitish': false,
           'pull-request-limit': 5,

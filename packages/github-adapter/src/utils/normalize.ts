@@ -51,22 +51,39 @@ export const normalizePullRequest = (
 export const normalizeCommit = (commit: GraphCommit): Commit => ({
   id: commit.id,
   oid: commit.oid,
+  url: commit.url,
+  authoredAt: commit.authoredDate,
   committedAt: commit.committedDate,
   message: commit.message,
   author: commit.author
     ? {
         name: commit.author.name,
         login: commit.author.user?.login,
-        type: 'User',
+        email: commit.author.email,
+        avatarUrl: commit.author.avatarUrl,
+        url: commit.author.user?.url,
+        type: commit.author.user?.__typename,
       }
     : commit.author,
   authors: commit.authors
     ? (commit.authors.nodes ?? []).map((author) =>
         author
-          ? { name: author.name, login: author.user?.login, type: 'User' }
+          ? {
+              name: author.name,
+              login: author.user?.login,
+              email: author.email,
+              avatarUrl: author.avatarUrl,
+              url: author.user?.url,
+              type: author.user?.__typename,
+            }
           : author,
       )
     : commit.authors,
+  associationStatus:
+    (commit.associatedPullRequests?.totalCount ?? 0) > 0 ||
+    (commit.associatedPullRequests?.nodes?.length ?? 0) > 0
+      ? 'associated'
+      : 'unresolved',
   associatedPullRequests: commit.associatedPullRequests
     ? (commit.associatedPullRequests.nodes ?? []).map((pullRequest) =>
         pullRequest

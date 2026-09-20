@@ -84,6 +84,25 @@ describe('drafter e2e', () => {
         expect(gqlScope.pendingMocks().length).toBe(0) // should call the mocked endpoints
         expect(mocks.core.setFailed).not.toHaveBeenCalled()
       })
+
+      it('includes direct commits when enabled', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config-with-individual-commits')
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-comparison-no-prs',
+        })
+        const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
+
+        await runDrafter()
+
+        const body = JSON.stringify(mocks.postReleaseBody.mock.lastCall)
+        expect(body).toContain('* Commit 5 (`83041a4`) @TimonVS')
+        expect(body).toContain('## Contributors\\n\\n@TimonVS')
+        expect(body).not.toContain('* No changes')
+        expect(scope.isDone()).toBe(true)
+        expect(gqlScope.pendingMocks().length).toBe(0)
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
     })
 
     describe('to a non-master branch', () => {
@@ -129,7 +148,6 @@ describe('drafter e2e', () => {
 
         const gqlScope = mockGraphqlQuery({
           payload: 'graphql-comparison-merge-commit',
-          suppressRecentPullRequestMock: true,
         })
 
         const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })

@@ -45,6 +45,7 @@ export type AvailableConfigs =
   | 'config-with-header-template'
   | 'config-with-history-limit'
   | 'config-with-include-labels'
+  | 'config-with-individual-commits'
   | 'config-with-include-paths'
   | 'config-with-include-exclude-paths'
   | 'config-with-include-pre-releases-true'

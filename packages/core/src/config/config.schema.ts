@@ -239,25 +239,37 @@ export type CategoryConfig = z.input<typeof categorySchema>
 
 export const exclusiveConfigSchema = object({
   /**
-   * The template to use for each merged change.
+   * Include commits that are not associated with a pull request as changes.
+   */
+  'include-commits': boolean().optional().default(false),
+  /**
+   * The generic fallback template for every change.
    */
   'change-template': string()
     .optional()
-    .default('* $TITLE (#$NUMBER) $AUTHORS'),
+    .default('* $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS'),
   /**
-   * The template to use for each author in `$AUTHORS`.
+   * An optional pull-request-specific template. Falls back to change-template.
+   */
+  'pr-template': string().optional(),
+  /**
+   * An optional commit-specific template. Falls back to change-template.
+   */
+  'commit-template': string().optional(),
+  /**
+   * The template to use for each author in `$CHANGE_AUTHORS`.
    */
   'change-author-template': string().optional().default('$AUTHOR_MENTION'),
   /**
-   * The separator to use between authors in `$AUTHORS`.
+   * The separator to use between authors in `$CHANGE_AUTHORS`.
    */
   'change-authors-separator': string().optional().default(', '),
   /**
-   * An optional separator to use before the final author in `$AUTHORS`.
+   * An optional separator to use before the final author in `$CHANGE_AUTHORS`.
    */
   'change-authors-final-separator': string().optional(),
   /**
-   * Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters.
+   * Characters to escape in change titles when inserting them into a change template so that they are not interpreted as Markdown format characters.
    */
   'change-title-escapes': string().optional(),
   /**
@@ -317,7 +329,9 @@ export const exclusiveConfigSchema = object({
    */
   'new-contributor-template': string()
     .optional()
-    .default('* $AUTHOR_MENTION made their first contribution in #$NUMBER'),
+    .default(
+      '* $AUTHOR_MENTION made their first contribution in $CHANGE_REFERENCE',
+    ),
   /**
    * The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list.
    */
@@ -329,9 +343,9 @@ export const exclusiveConfigSchema = object({
    */
   'no-contributors-template': string().optional().default('No contributors'),
   /**
-   * Sort changelog by merged_at or title.
+   * Sort changelog by change date or title.
    */
-  'sort-by': zenum(['merged_at', 'title']).optional().default('merged_at'),
+  'sort-by': zenum(['date', 'title']).optional().default('date'),
   /**
    * Sort changelog in ascending or descending order.
    */

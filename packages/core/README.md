@@ -3,11 +3,15 @@
 This private workspace package contains the forge-neutral Release Drafter
 logic. The package is not published.
 
-The package defines common data types for releases, commits, and pull requests.
-It also contains configuration schemas, configuration merging, category
-evaluation, pull request validation, changelog rendering, version calculation,
-release planning, and dry-run protection. Runtime code must provide a `Logger`,
-`Repository`, and `ForgeAdapter`.
+The package defines common data types for releases, commits, pull requests, and
+generic changes. It also contains configuration schemas, configuration merging,
+category evaluation, pull request validation, mixed-change sorting and
+rendering, version calculation, release planning, and dry-run protection.
+Runtime code must provide a `Logger`, `Repository`, and `ForgeAdapter`.
+
+When `include-commits` is enabled, commits with proven pull request associations
+are suppressed before category filtering. Commits whose association remains
+unresolved are also suppressed rather than risking duplicate release entries.
 
 Forge clients, GitHub Actions Toolkit modules, environment lookup, and API
 response types do not belong in this package. Each adapter operation receives a

@@ -197,7 +197,13 @@ export const draftRelease = async (params: {
   })
   const comparisonBase =
     input.from ?? (lastRelease ? `refs/tags/${lastRelease.tagName}` : undefined)
-  const { commits, newContributorLogins, pullRequests } = comparisonBase
+  const pullRequestTemplate = config['pr-template'] ?? config['change-template']
+  const {
+    commits,
+    newContributorLogins,
+    newCommitContributors = [],
+    pullRequests,
+  } = comparisonBase
     ? await adapter.findChanges({
         repository,
         comparison: {
@@ -205,10 +211,15 @@ export const draftRelease = async (params: {
           headRef: config.commitish,
         },
         pullRequestFields: {
-          body: config['change-template'].includes('$BODY'),
-          url: config['change-template'].includes('$URL'),
-          baseRefName: config['change-template'].includes('$BASE_REF_NAME'),
-          headRefName: config['change-template'].includes('$HEAD_REF_NAME'),
+          body:
+            pullRequestTemplate.includes('$CHANGE_BODY') ||
+            pullRequestTemplate.includes('$PR_BODY'),
+          url:
+            pullRequestTemplate.includes('$CHANGE_URL') ||
+            pullRequestTemplate.includes('$PR_URL') ||
+            config['new-contributor-template'].includes('$CHANGE_URL'),
+          baseRefName: pullRequestTemplate.includes('$PR_BASE_REF_NAME'),
+          headRefName: pullRequestTemplate.includes('$PR_HEAD_REF_NAME'),
         },
         pullRequestLimit: config['pull-request-limit'],
         historyLimit: config['history-limit'],
@@ -218,6 +229,7 @@ export const draftRelease = async (params: {
           config.template,
           config.footer,
         ].some((template) => template?.includes('$NEW_CONTRIBUTORS')),
+        includeCommits: config['include-commits'],
       })
     : (() => {
         logger.warning(
@@ -226,6 +238,7 @@ export const draftRelease = async (params: {
         return {
           commits: [],
           newContributorLogins: new Set<string>(),
+          newCommitContributors: [],
           pullRequests: [],
         }
       })()
@@ -233,6 +246,16 @@ export const draftRelease = async (params: {
     logger.info(
       `Found ${pullRequests.length} merged pull requests targeting ${repository.owner}/${repository.name}: ${pullRequests.map(({ number }) => `#${number}`).join(', ')}`,
     )
+  }
+  if (config['include-commits']) {
+    const directCommitCount = commits.filter(
+      (commit) => commit.associationStatus === 'unassociated',
+    ).length
+    if (directCommitCount > 0) {
+      logger.info(
+        `Found ${directCommitCount} commit${directCommitCount === 1 ? '' : 's'} without pull request associations.`,
+      )
+    }
   }
   const releasePayload = await buildReleasePayload({
     adapter,
@@ -242,6 +265,7 @@ export const draftRelease = async (params: {
     lastRelease,
     logger,
     newContributorLogins,
+    newCommitContributors,
     pullRequests,
     repository,
   })

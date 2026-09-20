@@ -43,19 +43,34 @@ export type GraphPullRequest = {
 export type GraphCommit = {
   id?: string
   oid: string
+  url?: string
+  authoredDate?: string
   committedDate?: string
   message?: string
   author?: {
     name?: string | null
-    user?: { login?: string | null } | null
+    email?: string | null
+    avatarUrl?: string
+    user?: {
+      __typename?: string
+      login?: string | null
+      url?: string
+    } | null
   } | null
   authors?: {
     nodes?: Array<{
       name?: string | null
-      user?: { login?: string | null } | null
+      email?: string | null
+      avatarUrl?: string
+      user?: {
+        __typename?: string
+        login?: string | null
+        url?: string
+      } | null
     } | null> | null
   } | null
   associatedPullRequests?: {
+    totalCount?: number
     nodes?: Array<GraphPullRequest | null> | null
   } | null
 }

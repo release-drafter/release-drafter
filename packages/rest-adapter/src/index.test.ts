@@ -54,7 +54,17 @@ const json = (
 
 const commit = (sha: string, date: string, login?: string) => ({
   sha,
-  ...(login ? { author: { login } } : {}),
+  html_url: `https://forge.example/octo/project/commit/${sha}`,
+  ...(login
+    ? {
+        author: {
+          login,
+          html_url: `https://forge.example/${login}`,
+          avatar_url: `https://forge.example/${login}.png`,
+          type: 'User',
+        },
+      }
+    : {}),
   commit: {
     message: `commit ${sha}`,
     author: { name: `Git ${sha}`, email: `${sha}@example.com`, date },
@@ -128,6 +138,7 @@ describe('GitHub-compatible REST mechanics', () => {
 
     expect({
       commitPull: endpoints.commitPull(repository, 'a/b'),
+      commits: endpoints.commits(repository),
       pullFiles: endpoints.pullFiles(repository, 7),
       pulls: endpoints.pulls(repository),
       gitCommit: endpoints.gitCommit(repository, 'refs/tags/v1'),
@@ -136,6 +147,7 @@ describe('GitHub-compatible REST mechanics', () => {
       release: endpoints.release(repository, 9),
     }).toEqual({
       commitPull: '/repos/octo/project/commits/a%2Fb/pull',
+      commits: '/repos/octo/project/commits',
       pullFiles: '/repos/octo/project/pulls/7/files',
       pulls: '/repos/octo/project/pulls',
       gitCommit: '/repos/octo/project/git/commits/refs%2Ftags%2Fv1',
@@ -265,6 +277,7 @@ describe('GitHub-compatible REST mechanics', () => {
       apiUrl: 'https://api.example/custom',
     }).findChanges(request())
     expect(result.commits).toHaveLength(1)
+    expect(result.commits[0]?.associationStatus).toBe('unassociated')
     expect(result.pullRequests).toEqual([])
     expect(fetch.mock.calls.map(([input]) => String(input))).toEqual([
       'https://api.example/custom/repos/octo/project/compare/v1...main',
@@ -310,6 +323,14 @@ describe('GitHub-compatible REST mechanics', () => {
     expect(result.commits[1]?.associatedPullRequests).toEqual([
       { number: 2, baseRepository: 'octo/project' },
     ])
+    expect(result.commits[0]).toMatchObject({
+      url: 'https://forge.example/octo/project/commit/a',
+      authoredAt: '2026-01-01T00:00:00Z',
+      committedAt: '2026-01-01T00:00:00Z',
+      associationStatus: 'associated',
+      author: { name: 'Git a', email: 'a@example.com' },
+    })
+    expect(result.commits[0]?.authors).toBeUndefined()
   })
 
   it.each([
@@ -790,8 +811,11 @@ describe('GitHub-compatible REST mechanics', () => {
       request({ includeNewContributors: true, historyLimit: 2 }),
     )
     expect(proven.newContributorLogins).toEqual(new Set(['pr-user']))
-    expect(proven.commits[0]?.authors?.[0]?.login).toBe('pr-user')
-    expect(JSON.stringify(proven)).not.toContain('@example.com')
+    expect(proven.commits[0]?.authors).toBeUndefined()
+    expect(proven.commits[0]?.author).toEqual({
+      name: 'Git a',
+      email: 'a@example.com',
+    })
 
     bounded = true
     const uncertain = await adapter.findChanges(
@@ -858,6 +882,37 @@ describe('GitHub-compatible REST mechanics', () => {
     )
     expect(result.newContributorLogins).toEqual(new Set())
     expect(historyPages).toEqual([1, 2])
+  })
+
+  it('finds direct commit authors with no history before the comparison base', async () => {
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({
+          total_commits: 1,
+          commits: [commit('direct', '2026-01-02T00:00:00Z', 'new-user')],
+        })
+      }
+      if (url.pathname.endsWith('/commits/direct/pull')) {
+        return json({ message: 'not found' }, { status: 404 })
+      }
+      if (url.pathname.endsWith('/commits')) {
+        expect(url.searchParams.get('sha')).toBe('v1')
+        return json([], {}, { 'x-total-count': '0' })
+      }
+      if (url.pathname.endsWith('/pulls')) {
+        expect(url.searchParams.get('poster')).toBe('new-user')
+        return json([], {}, { 'x-total-count': '0' })
+      }
+      throw new Error(`Unexpected ${url}`)
+    })
+
+    const result = await createAdapter(fetch).findChanges(
+      request({ includeCommits: true, includeNewContributors: true }),
+    )
+
+    expect(result.newCommitContributors).toEqual([
+      expect.objectContaining({ login: 'new-user' }),
+    ])
   })
 })
 

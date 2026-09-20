@@ -430,6 +430,29 @@ describe('draftRelease', () => {
     })
   })
 
+  it('requests pull request URLs used by the new contributor template', async () => {
+    const forge = adapter({
+      draftReleases: true,
+      releases: [release({ tagName: 'v1.0.0' })],
+    })
+    const config = orchestrationConfig()
+    config['new-contributor-template'] = '* $CHANGE_URL'
+
+    await draftRelease({
+      adapter: forge,
+      config,
+      input: { publish: false, dryRun: true },
+      logger,
+      repository,
+    })
+
+    expect(forge.findChanges).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pullRequestFields: expect.objectContaining({ url: true }),
+      }),
+    )
+  })
+
   it('finds changes from an explicit from without a selected release', async () => {
     const forge = adapter({ draftReleases: true, releases: [] })
 

@@ -1,7 +1,8 @@
 import { CommitParser } from 'conventional-commits-parser'
 import type { IncrementType } from 'verkit'
+import { changeForCategory } from './change.ts'
 import { createPathMatcher } from './path-matcher.ts'
-import type { ParsedConfig, PullRequest } from './types.ts'
+import type { Change, ParsedConfig, PullRequest } from './types.ts'
 
 type ReleaseType = Exclude<IncrementType, 'release'>
 type ParsedCategory = ParsedConfig['categories'][number]
@@ -212,6 +213,15 @@ export const filterPullRequestsByPreCategories = <Pr extends PullRequestLike>(
 ) =>
   pullRequests.filter(
     (pullRequest) => evaluateCategories(pullRequest, categories).included,
+  )
+
+export const filterChangesByPreCategories = (
+  changes: Change[],
+  categories: ParsedConfig['categories'],
+) =>
+  changes.filter(
+    (change) =>
+      evaluateCategories(changeForCategory(change), categories).included,
   )
 
 export const needsPullRequestChangedFiles = (

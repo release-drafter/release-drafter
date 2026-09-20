@@ -161,6 +161,10 @@ const validateParsedConfig = (parsedConfig: {
   commitish: string
   categories: ReturnType<typeof parseCategories>
   'filter-by-range'?: string
+  'change-template': string
+  'pr-template'?: string
+  'commit-template'?: string
+  'new-contributor-template': string
 }) => {
   if (!parsedConfig.commitish) {
     throw new Error(
@@ -191,6 +195,32 @@ const validateParsedConfig = (parsedConfig: {
   ) {
     throw new Error(
       `'filter-by-range' value "${parsedConfig['filter-by-range']}" could not be parsed as a valid semver range.`,
+    )
+  }
+  for (const key of [
+    'change-template',
+    'pr-template',
+    'commit-template',
+  ] as const) {
+    const template = parsedConfig[key]
+    if (!template) continue
+    const legacyVariables = [
+      ...template.matchAll(
+        /\$(?:CATEGORY|TITLE|NUMBER|AUTHORS|AUTHOR|AUTHOR_URL|BODY|URL|BASE_REF_NAME|HEAD_REF_NAME)\b/g,
+      ),
+    ].map(([variable]) => variable)
+    if (legacyVariables.length > 0) {
+      throw new Error(
+        `'${key}' uses variables removed from change-entry templates: ${[...new Set(legacyVariables)].join(', ')}. Use the namespaced $CHANGE_* variables, plus $PR_* in 'pr-template' or $COMMIT_* in 'commit-template'.`,
+      )
+    }
+  }
+  const legacyNewContributorVariables = [
+    ...parsedConfig['new-contributor-template'].matchAll(/\$(?:NUMBER|URL)\b/g),
+  ].map(([variable]) => variable)
+  if (legacyNewContributorVariables.length > 0) {
+    throw new Error(
+      `'new-contributor-template' uses removed variables: ${[...new Set(legacyNewContributorVariables)].join(', ')}. Use $CHANGE_REFERENCE or $CHANGE_URL instead.`,
     )
   }
 }

@@ -1,8 +1,17 @@
-import { filterPullRequestsByPreCategories } from '../category-matching.ts'
-import type { Commit, ParsedConfig, PullRequest } from '../types.ts'
+import { filterChangesByPreCategories } from '../category-matching.ts'
+import { changeDate, commitAuthorKey, commitAuthors } from '../change.ts'
+import type {
+  Change,
+  Commit,
+  CommitAuthor,
+  ParsedConfig,
+  PullRequest,
+} from '../types.ts'
 import { renderTemplate } from './render-template/index.ts'
 
-type Contributor = { login: string; botUrl?: string } | { name: string }
+type Contributor =
+  | { login: string; url?: string; isBot?: boolean }
+  | { name: string; url?: string }
 
 const botSuffix = '[bot]'
 const pullRequestKey = (
@@ -13,7 +22,7 @@ const normalizeLogin = (login: string, isBot = false) =>
 const renderAuthorMention = (contributor: Contributor, serverUrl: string) => {
   if ('name' in contributor) return contributor.name
   const botUrl = contributor.login.endsWith(botSuffix)
-    ? (contributor.botUrl ??
+    ? (contributor.url ??
       `${serverUrl.replace(/\/$/, '')}/apps/${contributor.login.slice(0, -botSuffix.length)}`)
     : undefined
   if (botUrl) {
@@ -24,22 +33,26 @@ const renderAuthorMention = (contributor: Contributor, serverUrl: string) => {
 
 export const generateContributorsSentence = (params: {
   commits: Commit[]
-  pullRequests: PullRequest[]
+  changes: Change[]
   serverUrl: string
   config: Pick<
     ParsedConfig,
     'categories' | 'exclude-contributors' | 'no-contributors-template'
   >
 }) => {
-  const { commits, pullRequests, config, serverUrl } = params
-
-  const includedPullRequests = filterPullRequestsByPreCategories(
-    pullRequests,
+  const { commits, changes, config, serverUrl } = params
+  const includedChanges = filterChangesByPreCategories(
+    changes,
     config.categories,
   )
   return generateAuthorsSentence({
     commits,
-    pullRequests: includedPullRequests,
+    pullRequests: includedChanges.flatMap((change) =>
+      change.type === 'pull-request' ? [change.pullRequest] : [],
+    ),
+    directCommits: includedChanges.flatMap((change) =>
+      change.type === 'commit' ? [change.commit] : [],
+    ),
     serverUrl,
     excludeContributors: config['exclude-contributors'],
     noAuthorsTemplate: config['no-contributors-template'],
@@ -49,6 +62,7 @@ export const generateContributorsSentence = (params: {
 export const generateAuthorsSentence = (params: {
   commits: Commit[]
   pullRequests: PullRequest[]
+  directCommits?: Commit[]
   serverUrl: string
   excludeContributors?: string[]
   noAuthorsTemplate?: string
@@ -56,7 +70,7 @@ export const generateAuthorsSentence = (params: {
   authorsSeparator?: string
   authorsFinalSeparator?: string
 }) => {
-  const { commits, pullRequests } = params
+  const { commits, pullRequests, directCommits = [] } = params
   const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey))
   const includedMergeCommitOids = new Set(
     pullRequests.flatMap((pullRequest) =>
@@ -65,6 +79,28 @@ export const generateAuthorsSentence = (params: {
   )
   const contributors = new Map<string, Contributor>()
   const pullRequestAuthorLogins = new Set<string>()
+
+  const addAuthor = (author: CommitAuthor | null | undefined) => {
+    if (author?.login) {
+      const isBot = author.type === 'Bot'
+      const login = normalizeLogin(author.login, isBot)
+      contributors.set(`login:${login}`, {
+        login,
+        url: author.url,
+        isBot,
+      })
+    } else if (author?.name) {
+      contributors.set(
+        author.email
+          ? `email:${author.email.toLowerCase()}`
+          : `name:${author.name}`,
+        {
+          name: author.name,
+          url: author.url,
+        },
+      )
+    }
+  }
 
   // Add from commits belonging to included pull requests
   for (const commit of commits) {
@@ -81,12 +117,13 @@ export const generateAuthorsSentence = (params: {
 
     for (const author of commit.authors ??
       (commit.author ? [commit.author] : [])) {
-      if (author?.login) {
-        const login = normalizeLogin(author.login)
-        contributors.set(`login:${login}`, { login })
-      } else if (author?.name) {
-        contributors.set(`name:${author.name}`, { name: author.name })
-      }
+      addAuthor(author)
+    }
+  }
+
+  for (const commit of directCommits) {
+    for (const author of commitAuthors(commit)) {
+      addAuthor(author)
     }
   }
 
@@ -98,7 +135,8 @@ export const generateAuthorsSentence = (params: {
       pullRequestAuthorLogins.add(login)
       contributors.set(`login:${login}`, {
         login,
-        botUrl: isBot ? pullRequest.author.url : undefined,
+        url: pullRequest.author.url,
+        isBot,
       })
     }
   }
@@ -106,11 +144,11 @@ export const generateAuthorsSentence = (params: {
   const sortedContributors = [...contributors.values()]
     .filter(
       (contributor) =>
-        'name' in contributor ||
-        !(params.excludeContributors ?? []).some(
-          (excluded) =>
-            excluded === contributor.login ||
-            `${excluded}${botSuffix}` === contributor.login,
+        !(params.excludeContributors ?? []).some((excluded) =>
+          'name' in contributor
+            ? excluded === contributor.name
+            : excluded === contributor.login ||
+              `${excluded}${botSuffix}` === contributor.login,
         ),
     )
     .sort((a, b) => {
@@ -122,10 +160,8 @@ export const generateAuthorsSentence = (params: {
         return aIsPullRequestAuthor ? -1 : 1
       }
 
-      const aIsBot =
-        'login' in a && (a.botUrl !== undefined || a.login.endsWith(botSuffix))
-      const bIsBot =
-        'login' in b && (b.botUrl !== undefined || b.login.endsWith(botSuffix))
+      const aIsBot = 'login' in a && (a.isBot || a.login.endsWith(botSuffix))
+      const bIsBot = 'login' in b && (b.isBot || b.login.endsWith(botSuffix))
       if (aIsBot !== bIsBot) return aIsBot ? 1 : -1
 
       const aName = 'name' in a ? a.name : a.login
@@ -146,6 +182,7 @@ export const generateAuthorsSentence = (params: {
         object: {
           $AUTHOR: author,
           $AUTHOR_MENTION: renderAuthorMention(contributor, params.serverUrl),
+          $AUTHOR_URL: contributor.url ?? '',
         },
       })
     })
@@ -166,8 +203,9 @@ export const generateAuthorsSentence = (params: {
 }
 
 export const generateNewContributorsList = (params: {
-  pullRequests: PullRequest[]
+  changes: Change[]
   newContributorLogins: ReadonlySet<string>
+  newCommitContributors?: readonly CommitAuthor[]
   config: Pick<
     ParsedConfig,
     | 'categories'
@@ -176,52 +214,90 @@ export const generateNewContributorsList = (params: {
     | 'no-new-contributor-template'
   >
 }) => {
-  const { pullRequests, newContributorLogins, config } = params
-  const firstPullRequestByLogin = new Map<string, PullRequest>()
-  const includedPullRequestKeys = new Set(
-    filterPullRequestsByPreCategories(pullRequests, config.categories).map(
-      pullRequestKey,
-    ),
+  const {
+    changes,
+    newContributorLogins,
+    newCommitContributors = [],
+    config,
+  } = params
+  // Selection removes duplicate and associated commits; each release-body
+  // renderer still applies pre-categories to decide which changes contribute.
+  const includedChanges = filterChangesByPreCategories(
+    changes,
+    config.categories,
+  )
+  const firstChangeByContributor = new Map<
+    string,
+    { change: Change; author: CommitAuthor }
+  >()
+  const newCommitContributorKeys = new Set(
+    newCommitContributors.flatMap((author) => {
+      const key = commitAuthorKey(author)
+      return key ? [key] : []
+    }),
   )
 
-  for (const pullRequest of pullRequests) {
-    if (
-      !pullRequest.author ||
-      !newContributorLogins.has(pullRequest.author.login) ||
-      config['exclude-contributors'].includes(pullRequest.author.login)
-    ) {
-      continue
-    }
+  for (const change of includedChanges) {
+    const author =
+      change.type === 'pull-request'
+        ? change.pullRequest.author
+        : change.commit.author
+    if (!author) continue
+    const key = commitAuthorKey(author)
+    if (!key) continue
+    const isNew =
+      change.type === 'pull-request'
+        ? Boolean(author.login && newContributorLogins.has(author.login))
+        : newCommitContributorKeys.has(key)
+    if (!isNew) continue
+    const identity =
+      author.login ?? ('name' in author ? author.name : undefined)
+    if (identity && config['exclude-contributors'].includes(identity)) continue
 
-    const previous = firstPullRequestByLogin.get(pullRequest.author.login)
-    if (!previous || (pullRequest.mergedAt ?? '') < (previous.mergedAt ?? '')) {
-      firstPullRequestByLogin.set(pullRequest.author.login, pullRequest)
+    const previous = firstChangeByContributor.get(key)
+    if (
+      !previous ||
+      (changeDate(change) ?? '') < (changeDate(previous.change) ?? '')
+    ) {
+      firstChangeByContributor.set(key, { change, author })
     }
   }
 
-  const entries = [...firstPullRequestByLogin.entries()]
-    .filter(([, pullRequest]) =>
-      includedPullRequestKeys.has(pullRequestKey(pullRequest)),
-    )
-    .sort(
-      ([, a], [, b]) =>
-        (a.mergedAt ?? '').localeCompare(b.mergedAt ?? '') ||
-        a.number - b.number,
-    )
+  const entries = [...firstChangeByContributor.values()].sort((a, b) =>
+    (changeDate(a.change) ?? '').localeCompare(changeDate(b.change) ?? ''),
+  )
   if (entries.length === 0) return config['no-new-contributor-template']
 
   return entries
-    .map(([login, pullRequest]) =>
-      renderTemplate({
+    .map(({ change, author }) => {
+      const login = author.login
+      const title =
+        change.type === 'pull-request'
+          ? change.pullRequest.title
+          : (change.commit.message?.split(/\r?\n/, 1)[0] ?? change.commit.oid)
+      const url =
+        change.type === 'pull-request'
+          ? (change.pullRequest.url ?? '')
+          : (change.commit.url ?? '')
+      const reference =
+        change.type === 'pull-request'
+          ? `#${change.pullRequest.number}`
+          : change.commit.url
+            ? `[\`${change.commit.oid.slice(0, 7)}\`](${change.commit.url})`
+            : `\`${change.commit.oid.slice(0, 7)}\``
+      return renderTemplate({
         template: config['new-contributor-template'],
         object: {
-          $AUTHOR: login,
-          $AUTHOR_MENTION: `@${login}`,
-          $AUTHOR_URL: pullRequest.author?.url,
-          $NUMBER: pullRequest.number,
-          $URL: pullRequest.url,
+          $AUTHOR: login ?? author.name ?? 'ghost',
+          $AUTHOR_MENTION: login ? `@${login}` : (author.name ?? 'ghost'),
+          $AUTHOR_URL: author.url ?? '',
+          $CHANGE_TYPE: change.type,
+          $CHANGE_TITLE: title,
+          $CHANGE_URL: url,
+          $CHANGE_REFERENCE: reference,
+          $CHANGE_DATE: changeDate(change) ?? '',
         },
-      }),
-    )
+      })
+    })
     .join('\n')
 }

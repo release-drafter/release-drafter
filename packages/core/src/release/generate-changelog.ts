@@ -1,11 +1,11 @@
-import type { Commit, ParsedConfig, PullRequest } from '../types.ts'
-import { categorizePullRequests } from './categorize-pull-requests.ts'
-import { pullRequestToString } from './pull-request-to-string.ts'
+import type { Change, Commit, ParsedConfig } from '../types.ts'
+import { categorizeChanges } from './categorize-changes.ts'
+import { changeToString } from './change-to-string.ts'
 import { renderTemplate } from './render-template/index.ts'
 
 export const generateChangeLog = (params: {
   commits?: Commit[]
-  pullRequests: PullRequest[]
+  changes: Change[]
   serverUrl: string
   config: Pick<
     ParsedConfig,
@@ -13,30 +13,33 @@ export const generateChangeLog = (params: {
     | 'no-changes-template'
     | 'categories'
     | 'change-template'
+    | 'pr-template'
     | 'change-author-template'
     | 'change-authors-separator'
     | 'change-authors-final-separator'
     | 'category-template'
   >
 }) => {
-  const { commits = [], pullRequests, serverUrl, config } = params
-  const [uncategorizedPullRequests, categorizedPullRequests] =
-    categorizePullRequests({ pullRequests, config })
-  const totalPullRequestsInChangelog =
-    uncategorizedPullRequests.length +
-    categorizedPullRequests.reduce(
-      (sum, category) => sum + category.pullRequests.length,
+  const { commits = [], changes, serverUrl, config } = params
+  const [uncategorizedChanges, categorizedChanges] = categorizeChanges({
+    changes,
+    config,
+  })
+  const totalChangesInChangelog =
+    uncategorizedChanges.length +
+    categorizedChanges.reduce(
+      (sum, category) => sum + category.changes.length,
       0,
     )
 
-  if (totalPullRequestsInChangelog === 0) return config['no-changes-template']
+  if (totalChangesInChangelog === 0) return config['no-changes-template']
   const changeLog: string[] = []
 
-  if (uncategorizedPullRequests.length > 0) {
+  if (uncategorizedChanges.length > 0) {
     changeLog.push(
-      pullRequestToString({
+      changeToString({
         commits,
-        pullRequests: uncategorizedPullRequests,
+        changes: uncategorizedChanges,
         serverUrl,
         config,
       }),
@@ -44,8 +47,8 @@ export const generateChangeLog = (params: {
     )
   }
 
-  const nonEmptyCategories = categorizedPullRequests.filter(
-    (category) => category.pullRequests.length > 0,
+  const nonEmptyCategories = categorizedChanges.filter(
+    (category) => category.changes.length > 0,
   )
   for (const [index, category] of nonEmptyCategories.entries()) {
     const categoryTitle = renderTemplate({
@@ -53,28 +56,28 @@ export const generateChangeLog = (params: {
       object: { $TITLE: category.title },
     })
     if (categoryTitle) changeLog.push(categoryTitle, '\n\n')
-    const pullRequestString = pullRequestToString({
-      category: category.title,
+    const changeString = changeToString({
+      categoryTitle: category.title,
       commits,
-      pullRequests: category.pullRequests,
+      changes: category.changes,
       serverUrl,
       config,
     })
     const shouldCollapse =
       category['collapse-after'] !== -1 &&
-      category.pullRequests.length > category['collapse-after']
+      category.changes.length > category['collapse-after']
     if (shouldCollapse) {
       changeLog.push(
         '<details>',
         '\n',
-        `<summary>${category.pullRequests.length} change${category.pullRequests.length > 1 ? 's' : ''}</summary>`,
+        `<summary>${category.changes.length} change${category.changes.length > 1 ? 's' : ''}</summary>`,
         '\n\n',
-        pullRequestString,
+        changeString,
         '\n',
         '</details>',
       )
     } else {
-      changeLog.push(pullRequestString)
+      changeLog.push(changeString)
     }
     if (index + 1 !== nonEmptyCategories.length) changeLog.push('\n\n')
   }
