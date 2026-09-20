@@ -52,7 +52,12 @@ export interface Commit {
   message?: string
   author?: CommitAuthor | null
   authors?: (CommitAuthor | null)[] | null
-  associationStatus: 'associated' | 'none' | 'unknown'
+  /**
+   * `associated`: positive forge evidence links this commit to a pull request.
+   * `unassociated`: a completed forge lookup found no pull request.
+   * `unresolved`: the forge could not safely decide, so the commit is omitted.
+   */
+  associationStatus: 'associated' | 'unassociated' | 'unresolved'
   associatedPullRequests?:
     | (Pick<PullRequest, 'number' | 'baseRepository'> | null)[]
     | null

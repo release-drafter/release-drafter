@@ -997,7 +997,14 @@ var resolveVersionKeyIncrement = (params) => {
 };
 //#endregion
 //#region packages/core/src/release/select-changes.ts
-var hasPullRequestAssociation = (commit) => commit.associationStatus === "associated" || Boolean(commit.associatedPullRequests?.some(Boolean));
+var hasLocalPrAssociation = (commit, mergeCommitOids) => mergeCommitOids.has(commit.oid) || Boolean(commit.associatedPullRequests?.some(Boolean));
+var hasExplicitForgePrAssociation = (commit) => commit.associationStatus === "associated";
+var hasUnresolvedForgePrAssociation = (commit) => commit.associationStatus === "unresolved";
+var associationRank = {
+	unresolved: 0,
+	unassociated: 1,
+	associated: 2
+};
 /** Selects the deduplicated release entries, omitting commits represented by PRs. */
 var selectChanges = (params) => {
 	const pullRequests = /* @__PURE__ */ new Map();
@@ -1011,22 +1018,24 @@ var selectChanges = (params) => {
 	}));
 	if (!params.config["include-commits"]) return changes;
 	const mergeCommitOids = new Set([...pullRequests.values()].flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
-	const seen = /* @__PURE__ */ new Set();
-	let unknownCount = 0;
+	const commits = /* @__PURE__ */ new Map();
 	for (const commit of params.commits) {
-		if (seen.has(commit.oid)) continue;
-		seen.add(commit.oid);
-		if (commit.associationStatus === "unknown") {
-			unknownCount += 1;
+		const existing = commits.get(commit.oid);
+		if (!existing || associationRank[commit.associationStatus] > associationRank[existing.associationStatus] || !existing.associatedPullRequests?.some(Boolean) && commit.associatedPullRequests?.some(Boolean)) commits.set(commit.oid, commit);
+	}
+	let unresolvedCount = 0;
+	for (const commit of commits.values()) {
+		if (hasUnresolvedForgePrAssociation(commit)) {
+			unresolvedCount += 1;
 			continue;
 		}
-		if (hasPullRequestAssociation(commit) || mergeCommitOids.has(commit.oid)) continue;
+		if (hasLocalPrAssociation(commit, mergeCommitOids) || hasExplicitForgePrAssociation(commit)) continue;
 		changes.push({
 			type: "commit",
 			commit
 		});
 	}
-	if (unknownCount > 0) params.logger?.warning(`Skipped ${unknownCount} commit${unknownCount === 1 ? "" : "s"} because pull request association could not be determined.`);
+	if (unresolvedCount > 0) params.logger?.warning(unresolvedCount === 1 ? "Skipped 1 commit because the forge could not determine its pull request association. It was omitted to prevent a potential duplicate release entry." : `Skipped ${unresolvedCount} commits because the forge could not determine their pull request associations. They were omitted to prevent potential duplicate release entries.`);
 	return changes;
 };
 //#endregion
@@ -1354,7 +1363,7 @@ var draftRelease = async (params) => {
 		},
 		pullRequestFields: {
 			body: pullRequestTemplate.includes("$CHANGE_BODY") || pullRequestTemplate.includes("$PR_BODY"),
-			url: pullRequestTemplate.includes("$CHANGE_URL") || pullRequestTemplate.includes("$PR_URL"),
+			url: pullRequestTemplate.includes("$CHANGE_URL") || pullRequestTemplate.includes("$PR_URL") || config["new-contributor-template"].includes("$CHANGE_URL"),
 			baseRefName: pullRequestTemplate.includes("$PR_BASE_REF_NAME"),
 			headRefName: pullRequestTemplate.includes("$PR_HEAD_REF_NAME")
 		},
@@ -1378,7 +1387,7 @@ var draftRelease = async (params) => {
 	})();
 	if (pullRequests.length > 0) logger.info(`Found ${pullRequests.length} merged pull requests targeting ${repository.owner}/${repository.name}: ${pullRequests.map(({ number }) => `#${number}`).join(", ")}`);
 	if (config["include-commits"]) {
-		const directCommitCount = commits.filter((commit) => commit.associationStatus === "none").length;
+		const directCommitCount = commits.filter((commit) => commit.associationStatus === "unassociated").length;
 		if (directCommitCount > 0) logger.info(`Found ${directCommitCount} commit${directCommitCount === 1 ? "" : "s"} without pull request associations.`);
 	}
 	const releasePayload = await buildReleasePayload({

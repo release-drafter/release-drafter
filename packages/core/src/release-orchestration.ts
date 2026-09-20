@@ -216,7 +216,8 @@ export const draftRelease = async (params: {
             pullRequestTemplate.includes('$PR_BODY'),
           url:
             pullRequestTemplate.includes('$CHANGE_URL') ||
-            pullRequestTemplate.includes('$PR_URL'),
+            pullRequestTemplate.includes('$PR_URL') ||
+            config['new-contributor-template'].includes('$CHANGE_URL'),
           baseRefName: pullRequestTemplate.includes('$PR_BASE_REF_NAME'),
           headRefName: pullRequestTemplate.includes('$PR_HEAD_REF_NAME'),
         },
@@ -248,7 +249,7 @@ export const draftRelease = async (params: {
   }
   if (config['include-commits']) {
     const directCommitCount = commits.filter(
-      (commit) => commit.associationStatus === 'none',
+      (commit) => commit.associationStatus === 'unassociated',
     ).length
     if (directCommitCount > 0) {
       logger.info(

@@ -13,6 +13,7 @@ import * as child from "node:child_process";
 import { setTimeout as setTimeout$1 } from "node:timers";
 import process$1 from "node:process";
 import path, { basename, dirname, isAbsolute, join, normalize } from "node:path";
+import { setTimeout as setTimeout$2 } from "node:timers/promises";
 import { existsSync as existsSync$1, readFileSync as readFileSync$1 } from "node:fs";
 //#region \0rolldown/runtime.js
 var __create = Object.create;
@@ -27068,19 +27069,14 @@ var FindPullRequestChangedFilesDocument = new TypedDocumentString(`
 }
     `);
 var FindRecentMergedPullRequestsDocument = new TypedDocumentString(`
-    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $cursor: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
+    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
   repository(name: $name, owner: $owner) {
     pullRequests(
       states: [MERGED]
       baseRefName: $baseRefName
       orderBy: { field: UPDATED_AT, direction: DESC }
       first: $limit
-      after: $cursor
     ) {
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
       nodes {
         ...AdapterPullRequestFields
         mergeCommit {
@@ -27160,6 +27156,47 @@ var HydrateComparisonCommitsDocument = new TypedDocumentString(`
                 ...AdapterPullRequestFields
               }
             }
+          }
+        }
+      }
+    }
+  }
+}
+    fragment AdapterPullRequestFields on PullRequest {
+  title
+  number
+  url @include(if: $withPullRequestURL)
+  body @include(if: $withPullRequestBody)
+  author {
+    __typename
+    login
+    url
+  }
+  baseRepository {
+    nameWithOwner
+  }
+  isCrossRepository
+  mergedAt
+  labels(first: 100) {
+    nodes {
+      name
+    }
+  }
+  merged
+  baseRefName @include(if: $withBaseRefName)
+  headRefName @include(if: $withHeadRefName)
+}`);
+var PollCommitAssociationsDocument = new TypedDocumentString(`
+    query pollCommitAssociations($ids: [ID!]!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
+  nodes(ids: $ids) {
+    ... on Commit {
+      id
+      associatedPullRequests(first: 100) {
+        totalCount
+        nodes {
+          ...AdapterPullRequestFields
+          mergeCommit {
+            oid
           }
         }
       }
@@ -27283,7 +27320,7 @@ var normalizeCommit = (commit) => ({
 		url: author.user?.url,
 		type: author.user?.__typename
 	} : author) : commit.authors,
-	associationStatus: (commit.associatedPullRequests?.totalCount ?? 0) > 0 || (commit.associatedPullRequests?.nodes?.length ?? 0) > 0 ? "associated" : "unknown",
+	associationStatus: (commit.associatedPullRequests?.totalCount ?? 0) > 0 || (commit.associatedPullRequests?.nodes?.length ?? 0) > 0 ? "associated" : "unresolved",
 	associatedPullRequests: commit.associatedPullRequests ? (commit.associatedPullRequests.nodes ?? []).map((pullRequest) => pullRequest ? {
 		number: pullRequest.number,
 		baseRepository: pullRequest.baseRepository?.nameWithOwner ?? null
@@ -40747,7 +40784,7 @@ var require_snapshot_utils = /* @__PURE__ */ __commonJSMin(((exports, module) =>
 var require_snapshot_recorder = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var { writeFile, readFile, mkdir } = __require("node:fs/promises");
 	var { dirname: dirname$1, resolve } = __require("node:path");
-	var { setTimeout: setTimeout$2, clearTimeout: clearTimeout$1 } = __require("node:timers");
+	var { setTimeout: setTimeout$3, clearTimeout: clearTimeout$1 } = __require("node:timers");
 	var { InvalidArgumentError, UndiciError } = require_errors();
 	var { hashId, isUrlExcludedFactory, normalizeHeaders, createHeaderFilters } = require_snapshot_utils();
 	/**
@@ -41125,7 +41162,7 @@ var require_snapshot_recorder = /* @__PURE__ */ __commonJSMin(((exports, module)
 		* Schedules a flush (debounced to avoid excessive writes)
 		*/
 		#scheduleFlush() {
-			this.#flushTimeout = setTimeout$2(() => {
+			this.#flushTimeout = setTimeout$3(() => {
 				this.saveSnapshots().catch(() => {});
 				if (this.#autoFlush) this.#flushTimeout?.refresh();
 				else this.#flushTimeout = null;
@@ -50941,10 +50978,23 @@ var createProxyAwareFetch = (env) => {
 	}));
 };
 //#endregion
+//#region packages/github-adapter/src/utils/sleep.ts
+var sleep = (milliseconds) => setTimeout$2(milliseconds);
+//#endregion
 //#region packages/github-adapter/src/index.ts
 var RELEASE_COUNT_LIMIT = 1e3;
-var RECENT_PULL_REQUEST_LOOKBACK = 100;
+var RECENT_PULL_REQUEST_LOOKBACK = 5;
 var DEFAULT_CONCURRENCY = 5;
+var ASSOCIATION_INITIAL_QUIET_PERIOD_MS = 15e3;
+var ASSOCIATION_POLL_INTERVAL_MS = 5e3;
+var ASSOCIATION_POLL_TIMEOUT_MS = 6e4;
+var ASSOCIATION_SETTLING_DELAY_MS = 2500;
+var ASSOCIATION_POLL_BATCH_SIZE = 50;
+var ASSOCIATION_POLL_ATTEMPTS = Math.ceil(45e3 / ASSOCIATION_POLL_INTERVAL_MS);
+var hasPullRequestAssociation = (commit) => (commit.associatedPullRequests?.totalCount ?? 0) > 0 || (commit.associatedPullRequests?.nodes?.length ?? 0) > 0;
+var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
+var pullRequestKeysForCommit = (commit) => new Set((commit.associatedPullRequests?.nodes ?? []).flatMap((pullRequest) => pullRequest ? [pullRequestKey(pullRequest)] : []));
+var hasExpectedPullRequestAssociation = ({ commit, expectedPullRequestKey }) => pullRequestKeysForCommit(commit).has(expectedPullRequestKey);
 var GitHubAdapter = class {
 	capabilities = { draftReleases: true };
 	serverUrl;
@@ -51033,37 +51083,42 @@ var GitHubAdapter = class {
 		if (missingOids.length > 0) throw new Error(`GitHub GraphQL did not return data for ${missingOids.length} comparison commits: ${missingOids.join(", ")}`);
 		const orderedGraphCommits = comparisonOids.map((oid) => commitsByOid.get(oid));
 		const repositoryName = `${repository.owner}/${repository.name}`;
-		const pullRequestsByKey = /* @__PURE__ */ new Map();
-		for (const commit of orderedGraphCommits) for (const pullRequest of commit.associatedPullRequests?.nodes ?? []) {
-			if (!pullRequest) continue;
-			const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
-			if (!pullRequestsByKey.has(key)) pullRequestsByKey.set(key, pullRequest);
-		}
 		const isBranchRef = comparison.headRef.startsWith("refs/heads/");
-		const isUnsupportedRecentRef = comparison.headRef.startsWith("refs/pull/");
-		const needsRecentRecovery = orderedGraphCommits.some((commit) => (commit.associatedPullRequests?.totalCount ?? 0) === 0 && (commit.associatedPullRequests?.nodes?.length ?? 0) === 0);
-		let recent = {
-			complete: false,
-			lagging: false,
-			pullRequests: []
-		};
-		if (!isUnsupportedRecentRef && needsRecentRecovery) {
-			recent = await this.findRecentPullRequests(params, new Set(comparisonOids), new Set(pullRequestsByKey.keys()), orderedGraphCommits, isBranchRef ? comparison.headRef.replace(/^refs\/heads\//, "") : null);
-			for (const pullRequest of recent.pullRequests) {
-				const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
-				if (!pullRequestsByKey.has(key)) pullRequestsByKey.set(key, pullRequest);
-			}
-			if (recent.pullRequests.length > 0) {
-				const recoveredMergeOids = new Set(recent.pullRequests.flatMap((pullRequest) => pullRequest.mergeCommit?.oid ? [pullRequest.mergeCommit.oid] : []));
-				for (const commit of orderedGraphCommits) {
-					if (!recoveredMergeOids.has(commit.oid)) continue;
-					commit.associatedPullRequests = {
-						totalCount: 1,
-						nodes: recent.pullRequests.filter((pullRequest) => pullRequest.mergeCommit?.oid === commit.oid)
-					};
+		const isPullRequestRef = comparison.headRef.startsWith("refs/pull/");
+		let emptyAssociationsCanBeClassifiedAsUnassociated = false;
+		let matchingRecentPullRequests = [];
+		if (isPullRequestRef) this.logger.debug(`Skipping recent pull request recovery for ephemeral ref ${comparison.headRef}.`);
+		else {
+			const baseRefName = isBranchRef ? comparison.headRef.replace(/^refs\/heads\//, "") : null;
+			this.logger.debug(`Checking the ${RECENT_PULL_REQUEST_LOOKBACK} most recently updated merged pull requests${baseRefName ? ` targeting ${baseRefName}` : ""} for delayed commit associations.`);
+			const recentCheck = await this.checkRecentPullRequestAssociations(params, new Set(comparisonOids), commitsByOid, baseRefName);
+			matchingRecentPullRequests = recentCheck.matchingPullRequests;
+			this.logger.debug(`Recent pull request check matched ${matchingRecentPullRequests.length} pull request${matchingRecentPullRequests.length === 1 ? "" : "s"} in the comparison and found ${recentCheck.contradictoryAssociations.length} contradictory merge commit association${recentCheck.contradictoryAssociations.length === 1 ? "" : "s"}.`);
+			const commitsWithEmptyAssociations = orderedGraphCommits.filter((commit) => !hasPullRequestAssociation(commit));
+			if (recentCheck.contradictoryAssociations.length === 0) {
+				if (params.includeCommits && matchingRecentPullRequests.length > 0 && commitsWithEmptyAssociations.length > 0) {
+					const commitsById = new Map(orderedGraphCommits.flatMap((commit) => commit.id ? [[commit.id, commit]] : []));
+					emptyAssociationsCanBeClassifiedAsUnassociated = await this.performFinalAssociationRefresh({
+						params,
+						commits: commitsWithEmptyAssociations,
+						commitsById,
+						reason: "Recent merged pull requests and empty commit associations were returned together."
+					});
+				} else {
+					emptyAssociationsCanBeClassifiedAsUnassociated = true;
+					this.logger.debug("The recent pull request check found no contradictory or unsettled commit associations; empty associations can be classified as unassociated.");
 				}
-			}
+			} else if (!params.includeCommits) this.logger.debug("Skipping commit association polling because individual commits are disabled.");
+			else emptyAssociationsCanBeClassifiedAsUnassociated = await this.waitForCommitAssociations({
+				params,
+				commits: orderedGraphCommits,
+				contradictoryAssociations: recentCheck.contradictoryAssociations
+			});
+			this.backfillRecentPullRequestAssociations(commitsByOid, matchingRecentPullRequests);
 		}
+		const pullRequestsByKey = /* @__PURE__ */ new Map();
+		for (const commit of orderedGraphCommits) for (const pullRequest of commit.associatedPullRequests?.nodes ?? []) if (pullRequest) pullRequestsByKey.set(pullRequestKey(pullRequest), pullRequest);
+		for (const pullRequest of matchingRecentPullRequests) pullRequestsByKey.set(pullRequestKey(pullRequest), pullRequest);
 		const graphPullRequests = [...pullRequestsByKey.values()].filter((pullRequest) => pullRequest.baseRepository?.nameWithOwner === repositoryName && pullRequest.merged);
 		const changedFiles = params.includeChangedFiles ? await this.loadChangedFiles(repository, graphPullRequests) : /* @__PURE__ */ new Map();
 		const pullRequests = graphPullRequests.map((pullRequest) => ({
@@ -51072,8 +51127,13 @@ var GitHubAdapter = class {
 		}));
 		const newContributorLogins = params.includeNewContributors ? await this.findNewContributorLogins(repository, graphPullRequests) : /* @__PURE__ */ new Set();
 		const commits = orderedGraphCommits.map(normalizeCommit);
-		if (!isUnsupportedRecentRef && needsRecentRecovery && recent.complete && !recent.lagging) {
-			for (const commit of commits) if (commit.associationStatus === "unknown") commit.associationStatus = "none";
+		if (emptyAssociationsCanBeClassifiedAsUnassociated) {
+			let directCommitCount = 0;
+			for (const commit of commits) if (commit.associationStatus === "unresolved") {
+				commit.associationStatus = "unassociated";
+				directCommitCount += 1;
+			}
+			this.logger.debug(`Classified ${directCommitCount} commit${directCommitCount === 1 ? "" : "s"} with empty pull request associations as unassociated.`);
 		}
 		return {
 			commits,
@@ -51111,35 +51171,177 @@ var GitHubAdapter = class {
 		}
 		return [...found.values()];
 	}
-	async findRecentPullRequests(params, commitOids, foundKeys, commits, baseRefName) {
-		const pullRequests = (await this.graphql(FindRecentMergedPullRequestsDocument.toString(), {
+	/**
+	* Checks a small, fresh PR-table window for merge commits present in the
+	* comparison. A matching PR whose merge commit reported no reverse association
+	* is concrete evidence that GitHub's commit association data is delayed.
+	*/
+	async checkRecentPullRequestAssociations(params, comparisonOids, commitsByOid, baseRefName) {
+		const pullRequestConnection = (await this.graphql(FindRecentMergedPullRequestsDocument.toString(), {
 			name: params.repository.name,
 			owner: params.repository.owner,
 			baseRefName,
-			cursor: null,
 			limit: RECENT_PULL_REQUEST_LOOKBACK,
 			withPullRequestBody: params.pullRequestFields.body,
 			withPullRequestURL: params.pullRequestFields.url,
 			withBaseRefName: params.pullRequestFields.baseRefName,
 			withHeadRefName: params.pullRequestFields.headRefName
 		})).repository?.pullRequests;
-		if (!pullRequests) throw new Error("Query returned no recent pull request connection");
-		const matches = (pullRequests.nodes ?? []).flatMap((pullRequest) => {
-			if (!pullRequest?.mergeCommit?.oid) return [];
-			return commitOids.has(pullRequest.mergeCommit.oid) ? [pullRequest] : [];
+		if (!pullRequestConnection) throw new Error("Query returned no recent pull request connection");
+		const matchingPullRequests = (pullRequestConnection.nodes ?? []).flatMap((pullRequest) => {
+			const mergeCommitOid = pullRequest?.mergeCommit?.oid;
+			return pullRequest && mergeCommitOid && comparisonOids.has(mergeCommitOid) ? [pullRequest] : [];
 		});
-		const commitsByOid = new Map(commits.map((commit) => [commit.oid, commit]));
 		return {
-			complete: !pullRequests.pageInfo?.hasNextPage,
-			lagging: matches.some((pullRequest) => {
-				const commit = pullRequest.mergeCommit?.oid ? commitsByOid.get(pullRequest.mergeCommit.oid) : void 0;
-				return commit !== void 0 && (commit.associatedPullRequests?.totalCount ?? 0) === 0;
-			}),
-			pullRequests: matches.filter((pullRequest) => {
-				const key = `${pullRequest.baseRepository?.nameWithOwner}#${pullRequest.number}`;
-				return !foundKeys.has(key);
+			matchingPullRequests,
+			contradictoryAssociations: matchingPullRequests.flatMap((pullRequest) => {
+				const mergeCommitOid = pullRequest.mergeCommit?.oid;
+				const mergeCommit = mergeCommitOid ? commitsByOid.get(mergeCommitOid) : void 0;
+				if (!mergeCommit) return [];
+				const contradiction = {
+					commit: mergeCommit,
+					expectedPullRequestKey: pullRequestKey(pullRequest)
+				};
+				return hasExpectedPullRequestAssociation(contradiction) ? [] : [contradiction];
 			})
 		};
+	}
+	async performFinalAssociationRefresh(params) {
+		const { params: request, commits, commitsById, reason } = params;
+		const commitsWithNodeIds = commits.filter((commit) => commit.id).length;
+		if (commitsWithNodeIds !== commits.length) {
+			const missingNodeIdCount = commits.length - commitsWithNodeIds;
+			this.logger.warning(`GitHub omitted node IDs for ${missingNodeIdCount} unresolved comparison commit${missingNodeIdCount === 1 ? "" : "s"}. Release Drafter cannot perform the final association refresh, so those commits will be omitted.`);
+			return false;
+		}
+		this.logger.info(`${reason} Waiting ${ASSOCIATION_SETTLING_DELAY_MS / 1e3} seconds before one final refresh of ${commits.length} possible sibling or direct commit${commits.length === 1 ? "" : "s"}.`);
+		await sleep(ASSOCIATION_SETTLING_DELAY_MS);
+		const finalRefreshSignal = AbortSignal.timeout(ASSOCIATION_POLL_INTERVAL_MS);
+		let finalRefresh;
+		try {
+			finalRefresh = await this.refreshCommitAssociations(request, commits, commitsById, finalRefreshSignal);
+		} catch (error) {
+			if (finalRefreshSignal.aborted) {
+				this.logger.warning(`GitHub's final association refresh exceeded ${ASSOCIATION_POLL_INTERVAL_MS / 1e3} seconds. Release Drafter cannot safely classify the remaining empty associations.`);
+				return false;
+			}
+			throw error;
+		}
+		if (finalRefresh.missingNodeIds.length > 0) {
+			this.logger.warning(`GitHub omitted ${finalRefresh.missingNodeIds.length} commit${finalRefresh.missingNodeIds.length === 1 ? "" : "s"} from the final association response. Release Drafter cannot safely classify their empty associations.`);
+			return false;
+		}
+		this.logger.debug(`Final association refresh found ${finalRefresh.newlyAssociatedCount} newly associated commit${finalRefresh.newlyAssociatedCount === 1 ? "" : "s"}.`);
+		return true;
+	}
+	/**
+	* Polls only commits whose associations were initially empty. The loop starts
+	* only after the recent PR check proves a contradiction, and the caller may
+	* classify empty results as unassociated only when the contradiction clears.
+	*/
+	async waitForCommitAssociations(params) {
+		const { params: request, commits, contradictoryAssociations } = params;
+		const commitsById = new Map(commits.flatMap((commit) => commit.id ? [[commit.id, commit]] : []));
+		const missingNodeIdCount = commits.filter((commit) => !hasPullRequestAssociation(commit) && !commit.id).length;
+		if (missingNodeIdCount > 0) {
+			this.logger.warning(`GitHub omitted node IDs for ${missingNodeIdCount} unresolved comparison commit${missingNodeIdCount === 1 ? "" : "s"}. Release Drafter cannot poll their pull request associations safely, so those commits will be omitted.`);
+			return false;
+		}
+		this.logger.info(`GitHub returned contradictory pull request data for ${contradictoryAssociations.length} merge commit${contradictoryAssociations.length === 1 ? "" : "s"}. Polling commit associations for up to ${ASSOCIATION_POLL_TIMEOUT_MS / 1e3} seconds before classifying individual commits.`);
+		const pollingDeadline = Date.now() + ASSOCIATION_POLL_TIMEOUT_MS;
+		this.logger.debug(`Waiting ${ASSOCIATION_INITIAL_QUIET_PERIOD_MS / 1e3} seconds before the first association refresh.`);
+		await sleep(ASSOCIATION_INITIAL_QUIET_PERIOD_MS);
+		for (let attempt = 1; attempt <= ASSOCIATION_POLL_ATTEMPTS; attempt += 1) {
+			if (attempt > 1 && Date.now() >= pollingDeadline) break;
+			const unresolvedContradictions = contradictoryAssociations.filter((contradiction) => !hasExpectedPullRequestAssociation(contradiction));
+			this.logger.debug(`Refreshing ${unresolvedContradictions.length} contradictory merge commit association${unresolvedContradictions.length === 1 ? "" : "s"} (attempt ${attempt}).`);
+			const remainingMilliseconds = pollingDeadline - Date.now();
+			if (remainingMilliseconds <= 0) break;
+			let refresh;
+			try {
+				refresh = await this.refreshCommitAssociations(request, unresolvedContradictions.map(({ commit }) => commit), commitsById, AbortSignal.timeout(remainingMilliseconds));
+			} catch (error) {
+				if (error instanceof Error && (error.name === "AbortError" || Date.now() >= pollingDeadline)) {
+					this.logger.warning(`GitHub commit association polling exceeded the ${ASSOCIATION_POLL_TIMEOUT_MS / 1e3}-second limit. Release Drafter will leave commits with empty associations unresolved and omit them to prevent duplicate release entries.`);
+					return false;
+				}
+				throw error;
+			}
+			if (refresh.missingNodeIds.length > 0) {
+				this.logger.warning(`GitHub omitted ${refresh.missingNodeIds.length} contradictory merge commit${refresh.missingNodeIds.length === 1 ? "" : "s"} from the association response. Release Drafter cannot continue polling safely.`);
+				return false;
+			}
+			this.logger.debug(`Association refresh found ${refresh.newlyAssociatedCount} newly associated commit${refresh.newlyAssociatedCount === 1 ? "" : "s"}.`);
+			if (contradictoryAssociations.every(hasExpectedPullRequestAssociation)) {
+				const unresolvedSiblingCandidates = [...commitsById.values()].filter((commit) => !hasPullRequestAssociation(commit));
+				this.logger.info(`GitHub's delayed merge commit association became available after ${attempt} refresh attempt${attempt === 1 ? "" : "s"}.`);
+				if (unresolvedSiblingCandidates.length > 0) {
+					if (!await this.performFinalAssociationRefresh({
+						params: request,
+						commits: unresolvedSiblingCandidates,
+						commitsById,
+						reason: "The contradictory merge commit association is now available."
+					})) return false;
+				}
+				this.logger.info("GitHub commit association polling settled. Remaining empty associations will be classified as unassociated commits.");
+				return true;
+			}
+			if (attempt < ASSOCIATION_POLL_ATTEMPTS) {
+				const delayMilliseconds = Math.min(ASSOCIATION_POLL_INTERVAL_MS, Math.max(0, pollingDeadline - Date.now()));
+				if (delayMilliseconds === 0) break;
+				this.logger.debug(`Merge commit associations are still delayed; retrying in ${delayMilliseconds / 1e3} seconds.`);
+				await sleep(delayMilliseconds);
+			}
+		}
+		this.logger.warning(`GitHub still returned contradictory pull request data after ${ASSOCIATION_POLL_TIMEOUT_MS / 1e3} seconds. Release Drafter will leave commits with empty associations unresolved and omit them to prevent duplicate release entries.`);
+		return false;
+	}
+	async refreshCommitAssociations(params, commits, commitsById, signal) {
+		let newlyAssociatedCount = 0;
+		const nodeIds = commits.flatMap((commit) => commit.id ? [commit.id] : []);
+		const returnedNodeIds = /* @__PURE__ */ new Set();
+		for (let offset = 0; offset < nodeIds.length; offset += ASSOCIATION_POLL_BATCH_SIZE) {
+			const ids = nodeIds.slice(offset, offset + ASSOCIATION_POLL_BATCH_SIZE);
+			const data = await this.graphql(PollCommitAssociationsDocument.toString(), {
+				ids,
+				withPullRequestBody: params.pullRequestFields.body,
+				withPullRequestURL: params.pullRequestFields.url,
+				withBaseRefName: params.pullRequestFields.baseRefName,
+				withHeadRefName: params.pullRequestFields.headRefName,
+				...signal ? { request: { signal } } : {}
+			});
+			for (const refreshedCommit of data.nodes ?? []) {
+				if (!refreshedCommit?.id) continue;
+				returnedNodeIds.add(refreshedCommit.id);
+				const commit = commitsById.get(refreshedCommit.id);
+				if (!commit || !refreshedCommit.associatedPullRequests) continue;
+				const wasUnassociated = !hasPullRequestAssociation(commit);
+				commit.associatedPullRequests = refreshedCommit.associatedPullRequests;
+				if (wasUnassociated && hasPullRequestAssociation(commit)) newlyAssociatedCount += 1;
+			}
+		}
+		return {
+			newlyAssociatedCount,
+			missingNodeIds: nodeIds.filter((nodeId) => !returnedNodeIds.has(nodeId))
+		};
+	}
+	backfillRecentPullRequestAssociations(commitsByOid, pullRequests) {
+		const pullRequestsByMergeOid = /* @__PURE__ */ new Map();
+		for (const pullRequest of pullRequests) {
+			const mergeCommitOid = pullRequest.mergeCommit?.oid;
+			if (!mergeCommitOid) continue;
+			const existing = pullRequestsByMergeOid.get(mergeCommitOid) ?? [];
+			existing.push(pullRequest);
+			pullRequestsByMergeOid.set(mergeCommitOid, existing);
+		}
+		for (const [mergeCommitOid, matchingPullRequests] of pullRequestsByMergeOid) {
+			const commit = commitsByOid.get(mergeCommitOid);
+			if (!commit || hasPullRequestAssociation(commit)) continue;
+			commit.associatedPullRequests = {
+				totalCount: matchingPullRequests.length,
+				nodes: matchingPullRequests
+			};
+		}
 	}
 	async loadChangedFiles(repository, pullRequests) {
 		const entries = await mapConcurrent(pullRequests, this.changedFilesConcurrency, async (pullRequest) => {
@@ -51216,7 +51418,7 @@ var GitHubAdapter = class {
 	async findNewCommitContributors(params, commits) {
 		const earliestCommitByLogin = /* @__PURE__ */ new Map();
 		for (const commit of commits) {
-			if (commit.associationStatus !== "none" || !commit.author?.login || !commit.committedAt) continue;
+			if (commit.associationStatus !== "unassociated" || !commit.author?.login || !commit.committedAt) continue;
 			const previous = earliestCommitByLogin.get(commit.author.login);
 			if (!previous || commit.committedAt < previous) earliestCommitByLogin.set(commit.author.login, commit.committedAt);
 		}

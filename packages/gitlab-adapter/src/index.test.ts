@@ -333,7 +333,7 @@ describe('GitLabAdapter', () => {
         associatedPullRequests,
       })),
     ).toEqual([
-      { associationStatus: 'none', associatedPullRequests: [] },
+      { associationStatus: 'unassociated', associatedPullRequests: [] },
       {
         associationStatus: 'associated',
         associatedPullRequests: [

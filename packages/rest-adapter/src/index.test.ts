@@ -277,7 +277,7 @@ describe('GitHub-compatible REST mechanics', () => {
       apiUrl: 'https://api.example/custom',
     }).findChanges(request())
     expect(result.commits).toHaveLength(1)
-    expect(result.commits[0]?.associationStatus).toBe('none')
+    expect(result.commits[0]?.associationStatus).toBe('unassociated')
     expect(result.pullRequests).toEqual([])
     expect(fetch.mock.calls.map(([input]) => String(input))).toEqual([
       'https://api.example/custom/repos/octo/project/compare/v1...main',

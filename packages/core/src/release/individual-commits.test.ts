@@ -23,7 +23,7 @@ const directCommit = (overrides: Partial<Commit> = {}): Commit => ({
     login: 'commit-author',
     url: 'https://example.test/commit-author',
   },
-  associationStatus: 'none',
+  associationStatus: 'unassociated',
   ...overrides,
 })
 
@@ -67,22 +67,30 @@ describe('individual commit changes', () => {
     })
   })
 
-  it('suppresses duplicate, associated, unknown, and merge-result commits', () => {
+  it('suppresses duplicate, associated, unresolved, and merge-result commits', () => {
     const warning = vi.fn()
     const changes = selectChanges({
       commits: [
         directCommit(),
         directCommit(),
+        directCommit({ oid: 'stronger-evidence' }),
+        directCommit({
+          oid: 'stronger-evidence',
+          associationStatus: 'associated',
+        }),
         directCommit({ oid: 'associated', associationStatus: 'associated' }),
         directCommit({
           oid: 'reported-association',
-          associationStatus: 'none',
+          associationStatus: 'unassociated',
           associatedPullRequests: [
             { number: 99, baseRepository: 'someone/else' },
           ],
         }),
-        directCommit({ oid: 'unknown', associationStatus: 'unknown' }),
-        directCommit({ oid: 'merge-result', associationStatus: 'none' }),
+        directCommit({ oid: 'unresolved', associationStatus: 'unresolved' }),
+        directCommit({
+          oid: 'merge-result',
+          associationStatus: 'unassociated',
+        }),
       ],
       pullRequests: [{ ...pullRequest, mergeCommitOid: 'merge-result' }],
       config: config(),
@@ -98,7 +106,7 @@ describe('individual commit changes', () => {
       commit: { oid: '1234567890abcdef' },
     })
     expect(warning).toHaveBeenCalledWith(
-      'Skipped 1 commit because pull request association could not be determined.',
+      'Skipped 1 commit because the forge could not determine its pull request association. It was omitted to prevent a potential duplicate release entry.',
     )
   })
 

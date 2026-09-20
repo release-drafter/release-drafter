@@ -69,7 +69,7 @@ const normalizeCommit = (commit: RestCommit): Commit => {
           },
         }
       : {}),
-    associationStatus: 'unknown',
+    associationStatus: 'unresolved',
   }
 }
 
@@ -256,7 +256,8 @@ class GitHubCompatibleRestAdapter
     const entryByCommit = new Map<string, PullRequestEntry>()
     for (const [index, pullRequest] of associated.entries()) {
       const commit = commits[index]
-      if (commit) commit.associationStatus = pullRequest ? 'associated' : 'none'
+      if (commit)
+        commit.associationStatus = pullRequest ? 'associated' : 'unassociated'
       if (!pullRequest) continue
       if (pullRequest.merged === false || !pullRequest.merged_at) continue
       const entry = normalizePullRequest(
@@ -351,7 +352,8 @@ class GitHubCompatibleRestAdapter
       { author: NonNullable<Commit['author']>; committedAt?: string }
     >()
     for (const commit of commits) {
-      if (commit.associationStatus !== 'none' || !commit.author) continue
+      if (commit.associationStatus !== 'unassociated' || !commit.author)
+        continue
       const key = commitAuthorKey(commit.author)
       if (!key) continue
       const previous = candidates.get(key)
