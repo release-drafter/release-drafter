@@ -1,4 +1,4 @@
-import { S as context, T as setFailed, _ as object, a as readActionInputs, c as getGitHubAdapter, i as defineActionInputNames, l as getRepository, n as sharedInputSchema, o as writeActionOutputs, s as actionLogger, u as escapeStringRegexp, v as string, w as info, y as stringbool } from "../../chunks/config.js";
+import { C as context, E as setFailed, T as info, a as readActionInputs, b as stringbool, c as getGitHubAdapter, d as escapeStringRegexp, i as defineActionInputNames, l as getRepository, n as sharedInputSchema, o as writeActionOutputs, s as actionLogger, u as noopLogger, v as object, y as string } from "../../chunks/config.js";
 import { _ as filterPullRequestsByPreCategories, a as COERCE, b as needsPullRequestChangedFiles, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
 //#region node_modules/verkit/dist/version-CQ98ZBpL.js
 var COERCE_EXACT = safeRegex(COERCE);
@@ -519,6 +519,96 @@ var renderTemplate = (params) => {
 	return input;
 };
 //#endregion
+//#region packages/core/src/release/group-changes.ts
+/**
+* Groups pull requests whose titles match the same `group` of a `group-changes`
+* rule into a single changelog entry. Pull requests are neither mutated nor
+* reordered: a grouped entry takes the place of its newest member.
+*/
+var groupChanges = (params) => {
+	const { pullRequests, rules = [], logger } = params;
+	if (rules.length === 0) return pullRequests.map((pullRequest) => ({
+		pullRequests: [pullRequest],
+		representative: pullRequest,
+		title: pullRequest.title
+	}));
+	const members = /* @__PURE__ */ new Map();
+	const ruleOf = /* @__PURE__ */ new Map();
+	const keys = [];
+	for (const [index, pullRequest] of pullRequests.entries()) {
+		const match = matchRule(pullRequest, rules);
+		if (!match) {
+			const key = `ungrouped ${index}`;
+			keys.push(key);
+			members.set(key, [pullRequest]);
+			continue;
+		}
+		const key = `rule ${match.index} ${JSON.stringify(match.values)}`;
+		const existing = members.get(key);
+		if (existing) {
+			existing.push(pullRequest);
+			continue;
+		}
+		keys.push(key);
+		members.set(key, [pullRequest]);
+		ruleOf.set(key, match.rule);
+	}
+	const positions = new Map(pullRequests.map((pullRequest, index) => [pullRequest, index]));
+	return keys.map((key) => {
+		const grouped = [...members.get(key) ?? []].sort(byMergeOrder);
+		const representative = grouped[grouped.length - 1];
+		const rule = ruleOf.get(key);
+		return {
+			pullRequests: grouped,
+			representative,
+			title: grouped.length > 1 && rule ? groupTitle({
+				pullRequests: grouped,
+				rule,
+				logger
+			}) : representative.title
+		};
+	}).sort((a, b) => (positions.get(a.representative) ?? 0) - (positions.get(b.representative) ?? 0));
+};
+/**
+* Finds the first rule that matches and reads its grouping values. Changes are
+* grouped only when every grouping capture holds the same value, so a bump of
+* the same dependency in another submodule stays a change of its own.
+*/
+var matchRule = (pullRequest, rules) => {
+	for (const [index, rule] of rules.entries()) {
+		const groups = rule.pattern.exec(pullRequest.title)?.groups;
+		if (!groups) continue;
+		const values = rule.groupNames.map((name) => groups[name] ?? "");
+		if (values.some((value) => value.trim())) return {
+			values,
+			index,
+			rule
+		};
+	}
+};
+/** Orders members the way they were merged, oldest first. */
+var byMergeOrder = (a, b) => {
+	if (a.mergedAt && b.mergedAt && a.mergedAt !== b.mergedAt) return a.mergedAt < b.mergedAt ? -1 : 1;
+	return a.number - b.number;
+};
+var groupTitle = (params) => {
+	const { pullRequests, rule, logger } = params;
+	const oldest = rule.pattern.exec(pullRequests[0].title)?.groups ?? {};
+	const newest = rule.pattern.exec(pullRequests[pullRequests.length - 1].title)?.groups ?? {};
+	const object = {};
+	for (const name of rule.groupNames) object[`$${name.toUpperCase()}`] = newest[name] ?? "";
+	for (const name of rule.captureNames) {
+		object[`$FIRST_${name.toUpperCase()}`] = oldest[name] ?? "";
+		object[`$LAST_${name.toUpperCase()}`] = newest[name] ?? "";
+	}
+	const title = renderTemplate({
+		template: rule["title-template"],
+		object
+	});
+	logger?.debug(`Grouped ${pullRequests.map(({ number }) => `#${number}`).join(", ")} into '${title}'`);
+	return title;
+};
+//#endregion
 //#region packages/core/src/release/generate-contributors-sentence.ts
 var botSuffix = "[bot]";
 var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
@@ -615,7 +705,10 @@ var generateNewContributorsList = (params) => {
 };
 //#endregion
 //#region packages/core/src/release/pull-request-to-string.ts
-var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
+/** Separator between the pull request numbers of `$NUMBERS`. */
+var numbersSeparator = ", ";
+var pullRequestToString = (params) => params.changes.map((change) => {
+	const pullRequest = change.representative;
 	let pullAuthor = "ghost";
 	if (pullRequest.author) pullAuthor = pullRequest.author.type === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
 	const authorTemplate = params.config["change-author-template"];
@@ -624,13 +717,14 @@ var pullRequestToString = (params) => params.pullRequests.map((pullRequest) => {
 		object: {
 			$CATEGORY: params.category ?? "",
 			$TITLE: escapeTitle({
-				title: pullRequest.title,
+				title: change.title,
 				escapes: params.config["change-title-escapes"]
 			}),
 			$NUMBER: pullRequest.number.toString(),
+			$NUMBERS: change.pullRequests.map(({ number }) => `#${number}`).join(numbersSeparator),
 			$AUTHORS: generateAuthorsSentence({
 				commits: params.commits,
-				pullRequests: [pullRequest],
+				pullRequests: change.pullRequests,
 				serverUrl: params.serverUrl,
 				noAuthorsTemplate: renderTemplate({
 					template: authorTemplate,
@@ -660,16 +754,21 @@ var escapeTitle = (params) => params.title.replace(new RegExp(`[${escapeStringRe
 //#endregion
 //#region packages/core/src/release/generate-changelog.ts
 var generateChangeLog = (params) => {
-	const { commits = [], pullRequests, serverUrl, config } = params;
+	const { commits = [], logger = noopLogger, pullRequests, serverUrl, config } = params;
 	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
 		pullRequests,
 		config
 	});
 	if (uncategorizedPullRequests.length + categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) === 0) return config["no-changes-template"];
 	const changeLog = [];
+	const toGroupedChanges = (categoryPullRequests) => groupChanges({
+		pullRequests: categoryPullRequests,
+		rules: config["group-changes"],
+		logger
+	});
 	if (uncategorizedPullRequests.length > 0) changeLog.push(pullRequestToString({
+		changes: toGroupedChanges(uncategorizedPullRequests),
 		commits,
-		pullRequests: uncategorizedPullRequests,
 		serverUrl,
 		config
 	}), "\n\n");
@@ -680,14 +779,15 @@ var generateChangeLog = (params) => {
 			object: { $TITLE: category.title }
 		});
 		if (categoryTitle) changeLog.push(categoryTitle, "\n\n");
+		const changes = toGroupedChanges(category.pullRequests);
 		const pullRequestString = pullRequestToString({
 			category: category.title,
+			changes,
 			commits,
-			pullRequests: category.pullRequests,
 			serverUrl,
 			config
 		});
-		if (category["collapse-after"] !== -1 && category.pullRequests.length > category["collapse-after"]) changeLog.push("<details>", "\n", `<summary>${category.pullRequests.length} change${category.pullRequests.length > 1 ? "s" : ""}</summary>`, "\n\n", pullRequestString, "\n", "</details>");
+		if (category["collapse-after"] !== -1 && changes.length > category["collapse-after"]) changeLog.push("<details>", "\n", `<summary>${changes.length} change${changes.length > 1 ? "s" : ""}</summary>`, "\n\n", pullRequestString, "\n", "</details>");
 		else changeLog.push(pullRequestString);
 		if (index + 1 !== nonEmptyCategories.length) changeLog.push("\n\n");
 	}
@@ -965,6 +1065,7 @@ var buildReleasePayload = async (params) => {
 			$PREVIOUS_TAG: lastRelease?.tagName ?? "",
 			$CHANGES: generateChangeLog({
 				commits,
+				logger,
 				pullRequests: sortedPullRequests,
 				serverUrl: repository.serverUrl,
 				config

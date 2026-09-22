@@ -1,10 +1,13 @@
+import { type Logger, noopLogger } from '../ports.ts'
 import type { Commit, ParsedConfig, PullRequest } from '../types.ts'
 import { categorizePullRequests } from './categorize-pull-requests.ts'
+import { type ChangeGroup, groupChanges } from './group-changes.ts'
 import { pullRequestToString } from './pull-request-to-string.ts'
 import { renderTemplate } from './render-template/index.ts'
 
 export const generateChangeLog = (params: {
   commits?: Commit[]
+  logger?: Logger
   pullRequests: PullRequest[]
   serverUrl: string
   config: Pick<
@@ -17,9 +20,16 @@ export const generateChangeLog = (params: {
     | 'change-authors-separator'
     | 'change-authors-final-separator'
     | 'category-template'
+    | 'group-changes'
   >
 }) => {
-  const { commits = [], pullRequests, serverUrl, config } = params
+  const {
+    commits = [],
+    logger = noopLogger,
+    pullRequests,
+    serverUrl,
+    config,
+  } = params
   const [uncategorizedPullRequests, categorizedPullRequests] =
     categorizePullRequests({ pullRequests, config })
   const totalPullRequestsInChangelog =
@@ -31,12 +41,22 @@ export const generateChangeLog = (params: {
 
   if (totalPullRequestsInChangelog === 0) return config['no-changes-template']
   const changeLog: string[] = []
+  // Grouping is applied per bucket so that a pull request matching several
+  // categories is grouped with the other changes of each category separately.
+  const toGroupedChanges = (
+    categoryPullRequests: PullRequest[],
+  ): ChangeGroup[] =>
+    groupChanges({
+      pullRequests: categoryPullRequests,
+      rules: config['group-changes'],
+      logger,
+    })
 
   if (uncategorizedPullRequests.length > 0) {
     changeLog.push(
       pullRequestToString({
+        changes: toGroupedChanges(uncategorizedPullRequests),
         commits,
-        pullRequests: uncategorizedPullRequests,
         serverUrl,
         config,
       }),
@@ -53,21 +73,22 @@ export const generateChangeLog = (params: {
       object: { $TITLE: category.title },
     })
     if (categoryTitle) changeLog.push(categoryTitle, '\n\n')
+    const changes = toGroupedChanges(category.pullRequests)
     const pullRequestString = pullRequestToString({
       category: category.title,
+      changes,
       commits,
-      pullRequests: category.pullRequests,
       serverUrl,
       config,
     })
     const shouldCollapse =
       category['collapse-after'] !== -1 &&
-      category.pullRequests.length > category['collapse-after']
+      changes.length > category['collapse-after']
     if (shouldCollapse) {
       changeLog.push(
         '<details>',
         '\n',
-        `<summary>${category.pullRequests.length} change${category.pullRequests.length > 1 ? 's' : ''}</summary>`,
+        `<summary>${changes.length} change${changes.length > 1 ? 's' : ''}</summary>`,
         '\n\n',
         pullRequestString,
         '\n',

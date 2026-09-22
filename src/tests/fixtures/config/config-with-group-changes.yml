@@ -1,0 +1,5 @@
+template: '$CHANGES'
+change-template: '* $TITLE ($NUMBERS) $AUTHORS'
+group-changes:
+  - pattern: '/^Bump (?<group>.+?) from (?<from>\S+) to (?<to>\S+)$/'
+    title-template: 'Bump $GROUP from $FIRST_FROM to $LAST_TO'

@@ -1,4 +1,4 @@
-import { _ as object, b as union, d as ZodDefault, f as _enum, g as number, h as literal, m as boolean, p as array, t as composeConfigGet, u as escapeStringRegexp, v as string, w as info, x as Minimatch, y as stringbool } from "./config.js";
+import { S as Minimatch, T as info, _ as number, b as stringbool, d as escapeStringRegexp, f as ZodDefault, g as literal, h as boolean, m as array, p as _enum, t as composeConfigGet, v as object, x as union, y as string } from "./config.js";
 //#region node_modules/conventional-commits-parser/dist/regex.js
 var nomatchRegex = /(?!.*)/;
 function escape(string) {
@@ -811,6 +811,16 @@ var categorySchema = object({
 	when: changeConditionSchema.or(array(changeConditionSchema)).optional().default([])
 });
 var categorySchemaDefaults = categorySchema.parse({});
+var groupChangeSchema = object({
+	/**
+	* A regular expression literal, such as `/^Bump (?<group>.+) from (?<from>\S+) to (?<to>\S+)$/`, matched against the pull request title. A `group` capture group is required and holds the value changes are grouped by. Every further `group_<name>` capture group extends the value, so that changes are merged only when all of them match.
+	*/
+	pattern: string().min(1),
+	/**
+	* The template to use for `$TITLE` of a merged entry. Expands `$GROUP`, every `$GROUP_<NAME>` and, for every other capture group, `$FIRST_<NAME>` and `$LAST_<NAME>`.
+	*/
+	"title-template": string().min(1)
+});
 var exclusiveConfigSchema = object({
 	/**
 	* The template to use for each merged change.
@@ -918,6 +928,10 @@ var exclusiveConfigSchema = object({
 		search: string().min(1),
 		replace: string().min(0)
 	})).optional().default([]),
+	/**
+	* Group changes whose titles share the same `group` into a single changelog entry.
+	*/
+	"group-changes": array(groupChangeSchema).optional().default([]),
 	/**
 	* Categorize changes
 	*/
@@ -1467,6 +1481,62 @@ function parseCategories(categories, deprecatedConfig, logger) {
 	return parsedCategories;
 }
 //#endregion
+//#region packages/core/src/config/parse-group-changes.ts
+/** Capture group names that `renderTemplate` can expand as `$FIRST_<NAME>`/`$LAST_<NAME>`. */
+var templatableName = /^[A-Za-z_]+$/;
+/** Capture group names that build the grouping key: `group` and every `group_<name>`. */
+var isGroupName = (name) => /^group(_|$)/i.test(name);
+/**
+* Converts the configured `group-changes` patterns into regular expressions and
+* collects the capture group names their `title-template` can reference.
+*
+* Rules that cannot be used are dropped with a warning so that a single bad
+* pattern never fails the whole release, matching how `replacers` are handled.
+*/
+var parseGroupChanges = (params) => {
+	const { groupChanges, logger } = params;
+	return groupChanges.flatMap((groupChange) => {
+		let pattern;
+		try {
+			const converted = stringToRegex(groupChange.pattern);
+			pattern = new RegExp(converted.source, converted.flags.replace(/[gy]/g, ""));
+		} catch {
+			logger.warning(`Bad group-changes pattern: '${groupChange.pattern}'`);
+			return [];
+		}
+		const names = captureNamesOf(pattern);
+		const groupNames = names.filter(isGroupName);
+		if (groupNames.length === 0) {
+			logger.warning(`The group-changes pattern '${groupChange.pattern}' must be a regular expression literal, such as '/…/', with a 'group' capture group.`);
+			return [];
+		}
+		const templatable = names.filter((name) => {
+			if (templatableName.test(name)) return true;
+			logger.warning(`The group-changes capture group '${name}' is not available in 'title-template'. Use letters and underscores only.`);
+			return false;
+		});
+		return [{
+			...groupChange,
+			pattern,
+			groupNames,
+			captureNames: templatable.filter((name) => !isGroupName(name))
+		}];
+	});
+};
+/**
+* Lists every named capture group of a pattern. Prefixing the source with an
+* empty alternative makes the expression match an empty string, so the match
+* reports all group names at once.
+*/
+var captureNamesOf = (pattern) => {
+	try {
+		const probe = new RegExp(`|${pattern.source}`, pattern.flags);
+		return Object.keys(probe.exec("")?.groups ?? {});
+	} catch {
+		return [];
+	}
+};
+//#endregion
 //#region packages/core/src/config/merge-input-and-config.ts
 var mergeInputAndConfig = (params) => {
 	const { config: originalConfig, input, defaultCommitish, logger } = params;
@@ -1494,13 +1564,18 @@ var mergeInputAndConfig = (params) => {
 		}
 	}).filter((replacer) => !!replacer);
 	const categories = parseCategories(config, deprecatedCategoryConfig, logger);
+	const groupChanges = parseGroupChanges({
+		groupChanges: config["group-changes"],
+		logger
+	});
 	const parsedConfig = {
 		...config,
 		commitish,
 		latest,
 		prerelease,
 		replacers,
-		categories
+		categories,
+		"group-changes": groupChanges
 	};
 	validateParsedConfig(parsedConfig);
 	return parsedConfig;

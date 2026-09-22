@@ -240,6 +240,15 @@ export interface ParsedReplacer {
   replace: string
 }
 
+export interface ParsedGroupChange {
+  pattern: RegExp
+  'title-template': string
+  /** Names of the capture groups that build the grouping key: `group` and every `group_<name>`. */
+  groupNames: string[]
+  /** Names of the capture groups exposed as `$FIRST_<NAME>` and `$LAST_<NAME>`, without the grouping ones. */
+  captureNames: string[]
+}
+
 /**
  * Fully parsed Release Drafter configuration for the orchestration core. The
  * caller or runtime must load and normalize the configuration.
@@ -265,6 +274,7 @@ export interface DraftReleaseConfig {
   'pull-request-limit': number
   'history-limit': number
   replacers: ParsedReplacer[]
+  'group-changes'?: ParsedGroupChange[]
   categories: ParsedCategory[]
   'category-template': string
   template: string
