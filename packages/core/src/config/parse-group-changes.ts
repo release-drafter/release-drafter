@@ -7,8 +7,7 @@ import type { Config } from './config.schema.ts'
 const templatableName = /^[A-Za-z_]+$/
 
 /** Capture group names that build the grouping key: `group` and every `group_<name>`. */
-const isGroupName = (name: string) =>
-  name === 'group' || name.startsWith('group_')
+const isGroupName = (name: string) => /^group(_|$)/i.test(name)
 
 /**
  * Converts the configured `group-changes` patterns into regular expressions and

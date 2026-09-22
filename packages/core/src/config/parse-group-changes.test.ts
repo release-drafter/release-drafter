@@ -63,6 +63,19 @@ describe('parseGroupChanges', () => {
     expect(logger.warning).not.toHaveBeenCalled()
   })
 
+  it('accepts group capture names in any case', () => {
+    const parsed = parse([
+      {
+        pattern: '/^Bump (?<Group>.+?) to (?<to>\\S+)(?<GROUP_IN> in .+)?$/',
+        'title-template': 'Bump $GROUP to $LAST_TO$GROUP_IN',
+      },
+    ])
+
+    expect(parsed?.[0].groupNames).toEqual(['Group', 'GROUP_IN'])
+    expect(parsed?.[0].captureNames).toEqual(['to'])
+    expect(logger.warning).not.toHaveBeenCalled()
+  })
+
   it('accepts a rule that groups by a group_<name> capture group alone', () => {
     const parsed = parse([
       { pattern: '/^Bump .+ in (?<group_in>.+)$/', 'title-template': '$GROUP' },

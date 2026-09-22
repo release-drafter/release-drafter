@@ -42,8 +42,10 @@ export const generateChangeLog = (params: {
   if (totalPullRequestsInChangelog === 0) return config['no-changes-template']
   const changeLog: string[] = []
   // Grouping is applied per bucket so that a pull request matching several
-  // categories is merged with the other changes of each category separately.
-  const toChanges = (categoryPullRequests: PullRequest[]): ChangeGroup[] =>
+  // categories is grouped with the other changes of each category separately.
+  const toGroupedChanges = (
+    categoryPullRequests: PullRequest[],
+  ): ChangeGroup[] =>
     groupChanges({
       pullRequests: categoryPullRequests,
       rules: config['group-changes'],
@@ -53,7 +55,7 @@ export const generateChangeLog = (params: {
   if (uncategorizedPullRequests.length > 0) {
     changeLog.push(
       pullRequestToString({
-        changes: toChanges(uncategorizedPullRequests),
+        changes: toGroupedChanges(uncategorizedPullRequests),
         commits,
         serverUrl,
         config,
@@ -71,7 +73,7 @@ export const generateChangeLog = (params: {
       object: { $TITLE: category.title },
     })
     if (categoryTitle) changeLog.push(categoryTitle, '\n\n')
-    const changes = toChanges(category.pullRequests)
+    const changes = toGroupedChanges(category.pullRequests)
     const pullRequestString = pullRequestToString({
       category: category.title,
       changes,

@@ -929,7 +929,7 @@ var exclusiveConfigSchema = object({
 		replace: string().min(0)
 	})).optional().default([]),
 	/**
-	* Merge changes whose titles match the same `group` into a single changelog entry.
+	* Group changes whose titles share the same `group` into a single changelog entry.
 	*/
 	"group-changes": array(groupChangeSchema).optional().default([]),
 	/**
@@ -1485,7 +1485,7 @@ function parseCategories(categories, deprecatedConfig, logger) {
 /** Capture group names that `renderTemplate` can expand as `$FIRST_<NAME>`/`$LAST_<NAME>`. */
 var templatableName = /^[A-Za-z_]+$/;
 /** Capture group names that build the grouping key: `group` and every `group_<name>`. */
-var isGroupName = (name) => name === "group" || name.startsWith("group_");
+var isGroupName = (name) => /^group(_|$)/i.test(name);
 /**
 * Converts the configured `group-changes` patterns into regular expressions and
 * collects the capture group names their `title-template` can reference.

@@ -371,7 +371,7 @@ export const exclusiveConfigSchema = object({
     .default([]),
 
   /**
-   * Merge changes whose titles match the same `group` into a single changelog entry.
+   * Group changes whose titles share the same `group` into a single changelog entry.
    */
   'group-changes': array(groupChangeSchema).optional().default([]),
 

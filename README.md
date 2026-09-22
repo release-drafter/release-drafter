@@ -166,7 +166,7 @@ The `.github/release-drafter.yml` file supports these keys:
 | `new-contributor-template`       | Optional | The template to use for each new contributor in `$NEW_CONTRIBUTORS`. Use [new contributor template variables](#new-contributor-template-variables) to insert values. Default: `"* $AUTHOR_MENTION made their first contribution in #$NUMBER"`.                                                                                                                       |
 | `no-new-contributor-template`    | Optional | The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list. Default: `"* No new contributors"`.                                                                                                                                                                                                                                          |
 | `no-contributors-template`       | Optional | The template to use when `$CONTRIBUTORS` has no entries. Default: `"No contributors"`.                                                                                                                                                                                                                                                                               |
-| `group-changes`                  | Optional | Merges pull requests whose titles share the same `group` into a single changelog entry. See [Group changes](#group-changes).                                                                                                                                                                                                                                         |
+| `group-changes`                  | Optional | Groups pull requests whose titles share the same `group` into a single changelog entry. See [Group changes](#group-changes).                                                                                                                                                                                                                                         |
 | `replacers`                      | Optional | Searches and replaces content in the generated changelog body. See [Replacers](#replacers).                                                                                                                                                                                                                                                                          |
 | `sort-by`                        | Optional | Sorts the changelog by `merged_at` or `title`. Default: `merged_at`.                                                                                                                                                                                                                                                                                                 |
 | `sort-direction`                 | Optional | Sorts the changelog in `ascending` or `descending` order. Default: `descending`.                                                                                                                                                                                                                                                                                     |
@@ -321,8 +321,8 @@ Use these variables in `change-template`:
 
 | Variable         | Description                                                                                                                                                                                                                                                                                |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `$NUMBER`        | The pull request number. Example: `42`. For a [merged entry](#group-changes), the number of the newest pull request.                                                                                                                                                                       |
-| `$NUMBERS`       | Every pull request number of the entry, prefixed with `#` and separated with `, `, oldest first. Example: `#42`, or `#308, #310, #316` for a [merged entry](#group-changes).                                                                                                               |
+| `$NUMBER`        | The pull request number. Example: `42`. For a [grouped entry](#group-changes), the number of the newest pull request.                                                                                                                                                                      |
+| `$NUMBERS`       | Every pull request number of the entry, prefixed with `#` and separated with `, `, oldest first. Example: `#42`, or `#308, #310, #316` for a [grouped entry](#group-changes).                                                                                                              |
 | `$CATEGORY`      | The title of the category that matched the pull request, preserving its configured case. Empty for uncategorized pull requests.                                                                                                                                                            |
 | `$TITLE`         | The pull request title. Example: `Add alien technology`. Release Drafter prefixes characters in `change-title-escapes`, except `@` and `#`, with a backslash. Markdown then displays these characters as text. For `@` and `#`, Release Drafter adds an HTML comment to prevent a mention. |
 | `$AUTHOR`        | The pull request author's username. Example: `gracehopper`.                                                                                                                                                                                                                                |
@@ -556,7 +556,7 @@ exclude-contributors:
 
 ## Group changes
 
-Use `group-changes` to merge pull requests that repeatedly update the same thing
+Use `group-changes` to group pull requests that repeatedly update the same thing
 into a single changelog entry. A dependency that a bot bumps several times
 between releases then appears once, with the full version range and every pull
 request number:
@@ -581,7 +581,7 @@ and holds the value that changes are grouped by. Release Drafter skips a rule it
 cannot use and reports the reason in the action log.
 
 Add a `group_<name>` capture group for every further value that has to match
-before two pull requests are merged. A bump of the same dependency in another
+before two pull requests are grouped. A bump of the same dependency in another
 submodule then stays a change of its own:
 
 ```yml
@@ -595,12 +595,15 @@ group-changes:
 * Bump lib from 1.0.0 to 1.1.0 in /module-b (#42) @dependabot[bot]
 ```
 
-`title-template` builds `$TITLE` of a merged entry:
+An entry is one combination of the `group` value and every `group_<name>` value,
+so `lib` in `/module-a` and `lib` in `/module-b` stay two entries.
+
+`title-template` builds `$TITLE` of a grouped entry:
 
 | Variable        | Description                                                                      |
 | --------------- | -------------------------------------------------------------------------------- |
 | `$GROUP`        | The value of the `group` capture group.                                          |
-| `$GROUP_<NAME>` | The value of the `group_<name>` capture group.                                   |
+| `$GROUP_<NAME>` | The value of a corresponding `group_<name>` capture group.                       |
 | `$FIRST_<NAME>` | The value of the `<name>` capture group in the oldest pull request of the entry. |
 | `$LAST_<NAME>`  | The value of the `<name>` capture group in the newest pull request of the entry. |
 
@@ -612,9 +615,10 @@ pull request of the entry. A capture group that did not participate in the match
 holds an empty value, and a group that matches a single pull request keeps its
 original title.
 
-`collapse-after` counts entries, so merged changes count as one. Because
-`replacers` run on the finished changelog body, write `pattern` against the
-original pull request titles.
+`collapse-after` counts entries, so grouped changes count as one. Release
+Drafter matches `pattern` against the original pull request titles, before the
+changelog body exists. `replacers` run last, on the finished body, so their
+`search` sees the title that `title-template` built, not the original ones.
 
 ## Replacers
 

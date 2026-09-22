@@ -7,14 +7,14 @@ export type ChangeGroup = {
   pullRequests: PullRequest[]
   /** The newest member, used for every single-valued change template variable. */
   representative: PullRequest
-  /** The unescaped title: merged for several members, the original one otherwise. */
+  /** The unescaped title: built from `title-template` for several members, the original one otherwise. */
   title: string
 }
 
 /**
- * Merges pull requests whose titles match the same `group` of a `group-changes`
+ * Groups pull requests whose titles match the same `group` of a `group-changes`
  * rule into a single changelog entry. Pull requests are neither mutated nor
- * reordered: a merged entry takes the place of its newest member.
+ * reordered: a grouped entry takes the place of its newest member.
  */
 export const groupChanges = (params: {
   pullRequests: PullRequest[]
@@ -67,7 +67,7 @@ export const groupChanges = (params: {
         representative,
         title:
           grouped.length > 1 && rule
-            ? mergeTitle({ pullRequests: grouped, rule, logger })
+            ? groupTitle({ pullRequests: grouped, rule, logger })
             : representative.title,
       }
     })
@@ -80,7 +80,7 @@ export const groupChanges = (params: {
 
 /**
  * Finds the first rule that matches and reads its grouping values. Changes are
- * merged only when every grouping capture holds the same value, so a bump of
+ * grouped only when every grouping capture holds the same value, so a bump of
  * the same dependency in another submodule stays a change of its own.
  */
 const matchRule = (pullRequest: PullRequest, rules: ParsedGroupChange[]) => {
@@ -100,7 +100,7 @@ const byMergeOrder = (a: PullRequest, b: PullRequest) => {
   return a.number - b.number
 }
 
-const mergeTitle = (params: {
+const groupTitle = (params: {
   pullRequests: PullRequest[]
   rule: ParsedGroupChange
   logger?: Logger

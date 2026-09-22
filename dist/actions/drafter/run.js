@@ -521,9 +521,9 @@ var renderTemplate = (params) => {
 //#endregion
 //#region packages/core/src/release/group-changes.ts
 /**
-* Merges pull requests whose titles match the same `group` of a `group-changes`
+* Groups pull requests whose titles match the same `group` of a `group-changes`
 * rule into a single changelog entry. Pull requests are neither mutated nor
-* reordered: a merged entry takes the place of its newest member.
+* reordered: a grouped entry takes the place of its newest member.
 */
 var groupChanges = (params) => {
 	const { pullRequests, rules = [], logger } = params;
@@ -561,7 +561,7 @@ var groupChanges = (params) => {
 		return {
 			pullRequests: grouped,
 			representative,
-			title: grouped.length > 1 && rule ? mergeTitle({
+			title: grouped.length > 1 && rule ? groupTitle({
 				pullRequests: grouped,
 				rule,
 				logger
@@ -571,7 +571,7 @@ var groupChanges = (params) => {
 };
 /**
 * Finds the first rule that matches and reads its grouping values. Changes are
-* merged only when every grouping capture holds the same value, so a bump of
+* grouped only when every grouping capture holds the same value, so a bump of
 * the same dependency in another submodule stays a change of its own.
 */
 var matchRule = (pullRequest, rules) => {
@@ -591,7 +591,7 @@ var byMergeOrder = (a, b) => {
 	if (a.mergedAt && b.mergedAt && a.mergedAt !== b.mergedAt) return a.mergedAt < b.mergedAt ? -1 : 1;
 	return a.number - b.number;
 };
-var mergeTitle = (params) => {
+var groupTitle = (params) => {
 	const { pullRequests, rule, logger } = params;
 	const oldest = rule.pattern.exec(pullRequests[0].title)?.groups ?? {};
 	const newest = rule.pattern.exec(pullRequests[pullRequests.length - 1].title)?.groups ?? {};
@@ -761,13 +761,13 @@ var generateChangeLog = (params) => {
 	});
 	if (uncategorizedPullRequests.length + categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) === 0) return config["no-changes-template"];
 	const changeLog = [];
-	const toChanges = (categoryPullRequests) => groupChanges({
+	const toGroupedChanges = (categoryPullRequests) => groupChanges({
 		pullRequests: categoryPullRequests,
 		rules: config["group-changes"],
 		logger
 	});
 	if (uncategorizedPullRequests.length > 0) changeLog.push(pullRequestToString({
-		changes: toChanges(uncategorizedPullRequests),
+		changes: toGroupedChanges(uncategorizedPullRequests),
 		commits,
 		serverUrl,
 		config
@@ -779,7 +779,7 @@ var generateChangeLog = (params) => {
 			object: { $TITLE: category.title }
 		});
 		if (categoryTitle) changeLog.push(categoryTitle, "\n\n");
-		const changes = toChanges(category.pullRequests);
+		const changes = toGroupedChanges(category.pullRequests);
 		const pullRequestString = pullRequestToString({
 			category: category.title,
 			changes,
