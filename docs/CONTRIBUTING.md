@@ -121,11 +121,12 @@ the daemon is not available.
 
 The package-readiness workflow checks packaging only. It receives no
 credentials and runs npm in offline and dry-run modes. It disables provenance
-and grants only `contents: read`. It does not configure a registry or trusted
-publisher.
+and grants only `contents: read`.
 
-Do not add a live npm publication step. Do not make a scoped
-`@release-drafter/*` workspace publishable without an approved release plan.
+Only `.github/workflows/npm-publish.yml` may publish to npm. It uses npm trusted
+publishing with GitHub OIDC and the protected `npm` environment; it does not use
+a long-lived npm token. Do not make a scoped `@release-drafter/*` workspace
+publishable.
 
 ## Issue management policy
 
@@ -179,6 +180,12 @@ these tasks:
 - Publishes the release draft.
 - Updates the major version tag. For example, a `v6.2.1` tag moves `v6` to the
   same commit.
+
+The `npm-publish.yml` workflow also runs for the tag. After approval through the
+`npm` environment, it verifies that the tag and workspace versions match, runs
+the full checks and package-readiness suite, and publishes only the public
+`release-drafter` facade through npm trusted publishing. A maintainer can rerun
+publication for an existing tag with `workflow_dispatch` and the exact tag name.
 
 ## Resources
 

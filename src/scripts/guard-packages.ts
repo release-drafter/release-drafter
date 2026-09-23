@@ -36,7 +36,7 @@ export function collectWorkflowFailures(rootDir = '.') {
       join(rootDir, '.github/workflows', workflow),
       'utf8',
     )
-    if (npmPublicationPattern.test(contents))
+    if (workflow !== 'npm-publish.yml' && npmPublicationPattern.test(contents))
       failures.push(`${workflow} must not enable npm publication`)
     const parsedWorkflow = parse(contents) as Workflow
     for (const [jobName, job] of Object.entries(parsedWorkflow.jobs ?? {})) {
