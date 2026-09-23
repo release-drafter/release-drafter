@@ -1,0 +1,59 @@
+name: Publish npm Package
+
+on:
+  push:
+    tags:
+      - v*.*.*
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.repository == 'release-drafter/release-drafter'
+    environment: npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+
+      - name: Select the tested npm version
+        run: npm install --global npm@12.0.1 --ignore-scripts
+
+      - name: Verify release tag and package versions
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          root_version=$(node -p "require('./package.json').version")
+          package_version=$(node -p "require('./packages/release-drafter/package.json').version")
+          test "$RELEASE_TAG" = "v$root_version"
+          test "$package_version" = "$root_version"
+
+      - run: npm ci
+
+      - name: Run all checks and rebuild artifacts
+        run: npm run ci
+
+      - name: Verify package publication readiness
+        run: npm run test:package-readiness
+
+      - name: Check for clean working directory
+        run: npm run check:clean
+
+      - name: Publish release-drafter
+        working-directory: packages/release-drafter
+        run: npm publish --ignore-scripts

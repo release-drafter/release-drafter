@@ -278,6 +278,23 @@ describe('workspace foundation', () => {
     }
   })
 
+  it('allows npm publication only from the dedicated workflow', () => {
+    const fixtureRoot = mkdtempSync(
+      join(tmpdir(), 'release-drafter-workflows-'),
+    )
+    try {
+      mkdirSync(join(fixtureRoot, '.github/workflows'), { recursive: true })
+      writeFileSync(
+        join(fixtureRoot, '.github/workflows/npm-publish.yml'),
+        'name: publish\njobs:\n  publish:\n    steps:\n      - run: npm publish\n',
+      )
+
+      expect(collectWorkflowFailures(fixtureRoot)).toEqual([])
+    } finally {
+      rmSync(fixtureRoot, { force: true, recursive: true })
+    }
+  })
+
   it('requires every setup-node step to use the repository Node version', () => {
     const fixtureRoot = mkdtempSync(
       join(tmpdir(), 'release-drafter-workflows-'),
