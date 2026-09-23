@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+import { basename } from 'node:path'
 import { compareVersions } from 'compare-versions'
 import { coerce, normalizeRange, satisfies } from 'verkit'
 import { needsPullRequestChangedFiles } from './category-matching.ts'
@@ -168,6 +170,95 @@ export const buildReleasePlan = (params: {
     : { action: 'create' as const, releasePayload }
 }
 
+type ReleaseAsset = {
+  data: Uint8Array
+  name: string
+  path: string
+}
+
+/**
+ * Reads configured asset files from disk and verifies unique asset names and
+ * forge upload support before any release write, so a missing path or
+ * duplicate name fails the run without creating the release.
+ */
+const prepareReleaseAssets = async (params: {
+  adapter: ForgeAdapter
+  paths: string[]
+}): Promise<ReleaseAsset[]> => {
+  const { adapter, paths } = params
+  if (paths.length === 0) return []
+  // The capability flag and the method are two independent facts, so both are
+  // checked: an adapter that declares the capability without implementing the
+  // method must fail here rather than silently skipping every upload later.
+  if (
+    !adapter.capabilities.uploadReleaseAssets ||
+    adapter.uploadReleaseAsset === undefined
+  ) {
+    throw new Error(
+      'Release assets are configured, but this forge adapter cannot upload them.',
+    )
+  }
+  const assets: ReleaseAsset[] = []
+  const firstPathByName = new Map<string, string>()
+  for (const path of paths) {
+    const name = basename(path)
+    const firstPath = firstPathByName.get(name)
+    if (firstPath !== undefined) {
+      throw new Error(
+        `Duplicate release asset name "${name}" from paths "${firstPath}" and "${path}"; asset names must be unique.`,
+      )
+    }
+    firstPathByName.set(name, path)
+    try {
+      assets.push({ data: await readFile(path), name, path })
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
+        throw new Error(`Release asset file not found: "${path}"`)
+      }
+      throw new Error(
+        `Cannot read release asset "${path}": ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+  return assets
+}
+
+/**
+ * Uploads prepared assets after the plan executes. An absent release means the
+ * plan was a dry run, so each upload is logged instead. Forge support was
+ * already verified by `prepareReleaseAssets`.
+ */
+const uploadReleaseAssets = async (params: {
+  adapter: ForgeAdapter
+  assets: ReleaseAsset[]
+  logger: Logger
+  release?: Release
+  repository: Repository
+}): Promise<void> => {
+  const { adapter, assets, logger, release, repository } = params
+  if (assets.length === 0) return
+  if (!release) {
+    for (const { name, path } of assets) {
+      logger.info(
+        `[dry-run] Would upload release asset "${name}" from "${path}"`,
+      )
+    }
+    return
+  }
+  for (const { name, data } of assets) {
+    logger.info(`Uploading release asset "${name}"...`)
+    // Bound to the adapter: the method may live on the prototype, so calling a
+    // detached reference would lose `this`. `prepareReleaseAssets` already
+    // rejected an adapter that declares the capability without implementing it.
+    await adapter.uploadReleaseAsset?.({ repository, release, name, data })
+    logger.info(`Release asset "${name}" uploaded!`)
+  }
+}
+
 export const draftRelease = async (params: {
   adapter: ForgeAdapter
   config: ParsedConfig
@@ -254,10 +345,21 @@ export const draftRelease = async (params: {
     input,
     releasePayload,
   })
+  const releaseAssets = await prepareReleaseAssets({
+    adapter,
+    paths: input.assets ?? [],
+  })
   const release = await executeReleasePlan({
     adapter,
     logger,
     plan,
+    repository,
+  })
+  await uploadReleaseAssets({
+    adapter,
+    assets: releaseAssets,
+    logger,
+    release,
     repository,
   })
   return { plan, release, releasePayload }

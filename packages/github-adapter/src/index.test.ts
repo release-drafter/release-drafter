@@ -563,6 +563,74 @@ describe('GitHubAdapter', () => {
     })
   })
 
+  it('uploads a release asset through the release upload URL', async () => {
+    const octokit = mockOctokit({
+      request: vi.fn().mockResolvedValue({ status: 201 }),
+    })
+
+    await adapter(octokit).uploadReleaseAsset({
+      repository,
+      release: {
+        id: '42',
+        tagName: 'v2',
+        uploadUrl:
+          'https://uploads.github.com/repos/release-drafter/release-drafter/releases/42/assets{?name,label}',
+      },
+      name: 'app.zip',
+      data: new TextEncoder().encode('archive'),
+    })
+
+    expect(octokit.request).toHaveBeenCalledWith({
+      method: 'POST',
+      url: 'https://uploads.github.com/repos/release-drafter/release-drafter/releases/42/assets?name=app.zip',
+      headers: { 'content-type': 'application/octet-stream' },
+      data: expect.any(Uint8Array),
+    })
+  })
+
+  it('requires a release upload URL before uploading', async () => {
+    const octokit = mockOctokit({ request: vi.fn() })
+
+    await expect(
+      adapter(octokit).uploadReleaseAsset({
+        repository,
+        release: { id: '42', tagName: 'v2' },
+        name: 'app.zip',
+        data: new Uint8Array(),
+      }),
+    ).rejects.toThrow('Release 42 has no upload URL')
+
+    expect(octokit.request).not.toHaveBeenCalled()
+  })
+
+  it('sends the asset upload to the upload URL with authentication', async () => {
+    const uploadFetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(new Response('{}', { status: 201 }))
+    const github = new GitHubAdapter({ token: 'token', fetch: uploadFetch })
+
+    await github.uploadReleaseAsset({
+      repository,
+      release: {
+        id: '42',
+        tagName: 'v2',
+        uploadUrl:
+          'https://uploads.github.com/repos/release-drafter/release-drafter/releases/42/assets{?name,label}',
+      },
+      name: 'app.zip',
+      data: new TextEncoder().encode('archive'),
+    })
+
+    expect(uploadFetch).toHaveBeenCalledOnce()
+    const [url, init] = uploadFetch.mock.calls[0]
+    expect(String(url)).toBe(
+      'https://uploads.github.com/repos/release-drafter/release-drafter/releases/42/assets?name=app.zip',
+    )
+    const headers = new Headers(init?.headers)
+    expect(headers.get('content-type')).toBe('application/octet-stream')
+    expect(headers.get('authorization')).toBe('token token')
+  })
+
   it('resolves branch, annotated tag, and pull request refs compatibly', async () => {
     const octokit = mockOctokit()
     vi.mocked(octokit.graphql)

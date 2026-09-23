@@ -137,6 +137,21 @@ describe('draftRelease', () => {
     expect(coreDraftRelease).toHaveBeenCalledWith({ ...options, logger })
   })
 
+  it('passes release asset paths through to the core contract', async () => {
+    const input = {
+      ...options.input,
+      assets: ['dist/app.zip', 'dist/app.tgz'],
+    }
+
+    await draftRelease({ ...options, input })
+
+    expect(coreDraftRelease).toHaveBeenCalledWith({
+      ...options,
+      input,
+      logger: expect.objectContaining({ info: expect.any(Function) }),
+    })
+  })
+
   it('exposes self-contained forge-neutral input and output types', () => {
     expectTypeOf(draftRelease).parameter(0).toEqualTypeOf<DraftReleaseOptions>()
     expectTypeOf(draftRelease).returns.toEqualTypeOf<

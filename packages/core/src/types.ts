@@ -85,6 +85,8 @@ export type Repository = {
 
 export type ForgeCapabilities = {
   draftReleases: boolean
+  /** Adapters without release-asset support leave this unset. */
+  uploadReleaseAssets?: boolean
 }
 
 export type RefComparison = {
@@ -140,6 +142,13 @@ export type UpdateReleaseRequest = {
   repository: Repository
   release: Release
   payload: ReleasePayload
+}
+
+export type UploadReleaseAssetRequest = {
+  repository: Repository
+  release: Release
+  name: string
+  data: Uint8Array
 }
 
 export type ParsedChangeCondition = Omit<
@@ -220,6 +229,8 @@ export type ReleaseInput = {
   name?: string
   tag?: string
   version?: string
+  /** File paths to upload to the release after it is created or updated. */
+  assets?: string[]
   publish: boolean
   dryRun?: boolean
 }

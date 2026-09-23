@@ -38,4 +38,26 @@ describe('Drafter action input mapping', () => {
       dryRun: true,
     })
   })
+
+  it('splits a comma- or newline-separated assets input into unique paths', () => {
+    const releaseInput = toReleaseInput({
+      'config-name': 'release-drafter.yml',
+      assets: 'dist/app.zip\n dist/app.tgz, dist/app.zip\r\n',
+      publish: false,
+      token: 'token',
+    } as ActionInput)
+
+    expect(releaseInput.assets).toEqual(['dist/app.zip', 'dist/app.tgz'])
+    expect(releaseInput.publish).toBe(false)
+  })
+
+  it('omits the assets key when the input is not configured', () => {
+    expect(
+      toReleaseInput({
+        'config-name': 'release-drafter.yml',
+        publish: false,
+        token: 'token',
+      } as ActionInput).assets,
+    ).toBeUndefined()
+  })
 })
