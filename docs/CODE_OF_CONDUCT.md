@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD038 -->
+
 # Contributor Covenant Code of Conduct
 
 ## Our Pledge
@@ -43,6 +45,24 @@ not aligned to this Code of Conduct, or to ban temporarily or permanently any
 contributor for other behaviors that they deem inappropriate, threatening,
 offensive, or harmful.
 
+## AI Coding Assistant Policy
+
+Contributors can use whatever tool they see fit to craft their contributions - but there must be a **human in the loop**.
+
+**Contributors must read and review all LLM-generated code or text before they ask other project members to review it.**
+
+> [!IMPORTANT]
+> Generating a change cheaply does not make reviewing it cheap. It takes a lot of maintainer time and energy to review those contributions.
+>
+> A contribution should create more value than the review work it imposes.
+
+The code must still follow coding standards, be written clearly, be documented, feature test cases and adhere to all the normal requirements we have.
+
+Contributors are expected to be transparent and label contributions that contain substantial amounts of tool-generated content. Our policy on labelling is intended to facilitate reviews, and not to track which parts of LLVM are generated. Contributors should note tool usage in their pull request description, commit message, or wherever authorship is normally indicated for the work. For instance, use a commit message trailer like `Assisted-by: ` or `Generated-by: `. This transparency helps the community develop best practices and understand the role of these new tools.
+
+> [!WARNING]
+> Maintainers are the only judges on whether a contribution complies with the above - and may dismiss contributions that do not comply.
+
 ## Scope
 
 This Code of Conduct applies both within project spaces and in public spaces
@@ -68,7 +88,9 @@ members of the project's leadership.
 ## Attribution
 
 This Code of Conduct is adapted from the [Contributor Covenant][homepage],
-version 1.4, available at [http://contributor-covenant.org/version/1/4][version]
+version 1.4, available at [contributor-covenant.org/version/1/4][version]
+
+AI policy was inspired from [curl's](https://curl.se/dev/contribute.html#on-ai-use-in-curl) and [LLVM's](https://llvm.org/docs/AIToolPolicy.html) policies (as of 09/2026).
 
 [homepage]: http://contributor-covenant.org
 [version]: http://contributor-covenant.org/version/1/4/
