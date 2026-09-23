@@ -108,6 +108,11 @@ const drafterInputs = defineActionInputs<DrafterActionInput>()({
     required: false,
     default: '',
   },
+  assets: {
+    description:
+      'File paths to upload to the release after it is created or updated.\nSeparate multiple paths with commas or newlines. Paths are relative to the working directory.\n',
+    required: false,
+  },
 })
 
 const drafterOutputs = {

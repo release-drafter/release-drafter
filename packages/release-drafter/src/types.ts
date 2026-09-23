@@ -123,6 +123,13 @@ export interface UpdateReleaseRequest {
   payload: ReleasePayload
 }
 
+export interface UploadReleaseAssetRequest {
+  repository: Repository
+  release: Release
+  name: string
+  data: Uint8Array
+}
+
 /**
  * Forge operations required by Release Drafter.
  *
@@ -132,12 +139,20 @@ export interface UpdateReleaseRequest {
 export interface ForgeAdapter {
   readonly capabilities: {
     draftReleases: boolean
+    /** Adapters without release-asset support leave this unset. */
+    uploadReleaseAssets?: boolean
   }
   listReleases(params: ListReleasesRequest): Promise<Release[]>
   findChanges(params: FindChangesRequest): Promise<ChangeSet>
   resolveCommitish(params: ResolveCommitishRequest): Promise<string>
   createRelease(params: CreateReleaseRequest): Promise<Release>
   updateRelease(params: UpdateReleaseRequest): Promise<Release>
+  /**
+   * Uploads a file to an existing release as a release asset.
+   *
+   * Adapters for forges without release assets omit this method.
+   */
+  uploadReleaseAsset?(params: UploadReleaseAssetRequest): Promise<void>
 }
 
 export type ForgeName = 'github' | 'gitea' | 'forgejo' | 'gitlab'
@@ -294,6 +309,8 @@ export interface ReleaseInput {
   name?: string
   tag?: string
   version?: string
+  /** File paths to upload to the release after it is created or updated. */
+  assets?: string[]
   publish: boolean
   dryRun?: boolean
 }

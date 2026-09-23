@@ -9,6 +9,7 @@ import type {
   Release,
   ResolveCommitishRequest,
   UpdateReleaseRequest,
+  UploadReleaseAssetRequest,
 } from './types.ts'
 
 export type { Repository } from './types.ts'
@@ -34,6 +35,12 @@ export interface ForgeAdapter {
   resolveCommitish(params: ResolveCommitishRequest): Promise<string>
   createRelease(params: CreateReleaseRequest): Promise<Release>
   updateRelease(params: UpdateReleaseRequest): Promise<Release>
+  /**
+   * Uploads a file to an existing release as a release asset.
+   *
+   * Adapters for forges without release assets omit this method.
+   */
+  uploadReleaseAsset?(params: UploadReleaseAssetRequest): Promise<void>
 }
 
 export interface PullRequestReader {

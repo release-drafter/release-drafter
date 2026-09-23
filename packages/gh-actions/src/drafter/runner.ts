@@ -15,11 +15,24 @@ import { getActionInput } from './get-action-inputs.ts'
 import { getConfig } from './get-config.ts'
 import { setActionOutput } from './set-action-output.ts'
 
+/** Split a comma- or newline-separated assets input into unique file paths. */
+const parseAssetPaths = (value: string): string[] => [
+  ...new Set(
+    value
+      .split(/[\n,]/)
+      .map((path) => path.trim())
+      .filter(Boolean),
+  ),
+]
+
 export const toReleaseInput = (input: ActionInput): ReleaseInput => ({
   ...(input.from !== undefined ? { from: input.from } : {}),
   ...(input.name !== undefined ? { name: input.name } : {}),
   ...(input.tag !== undefined ? { tag: input.tag } : {}),
   ...(input.version !== undefined ? { version: input.version } : {}),
+  ...(input.assets !== undefined
+    ? { assets: parseAssetPaths(input.assets) }
+    : {}),
   publish: input.publish,
   ...(input['dry-run'] !== undefined ? { dryRun: input['dry-run'] } : {}),
 })

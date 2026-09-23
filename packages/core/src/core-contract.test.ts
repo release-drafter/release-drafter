@@ -1,3 +1,6 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { evaluateCategories } from './category-matching.ts'
 import { configSchema, mergeInputAndConfig } from './config/index.ts'
@@ -104,8 +107,12 @@ const orchestrationConfig = () =>
 const adapter = (params: {
   draftReleases: boolean
   releases: Release[]
+  uploadReleaseAssets?: boolean
 }): ForgeAdapter => ({
-  capabilities: { draftReleases: params.draftReleases },
+  capabilities: {
+    draftReleases: params.draftReleases,
+    uploadReleaseAssets: params.uploadReleaseAssets ?? true,
+  },
   listReleases: vi.fn().mockResolvedValue(params.releases),
   findChanges: vi.fn().mockResolvedValue({
     commits: [],
@@ -125,6 +132,7 @@ const adapter = (params: {
     .mockImplementation(({ release: existingRelease }) =>
       Promise.resolve(existingRelease),
     ),
+  uploadReleaseAsset: vi.fn().mockResolvedValue(undefined),
 })
 
 describe('evaluateCategories', () => {
@@ -568,5 +576,201 @@ describe('draftRelease', () => {
         .mocked(forge.resolveCommitish)
         .mock.calls.map(([request]) => request.repository),
     ).toEqual(repositories)
+  })
+})
+
+describe('release asset uploads', () => {
+  const repository = {
+    owner: 'release-drafter',
+    name: 'release-drafter',
+    serverUrl: 'https://github.com',
+  }
+  const writeAssets = async (...names: string[]) => {
+    const directory = await mkdtemp(join(tmpdir(), 'release-drafter-assets-'))
+    await Promise.all(
+      names.map((name) =>
+        writeFile(join(directory, name), `contents of ${name}`),
+      ),
+    )
+    return directory
+  }
+  const uploadRequests = (forge: ForgeAdapter) =>
+    vi
+      .mocked(
+        forge.uploadReleaseAsset as NonNullable<
+          ForgeAdapter['uploadReleaseAsset']
+        >,
+      )
+      .mock.calls.map(([request]) => request)
+
+  it('uploads every configured asset after the release is written', async () => {
+    const directory = await writeAssets('one.txt', 'two.txt')
+    try {
+      const forge = adapter({ draftReleases: true, releases: [] })
+
+      const result = await draftRelease({
+        adapter: forge,
+        config: orchestrationConfig(),
+        input: {
+          publish: false,
+          assets: [join(directory, 'one.txt'), join(directory, 'two.txt')],
+        },
+        logger,
+        repository,
+      })
+
+      expect(result.plan.action).toBe('create')
+      const requests = uploadRequests(forge)
+      expect(requests.map(({ name }) => name)).toEqual(['one.txt', 'two.txt'])
+      expect(
+        requests.map(({ data }) => new TextDecoder().decode(data)),
+      ).toEqual(['contents of one.txt', 'contents of two.txt'])
+      expect(requests[0].repository).toBe(repository)
+      expect(requests[0].release).toEqual(
+        expect.objectContaining({ id: 'created' }),
+      )
+      expect(logger.info).toHaveBeenCalledWith(
+        'Release asset "two.txt" uploaded!',
+      )
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('does not upload anything when no assets are configured', async () => {
+    const forge = adapter({ draftReleases: true, releases: [] })
+
+    await draftRelease({
+      adapter: forge,
+      config: orchestrationConfig(),
+      input: { publish: false },
+      logger,
+      repository,
+    })
+
+    expect(forge.createRelease).toHaveBeenCalled()
+    expect(forge.uploadReleaseAsset).not.toHaveBeenCalled()
+  })
+
+  it('fails before writing the release when a configured file does not exist', async () => {
+    const forge = adapter({ draftReleases: true, releases: [] })
+
+    await expect(
+      draftRelease({
+        adapter: forge,
+        config: orchestrationConfig(),
+        input: { publish: false, assets: ['missing-release-asset.bin'] },
+        logger,
+        repository,
+      }),
+    ).rejects.toThrow(
+      'Release asset file not found: "missing-release-asset.bin"',
+    )
+
+    expect(forge.createRelease).not.toHaveBeenCalled()
+    expect(forge.uploadReleaseAsset).not.toHaveBeenCalled()
+  })
+
+  it('fails before writing the release when two paths share an asset name', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'release-drafter-assets-'))
+    try {
+      await mkdir(join(directory, 'first'))
+      await mkdir(join(directory, 'second'))
+      const first = join(directory, 'first', 'x.zip')
+      const second = join(directory, 'second', 'x.zip')
+      await writeFile(first, 'first contents')
+      await writeFile(second, 'second contents')
+      const forge = adapter({ draftReleases: true, releases: [] })
+
+      await expect(
+        draftRelease({
+          adapter: forge,
+          config: orchestrationConfig(),
+          input: { publish: false, assets: [first, second] },
+          logger,
+          repository,
+        }),
+      ).rejects.toThrow(
+        `Duplicate release asset name "x.zip" from paths "${first}" and "${second}"; asset names must be unique.`,
+      )
+
+      expect(forge.createRelease).not.toHaveBeenCalled()
+      expect(forge.uploadReleaseAsset).not.toHaveBeenCalled()
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('logs configured assets instead of uploading during dry-run', async () => {
+    const directory = await writeAssets('asset.txt')
+    try {
+      const forge = adapter({
+        draftReleases: true,
+        releases: [release({ tagName: 'v1.0.0' })],
+      })
+
+      await draftRelease({
+        adapter: forge,
+        config: orchestrationConfig(),
+        input: {
+          publish: false,
+          dryRun: true,
+          assets: [join(directory, 'asset.txt')],
+        },
+        logger,
+        repository,
+      })
+
+      expect(forge.createRelease).not.toHaveBeenCalled()
+      expect(forge.updateRelease).not.toHaveBeenCalled()
+      expect(forge.uploadReleaseAsset).not.toHaveBeenCalled()
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining(
+          '[dry-run] Would upload release asset "asset.txt"',
+        ),
+      )
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects assets when the forge adapter cannot upload them', async () => {
+    const forge = adapter({
+      draftReleases: true,
+      releases: [],
+      uploadReleaseAssets: false,
+    })
+
+    await expect(
+      draftRelease({
+        adapter: forge,
+        config: orchestrationConfig(),
+        input: { publish: false, assets: ['any-file.bin'] },
+        logger,
+        repository,
+      }),
+    ).rejects.toThrow('this forge adapter cannot upload them')
+
+    expect(forge.createRelease).not.toHaveBeenCalled()
+  })
+
+  it('rejects assets when the capability is declared but the method is missing', async () => {
+    // The capability flag and the method are independent facts: an adapter that
+    // claims support without implementing it must fail rather than log uploads
+    // that never happen.
+    const forge = adapter({ draftReleases: true, releases: [] })
+    delete (forge as { uploadReleaseAsset?: unknown }).uploadReleaseAsset
+
+    await expect(
+      draftRelease({
+        adapter: forge,
+        config: orchestrationConfig(),
+        input: { publish: false, assets: ['any-file.bin'] },
+        logger,
+        repository,
+      }),
+    ).rejects.toThrow('this forge adapter cannot upload them')
+
+    expect(forge.createRelease).not.toHaveBeenCalled()
   })
 })

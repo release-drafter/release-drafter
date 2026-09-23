@@ -11,6 +11,7 @@ import type {
   Repository,
   ResolveCommitishRequest,
   UpdateReleaseRequest,
+  UploadReleaseAssetRequest,
 } from '@release-drafter/core'
 import { noopLogger } from '@release-drafter/core'
 import {
@@ -51,7 +52,10 @@ const RECENT_PULL_REQUEST_LOOKBACK = 5
 const DEFAULT_CONCURRENCY = 5
 
 export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
-  readonly capabilities = { draftReleases: true } as const
+  readonly capabilities = {
+    draftReleases: true,
+    uploadReleaseAssets: true,
+  } as const
   readonly serverUrl: string
   readonly apiUrl: string
   readonly graphqlUrl: string
@@ -599,6 +603,29 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
         : {}),
     })
     return normalizeRelease(response.data)
+  }
+
+  async uploadReleaseAsset({
+    release,
+    name,
+    data,
+  }: UploadReleaseAssetRequest): Promise<void> {
+    if (!release.uploadUrl) {
+      throw new Error(
+        `Release ${release.id} has no upload URL; cannot upload asset "${name}"`,
+      )
+    }
+    // Releases carry a templated upload_url (for example `...assets{?name,label}`)
+    // that points at the forge's asset upload endpoint; expand it with the
+    // asset name instead of guessing an API path.
+    const url = new URL(release.uploadUrl.replace(/\{\?.*\}$/, ''))
+    url.searchParams.set('name', name)
+    await this.octokit.request({
+      method: 'POST',
+      url: url.toString(),
+      headers: { 'content-type': 'application/octet-stream' },
+      data,
+    })
   }
 
   async getRepositoryConfig({

@@ -776,6 +776,7 @@ corresponding values in `release-drafter.yml`.
 | `version`               | Overrides the version that Release Drafter calculates.                                                                                                                                                                                         |
 | `from`                  | Ref, tag, branch, or commit SHA to use as the change comparison baseline. This value does not select the release version or the draft release to update.                                                                                       |
 | `publish`               | Publishes the created or updated release immediately. Set it from an earlier version-detection step, such as [`salsify/action-detect-and-tag-new-version`](https://github.com/salsify/action-detect-and-tag-new-version).                      |
+| `assets`                | File paths to upload to the release after it is created or updated. Separate multiple paths with commas or newlines. Paths are relative to the working directory. See [Uploading release assets](#uploading-release-assets).                   |
 | `prerelease`            | Creates a prerelease and includes changes since the previous prerelease when one exists. Default: `false`.                                                                                                                                     |
 | `prerelease-identifier` | Sets the prerelease identifier, such as `alpha`, `beta`, or `rc`. This input enables `prerelease`. Default: `''`.                                                                                                                              |
 | `include-pre-releases`  | Includes prereleases when Release Drafter selects the last published release. This input has no effect when `prerelease` is `true`. Default: `false`.                                                                                          |
@@ -800,6 +801,32 @@ The Release Drafter action sets outputs for later workflow steps.
 | `major_version`    | Major component of the resolved version. Example: `6` for `6.3.1`.                                      |
 | `minor_version`    | Minor component of the resolved version. Example: `3` for `6.3.1`.                                      |
 | `patch_version`    | Patch component of the resolved version. Example: `1` for `6.3.1`.                                      |
+
+## Uploading release assets
+
+Set the `assets` input to upload files to the release after Release Drafter
+creates or updates it:
+
+```yaml
+- uses: release-drafter/release-drafter@v7
+  with:
+    publish: true
+    assets: |
+      dist/app.zip
+      dist/app.tar.gz
+```
+
+Each path is resolved from the workflow working directory and uploaded under
+its file name. Separate multiple paths with commas or newlines. The action
+fails when a configured path does not exist, and `dry-run` logs the resolved
+paths without uploading.
+
+Paths are literal: glob patterns are not expanded. Assets are currently
+uploaded only by the GitHub adapter; the Gitea, Forgejo, and GitLab adapters
+fail with a clear error when `assets` is configured. Re-running against a
+release that already has an asset with the same name does not replace it; the
+run fails after the release has been written. Asset uploads are not labeled;
+the `?label=` upload parameter is unused.
 
 ## GitHub Enterprise Server (GHES)
 

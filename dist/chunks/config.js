@@ -11,8 +11,8 @@ import * as events from "node:events";
 import { StringDecoder } from "node:string_decoder";
 import * as child from "node:child_process";
 import { setTimeout as setTimeout$1 } from "node:timers";
-import process$1 from "node:process";
 import path, { basename, dirname, isAbsolute, join, normalize } from "node:path";
+import process$1 from "node:process";
 import { existsSync as existsSync$1, readFileSync as readFileSync$1 } from "node:fs";
 //#region \0rolldown/runtime.js
 var __create = Object.create;
@@ -50926,7 +50926,10 @@ var RELEASE_COUNT_LIMIT = 1e3;
 var RECENT_PULL_REQUEST_LOOKBACK = 5;
 var DEFAULT_CONCURRENCY = 5;
 var GitHubAdapter = class {
-	capabilities = { draftReleases: true };
+	capabilities = {
+		draftReleases: true,
+		uploadReleaseAssets: true
+	};
 	serverUrl;
 	apiUrl;
 	graphqlUrl;
@@ -51221,6 +51224,17 @@ var GitHubAdapter = class {
 			...payload.tag || release.tagName ? { tag_name: payload.tag || release.tagName } : {},
 			...payload.targetCommitish ? { target_commitish: payload.targetCommitish } : {}
 		})).data);
+	}
+	async uploadReleaseAsset({ release, name, data }) {
+		if (!release.uploadUrl) throw new Error(`Release ${release.id} has no upload URL; cannot upload asset "${name}"`);
+		const url = new URL(release.uploadUrl.replace(/\{\?.*\}$/, ""));
+		url.searchParams.set("name", name);
+		await this.octokit.request({
+			method: "POST",
+			url: url.toString(),
+			headers: { "content-type": "application/octet-stream" },
+			data
+		});
 	}
 	async getRepositoryConfig({ repository, path, ref }) {
 		const target = `${repository.owner}/${repository.name}:${path}${ref ? `@${ref}` : ""}`;
