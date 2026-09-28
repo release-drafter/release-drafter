@@ -3,11 +3,25 @@
 [fork]: https://github.com/release-drafter/release-drafter/fork
 [pr]: https://github.com/release-drafter/release-drafter/compare
 [code-of-conduct]: CODE_OF_CONDUCT.md
+[license]: ../LICENSE
 
 Thank you for contributing to Release Drafter.
 
 This project uses a [Contributor Code of Conduct][code-of-conduct]. All
 contributors must follow it.
+
+By submitting a contribution, you agree that it may be distributed under the
+project's [ISC license][license]. You are responsible for reviewing your
+submission, including content produced with AI-assisted tools, and for ensuring
+that you have the right to submit it.
+
+When you open your first pull request, a bot will ask you to acknowledge these
+contribution policies. After reading this guide, the Code of Conduct, and the
+license, reply to the bot with exactly:
+
+> I have read and agree to the Release Drafter contribution policies.
+
+The pull request cannot be merged until this acknowledgement is recorded.
 
 ## Submitting a pull request
 
