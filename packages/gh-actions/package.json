@@ -68,6 +68,6 @@
     "@octokit/webhooks-types": "^7.6.1",
     "vitest": "^4.1.10"
   },
-  "license": "MIT",
+  "license": "ISC",
   "private": true
 }

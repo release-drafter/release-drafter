@@ -62,7 +62,7 @@
     "version": "node src/scripts/sync-workspace-versions.ts && npm install --package-lock-only --ignore-scripts && git add package.json package-lock.json packages/*/package.json",
     "postversion": "git push && git push origin v$npm_package_version"
   },
-  "license": "MIT",
+  "license": "ISC",
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",

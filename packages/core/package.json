@@ -33,7 +33,7 @@
     "verkit": "0.4.0",
     "zod": "^4.4.3"
   },
-  "license": "MIT",
+  "license": "ISC",
   "devDependencies": {
     "vitest": "^4.1.10"
   },

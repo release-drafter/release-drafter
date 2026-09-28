@@ -24,7 +24,7 @@
     "test:run": "vitest run --config ../../vite.workspace.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
-  "license": "MIT",
+  "license": "ISC",
   "private": true,
   "dependencies": {
     "@release-drafter/core": "*"
