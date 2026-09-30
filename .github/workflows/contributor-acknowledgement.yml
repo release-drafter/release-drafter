@@ -1,0 +1,137 @@
+name: Contributor Acknowledgement
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+  issue_comment:
+    types:
+      - created
+      - edited
+      - deleted
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  acknowledgement:
+    if: >-
+      github.event_name == 'pull_request_target' ||
+      (github.event.issue.pull_request &&
+      github.event.issue.state == 'open' &&
+      github.event.comment.user.login == github.event.issue.user.login &&
+      (((github.event.action == 'created' || github.event.action == 'deleted') &&
+      contains(github.event.comment.body, 'I have read and agree to the Release Drafter contribution policies.')) ||
+      (github.event.action == 'edited' &&
+      (contains(github.event.comment.body, 'I have read and agree to the Release Drafter contribution policies.') ||
+      contains(github.event.changes.body.from, 'I have read and agree to the Release Drafter contribution policies.')))))
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Check acknowledgement
+        id: acknowledgement
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const pullNumber = context.payload.pull_request?.number ?? context.payload.issue.number
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: pullNumber,
+            })
+            const establishedAssociations = new Set([
+              'COLLABORATOR',
+              'CONTRIBUTOR',
+              'MEMBER',
+              'OWNER',
+            ])
+            const required = pull.user.type !== 'Bot' &&
+              !establishedAssociations.has(pull.author_association)
+            let acknowledged = false
+
+            if (required) {
+              const phrase = 'I have read and agree to the Release Drafter contribution policies.'
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                ...context.repo,
+                issue_number: pullNumber,
+                per_page: 100,
+              })
+              acknowledged = comments.some(comment =>
+                comment.user?.login === pull.user.login && comment.body?.trim() === phrase
+              )
+            }
+
+            core.setOutput('acknowledged', acknowledged)
+            core.setOutput('pull-number', pullNumber)
+            core.setOutput('required', required)
+
+      - name: Request acknowledgement
+        if: steps.acknowledgement.outputs.required == 'true' && steps.acknowledgement.outputs.acknowledged != 'true'
+        uses: marocchino/sticky-pull-request-comment@28ad303d6acb4ccfc50f20c0044188e7e294b8c4 # v3
+        with:
+          header: contributor-acknowledgement
+          number_force: ${{ steps.acknowledgement.outputs.pull-number }}
+          only_create: true
+          message: |
+            Thanks for contributing to Release Drafter. Before this pull request can be merged, please read our:
+
+            - [Contribution guide](https://github.com/release-drafter/release-drafter/blob/main/docs/CONTRIBUTING.md)
+            - [Code of Conduct and AI-assistance policy](https://github.com/release-drafter/release-drafter/blob/main/docs/CODE_OF_CONDUCT.md)
+            - [ISC license](https://github.com/release-drafter/release-drafter/blob/main/LICENSE)
+
+            Then post this exact comment:
+
+            > I have read and agree to the Release Drafter contribution policies.
+
+      - name: Update acknowledgement state
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          ACKNOWLEDGED: ${{ steps.acknowledgement.outputs.acknowledged }}
+          PULL_NUMBER: ${{ steps.acknowledgement.outputs.pull-number }}
+          REQUIRED: ${{ steps.acknowledgement.outputs.required }}
+        with:
+          script: |
+            const label = 'awaiting-acknowledgement'
+            const required = process.env.REQUIRED === 'true'
+            const acknowledged = process.env.ACKNOWLEDGED === 'true'
+            const pending = required && !acknowledged
+
+            if (pending) {
+              try {
+                await github.rest.issues.getLabel({ ...context.repo, name: label })
+              } catch (error) {
+                if (error.status !== 404) throw error
+                await github.rest.issues.createLabel({
+                  ...context.repo,
+                  name: label,
+                  color: 'd93f0b',
+                  description: 'Waiting for the contributor to acknowledge project policies',
+                })
+              }
+              await github.rest.issues.addLabels({
+                ...context.repo,
+                issue_number: Number(process.env.PULL_NUMBER),
+                labels: [label],
+              })
+            } else {
+              for (const name of [label, 'stale-awaiting-acknowledgement']) {
+                await github.rest.issues.removeLabel({
+                  ...context.repo,
+                  issue_number: Number(process.env.PULL_NUMBER),
+                  name,
+                }).catch(error => {
+                  if (error.status !== 404) throw error
+                })
+              }
+            }
+
+      - name: Enforce acknowledgement
+        if: steps.acknowledgement.outputs.required == 'true' && steps.acknowledgement.outputs.acknowledged != 'true'
+        run: exit 1
