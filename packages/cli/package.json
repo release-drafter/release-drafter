@@ -31,7 +31,7 @@
     "@release-drafter/gitlab-adapter": "*",
     "@release-drafter/github-adapter": "*",
     "@release-drafter/rest-adapter": "*",
-    "yaml": "^2.9.0",
+    "yaml": "^2.9.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
