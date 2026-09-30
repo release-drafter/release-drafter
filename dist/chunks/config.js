@@ -27567,8 +27567,8 @@ var import_light = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((expo
 				});
 			}
 			getFirst(arr = this._lists) {
-				var j, len, list;
-				for (j = 0, len = arr.length; j < len; j++) {
+				var j = 0, len = arr.length, list;
+				for (; j < len; j++) {
 					list = arr[j];
 					if (list.length > 0) return list;
 				}
