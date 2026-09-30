@@ -85,7 +85,7 @@
     "@types/node": "^24.13.6",
     "@vitest/coverage-v8": "^4.1.11",
     "dependency-cruiser": "18.1.0",
-    "knip": "6.29.0",
+    "knip": "6.38.0",
     "nock": "^14.0.17",
     "prettier": "^3.9.9",
     "rolldown-plugin-dts": "^0.28.6",
