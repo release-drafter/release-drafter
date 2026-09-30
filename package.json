@@ -77,10 +77,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
-    "@graphql-codegen/cli": "^7.2.0",
+    "@graphql-codegen/cli": "^7.4.2",
     "@graphql-codegen/typed-document-node": "^7.1.0",
     "@graphql-codegen/typescript": "^6.1.0",
-    "@graphql-codegen/typescript-operations": "^6.1.0",
+    "@graphql-codegen/typescript-operations": "^6.1.7",
     "@swc/core": "1.16.2",
     "@types/node": "^24.13.6",
     "@vitest/coverage-v8": "^4.1.11",
