@@ -150,4 +150,57 @@ describe('npm package readiness', () => {
     ).toBeDefined()
     expect(steps.find(({ run }) => run === 'npm run check:clean')).toBeDefined()
   })
+
+  it('publishes only the tagged facade through trusted publishing', () => {
+    const contents = readFileSync(
+      join(repositoryRoot, '.github/workflows/npm-publish.yml'),
+      'utf8',
+    )
+    const workflow = parseYaml(contents) as {
+      on?: Record<string, unknown>
+      permissions?: Record<string, string>
+      jobs?: Record<
+        string,
+        {
+          environment?: string
+          steps?: Array<{
+            run?: string
+            uses?: string
+            with?: Record<string, unknown>
+            'working-directory'?: string
+          }>
+        }
+      >
+    }
+    const job = workflow.jobs?.publish
+    const steps = job?.steps ?? []
+
+    expect(Object.keys(workflow.on ?? {}).sort()).toEqual([
+      'push',
+      'workflow_dispatch',
+    ])
+    expect(workflow.on?.push).toEqual({ tags: ['v*.*.*'] })
+    expect(workflow.permissions).toEqual({
+      contents: 'read',
+      'id-token': 'write',
+    })
+    expect(job?.environment).toBe('npm')
+    expect(steps.flatMap(({ uses }) => (uses ? [uses] : []))).toEqual([
+      'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0',
+      'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020',
+    ])
+    expect(steps.find(({ run }) => run === 'npm run ci')).toBeDefined()
+    expect(
+      steps.find(({ run }) => run === 'npm run test:package-readiness'),
+    ).toBeDefined()
+    expect(steps.find(({ run }) => run === 'npm run check:clean')).toBeDefined()
+    expect(
+      steps.find(
+        (step) =>
+          step.run === 'npm publish --ignore-scripts' &&
+          step['working-directory'] === 'packages/release-drafter',
+      ),
+    ).toBeDefined()
+    expect(contents).not.toMatch(/NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./u)
+  })
 })
