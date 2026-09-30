@@ -28,7 +28,7 @@
   "dependencies": {
     "escape-string-regexp": "^5.0.0",
     "minimatch": "^10.2.6",
-    "yaml": "^2.9.0",
+    "yaml": "^2.9.1",
     "zod": "^4.4.3"
   },
   "license": "ISC",
