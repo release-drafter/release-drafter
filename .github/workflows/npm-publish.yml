@@ -1,9 +1,8 @@
 name: Publish npm Package
 
 on:
-  push:
-    tags:
-      - v*.*.*
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -25,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
@@ -36,7 +35,7 @@ jobs:
 
       - name: Verify release tag and package versions
         env:
-          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
         run: |
           root_version=$(node -p "require('./package.json').version")
           package_version=$(node -p "require('./packages/release-drafter/package.json').version")
@@ -54,6 +53,6 @@ jobs:
       - name: Check for clean working directory
         run: npm run check:clean
 
-      - name: Publish release-drafter
+      - name: Stage release-drafter for npm approval
         working-directory: packages/release-drafter
-        run: npm publish --ignore-scripts
+        run: npm stage publish --ignore-scripts

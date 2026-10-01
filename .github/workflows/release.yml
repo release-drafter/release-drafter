@@ -1,21 +1,39 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - v*.*.*
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'auto uses Release Drafter; otherwise patch, minor, major, or exact stable version'
+        required: true
+        default: auto
+        type: string
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    if: github.repository == 'release-drafter/release-drafter'
+  prepare:
+    name: Prepare release PR
+    environment: releaser
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'release-drafter/release-drafter'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: read
+    concurrency:
+      group: release-preparation
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          ref: main
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
@@ -24,31 +42,133 @@ jobs:
 
       - run: npm ci
 
+      - name: Capture release base
+        id: base
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve version with Release Drafter
+        id: draft
+        uses: ./
+        with:
+          commitish: ${{ steps.base.outputs.sha }}
+          dry-run: true
+
+      - name: Prepare version changes
+        id: version
+        env:
+          VERSION: ${{ inputs.version }}
+          RESOLVED_VERSION: ${{ steps.draft.outputs.resolved_version }}
+        run: |
+          if [[ "$VERSION" == auto ]]; then VERSION="$RESOLVED_VERSION"; fi
+          [[ "$VERSION" =~ ^(patch|minor|major|(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*))$ ]]
+          npm version "$VERSION" --no-git-tag-version --ignore-scripts=false
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - name: Run all checks and rebuild artifacts
         run: npm run ci
 
-      - name: Check for clean working directory
+      - name: Verify package publication readiness
+        run: npm run test:package-readiness
+
+      - name: Verify generated files match the staged tree
         run: npm run check:clean
 
-      - name: Parse pushed tag version
-        id: version
-        run: |
-          tag=${GITHUB_REF/refs\/tags\//}
-          version=${tag#v}
-          major=${version%%.*}
-          {
-            echo "tag=${tag}"
-            echo "version=${version}"
-            echo "major=${major}"
-          } >> "$GITHUB_OUTPUT"
+      - name: Enforce coverage threshold
+        env:
+          COVERAGE_THRESHOLD: '90'
+        run: npm run coverage
 
-      - name: Publish Release
+      - name: Create repository-scoped release token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Create GitHub-signed version commit and release PR
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          sign-commits: true
+          base: main
+          branch: release/v${{ steps.version.outputs.version }}
+          commit-message: 'chore: release v${{ steps.version.outputs.version }}'
+          title: 'chore: release v${{ steps.version.outputs.version }}'
+          add-paths: |
+            package.json
+            package-lock.json
+            packages/*/package.json
+          reviewers: |
+            jetersen
+            cchanche
+          body: |
+            Prepare release v${{ steps.version.outputs.version }}.
+
+            Merge after review and checks using GitHub's merge or squash method.
+            Release Drafter publishes the release; npm staging requires approval.
+
+  publish:
+    name: Publish merged release PR
+    environment: releaser
+    if: >-
+      github.event_name == 'pull_request' && github.event.pull_request.merged == true &&
+      github.repository == 'release-drafter/release-drafter' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login == 'release-drafter-releaser[bot]' &&
+      startsWith(github.event.pull_request.head.ref, 'release/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+
+      - name: Read release version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Create repository-scoped release token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: read
+
+      - name: Publish with Release Drafter
+        id: release
         uses: ./
         with:
+          token: ${{ steps.app-token.outputs.token }}
           version: ${{ steps.version.outputs.version }}
+          commitish: ${{ github.event.pull_request.merge_commit_sha }}
           publish: true
 
-      - name: Update major tag v${{ steps.version.outputs.major }}
-        run: |
-          git tag v${{ steps.version.outputs.major }} ${{ steps.version.outputs.tag }} -f
-          git push origin refs/tags/v${{ steps.version.outputs.major }} -f
+      - name: Update major tag
+        id: update-major-tag
+        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae # v3.0.0
+        continue-on-error: true
+        with:
+          route: PATCH /repos/${{ github.repository }}/git/refs/tags/v${{ steps.release.outputs.major_version }}
+          sha: ${{ github.event.pull_request.merge_commit_sha }}
+          force: true
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Create major tag
+        if: steps.update-major-tag.outcome == 'failure'
+        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae # v3.0.0
+        with:
+          route: POST /repos/${{ github.repository }}/git/refs
+          ref: refs/tags/v${{ steps.release.outputs.major_version }}
+          sha: ${{ github.event.pull_request.merge_commit_sha }}
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
