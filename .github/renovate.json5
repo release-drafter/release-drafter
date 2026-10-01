@@ -25,6 +25,13 @@
   "minimumReleaseAge": "7 days",
   "packageRules": [
     {
+      "matchManagers": ["renovate-config"],
+      "matchDepTypes": ["tool-constraint"],
+      "matchDepNames": ["npm"],
+      // Allow time for npm releases to reach the bundled Node.js runtimes.
+      "minimumReleaseAge": "90 days",
+    },
+    {
       "matchManagers": ["github-actions"],
       // Keep Actions updates out of chore(deps); Release Drafter treats ci(deps) as a dependency update.
       "semanticCommitType": "ci",
