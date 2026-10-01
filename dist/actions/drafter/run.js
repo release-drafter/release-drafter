@@ -1,6 +1,6 @@
 import { C as context, E as setFailed, T as info, a as readActionInputs, b as stringbool, c as getGitHubAdapter, d as escapeStringRegexp, i as defineActionInputNames, l as getRepository, n as sharedInputSchema, o as writeActionOutputs, s as actionLogger, u as noopLogger, v as object, y as string } from "../../chunks/config.js";
 import { _ as filterPullRequestsByPreCategories, a as COERCE, b as needsPullRequestChangedFiles, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
-//#region node_modules/verkit/dist/version-CQ98ZBpL.js
+//#region node_modules/verkit/dist/version-Co1j9Tpq.js
 var COERCE_EXACT = safeRegex(COERCE);
 var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
 var PRERELEASE_EXACT = safeRegex(`^${PRERELEASE}$`);
@@ -102,6 +102,7 @@ function incrementMutable(version, release, identifier, identifierBase) {
 			if (!version.prerelease?.length) version.patch++;
 			version.prerelease = void 0;
 			break;
+		/* v8 ignore next */
 		case "pre":
 			incrementPrerelease(version, identifier, identifierBase);
 			break;

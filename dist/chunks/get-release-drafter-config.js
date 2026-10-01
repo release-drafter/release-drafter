@@ -978,7 +978,7 @@ var configSchemaDefaults = Object.fromEntries(Object.entries({
 	return [key, void 0];
 }));
 //#endregion
-//#region node_modules/verkit/dist/comparison-DenM3wCn.js
+//#region node_modules/verkit/dist/comparison-CmVirWIW.js
 var LETTER_DASH_NUMBER = "[a-zA-Z0-9-]";
 var NUMERIC_IDENTIFIER = String.raw`0|[1-9]\d*`;
 var NUMERIC_IDENTIFIER_LOOSE = String.raw`\d+`;
@@ -1090,7 +1090,7 @@ function compareParsed(left, right) {
 	return compareMainParsed(left, right) || comparePrereleaseParsed(left, right);
 }
 //#endregion
-//#region node_modules/verkit/dist/set-CC5YeoYX.js
+//#region node_modules/verkit/dist/set-BGFWKKE8.js
 var STRICT_COMPARATOR = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${FULL_PLAIN})$|^$`);
 var LOOSE_COMPARATOR$1 = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${LOOSE_PLAIN})$|^$`);
 function formatComparator(comparator) {
@@ -1130,7 +1130,7 @@ function testComparatorSet(set, version, options) {
 	return !version.prerelease?.length || !!options.includePrerelease || set.some((comparator) => comparatorAllowsPrerelease(comparator, version));
 }
 //#endregion
-//#region node_modules/verkit/dist/range-DvX-Y6iv.js
+//#region node_modules/verkit/dist/range-C5wjdo9a.js
 function formatRange(range) {
 	return range.sets.map((set) => set.map(formatComparator).join(" ")).join("||");
 }
