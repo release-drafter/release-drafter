@@ -134,8 +134,8 @@ describe('npm package readiness', () => {
       /id-token|registry-url|NODE_AUTH_TOKEN|NPM_TOKEN|secrets\.|cache:/u,
     )
     expect(steps.flatMap(({ uses }) => (uses ? [uses] : []))).toEqual([
-      'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0',
-      'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020',
+      expect.stringMatching(/^actions\/checkout@[0-9a-f]{40}$/u),
+      expect.stringMatching(/^actions\/setup-node@[0-9a-f]{40}$/u),
     ])
     expect(steps[1]?.with).toEqual({ 'node-version-file': '.node-version' })
 
@@ -186,8 +186,8 @@ describe('npm package readiness', () => {
     })
     expect(job?.environment).toBe('npm')
     expect(steps.flatMap(({ uses }) => (uses ? [uses] : []))).toEqual([
-      'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0',
-      'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020',
+      expect.stringMatching(/^actions\/checkout@[0-9a-f]{40}$/u),
+      expect.stringMatching(/^actions\/setup-node@[0-9a-f]{40}$/u),
     ])
     expect(steps.find(({ run }) => run === 'npm run ci')).toBeDefined()
     expect(

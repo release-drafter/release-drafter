@@ -115,6 +115,7 @@ const isolatedEnvironment = (): NodeJS.ProcessEnv => {
     'NODE_AUTH_TOKEN',
     'NPM_TOKEN',
     'RELEASE_DRAFTER_TOKEN',
+    'npm_config_allow_scripts',
   ]) {
     delete environment[name]
   }
