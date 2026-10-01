@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "compare-versions": "^6.1.1",
-    "conventional-commits-parser": "^6.4.0",
+    "conventional-commits-parser": "^7.1.2",
     "escape-string-regexp": "^5.0.0",
     "minimatch": "^10.2.6",
     "verkit": "0.5.0",
