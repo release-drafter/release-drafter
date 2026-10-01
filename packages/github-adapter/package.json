@@ -28,11 +28,11 @@
   "private": true,
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.2.0",
-    "@octokit/core": "^7.0.6",
+    "@octokit/core": "^7.0.8",
     "@octokit/plugin-paginate-graphql": "^6.0.0",
     "@octokit/plugin-paginate-rest": "^14.0.0",
     "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
-    "@octokit/plugin-retry": "^8.1.0",
+    "@octokit/plugin-retry": "^8.1.1",
     "@release-drafter/core": "*",
     "undici": "^7.29.0"
   },
