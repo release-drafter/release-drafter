@@ -34,7 +34,7 @@
     "@octokit/plugin-rest-endpoint-methods": "^17.0.0",
     "@octokit/plugin-retry": "^8.1.1",
     "@release-drafter/core": "*",
-    "undici": "^7.29.0"
+    "undici": "^8.11.2"
   },
   "devDependencies": {
     "vitest": "^5.0.1"
