@@ -1,11 +1,13 @@
 import { C as context, E as setFailed, T as info, a as readActionInputs, b as stringbool, c as getGitHubAdapter, d as escapeStringRegexp, i as defineActionInputNames, l as getRepository, n as sharedInputSchema, o as writeActionOutputs, s as actionLogger, u as noopLogger, v as object, y as string } from "../../chunks/config.js";
 import { _ as filterPullRequestsByPreCategories, a as COERCE, b as needsPullRequestChangedFiles, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
+import { readFile } from "node:fs/promises";
+import { basename } from "node:path";
 //#region node_modules/verkit/dist/version-CQ98ZBpL.js
 var COERCE_EXACT = safeRegex(COERCE);
 var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
 var PRERELEASE_EXACT = safeRegex(`^${PRERELEASE}$`);
 var PRERELEASE_LOOSE_EXACT = safeRegex(`^${PRERELEASE_LOOSE}$`);
-function normalize(version, options = {}) {
+function normalize$1(version, options = {}) {
 	const parsed = tryParse$1(version, options);
 	return parsed ? formatComparableVersion(parsed) : null;
 }
@@ -841,9 +843,9 @@ var VersionDescriptor = class VersionDescriptor {
 			loose: true,
 			identifier: this.preReleaseIdentifier
 		});
-		if (!incrementedVersion) throw new Error(`Failed to increment version ${normalize(this.version)} with increment ${incrementType}`);
+		if (!incrementedVersion) throw new Error(`Failed to increment version ${normalize$1(this.version)} with increment ${incrementType}`);
 		const incrementedSemver = this.toSemver(incrementedVersion);
-		if (!incrementedSemver) throw new Error(`Failed to parse version ${incrementedVersion} after incrementing ${normalize(this.version)} with increment ${incrementType}`);
+		if (!incrementedSemver) throw new Error(`Failed to parse version ${incrementedVersion} after incrementing ${normalize$1(this.version)} with increment ${incrementType}`);
 		return new VersionDescriptor(incrementedSemver, {
 			logger: this.logger,
 			tagPrefix: this.tagPrefix,
@@ -877,14 +879,14 @@ var getVersionInfo = (params) => {
 		tagPrefix: config["tag-prefix"],
 		preReleaseIdentifier: config["prerelease-identifier"]
 	});
-	logger.info(`Parsed version from last release: ${normalize(versionFromLastRelease.version ?? "") || "none"}.`);
+	logger.info(`Parsed version from last release: ${normalize$1(versionFromLastRelease.version ?? "") || "none"}.`);
 	logger.info(`Coerce and parse versions from input...`);
 	const versionFromInput = new VersionDescriptor(input.version || input.tag || input.name, {
 		logger,
 		tagPrefix: config["tag-prefix"],
 		preReleaseIdentifier: config["prerelease-identifier"]
 	});
-	logger.info(`Parsed version from input: ${normalize(versionFromInput.version ?? "") || "none"}.`);
+	logger.info(`Parsed version from input: ${normalize$1(versionFromInput.version ?? "") || "none"}.`);
 	let referenceVersion;
 	if (versionFromInput.version) {
 		_localIncrement = "no_increment";
@@ -896,7 +898,7 @@ var getVersionInfo = (params) => {
 		if (incrementsToPrerelease) {
 			if (lastReleaseIsPrerelease) {
 				if (_localIncrement !== "prerelease") {
-					logger.info(`versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${normalize(referenceVersion.version ?? "") || "none"}). The version will be incremented as a prerelease instead.`);
+					logger.info(`versionKeyIncrement is set to "${_localIncrement}", but the last release is already a prerelease (${normalize$1(referenceVersion.version ?? "") || "none"}). The version will be incremented as a prerelease instead.`);
 					_localIncrement = "prerelease";
 				}
 			}
@@ -1291,6 +1293,58 @@ var buildReleasePlan = (params) => {
 		releasePayload
 	};
 };
+/**
+* Reads configured asset files from disk and verifies unique asset names and
+* forge upload support before any release write, so a missing path or
+* duplicate name fails the run without creating the release.
+*/
+var prepareReleaseAssets = async (params) => {
+	const { adapter, paths } = params;
+	if (paths.length === 0) return [];
+	if (!adapter.capabilities.uploadReleaseAssets || adapter.uploadReleaseAsset === void 0) throw new Error("Release assets are configured, but this forge adapter cannot upload them.");
+	const assets = [];
+	const firstPathByName = /* @__PURE__ */ new Map();
+	for (const path of paths) {
+		const name = basename(path);
+		const firstPath = firstPathByName.get(name);
+		if (firstPath !== void 0) throw new Error(`Duplicate release asset name "${name}" from paths "${firstPath}" and "${path}"; asset names must be unique.`);
+		firstPathByName.set(name, path);
+		try {
+			assets.push({
+				data: await readFile(path),
+				name,
+				path
+			});
+		} catch (error) {
+			if (error instanceof Error && "code" in error && error.code === "ENOENT") throw new Error(`Release asset file not found: "${path}"`);
+			throw new Error(`Cannot read release asset "${path}": ${error instanceof Error ? error.message : String(error)}`);
+		}
+	}
+	return assets;
+};
+/**
+* Uploads prepared assets after the plan executes. An absent release means the
+* plan was a dry run, so each upload is logged instead. Forge support was
+* already verified by `prepareReleaseAssets`.
+*/
+var uploadReleaseAssets = async (params) => {
+	const { adapter, assets, logger, release, repository } = params;
+	if (assets.length === 0) return;
+	if (!release) {
+		for (const { name, path } of assets) logger.info(`[dry-run] Would upload release asset "${name}" from "${path}"`);
+		return;
+	}
+	for (const { name, data } of assets) {
+		logger.info(`Uploading release asset "${name}"...`);
+		await adapter.uploadReleaseAsset?.({
+			repository,
+			release,
+			name,
+			data
+		});
+		logger.info(`Release asset "${name}" uploaded!`);
+	}
+};
 var draftRelease = async (params) => {
 	const { adapter, config, logger, repository } = params;
 	let input = protectReleaseInput({
@@ -1357,14 +1411,26 @@ var draftRelease = async (params) => {
 		input,
 		releasePayload
 	});
+	const releaseAssets = await prepareReleaseAssets({
+		adapter,
+		paths: input.assets ?? []
+	});
+	const release = await executeReleasePlan({
+		adapter,
+		logger,
+		plan,
+		repository
+	});
+	await uploadReleaseAssets({
+		adapter,
+		assets: releaseAssets,
+		logger,
+		release,
+		repository
+	});
 	return {
 		plan,
-		release: await executeReleasePlan({
-			adapter,
-			logger,
-			plan,
-			repository
-		}),
+		release,
 		releasePayload
 	};
 };
@@ -1375,6 +1441,8 @@ var actionInputSchema = object({
 	name: string().optional(),
 	tag: string().optional(),
 	version: string().optional(),
+	/** File paths to upload to the release after it is created or updated. */
+	assets: string().optional(),
 	publish: stringbool().optional().default(false)
 }).and(sharedInputSchema).and(commonConfigSchema);
 //#endregion
@@ -1395,7 +1463,8 @@ var actionInputNames = defineActionInputNames()([
 	"header",
 	"footer",
 	"dry-run",
-	"filter-by-range"
+	"filter-by-range",
+	"assets"
 ]);
 var actionOutputNames = [
 	"id",
@@ -1440,11 +1509,14 @@ var setActionOutput = ({ release, releasePayload }) => {
 };
 //#endregion
 //#region packages/gh-actions/src/drafter/runner.ts
+/** Split a comma- or newline-separated assets input into unique file paths. */
+var parseAssetPaths = (value) => [...new Set(value.split(/[\n,]/).map((path) => path.trim()).filter(Boolean))];
 var toReleaseInput = (input) => ({
 	...input.from !== void 0 ? { from: input.from } : {},
 	...input.name !== void 0 ? { name: input.name } : {},
 	...input.tag !== void 0 ? { tag: input.tag } : {},
 	...input.version !== void 0 ? { version: input.version } : {},
+	...input.assets !== void 0 ? { assets: parseAssetPaths(input.assets) } : {},
 	publish: input.publish,
 	...input["dry-run"] !== void 0 ? { dryRun: input["dry-run"] } : {}
 });

@@ -86,6 +86,62 @@ describe('drafter e2e', () => {
       })
     })
 
+    describe('with release assets', () => {
+      it('uploads every configured asset to the created release', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config')
+        await mockInput('assets', 'package.json\nLICENSE')
+
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-comparison-no-prs',
+        })
+        const scope = nockGetAndPostReleases({ fetchedReleases: ['release'] })
+        const uploadScope = nock('https://uploads.github.com')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases/11691725/assets',
+          )
+          .query({ name: 'package.json' })
+          .reply(201, '{}')
+          .post(
+            '/repos/toolmantim/release-drafter-test-project/releases/11691725/assets',
+          )
+          .query({ name: 'LICENSE' })
+          .reply(201, '{}')
+
+        await runDrafter()
+
+        expect(scope.isDone()).toBe(true)
+        expect(uploadScope.isDone()).toBe(true)
+        expect(gqlScope.pendingMocks().length).toBe(0)
+        expect(mocks.core.info.mock.calls.flat()).toContain(
+          'Release asset "package.json" uploaded!',
+        )
+        expect(mocks.core.info.mock.calls.flat()).toContain(
+          'Release asset "LICENSE" uploaded!',
+        )
+        expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      })
+
+      it('fails with a clear error before writing the release when a configured asset is missing', async () => {
+        await mockContext('push')
+        mocks.config.mockReturnValue('config')
+        await mockInput('assets', 'missing-release-asset.bin')
+
+        const gqlScope = mockGraphqlQuery({
+          payload: 'graphql-comparison-no-prs',
+        })
+        const scope = nockGetReleases({ releaseFiles: ['release'] })
+
+        await runDrafter()
+
+        expect(mocks.core.setFailed).toHaveBeenCalledWith(
+          'Release asset file not found: "missing-release-asset.bin"',
+        )
+        expect(scope.isDone()).toBe(true)
+        expect(gqlScope.pendingMocks().length).toBe(0)
+      })
+    })
+
     describe('to a non-master branch', () => {
       it('creates a release draft targeting that branch', async () => {
         await mockContext('push-non-master-branch')

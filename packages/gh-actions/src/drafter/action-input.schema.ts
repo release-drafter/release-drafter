@@ -10,6 +10,8 @@ const exclusiveInputSchema = object({
   name: string().optional(),
   tag: string().optional(),
   version: string().optional(),
+  /** File paths to upload to the release after it is created or updated. */
+  assets: string().optional(),
   publish: stringbool().optional().default(false),
 }).and(sharedInputSchema)
 

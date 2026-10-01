@@ -91,6 +91,11 @@ inputs:
       Filter releases whose tag names satisfy this SemVer range.
     required: false
     default: ''
+  assets:
+    description: |
+      File paths to upload to the release after it is created or updated.
+      Separate multiple paths with commas or newlines. Paths are relative to the working directory.
+    required: false
 
 outputs:
   id:
