@@ -1,4 +1,7 @@
-import type { SpawnSyncReturns } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import {
   emitForgeConformanceDecision,
@@ -21,16 +24,11 @@ const baseEnvironment: ForgeConformanceEnvironment = {
 const result = (
   status: number | null,
   error?: Error,
-): SpawnSyncReturns<Buffer> =>
-  ({
-    pid: 1,
-    output: [null, Buffer.alloc(0), Buffer.alloc(0)],
-    stdout: Buffer.alloc(0),
-    stderr: Buffer.alloc(0),
-    status,
-    signal: null,
-    ...(error ? { error } : {}),
-  }) as SpawnSyncReturns<Buffer>
+): ReturnType<GitRunner> => ({
+  status,
+  stdout: '',
+  ...(error ? { error } : {}),
+})
 
 const gitRunner = (...statuses: Array<number | null>) => {
   const run = vi.fn<GitRunner>()
@@ -41,7 +39,7 @@ const gitRunner = (...statuses: Array<number | null>) => {
 describe('forge conformance router', () => {
   it.each([
     ['pull request relevant diff', baseEnvironment, [0, 1], true],
-    ['pull request irrelevant diff', baseEnvironment, [0, 0], false],
+    ['pull request irrelevant diff', baseEnvironment, [0, 0, 0], false],
     [
       'push relevant diff',
       {
@@ -61,7 +59,7 @@ describe('forge conformance router', () => {
         PR_BASE_SHA: '',
         PUSH_BEFORE_SHA: 'def456',
       },
-      [0, 0],
+      [0, 0, 0],
       false,
     ],
   ])('routes a %s', (_name, environment, statuses, shouldRun) => {
@@ -95,7 +93,7 @@ describe('forge conformance router', () => {
   ])(
     'routes an unrelated labeled event using its %s',
     (_name, diffStatus, shouldRun) => {
-      const runGit = gitRunner(0, diffStatus)
+      const runGit = gitRunner(0, diffStatus, 0)
 
       expect(
         routeForgeConformance(
@@ -107,7 +105,7 @@ describe('forge conformance router', () => {
           runGit,
         ),
       ).toMatchObject({ shouldRun })
-      expect(runGit).toHaveBeenCalledTimes(2)
+      expect(runGit).toHaveBeenCalledTimes(diffStatus === 0 ? 3 : 2)
     },
   )
 
@@ -176,7 +174,7 @@ describe('forge conformance router', () => {
   })
 
   it('uses the exact fixed git pathspec arguments without a shell', () => {
-    const runGit = gitRunner(0, 0)
+    const runGit = gitRunner(0, 0, 0)
 
     routeForgeConformance(baseEnvironment, runGit)
 
@@ -194,28 +192,340 @@ describe('forge conformance router', () => {
       '--',
       ...FORGE_CONFORMANCE_PATHSPECS,
     ])
-    expect(FORGE_CONFORMANCE_PATHSPECS).toEqual([
-      '.github/workflows/ci.yml',
-      '.github/workflows/forge-conformance.yml',
-      '.node-version',
-      '.npmrc',
-      'package.json',
-      'package-lock.json',
-      ':(glob)tsconfig*.json',
-      ':(glob)vite*.config.ts',
-      ':(glob)vitest*.config.ts',
-      ':(glob)src/tests/integration/**',
-      'src/scripts/forge-conformance-router.ts',
-      ':(glob)packages/core/src/**',
-      ':(glob)packages/release-drafter/src/**',
-      ':(glob)packages/github-adapter/src/**',
-      ':(glob)packages/rest-adapter/src/**',
-      ':(glob)packages/gitea-adapter/src/**',
-      ':(glob)packages/forgejo-adapter/src/**',
-      ':(glob)packages/gitlab-adapter/src/**',
+    expect(FORGE_CONFORMANCE_PATHSPECS).not.toContain('package-lock.json')
+    expect(FORGE_CONFORMANCE_PATHSPECS).not.toContain(
       ':(glob)packages/*/package.json',
-      ':(glob)packages/*/tsconfig*.json',
-    ])
+    )
+    expect(FORGE_CONFORMANCE_PATHSPECS).toContain(':(glob)packages/core/src/**')
+    expect(FORGE_CONFORMANCE_PATHSPECS).toContain(
+      ':(glob)packages/gitlab-adapter/src/**',
+    )
+    expect(FORGE_CONFORMANCE_PATHSPECS).not.toContain(
+      'packages/gh-actions/package.json',
+    )
+  })
+
+  describe('lockfile dependency routing', () => {
+    const lockfile = () => ({
+      lockfileVersion: 3,
+      packages: {
+        '': {
+          devDependencies: {
+            vitest: '^4',
+            vite: '^8',
+            testcontainers: '^12',
+            biome: '^2',
+          },
+        },
+        ...Object.fromEntries(
+          [
+            'core',
+            'release-drafter',
+            'github-adapter',
+            'rest-adapter',
+            'gitea-adapter',
+            'forgejo-adapter',
+            'gitlab-adapter',
+          ].map((name) => [
+            `packages/${name}`,
+            { dependencies: { shared: '^1' } },
+          ]),
+        ),
+        'packages/gh-actions': { devDependencies: { webhooks: '^1' } },
+        'node_modules/webhooks': { version: '1.0.0', dev: true },
+        'node_modules/vitest': { version: '4.0.0' },
+        'node_modules/vite': { version: '8.0.0' },
+        'node_modules/@vitest/coverage-v8': { version: '4.0.0' },
+        'node_modules/biome': { version: '2.0.0' },
+        'node_modules/testcontainers': { version: '12.0.0' },
+        'node_modules/shared': {
+          version: '1.0.0',
+          dependencies: { transitive: '^1' },
+        },
+        'node_modules/transitive': { version: '1.0.0' },
+      } as Record<string, Record<string, unknown>>,
+    })
+    const routeLocks = (before: unknown, after: unknown) => {
+      const runGit = gitRunner(0, 0)
+      runGit.mockReturnValueOnce({ status: 0, stdout: 'package-lock.json\n' })
+      runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(before) })
+      runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(after) })
+      return routeForgeConformance(baseEnvironment, runGit)
+    }
+
+    it('skips a gh-actions webhook dependency replacement', () => {
+      const before = lockfile()
+      const after = lockfile()
+      delete after.packages['node_modules/webhooks']
+      after.packages['node_modules/openapi-webhooks'] = {
+        version: '12.1.0',
+        dev: true,
+      }
+      after.packages['packages/gh-actions'] = {
+        devDependencies: { 'openapi-webhooks': '^12' },
+      }
+      expect(routeLocks(before, after)).toEqual({
+        shouldRun: false,
+        reason: 'no relevant files or dependencies changed',
+      })
+    })
+
+    it.each(['shared', 'transitive', 'vitest', 'vite', 'testcontainers'])(
+      'runs when the resolved %s dependency changes',
+      (name) => {
+        const before = lockfile()
+        const after = lockfile()
+        after.packages[`node_modules/${name}`].version = '99.0.0'
+        expect(routeLocks(before, after)).toEqual({
+          shouldRun: true,
+          reason: 'forge dependencies changed',
+        })
+      },
+    )
+
+    it('skips unrelated root tooling and workspace development dependencies', () => {
+      const before = lockfile()
+      before.packages['packages/core'].devDependencies = { biome: '^2' }
+      before.packages['node_modules/vitest'].peerDependencies = { biome: '^2' }
+      before.packages['node_modules/vitest'].peerDependenciesMeta = {
+        biome: { optional: true },
+      }
+      const after = structuredClone(before)
+      after.packages[''].devDependencies = {
+        vitest: '^4',
+        vite: '^8',
+        testcontainers: '^12',
+        biome: '^3',
+      }
+      after.packages['packages/core'].devDependencies = { biome: '^3' }
+      after.packages['node_modules/biome'].version = '3.0.0'
+      expect(routeLocks(before, after).shouldRun).toBe(false)
+    })
+
+    it('skips workspace version, license, and range normalization with unchanged resolutions', () => {
+      const before = lockfile()
+      const after = lockfile()
+      after.packages['packages/core'].version = '99.0.0'
+      after.packages['packages/core'].license = 'MIT'
+      after.packages['packages/core'].dependencies = { shared: '^1.0.1' }
+      expect(routeLocks(before, after).shouldRun).toBe(false)
+    })
+
+    it('still runs when unrelated tooling updates a shared runtime dependency', () => {
+      const before = lockfile()
+      before.packages['node_modules/biome'].dependencies = { shared: '^1' }
+      const after = structuredClone(before)
+      after.packages['node_modules/shared'].version = '2.0.0'
+      expect(routeLocks(before, after).shouldRun).toBe(true)
+    })
+
+    it('ignores dev classification changes caused by unrelated workspaces', () => {
+      const before = lockfile()
+      const after = lockfile()
+      after.packages['node_modules/shared'].dev = true
+      expect(routeLocks(before, after).shouldRun).toBe(false)
+    })
+
+    it('follows nested dependencies and workspace links', () => {
+      const before = lockfile()
+      before.packages['node_modules/shared'].dependencies = { linked: '*' }
+      before.packages['node_modules/linked'] = {
+        link: true,
+        resolved: 'packages/linked',
+      }
+      before.packages['packages/linked'] = { dependencies: { nested: '^1' } }
+      before.packages['packages/linked/node_modules/nested'] = {
+        version: '1.0.0',
+      }
+      const after = structuredClone(before)
+      after.packages['packages/linked/node_modules/nested'].version = '2.0.0'
+      expect(routeLocks(before, after).shouldRun).toBe(true)
+    })
+
+    it('includes installed optional and peer dependencies', () => {
+      const before = lockfile()
+      before.packages['node_modules/shared'].optionalDependencies = {
+        optional: '^1',
+        missing: '^1',
+      }
+      before.packages['node_modules/shared'].peerDependencies = { peer: '^1' }
+      before.packages['node_modules/optional'] = { version: '1.0.0' }
+      before.packages['node_modules/peer'] = { version: '1.0.0' }
+      for (const name of ['optional', 'peer']) {
+        const after = structuredClone(before)
+        after.packages[`node_modules/${name}`].version = '2.0.0'
+        expect(routeLocks(before, after).shouldRun).toBe(true)
+      }
+    })
+
+    it.each(['missing dependency', 'unsupported format', 'missing workspace'])(
+      'fails open for %s',
+      (failure) => {
+        const before = lockfile()
+        const after = lockfile()
+        if (failure === 'missing dependency')
+          delete after.packages['node_modules/shared']
+        if (failure === 'missing workspace')
+          delete after.packages['packages/core']
+        if (failure === 'unsupported format') after.lockfileVersion = 1
+        expect(routeLocks(before, after)).toMatchObject({
+          shouldRun: true,
+          warning: expect.any(String),
+        })
+      },
+    )
+
+    it('fails open when git cannot inspect the lockfile', () => {
+      expect(
+        routeForgeConformance(baseEnvironment, gitRunner(0, 0, 2)),
+      ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
+      expect(
+        routeForgeConformance(baseEnvironment, gitRunner(0, 0, 2)),
+      ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
+    })
+  })
+
+  describe('manifest routing', () => {
+    const routeManifest = (path: string, before: unknown, after: unknown) => {
+      const runGit = gitRunner(0, 0)
+      runGit.mockReturnValueOnce({ status: 0, stdout: `${path}\n` })
+      runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(before) })
+      runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(after) })
+      return routeForgeConformance(baseEnvironment, runGit)
+    }
+
+    it('skips root formatting, code generation, and type tooling changes', () => {
+      expect(
+        routeManifest(
+          'package.json',
+          {
+            devDependencies: {
+              '@biomejs/biome': '2.5.3',
+              typescript: '^7',
+              '@graphql-codegen/cli': '^7',
+            },
+            scripts: { format: 'biome format .', ci: 'npm run test:run' },
+          },
+          {
+            devDependencies: {
+              '@biomejs/biome': '2.5.14',
+              typescript: '^8',
+              '@graphql-codegen/cli': '^8',
+            },
+            scripts: {
+              format: 'biome format --write .',
+              ci: 'npm run test:run && npm run lint',
+            },
+          },
+        ).shouldRun,
+      ).toBe(false)
+    })
+
+    it('skips workspace development dependency and publication metadata changes', () => {
+      expect(
+        routeManifest(
+          'packages/core/package.json',
+          {
+            version: '1',
+            license: 'ISC',
+            devDependencies: { vitest: '^4' },
+            scripts: { build: 'vite build' },
+          },
+          {
+            version: '2',
+            license: 'MIT',
+            devDependencies: { vitest: '^5' },
+            scripts: { build: 'vite build --config something.ts' },
+          },
+        ).shouldRun,
+      ).toBe(false)
+    })
+
+    it.each([
+      ['package.json', { devDependencies: { vitest: '^5' } }],
+      [
+        'package.json',
+        { scripts: { 'test:conformance:gitlab': 'different-command' } },
+      ],
+      ['package.json', { overrides: { shared: '2' } }],
+      ['packages/core/package.json', { dependencies: { shared: '^2' } }],
+      [
+        'packages/release-drafter/package.json',
+        { exports: { '.': './different.ts' } },
+      ],
+    ])('runs for relevant settings in %s', (path, after) => {
+      expect(routeManifest(path, {}, after)).toEqual({
+        shouldRun: true,
+        reason: 'forge package settings changed',
+      })
+    })
+
+    it('fails open when changed manifests cannot be read', () => {
+      const runGit = gitRunner(0, 0)
+      runGit.mockReturnValueOnce({ status: 0, stdout: 'package.json\n' })
+      runGit.mockReturnValueOnce({ status: 128 })
+      expect(routeForgeConformance(baseEnvironment, runGit)).toMatchObject({
+        shouldRun: true,
+        warning: expect.any(String),
+      })
+    })
+  })
+
+  it('routes actual git diffs for gh-actions and forge workspace changes', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'forge-router-'))
+    const git = (...args: string[]) =>
+      execFileSync('git', args, { cwd: directory, encoding: 'utf8' }).trim()
+    const runGit: GitRunner = (executable, args) =>
+      spawnSync(executable, args, { cwd: directory, encoding: 'utf8' })
+    try {
+      git('init', '--quiet')
+      git('config', 'user.name', 'Router Test')
+      git('config', 'user.email', 'router@example.invalid')
+      writeFileSync(join(directory, 'baseline'), 'baseline')
+      git('add', '.')
+      git('commit', '--quiet', '-m', 'baseline')
+      const base = git('rev-parse', 'HEAD')
+      for (const [file, shouldRun] of [
+        ['packages/gh-actions/package.json', false],
+        ['packages/gh-actions/tsconfig.json', false],
+        ['packages/gh-actions/src/autolabeler/runner.ts', false],
+        ['packages/core/package.json', true],
+        ['packages/core/src/ports.ts', true],
+        ['packages/core/src/new-helper.ts', true],
+        ['packages/gitlab-adapter/src/new-helper.ts', true],
+        ['packages/core/src/release/generate-changelog.ts', true],
+        ['packages/core/src/category-matching.ts', true],
+        ['packages/release-drafter/src/cli.ts', false],
+        ['packages/rest-adapter/src/index.test.ts', false],
+        ['packages/github-adapter/src/index.ts', true],
+        ['src/tests/integration/forge-conformance/github.test.ts', false],
+        ['src/tests/integration/forge-conformance/contract.ts', true],
+        ['vite.config.ts', false],
+        ['vitest.gitlab.config.ts', true],
+        ['.github/workflows/ci.yml', false],
+        ['packages/gitlab-adapter/tsconfig.json', true],
+        ['packages/rest-adapter/src/index.ts', true],
+      ] as const) {
+        git('read-tree', '--empty')
+        // Store a blob and index entry directly so the fixture needs no directory tree.
+        const blob = execFileSync('git', ['hash-object', '-w', '--stdin'], {
+          cwd: directory,
+          input: '{}',
+          encoding: 'utf8',
+        }).trim()
+        git('update-index', '--add', '--cacheinfo', `100644,${blob},${file}`)
+        git('commit', '--quiet', '-m', file)
+        expect(
+          routeForgeConformance(
+            { ...baseEnvironment, PR_BASE_SHA: base },
+            runGit,
+          ).shouldRun,
+          file,
+        ).toBe(shouldRun)
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
   })
 
   it('appends the GitHub output and reports the decision and warning', () => {
