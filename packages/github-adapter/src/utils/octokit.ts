@@ -40,8 +40,6 @@ export const deriveEndpoints = (options: {
 
 export const createProxyAwareFetch = (env: NodeJS.ProcessEnv): GitHubFetch => {
   const dispatcher = new EnvHttpProxyAgent({
-    // Preserve CONNECT tunneling for HTTP targets when upgrading from Undici 7.
-    proxyTunnel: true,
     httpProxy: env.HTTP_PROXY ?? env.http_proxy,
     httpsProxy: env.HTTPS_PROXY ?? env.https_proxy,
     noProxy: env.NO_PROXY ?? env.no_proxy,

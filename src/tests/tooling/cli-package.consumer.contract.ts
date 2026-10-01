@@ -61,7 +61,7 @@ const approvedRuntimeDependencies = {
   '@octokit/plugin-paginate-rest': '^15.0.0',
   '@octokit/plugin-rest-endpoint-methods': '^18.0.0',
   '@octokit/plugin-retry': '^8.1.1',
-  undici: '^8.11.2',
+  undici: '^6.28.1',
 }
 const nodeBuiltins = new Set(
   builtinModules.map((specifier) => specifier.replace(/^node:/, '')),
