@@ -74,7 +74,7 @@ jobs:
 
       - name: Request acknowledgement
         if: steps.acknowledgement.outputs.required == 'true' && steps.acknowledgement.outputs.acknowledged != 'true'
-        uses: marocchino/sticky-pull-request-comment@28ad303d6acb4ccfc50f20c0044188e7e294b8c4 # v3
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: contributor-acknowledgement
           number_force: ${{ steps.acknowledgement.outputs.pull-number }}
