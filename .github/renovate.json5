@@ -21,7 +21,6 @@
     "npm": "^12.1.0",
   },
   "commitMessageExtra": "to {{newVersion}}",
-  "schedule": ["every weekend"],
   // Mirror .npmrc min-release-age.
   "minimumReleaseAge": "7 days",
   // Mend allowlisted these commands for the Community (OSS) plan.
