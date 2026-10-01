@@ -39,7 +39,7 @@ const execNpm = (args: string[]) =>
     ...args,
   ])
 
-describe.sequential('built REST adapter declarations', () => {
+describe('built REST adapter declarations', { concurrent: false }, () => {
   let consumerDirectory: string
 
   beforeAll(() => {

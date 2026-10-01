@@ -29,7 +29,7 @@
     "@release-drafter/core": "*"
   },
   "devDependencies": {
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.1"
   },
   "license": "ISC",
   "private": true

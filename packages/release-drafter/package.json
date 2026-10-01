@@ -60,7 +60,7 @@
     "@release-drafter/gitea-adapter": "*",
     "@release-drafter/github-adapter": "*",
     "@release-drafter/gitlab-adapter": "*",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.1"
   },
   "license": "ISC",
   "publishConfig": {

@@ -125,7 +125,9 @@ const reachableModules = (
   return reachable
 }
 
-describe.sequential('release-drafter workspace build boundary', () => {
+describe('release-drafter workspace build boundary', {
+  concurrent: false,
+}, () => {
   let shippedFiles: Map<string, string>
   let javascriptFiles: Map<string, string>
   let indexClosure: Set<string>
