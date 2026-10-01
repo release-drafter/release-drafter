@@ -23,6 +23,21 @@
   "schedule": ["every weekend"],
   // Mirror .npmrc min-release-age.
   "minimumReleaseAge": "7 days",
+  // Mend allowlisted these commands for the Community (OSS) plan.
+  "postUpgradeTasks": {
+    "commands": ["npm ci", "npm run ci"],
+    "executionMode": "branch",
+    "installTools": {
+      "node": {},
+      "npm": {},
+    },
+    "fileFilters": [
+      "dist/**",
+      "schema.json",
+      "autolabeler/schema.json",
+      "drafter/schema.json",
+    ],
+  },
   // Refresh transitive dependencies even when direct dependencies have no updates.
   "lockFileMaintenance": {
     "enabled": true,
