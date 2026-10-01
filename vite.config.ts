@@ -37,6 +37,13 @@ export default defineConfig({
       },
       output: {
         format: 'es',
+        // Keep dependency Unicode literals visible to repository scanners while
+        // preserving their runtime values and readable, unminified output.
+        minify: {
+          compress: false,
+          mangle: false,
+          codegen: { asciiOnly: true, removeWhitespace: false },
+        },
         entryFileNames: '[name].js',
         chunkFileNames: 'chunks/[name].js',
         paths: (id) => (builtinModules.includes(id) ? `node:${id}` : id),

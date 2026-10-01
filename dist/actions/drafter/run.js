@@ -622,9 +622,10 @@ var renderAuthorMention = (contributor, serverUrl) => {
 };
 var generateContributorsSentence = (params) => {
 	const { commits, pullRequests, config, serverUrl } = params;
+	const includedPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
 	return generateAuthorsSentence({
 		commits,
-		pullRequests: filterPullRequestsByPreCategories(pullRequests, config.categories),
+		pullRequests: includedPullRequests,
 		serverUrl,
 		excludeContributors: config["exclude-contributors"],
 		noAuthorsTemplate: config["no-contributors-template"]
@@ -1087,15 +1088,16 @@ var buildReleasePayload = async (params) => {
 		},
 		replacers: config.replacers
 	});
+	const versionKeyIncrement = resolveVersionKeyIncrement({
+		pullRequests,
+		config,
+		logger
+	});
 	const versionInfo = getVersionInfo({
 		lastRelease,
 		config,
 		input,
-		versionKeyIncrement: resolveVersionKeyIncrement({
-			pullRequests,
-			config,
-			logger
-		}),
+		versionKeyIncrement,
 		logger
 	});
 	logger.debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`);
@@ -1369,7 +1371,9 @@ var draftRelease = async (params) => {
 		releasePayload
 	};
 };
-var actionInputSchema = object({
+//#endregion
+//#region packages/gh-actions/src/drafter/action-input.schema.ts
+var exclusiveInputSchema = object({
 	"config-name": string().optional().default("release-drafter.yml"),
 	/** Ref, tag, branch, or commit SHA used only as the change comparison base. */
 	from: string().optional(),
@@ -1377,7 +1381,8 @@ var actionInputSchema = object({
 	tag: string().optional(),
 	version: string().optional(),
 	publish: stringbool().optional().default(false)
-}).and(sharedInputSchema).and(commonConfigSchema);
+}).and(sharedInputSchema);
+var actionInputSchema = exclusiveInputSchema.and(commonConfigSchema);
 //#endregion
 //#region packages/gh-actions/src/drafter/action-metadata.ts
 var actionInputNames = defineActionInputNames()([
@@ -1460,13 +1465,14 @@ async function run() {
 			defaultCommitish: context.ref || context.payload.ref,
 			logger: actionLogger
 		});
-		setActionOutput(await draftRelease({
+		const result = await draftRelease({
 			adapter: getGitHubAdapter(input.token),
 			config,
 			input: toReleaseInput(input),
 			logger: actionLogger,
 			repository: getRepository()
-		}));
+		});
+		setActionOutput(result);
 	} catch (error) {
 		if (error instanceof Error) setFailed(error.message);
 	}
