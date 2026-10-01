@@ -383,7 +383,7 @@ describe('workspace foundation', () => {
     const configPath = join(process.cwd(), '.dependency-cruiser.mjs')
     const dependencyCruiserCli = join(
       process.cwd(),
-      'node_modules/dependency-cruiser/bin/dependency-cruise.mjs',
+      'node_modules/dependency-cruiser/bin/dependency-cruiser.mjs',
     )
     const writeWorkspace = (params: {
       name: string
