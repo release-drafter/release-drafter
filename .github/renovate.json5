@@ -12,6 +12,11 @@
   ],
   "dependencyDashboard": false,
   "prHourlyLimit": 0,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  // GitHub must require passing CI checks on main before platform automerge is enabled.
+  "platformAutomerge": true,
+  "ignoreTests": false,
   // Renovate docs: this makes PR titles conventional, e.g. chore(deps): update eslint to v7.30.0.
   // Release Drafter categorizes Renovate PRs from those titles, not from the labels below.
   "semanticCommits": "enabled",
@@ -41,13 +46,19 @@
   // Refresh transitive dependencies even when direct dependencies have no updates.
   "lockFileMaintenance": {
     "enabled": true,
+    "automerge": true,
     "extends": ["schedule:monthly"],
   },
   "vulnerabilityAlerts": {
     "enabled": true,
+    "automerge": true,
     "labels": ["type: security"],
   },
   "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+    },
     {
       "matchDatasources": ["npm"],
       "matchUpdateTypes": ["minor", "patch"],
