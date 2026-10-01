@@ -23,6 +23,15 @@
   "schedule": ["every weekend"],
   // Mirror .npmrc min-release-age.
   "minimumReleaseAge": "7 days",
+  // Refresh transitive dependencies even when direct dependencies have no updates.
+  "lockFileMaintenance": {
+    "enabled": true,
+    "extends": ["schedule:monthly"],
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["type: security"],
+  },
   "packageRules": [
     {
       "matchManagers": ["renovate-config"],
@@ -36,10 +45,6 @@
       // Keep Actions updates out of chore(deps); Release Drafter treats ci(deps) as a dependency update.
       "semanticCommitType": "ci",
       "labels": ["type: maintenance"],
-    },
-    {
-      "matchCategories": ["security"],
-      "labels": ["type: security"],
     },
     {
       "matchDepTypes": ["devDependencies"],

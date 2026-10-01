@@ -820,6 +820,10 @@ yourself.
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for contribution instructions.
 
+Renovate refreshes dependency lockfiles monthly. See
+[Dependency updates](docs/CONTRIBUTING.md#dependency-updates) for the security
+update setup and generated artifact requirements.
+
 > [!IMPORTANT]
 >
 > Before pushing, run `npm run ci` to format, lint, type-check, test, and

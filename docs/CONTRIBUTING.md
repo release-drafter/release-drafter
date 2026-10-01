@@ -91,6 +91,27 @@ Common commands:
 - `npm run build --workspaces --if-present` builds workspace packages after the
   root Vite action bundle build.
 
+### Dependency updates
+
+Renovate proposes routine dependency updates on weekends and refreshes the
+lockfile monthly to pick up transitive dependency updates. Both retain the
+seven-day release-age policy. Renovate vulnerability-fix PRs use the
+`type: security` label and bypass its routine schedule and release-age delay;
+the separate `.npmrc` policy still applies when npm resolves dependencies.
+
+Automatic Renovate PR creation requires full mode in the Mend Developer Portal.
+Silent mode only creates new PRs when requested through the portal. Renovate
+does not directly manage transitive dependencies, so lockfile maintenance does
+not replace alert-driven security updates. Enable Dependabot security updates
+in the repository's GitHub Advanced Security settings for those fixes.
+
+The Renovate Build workflow rebuilds tracked bundles and schemas on
+`renovate/**` branches. For Dependabot PRs, a maintainer must run `npm ci` and
+`npm run ci`, commit any generated changes to the PR branch, and wait for CI
+before merging. The existing rebuild workflow cannot simply be extended to
+Dependabot branches because Dependabot-triggered runs receive a read-only
+token.
+
 ### Forge conformance tests
 
 `npm run test:run` and `npm run ci` do not start containers. Use these commands
