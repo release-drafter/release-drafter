@@ -13,6 +13,7 @@ autolabeler:
       - docs/**
 `),
     ).resolves.toEqual({
+      'sync-labels': false,
       autolabeler: [
         {
           label: 'documentation',
@@ -29,6 +30,7 @@ autolabeler:
 
   it('accepts an empty rule list or a fallback-only configuration', async () => {
     await expect(parseConfigFile('autolabeler: []')).resolves.toEqual({
+      'sync-labels': false,
       autolabeler: [],
     })
     await expect(
@@ -41,6 +43,25 @@ autolabeler:
       ],
     })
   })
+
+  it.each([true, false])('parses sync-labels: %s', async (syncLabels) => {
+    const config = await parseConfigFile(
+      `sync-labels: ${syncLabels}\nautolabeler: []`,
+    )
+    expect(config['sync-labels']).toBe(syncLabels)
+    expect(
+      parseConfig({ config, logger: { warning: vi.fn() } })['sync-labels'],
+    ).toBe(syncLabels)
+  })
+
+  it.each(['true', 1, null, []])(
+    'rejects invalid sync-labels: %j',
+    (syncLabels) => {
+      expect(() =>
+        configSchema.parse({ autolabeler: [], 'sync-labels': syncLabels }),
+      ).toThrow()
+    },
+  )
 
   it('rejects missing rules and empty matcher values', async () => {
     await expect(parseConfigFile('{}')).rejects.toThrow()

@@ -21,6 +21,12 @@ const ruleSchema = object({
 })
 
 export const configSchema = object({
+  'sync-labels': boolean()
+    .optional()
+    .default(false)
+    .describe(
+      'Remove configured labels when they are not selected by this run.',
+    ),
   /**
    * Defines pull request label rules.
    * `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.

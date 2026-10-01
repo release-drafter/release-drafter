@@ -54,6 +54,29 @@ export async function run(): Promise<void> {
     for (const match of result.matches)
       core.info(`Found label for ${match.matcher}: '${match.label}'`)
 
+    const labelsToRemove: string[] = []
+    if (config['sync-labels']) {
+      const currentLabels = await adapter.octokit.paginate(
+        adapter.octokit.rest.issues.listLabelsOnIssue,
+        { ...context.repo, issue_number: payload.number, per_page: 100 },
+      )
+      const managedLabels = new Set(
+        config.autolabeler.flatMap((rule) =>
+          rule.labels.map((label) => label.toLowerCase()),
+        ),
+      )
+      const selectedLabels = new Set(
+        result.labels.map((label) => label.toLowerCase()),
+      )
+      for (const { name } of currentLabels) {
+        if (
+          managedLabels.has(name.toLowerCase()) &&
+          !selectedLabels.has(name.toLowerCase())
+        )
+          labelsToRemove.push(name)
+      }
+    }
+
     if (result.labels.length > 0) {
       if (input['dry-run']) {
         core.info(
@@ -65,6 +88,20 @@ export async function run(): Promise<void> {
           issue_number: payload.number,
           labels: result.labels,
         })
+      }
+    }
+    for (const name of labelsToRemove) {
+      if (input['dry-run']) {
+        core.info(
+          `[dry-run] Would remove label '${name}' from PR #${payload.number}`,
+        )
+      } else {
+        await adapter.octokit.rest.issues.removeLabel({
+          ...context.repo,
+          issue_number: payload.number,
+          name,
+        })
+        core.info(`Removed label '${name}' from PR #${payload.number}`)
       }
     }
     writeActionOutputs(actionOutputNames, {

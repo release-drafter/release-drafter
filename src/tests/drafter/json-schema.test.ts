@@ -56,6 +56,7 @@ describe('JSON schema', () => {
     expect(schema).toMatchObject({
       required: ['autolabeler'],
       properties: {
+        'sync-labels': { type: 'boolean', default: false },
         autolabeler: {
           type: 'array',
           items: {

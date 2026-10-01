@@ -40,6 +40,11 @@
         }
       ]
     },
+    "sync-labels": {
+      "default": false,
+      "description": "Remove configured labels when they are not selected by this run.",
+      "type": "boolean"
+    },
     "autolabeler": {
       "type": "array",
       "items": {

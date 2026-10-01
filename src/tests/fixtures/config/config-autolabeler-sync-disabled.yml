@@ -1,0 +1,4 @@
+sync-labels: false
+autolabeler:
+  - label: 'patch'
+    title: ['/^feat:/']
