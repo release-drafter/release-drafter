@@ -83,7 +83,7 @@
     "@graphql-codegen/typescript-operations": "^6.1.7",
     "@swc/core": "1.16.2",
     "@types/node": "^24.13.6",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.1",
     "dependency-cruiser": "18.4.0",
     "knip": "6.38.0",
     "nock": "^14.0.17",
@@ -92,7 +92,7 @@
     "testcontainers": "12.1.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.1"
   },
   "workspaces": [
     "packages/*"
