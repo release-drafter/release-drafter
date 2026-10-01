@@ -1,0 +1,3 @@
+autolabeler:
+  - label: []
+    files: ['*.md']

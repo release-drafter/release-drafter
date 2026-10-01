@@ -41,14 +41,29 @@
       ]
     },
     "autolabeler": {
-      "minItems": 1,
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
           "label": {
-            "type": "string",
-            "minLength": 1
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            ]
+          },
+          "stop-on-match": {
+            "default": false,
+            "type": "boolean"
           },
           "files": {
             "default": [],
@@ -85,6 +100,10 @@
         },
         "required": ["label"]
       }
+    },
+    "autolabeler-fallback-label": {
+      "type": "string",
+      "minLength": 1
     }
   },
   "required": ["autolabeler"],

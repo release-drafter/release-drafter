@@ -668,17 +668,34 @@ jobs:
 
 The available matchers are `files` for glob patterns and `branch`, `title`, and
 `body` for regular expressions. Autolabeler evaluates each matcher
-independently. It adds the label if at least one matcher succeeds.
+independently. A rule matches if at least one matcher succeeds. Its `label` can
+be a nonempty string or a nonempty list of nonempty strings. Autolabeler adds
+all labels from matching rules, removes duplicates, and preserves their
+configuration order.
+
+Rules run in configuration order. Set `stop-on-match: true` on a rule to stop
+evaluating later rules after that rule matches and adds all its labels. Labels
+from earlier matching rules are retained. A rule that does not match never
+stops evaluation. The default is `false`, so all rules are evaluated.
+
+Set the optional top-level `autolabeler-fallback-label` to a nonempty string to
+add that label when no rule matches. This also applies when `autolabeler: []`.
+Without a fallback, a run with no matches adds no labels. Autolabeler only adds
+labels: if a later run matches a rule, an existing fallback label remains on
+the pull request. Existing labels do not affect rule matching or fallback
+selection.
 
 ```yml
 # .github/release-drafter.yml
+autolabeler-fallback-label: 'needs-triage'
 autolabeler:
-  - label: 'chore'
+  - label: ['chore', 'documentation']
     files:
       - '*.md'
     branch:
       - '/docs{0,1}\/.+/'
   - label: 'bug'
+    stop-on-match: true
     branch:
       - '/fix\/.+/'
     title:
@@ -691,6 +708,11 @@ autolabeler:
 
 # Add the remaining Release Drafter configuration here.
 ```
+
+In this example, a matching documentation rule adds both `chore` and
+`documentation`. A matching bug rule adds `bug` and skips the enhancement rule,
+while keeping any documentation labels already selected. A pull request that
+matches none of the rules receives `needs-triage`.
 
 ## Prerelease workflow
 

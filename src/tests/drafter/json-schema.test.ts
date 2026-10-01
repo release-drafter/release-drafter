@@ -41,6 +41,36 @@ describe('JSON schema', () => {
     expect(generateAutolabelerJSONSchema()).not.toHaveProperty('id')
   })
 
+  it('exposes compatible labels, stop defaults and an optional fallback', () => {
+    const schema = generateAutolabelerJSONSchema()
+    expect(schema).toMatchObject({
+      required: ['autolabeler'],
+      properties: {
+        autolabeler: {
+          type: 'array',
+          items: {
+            required: ['label'],
+            properties: {
+              label: {
+                anyOf: [
+                  { type: 'string', minLength: 1 },
+                  {
+                    type: 'array',
+                    minItems: 1,
+                    items: { type: 'string', minLength: 1 },
+                  },
+                ],
+              },
+              'stop-on-match': { type: 'boolean', default: false },
+            },
+          },
+        },
+        'autolabeler-fallback-label': { type: 'string', minLength: 1 },
+      },
+    })
+    expect(schema.properties?.autolabeler).not.toHaveProperty('minItems')
+  })
+
   /**
    * Fields with defaults should not be required in the JSON schema.
    * YAML LSPs use the JSON schema to validate config files, and marking

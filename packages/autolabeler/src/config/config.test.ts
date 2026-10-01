@@ -16,6 +16,7 @@ autolabeler:
       autolabeler: [
         {
           label: 'documentation',
+          'stop-on-match': false,
           files: ['docs/**'],
           branch: [],
           title: [],
@@ -25,8 +26,22 @@ autolabeler:
     })
   })
 
-  it('rejects empty configs and empty matcher values', async () => {
-    await expect(parseConfigFile('autolabeler: []')).rejects.toThrow()
+  it('accepts an empty rule list with or without a fallback', async () => {
+    await expect(parseConfigFile('autolabeler: []')).resolves.toEqual({
+      autolabeler: [],
+    })
+    await expect(
+      parseConfigFile(
+        'autolabeler: []\nautolabeler-fallback-label: needs-triage',
+      ),
+    ).resolves.toEqual({
+      autolabeler: [],
+      'autolabeler-fallback-label': 'needs-triage',
+    })
+  })
+
+  it('rejects missing rules and empty matcher values', async () => {
+    await expect(parseConfigFile('{}')).rejects.toThrow()
     await expect(
       parseConfigFile(`
 autolabeler:
@@ -37,11 +52,53 @@ autolabeler:
     ).rejects.toThrow()
   })
 
+  it('parses multiple labels and an explicit stop option', async () => {
+    await expect(
+      parseConfigFile(`
+autolabeler:
+  - label: [chore, documentation]
+    stop-on-match: true
+    files: [docs/**]
+`),
+    ).resolves.toMatchObject({
+      autolabeler: [
+        { label: ['chore', 'documentation'], 'stop-on-match': true },
+      ],
+    })
+  })
+
+  it.each(
+    ['', [], [''], ['valid', ''], [42], null, 42].map((label) => ({ label })),
+  )('rejects invalid label configuration $label', ({ label }) => {
+    expect(() => configSchema.parse({ autolabeler: [{ label }] })).toThrow()
+  })
+
+  it.each(['', [], null, 42].map((fallback) => ({ fallback })))(
+    'rejects invalid fallback $fallback',
+    ({ fallback }) => {
+      expect(() =>
+        configSchema.parse({
+          autolabeler: [],
+          'autolabeler-fallback-label': fallback,
+        }),
+      ).toThrow()
+    },
+  )
+
+  it('rejects a nonboolean stop option', () => {
+    expect(() =>
+      configSchema.parse({
+        autolabeler: [{ label: 'bug', 'stop-on-match': 'true' }],
+      }),
+    ).toThrow()
+  })
+
   it('compiles regex matchers without mutating parsed config', () => {
     const config = configSchema.parse({
       autolabeler: [
         {
-          label: 'feature',
+          label: ['feature', 'core'],
+          'stop-on-match': true,
           files: ['src/**'],
           branch: ['/feature\\/.+/i'],
           title: ['feat(core)'],
@@ -56,6 +113,8 @@ autolabeler:
     })
 
     expect(config).toEqual(original)
+    expect(parsed.autolabeler[0]?.label).toEqual(['feature', 'core'])
+    expect(parsed.autolabeler[0]?.['stop-on-match']).toBe(true)
     expect(parsed.autolabeler[0]?.files).toEqual(['src/**'])
     expect(parsed.autolabeler[0]?.branch[0]).toEqual(/feature\/.+/i)
     expect(parsed.autolabeler[0]?.title[0]).toEqual(/feat\(core\)/g)
