@@ -1,6 +1,18 @@
 import { spawnSync } from 'node:child_process'
 import { appendFileSync } from 'node:fs'
+import { posix } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { isDeepStrictEqual } from 'node:util'
+
+const FORGE_WORKSPACES = [
+  'core',
+  'release-drafter',
+  'github-adapter',
+  'rest-adapter',
+  'gitea-adapter',
+  'forgejo-adapter',
+  'gitlab-adapter',
+] as const
 
 export const FORGE_CONFORMANCE_PATHSPECS = [
   '.github/workflows/ci.yml',
@@ -8,7 +20,6 @@ export const FORGE_CONFORMANCE_PATHSPECS = [
   '.node-version',
   '.npmrc',
   'package.json',
-  'package-lock.json',
   ':(glob)tsconfig*.json',
   ':(glob)vite*.config.ts',
   ':(glob)vitest*.config.ts',
@@ -21,8 +32,10 @@ export const FORGE_CONFORMANCE_PATHSPECS = [
   ':(glob)packages/gitea-adapter/src/**',
   ':(glob)packages/forgejo-adapter/src/**',
   ':(glob)packages/gitlab-adapter/src/**',
-  ':(glob)packages/*/package.json',
-  ':(glob)packages/*/tsconfig*.json',
+  ...FORGE_WORKSPACES.flatMap((workspace) => [
+    `packages/${workspace}/package.json`,
+    `:(glob)packages/${workspace}/tsconfig*.json`,
+  ]),
 ] as const
 
 export type ForgeConformanceEnvironment = {
@@ -38,7 +51,80 @@ export type ForgeConformanceEnvironment = {
 export type GitRunner = (
   executable: string,
   args: readonly string[],
-) => { status: number | null; error?: Error }
+) => { status: number | null; error?: Error; stdout?: string }
+
+type LockPackage = {
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
+  optionalDependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
+  link?: boolean
+  resolved?: string
+  dev?: boolean
+}
+
+/** Follow npm's installed dependency graph, including nested and workspace links. */
+const forgeLockPackages = (source: string) => {
+  const lock = JSON.parse(source) as {
+    lockfileVersion: number
+    packages: Record<string, LockPackage>
+  }
+  if (lock.lockfileVersion !== 3 || !lock.packages?.[''])
+    throw new Error('Expected an npm v3 lockfile with a root package')
+
+  const packages = lock.packages
+  const selected = new Map<string, LockPackage>()
+  const visitedWithDev = new Set<string>()
+  const resolve = (from: string, name: string): string => {
+    let directory = from
+    while (true) {
+      const candidate = posix.join(directory, 'node_modules', name)
+      if (packages[candidate]) return candidate
+      if (!directory) throw new Error(`Cannot resolve ${name} from ${from}`)
+      directory = posix.dirname(directory)
+      if (directory === '.') directory = ''
+    }
+  }
+  const visit = (path: string, includeDev = false) => {
+    if (selected.has(path) && (!includeDev || visitedWithDev.has(path))) return
+    if (includeDev) visitedWithDev.add(path)
+    const entry = packages[path]
+    if (!entry) throw new Error(`Missing lockfile package ${path}`)
+    // An unrelated workspace can change npm's dev classification through hoisting.
+    const { dev: _dev, ...identity } = entry
+    selected.set(path, identity)
+    if (entry.link) {
+      if (!entry.resolved) throw new Error(`Missing workspace target ${path}`)
+      visit(entry.resolved, includeDev)
+      return
+    }
+    const optional = {
+      ...entry.peerDependencies,
+      ...entry.optionalDependencies,
+    }
+    for (const name of Object.keys({
+      ...entry.dependencies,
+      ...(includeDev ? entry.devDependencies : {}),
+      ...optional,
+    })) {
+      let dependency: string
+      try {
+        dependency = resolve(path, name)
+      } catch (error) {
+        if (name in optional) continue
+        throw error
+      }
+      visit(dependency)
+    }
+  }
+
+  // Root dev dependencies supply Vitest, Vite, TypeScript and container tooling.
+  selected.set('', packages[''])
+  for (const name of Object.keys(packages[''].devDependencies ?? {}))
+    visit(resolve('', name))
+  for (const workspace of FORGE_WORKSPACES) visit(`packages/${workspace}`, true)
+  return selected
+}
 
 export type ForgeConformanceDecision = {
   shouldRun: boolean
@@ -55,7 +141,7 @@ const failOpen = (warning: string): ForgeConformanceDecision => ({
 const isZeroSha = (sha: string) => /^0+$/.test(sha)
 
 const defaultGitRunner: GitRunner = (executable, args) =>
-  spawnSync(executable, args, { stdio: 'ignore' })
+  spawnSync(executable, args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 })
 
 /** Routes forge conformance without evaluating event data through a shell. */
 export const routeForgeConformance = (
@@ -112,7 +198,38 @@ export const routeForgeConformance = (
     return failOpen('git diff failed to execute; running forge conformance')
   }
   if (diffResult.status === 0) {
-    return { shouldRun: false, reason: 'no relevant files changed' }
+    const lockDiff = runGit('git', [
+      'diff',
+      '--quiet',
+      '--no-renames',
+      baseSha,
+      'HEAD',
+      '--',
+      'package-lock.json',
+    ])
+    if (lockDiff.error || (lockDiff.status !== 0 && lockDiff.status !== 1))
+      return failOpen('Lockfile diff failed; running forge conformance')
+    if (lockDiff.status === 1) {
+      try {
+        const readLock = (revision: string) => {
+          const result = runGit('git', [
+            'show',
+            `${revision}:package-lock.json`,
+          ])
+          if (result.error || result.status !== 0 || !result.stdout)
+            throw new Error(`Cannot read lockfile at ${revision}`)
+          return forgeLockPackages(result.stdout)
+        }
+        if (!isDeepStrictEqual(readLock(baseSha), readLock('HEAD')))
+          return { shouldRun: true, reason: 'forge dependencies changed' }
+      } catch {
+        return failOpen('Lockfile inspection failed; running forge conformance')
+      }
+    }
+    return {
+      shouldRun: false,
+      reason: 'no relevant files or dependencies changed',
+    }
   }
   if (diffResult.status === 1) {
     return { shouldRun: true, reason: 'relevant files changed' }

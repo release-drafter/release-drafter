@@ -111,16 +111,27 @@ The forge conformance workflow runs the matrix in these cases:
 - A pull request changes one of these paths:
   - `.github/workflows/ci.yml`
   - `.github/workflows/forge-conformance.yml`
-  - `.node-version`, `package.json`, or `package-lock.json`
+  - `.node-version`, `.npmrc`, or root `package.json`
   - Root TypeScript, Vite, or Vitest configuration files
-  - `src/**`
-  - Package source, manifests, or TypeScript configuration files
+  - `src/tests/integration/**` or `src/scripts/forge-conformance-router.ts`
+  - Source, manifests, or TypeScript configuration in `core`, `release-drafter`,
+    `github-adapter`, `rest-adapter`, `gitea-adapter`, `forgejo-adapter`, or
+    `gitlab-adapter`
+  - `package-lock.json`, when resolved dependencies used by these workspaces
+    or root development tools change. The router follows transitive, nested,
+    optional, peer, and workspace dependencies in both lockfile versions.
 - A maintainer applies the exact `ci:forge-conformance` label. This label skips
   changed-file detection.
 - A push to `main` changes one of the same paths.
 
+Changes confined to `gh-actions`, `autolabeler`, or `cli` skip the matrix,
+including lockfile changes that only affect their dependencies. A dependency
+update still runs the matrix if it changes a package shared with the forge
+suites.
+
 Other pull request label events use changed file detection. The workflow also
-runs the matrix if the base commit is missing or invalid, or if Git fails.
+runs the matrix if the base commit is missing or invalid, if Git fails, or if
+the changed lockfile cannot be inspected.
 
 The scope job runs the checked-in TypeScript router with the repository's pinned
 Node version. It passes fixed pathspec arguments directly to Git without shell
