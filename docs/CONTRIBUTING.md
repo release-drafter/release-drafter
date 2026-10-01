@@ -62,11 +62,6 @@ directly from the repository. Builds generate `packages/*/dist/`, but Git
 ignores these directories. npm includes the generated files when it packs a
 workspace package.
 
-The action build emits Unicode escapes for dependency literals so invisible
-characters, such as the YAML parser's byte order mark, do not trigger repository
-scanner warnings. The escapes preserve the characters' runtime values. Tooling
-tests check every generated action entry and shared chunk for hidden Unicode.
-
 Common commands:
 
 - `npm run ci` runs all repository checks and builds generated files. It
