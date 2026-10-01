@@ -17,6 +17,7 @@ autolabeler:
         {
           label: 'documentation',
           'stop-on-match': false,
+          fallback: false,
           files: ['docs/**'],
           branch: [],
           title: [],
@@ -26,15 +27,18 @@ autolabeler:
     })
   })
 
-  it('accepts an empty rule list with or without a fallback', async () => {
+  it('accepts an empty rule list or a fallback-only configuration', async () => {
     await expect(parseConfigFile('autolabeler: []')).resolves.toEqual({
       autolabeler: [],
     })
     await expect(
-      parseConfigFile('autolabeler: []\nfallback-label: needs-triage'),
-    ).resolves.toEqual({
-      autolabeler: [],
-      'fallback-label': 'needs-triage',
+      parseConfigFile(
+        'autolabeler:\n  - labels: [needs-triage, uncategorized]\n    fallback: true',
+      ),
+    ).resolves.toMatchObject({
+      autolabeler: [
+        { labels: ['needs-triage', 'uncategorized'], fallback: true },
+      ],
     })
   })
 
@@ -121,10 +125,46 @@ autolabeler:
     ({ fallback }) => {
       expect(() =>
         configSchema.parse({
-          autolabeler: [],
-          'fallback-label': fallback,
+          autolabeler: [{ labels: ['needs-triage'], fallback }],
         }),
       ).toThrow()
+    },
+  )
+
+  it.each([
+    {
+      name: 'multiple fallback rules',
+      rules: [
+        { label: 'one', fallback: true },
+        { labels: ['two'], fallback: true },
+      ],
+      error: 'Only one Autolabeler fallback rule is supported.',
+    },
+    {
+      name: 'fallback and stop-on-match',
+      rules: [
+        { labels: ['needs-triage'], fallback: true, 'stop-on-match': true },
+      ],
+      error:
+        "An Autolabeler rule cannot enable both 'fallback' and 'stop-on-match'.",
+    },
+    ...['files', 'branch', 'title', 'body'].map((matcher) => ({
+      name: `fallback with ${matcher} matchers`,
+      rules: [
+        { labels: ['needs-triage'], fallback: true, [matcher]: ['pattern'] },
+      ],
+      error: 'An Autolabeler fallback rule must not specify matchers.',
+    })),
+  ])(
+    'rejects $name in both config parsing entrypoints',
+    async ({ rules, error }) => {
+      const config = configSchema.parse({ autolabeler: rules })
+      expect(() =>
+        parseConfig({ config, logger: { warning: vi.fn() } }),
+      ).toThrow(error)
+      await expect(
+        parseConfigFile(JSON.stringify({ autolabeler: rules })),
+      ).rejects.toThrow(error)
     },
   )
 

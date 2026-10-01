@@ -9,6 +9,7 @@ export type AvailableConfigs =
   | 'config-autolabeler'
   | 'config-autolabeler-rule-options'
   | 'config-autolabeler-empty'
+  | 'config-autolabeler-fallback-only'
   | 'config-autolabeler-invalid-labels'
   | 'config-autolabeler-no-match'
   | 'config-name-input'

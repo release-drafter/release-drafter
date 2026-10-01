@@ -37,6 +37,7 @@ export const matchLabels = (params: {
   const matches: AutolabelMatch[] = []
 
   for (const rule of config.autolabeler) {
+    if (rule.fallback) continue
     const body = pullRequest.body
     let matcher: AutolabelMatch['matcher'] | undefined
     if (matchesFiles(rule.files, pullRequest.files)) {
@@ -58,10 +59,12 @@ export const matchLabels = (params: {
     }
   }
 
-  const fallback = config['fallback-label']
-  if (labels.size === 0 && fallback !== undefined) {
-    labels.add(fallback)
-    matches.push({ label: fallback, matcher: 'fallback' })
+  const fallback = config.autolabeler.find((rule) => rule.fallback)
+  if (labels.size === 0 && fallback) {
+    for (const label of fallback.labels) {
+      labels.add(label)
+      matches.push({ label, matcher: 'fallback' })
+    }
   }
 
   return { labels: [...labels], matches }

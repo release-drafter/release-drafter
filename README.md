@@ -681,16 +681,20 @@ evaluating later rules after that rule matches and adds all its labels. Labels
 from earlier matching rules are retained. A rule that does not match never
 stops evaluation. The default is `false`, so all rules are evaluated.
 
-Set the optional top-level `fallback-label` to a nonempty string to
-add that label when no rule matches. This also applies when `autolabeler: []`.
-Without a fallback, a run with no matches adds no labels. Autolabeler only adds
-labels: if a later run matches a rule, an existing fallback label remains on
-the pull request. Existing labels do not affect rule matching or fallback
-selection.
+Set `fallback: true` on one rule to add its labels when no ordinary rule
+matches. A fallback rule must not specify matchers. It runs after ordinary
+rules regardless of its position in the list, including when it is the only
+rule. The default is `false`; an ordinary rule without matchers adds no labels.
+Only one fallback rule is supported. `fallback: true` and `stop-on-match: true`
+are mutually exclusive.
+
+Without a fallback rule, a run with no matches adds no labels. An empty
+`autolabeler: []` list also adds no labels. Autolabeler only adds labels: if a
+later run matches an ordinary rule, existing fallback labels remain on the pull
+request. Existing labels do not affect rule matching or fallback selection.
 
 ```yml
 # .github/release-drafter.yml
-fallback-label: 'needs-triage'
 autolabeler:
   - labels: ['chore', 'documentation']
     files:
@@ -708,6 +712,8 @@ autolabeler:
       - '/feature\/.+/'
     body:
       - '/JIRA-[0-9]{1,4}/'
+  - labels: ['needs-triage', 'uncategorized']
+    fallback: true
 
 # Add the remaining Release Drafter configuration here.
 ```
@@ -715,7 +721,7 @@ autolabeler:
 In this example, a matching documentation rule adds both `chore` and
 `documentation`. A matching bug rule adds `bug` and skips the enhancement rule,
 while keeping any documentation labels already selected. A pull request that
-matches none of the rules receives `needs-triage`.
+matches none of the ordinary rules receives `needs-triage` and `uncategorized`.
 
 ## Prerelease workflow
 

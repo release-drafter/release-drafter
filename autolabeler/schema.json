@@ -61,6 +61,10 @@
                 "minLength": 1,
                 "description": "Backward-compatible single label. Prefer labels for new rules."
               },
+              "fallback": {
+                "default": false,
+                "type": "boolean"
+              },
               "stop-on-match": {
                 "default": false,
                 "type": "boolean"
@@ -117,6 +121,10 @@
                 "minLength": 1,
                 "description": "Backward-compatible single label. Prefer labels for new rules."
               },
+              "fallback": {
+                "default": false,
+                "type": "boolean"
+              },
               "stop-on-match": {
                 "default": false,
                 "type": "boolean"
@@ -158,10 +166,6 @@
           }
         ]
       }
-    },
-    "fallback-label": {
-      "type": "string",
-      "minLength": 1
     }
   },
   "required": ["autolabeler"],

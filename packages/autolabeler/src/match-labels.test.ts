@@ -7,8 +7,10 @@ const compile = (autolabeler: unknown[], fallback?: string) => {
   const warning = vi.fn()
   const config = parseConfig({
     config: configSchema.parse({
-      autolabeler,
-      'fallback-label': fallback,
+      autolabeler:
+        fallback === undefined
+          ? autolabeler
+          : [...autolabeler, { label: fallback, fallback: true }],
     }),
     logger: { warning },
   })
@@ -141,6 +143,53 @@ describe('matchLabels', () => {
     expect(matchLabels({ config, pullRequest })).toEqual({
       labels: [],
       matches: [],
+    })
+  })
+
+  it('keeps matcher-free ordinary rules as no-ops', () => {
+    const { config } = compile([
+      { labels: ['empty'] },
+      { label: 'explicit', fallback: false },
+    ])
+    expect(matchLabels({ config, pullRequest })).toEqual({
+      labels: [],
+      matches: [],
+    })
+  })
+
+  it.each([0, 1, 2])(
+    'defers fallback at index %i until ordinary rules have no matches',
+    (position) => {
+      const rules: unknown[] = [
+        { label: 'miss', title: ['/fix/'], 'stop-on-match': true },
+        { label: 'core', title: ['/feat/'] },
+      ]
+      rules.splice(position, 0, { labels: ['needs-triage'], fallback: true })
+      const { config } = compile(rules)
+      expect(matchLabels({ config, pullRequest })).toEqual({
+        labels: ['core'],
+        matches: [{ label: 'core', matcher: 'title' }],
+      })
+    },
+  )
+
+  it('adds all fallback labels, combining scalar shorthand and deduplicating submission', () => {
+    const { config } = compile([
+      {
+        labels: ['needs-triage', 'uncategorized', 'needs-triage'],
+        label: 'uncategorized',
+        fallback: true,
+      },
+      { labels: ['miss'], title: ['/fix/'], 'stop-on-match': true },
+    ])
+    expect(matchLabels({ config, pullRequest })).toEqual({
+      labels: ['needs-triage', 'uncategorized'],
+      matches: [
+        { label: 'needs-triage', matcher: 'fallback' },
+        { label: 'uncategorized', matcher: 'fallback' },
+        { label: 'needs-triage', matcher: 'fallback' },
+        { label: 'uncategorized', matcher: 'fallback' },
+      ],
     })
   })
 

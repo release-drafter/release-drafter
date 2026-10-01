@@ -91,7 +91,7 @@ describe('autolabeler e2e', async () => {
 
   it.each([
     'config-autolabeler-rule-options',
-    'config-autolabeler-empty',
+    'config-autolabeler-fallback-only',
   ] as const)('adds and reports the fallback with %s', async (config) => {
     await mockContext('pull_request-synchronize')
     mocks.config.mockReturnValue(config)
@@ -101,12 +101,18 @@ describe('autolabeler e2e', async () => {
     await runAutolabeler()
 
     expect(mocks.postPrLabelsBody).toHaveBeenCalledExactlyOnceWith({
-      labels: ['needs-triage'],
+      labels: ['needs-triage', 'uncategorized'],
     })
     expect(mocks.core.info).toHaveBeenCalledWith(
       "Found label for fallback: 'needs-triage'",
     )
-    expect(mocks.core.setOutput).toHaveBeenCalledWith('labels', 'needs-triage')
+    expect(mocks.core.info).toHaveBeenCalledWith(
+      "Found label for fallback: 'uncategorized'",
+    )
+    expect(mocks.core.setOutput).toHaveBeenCalledWith(
+      'labels',
+      'needs-triage,uncategorized',
+    )
     expect(mocks.core.setFailed).not.toHaveBeenCalled()
     expect(getScope.isDone()).toBe(true)
     expect(postScope.isDone()).toBe(true)
@@ -115,16 +121,19 @@ describe('autolabeler e2e', async () => {
   it('reports the fallback in dry runs without submitting labels', async () => {
     await mockContext('pull_request-synchronize')
     await mockInput('dry-run', 'true')
-    mocks.config.mockReturnValue('config-autolabeler-empty')
+    mocks.config.mockReturnValue('config-autolabeler-fallback-only')
     const getScope = nockGetPrFiles({ filenames: [] })
 
     await runAutolabeler()
 
     expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
     expect(mocks.core.info).toHaveBeenCalledWith(
-      '[dry-run] Would add labels [needs-triage] to PR #1475',
+      '[dry-run] Would add labels [needs-triage, uncategorized] to PR #1475',
     )
-    expect(mocks.core.setOutput).toHaveBeenCalledWith('labels', 'needs-triage')
+    expect(mocks.core.setOutput).toHaveBeenCalledWith(
+      'labels',
+      'needs-triage,uncategorized',
+    )
     expect(mocks.core.setFailed).not.toHaveBeenCalled()
     expect(getScope.isDone()).toBe(true)
   })
@@ -140,22 +149,25 @@ describe('autolabeler e2e', async () => {
     expect(mocks.core.setOutput).not.toHaveBeenCalled()
   })
 
-  it('sets the pull request number and performs no write when no rule matches', async () => {
-    await mockContext('pull_request-synchronize')
-    mocks.config.mockReturnValue('config-autolabeler-no-match')
-    const getScope = nockGetPrFiles({ filenames: ['src/index.ts'] })
+  it.each(['config-autolabeler-no-match', 'config-autolabeler-empty'] as const)(
+    'sets the pull request number and performs no write without matches or fallback: %s',
+    async (config) => {
+      await mockContext('pull_request-synchronize')
+      mocks.config.mockReturnValue(config)
+      const getScope = nockGetPrFiles({ filenames: ['src/index.ts'] })
 
-    await runAutolabeler()
+      await runAutolabeler()
 
-    expect(mocks.core.setFailed).not.toHaveBeenCalled()
-    expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
-    expect(mocks.core.setOutput).toHaveBeenCalledWith('number', '1475')
-    expect(mocks.core.setOutput).not.toHaveBeenCalledWith(
-      'labels',
-      expect.anything(),
-    )
-    expect(getScope.isDone()).toBe(true)
-  })
+      expect(mocks.core.setFailed).not.toHaveBeenCalled()
+      expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
+      expect(mocks.core.setOutput).toHaveBeenCalledWith('number', '1475')
+      expect(mocks.core.setOutput).not.toHaveBeenCalledWith(
+        'labels',
+        expect.anything(),
+      )
+      expect(getScope.isDone()).toBe(true)
+    },
+  )
 
   it('fails without reading pull request files for unsupported events', async () => {
     await mockContext('push')

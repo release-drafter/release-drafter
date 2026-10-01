@@ -51,6 +51,7 @@ describe('JSON schema', () => {
       },
       label: { type: 'string', minLength: 1 },
       'stop-on-match': { type: 'boolean', default: false },
+      fallback: { type: 'boolean', default: false },
     }
     expect(schema).toMatchObject({
       required: ['autolabeler'],
@@ -72,10 +73,10 @@ describe('JSON schema', () => {
             ],
           },
         },
-        'fallback-label': { type: 'string', minLength: 1 },
       },
     })
     expect(schema.properties?.autolabeler).not.toHaveProperty('minItems')
+    expect(schema.properties).not.toHaveProperty('fallback-label')
   })
 
   /**

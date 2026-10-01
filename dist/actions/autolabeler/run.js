@@ -6,6 +6,8 @@ var labelsSchema = array(string().min(1)).min(1).describe("Labels to add when th
 var ruleSchema = object({
 	labels: labelsSchema.optional(),
 	label: labelSchema.optional(),
+	/** Add these labels only when no ordinary rule matches. */
+	fallback: boolean().optional().default(false),
 	/** Stop evaluating later rules after this rule matches and adds its labels. */
 	"stop-on-match": boolean().optional().default(false),
 	files: array(string().min(1)).optional().default([]),
@@ -13,16 +15,13 @@ var ruleSchema = object({
 	title: array(string().min(1)).optional().default([]),
 	body: array(string().min(1)).optional().default([])
 });
-var configSchema = object({
-	/**
-	* Defines pull request label rules.
-	* `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.
-	* A rule matches when at least one configured matcher succeeds.
-	*/
-	autolabeler: array(ruleSchema.extend({ labels: labelsSchema }).or(ruleSchema.extend({ label: labelSchema }))),
-	/** Added when no rule matches, including when the rule list is empty. */
-	"fallback-label": string().min(1).optional()
-}).meta({
+var configSchema = object({ 
+/**
+* Defines pull request label rules.
+* `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.
+* A rule matches when at least one configured matcher succeeds.
+*/
+autolabeler: array(ruleSchema.extend({ labels: labelsSchema }).or(ruleSchema.extend({ label: labelSchema }))) }).meta({
 	title: "JSON schema for Release Drafter's autolabeler action config.",
 	id: "https://github.com/release-drafter/release-drafter/blob/main/autolabeler/schema.json"
 });
@@ -38,9 +37,25 @@ var stringToRegex = (search) => {
 	return new RegExp(search.slice(1, delimiter), flags);
 };
 //#endregion
+//#region packages/autolabeler/src/config/validate-config.ts
+/** Validates fallback rules after structural configuration parsing. */
+var validateConfig = (config) => {
+	const fallbacks = config.autolabeler.filter((rule) => rule.fallback);
+	if (fallbacks.length > 1) throw new Error("Only one Autolabeler fallback rule is supported.");
+	const fallback = fallbacks[0];
+	if (fallback?.["stop-on-match"]) throw new Error("An Autolabeler rule cannot enable both 'fallback' and 'stop-on-match'.");
+	if (fallback && [
+		fallback.files,
+		fallback.branch,
+		fallback.title,
+		fallback.body
+	].some((matchers) => matchers.length > 0)) throw new Error("An Autolabeler fallback rule must not specify matchers.");
+};
+//#endregion
 //#region packages/autolabeler/src/config/parse-config.ts
 /** Normalizes label shorthand and compiles configured regex matchers. */
 var parseConfig = (params) => {
+	validateConfig(params.config);
 	const config = structuredClone(params.config);
 	const autolabeler = config.autolabeler.map((rule) => {
 		try {
@@ -137,6 +152,7 @@ var matchLabels = (params) => {
 	const labels = /* @__PURE__ */ new Set();
 	const matches = [];
 	for (const rule of config.autolabeler) {
+		if (rule.fallback) continue;
 		const body = pullRequest.body;
 		let matcher;
 		if (matchesFiles(rule.files, pullRequest.files)) matcher = "files";
@@ -154,11 +170,11 @@ var matchLabels = (params) => {
 			if (rule["stop-on-match"]) break;
 		}
 	}
-	const fallback = config["fallback-label"];
-	if (labels.size === 0 && fallback !== void 0) {
-		labels.add(fallback);
+	const fallback = config.autolabeler.find((rule) => rule.fallback);
+	if (labels.size === 0 && fallback) for (const label of fallback.labels) {
+		labels.add(label);
 		matches.push({
-			label: fallback,
+			label,
 			matcher: "fallback"
 		});
 	}

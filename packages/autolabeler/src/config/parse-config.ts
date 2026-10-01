@@ -1,9 +1,11 @@
 import type { Logger } from '../util.ts'
 import { stringToRegex } from '../util.ts'
 import type { Config } from './config.schema.ts'
+import { validateConfig } from './validate-config.ts'
 
 /** Normalizes label shorthand and compiles configured regex matchers. */
 export const parseConfig = (params: { config: Config; logger: Logger }) => {
+  validateConfig(params.config)
   const config = structuredClone(params.config)
   const autolabeler = config.autolabeler
     .map((rule) => {

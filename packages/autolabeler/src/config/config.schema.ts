@@ -10,6 +10,8 @@ const labelsSchema = array(string().min(1))
 const ruleSchema = object({
   labels: labelsSchema.optional(),
   label: labelSchema.optional(),
+  /** Add these labels only when no ordinary rule matches. */
+  fallback: boolean().optional().default(false),
   /** Stop evaluating later rules after this rule matches and adds its labels. */
   'stop-on-match': boolean().optional().default(false),
   files: array(string().min(1)).optional().default([]),
@@ -30,8 +32,6 @@ export const configSchema = object({
       .extend({ labels: labelsSchema })
       .or(ruleSchema.extend({ label: labelSchema })),
   ),
-  /** Added when no rule matches, including when the rule list is empty. */
-  'fallback-label': string().min(1).optional(),
 }).meta({
   title: "JSON schema for Release Drafter's autolabeler action config.",
   id: 'https://github.com/release-drafter/release-drafter/blob/main/autolabeler/schema.json',

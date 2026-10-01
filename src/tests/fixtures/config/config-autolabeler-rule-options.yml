@@ -1,5 +1,6 @@
-fallback-label: 'needs-triage'
 autolabeler:
+  - labels: ['needs-triage', 'uncategorized', 'needs-triage']
+    fallback: true
   - label: 'prior'
     files: ['*.md']
   - labels: ['documentation', 'chore', 'documentation', 'prior']
