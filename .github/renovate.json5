@@ -14,8 +14,8 @@
   "prHourlyLimit": 0,
   "automergeType": "pr",
   "automergeStrategy": "squash",
-  // Main has no required status checks, so Renovate must check results before merging.
-  "platformAutomerge": false,
+  // GitHub must require passing CI checks on main before platform automerge is enabled.
+  "platformAutomerge": true,
   "ignoreTests": false,
   // Renovate docs: this makes PR titles conventional, e.g. chore(deps): update eslint to v7.30.0.
   // Release Drafter categorizes Renovate PRs from those titles, not from the labels below.
