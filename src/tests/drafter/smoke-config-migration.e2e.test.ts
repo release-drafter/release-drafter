@@ -142,6 +142,10 @@ describe('smoke config migration e2e', () => {
         **Full Changelog**: https://github.com/toolmantim/release-drafter-test-project/compare/v2.0.0...v2.0.1
         ",
           ],
+          [
+            "labels",
+            "["feature","fix","minor","patch"]",
+          ],
         ]
       `)
     },

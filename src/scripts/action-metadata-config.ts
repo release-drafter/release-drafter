@@ -117,6 +117,10 @@ const drafterOutputs = {
     description: 'The name of the tag associated with the release.',
   },
   body: { description: 'The body of the drafted release.' },
+  labels: {
+    description:
+      'A JSON array of unique, sorted labels from pull requests passing release inclusion rules. Empty results are [].',
+  },
   html_url: {
     description: 'The URL for viewing the release.',
   },
@@ -193,6 +197,11 @@ export const actionManifests = {
   checkPr: {
     paths: ['check-pr/action.yml'],
     inputs: checkPrInputs,
-    outputs: {},
+    outputs: {
+      labels: {
+        description:
+          'A JSON array of unique, sorted labels on the current pull request from the event payload, including excluded or invalid pull requests. Empty results are [].',
+      },
+    },
   },
 } as const

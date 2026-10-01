@@ -19,4 +19,6 @@ inputs:
       Access token for configuration reads. Default: github.token.
     default: ${{ github.token }}
 
-outputs: {}
+outputs:
+  labels:
+    description: A JSON array of unique, sorted labels on the current pull request from the event payload, including excluded or invalid pull requests. Empty results are [].

@@ -1,4 +1,4 @@
-import { C as context, E as setFailed, T as info, _ as number, a as readActionInputs, i as defineActionInputNames, m as array, p as _enum, r as tokenInputSchema, s as actionLogger, v as object, x as union, y as string } from "../../chunks/config.js";
+import { C as context, E as setFailed, T as info, _ as number, a as readActionInputs, i as defineActionInputNames, m as array, o as writeActionOutputs, p as _enum, r as tokenInputSchema, s as actionLogger, v as object, x as union, y as string } from "../../chunks/config.js";
 import { g as evaluateCategories, n as mergeInputAndConfig, t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
 //#region packages/core/src/pull-request-validation.ts
 /** Remove path predicates and conditions that contain only path predicates. */
@@ -30,6 +30,10 @@ var evaluatePullRequest = (pullRequest, categories) => {
 		selectedCategoryCount: selectedCount
 	};
 };
+//#endregion
+//#region packages/gh-actions/src/check-pr/action-metadata.ts
+var actionInputNames = defineActionInputNames()(["config-name", "token"]);
+var actionOutputNames = ["labels"];
 //#endregion
 //#region packages/gh-actions/src/check-pr/event.ts
 var supportedPullRequestActions = [
@@ -71,9 +75,6 @@ var parsePullRequestEvent = (eventName, payload) => {
 //#region packages/gh-actions/src/check-pr/action-input.schema.ts
 var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(tokenInputSchema);
 //#endregion
-//#region packages/gh-actions/src/check-pr/action-metadata.ts
-var actionInputNames = defineActionInputNames()(["config-name", "token"]);
-//#endregion
 //#region packages/gh-actions/src/check-pr/get-action-inputs.ts
 var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
 //#endregion
@@ -94,6 +95,7 @@ var defaultDependencies = () => ({
 async function checkPullRequest(dependencies = defaultDependencies()) {
 	if (dependencies.eventName !== "pull_request" && dependencies.eventName !== "pull_request_target") throw new Error(`Unsupported event \`${dependencies.eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`);
 	const pullRequest = parsePullRequestEvent(dependencies.eventName, dependencies.payload);
+	writeActionOutputs(actionOutputNames, { labels: JSON.stringify([...new Set(pullRequest.labels)].sort()) });
 	const input = dependencies.getInput();
 	const config = mergeInputAndConfig({
 		config: await dependencies.getConfig(input["config-name"], input.token, pullRequest.baseRef),

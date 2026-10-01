@@ -322,6 +322,10 @@ forge-neutral:
   GitHub Actions state.
 - `logger` is optional. Omitting it uses a no-op logger.
 
+`DraftReleaseResult.labels` contains the unique, sorted labels from pull requests
+that pass the release inclusion and exclusion rules, including in dry-run mode.
+It is an empty array when there are no labels.
+
 `DraftReleaseResult` contains the forge-neutral release plan and normalized
 release payload. If the adapter writes a release, the result also contains the
 created or updated release.

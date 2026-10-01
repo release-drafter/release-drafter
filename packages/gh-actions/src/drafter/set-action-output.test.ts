@@ -5,6 +5,7 @@ import { setActionOutput } from './set-action-output.ts'
 describe('Drafter action outputs', () => {
   it('preserves the complete output contract from a normalized core result', () => {
     setActionOutput({
+      labels: ['api/user', 'feature'],
       plan: {
         action: 'create',
         releasePayload: {
@@ -54,6 +55,24 @@ describe('Drafter action outputs', () => {
       ['minor_version', '3'],
       ['patch_version', '4'],
       ['body', 'release body'],
+      ['labels', '["api/user","feature"]'],
     ])
+  })
+  it('sets an empty JSON array in dry-run mode without a persisted release', () => {
+    const releasePayload = {
+      name: 'v1.0.0',
+      tag: 'v1.0.0',
+      body: '',
+      targetCommitish: 'main',
+      prerelease: false,
+      makeLatest: true,
+      draft: true,
+    }
+    setActionOutput({
+      plan: { action: 'dry-run', releasePayload },
+      releasePayload,
+      labels: [],
+    })
+    expect(core.setOutput).toHaveBeenCalledWith('labels', '[]')
   })
 })

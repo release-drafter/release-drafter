@@ -31,4 +31,5 @@ export const actionOutputNames = [
   'minor_version',
   'patch_version',
   'body',
+  'labels',
 ] as const

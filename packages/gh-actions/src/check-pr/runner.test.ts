@@ -43,7 +43,7 @@ describe('check PR runner', () => {
       'token',
       'main',
     )
-    expect(core.setOutput).not.toHaveBeenCalled()
+    expect(core.setOutput).toHaveBeenCalledWith('labels', '[]')
     expect(core.setFailed).not.toHaveBeenCalled()
   })
 
@@ -54,6 +54,7 @@ describe('check PR runner', () => {
     await expect(checkPullRequest(value)).rejects.toThrow(
       'No configured changelog or version-resolver category matches the title or labels of pull request #42.',
     )
+    expect(core.setOutput).toHaveBeenCalledWith('labels', '[]')
   })
 
   it('passes pull requests excluded by labels', async () => {
@@ -66,6 +67,7 @@ describe('check PR runner', () => {
       { payload: payload('invalid title', ['skip']) },
     )
     await expect(checkPullRequest(value)).resolves.toBeUndefined()
+    expect(core.setOutput).toHaveBeenCalledWith('labels', '["skip"]')
     expect(core.info).toHaveBeenCalledWith(
       'Skipping excluded pull request #42.',
     )
@@ -80,6 +82,27 @@ describe('check PR runner', () => {
       )
     },
   )
+
+  it('outputs unique sorted labels with JSON escaping', async () => {
+    await checkPullRequest(
+      dependencies(
+        'feat: title',
+        [{ title: 'Features', when: { conventional: { type: 'feat' } } }],
+        {
+          payload: payload('feat: title', [
+            'z',
+            'api/user',
+            'z',
+            'comma,quote"',
+          ]),
+        },
+      ),
+    )
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'labels',
+      JSON.stringify(['api/user', 'comma,quote"', 'z']),
+    )
+  })
 
   it('supports pull_request_target', async () => {
     const value = dependencies(

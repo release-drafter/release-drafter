@@ -91,6 +91,7 @@ const options: DraftReleaseOptions = {
 }
 
 const result: DraftReleaseResult = {
+  labels: ['api/user'],
   plan: { action: 'dry-run', releasePayload: payload },
   releasePayload: payload,
 }

@@ -46,6 +46,7 @@ const createResult = (): DraftReleaseResult => ({
     uploadUrl: 'https://uploads.github.example/releases/42/assets',
   },
   releasePayload: payload,
+  labels: [],
 })
 
 const capture = () => {
@@ -982,6 +983,7 @@ describe('output and release result mapping', () => {
           releasePayload: payload,
         },
         releasePayload: payload,
+        labels: [],
       },
     })
 
@@ -1021,6 +1023,7 @@ describe('output and release result mapping', () => {
           plan,
           release: actualRelease,
           releasePayload: payload,
+          labels: [],
         },
       })
 
@@ -1078,6 +1081,7 @@ describe('output and release result mapping', () => {
       result: {
         plan: { action: 'dry-run' as const, releasePayload: payload },
         releasePayload: payload,
+        labels: [],
       },
       expected: undefined,
     },

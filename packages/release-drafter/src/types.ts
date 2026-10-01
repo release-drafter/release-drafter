@@ -319,6 +319,8 @@ export interface DraftReleaseResult {
   plan: ReleasePlan
   release?: Release
   releasePayload: ReleasePayload
+  /** Unique, sorted labels from pull requests passing release inclusion rules. */
+  labels: string[]
 }
 
 export interface DraftReleaseOptions {

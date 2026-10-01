@@ -66,6 +66,7 @@ export const draftRelease = async (
     plan: result.plan,
     release: result.release,
     releasePayload: result.releasePayload,
+    labels: result.labels,
   }
 }
 

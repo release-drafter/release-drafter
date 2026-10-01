@@ -1368,7 +1368,8 @@ var draftRelease = async (params) => {
 			plan,
 			repository
 		}),
-		releasePayload
+		releasePayload,
+		labels: [...new Set(filterPullRequestsByPreCategories(pullRequests, config.categories).flatMap((pullRequest) => pullRequest.labels ?? []).filter((label) => label.length > 0))].sort()
 	};
 };
 //#endregion
@@ -1413,7 +1414,8 @@ var actionOutputNames = [
 	"major_version",
 	"minor_version",
 	"patch_version",
-	"body"
+	"body",
+	"labels"
 ];
 //#endregion
 //#region packages/gh-actions/src/drafter/get-action-inputs.ts
@@ -1426,7 +1428,7 @@ var getConfig = async (configName, token) => {
 //#endregion
 //#region packages/gh-actions/src/drafter/set-action-output.ts
 /** Set every declared Drafter action output from the release result. */
-var setActionOutput = ({ release, releasePayload }) => {
+var setActionOutput = ({ release, releasePayload, labels }) => {
 	info("Set action outputs...");
 	const outputName = release?.name ?? releasePayload.name;
 	const outputTagName = release?.tagName ?? releasePayload.tag;
@@ -1440,7 +1442,8 @@ var setActionOutput = ({ release, releasePayload }) => {
 		major_version: releasePayload.majorVersion || void 0,
 		minor_version: releasePayload.minorVersion || void 0,
 		patch_version: releasePayload.patchVersion || void 0,
-		body: releasePayload.body
+		body: releasePayload.body,
+		labels: JSON.stringify(labels)
 	});
 	info("Outputs set!");
 };

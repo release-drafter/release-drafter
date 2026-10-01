@@ -399,6 +399,101 @@ describe('draftRelease', () => {
     serverUrl: 'https://github.com',
   }
 
+  it.each(['create', 'update', 'dry-run'] as const)(
+    'returns labels only from included pull requests for %s',
+    async (action) => {
+      const forge = adapter({
+        draftReleases: true,
+        releases: [
+          release({ tagName: 'v1.0.0' }),
+          ...(action === 'update'
+            ? [release({ tagName: 'v1.1.0', draft: true })]
+            : []),
+        ],
+      })
+      vi.mocked(forge.findChanges).mockResolvedValue({
+        commits: [],
+        newContributorLogins: new Set<string>(),
+        pullRequests: [
+          {
+            number: 1,
+            title: 'feat: user',
+            labels: ['included', 'api/user', 'shared', ''],
+            changedFiles: ['src/user.ts'],
+          },
+          {
+            number: 2,
+            title: 'fix: billing',
+            labels: ['shared', 'api/billing', 'included', 'comma,quote"'],
+            changedFiles: ['src/billing.ts'],
+          },
+          {
+            number: 3,
+            title: 'docs: excluded',
+            labels: ['included', 'docs-only'],
+            changedFiles: ['docs/readme.md'],
+          },
+          { number: 4, title: 'feat: not included', labels: ['other-service'] },
+          { number: 5, title: 'fix: unlabeled' },
+        ],
+      })
+      const config = orchestrationConfig()
+      config.categories = categories
+      const result = await draftRelease({
+        adapter: forge,
+        config,
+        input: { publish: false, dryRun: action === 'dry-run' },
+        logger,
+        repository,
+      })
+      expect(result.plan.action).toBe(action)
+      expect(result.labels).toEqual([
+        'api/billing',
+        'api/user',
+        'comma,quote"',
+        'included',
+        'shared',
+      ])
+      expect(result.releasePayload).not.toHaveProperty('labels')
+    },
+  )
+
+  it.each([
+    { pullRequests: [] },
+    { pullRequests: [{ number: 1, title: 'fix: unlabeled' }] },
+  ])(
+    'returns an empty label array when changes have no labels',
+    async ({ pullRequests }) => {
+      const forge = adapter({ draftReleases: true, releases: [release()] })
+      vi.mocked(forge.findChanges).mockResolvedValue({
+        commits: [],
+        pullRequests,
+        newContributorLogins: new Set<string>(),
+      })
+      const result = await draftRelease({
+        adapter: forge,
+        config: orchestrationConfig(),
+        input: { publish: false, dryRun: true },
+        logger,
+        repository,
+      })
+      expect(result.labels).toEqual([])
+    },
+  )
+
+  it('returns an empty label array when no comparison base is available', async () => {
+    const forge = adapter({ draftReleases: true, releases: [] })
+    const result = await draftRelease({
+      adapter: forge,
+      config: orchestrationConfig(),
+      input: { publish: false, dryRun: true },
+      logger,
+      repository,
+    })
+    expect(forge.findChanges).not.toHaveBeenCalled()
+    expect(result.labels).toEqual([])
+  })
+
   it('uses an explicit from only as the change comparison base', async () => {
     const existingDraft = release({
       id: 'draft',

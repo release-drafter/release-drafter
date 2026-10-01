@@ -1,7 +1,9 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
 import { evaluatePullRequest, mergeInputAndConfig } from '@release-drafter/core'
+import { writeActionOutputs } from '../common/action-contract.ts'
 import { actionLogger } from '../common/github.ts'
+import { actionOutputNames } from './action-metadata.ts'
 import { parsePullRequestEvent } from './event.ts'
 import { getActionInput } from './get-action-inputs.ts'
 import { getConfig } from './get-config.ts'
@@ -36,6 +38,9 @@ export async function checkPullRequest(
     dependencies.eventName,
     dependencies.payload,
   )
+  writeActionOutputs(actionOutputNames, {
+    labels: JSON.stringify([...new Set(pullRequest.labels)].sort()),
+  })
   const input = dependencies.getInput()
   const config = mergeInputAndConfig({
     config: await dependencies.getConfig(
