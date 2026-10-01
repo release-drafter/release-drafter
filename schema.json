@@ -479,37 +479,16 @@
       "type": "string"
     },
     "latest": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "boolean"
-        }
-      ]
+      "type": ["string", "boolean"]
     },
     "prerelease": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "boolean"
-        }
-      ]
+      "type": ["string", "boolean"]
     },
     "prerelease-identifier": {
       "type": "string"
     },
     "include-pre-releases": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "boolean"
-        }
-      ]
+      "type": ["string", "boolean"]
     },
     "commitish": {
       "type": "string"
