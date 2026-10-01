@@ -1,6 +1,23 @@
 import type * as z from 'zod'
 import { array, boolean, object, string } from 'zod'
 
+const labelSchema = string()
+  .min(1)
+  .describe('Backward-compatible single label. Prefer labels for new rules.')
+const labelsSchema = array(string().min(1))
+  .min(1)
+  .describe('Labels to add when this rule matches, in configuration order.')
+const ruleSchema = object({
+  labels: labelsSchema.optional(),
+  label: labelSchema.optional(),
+  /** Stop evaluating later rules after this rule matches and adds its labels. */
+  'stop-on-match': boolean().optional().default(false),
+  files: array(string().min(1)).optional().default([]),
+  branch: array(string().min(1)).optional().default([]),
+  title: array(string().min(1)).optional().default([]),
+  body: array(string().min(1)).optional().default([]),
+})
+
 export const configSchema = object({
   /**
    * Defines pull request label rules.
@@ -8,18 +25,10 @@ export const configSchema = object({
    * A rule matches when at least one configured matcher succeeds.
    */
   autolabeler: array(
-    object({
-      /** Labels to add when this rule matches, in configuration order. */
-      label: string()
-        .min(1)
-        .or(array(string().min(1)).min(1)),
-      /** Stop evaluating later rules after this rule matches and adds its labels. */
-      'stop-on-match': boolean().optional().default(false),
-      files: array(string().min(1)).optional().default([]),
-      branch: array(string().min(1)).optional().default([]),
-      title: array(string().min(1)).optional().default([]),
-      body: array(string().min(1)).optional().default([]),
-    }),
+    // Require at least one form without refinements so JSON Schema validates it too.
+    ruleSchema
+      .extend({ labels: labelsSchema })
+      .or(ruleSchema.extend({ label: labelSchema })),
   ),
   /** Added when no rule matches, including when the rule list is empty. */
   'autolabeler-fallback-label': string().min(1).optional(),

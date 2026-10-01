@@ -2,7 +2,7 @@ import type { Logger } from '../util.ts'
 import { stringToRegex } from '../util.ts'
 import type { Config } from './config.schema.ts'
 
-/** Compiles configured regex matchers while preserving all other config values. */
+/** Normalizes label shorthand and compiles configured regex matchers. */
 export const parseConfig = (params: { config: Config; logger: Logger }) => {
   const config = structuredClone(params.config)
   const autolabeler = config.autolabeler
@@ -10,6 +10,10 @@ export const parseConfig = (params: { config: Config; logger: Logger }) => {
       try {
         return {
           ...rule,
+          labels: [
+            ...(rule.labels ?? []),
+            ...(rule.label !== undefined ? [rule.label] : []),
+          ],
           branch: rule.branch.map(stringToRegex),
           title: rule.title.map(stringToRegex),
           body: rule.body.map(stringToRegex),

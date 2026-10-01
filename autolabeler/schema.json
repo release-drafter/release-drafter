@@ -43,62 +43,120 @@
     "autolabeler": {
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "label": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "labels": {
                 "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Labels to add when this rule matches, in configuration order."
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Backward-compatible single label. Prefer labels for new rules."
+              },
+              "stop-on-match": {
+                "default": false,
+                "type": "boolean"
+              },
+              "files": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "branch": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "title": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "body": {
+                "default": [],
                 "type": "array",
                 "items": {
                   "type": "string",
                   "minLength": 1
                 }
               }
-            ]
+            },
+            "required": ["labels"]
           },
-          "stop-on-match": {
-            "default": false,
-            "type": "boolean"
-          },
-          "files": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "branch": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "title": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "body": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
+          {
+            "type": "object",
+            "properties": {
+              "labels": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Labels to add when this rule matches, in configuration order."
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Backward-compatible single label. Prefer labels for new rules."
+              },
+              "stop-on-match": {
+                "default": false,
+                "type": "boolean"
+              },
+              "files": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "branch": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "title": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "body": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": ["label"]
           }
-        },
-        "required": ["label"]
+        ]
       }
     },
     "autolabeler-fallback-label": {

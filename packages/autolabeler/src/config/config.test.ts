@@ -56,21 +56,66 @@ autolabeler:
     await expect(
       parseConfigFile(`
 autolabeler:
-  - label: [chore, documentation]
+  - labels: [chore, documentation]
     stop-on-match: true
     files: [docs/**]
 `),
     ).resolves.toMatchObject({
       autolabeler: [
-        { label: ['chore', 'documentation'], 'stop-on-match': true },
+        { labels: ['chore', 'documentation'], 'stop-on-match': true },
       ],
     })
   })
 
   it.each(
-    ['', [], [''], ['valid', ''], [42], null, 42].map((label) => ({ label })),
+    ['', [], ['valid'], [''], ['valid', ''], [42], null, 42].map((label) => ({
+      label,
+    })),
   )('rejects invalid label configuration $label', ({ label }) => {
     expect(() => configSchema.parse({ autolabeler: [{ label }] })).toThrow()
+  })
+
+  it.each(
+    ['', [], [''], ['valid', ''], [42], null, 42].map((labels) => ({ labels })),
+  )(
+    'rejects invalid labels configuration $labels even with a valid scalar label',
+    ({ labels }) => {
+      expect(() => configSchema.parse({ autolabeler: [{ labels }] })).toThrow()
+      expect(() =>
+        configSchema.parse({ autolabeler: [{ labels, label: 'valid' }] }),
+      ).toThrow()
+    },
+  )
+
+  it('requires labels or the backward-compatible label option', () => {
+    expect(() =>
+      configSchema.parse({ autolabeler: [{ files: ['docs/**'] }] }),
+    ).toThrow()
+  })
+
+  it('rejects an invalid scalar label even with a valid labels list', () => {
+    expect(() =>
+      configSchema.parse({ autolabeler: [{ labels: ['valid'], label: '' }] }),
+    ).toThrow()
+  })
+
+  it('normalizes the scalar label and combines both forms without mutating config', () => {
+    const config = configSchema.parse({
+      autolabeler: [
+        { label: 'legacy' },
+        { labels: ['canonical'] },
+        { labels: ['canonical', 'legacy'], label: 'legacy' },
+      ],
+    })
+    const original = structuredClone(config)
+    const parsed = parseConfig({ config, logger: { warning: vi.fn() } })
+
+    expect(config).toEqual(original)
+    expect(parsed.autolabeler.map(({ labels }) => labels)).toEqual([
+      ['legacy'],
+      ['canonical'],
+      ['canonical', 'legacy', 'legacy'],
+    ])
   })
 
   it.each(['', [], null, 42].map((fallback) => ({ fallback })))(
@@ -97,7 +142,7 @@ autolabeler:
     const config = configSchema.parse({
       autolabeler: [
         {
-          label: ['feature', 'core'],
+          labels: ['feature', 'core'],
           'stop-on-match': true,
           files: ['src/**'],
           branch: ['/feature\\/.+/i'],
@@ -113,7 +158,7 @@ autolabeler:
     })
 
     expect(config).toEqual(original)
-    expect(parsed.autolabeler[0]?.label).toEqual(['feature', 'core'])
+    expect(parsed.autolabeler[0]?.labels).toEqual(['feature', 'core'])
     expect(parsed.autolabeler[0]?.['stop-on-match']).toBe(true)
     expect(parsed.autolabeler[0]?.files).toEqual(['src/**'])
     expect(parsed.autolabeler[0]?.branch[0]).toEqual(/feature\/.+/i)

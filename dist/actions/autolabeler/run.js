@@ -1,22 +1,25 @@
 import { C as context, E as setFailed, S as Minimatch, T as info, a as readActionInputs, c as getGitHubAdapter, d as escapeStringRegexp, h as boolean, i as defineActionInputNames, m as array, n as sharedInputSchema, o as writeActionOutputs, t as composeConfigGet, v as object, w as core_exports, y as string } from "../../chunks/config.js";
 import process from "node:process";
 //#region packages/autolabeler/src/config/config.schema.ts
+var labelSchema = string().min(1).describe("Backward-compatible single label. Prefer labels for new rules.");
+var labelsSchema = array(string().min(1)).min(1).describe("Labels to add when this rule matches, in configuration order.");
+var ruleSchema = object({
+	labels: labelsSchema.optional(),
+	label: labelSchema.optional(),
+	/** Stop evaluating later rules after this rule matches and adds its labels. */
+	"stop-on-match": boolean().optional().default(false),
+	files: array(string().min(1)).optional().default([]),
+	branch: array(string().min(1)).optional().default([]),
+	title: array(string().min(1)).optional().default([]),
+	body: array(string().min(1)).optional().default([])
+});
 var configSchema = object({
 	/**
 	* Defines pull request label rules.
 	* `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.
 	* A rule matches when at least one configured matcher succeeds.
 	*/
-	autolabeler: array(object({
-		/** Labels to add when this rule matches, in configuration order. */
-		label: string().min(1).or(array(string().min(1)).min(1)),
-		/** Stop evaluating later rules after this rule matches and adds its labels. */
-		"stop-on-match": boolean().optional().default(false),
-		files: array(string().min(1)).optional().default([]),
-		branch: array(string().min(1)).optional().default([]),
-		title: array(string().min(1)).optional().default([]),
-		body: array(string().min(1)).optional().default([])
-	})),
+	autolabeler: array(ruleSchema.extend({ labels: labelsSchema }).or(ruleSchema.extend({ label: labelSchema }))),
 	/** Added when no rule matches, including when the rule list is empty. */
 	"autolabeler-fallback-label": string().min(1).optional()
 }).meta({
@@ -36,13 +39,14 @@ var stringToRegex = (search) => {
 };
 //#endregion
 //#region packages/autolabeler/src/config/parse-config.ts
-/** Compiles configured regex matchers while preserving all other config values. */
+/** Normalizes label shorthand and compiles configured regex matchers. */
 var parseConfig = (params) => {
 	const config = structuredClone(params.config);
 	const autolabeler = config.autolabeler.map((rule) => {
 		try {
 			return {
 				...rule,
+				labels: [...rule.labels ?? [], ...rule.label !== void 0 ? [rule.label] : []],
 				branch: rule.branch.map(stringToRegex),
 				title: rule.title.map(stringToRegex),
 				body: rule.body.map(stringToRegex)
@@ -140,8 +144,7 @@ var matchLabels = (params) => {
 		else if (rule.title.some((regex) => test(regex, pullRequest.title))) matcher = "title";
 		else if (body != null && rule.body.some((regex) => test(regex, body))) matcher = "body";
 		if (matcher) {
-			const ruleLabels = Array.isArray(rule.label) ? rule.label : [rule.label];
-			for (const label of ruleLabels) {
+			for (const label of rule.labels) {
 				labels.add(label);
 				matches.push({
 					label,

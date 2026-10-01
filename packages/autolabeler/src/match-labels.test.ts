@@ -26,8 +26,8 @@ describe('matchLabels', () => {
   it('adds all labels and deduplicates within and across matching rules', () => {
     const { config } = compile([
       { label: 'core', branch: ['/feature/'] },
-      { label: ['feature', 'core', 'feature'], title: ['/feat/'] },
-      { label: ['ignored'], title: ['/fix/'] },
+      { labels: ['feature', 'core', 'feature'], title: ['/feat/'] },
+      { labels: ['ignored'], title: ['/fix/'] },
     ])
     expect(matchLabels({ config, pullRequest })).toEqual({
       labels: ['core', 'feature'],
@@ -36,6 +36,20 @@ describe('matchLabels', () => {
         { label: 'feature', matcher: 'title' },
         { label: 'core', matcher: 'title' },
         { label: 'feature', matcher: 'title' },
+      ],
+    })
+  })
+
+  it('combines both label forms, deduplicates submission and retains diagnostics', () => {
+    const { config } = compile([
+      { labels: ['feature', 'core'], label: 'core', title: ['/feat/'] },
+    ])
+    expect(matchLabels({ config, pullRequest })).toEqual({
+      labels: ['feature', 'core'],
+      matches: [
+        { label: 'feature', matcher: 'title' },
+        { label: 'core', matcher: 'title' },
+        { label: 'core', matcher: 'title' },
       ],
     })
   })
@@ -52,7 +66,7 @@ describe('matchLabels', () => {
         [
           { label: 'prior', title: ['/feat/'] },
           {
-            label: ['core', 'prior', 'feature'],
+            labels: ['core', 'prior', 'feature'],
             [matcher as string]: patterns,
             'stop-on-match': true,
           },
@@ -75,7 +89,7 @@ describe('matchLabels', () => {
   it('stops on a matching rule even when its labels were already selected', () => {
     const { config } = compile([
       { label: 'core', title: ['/feat/'] },
-      { label: ['core', 'core'], title: ['/feat/'], 'stop-on-match': true },
+      { labels: ['core', 'core'], title: ['/feat/'], 'stop-on-match': true },
       { label: 'later', title: ['/feat/'] },
     ])
     expect(matchLabels({ config, pullRequest }).labels).toEqual(['core'])

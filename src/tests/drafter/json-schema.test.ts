@@ -43,26 +43,33 @@ describe('JSON schema', () => {
 
   it('exposes compatible labels, stop defaults and an optional fallback', () => {
     const schema = generateAutolabelerJSONSchema()
+    const ruleProperties = {
+      labels: {
+        type: 'array',
+        minItems: 1,
+        items: { type: 'string', minLength: 1 },
+      },
+      label: { type: 'string', minLength: 1 },
+      'stop-on-match': { type: 'boolean', default: false },
+    }
     expect(schema).toMatchObject({
       required: ['autolabeler'],
       properties: {
         autolabeler: {
           type: 'array',
           items: {
-            required: ['label'],
-            properties: {
-              label: {
-                anyOf: [
-                  { type: 'string', minLength: 1 },
-                  {
-                    type: 'array',
-                    minItems: 1,
-                    items: { type: 'string', minLength: 1 },
-                  },
-                ],
+            anyOf: [
+              {
+                type: 'object',
+                required: ['labels'],
+                properties: ruleProperties,
               },
-              'stop-on-match': { type: 'boolean', default: false },
-            },
+              {
+                type: 'object',
+                required: ['label'],
+                properties: ruleProperties,
+              },
+            ],
           },
         },
         'autolabeler-fallback-label': { type: 'string', minLength: 1 },

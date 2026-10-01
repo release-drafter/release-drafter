@@ -50,8 +50,7 @@ export const matchLabels = (params: {
     }
 
     if (matcher) {
-      const ruleLabels = Array.isArray(rule.label) ? rule.label : [rule.label]
-      for (const label of ruleLabels) {
+      for (const label of rule.labels) {
         labels.add(label)
         matches.push({ label, matcher })
       }

@@ -668,8 +668,11 @@ jobs:
 
 The available matchers are `files` for glob patterns and `branch`, `title`, and
 `body` for regular expressions. Autolabeler evaluates each matcher
-independently. A rule matches if at least one matcher succeeds. Its `label` can
-be a nonempty string or a nonempty list of nonempty strings. Autolabeler adds
+independently. A rule matches if at least one matcher succeeds. Use `labels`
+with a nonempty list of nonempty strings. The scalar `label` option remains
+supported for backward compatibility. Each rule must specify at least one of
+these options. If both are supplied, Autolabeler combines them, using `labels`
+first and then `label`. Autolabeler adds
 all labels from matching rules, removes duplicates, and preserves their
 configuration order.
 
@@ -689,18 +692,18 @@ selection.
 # .github/release-drafter.yml
 autolabeler-fallback-label: 'needs-triage'
 autolabeler:
-  - label: ['chore', 'documentation']
+  - labels: ['chore', 'documentation']
     files:
       - '*.md'
     branch:
       - '/docs{0,1}\/.+/'
-  - label: 'bug'
+  - labels: ['bug']
     stop-on-match: true
     branch:
       - '/fix\/.+/'
     title:
       - '/fix/i'
-  - label: 'enhancement'
+  - labels: ['enhancement']
     branch:
       - '/feature\/.+/'
     body:
