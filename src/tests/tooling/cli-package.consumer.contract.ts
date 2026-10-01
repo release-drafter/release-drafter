@@ -58,8 +58,8 @@ const approvedRuntimeDependencies = {
   '@gitbeaker/rest': '43.8.0',
   '@octokit/core': '^7.0.8',
   '@octokit/plugin-paginate-graphql': '^6.0.0',
-  '@octokit/plugin-paginate-rest': '^14.0.0',
-  '@octokit/plugin-rest-endpoint-methods': '^17.0.0',
+  '@octokit/plugin-paginate-rest': '^15.0.0',
+  '@octokit/plugin-rest-endpoint-methods': '^18.0.0',
   '@octokit/plugin-retry': '^8.1.1',
   undici: '^8.11.2',
 }
