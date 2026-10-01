@@ -71,6 +71,13 @@
       "groupName": "actions",
     },
     {
+      "matchPackageNames": ["undici"],
+      "matchDepTypes": ["dependencies"],
+      // Share Undici 6 with the Actions toolkit and retain patched v6 updates.
+      // Revisit when the toolkit changes major or before v6 support ends on 2027-04-30.
+      "allowedVersions": "^6.28.1",
+    },
+    {
       "matchPackageNames": ["@types/*"],
       "groupName": "types",
     },

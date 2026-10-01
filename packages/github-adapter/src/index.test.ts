@@ -161,7 +161,6 @@ describe('GitHubAdapter', () => {
     })
 
     expect(undiciMocks.EnvHttpProxyAgent).toHaveBeenCalledWith({
-      proxyTunnel: true,
       httpProxy: undefined,
       httpsProxy: 'http://proxy.example.com:8080',
       noProxy: 'api.github.com,localhost',
