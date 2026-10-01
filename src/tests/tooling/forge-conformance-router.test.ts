@@ -26,6 +26,7 @@ const result = (
   error?: Error,
 ): ReturnType<GitRunner> => ({
   status,
+  stdout: '',
   ...(error ? { error } : {}),
 })
 
@@ -195,9 +196,9 @@ describe('forge conformance router', () => {
     expect(FORGE_CONFORMANCE_PATHSPECS).not.toContain(
       ':(glob)packages/*/package.json',
     )
-    expect(FORGE_CONFORMANCE_PATHSPECS).toContain('packages/core/package.json')
+    expect(FORGE_CONFORMANCE_PATHSPECS).toContain(':(glob)packages/core/src/**')
     expect(FORGE_CONFORMANCE_PATHSPECS).toContain(
-      'packages/gitlab-adapter/package.json',
+      ':(glob)packages/gitlab-adapter/src/**',
     )
     expect(FORGE_CONFORMANCE_PATHSPECS).not.toContain(
       'packages/gh-actions/package.json',
@@ -208,7 +209,14 @@ describe('forge conformance router', () => {
     const lockfile = () => ({
       lockfileVersion: 3,
       packages: {
-        '': { devDependencies: { vitest: '^4', testcontainers: '^12' } },
+        '': {
+          devDependencies: {
+            vitest: '^4',
+            vite: '^8',
+            testcontainers: '^12',
+            biome: '^2',
+          },
+        },
         ...Object.fromEntries(
           [
             'core',
@@ -226,6 +234,9 @@ describe('forge conformance router', () => {
         'packages/gh-actions': { devDependencies: { webhooks: '^1' } },
         'node_modules/webhooks': { version: '1.0.0', dev: true },
         'node_modules/vitest': { version: '4.0.0' },
+        'node_modules/vite': { version: '8.0.0' },
+        'node_modules/@vitest/coverage-v8': { version: '4.0.0' },
+        'node_modules/biome': { version: '2.0.0' },
         'node_modules/testcontainers': { version: '12.0.0' },
         'node_modules/shared': {
           version: '1.0.0',
@@ -235,7 +246,8 @@ describe('forge conformance router', () => {
       } as Record<string, Record<string, unknown>>,
     })
     const routeLocks = (before: unknown, after: unknown) => {
-      const runGit = gitRunner(0, 0, 1)
+      const runGit = gitRunner(0, 0)
+      runGit.mockReturnValueOnce({ status: 0, stdout: 'package-lock.json\n' })
       runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(before) })
       runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(after) })
       return routeForgeConformance(baseEnvironment, runGit)
@@ -258,7 +270,7 @@ describe('forge conformance router', () => {
       })
     })
 
-    it.each(['shared', 'transitive', 'vitest', 'testcontainers'])(
+    it.each(['shared', 'transitive', 'vitest', 'vite', 'testcontainers'])(
       'runs when the resolved %s dependency changes',
       (name) => {
         const before = lockfile()
@@ -270,6 +282,42 @@ describe('forge conformance router', () => {
         })
       },
     )
+
+    it('skips unrelated root tooling and workspace development dependencies', () => {
+      const before = lockfile()
+      before.packages['packages/core'].devDependencies = { biome: '^2' }
+      before.packages['node_modules/vitest'].peerDependencies = { biome: '^2' }
+      before.packages['node_modules/vitest'].peerDependenciesMeta = {
+        biome: { optional: true },
+      }
+      const after = structuredClone(before)
+      after.packages[''].devDependencies = {
+        vitest: '^4',
+        vite: '^8',
+        testcontainers: '^12',
+        biome: '^3',
+      }
+      after.packages['packages/core'].devDependencies = { biome: '^3' }
+      after.packages['node_modules/biome'].version = '3.0.0'
+      expect(routeLocks(before, after).shouldRun).toBe(false)
+    })
+
+    it('skips workspace version, license, and range normalization with unchanged resolutions', () => {
+      const before = lockfile()
+      const after = lockfile()
+      after.packages['packages/core'].version = '99.0.0'
+      after.packages['packages/core'].license = 'MIT'
+      after.packages['packages/core'].dependencies = { shared: '^1.0.1' }
+      expect(routeLocks(before, after).shouldRun).toBe(false)
+    })
+
+    it('still runs when unrelated tooling updates a shared runtime dependency', () => {
+      const before = lockfile()
+      before.packages['node_modules/biome'].dependencies = { shared: '^1' }
+      const after = structuredClone(before)
+      after.packages['node_modules/shared'].version = '2.0.0'
+      expect(routeLocks(before, after).shouldRun).toBe(true)
+    })
 
     it('ignores dev classification changes caused by unrelated workspaces', () => {
       const before = lockfile()
@@ -332,8 +380,94 @@ describe('forge conformance router', () => {
         routeForgeConformance(baseEnvironment, gitRunner(0, 0, 2)),
       ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
       expect(
-        routeForgeConformance(baseEnvironment, gitRunner(0, 0, 1, 2)),
+        routeForgeConformance(baseEnvironment, gitRunner(0, 0, 2)),
       ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
+    })
+  })
+
+  describe('manifest routing', () => {
+    const routeManifest = (path: string, before: unknown, after: unknown) => {
+      const runGit = gitRunner(0, 0)
+      runGit.mockReturnValueOnce({ status: 0, stdout: `${path}\n` })
+      runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(before) })
+      runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(after) })
+      return routeForgeConformance(baseEnvironment, runGit)
+    }
+
+    it('skips root formatting, code generation, and type tooling changes', () => {
+      expect(
+        routeManifest(
+          'package.json',
+          {
+            devDependencies: {
+              '@biomejs/biome': '2.5.3',
+              typescript: '^7',
+              '@graphql-codegen/cli': '^7',
+            },
+            scripts: { format: 'biome format .', ci: 'npm run test:run' },
+          },
+          {
+            devDependencies: {
+              '@biomejs/biome': '2.5.14',
+              typescript: '^8',
+              '@graphql-codegen/cli': '^8',
+            },
+            scripts: {
+              format: 'biome format --write .',
+              ci: 'npm run test:run && npm run lint',
+            },
+          },
+        ).shouldRun,
+      ).toBe(false)
+    })
+
+    it('skips workspace development dependency and publication metadata changes', () => {
+      expect(
+        routeManifest(
+          'packages/core/package.json',
+          {
+            version: '1',
+            license: 'ISC',
+            devDependencies: { vitest: '^4' },
+            scripts: { build: 'vite build' },
+          },
+          {
+            version: '2',
+            license: 'MIT',
+            devDependencies: { vitest: '^5' },
+            scripts: { build: 'vite build --config something.ts' },
+          },
+        ).shouldRun,
+      ).toBe(false)
+    })
+
+    it.each([
+      ['package.json', { devDependencies: { vitest: '^5' } }],
+      [
+        'package.json',
+        { scripts: { 'test:conformance:gitlab': 'different-command' } },
+      ],
+      ['package.json', { overrides: { shared: '2' } }],
+      ['packages/core/package.json', { dependencies: { shared: '^2' } }],
+      [
+        'packages/release-drafter/package.json',
+        { exports: { '.': './different.ts' } },
+      ],
+    ])('runs for relevant settings in %s', (path, after) => {
+      expect(routeManifest(path, {}, after)).toEqual({
+        shouldRun: true,
+        reason: 'forge package settings changed',
+      })
+    })
+
+    it('fails open when changed manifests cannot be read', () => {
+      const runGit = gitRunner(0, 0)
+      runGit.mockReturnValueOnce({ status: 0, stdout: 'package.json\n' })
+      runGit.mockReturnValueOnce({ status: 128 })
+      expect(routeForgeConformance(baseEnvironment, runGit)).toMatchObject({
+        shouldRun: true,
+        warning: expect.any(String),
+      })
     })
   })
 
@@ -356,6 +490,19 @@ describe('forge conformance router', () => {
         ['packages/gh-actions/tsconfig.json', false],
         ['packages/gh-actions/src/autolabeler/runner.ts', false],
         ['packages/core/package.json', true],
+        ['packages/core/src/ports.ts', true],
+        ['packages/core/src/new-helper.ts', true],
+        ['packages/gitlab-adapter/src/new-helper.ts', true],
+        ['packages/core/src/release/generate-changelog.ts', true],
+        ['packages/core/src/category-matching.ts', true],
+        ['packages/release-drafter/src/cli.ts', false],
+        ['packages/rest-adapter/src/index.test.ts', false],
+        ['packages/github-adapter/src/index.ts', true],
+        ['src/tests/integration/forge-conformance/github.test.ts', false],
+        ['src/tests/integration/forge-conformance/contract.ts', true],
+        ['vite.config.ts', false],
+        ['vitest.gitlab.config.ts', true],
+        ['.github/workflows/ci.yml', false],
         ['packages/gitlab-adapter/tsconfig.json', true],
         ['packages/rest-adapter/src/index.ts', true],
       ] as const) {
