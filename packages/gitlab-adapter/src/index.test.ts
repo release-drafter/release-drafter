@@ -251,26 +251,26 @@ describe('GitLabAdapter', () => {
       mergeRequest: mergeRequest(1, { title: undefined }),
       error: 'Associated GitLab merge request !1 omitted its title',
     },
-  ])('rejects an associated merge request with $name', async ({
-    mergeRequest: malformedMergeRequest,
-    error,
-  }) => {
-    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
-      const path = pathOf(input)
-      if (path.includes('/repository/compare')) {
-        return json({
-          compare_timeout: false,
-          commits: [commit('a', '2026-01-01')],
-        })
-      }
-      if (path.includes('/commits/a/merge_requests')) {
-        return json([malformedMergeRequest])
-      }
-      throw new Error(`Unexpected ${path}`)
-    })
+  ])(
+    'rejects an associated merge request with $name',
+    async ({ mergeRequest: malformedMergeRequest, error }) => {
+      const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+        const path = pathOf(input)
+        if (path.includes('/repository/compare')) {
+          return json({
+            compare_timeout: false,
+            commits: [commit('a', '2026-01-01')],
+          })
+        }
+        if (path.includes('/commits/a/merge_requests')) {
+          return json([malformedMergeRequest])
+        }
+        throw new Error(`Unexpected ${path}`)
+      })
 
-    await expect(adapter(fetch).findChanges(request())).rejects.toThrow(error)
-  })
+      await expect(adapter(fetch).findChanges(request())).rejects.toThrow(error)
+    },
+  )
 
   it('continues merge-request discovery when only comparison diffs timed out', async () => {
     const debug = vi.fn()
@@ -415,32 +415,32 @@ describe('GitLabAdapter', () => {
     ).rejects.toThrow('incomplete: expected 2 files but received 1')
   })
 
-  it.each([
-    '1000+',
-    'unknown',
-  ])('rejects invalid or capped changed-file count %s before loading diffs', async (changesCount) => {
-    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
-      const path = pathOf(input)
-      if (path.includes('/repository/compare')) {
-        return json({
-          compare_timeout: false,
-          commits: [commit('a', '2026-01-01')],
-        })
-      }
-      if (path.includes('/commits/a/merge_requests')) {
-        return json([mergeRequest(1, { changes_count: changesCount })])
-      }
-      throw new Error(`Unexpected ${path}`)
-    })
-    await expect(
-      adapter(fetch).findChanges(request({ includeChangedFiles: true })),
-    ).rejects.toThrow(`invalid or capped changed-file count: ${changesCount}`)
-    expect(
-      fetch.mock.calls.some(([input]) =>
-        pathOf(input).includes('/merge_requests/1/diffs'),
-      ),
-    ).toBe(false)
-  })
+  it.each(['1000+', 'unknown'])(
+    'rejects invalid or capped changed-file count %s before loading diffs',
+    async (changesCount) => {
+      const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+        const path = pathOf(input)
+        if (path.includes('/repository/compare')) {
+          return json({
+            compare_timeout: false,
+            commits: [commit('a', '2026-01-01')],
+          })
+        }
+        if (path.includes('/commits/a/merge_requests')) {
+          return json([mergeRequest(1, { changes_count: changesCount })])
+        }
+        throw new Error(`Unexpected ${path}`)
+      })
+      await expect(
+        adapter(fetch).findChanges(request({ includeChangedFiles: true })),
+      ).rejects.toThrow(`invalid or capped changed-file count: ${changesCount}`)
+      expect(
+        fetch.mock.calls.some(([input]) =>
+          pathOf(input).includes('/merge_requests/1/diffs'),
+        ),
+      ).toBe(false)
+    },
+  )
 
   it('uses GitLab first_contribution without confusing display names for usernames', async () => {
     const warning = vi.fn()
@@ -541,34 +541,34 @@ describe('GitLabAdapter', () => {
     { name: 'absent', headers: {}, expectedWait: 2 },
     { name: 'valid', headers: { 'retry-after': '0.001' }, expectedWait: 1 },
     { name: 'malformed', headers: { 'retry-after': 'later' }, expectedWait: 2 },
-  ])('uses the correct retry delay for a $name Retry-After header', async ({
-    headers,
-    expectedWait,
-  }) => {
-    const debug = vi.fn()
-    const fetch = vi
-      .fn<typeof globalThis.fetch>()
-      .mockResolvedValueOnce(
-        json({ message: 'busy' }, { status: 429 }, headers),
+  ])(
+    'uses the correct retry delay for a $name Retry-After header',
+    async ({ headers, expectedWait }) => {
+      const debug = vi.fn()
+      const fetch = vi
+        .fn<typeof globalThis.fetch>()
+        .mockResolvedValueOnce(
+          json({ message: 'busy' }, { status: 429 }, headers),
+        )
+        .mockResolvedValueOnce(json([]))
+      await expect(
+        new GitLabAdapter({
+          token: 'gitlab-token',
+          fetch,
+          logger: { debug, info() {}, error() {}, warning() {} },
+          limits: {
+            retries: 1,
+            retryBaseDelayMs: 2,
+            maxRetryDelayMs: 10,
+          },
+        }).listReleases({ repository }),
+      ).resolves.toEqual([])
+      expect(debug).toHaveBeenCalledWith(
+        expect.stringContaining(`after ${expectedWait}ms`),
       )
-      .mockResolvedValueOnce(json([]))
-    await expect(
-      new GitLabAdapter({
-        token: 'gitlab-token',
-        fetch,
-        logger: { debug, info() {}, error() {}, warning() {} },
-        limits: {
-          retries: 1,
-          retryBaseDelayMs: 2,
-          maxRetryDelayMs: 10,
-        },
-      }).listReleases({ repository }),
-    ).resolves.toEqual([])
-    expect(debug).toHaveBeenCalledWith(
-      expect.stringContaining(`after ${expectedWait}ms`),
-    )
-    expect(fetch).toHaveBeenCalledTimes(2)
-  })
+      expect(fetch).toHaveBeenCalledTimes(2)
+    },
+  )
 
   it('performs only one POST attempt for transient HTTP and network failures', async () => {
     const payload = {
@@ -787,35 +787,35 @@ describe('GitLabAdapter', () => {
     ])
   })
 
-  it.each([
-    'creation',
-    'update',
-  ] as const)('rejects prerelease %s before constructing or sending a request', async (operation) => {
-    const fetch = vi.fn<typeof globalThis.fetch>()
-    const instance = new GitLabAdapter({ token: '', fetch })
-    const payload = {
-      name: 'Two',
-      tag: 'v2',
-      body: 'notes',
-      targetCommitish: 'main',
-      prerelease: true,
-      makeLatest: true,
-      draft: false,
-    }
-    const result =
-      operation === 'creation'
-        ? instance.createRelease({ repository, payload })
-        : instance.updateRelease({
-            repository,
-            release: { id: 'v1', tagName: 'v1' },
-            payload,
-          })
+  it.each(['creation', 'update'] as const)(
+    'rejects prerelease %s before constructing or sending a request',
+    async (operation) => {
+      const fetch = vi.fn<typeof globalThis.fetch>()
+      const instance = new GitLabAdapter({ token: '', fetch })
+      const payload = {
+        name: 'Two',
+        tag: 'v2',
+        body: 'notes',
+        targetCommitish: 'main',
+        prerelease: true,
+        makeLatest: true,
+        draft: false,
+      }
+      const result =
+        operation === 'creation'
+          ? instance.createRelease({ repository, payload })
+          : instance.updateRelease({
+              repository,
+              release: { id: 'v1', tagName: 'v1' },
+              payload,
+            })
 
-    await expect(result).rejects.toThrow(
-      'GitLab does not support prerelease releases',
-    )
-    expect(fetch).not.toHaveBeenCalled()
-  })
+      await expect(result).rejects.toThrow(
+        'GitLab does not support prerelease releases',
+      )
+      expect(fetch).not.toHaveBeenCalled()
+    },
+  )
 
   it('rejects draft creation and updates before constructing or sending a request', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>()

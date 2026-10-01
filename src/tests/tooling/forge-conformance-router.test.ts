@@ -92,21 +92,24 @@ describe('forge conformance router', () => {
   it.each([
     ['relevant diff', 1, true],
     ['irrelevant diff', 0, false],
-  ])('routes an unrelated labeled event using its %s', (_name, diffStatus, shouldRun) => {
-    const runGit = gitRunner(0, diffStatus)
+  ])(
+    'routes an unrelated labeled event using its %s',
+    (_name, diffStatus, shouldRun) => {
+      const runGit = gitRunner(0, diffStatus)
 
-    expect(
-      routeForgeConformance(
-        {
-          ...baseEnvironment,
-          EVENT_ACTION: 'labeled',
-          LABEL_NAME: 'documentation',
-        },
-        runGit,
-      ),
-    ).toMatchObject({ shouldRun })
-    expect(runGit).toHaveBeenCalledTimes(2)
-  })
+      expect(
+        routeForgeConformance(
+          {
+            ...baseEnvironment,
+            EVENT_ACTION: 'labeled',
+            LABEL_NAME: 'documentation',
+          },
+          runGit,
+        ),
+      ).toMatchObject({ shouldRun })
+      expect(runGit).toHaveBeenCalledTimes(2)
+    },
+  )
 
   it('runs labeled events when the override label already exists', () => {
     const runGit = gitRunner()
@@ -143,20 +146,20 @@ describe('forge conformance router', () => {
     expect(runGit).not.toHaveBeenCalled()
   })
 
-  it.each([
-    '',
-    '0'.repeat(40),
-  ])('fails open for a missing or zero base SHA (%s)', (baseSha) => {
-    const runGit = gitRunner()
+  it.each(['', '0'.repeat(40)])(
+    'fails open for a missing or zero base SHA (%s)',
+    (baseSha) => {
+      const runGit = gitRunner()
 
-    expect(
-      routeForgeConformance(
-        { ...baseEnvironment, PR_BASE_SHA: baseSha },
-        runGit,
-      ),
-    ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
-    expect(runGit).not.toHaveBeenCalled()
-  })
+      expect(
+        routeForgeConformance(
+          { ...baseEnvironment, PR_BASE_SHA: baseSha },
+          runGit,
+        ),
+      ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
+      expect(runGit).not.toHaveBeenCalled()
+    },
+  )
 
   it.each([
     ['invalid base', [2]],

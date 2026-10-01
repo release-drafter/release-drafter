@@ -71,15 +71,15 @@ describe('check PR runner', () => {
     )
   })
 
-  it.each([
-    'push',
-    'workflow_dispatch',
-  ])('rejects non-PR event %s', async (eventName) => {
-    const value = dependencies('feat: title', [], { eventName })
-    await expect(checkPullRequest(value)).rejects.toThrow(
-      `Unsupported event \`${eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`,
-    )
-  })
+  it.each(['push', 'workflow_dispatch'])(
+    'rejects non-PR event %s',
+    async (eventName) => {
+      const value = dependencies('feat: title', [], { eventName })
+      await expect(checkPullRequest(value)).rejects.toThrow(
+        `Unsupported event \`${eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`,
+      )
+    },
+  )
 
   it('supports pull_request_target', async () => {
     const value = dependencies(

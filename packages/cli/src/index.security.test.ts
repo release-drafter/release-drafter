@@ -93,25 +93,28 @@ describe('CLI runtime security', () => {
     ['gitea', 'GITEA_TOKEN', 'gitea-token'],
     ['forgejo', 'FORGEJO_TOKEN', 'forgejo-token'],
     ['gitlab', 'GITLAB_TOKEN', 'gitlab-token'],
-  ] as const)('uses only the %s-specific environment token', async (forge, variable, token) => {
-    const result = await invoke(
-      ['acme/widgets', '--forge', forge, '--to', 'main'],
-      {
-        env: {
-          GITHUB_TOKEN: 'github-secret',
-          GITEA_TOKEN: 'wrong-gitea',
-          FORGEJO_TOKEN: 'wrong-forgejo',
-          GITLAB_TOKEN: 'wrong-gitlab',
-          [variable]: token,
+  ] as const)(
+    'uses only the %s-specific environment token',
+    async (forge, variable, token) => {
+      const result = await invoke(
+        ['acme/widgets', '--forge', forge, '--to', 'main'],
+        {
+          env: {
+            GITHUB_TOKEN: 'github-secret',
+            GITEA_TOKEN: 'wrong-gitea',
+            FORGEJO_TOKEN: 'wrong-forgejo',
+            GITLAB_TOKEN: 'wrong-gitlab',
+            [variable]: token,
+          },
         },
-      },
-    )
+      )
 
-    expect(result.code).toBe(0)
-    expect(result.adapterFactory).toHaveBeenCalledWith(
-      expect.objectContaining({ token }),
-    )
-  })
+      expect(result.code).toBe(0)
+      expect(result.adapterFactory).toHaveBeenCalledWith(
+        expect.objectContaining({ token }),
+      )
+    },
+  )
 
   it('does not reuse another forge token when the selected forge token is missing', async () => {
     const result = await invoke(
@@ -162,16 +165,19 @@ describe('CLI runtime security', () => {
       'https://github.example/api/graphql#f-value-secret',
       'f-value-secret',
     ],
-  ])('rejects and redacts unsafe %s values', async (option, endpoint, secret) => {
-    const result = await invoke(['acme/widgets', option, endpoint])
+  ])(
+    'rejects and redacts unsafe %s values',
+    async (option, endpoint, secret) => {
+      const result = await invoke(['acme/widgets', option, endpoint])
 
-    expect(result.code).toBe(2)
-    expect(result.stderr.text()).toContain(
-      `${option} must be an absolute HTTP(S) URL without credentials, a query, or a fragment.`,
-    )
-    expect(result.stderr.text()).not.toContain(secret)
-    expect(result.adapterFactory).not.toHaveBeenCalled()
-  })
+      expect(result.code).toBe(2)
+      expect(result.stderr.text()).toContain(
+        `${option} must be an absolute HTTP(S) URL without credentials, a query, or a fragment.`,
+      )
+      expect(result.stderr.text()).not.toContain(secret)
+      expect(result.adapterFactory).not.toHaveBeenCalled()
+    },
+  )
 
   it('routes local configs through the injected atomic reader boundary', async () => {
     const readLocalFile = vi.fn(async () => ({
@@ -333,39 +339,43 @@ describe('CLI runtime security', () => {
         'https://attacker.example/graphql',
       ],
     },
-  ])('does not send automatic GitHub.com credentials for $name', async ({
-    endpoints,
-  }) => {
-    const result = await invoke(
-      ['acme/widgets', '--to', 'main', '--forge', 'github', ...endpoints],
-      { env: { GITHUB_TOKEN: 'github-dot-com-secret' } },
-    )
+  ])(
+    'does not send automatic GitHub.com credentials for $name',
+    async ({ endpoints }) => {
+      const result = await invoke(
+        ['acme/widgets', '--to', 'main', '--forge', 'github', ...endpoints],
+        { env: { GITHUB_TOKEN: 'github-dot-com-secret' } },
+      )
 
-    expect(result.code).toBe(2)
-    expect(result.stderr.text()).toContain(
-      'Automatic environment credentials cannot be used with endpoints on a different origin.',
-    )
-    expect(result.stderr.text()).toContain(
-      'Pass --token to authorize the custom endpoints explicitly.',
-    )
-    expect(result.stderr.text()).not.toContain('github-dot-com-secret')
-    expect(result.adapterFactory).not.toHaveBeenCalled()
-  })
+      expect(result.code).toBe(2)
+      expect(result.stderr.text()).toContain(
+        'Automatic environment credentials cannot be used with endpoints on a different origin.',
+      )
+      expect(result.stderr.text()).toContain(
+        'Pass --token to authorize the custom endpoints explicitly.',
+      )
+      expect(result.stderr.text()).not.toContain('github-dot-com-secret')
+      expect(result.adapterFactory).not.toHaveBeenCalled()
+    },
+  )
 
   it.each([
     ['--api-url', 'https://api.github.com/custom-rest'],
     ['--graphql-url', 'https://api.github.com/custom-graphql'],
-  ])('uses GitHub.com credentials for a valid %s origin', async (...endpoint) => {
-    const result = await invoke(
-      ['acme/widgets', '--to', 'main', '--forge', 'github', ...endpoint],
-      { env: { GITHUB_TOKEN: 'github-dot-com-token' } },
-    )
+  ])(
+    'uses GitHub.com credentials for a valid %s origin',
+    async (...endpoint) => {
+      const result = await invoke(
+        ['acme/widgets', '--to', 'main', '--forge', 'github', ...endpoint],
+        { env: { GITHUB_TOKEN: 'github-dot-com-token' } },
+      )
 
-    expect(result.code).toBe(0)
-    expect(result.adapterFactory).toHaveBeenCalledWith(
-      expect.objectContaining({ token: 'github-dot-com-token' }),
-    )
-  })
+      expect(result.code).toBe(0)
+      expect(result.adapterFactory).toHaveBeenCalledWith(
+        expect.objectContaining({ token: 'github-dot-com-token' }),
+      )
+    },
+  )
 
   it('allows an explicit token to authorize custom endpoint origins', async () => {
     const result = await invoke(
@@ -413,52 +423,58 @@ describe('CLI runtime security', () => {
   it.each([
     ['--api-url', 'https://attacker.example/api/v3'],
     ['--graphql-url', 'https://attacker.example/api/graphql'],
-  ])('does not send automatic GHES credentials for a mismatched %s', async (...endpoint) => {
-    const result = await invoke(
-      [
-        'acme/widgets',
-        '--to',
-        'main',
-        '--forge',
-        'github',
-        '--server-url',
-        'https://github.corp',
-        ...endpoint,
-      ],
-      { env: { GH_ENTERPRISE_TOKEN: 'enterprise-secret' } },
-    )
+  ])(
+    'does not send automatic GHES credentials for a mismatched %s',
+    async (...endpoint) => {
+      const result = await invoke(
+        [
+          'acme/widgets',
+          '--to',
+          'main',
+          '--forge',
+          'github',
+          '--server-url',
+          'https://github.corp',
+          ...endpoint,
+        ],
+        { env: { GH_ENTERPRISE_TOKEN: 'enterprise-secret' } },
+      )
 
-    expect(result.code).toBe(2)
-    expect(result.stderr.text()).toContain(
-      'Automatic environment credentials cannot be used with endpoints on a different origin.',
-    )
-    expect(result.stderr.text()).not.toContain('enterprise-secret')
-    expect(result.adapterFactory).not.toHaveBeenCalled()
-  })
+      expect(result.code).toBe(2)
+      expect(result.stderr.text()).toContain(
+        'Automatic environment credentials cannot be used with endpoints on a different origin.',
+      )
+      expect(result.stderr.text()).not.toContain('enterprise-secret')
+      expect(result.adapterFactory).not.toHaveBeenCalled()
+    },
+  )
 
   it.each([
     ['--api-url', 'https://github.corp/custom-rest'],
     ['--graphql-url', 'https://github.corp/custom-graphql'],
-  ])('uses GHES credentials for a valid same-origin %s endpoint', async (...endpoint) => {
-    const result = await invoke(
-      [
-        'acme/widgets',
-        '--to',
-        'main',
-        '--forge',
-        'github',
-        '--server-url',
-        'https://github.corp',
-        ...endpoint,
-      ],
-      { env: { GH_ENTERPRISE_TOKEN: 'enterprise-token' } },
-    )
+  ])(
+    'uses GHES credentials for a valid same-origin %s endpoint',
+    async (...endpoint) => {
+      const result = await invoke(
+        [
+          'acme/widgets',
+          '--to',
+          'main',
+          '--forge',
+          'github',
+          '--server-url',
+          'https://github.corp',
+          ...endpoint,
+        ],
+        { env: { GH_ENTERPRISE_TOKEN: 'enterprise-token' } },
+      )
 
-    expect(result.code).toBe(0)
-    expect(result.adapterFactory).toHaveBeenCalledWith(
-      expect.objectContaining({ token: 'enterprise-token' }),
-    )
-  })
+      expect(result.code).toBe(0)
+      expect(result.adapterFactory).toHaveBeenCalledWith(
+        expect.objectContaining({ token: 'enterprise-token' }),
+      )
+    },
+  )
 
   it('rejects a GHES endpoint with a mismatched protocol', async () => {
     const result = await invoke([
