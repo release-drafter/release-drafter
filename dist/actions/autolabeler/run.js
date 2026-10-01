@@ -185,17 +185,18 @@ async function run() {
 		if (context.eventName !== "pull_request" && context.eventName !== "pull_request_target") throw new Error(`Event type is wrong. Expected 'pull_request' or 'pull_request_target', received '${context.eventName}'`);
 		const adapter = getGitHubAdapter(input.token);
 		const payload = context.payload;
+		const files = await adapter.findPullRequestChangedFiles({
+			repository: {
+				owner: context.repo.owner,
+				name: context.repo.repo,
+				serverUrl: process.env.GITHUB_SERVER_URL ?? "https://github.com"
+			},
+			number: payload.number
+		});
 		const result = matchLabels({
 			config,
 			pullRequest: {
-				files: await adapter.findPullRequestChangedFiles({
-					repository: {
-						owner: context.repo.owner,
-						name: context.repo.repo,
-						serverUrl: process.env.GITHUB_SERVER_URL ?? "https://github.com"
-					},
-					number: payload.number
-				}),
+				files,
 				branch: payload.pull_request.head.ref,
 				title: payload.pull_request.title,
 				body: payload.pull_request.body

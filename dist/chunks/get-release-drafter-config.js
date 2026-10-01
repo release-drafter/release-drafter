@@ -1509,7 +1509,7 @@ var parseGroupChanges = (params) => {
 		const names = captureNamesOf(pattern);
 		const groupNames = names.filter(isGroupName);
 		if (groupNames.length === 0) {
-			logger.warning(`The group-changes pattern '${groupChange.pattern}' must be a regular expression literal, such as '/…/', with a 'group' capture group.`);
+			logger.warning(`The group-changes pattern '${groupChange.pattern}' must be a regular expression literal, such as '/\u2026/', with a 'group' capture group.`);
 			return [];
 		}
 		const templatable = names.filter((name) => {
