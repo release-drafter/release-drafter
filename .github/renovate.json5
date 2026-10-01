@@ -49,6 +49,13 @@
   },
   "packageRules": [
     {
+      "matchDatasources": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchConfidence": ["high", "very high"],
+      // Prefer well-tested updates in the PR queue without suppressing other updates.
+      "prPriority": 1,
+    },
+    {
       "matchManagers": ["renovate-config"],
       "matchDepTypes": ["tool-constraint"],
       "matchDepNames": ["npm"],
