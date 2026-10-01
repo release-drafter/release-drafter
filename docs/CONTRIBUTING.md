@@ -161,7 +161,10 @@ and grants only `contents: read`.
 
 Only `.github/workflows/npm-publish.yml` may publish to npm. It uses npm trusted
 publishing with GitHub OIDC and the protected `npm` environment; it does not use
-a long-lived npm token. Do not make a scoped `@release-drafter/*` workspace
+a long-lived npm token. The trusted publisher must specify `npm-publish.yml`,
+the `release-drafter/release-drafter` repository, and the `npm` environment.
+Keep direct publishing and dist-tag management disabled; staging is always
+allowed. Do not make a scoped `@release-drafter/*` workspace
 publishable.
 
 ## Issue management policy
@@ -185,43 +188,17 @@ a new issue.
 
 ## Releasing
 
-Run this command:
+1. Run the **Release** workflow on `main`. Use `auto` for Release Drafter's
+   proposed version, or enter `patch`, `minor`, `major`, or an exact stable version.
+2. Review the generated version PR and merge it using GitHub's merge or squash
+   method after checks pass. Release Drafter publishes the immutable GitHub
+   release and updates the major tag automatically.
+3. Approve the **Publish npm Package** workflow through the `npm` environment.
+4. Review and approve the staged package on npm with 2FA to make it public.
 
-```bash
-git checkout main
-git pull
-npm version [major | minor | patch] --ignore-scripts=false
-```
-
-> [!IMPORTANT]
->
-> - Select the version increment for the last drafted release.
-> - Use a version number instead of `major | minor | patch` if needed.
-> - This repository sets `ignore-scripts=true` in `.npmrc`. Use
->   `--ignore-scripts=false` to run the release lifecycle scripts.
-
-The command performs these tasks:
-
-- Runs tests (`preversion` script).
-- Bumps the private root version in [package.json](../package.json).
-- Synchronizes that version to every workspace manifest, including the public
-  `packages/release-drafter/package.json`, refreshes `package-lock.json`, and
-  stages all versioned manifests (`version` script).
-- Commits the changes and creates the corresponding tag.
-- Pushes the commit and tag (`postversion` script).
-
-After the push, the `release.yml` workflow runs for the new tag. It performs
-these tasks:
-
-- Publishes the release draft.
-- Updates the major version tag. For example, a `v6.2.1` tag moves `v6` to the
-  same commit.
-
-The `npm-publish.yml` workflow also runs for the tag. After approval through the
-`npm` environment, it verifies that the tag and workspace versions match, runs
-the full checks and package-readiness suite, and publishes only the public
-`release-drafter` facade through npm trusted publishing. A maintainer can rerun
-publication for an existing tag with `workflow_dispatch` and the exact tag name.
+For a failed npm publication, run **Publish npm Package** manually with the
+existing release tag. If the workflow needs a fix, merge it first and run from
+the corrected ref, which must be allowed by the `npm` environment.
 
 ## Resources
 

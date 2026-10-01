@@ -58,9 +58,7 @@
     "check:workspaces": "npm run check:dependencies && npm run check:boundaries && npm run check:packages && npm run check:package-boundaries",
     "ci": "npm run generate:action-metadata && npm run lint:fix && npm run format:docs && npm run typecheck && npm run test:run && npm run generate:schemas && npm run build:actions && npm run check:workspaces",
     "check:clean": "node src/scripts/check-clean.ts",
-    "preversion": "npm run ci && npm run check:clean",
-    "version": "node src/scripts/sync-workspace-versions.ts && npm install --package-lock-only --ignore-scripts && git add package.json package-lock.json packages/*/package.json",
-    "postversion": "git push && git push origin v$npm_package_version"
+    "version": "node src/scripts/sync-workspace-versions.ts && npm install --package-lock-only --ignore-scripts && git add package.json package-lock.json packages/*/package.json"
   },
   "license": "ISC",
   "dependencies": {
