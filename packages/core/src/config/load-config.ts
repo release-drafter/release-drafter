@@ -1,5 +1,4 @@
 import { dirname, isAbsolute, posix, relative, resolve, sep } from 'node:path'
-import { type Config, configSchema } from '@release-drafter/core'
 import { parse as parseYaml } from 'yaml'
 import {
   looseObject,
@@ -12,6 +11,8 @@ import {
   enum as zenum,
   null as znull,
 } from 'zod'
+import type { Repository } from '../types.ts'
+import { type Config, configSchema } from './config.schema.ts'
 import {
   LocalConfigFileBoundaryError,
   type LocalConfigFileReader,
@@ -20,13 +21,6 @@ import {
 const SUPPORTED_EXTENSIONS = ['json', 'yml', 'yaml'] as const
 const MAX_EXTENDS_DEPTH = 33
 const MERGE_STRATEGIES = ['override', 'append', 'prepend'] as const
-
-/** A repository address used by the CLI config loader. */
-export type CliRepository = {
-  owner: string
-  name: string
-  serverUrl: string
-}
 
 /** Side-effect boundary for config-loader diagnostics. */
 export interface ConfigLogger {
@@ -39,7 +33,7 @@ export interface ConfigLogger {
 /** Injected repository-content reader used instead of a global forge adapter. */
 export interface RepositoryConfigReader {
   getRepositoryConfig(options: {
-    repository: CliRepository
+    repository: Repository
     path: string
     ref?: string
   }): Promise<string>
@@ -53,7 +47,7 @@ export interface LoadConfigOptions {
    * repository-relative path outside an inheritance chain defaults to `.github/`.
    */
   target: string
-  repository: CliRepository
+  repository: Repository
   ref: string
   cwd: string
   reader: RepositoryConfigReader
@@ -66,7 +60,7 @@ type Scheme = 'file' | 'github'
 
 type ConfigTarget = {
   scheme: Scheme
-  repository: CliRepository
+  repository: Repository
   path: string
   ref?: string
 }
@@ -114,7 +108,7 @@ const configFileSchema = looseObject({
   _extends: extendsDeclarationSchema,
 })
 
-const sameRepository = (left: CliRepository, right: CliRepository): boolean =>
+const sameRepository = (left: Repository, right: Repository): boolean =>
   left.owner === right.owner &&
   left.name === right.name &&
   normalizedServerUrl(left.serverUrl) === normalizedServerUrl(right.serverUrl)
@@ -140,7 +134,7 @@ const targetError = (target: string, detail: string): Error =>
 
 const parseBlobUrl = (
   target: string,
-  repository: CliRepository,
+  repository: Repository,
 ): ParsedTarget | undefined => {
   if (!/^https?:\/\//i.test(target)) return undefined
 
@@ -637,7 +631,7 @@ const mergeConfigChain = (
 }
 
 /**
- * Loads, composes, and validates a Release Drafter CLI configuration.
+ * Loads, composes, and validates a Release Drafter configuration.
  *
  * All I/O and logging are injected. The loader does not read environment
  * variables, `process`, a global workspace, or the network directly.

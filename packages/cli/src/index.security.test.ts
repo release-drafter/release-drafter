@@ -1,4 +1,7 @@
-import type { DraftReleaseResult } from '@release-drafter/core'
+import type {
+  DraftReleaseResult,
+  LocalConfigFileReader,
+} from '@release-drafter/core'
 import { describe, expect, it, vi } from 'vitest'
 import type {
   CliAdapter,
@@ -7,7 +10,6 @@ import type {
   WritableStream,
 } from './index.ts'
 import { runCli } from './index.ts'
-import type { LocalConfigFileReader } from './local-config-file.ts'
 
 const CONFIG = 'template: "$CHANGES"\n'
 

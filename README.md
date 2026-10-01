@@ -69,6 +69,14 @@ See the [`release-drafter` package README](./packages/release-drafter/README.md)
 for installation instructions, the complete option reference, configuration
 targets, JSON output, and exit codes.
 
+## Programmatic API
+
+The `release-drafter` package also exports `createForgeAdapter`, `loadConfig`,
+and `draftRelease` for GitHub, Gitea, Forgejo, and GitLab. Use `loadConfig` for
+standard configuration loading, inheritance, validation, and normalization, or
+pass your own parsed configuration to `draftRelease`.
+See the [programmatic API examples](./packages/release-drafter/README.md#programmatic-api).
+
 ## Check pull requests
 
 The read-only Check PR action validates a pull request against the title or
