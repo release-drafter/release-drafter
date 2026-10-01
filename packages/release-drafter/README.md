@@ -152,7 +152,9 @@ pull request valid.
 
 The command exits with `0` for valid or excluded pull requests and `1` for an
 invalid pull request. In JSON mode, it returns the pull request number, title,
-status, validity, skip status, and number of selected categories:
+labels, status, validity, skip status, and number of selected categories.
+`labels` is a JSON array of unique, sorted current PR labels, including for
+excluded or invalid PRs:
 
 ```sh
 npx release-drafter check-pr owner/repo 123 --json
@@ -175,6 +177,9 @@ The result contains these fields:
 - `id`: release ID, when an existing or written release is available
 - `html_url` and `upload_url`: release URLs when available
 - `tag_name`, `name`, and `body`: the resolved release payload
+- `labels`: a JSON array of unique, sorted labels from PRs passing the release
+  inclusion and exclusion rules, including labels not referenced by the config;
+  empty results are `[]`
 - `resolved_version`, `major_version`, `minor_version`, `patch_version`, and
   `prerelease_version`: calculated version fields when available
 - `target_commitish`: the resolved release target
@@ -197,7 +202,8 @@ For example:
   "prerelease": false,
   "latest": true,
   "dry_run": true,
-  "body": "## What's Changed\n"
+  "body": "## What's Changed\n",
+  "labels": ["api/user", "feature"]
 }
 ```
 

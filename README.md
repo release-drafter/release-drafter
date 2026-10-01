@@ -803,7 +803,9 @@ The Release Drafter action sets outputs for later workflow steps.
 | `patch_version`    | Patch component of the resolved version. Example: `1` for `6.3.1`.                                             |
 
 The `labels` output includes all labels on merged pull requests that pass the
-configured inclusion and exclusion rules, including uncategorized pull requests.
+configured inclusion and exclusion rules, including uncategorized pull requests
+and labels not referenced by the configuration. The CLI also exposes these
+labels as an array in its `--json` result.
 It covers the same comparison range used to draft the release and is also set in
 dry-run mode. With no labels or no available comparison base, it is `[]`.
 
