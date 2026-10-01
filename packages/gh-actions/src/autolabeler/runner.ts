@@ -1,13 +1,18 @@
 import process from 'node:process'
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import type { PullRequestEvent } from '@octokit/webhooks-types'
+import type { components } from '@octokit/openapi-webhooks-types'
 import { matchLabels } from '@release-drafter/autolabeler'
 import { writeActionOutputs } from '../common/action-contract.ts'
 import { getGitHubAdapter } from '../common/github.ts'
 import { actionOutputNames } from './action-metadata.ts'
 import { getActionInput } from './get-action-inputs.ts'
 import { getConfig } from './get-config.ts'
+
+type PullRequestPayload = Pick<
+  components['schemas']['webhook-pull-request-opened'],
+  'number' | 'pull_request'
+>
 
 /** Run the Autolabeler action using package-owned config and matching logic. */
 export async function run(): Promise<void> {
@@ -27,7 +32,7 @@ export async function run(): Promise<void> {
     }
 
     const adapter = getGitHubAdapter(input.token)
-    const payload = context.payload as PullRequestEvent
+    const payload = context.payload as PullRequestPayload
     const files = await adapter.findPullRequestChangedFiles({
       repository: {
         owner: context.repo.owner,

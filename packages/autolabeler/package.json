@@ -29,7 +29,7 @@
     "escape-string-regexp": "^5.0.0",
     "minimatch": "^10.2.6",
     "yaml": "^2.9.1",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "license": "ISC",
   "private": true,

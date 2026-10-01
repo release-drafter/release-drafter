@@ -73,7 +73,7 @@
     "graphql": "^17.0.2",
     "release-drafter": "*",
     "yaml": "^2.9.1",
-    "zod": "^4.4.3"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
@@ -84,7 +84,7 @@
     "@swc/core": "1.16.2",
     "@types/node": "^24.13.6",
     "@vitest/coverage-v8": "^4.1.11",
-    "dependency-cruiser": "18.1.0",
+    "dependency-cruiser": "18.4.0",
     "knip": "6.38.0",
     "nock": "^14.0.17",
     "prettier": "^3.9.9",

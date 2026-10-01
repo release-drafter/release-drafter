@@ -106,21 +106,41 @@ to run Docker-backed forge conformance tests:
 The CI matrix tests Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
 redacted container logs and fixture metadata.
 
-The forge conformance workflow runs the matrix in these cases:
+The forge conformance workflow runs the matrix for changes to these inputs:
 
-- A pull request changes one of these paths:
-  - `.github/workflows/ci.yml`
-  - `.github/workflows/forge-conformance.yml`
-  - `.node-version`, `package.json`, or `package-lock.json`
-  - Root TypeScript, Vite, or Vitest configuration files
-  - `src/**`
-  - Package source, manifests, or TypeScript configuration files
-- A maintainer applies the exact `ci:forge-conformance` label. This label skips
-  changed-file detection.
-- A push to `main` changes one of the same paths.
+- Source or TypeScript configurations in the core, public package, or adapters
+  (`github-adapter`, `rest-adapter`, `gitea-adapter`, `forgejo-adapter`, and
+  `gitlab-adapter`). Source scope uses package directories so new shared helpers
+  are included automatically. Unit tests and the public CLI entrypoint are excluded.
+- The conformance suites and fixtures under `src/tests/integration/forge-conformance`
+  and `src/tests/integration/gitlab`, excluding the mocked GitHub unit suite.
+- `.github/workflows/forge-conformance.yml`, `.node-version`, `.npmrc`, root
+  TypeScript configurations, `vitest.forge.config.ts`, `vitest.gitlab.config.ts`,
+  or `src/scripts/forge-conformance-router.ts`.
+- Runtime dependency or module-resolution settings in the core, public package,
+  or adapter manifests. Root manifest triggers are limited to conformance
+  commands, Vitest, Vite, Testcontainers, installation overrides, and runtime
+  and workspace resolution settings.
+- Lockfile changes affecting runtime dependencies of those packages, or Vitest,
+  Vite, and Testcontainers. The router follows transitive, nested, installed
+  optional, required peer, and workspace dependencies in both lockfile versions.
+  Workspace development dependencies and unused optional peer integrations
+  such as coverage and browser runners are excluded.
+
+Formatting, linting, code generation, publication metadata, unrelated unit tests,
+CLI, autolabeler, and GitHub Actions changes use normal CI without starting forge
+containers. A dependency update still runs the matrix if it changes a runtime
+package shared with the forge suites. Shared package source changes remain
+conservative triggers even when a particular function is not exercised.
+
+Apply the exact `ci:forge-conformance` label when a change outside this scope
+needs container verification. The label overrides detection. Extend the package
+and tool lists when the suites start using another workspace or test tool.
+The same routing applies to pushes to `main`.
 
 Other pull request label events use changed file detection. The workflow also
-runs the matrix if the base commit is missing or invalid, or if Git fails.
+runs the matrix if the base commit is missing or invalid, if Git fails, or if
+changed dependency inputs cannot be inspected.
 
 The scope job runs the checked-in TypeScript router with the repository's pinned
 Node version. It passes fixed pathspec arguments directly to Git without shell
