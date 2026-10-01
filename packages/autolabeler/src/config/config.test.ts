@@ -31,12 +31,10 @@ autolabeler:
       autolabeler: [],
     })
     await expect(
-      parseConfigFile(
-        'autolabeler: []\nautolabeler-fallback-label: needs-triage',
-      ),
+      parseConfigFile('autolabeler: []\nfallback-label: needs-triage'),
     ).resolves.toEqual({
       autolabeler: [],
-      'autolabeler-fallback-label': 'needs-triage',
+      'fallback-label': 'needs-triage',
     })
   })
 
@@ -124,7 +122,7 @@ autolabeler:
       expect(() =>
         configSchema.parse({
           autolabeler: [],
-          'autolabeler-fallback-label': fallback,
+          'fallback-label': fallback,
         }),
       ).toThrow()
     },

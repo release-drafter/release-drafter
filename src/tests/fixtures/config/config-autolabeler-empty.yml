@@ -1,2 +1,2 @@
 autolabeler: []
-autolabeler-fallback-label: 'needs-triage'
+fallback-label: 'needs-triage'

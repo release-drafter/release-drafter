@@ -58,7 +58,7 @@ export const matchLabels = (params: {
     }
   }
 
-  const fallback = config['autolabeler-fallback-label']
+  const fallback = config['fallback-label']
   if (labels.size === 0 && fallback !== undefined) {
     labels.add(fallback)
     matches.push({ label: fallback, matcher: 'fallback' })

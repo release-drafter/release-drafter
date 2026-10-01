@@ -1,4 +1,4 @@
-autolabeler-fallback-label: 'needs-triage'
+fallback-label: 'needs-triage'
 autolabeler:
   - label: 'prior'
     files: ['*.md']

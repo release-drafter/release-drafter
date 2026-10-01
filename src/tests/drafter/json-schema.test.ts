@@ -72,7 +72,7 @@ describe('JSON schema', () => {
             ],
           },
         },
-        'autolabeler-fallback-label': { type: 'string', minLength: 1 },
+        'fallback-label': { type: 'string', minLength: 1 },
       },
     })
     expect(schema.properties?.autolabeler).not.toHaveProperty('minItems')

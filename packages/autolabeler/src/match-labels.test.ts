@@ -8,7 +8,7 @@ const compile = (autolabeler: unknown[], fallback?: string) => {
   const config = parseConfig({
     config: configSchema.parse({
       autolabeler,
-      'autolabeler-fallback-label': fallback,
+      'fallback-label': fallback,
     }),
     logger: { warning },
   })

@@ -21,7 +21,7 @@ var configSchema = object({
 	*/
 	autolabeler: array(ruleSchema.extend({ labels: labelsSchema }).or(ruleSchema.extend({ label: labelSchema }))),
 	/** Added when no rule matches, including when the rule list is empty. */
-	"autolabeler-fallback-label": string().min(1).optional()
+	"fallback-label": string().min(1).optional()
 }).meta({
 	title: "JSON schema for Release Drafter's autolabeler action config.",
 	id: "https://github.com/release-drafter/release-drafter/blob/main/autolabeler/schema.json"
@@ -154,7 +154,7 @@ var matchLabels = (params) => {
 			if (rule["stop-on-match"]) break;
 		}
 	}
-	const fallback = config["autolabeler-fallback-label"];
+	const fallback = config["fallback-label"];
 	if (labels.size === 0 && fallback !== void 0) {
 		labels.add(fallback);
 		matches.push({

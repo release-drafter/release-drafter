@@ -681,7 +681,7 @@ evaluating later rules after that rule matches and adds all its labels. Labels
 from earlier matching rules are retained. A rule that does not match never
 stops evaluation. The default is `false`, so all rules are evaluated.
 
-Set the optional top-level `autolabeler-fallback-label` to a nonempty string to
+Set the optional top-level `fallback-label` to a nonempty string to
 add that label when no rule matches. This also applies when `autolabeler: []`.
 Without a fallback, a run with no matches adds no labels. Autolabeler only adds
 labels: if a later run matches a rule, an existing fallback label remains on
@@ -690,7 +690,7 @@ selection.
 
 ```yml
 # .github/release-drafter.yml
-autolabeler-fallback-label: 'needs-triage'
+fallback-label: 'needs-triage'
 autolabeler:
   - labels: ['chore', 'documentation']
     files:
