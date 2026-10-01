@@ -534,7 +534,7 @@ const pullRequestResultDocument = (
   action: 'check-pr' as const,
   number: pullRequest.number,
   title: pullRequest.title,
-  labels: [...new Set(pullRequest.labels ?? [])].sort(),
+  labels: evaluation.labels,
   status: evaluation.skipped
     ? ('skipped' as const)
     : evaluation.valid

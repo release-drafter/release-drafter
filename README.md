@@ -788,29 +788,35 @@ corresponding values in `release-drafter.yml`.
 
 The Release Drafter action sets outputs for later workflow steps.
 
-| Output             | Description                                                                                                    |
-| ------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `id`               | The ID of the release that was created or updated.                                                             |
-| `name`             | The name of this release.                                                                                      |
-| `tag_name`         | The name of the tag associated with this release.                                                              |
-| `labels`           | A JSON array of unique, sorted labels from merged PRs passing release inclusion rules. Empty results are `[]`. |
-| `body`             | The body of the drafted release.                                                                               |
-| `html_url`         | The URL for viewing the release. For example, `https://github.com/octocat/Hello-World/releases/v1.0.0`.        |
-| `upload_url`       | The URL for uploading release assets.                                                                          |
-| `resolved_version` | Version from the [version resolver](#version-resolver). Example: `6.3.1`.                                      |
-| `major_version`    | Major component of the resolved version. Example: `6` for `6.3.1`.                                             |
-| `minor_version`    | Minor component of the resolved version. Example: `3` for `6.3.1`.                                             |
-| `patch_version`    | Patch component of the resolved version. Example: `1` for `6.3.1`.                                             |
+| Output             | Description                                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | The ID of the release that was created or updated.                                                                        |
+| `name`             | The name of this release.                                                                                                 |
+| `tag_name`         | The name of the tag associated with this release.                                                                         |
+| `labels`           | A JSON array of unique, sorted labels matched by configuration conditions on included merged PRs. Empty results are `[]`. |
+| `body`             | The body of the drafted release.                                                                                          |
+| `html_url`         | The URL for viewing the release. For example, `https://github.com/octocat/Hello-World/releases/v1.0.0`.                   |
+| `upload_url`       | The URL for uploading release assets.                                                                                     |
+| `resolved_version` | Version from the [version resolver](#version-resolver). Example: `6.3.1`.                                                 |
+| `major_version`    | Major component of the resolved version. Example: `6` for `6.3.1`.                                                        |
+| `minor_version`    | Minor component of the resolved version. Example: `3` for `6.3.1`.                                                        |
+| `patch_version`    | Patch component of the resolved version. Example: `1` for `6.3.1`.                                                        |
 
-The `labels` output includes all labels on merged pull requests that pass the
-configured inclusion and exclusion rules, including uncategorized pull requests
-and labels not referenced by the configuration. The CLI also exposes these
-labels as an array in its `--json` result.
-It covers the same comparison range used to draft the release and is also set in
-dry-run mode. With no labels or no available comparison base, it is `[]`.
+The `labels` output contains labels present on included merged pull requests
+that match successful `label` or `labels` conditions in the configuration. It
+includes matching pre-include conditions and selected changelog and
+version-resolver categories. It respects `labels-mode`, category exclusivity,
+and any title or path predicates in the same condition. Labels from failed
+conditions, unselected categories, excluded PRs, or labels not referenced by the
+configuration are omitted. Title-only, path-only and fallback matches add no
+labels.
+
+The output covers the comparison range used to draft the release and is also
+set in dry-run mode. Empty results or no available comparison base produce `[]`.
+The CLI exposes the same labels as an array in its `--json` result.
 
 Use it to select later workflow steps, for example deploying a service when one
-of the included pull requests has the `api/user` label:
+of the included pull requests matches a configured `api/user` label condition:
 
 ```yaml
 - uses: release-drafter/release-drafter@v7

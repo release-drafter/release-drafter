@@ -153,8 +153,10 @@ pull request valid.
 The command exits with `0` for valid or excluded pull requests and `1` for an
 invalid pull request. In JSON mode, it returns the pull request number, title,
 labels, status, validity, skip status, and number of selected categories.
-`labels` is a JSON array of unique, sorted current PR labels, including for
-excluded or invalid PRs:
+`labels` is a JSON array of unique, sorted labels matched by successful
+configuration conditions under Check PR's validation rules. Unrelated labels
+are omitted. For excluded PRs, it contains labels matched by pre-include and
+pre-exclude conditions; invalid PRs can still report matching pre-include labels:
 
 ```sh
 npx release-drafter check-pr owner/repo 123 --json
@@ -177,9 +179,9 @@ The result contains these fields:
 - `id`: release ID, when an existing or written release is available
 - `html_url` and `upload_url`: release URLs when available
 - `tag_name`, `name`, and `body`: the resolved release payload
-- `labels`: a JSON array of unique, sorted labels from PRs passing the release
-  inclusion and exclusion rules, including labels not referenced by the config;
-  empty results are `[]`
+- `labels`: a JSON array of unique, sorted labels matched by successful
+  configuration conditions on included PRs. Only labels present on those PRs
+  contribute. Excluded PRs and unrelated labels are omitted; empty results are `[]`
 - `resolved_version`, `major_version`, `minor_version`, `patch_version`, and
   `prerelease_version`: calculated version fields when available
 - `target_commitish`: the resolved release target
@@ -328,9 +330,10 @@ forge-neutral:
   GitHub Actions state.
 - `logger` is optional. Omitting it uses a no-op logger.
 
-`DraftReleaseResult.labels` contains the unique, sorted labels from pull requests
-that pass the release inclusion and exclusion rules, including in dry-run mode.
-It is an empty array when there are no labels.
+`DraftReleaseResult.labels` contains the unique, sorted labels matched by
+successful configuration conditions on included PRs, including in dry-run mode.
+It respects compound title/path predicates and category exclusivity. It is an
+empty array when no configured labels match.
 
 `DraftReleaseResult` contains the forge-neutral release plan and normalized
 release payload. If the adapter writes a release, the result also contains the

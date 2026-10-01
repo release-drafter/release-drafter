@@ -119,7 +119,7 @@ const drafterOutputs = {
   body: { description: 'The body of the drafted release.' },
   labels: {
     description:
-      'A JSON array of unique, sorted labels from pull requests passing release inclusion rules. Empty results are [].',
+      'A JSON array of unique, sorted labels matched by configuration conditions on included merged pull requests. Empty results are [].',
   },
   html_url: {
     description: 'The URL for viewing the release.',
@@ -200,7 +200,7 @@ export const actionManifests = {
     outputs: {
       labels: {
         description:
-          'A JSON array of unique, sorted labels on the current pull request from the event payload, including excluded or invalid pull requests. Empty results are [].',
+          'A JSON array of unique, sorted PR labels matched by configuration conditions under Check PR validation rules, including prefilter matches for skipped PRs. Empty results are [].',
       },
     },
   },

@@ -87,7 +87,15 @@ describe('check PR runner', () => {
     await checkPullRequest(
       dependencies(
         'feat: title',
-        [{ title: 'Features', when: { conventional: { type: 'feat' } } }],
+        [
+          {
+            title: 'Features',
+            when: {
+              conventional: { type: 'feat' },
+              labels: ['api/user', 'comma,quote"'],
+            },
+          },
+        ],
         {
           payload: payload('feat: title', [
             'z',
@@ -100,7 +108,7 @@ describe('check PR runner', () => {
     )
     expect(core.setOutput).toHaveBeenCalledWith(
       'labels',
-      JSON.stringify(['api/user', 'comma,quote"', 'z']),
+      JSON.stringify(['api/user', 'comma,quote"']),
     )
   })
 

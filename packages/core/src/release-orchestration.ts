@@ -1,7 +1,7 @@
 import { compareVersions } from 'compare-versions'
 import { coerce, normalizeRange, satisfies } from 'verkit'
 import {
-  filterPullRequestsByPreCategories,
+  evaluateCategories,
   needsPullRequestChangedFiles,
 } from './category-matching.ts'
 import type { ForgeAdapter, Logger } from './ports.ts'
@@ -265,9 +265,10 @@ export const draftRelease = async (params: {
   })
   const labels = [
     ...new Set(
-      filterPullRequestsByPreCategories(pullRequests, config.categories)
-        .flatMap((pullRequest) => pullRequest.labels ?? [])
-        .filter((label) => label.length > 0),
+      pullRequests.flatMap((pullRequest) => {
+        const evaluation = evaluateCategories(pullRequest, config.categories)
+        return evaluation.included ? evaluation.matchedLabels : []
+      }),
     ),
   ].sort()
   return { plan, release, releasePayload, labels }

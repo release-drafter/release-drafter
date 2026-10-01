@@ -26,10 +26,7 @@ describe('check-pr e2e', () => {
     expect(mocks.core.setFailed).toHaveBeenCalledWith(
       expect.stringContaining('pull request #1475'),
     )
-    expect(mocks.core.setOutput).toHaveBeenCalledWith(
-      'labels',
-      JSON.stringify(['type: breaking']),
-    )
+    expect(mocks.core.setOutput).toHaveBeenCalledWith('labels', '[]')
     expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
     expect(mocks.postReleaseBody).not.toHaveBeenCalled()
     expect(mocks.patchReleaseBody).not.toHaveBeenCalled()

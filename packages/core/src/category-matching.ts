@@ -190,9 +190,29 @@ export const evaluateCategories = (
     undefined,
   )
 
+  const matchedCategories: ParsedCategory[] = [
+    ...preIncludes.filter((category) => matchesCategory(category, pullRequest)),
+    ...(includedByPrecondition
+      ? preExcludes.filter((category) => matchesCategory(category, pullRequest))
+      : []),
+    ...changelog.categories,
+    ...version.categories,
+  ]
+  const actualLabels = getPullRequestLabels(pullRequest)
+  const matchedLabels = unique(
+    matchedCategories.flatMap((category) =>
+      category.when
+        .filter((condition) => matchesCategoryCondition(condition, pullRequest))
+        .flatMap((condition) =>
+          condition.labels.filter((label) => actualLabels.includes(label)),
+        ),
+    ),
+  ).sort()
+
   return {
     included,
     excluded,
+    matchedLabels,
     changelogCategories: changelog.categories,
     versionResolverCategories: version.categories,
     usedChangelogFallback: changelog.usedFallback,

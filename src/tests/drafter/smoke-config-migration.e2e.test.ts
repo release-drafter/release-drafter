@@ -144,7 +144,7 @@ describe('smoke config migration e2e', () => {
           ],
           [
             "labels",
-            "["feature","fix","minor","patch"]",
+            "[]",
           ],
         ]
       `)

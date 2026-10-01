@@ -128,6 +128,117 @@ const adapter = (params: {
 })
 
 describe('evaluateCategories', () => {
+  it.each([
+    { mode: 'any', actual: ['feature', 'unrelated'], expected: ['feature'] },
+    {
+      mode: 'all',
+      actual: ['feature', 'approved', 'unrelated'],
+      expected: ['approved', 'feature'],
+    },
+    { mode: 'all', actual: ['feature'], expected: [] },
+    { mode: 'only', actual: ['feature'], expected: ['feature'] },
+    { mode: 'only', actual: ['feature', 'unrelated'], expected: [] },
+    {
+      mode: 'exactly',
+      actual: ['feature', 'approved', 'feature'],
+      expected: ['approved', 'feature'],
+    },
+    { mode: 'exactly', actual: ['feature'], expected: [] },
+  ])(
+    'reports present matched labels for labels-mode $mode',
+    ({ mode, actual, expected }) => {
+      const parsed = mergeInputAndConfig({
+        config: configSchema.parse({
+          categories: [
+            {
+              title: 'Features',
+              when: {
+                labels: ['feature', 'approved', 'feature'],
+                'labels-mode': mode,
+              },
+            },
+          ],
+        }),
+        input: {},
+        defaultCommitish: 'main',
+        logger,
+      })
+      expect(
+        evaluateCategories({ labels: actual }, parsed.categories).matchedLabels,
+      ).toEqual(expected)
+    },
+  )
+
+  it('reports only successful conditions in selected categories, including version rules', () => {
+    const parsed = mergeInputAndConfig({
+      config: configSchema.parse({
+        categories: [
+          {
+            title: 'Features',
+            exclusive: true,
+            when: [
+              { labels: ['feature', 'absent'] },
+              { label: 'blocked-title', conventional: { type: 'fix' } },
+              { label: 'blocked-path', path: 'docs/**' },
+            ],
+          },
+          { title: 'Unselected', when: { label: 'after-exclusive' } },
+          {
+            type: 'version-resolver',
+            when: { label: 'major' },
+            'semver-increment': 'major',
+          },
+        ],
+      }),
+      input: {},
+      defaultCommitish: 'main',
+      logger,
+    })
+    expect(
+      evaluateCategories(
+        {
+          title: 'feat: user',
+          changedFiles: ['src/user.ts'],
+          labels: [
+            'feature',
+            'blocked-title',
+            'blocked-path',
+            'after-exclusive',
+            'major',
+            'unrelated',
+          ],
+        },
+        parsed.categories,
+      ).matchedLabels,
+    ).toEqual(['feature', 'major'])
+  })
+
+  it('returns no labels for title-only, path-only or fallback matches', () => {
+    const parsed = mergeInputAndConfig({
+      config: configSchema.parse({
+        categories: [
+          {
+            title: 'Features',
+            when: [{ conventional: { type: 'feat' } }, { label: 'feature' }],
+          },
+          { title: 'Paths', when: { path: 'src/**' }, exclusive: false },
+          { title: 'Other' },
+        ],
+      }),
+      input: {},
+      defaultCommitish: 'main',
+      logger,
+    })
+    for (const title of ['feat: user', 'old title']) {
+      expect(
+        evaluateCategories(
+          { title, labels: ['unrelated'], changedFiles: ['src/user.ts'] },
+          parsed.categories,
+        ).matchedLabels,
+      ).toEqual([])
+    }
+  })
+
   it('combines conventional, labels, paths, prefilters, exclusivity, and version rules', () => {
     const result = evaluateCategories(
       {
@@ -400,7 +511,7 @@ describe('draftRelease', () => {
   }
 
   it.each(['create', 'update', 'dry-run'] as const)(
-    'returns labels only from included pull requests for %s',
+    'returns only matched configuration labels from included pull requests for %s',
     async (action) => {
       const forge = adapter({
         draftReleases: true,
@@ -424,7 +535,13 @@ describe('draftRelease', () => {
           {
             number: 2,
             title: 'fix: billing',
-            labels: ['shared', 'api/billing', 'included', 'comma,quote"'],
+            labels: [
+              'shared',
+              'api/billing',
+              'included',
+              'comma,quote"',
+              'ready',
+            ],
             changedFiles: ['src/billing.ts'],
           },
           {
@@ -447,13 +564,7 @@ describe('draftRelease', () => {
         repository,
       })
       expect(result.plan.action).toBe(action)
-      expect(result.labels).toEqual([
-        'api/billing',
-        'api/user',
-        'comma,quote"',
-        'included',
-        'shared',
-      ])
+      expect(result.labels).toEqual(['included', 'ready'])
       expect(result.releasePayload).not.toHaveProperty('labels')
     },
   )

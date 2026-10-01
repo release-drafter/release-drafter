@@ -38,9 +38,6 @@ export async function checkPullRequest(
     dependencies.eventName,
     dependencies.payload,
   )
-  writeActionOutputs(actionOutputNames, {
-    labels: JSON.stringify([...new Set(pullRequest.labels)].sort()),
-  })
   const input = dependencies.getInput()
   const config = mergeInputAndConfig({
     config: await dependencies.getConfig(
@@ -59,6 +56,10 @@ export async function checkPullRequest(
     },
     config.categories,
   )
+
+  writeActionOutputs(actionOutputNames, {
+    labels: JSON.stringify(evaluation.labels),
+  })
 
   if (evaluation.skipped) {
     core.info(`Skipping excluded pull request #${pullRequest.number}.`)

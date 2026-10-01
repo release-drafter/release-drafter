@@ -44,15 +44,22 @@ pull request valid.
 
 ## Outputs
 
-| Output   | Description                                                                                                       |
-| -------- | ----------------------------------------------------------------------------------------------------------------- |
-| `labels` | A JSON array of unique, sorted labels on the current pull request from the event payload. Empty results are `[]`. |
+| Output   | Description                                                                                           |
+| -------- | ----------------------------------------------------------------------------------------------------- |
+| `labels` | A JSON array of unique, sorted PR labels matched by configuration conditions. Empty results are `[]`. |
 
-The action sets `labels` after parsing the event, before checking configuration.
-It includes all current labels even when validation skips an excluded pull
-request or fails. Unsupported or malformed events do not set it. Labels reflect
-the event snapshot; run Check PR after Autolabeler in a subsequent event to see
-labels added by that action.
+The action sets `labels` after loading configuration and evaluating the PR,
+before reporting validation success, a skip, or a failure. It uses the same
+projected conditions as validation: path predicates are ignored. Only labels
+present on the PR and matched by a successful condition are returned. Unrelated
+labels and labels from failed conditions or unselected categories are omitted.
+Title-only and fallback matches add no labels. For a skipped PR, matching
+pre-include and pre-exclude labels explain the skip; changelog and
+version-resolver categories are not selected.
+
+Unsupported or malformed events and configuration-loading failures do not set
+the output. PR labels reflect the event snapshot; run Check PR after Autolabeler
+in a subsequent event to see labels added by that action.
 
 ```yaml
 - uses: release-drafter/release-drafter/check-pr@v7

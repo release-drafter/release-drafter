@@ -1369,7 +1369,10 @@ var draftRelease = async (params) => {
 			repository
 		}),
 		releasePayload,
-		labels: [...new Set(filterPullRequestsByPreCategories(pullRequests, config.categories).flatMap((pullRequest) => pullRequest.labels ?? []).filter((label) => label.length > 0))].sort()
+		labels: [...new Set(pullRequests.flatMap((pullRequest) => {
+			const evaluation = evaluateCategories(pullRequest, config.categories);
+			return evaluation.included ? evaluation.matchedLabels : [];
+		}))].sort()
 	};
 };
 //#endregion

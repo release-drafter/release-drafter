@@ -260,6 +260,6 @@ export type DraftReleaseResult = {
   plan: ReleasePlan
   release?: Release
   releasePayload: ReleasePayload
-  /** Unique, sorted labels from pull requests passing release inclusion rules. */
+  /** Unique, sorted labels matched by configuration conditions on included pull requests. */
   labels: string[]
 }

@@ -533,9 +533,17 @@ var evaluateCategories = (pullRequest, categories) => {
 		usedFallback: false
 	};
 	const highest = [...changelog.categories, ...version.categories].map((category) => category["semver-increment"]).filter((increment) => increment in priority).reduce((current, increment) => !current || priority[increment] > priority[current] ? increment : current, void 0);
+	const matchedCategories = [
+		...preIncludes.filter((category) => matchesCategory(category, pullRequest)),
+		...includedByPrecondition ? preExcludes.filter((category) => matchesCategory(category, pullRequest)) : [],
+		...changelog.categories,
+		...version.categories
+	];
+	const actualLabels = getPullRequestLabels(pullRequest);
 	return {
 		included,
 		excluded,
+		matchedLabels: unique(matchedCategories.flatMap((category) => category.when.filter((condition) => matchesCategoryCondition(condition, pullRequest)).flatMap((condition) => condition.labels.filter((label) => actualLabels.includes(label))))).sort(),
 		changelogCategories: changelog.categories,
 		versionResolverCategories: version.categories,
 		usedChangelogFallback: changelog.usedFallback,

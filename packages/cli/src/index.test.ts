@@ -301,14 +301,22 @@ describe('check-pr', () => {
   it.each([
     {
       labels: ['z', 'api/user', 'z', 'comma,quote"'],
-      expected: ['api/user', 'comma,quote"', 'z'],
+      expected: ['api/user', 'comma,quote"'],
     },
     { labels: [], expected: [] },
   ])(
-    'normalizes current PR labels in JSON output',
+    'outputs only configured matching PR labels in JSON output',
     async ({ labels, expected }) => {
       const state = createAdapter({
-        getConfig: async () => CONVENTIONAL_CONFIG,
+        getConfig: async () => `categories:
+  - title: Features
+    when:
+      labels: [api/user, 'comma,quote"']
+  - title: Other
+    when:
+      conventional:
+        type: feat
+`,
         pullRequest: {
           number: 18,
           title: 'feat: search',
@@ -342,7 +350,7 @@ describe('check-pr', () => {
     expect(result.code).toBe(0)
     expect(JSON.parse(result.stdout.text())).toMatchObject({
       status: 'skipped',
-      labels: ['api/user', 'skip'],
+      labels: ['skip'],
     })
   })
 
@@ -402,7 +410,7 @@ describe('check-pr', () => {
         action: 'check-pr',
         number: 19,
         status: 'invalid',
-        labels: ['feature'],
+        labels: [],
         valid: false,
         skipped: false,
         selected_category_count: 0,

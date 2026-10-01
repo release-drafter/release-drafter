@@ -21,10 +21,12 @@ var evaluatePullRequest = (pullRequest, categories) => {
 	const evaluation = evaluateCategories(pullRequest, projectPullRequestValidationCategories(categories));
 	if (!evaluation.included) return {
 		valid: true,
-		skipped: true
+		skipped: true,
+		labels: evaluation.matchedLabels
 	};
 	const selectedCount = evaluation.changelogCategories.length + evaluation.versionResolverCategories.length;
 	return {
+		labels: evaluation.matchedLabels,
 		valid: selectedCount > 0 && !evaluation.fallbackOnly,
 		skipped: false,
 		selectedCategoryCount: selectedCount
@@ -95,7 +97,6 @@ var defaultDependencies = () => ({
 async function checkPullRequest(dependencies = defaultDependencies()) {
 	if (dependencies.eventName !== "pull_request" && dependencies.eventName !== "pull_request_target") throw new Error(`Unsupported event \`${dependencies.eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`);
 	const pullRequest = parsePullRequestEvent(dependencies.eventName, dependencies.payload);
-	writeActionOutputs(actionOutputNames, { labels: JSON.stringify([...new Set(pullRequest.labels)].sort()) });
 	const input = dependencies.getInput();
 	const config = mergeInputAndConfig({
 		config: await dependencies.getConfig(input["config-name"], input.token, pullRequest.baseRef),
@@ -107,6 +108,7 @@ async function checkPullRequest(dependencies = defaultDependencies()) {
 		title: pullRequest.title,
 		labels: pullRequest.labels
 	}, config.categories);
+	writeActionOutputs(actionOutputNames, { labels: JSON.stringify(evaluation.labels) });
 	if (evaluation.skipped) {
 		info(`Skipping excluded pull request #${pullRequest.number}.`);
 		return;

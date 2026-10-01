@@ -21,4 +21,4 @@ inputs:
 
 outputs:
   labels:
-    description: A JSON array of unique, sorted labels on the current pull request from the event payload, including excluded or invalid pull requests. Empty results are [].
+    description: A JSON array of unique, sorted PR labels matched by configuration conditions under Check PR validation rules, including prefilter matches for skipped PRs. Empty results are [].
