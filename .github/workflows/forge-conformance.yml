@@ -48,7 +48,8 @@ jobs:
         run: node src/scripts/forge-conformance-router.ts
 
   forge-conformance:
-    name: Forge conformance (${{ matrix.forge }})
+    # GitHub appends matrix values when running; a static name also renders when skipped.
+    name: Forge conformance
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: forge-conformance-scope
