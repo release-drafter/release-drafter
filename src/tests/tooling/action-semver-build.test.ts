@@ -41,7 +41,9 @@ const packageManifestPaths = () => [
   ),
 ]
 
-describe.sequential('action build excludes direct node-semver', () => {
+describe('action build excludes direct node-semver', {
+  concurrent: false,
+}, () => {
   let generatedJavaScriptFiles: string[]
 
   beforeAll(() => {

@@ -229,7 +229,9 @@ const containsJsonOutput = (output: string): boolean =>
     )
   })
 
-describe.sequential('release-drafter packed CLI and package consumer', () => {
+describe('release-drafter packed CLI and package consumer', {
+  concurrent: false,
+}, () => {
   let temporaryDirectory: string
   let consumerDirectory: string
   let installedPackageDirectory: string
