@@ -72,6 +72,8 @@ Common commands:
   This verifies that Node 24 can run the scripts without a compile step.
 - `npm run check:dependencies` uses Knip to find unused files, unused
   dependencies, and unlisted dependencies. It does not report unused exports.
+  It uses Knip's normal parser to avoid raw-transfer buffer allocation failures
+  on memory-limited workers, including Mend Renovate.
 - `npm run check:boundaries` uses dependency-cruiser's SWC parser to validate
   internal imports in workspace source, generated JavaScript, and declarations.
 - `npm run check:packages` checks package publication settings and the required

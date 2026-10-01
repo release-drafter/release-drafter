@@ -50,7 +50,7 @@
     "generate:action-metadata": "node src/scripts/action-metadata.ts",
     "generate:graphql": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
     "generate:schemas": "npm run build:workspaces && node src/scripts/json-schema.ts",
-    "check:dependencies": "knip --config knip.jsonc --no-progress",
+    "check:dependencies": "KNIP_DISABLE_RAW_TRANSFER=1 knip --config knip.jsonc --no-progress",
     "check:boundaries": "dependency-cruiser --config .dependency-cruiser.mjs packages",
     "check:packages": "node src/scripts/guard-packages.ts",
     "check:package-readiness": "node src/scripts/check-package-readiness.ts",
