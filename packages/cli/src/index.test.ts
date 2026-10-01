@@ -177,32 +177,32 @@ describe('usage and informational commands', () => {
   it.each([
     { argv: ['--help'], expected: 'Usage: release-drafter' },
     { argv: ['--version'], expected: 'test-version' },
-  ])('$argv returns zero without resolving a token or creating an adapter', async ({
-    argv,
-    expected,
-  }) => {
-    const adapterFactory = vi.fn()
-    const readLocalFile = vi.fn()
-    const draft = vi.fn()
-    const stdout = capture()
-    const stderr = capture()
+  ])(
+    '$argv returns zero without resolving a token or creating an adapter',
+    async ({ argv, expected }) => {
+      const adapterFactory = vi.fn()
+      const readLocalFile = vi.fn()
+      const draft = vi.fn()
+      const stdout = capture()
+      const stderr = capture()
 
-    const code = await runCli(argv, 'test-version', {
-      stdout: stdout.stream,
-      stderr: stderr.stream,
-      env: {},
-      adapterFactory,
-      readLocalFile,
-      draft,
-    })
+      const code = await runCli(argv, 'test-version', {
+        stdout: stdout.stream,
+        stderr: stderr.stream,
+        env: {},
+        adapterFactory,
+        readLocalFile,
+        draft,
+      })
 
-    expect(code).toBe(0)
-    expect(stdout.text()).toContain(expected)
-    expect(stderr.text()).toBe('')
-    expect(adapterFactory).not.toHaveBeenCalled()
-    expect(readLocalFile).not.toHaveBeenCalled()
-    expect(draft).not.toHaveBeenCalled()
-  })
+      expect(code).toBe(0)
+      expect(stdout.text()).toContain(expected)
+      expect(stderr.text()).toBe('')
+      expect(adapterFactory).not.toHaveBeenCalled()
+      expect(readLocalFile).not.toHaveBeenCalled()
+      expect(draft).not.toHaveBeenCalled()
+    },
+  )
 
   it.each([
     { name: 'missing repository', argv: [] },
@@ -596,19 +596,18 @@ describe('forge and endpoint selection', () => {
     expect(result.adapterFactory).not.toHaveBeenCalled()
   })
 
-  it.each([
-    'github',
-    'gitea',
-    'forgejo',
-  ] as const)('rejects nested namespaces for the %s forge', async (forge) => {
-    const result = await invoke(['group/subgroup/project', '--forge', forge])
+  it.each(['github', 'gitea', 'forgejo'] as const)(
+    'rejects nested namespaces for the %s forge',
+    async (forge) => {
+      const result = await invoke(['group/subgroup/project', '--forge', forge])
 
-    expect(result.code).toBe(2)
-    expect(result.stderr.text()).toContain(
-      'Repository must use the form owner/name.',
-    )
-    expect(result.adapterFactory).not.toHaveBeenCalled()
-  })
+      expect(result.code).toBe(2)
+      expect(result.stderr.text()).toContain(
+        'Repository must use the form owner/name.',
+      )
+      expect(result.adapterFactory).not.toHaveBeenCalled()
+    },
+  )
 
   it('rejects an arbitrary /api/v1 endpoint as ambiguous without inferring a forge', async () => {
     const result = await invoke([
@@ -848,32 +847,31 @@ describe('config loading', () => {
       leaf: ['leaf'],
       expected: ['leaf', 'base'],
     },
-  ])('applies _extends $strategy list merging', async ({
-    strategy,
-    leaf,
-    expected,
-  }) => {
-    const files = new Map([
-      [
-        'leaf.yml',
-        `template: leaf\nexclude-contributors: ${JSON.stringify(leaf)}\n_extends:\n  from: base.yml\n  strategy:\n    exclude-contributors: ${strategy}\n`,
-      ],
-      ['base.yml', 'template: base\nexclude-contributors: [base]\n'],
-    ])
-    const state = createAdapter({
-      getConfig: async ({ path }) =>
-        files.get(path.split('/').at(-1) ?? path) ?? BASE_CONFIG,
-    })
-    const result = await invoke(
-      ['acme/widgets', '--to', 'main', '--config', 'leaf.yml'],
-      { adapter: state.adapter },
-    )
+  ])(
+    'applies _extends $strategy list merging',
+    async ({ strategy, leaf, expected }) => {
+      const files = new Map([
+        [
+          'leaf.yml',
+          `template: leaf\nexclude-contributors: ${JSON.stringify(leaf)}\n_extends:\n  from: base.yml\n  strategy:\n    exclude-contributors: ${strategy}\n`,
+        ],
+        ['base.yml', 'template: base\nexclude-contributors: [base]\n'],
+      ])
+      const state = createAdapter({
+        getConfig: async ({ path }) =>
+          files.get(path.split('/').at(-1) ?? path) ?? BASE_CONFIG,
+      })
+      const result = await invoke(
+        ['acme/widgets', '--to', 'main', '--config', 'leaf.yml'],
+        { adapter: state.adapter },
+      )
 
-    expect(result.code).toBe(0)
-    expect(
-      result.draft.mock.calls[0][0].config['exclude-contributors'],
-    ).toEqual(expected)
-  })
+      expect(result.code).toBe(0)
+      expect(
+        result.draft.mock.calls[0][0].config['exclude-contributors'],
+      ).toEqual(expected)
+    },
+  )
 
   it('stops a recursive _extends chain deterministically', async () => {
     const state = createAdapter({
@@ -999,45 +997,45 @@ describe('output and release result mapping', () => {
     )
   })
 
-  it.each([
-    'create',
-    'update',
-  ] as const)('uses actual returned release tag and name for %s results', async (action) => {
-    const actualRelease = {
-      id: 42,
-      tagName: 'v2.0.0-server',
-      name: 'Server-normalized release name',
-      url: 'https://github.example/releases/42',
-      uploadUrl: 'https://uploads.github.example/releases/42/assets',
-    }
-    const draftRelease = {
-      id: 7,
-      tagName: 'v1-draft',
-      name: 'Old draft',
-    }
-    const plan =
-      action === 'create'
-        ? { action, releasePayload: payload }
-        : { action, draftRelease, releasePayload: payload }
-    const result = await invoke(['acme/widgets', '--to', 'main', '--json'], {
-      draftResult: {
-        plan,
-        release: actualRelease,
-        releasePayload: payload,
-      },
-    })
+  it.each(['create', 'update'] as const)(
+    'uses actual returned release tag and name for %s results',
+    async (action) => {
+      const actualRelease = {
+        id: 42,
+        tagName: 'v2.0.0-server',
+        name: 'Server-normalized release name',
+        url: 'https://github.example/releases/42',
+        uploadUrl: 'https://uploads.github.example/releases/42/assets',
+      }
+      const draftRelease = {
+        id: 7,
+        tagName: 'v1-draft',
+        name: 'Old draft',
+      }
+      const plan =
+        action === 'create'
+          ? { action, releasePayload: payload }
+          : { action, draftRelease, releasePayload: payload }
+      const result = await invoke(['acme/widgets', '--to', 'main', '--json'], {
+        draftResult: {
+          plan,
+          release: actualRelease,
+          releasePayload: payload,
+        },
+      })
 
-    expect(result.code).toBe(0)
-    expect(JSON.parse(result.stdout.text())).toEqual(
-      expect.objectContaining({
-        tag_name: actualRelease.tagName,
-        name: actualRelease.name,
-        id: String(actualRelease.id),
-        html_url: actualRelease.url,
-        upload_url: actualRelease.uploadUrl,
-      }),
-    )
-  })
+      expect(result.code).toBe(0)
+      expect(JSON.parse(result.stdout.text())).toEqual(
+        expect.objectContaining({
+          tag_name: actualRelease.tagName,
+          name: actualRelease.name,
+          id: String(actualRelease.id),
+          html_url: actualRelease.url,
+          upload_url: actualRelease.uploadUrl,
+        }),
+      )
+    },
+  )
 
   it.each([
     {
@@ -1083,39 +1081,38 @@ describe('output and release result mapping', () => {
       },
       expected: undefined,
     },
-  ])('maps $action results and snake_case payload fields', async ({
-    action,
-    result: draftResult,
-    expected,
-  }) => {
-    const result = await invoke(['acme/widgets', '--to', 'main', '--json'], {
-      draftResult,
-    })
+  ])(
+    'maps $action results and snake_case payload fields',
+    async ({ action, result: draftResult, expected }) => {
+      const result = await invoke(['acme/widgets', '--to', 'main', '--json'], {
+        draftResult,
+      })
 
-    expect(result.code).toBe(0)
-    const document = JSON.parse(result.stdout.text())
-    expect(document).toMatchObject({
-      action,
-      tag_name: expected?.tagName ?? 'v2.0.0',
-      name: expected?.name ?? 'Release 2.0.0',
-      resolved_version: '2.0.0',
-      major_version: '2',
-      minor_version: '0',
-      patch_version: '0',
-      body: 'Changes',
-    })
-    if (expected) {
-      expect(document).toEqual(
-        expect.objectContaining({
-          id: expected.id,
-          html_url: expected.url,
-          upload_url: expected.uploadUrl,
-        }),
-      )
-    } else {
-      expect(document).not.toHaveProperty('id')
-      expect(document).not.toHaveProperty('html_url')
-      expect(document).not.toHaveProperty('upload_url')
-    }
-  })
+      expect(result.code).toBe(0)
+      const document = JSON.parse(result.stdout.text())
+      expect(document).toMatchObject({
+        action,
+        tag_name: expected?.tagName ?? 'v2.0.0',
+        name: expected?.name ?? 'Release 2.0.0',
+        resolved_version: '2.0.0',
+        major_version: '2',
+        minor_version: '0',
+        patch_version: '0',
+        body: 'Changes',
+      })
+      if (expected) {
+        expect(document).toEqual(
+          expect.objectContaining({
+            id: expected.id,
+            html_url: expected.url,
+            upload_url: expected.uploadUrl,
+          }),
+        )
+      } else {
+        expect(document).not.toHaveProperty('id')
+        expect(document).not.toHaveProperty('html_url')
+        expect(document).not.toHaveProperty('upload_url')
+      }
+    },
+  )
 })

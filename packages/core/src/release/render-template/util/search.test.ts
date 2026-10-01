@@ -10,14 +10,17 @@ describe('buildReplaceStringWithCasePreserved', () => {
     [['Foo'], 'pattern', 'Pattern'],
     [['fOO'], 'Pattern', 'pattern'],
     [['1Foo'], 'Pattern', 'Pattern'],
-  ] as const)('preserves the case shape of %j', (matches, pattern, expected) => {
-    expect(
-      buildReplaceStringWithCasePreserved(
-        matches === null ? null : [...matches],
-        pattern,
-      ),
-    ).toBe(expected)
-  })
+  ] as const)(
+    'preserves the case shape of %j',
+    (matches, pattern, expected) => {
+      expect(
+        buildReplaceStringWithCasePreserved(
+          matches === null ? null : [...matches],
+          pattern,
+        ),
+      ).toBe(expected)
+    },
+  )
 
   it('preserves case independently across matching hyphenated segments', () => {
     expect(buildReplaceStringWithCasePreserved(['FOO-bar'], 'baz-Qux')).toBe(

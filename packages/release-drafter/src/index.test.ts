@@ -209,34 +209,31 @@ describe('createForgeAdapter', () => {
       header: 'private-token',
       authorization: 'facade-token',
     },
-  ] as const)('wires the default $forge endpoint and authentication', async ({
-    forge,
-    draftReleases,
-    url,
-    header,
-    authorization,
-  }) => {
-    const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
-      expect(String(input)).toBe(url)
-      expect(new Headers(init?.headers).get(header)).toBe(authorization)
-      return new Response('[]', {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-          'x-total': '0',
-        },
+  ] as const)(
+    'wires the default $forge endpoint and authentication',
+    async ({ forge, draftReleases, url, header, authorization }) => {
+      const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
+        expect(String(input)).toBe(url)
+        expect(new Headers(init?.headers).get(header)).toBe(authorization)
+        return new Response('[]', {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            'x-total': '0',
+          },
+        })
       })
-    })
-    const created = createForgeAdapter({
-      forge,
-      token: 'facade-token',
-      fetch,
-    })
+      const created = createForgeAdapter({
+        forge,
+        token: 'facade-token',
+        fetch,
+      })
 
-    expect(created.capabilities.draftReleases).toBe(draftReleases)
-    await expect(created.listReleases({ repository })).resolves.toEqual([])
-    expect(fetch).toHaveBeenCalledOnce()
-  })
+      expect(created.capabilities.draftReleases).toBe(draftReleases)
+      await expect(created.listReleases({ repository })).resolves.toEqual([])
+      expect(fetch).toHaveBeenCalledOnce()
+    },
+  )
 
   it.each([
     {
@@ -247,21 +244,21 @@ describe('createForgeAdapter', () => {
       forge: 'forgejo',
       expectedCommitish: 'refs/heads/main',
     },
-  ] as const)('selects $forge qualified-ref behavior', async ({
-    forge,
-    expectedCommitish,
-  }) => {
-    const created = createForgeAdapter({
-      forge,
-      token: 'facade-token',
-      fetch: vi.fn(),
-    })
+  ] as const)(
+    'selects $forge qualified-ref behavior',
+    async ({ forge, expectedCommitish }) => {
+      const created = createForgeAdapter({
+        forge,
+        token: 'facade-token',
+        fetch: vi.fn(),
+      })
 
-    await expect(
-      created.resolveCommitish({
-        repository,
-        commitish: 'refs/heads/main',
-      }),
-    ).resolves.toBe(expectedCommitish)
-  })
+      await expect(
+        created.resolveCommitish({
+          repository,
+          commitish: 'refs/heads/main',
+        }),
+      ).resolves.toBe(expectedCommitish)
+    },
+  )
 })
