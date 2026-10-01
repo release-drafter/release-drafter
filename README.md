@@ -190,8 +190,27 @@ Use these variables in `template`, `header`, and `footer`:
 | `$CONTRIBUTORS`     | A comma-separated list of pull request authors, commit authors, and commit committers for the release.      |
 | `$NEW_CONTRIBUTORS` | A Markdown list of pull request authors making their first contribution and the corresponding pull request. |
 | `$PREVIOUS_TAG`     | The previous release tag.                                                                                   |
+| `$RESOLVED_TAG`     | The final release tag after expanding `tag-template` or the action's `tag` input override.                  |
 | `$REPOSITORY`       | The current repository.                                                                                     |
 | `$OWNER`            | The current repository owner.                                                                               |
+
+Use `$RESOLVED_TAG` to build compare links that include the complete tag,
+including any prefix in `tag-template`:
+
+```yaml
+tag-template: 'foobar_v$RESOLVED_VERSION'
+tag-prefix: foobar_v
+template: |
+  $CHANGES
+
+  [Full Changelog](https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_TAG)
+```
+
+For example, the tag `foobar_v1.9.2` gives `$RESOLVED_TAG` the value
+`foobar_v1.9.2`, while `$RESOLVED_VERSION` remains `1.9.2` with the default
+`version-template`. The `tag-prefix` setting filters and parses previous tags;
+it does not add a prefix to the new tag. If neither `tag-template` nor a `tag`
+input is provided, `$RESOLVED_TAG` is empty.
 
 ## Category template variables
 

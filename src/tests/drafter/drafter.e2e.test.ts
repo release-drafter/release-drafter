@@ -3217,6 +3217,48 @@ describe('drafter e2e', () => {
       })
     })
 
+    describe('with resolved tag templates', () => {
+      it.each([
+        { inputTag: undefined, tag: 'foobar_v2.1.1', version: '2.1.1' },
+        {
+          inputTag: 'override-v3.0.0',
+          tag: 'override-v3.0.0',
+          version: '3.0.0',
+        },
+        {
+          inputTag: 'override-v$RESOLVED_VERSION',
+          tag: 'override-v2.1.1',
+          version: '2.1.1',
+        },
+      ])(
+        'uses $tag in compare links and the release payload',
+        async ({ inputTag, tag, version }) => {
+          await mockContext('push')
+          if (inputTag !== undefined) await mockInput('tag', inputTag)
+          mocks.config.mockReturnValue('config-with-resolved-tag-template')
+          const scope = nockGetAndPostReleases({
+            fetchedReleases: ['release'],
+            fetchedReleasesOverrides: [{ tag_name: 'foobar_v2.1.0' }],
+          })
+          const gqlScope = mockGraphqlQuery({
+            payload: 'graphql-comparison-no-prs',
+          })
+
+          await runDrafter()
+
+          expect(mocks.postReleaseBody.mock.lastCall).toEqual([
+            expect.objectContaining({
+              tag_name: tag,
+              body: `Tag: ${tag}\nhttps://github.com/toolmantim/release-drafter-test-project/compare/foobar_v2.1.0...${tag}\nVersion: ${version}\n`,
+            }),
+          ])
+          expect(scope.isDone()).toBe(true)
+          expect(gqlScope.isDone()).toBe(true)
+          expect(mocks.core.setFailed).not.toHaveBeenCalled()
+        },
+      )
+    })
+
     describe('with custom version resolver', () => {
       it('uses correct default when no labels exist', async () => {
         await mockContext('push')
