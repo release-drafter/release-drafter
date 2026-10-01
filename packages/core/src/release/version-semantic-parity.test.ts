@@ -50,24 +50,22 @@ describe('version semantic parity', () => {
       })
     })
 
-    it.each([
-      undefined,
-      '',
-      'not-a-version',
-      '*',
-    ])('keeps nullable outputs for unparseable input %j', (input) => {
-      const warning = vi.fn()
-      const descriptor = new VersionDescriptor(input, {
-        logger: { ...noopLogger, warning },
-      })
+    it.each([undefined, '', 'not-a-version', '*'])(
+      'keeps nullable outputs for unparseable input %j',
+      (input) => {
+        const warning = vi.fn()
+        const descriptor = new VersionDescriptor(input, {
+          logger: { ...noopLogger, warning },
+        })
 
-      expect(descriptor.version).toBeNull()
-      expect(descriptor.major).toBeNull()
-      expect(descriptor.minor).toBeNull()
-      expect(descriptor.patch).toBeNull()
-      expect(descriptor.prerelease).toBeNull()
-      expect(warning).toHaveBeenCalledTimes(input ? 1 : 0)
-    })
+        expect(descriptor.version).toBeNull()
+        expect(descriptor.major).toBeNull()
+        expect(descriptor.minor).toBeNull()
+        expect(descriptor.patch).toBeNull()
+        expect(descriptor.prerelease).toBeNull()
+        expect(warning).toHaveBeenCalledTimes(input ? 1 : 0)
+      },
+    )
 
     it('prefers a prefixed release tag and falls back to its name', () => {
       const tagged = describeVersion(
@@ -96,23 +94,21 @@ describe('version semantic parity', () => {
         logger: noopLogger,
       })
 
-    it.each([
-      '^1.2.3',
-      '1.x',
-      '>=1.2.3-rc.1 <2.0.0',
-    ])('accepts the valid range %s', (range) => {
-      expect(parseConfigWithRange(range)['filter-by-range']).toBe(range)
-    })
+    it.each(['^1.2.3', '1.x', '>=1.2.3-rc.1 <2.0.0'])(
+      'accepts the valid range %s',
+      (range) => {
+        expect(parseConfigWithRange(range)['filter-by-range']).toBe(range)
+      },
+    )
 
-    it.each([
-      'not a range',
-      '1.2.3 -',
-      '>=1.2.3 <',
-    ])('rejects the invalid range %s', (range) => {
-      expect(() => parseConfigWithRange(range)).toThrow(
-        `'filter-by-range' value "${range}" could not be parsed as a valid semver range.`,
-      )
-    })
+    it.each(['not a range', '1.2.3 -', '>=1.2.3 <'])(
+      'rejects the invalid range %s',
+      (range) => {
+        expect(() => parseConfigWithRange(range)).toThrow(
+          `'filter-by-range' value "${range}" could not be parsed as a valid semver range.`,
+        )
+      },
+    )
   })
 
   describe('Release Drafter increments', () => {

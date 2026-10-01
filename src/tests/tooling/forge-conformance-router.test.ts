@@ -89,21 +89,24 @@ describe('forge conformance router', () => {
   it.each([
     ['relevant diff', 1, true],
     ['irrelevant diff', 0, false],
-  ])('routes an unrelated labeled event using its %s', (_name, diffStatus, shouldRun) => {
-    const runGit = gitRunner(0, diffStatus, 0)
+  ])(
+    'routes an unrelated labeled event using its %s',
+    (_name, diffStatus, shouldRun) => {
+      const runGit = gitRunner(0, diffStatus, 0)
 
-    expect(
-      routeForgeConformance(
-        {
-          ...baseEnvironment,
-          EVENT_ACTION: 'labeled',
-          LABEL_NAME: 'documentation',
-        },
-        runGit,
-      ),
-    ).toMatchObject({ shouldRun })
-    expect(runGit).toHaveBeenCalledTimes(diffStatus === 0 ? 3 : 2)
-  })
+      expect(
+        routeForgeConformance(
+          {
+            ...baseEnvironment,
+            EVENT_ACTION: 'labeled',
+            LABEL_NAME: 'documentation',
+          },
+          runGit,
+        ),
+      ).toMatchObject({ shouldRun })
+      expect(runGit).toHaveBeenCalledTimes(diffStatus === 0 ? 3 : 2)
+    },
+  )
 
   it('runs labeled events when the override label already exists', () => {
     const runGit = gitRunner()
@@ -140,20 +143,20 @@ describe('forge conformance router', () => {
     expect(runGit).not.toHaveBeenCalled()
   })
 
-  it.each([
-    '',
-    '0'.repeat(40),
-  ])('fails open for a missing or zero base SHA (%s)', (baseSha) => {
-    const runGit = gitRunner()
+  it.each(['', '0'.repeat(40)])(
+    'fails open for a missing or zero base SHA (%s)',
+    (baseSha) => {
+      const runGit = gitRunner()
 
-    expect(
-      routeForgeConformance(
-        { ...baseEnvironment, PR_BASE_SHA: baseSha },
-        runGit,
-      ),
-    ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
-    expect(runGit).not.toHaveBeenCalled()
-  })
+      expect(
+        routeForgeConformance(
+          { ...baseEnvironment, PR_BASE_SHA: baseSha },
+          runGit,
+        ),
+      ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
+      expect(runGit).not.toHaveBeenCalled()
+    },
+  )
 
   it.each([
     ['invalid base', [2]],
@@ -255,20 +258,18 @@ describe('forge conformance router', () => {
       })
     })
 
-    it.each([
-      'shared',
-      'transitive',
-      'vitest',
-      'testcontainers',
-    ])('runs when the resolved %s dependency changes', (name) => {
-      const before = lockfile()
-      const after = lockfile()
-      after.packages[`node_modules/${name}`].version = '99.0.0'
-      expect(routeLocks(before, after)).toEqual({
-        shouldRun: true,
-        reason: 'forge dependencies changed',
-      })
-    })
+    it.each(['shared', 'transitive', 'vitest', 'testcontainers'])(
+      'runs when the resolved %s dependency changes',
+      (name) => {
+        const before = lockfile()
+        const after = lockfile()
+        after.packages[`node_modules/${name}`].version = '99.0.0'
+        expect(routeLocks(before, after)).toEqual({
+          shouldRun: true,
+          reason: 'forge dependencies changed',
+        })
+      },
+    )
 
     it('ignores dev classification changes caused by unrelated workspaces', () => {
       const before = lockfile()
@@ -309,23 +310,22 @@ describe('forge conformance router', () => {
       }
     })
 
-    it.each([
-      'missing dependency',
-      'unsupported format',
-      'missing workspace',
-    ])('fails open for %s', (failure) => {
-      const before = lockfile()
-      const after = lockfile()
-      if (failure === 'missing dependency')
-        delete after.packages['node_modules/shared']
-      if (failure === 'missing workspace')
-        delete after.packages['packages/core']
-      if (failure === 'unsupported format') after.lockfileVersion = 1
-      expect(routeLocks(before, after)).toMatchObject({
-        shouldRun: true,
-        warning: expect.any(String),
-      })
-    })
+    it.each(['missing dependency', 'unsupported format', 'missing workspace'])(
+      'fails open for %s',
+      (failure) => {
+        const before = lockfile()
+        const after = lockfile()
+        if (failure === 'missing dependency')
+          delete after.packages['node_modules/shared']
+        if (failure === 'missing workspace')
+          delete after.packages['packages/core']
+        if (failure === 'unsupported format') after.lockfileVersion = 1
+        expect(routeLocks(before, after)).toMatchObject({
+          shouldRun: true,
+          warning: expect.any(String),
+        })
+      },
+    )
 
     it('fails open when git cannot inspect the lockfile', () => {
       expect(
