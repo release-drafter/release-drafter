@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/autolabeler",
-  "version": "7.8.0",
+  "version": "7.9.0",
   "description": "Runtime-neutral configuration and matching for Release Drafter's autolabeler.",
   "type": "module",
   "sideEffects": false,
