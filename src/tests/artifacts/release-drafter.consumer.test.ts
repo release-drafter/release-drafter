@@ -437,7 +437,7 @@ describe('release-drafter packed CLI and package consumer', {
               pullRequests: [{
                 number: 42,
                 title: 'Change',
-                body: ${JSON.stringify('<!-- hidden -->\n\n~~~md\n<!-- example -->\n~~~')},
+                body: ${JSON.stringify('<!-- hidden -->\n\n```md\n<!-- example -->\n```')},
               }],
               newContributorLogins: new Set(),
             }
@@ -489,7 +489,7 @@ describe('release-drafter packed CLI and package consumer', {
       if (
         result.plan.action !== 'dry-run' ||
         result.releasePayload.tag !== 'v1.0.1' ||
-        result.releasePayload.body !== ${JSON.stringify('\\<!-- hidden -->\n\n~~~md\n<!-- example -->\n~~~')}
+        result.releasePayload.body !== ${JSON.stringify('\\<!-- hidden -->\n\n```md\n<!-- example -->\n```')}
       ) {
         throw new Error(JSON.stringify(result))
       }
