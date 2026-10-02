@@ -1,0 +1,8 @@
+tag-template: 'foobar_v$RESOLVED_VERSION'
+tag-prefix: foobar_v
+header: |
+  Tag: $RESOLVED_TAG
+template: |
+  https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_TAG
+footer: |
+  Version: $RESOLVED_VERSION
