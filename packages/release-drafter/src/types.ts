@@ -12,6 +12,45 @@ export interface Repository {
   serverUrl: string
 }
 
+/** Reads configuration through the selected forge. */
+export interface RepositoryConfigReader {
+  getDefaultBranch(repository: Repository): Promise<string>
+  getRepositoryConfig(options: {
+    repository: Repository
+    path: string
+    ref?: string
+  }): Promise<string>
+}
+
+/** Bundled adapters support release operations and configuration loading. */
+export type BundledForgeAdapter = ForgeAdapter & RepositoryConfigReader
+
+/** Optional values applied after configuration inheritance and validation. */
+export interface ConfigOverrides {
+  commitish?: string
+  header?: string
+  footer?: string
+  latest?: boolean
+  prerelease?: boolean
+  'prerelease-identifier'?: string
+  'include-pre-releases'?: boolean
+  'filter-by-range'?: string
+}
+
+/** Options for the standard forge-neutral configuration loader. */
+export interface LoadConfigOptions {
+  adapter: RepositoryConfigReader
+  repository: Repository
+  /** Defaults to `release-drafter.yml` in the repository's `.github/` directory. */
+  target?: string
+  /** Defaults to the repository's default branch. */
+  ref?: string
+  /** Base directory for `file:` targets. Defaults to the current working directory. */
+  cwd?: string
+  overrides?: ConfigOverrides
+  logger?: Logger
+}
+
 export interface ReleaseAuthor {
   login: string
   url?: string
@@ -251,7 +290,8 @@ export interface ParsedGroupChange {
 
 /**
  * Fully parsed Release Drafter configuration for the orchestration core. The
- * caller or runtime must load and normalize the configuration.
+ * standard `loadConfig` helper returns this shape. Applications can also supply
+ * their own parsed configuration.
  */
 export interface DraftReleaseConfig {
   'change-template': string

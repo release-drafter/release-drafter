@@ -3,7 +3,7 @@ import {
   type ConfigLogger,
   type LoadConfigOptions,
   loadConfig,
-} from './config.ts'
+} from './load-config.ts'
 import { LocalConfigFileBoundaryError } from './local-config-file.ts'
 
 const repository = {

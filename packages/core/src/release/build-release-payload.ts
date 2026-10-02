@@ -47,7 +47,8 @@ export const buildReleasePayload = async (params: {
   let body =
     (config.header || '') +
     config.template +
-    (!lastRelease
+    // An explicit `from` is a comparison baseline, so only warn without one.
+    (!lastRelease && !input.from
       ? `\n---\n${renderTemplate({ template: lastReleaseNotFoundTemplate, object: { $OWNER: repository.owner, $REPOSITORY: repository.name } })}\n---\n`
       : '') +
     (config.footer || '')
@@ -93,8 +94,16 @@ export const buildReleasePayload = async (params: {
     logger,
   })
   logger.debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`)
-  if (versionInfo)
-    body = renderTemplate({ template: body, object: versionInfo })
+  const tag = renderTagName({
+    inputTagName: input.tag,
+    config,
+    versionInfo,
+    logger,
+  })
+  body = renderTemplate({
+    template: body,
+    object: { ...versionInfo, $RESOLVED_TAG: tag },
+  })
 
   const releasePayload: ReleasePayload = {
     name: renderReleaseName({
@@ -103,12 +112,7 @@ export const buildReleasePayload = async (params: {
       versionInfo,
       logger,
     }),
-    tag: renderTagName({
-      inputTagName: input.tag,
-      config,
-      versionInfo,
-      logger,
-    }),
+    tag,
     body,
     targetCommitish: await adapter.resolveCommitish({
       repository,

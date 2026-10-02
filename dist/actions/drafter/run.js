@@ -1054,7 +1054,7 @@ var buildReleasePayload = async (params) => {
 		config,
 		logger
 	});
-	let body = (config.header || "") + config.template + (!lastRelease ? `\n---\n${renderTemplate({
+	let body = (config.header || "") + config.template + (!lastRelease && !input.from ? `\n---\n${renderTemplate({
 		template: lastReleaseNotFoundTemplate,
 		object: {
 			$OWNER: repository.owner,
@@ -1101,9 +1101,18 @@ var buildReleasePayload = async (params) => {
 		logger
 	});
 	logger.debug(`versionInfo: ${JSON.stringify(versionInfo, null, 2)}`);
-	if (versionInfo) body = renderTemplate({
+	const tag = renderTagName({
+		inputTagName: input.tag,
+		config,
+		versionInfo,
+		logger
+	});
+	body = renderTemplate({
 		template: body,
-		object: versionInfo
+		object: {
+			...versionInfo,
+			$RESOLVED_TAG: tag
+		}
 	});
 	const releasePayload = {
 		name: renderReleaseName({
@@ -1112,12 +1121,7 @@ var buildReleasePayload = async (params) => {
 			versionInfo,
 			logger
 		}),
-		tag: renderTagName({
-			inputTagName: input.tag,
-			config,
-			versionInfo,
-			logger
-		}),
+		tag,
 		body,
 		targetCommitish: await adapter.resolveCommitish({
 			repository,

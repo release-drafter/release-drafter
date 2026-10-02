@@ -4,7 +4,8 @@ const { coreDraftRelease } = vi.hoisted(() => ({
   coreDraftRelease: vi.fn(),
 }))
 
-vi.mock('@release-drafter/core', () => ({
+vi.mock('@release-drafter/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@release-drafter/core')>()),
   draftRelease: coreDraftRelease,
   noopLogger: {
     debug() {},
@@ -15,6 +16,7 @@ vi.mock('@release-drafter/core', () => ({
 }))
 
 import {
+  type BundledForgeAdapter,
   type CreateForgeAdapterOptions,
   createForgeAdapter,
   type DraftReleaseConfig,
@@ -153,7 +155,9 @@ describe('createForgeAdapter', () => {
     expectTypeOf(createForgeAdapter)
       .parameter(0)
       .toEqualTypeOf<CreateForgeAdapterOptions>()
-    expectTypeOf(createForgeAdapter).returns.toEqualTypeOf<ForgeAdapter>()
+    expectTypeOf(
+      createForgeAdapter,
+    ).returns.toEqualTypeOf<BundledForgeAdapter>()
 
     const github = {
       forge: 'github',

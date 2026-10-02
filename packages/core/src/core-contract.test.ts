@@ -654,6 +654,26 @@ describe('draftRelease', () => {
     )
     expect(result.releasePayload.targetCommitish).toBe('main')
     expect(result.releasePayload.resolvedVersion).toBe('0.0.1')
+    expect(result.releasePayload.body).not.toContain(
+      'without a comparison baseline',
+    )
+  })
+
+  it('warns about a missing baseline without a selected release or from', async () => {
+    const forge = adapter({ draftReleases: true, releases: [] })
+
+    const result = await draftRelease({
+      adapter: forge,
+      config: orchestrationConfig(),
+      input: { publish: false, dryRun: true },
+      logger,
+      repository,
+    })
+
+    expect(forge.findChanges).not.toHaveBeenCalled()
+    expect(result.releasePayload.body).toContain(
+      'without a comparison baseline',
+    )
   })
 
   it('uses the selected last release tag as the default comparison base', async () => {

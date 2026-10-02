@@ -384,11 +384,13 @@ describe('release-drafter packed CLI and package consumer', {
     writeFileSync(
       join(consumerDirectory, 'consumer.mts'),
       `
-      import { createForgeAdapter, draftRelease } from 'release-drafter'
+      import { createForgeAdapter, draftRelease, loadConfig } from 'release-drafter'
       import type {
         CreateForgeAdapterOptions,
+        DraftReleaseConfig,
         DraftReleaseOptions,
         DraftReleaseResult,
+        LoadConfigOptions,
         ForgeAdapter,
         ForgejoForgeAdapterOptions,
         GiteaForgeAdapterOptions,
@@ -403,6 +405,14 @@ describe('release-drafter packed CLI and package consumer', {
       declare const adapter: ForgeAdapter
       declare const logger: Logger
       const injectable = { adapter, logger } satisfies Partial<DraftReleaseOptions>
+      const load: (options: LoadConfigOptions) => Promise<DraftReleaseConfig> = loadConfig
+      const bundled = createForgeAdapter({ forge: 'github', token: 'token' })
+      void loadConfig({
+        adapter: bundled,
+        repository: { owner: 'acme', name: 'widgets', serverUrl: 'https://github.com' },
+        overrides: { prerelease: true, latest: false },
+      })
+      void load
       void invoke
       void injectable
       const factoryOptions = {
@@ -478,6 +488,24 @@ describe('release-drafter packed CLI and package consumer', {
       process.stderr.write = stderrWrite
       if (typeof facade.draftRelease !== 'function') {
         throw new Error('draftRelease is not a function')
+      }
+      if (typeof facade.loadConfig !== 'function') {
+        throw new Error('loadConfig is not a function')
+      }
+      const config = await facade.loadConfig({
+        adapter: {
+          getDefaultBranch: async () => 'main',
+          getRepositoryConfig: async ({ path, ref }) => {
+            if (path !== '.github/release-drafter.yml' || ref !== 'main') {
+              throw new Error('unexpected configuration target')
+            }
+            return 'template: $CHANGES\\n'
+          },
+        },
+        repository: { owner: 'acme', name: 'widgets', serverUrl: 'https://example.test' },
+      })
+      if (config.commitish !== 'main' || config.latest !== true || !config['change-template']) {
+        throw new Error('configuration was not normalized')
       }
       stdoutWrite.call(process.stdout, 'imported\\n')
     `,

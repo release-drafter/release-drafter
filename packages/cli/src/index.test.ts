@@ -1,5 +1,6 @@
 import type {
   DraftReleaseResult,
+  LocalConfigFileReader,
   PullRequestValidationData,
 } from '@release-drafter/core'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
@@ -9,7 +10,6 @@ import type {
   DraftFunction,
   WritableStream,
 } from './index.ts'
-import type { LocalConfigFileReader } from './local-config-file.ts'
 
 const BASE_CONFIG = 'template: "$CHANGES"\n'
 const CONVENTIONAL_CONFIG = `${BASE_CONFIG}categories:\n  - title: Features\n    when:\n      conventional:\n        type: feat\n`

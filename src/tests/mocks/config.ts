@@ -61,6 +61,7 @@ export type AvailableConfigs =
   | 'config-with-prerelease'
   | 'config-with-pull-request-limit'
   | 'config-with-replacers'
+  | 'config-with-resolved-tag-template'
   | 'config-with-resolved-version-template'
   | 'config-with-schema-error'
   | 'config-with-smoke-test-categories-legacy'
