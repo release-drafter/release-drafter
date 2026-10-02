@@ -36,7 +36,7 @@
   },
   "license": "ISC",
   "devDependencies": {
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.2"
   },
   "private": true
 }

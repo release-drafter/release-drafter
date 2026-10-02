@@ -33,7 +33,7 @@
     "@release-drafter/rest-adapter": "*"
   },
   "devDependencies": {
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.2"
   },
   "license": "ISC",
   "private": true
