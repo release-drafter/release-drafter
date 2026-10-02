@@ -794,6 +794,8 @@ prerelease contents.
 > - A configuration-file `prerelease-identifier` enables `prerelease: true`
 >   unless the workflow has a `prerelease: false` action input. A
 >   `prerelease-identifier` action input always enables `prerelease: true`.
+> - Prereleases always use `latest: false`, including when a prerelease
+>   identifier enables prerelease mode automatically.
 
 Set `include-pre-releases: true` to include changes since the last prerelease
 instead of the last stable release. The stable release body then contains only

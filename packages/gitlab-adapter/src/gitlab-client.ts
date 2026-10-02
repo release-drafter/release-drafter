@@ -505,9 +505,12 @@ export class GitLabClient {
             `GitLab pagination received more items than the advertised total of ${advertisedTotal}`,
           )
         if (items.length === advertisedTotal) return items
+        if (response.data.length === 0)
+          throw new Error(
+            `GitLab pagination was incomplete: expected ${advertisedTotal} items but received ${items.length}`,
+          )
       } else if (!hasNextPage(response) && response.data.length < pageSize)
         return items
-      if (!hasNextPage(response) && response.data.length === 0) return items
     }
     throw new Error(
       `GitLab pagination reached the ${this.limits.maxPages} page limit before proving completion`,

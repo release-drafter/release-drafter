@@ -27,6 +27,7 @@ jobs:
     timeout-minutes: 20
     env:
       COVERAGE_THRESHOLD: '90'
+      BRANCH_COVERAGE_THRESHOLD: '90'
     permissions:
       contents: read
       pull-requests: read
