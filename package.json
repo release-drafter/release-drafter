@@ -1,7 +1,7 @@
 {
   "name": "@release-drafter/root",
   "description": "Private workspace coordinator for Release Drafter.",
-  "version": "7.8.0",
+  "version": "7.9.0",
   "author": "",
   "type": "module",
   "private": true,
