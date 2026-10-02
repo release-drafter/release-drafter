@@ -204,6 +204,7 @@ verifies that the merge commit is an ancestor of the workflow commit and that
 the root and public package versions match the release branch. Published releases
 are not republished; a pending PR can still finish a failed major-tag update or
 label change. An existing version tag must point to the release PR's merge commit.
+If the version tag is missing, publication creates it at that merge commit.
 Only a verified candidate enables the publication job in the `releaser`
 environment, which can remain restricted to `main`.
 Draft updates and publication share a concurrency group to prevent simultaneous
