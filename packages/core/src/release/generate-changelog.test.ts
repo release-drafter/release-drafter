@@ -67,6 +67,29 @@ const changelog = (config: Record<string, unknown>, pullRequests = bumps) =>
   })
 
 describe('generateChangeLog', () => {
+  it.each([{ labels: [] }, { labels: ['feature'] }])(
+    'escapes bodies in the changelog with labels $labels',
+    ({ labels }) => {
+      expect(
+        changelog(
+          {
+            'change-template': '$BODY',
+            'change-body-escapes': '<',
+            categories: [{ title: 'Features', labels: ['feature'] }],
+          },
+          [
+            {
+              ...pullRequest(42, 'Change', labels),
+              body: '<!-- hidden -->\n\n```md\n<!-- example -->\n```',
+            },
+          ],
+        ),
+      ).toBe(
+        `${labels.length ? '## Features\n\n' : ''}\\<!-- hidden -->\n\n\`\`\`md\n<!-- example -->\n\`\`\``,
+      )
+    },
+  )
+
   it('renders one entry per pull request without grouping rules', () => {
     expect(
       changelog({ 'change-template': '* $TITLE ($NUMBERS)' }),

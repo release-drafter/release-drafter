@@ -299,6 +299,7 @@ export interface DraftReleaseConfig {
   'change-authors-separator': string
   'change-authors-final-separator'?: string
   'change-title-escapes'?: string
+  'change-body-escapes'?: string
   'no-changes-template': string
   'version-template': string
   'name-template'?: string

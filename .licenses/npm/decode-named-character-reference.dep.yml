@@ -1,0 +1,70 @@
+---
+name: decode-named-character-reference
+version: 1.3.0
+type: npm
+summary: Decode named character references
+homepage:
+license: mit
+licenses:
+- sources: license
+  text: |
+    (The MIT License)
+
+    Copyright (c) Titus Wormer <tituswormer@gmail.com>
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    'Software'), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- sources: readme.md
+  text: |-
+    [MIT][license] © [Titus Wormer][author]
+
+    <!-- Definitions -->
+
+    [author]: https://wooorm.com
+
+    [build]: https://github.com/wooorm/decode-named-character-reference/actions
+
+    [build-badge]: https://github.com/wooorm/decode-named-character-reference/workflows/main/badge.svg
+
+    [contribute]: https://opensource.guide/how-to-contribute/
+
+    [coverage]: https://codecov.io/github/wooorm/decode-named-character-reference
+
+    [coverage-badge]: https://img.shields.io/codecov/c/github/wooorm/decode-named-character-reference.svg
+
+    [downloads]: https://www.npmjs.com/package/decode-named-character-reference
+
+    [downloads-badge]: https://img.shields.io/npm/dm/decode-named-character-reference.svg
+
+    [esm]: https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+
+    [esmsh]: https://esm.sh
+
+    [license]: license
+
+    [npm]: https://docs.npmjs.com/cli/install
+
+    [parse-entities]: https://github.com/wooorm/parse-entities
+
+    [size]: https://bundlephobia.com/result?p=decode-named-character-reference
+
+    [size-badge]: https://img.shields.io/bundlephobia/minzip/decode-named-character-reference.svg
+
+    [typescript]: https://www.typescriptlang.org
+notices: []

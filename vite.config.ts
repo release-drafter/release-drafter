@@ -1,12 +1,19 @@
 import { builtinModules } from 'node:module'
-import { defaultClientConditions, defaultServerConditions } from 'vite'
+import { defaultServerConditions } from 'vite'
 import { defineConfig } from 'vitest/config'
 
 const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   resolve: {
-    conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
+    // Package tests build with NODE_ENV=test. Always use production Node
+    // exports for shipped bundles, rather than browser or development exports.
+    conditions: [
+      WORKSPACE_SOURCE_CONDITION,
+      ...(command === 'build'
+        ? ['node', 'module', 'production']
+        : defaultServerConditions),
+    ],
     tsconfigPaths: true,
   },
   // GitHub Actions libraries read inputs and context from process.env at runtime.
@@ -71,4 +78,4 @@ export default defineConfig({
       ],
     },
   },
-})
+}))
