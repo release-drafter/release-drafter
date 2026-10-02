@@ -47,7 +47,8 @@ export const buildReleasePayload = async (params: {
   let body =
     (config.header || '') +
     config.template +
-    (!lastRelease
+    // An explicit `from` is a comparison baseline, so only warn without one.
+    (!lastRelease && !input.from
       ? `\n---\n${renderTemplate({ template: lastReleaseNotFoundTemplate, object: { $OWNER: repository.owner, $REPOSITORY: repository.name } })}\n---\n`
       : '') +
     (config.footer || '')
