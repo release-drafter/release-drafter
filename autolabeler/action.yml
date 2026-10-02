@@ -1,5 +1,5 @@
 name: 'Release Drafter - Autolabeler'
-description: 'Add pull request labels from the Autolabeler configuration.'
+description: 'Apply pull request labels from the Autolabeler configuration.'
 author: release-drafter
 branding:
   icon: edit-2

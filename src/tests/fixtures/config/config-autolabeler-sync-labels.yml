@@ -1,0 +1,17 @@
+sync-labels: true
+autolabeler:
+  - labels: ['needs-triage', 'uncategorized']
+    fallback: true
+  - label: 'shared'
+    title: ['/(fix|feat):/']
+  - label: 'patch'
+    title: ['/^fix:/']
+  - labels: ['minor', 'shared', 'minor']
+    label: 'enhancement'
+    title: ['/^feat:/']
+    stop-on-match: true
+  - label: 'later'
+    title: ['/^feat:/']
+  - label: 'unused'
+  - label: 'broken'
+    title: ['/[/']

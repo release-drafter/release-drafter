@@ -667,7 +667,8 @@ Release Drafter parses `search` as a regular expression. `replace` supports the
 
 ## Autolabeler
 
-Use the Autolabeler action to add labels to pull requests.
+Use the Autolabeler action to add labels to pull requests and optionally remove
+configured labels that no longer match.
 
 ```yaml
 name: Auto Label
@@ -675,10 +676,10 @@ name: Auto Label
 on:
   pull_request:
     # Autolabeler handles these event types.
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, edited]
   # Use pull_request_target to label pull requests from forks.
   # pull_request_target:
-  #   types: [opened, reopened, synchronize]
+  #   types: [opened, reopened, synchronize, edited]
 
 permissions:
   contents: read
@@ -716,12 +717,30 @@ Only one fallback rule is supported. `fallback: true` and `stop-on-match: true`
 are mutually exclusive.
 
 Without a fallback rule, a run with no matches adds no labels. An empty
-`autolabeler: []` list also adds no labels. Autolabeler only adds labels: if a
-later run matches an ordinary rule, existing fallback labels remain on the pull
-request. Existing labels do not affect rule matching or fallback selection.
+`autolabeler: []` list also adds no labels. Existing labels do not affect rule
+matching or fallback selection.
+
+Set top-level `sync-labels: true` in the configuration to remove configured
+labels that are not selected by the current run. The default is `false`, which
+preserves the existing behavior of only adding labels. With syncing enabled,
+changing a PR title from `fix: ...` to `feat: ...` can replace a configured
+`patch` label with `minor`. Include the `edited` event in your workflow to
+reevaluate title and body changes.
+
+Syncing manages labels from every valid rule, including fallback labels and
+rules skipped by `stop-on-match`. A label stays when any evaluated rule selects
+it. Matching an ordinary rule removes stale fallback labels; selecting the
+fallback removes stale ordinary labels. Labels outside the current valid rules
+are preserved, including labels whose rules were removed from the config or
+skipped because of invalid regular expressions. An empty rule list removes no
+labels. Configured labels added manually are also managed. Label names are
+compared without regard to case. The `dry-run` input reports proposed additions
+and removals without changing labels. The `labels` output remains the labels
+selected by the configuration.
 
 ```yml
 # .github/release-drafter.yml
+sync-labels: true
 autolabeler:
   - labels: ['chore', 'documentation']
     files:

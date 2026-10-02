@@ -15,13 +15,15 @@ var ruleSchema = object({
 	title: array(string().min(1)).optional().default([]),
 	body: array(string().min(1)).optional().default([])
 });
-var configSchema = object({ 
-/**
-* Defines pull request label rules.
-* `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.
-* A rule matches when at least one configured matcher succeeds.
-*/
-autolabeler: array(ruleSchema.extend({ labels: labelsSchema }).or(ruleSchema.extend({ label: labelSchema }))) }).meta({
+var configSchema = object({
+	"sync-labels": boolean().optional().default(false).describe("Remove configured labels when they are not selected by this run."),
+	/**
+	* Defines pull request label rules.
+	* `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.
+	* A rule matches when at least one configured matcher succeeds.
+	*/
+	autolabeler: array(ruleSchema.extend({ labels: labelsSchema }).or(ruleSchema.extend({ label: labelSchema })))
+}).meta({
 	title: "JSON schema for Release Drafter's autolabeler action config.",
 	id: "https://github.com/release-drafter/release-drafter/blob/main/autolabeler/schema.json"
 });
@@ -240,6 +242,17 @@ async function run() {
 			}
 		});
 		for (const match of result.matches) info(`Found label for ${match.matcher}: '${match.label}'`);
+		const labelsToRemove = [];
+		if (config["sync-labels"]) {
+			const currentLabels = await adapter.octokit.paginate(adapter.octokit.rest.issues.listLabelsOnIssue, {
+				...context.repo,
+				issue_number: payload.number,
+				per_page: 100
+			});
+			const managedLabels = new Set(config.autolabeler.flatMap((rule) => rule.labels.map((label) => label.toLowerCase())));
+			const selectedLabels = new Set(result.labels.map((label) => label.toLowerCase()));
+			for (const { name } of currentLabels) if (managedLabels.has(name.toLowerCase()) && !selectedLabels.has(name.toLowerCase())) labelsToRemove.push(name);
+		}
 		if (result.labels.length > 0) {
 			if (input["dry-run"]) info(`[dry-run] Would add labels [${result.labels.join(", ")}] to PR #${payload.number}`);
 			else await adapter.octokit.rest.issues.addLabels({
@@ -247,6 +260,15 @@ async function run() {
 				issue_number: payload.number,
 				labels: result.labels
 			});
+		}
+		for (const name of labelsToRemove) if (input["dry-run"]) info(`[dry-run] Would remove label '${name}' from PR #${payload.number}`);
+		else {
+			await adapter.octokit.rest.issues.removeLabel({
+				...context.repo,
+				issue_number: payload.number,
+				name
+			});
+			info(`Removed label '${name}' from PR #${payload.number}`);
 		}
 		writeActionOutputs(actionOutputNames, {
 			number: payload.number.toString(),
