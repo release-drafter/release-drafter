@@ -274,30 +274,24 @@ origin. A cross-origin endpoint requires an explicit `--token`.
 ## Programmatic API
 
 ```ts
-import {
-  createForgeAdapter,
-  draftRelease,
-  type DraftReleaseConfig,
-  type ForgeAdapter,
-} from 'release-drafter'
+import { createForgeAdapter, draftRelease, loadConfig } from 'release-drafter'
 
-const adapter: ForgeAdapter = createForgeAdapter({
+const adapter = createForgeAdapter({
   forge: 'github',
   token: process.env.GITHUB_TOKEN!,
 })
 
-// The application must implement configuration loading and normalization.
-declare function loadAndNormalizeReleaseDrafterConfig(): DraftReleaseConfig
-const config: DraftReleaseConfig = loadAndNormalizeReleaseDrafterConfig()
+const repository = {
+  owner: 'release-drafter',
+  name: 'release-drafter',
+  serverUrl: 'https://github.com',
+}
+const config = await loadConfig({ adapter, repository })
 
 const result = await draftRelease({
   adapter,
   config,
-  repository: {
-    owner: 'release-drafter',
-    name: 'release-drafter',
-    serverUrl: 'https://github.com',
-  },
+  repository,
   input: {
     publish: false,
     dryRun: true,
@@ -313,14 +307,44 @@ forge-neutral:
 
 - `adapter` is an injected `ForgeAdapter`. It supplies repository, change, ref,
   and release operations for the forge.
-- `config` must be a fully parsed `DraftReleaseConfig`. The caller or runtime
-  must load YAML, apply configuration inheritance, and normalize the raw
-  configuration.
+- `config` is a fully parsed `DraftReleaseConfig`. Use the standard `loadConfig`
+  helper or supply your own parsed configuration.
 - `input` selects the comparison base and the operation mode. The modes are dry
   run, draft, and publish.
 - `repository` identifies the target. The package does not read the target from
   GitHub Actions state.
 - `logger` is optional. Omitting it uses a no-op logger.
+
+`loadConfig(options)` loads `.github/release-drafter.yml` from the repository's
+default branch through the supplied adapter. It supports the same YAML/JSON
+files, `_extends` chains, merge strategies, and `.github` repository fallback
+as the CLI. It validates the composed configuration, applies defaults, and
+normalizes categories, replacer expressions, and change grouping.
+
+Use `target` to select another repository configuration or a local
+`file:relative/path` target. `ref` selects the branch or ref used to load the
+configuration and supplies the default release commitish. `cwd` sets the base
+directory for local files; it defaults to the current working directory. Local
+paths and their symlink targets must stay within that directory. Repository
+configurations cannot extend local files. `overrides` applies common config
+values, such as `commitish`, `prerelease`, and `latest`, after inheritance.
+`logger` is optional and defaults to a no-op logger.
+
+```ts
+const config = await loadConfig({
+  adapter,
+  repository,
+  target: 'file:release-drafter.yml',
+  ref: 'main',
+  overrides: { prerelease: true, latest: false },
+})
+```
+
+The bundled adapters returned by `createForgeAdapter` support configuration
+loading. A custom `RepositoryConfigReader` can provide `getDefaultBranch` and
+`getRepositoryConfig` for another forge or storage layer. Applications that
+already load and normalize configuration can pass their `DraftReleaseConfig`
+directly to `draftRelease`.
 
 `DraftReleaseResult` contains the forge-neutral release plan and normalized
 release payload. If the adapter writes a release, the result also contains the
