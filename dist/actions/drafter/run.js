@@ -1054,7 +1054,7 @@ var buildReleasePayload = async (params) => {
 		config,
 		logger
 	});
-	let body = (config.header || "") + config.template + (!lastRelease ? `\n---\n${renderTemplate({
+	let body = (config.header || "") + config.template + (!lastRelease && !input.from ? `\n---\n${renderTemplate({
 		template: lastReleaseNotFoundTemplate,
 		object: {
 			$OWNER: repository.owner,
