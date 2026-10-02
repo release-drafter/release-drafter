@@ -3,7 +3,7 @@ import { runCheckPr } from '#tests/helpers/index.ts'
 import { mockContext, mocks } from '#tests/mocks/index.ts'
 
 describe('check-pr e2e', () => {
-  it('loads composed configuration, fails an invalid PR, and performs no writes or outputs', async () => {
+  it('loads composed configuration, fails an invalid PR, outputs labels and performs no writes', async () => {
     await mockContext('pull_request-synchronize')
     mocks.config.mockReturnValue('config-check-pr')
     mocks.getContextsConfigWasFetchedFrom.mockReturnValue([
@@ -26,7 +26,7 @@ describe('check-pr e2e', () => {
     expect(mocks.core.setFailed).toHaveBeenCalledWith(
       expect.stringContaining('pull request #1475'),
     )
-    expect(mocks.core.setOutput).not.toHaveBeenCalled()
+    expect(mocks.core.setOutput).toHaveBeenCalledWith('labels', '[]')
     expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
     expect(mocks.postReleaseBody).not.toHaveBeenCalled()
     expect(mocks.patchReleaseBody).not.toHaveBeenCalled()

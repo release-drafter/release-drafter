@@ -101,6 +101,8 @@ outputs:
     description: The name of the tag associated with the release.
   body:
     description: The body of the drafted release.
+  labels:
+    description: A JSON array of unique, sorted labels matched by configuration conditions on included merged pull requests. Empty results are [].
   html_url:
     description: The URL for viewing the release.
   upload_url:

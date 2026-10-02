@@ -33,7 +33,12 @@ describe('pull request validation', () => {
           },
         ]),
       ),
-    ).toEqual({ valid: true, skipped: false, selectedCategoryCount: 1 })
+    ).toEqual({
+      valid: true,
+      skipped: false,
+      selectedCategoryCount: 1,
+      labels: [],
+    })
   })
 
   it('rejects a non-conventional or unmatched title', () => {
@@ -44,7 +49,12 @@ describe('pull request validation', () => {
           { title: 'Features', when: { conventional: { type: 'feat' } } },
         ]),
       ),
-    ).toEqual({ valid: false, skipped: false, selectedCategoryCount: 0 })
+    ).toEqual({
+      valid: false,
+      skipped: false,
+      selectedCategoryCount: 0,
+      labels: [],
+    })
   })
 
   it('rejects a match that selects only an unconditional fallback', () => {
@@ -56,7 +66,12 @@ describe('pull request validation', () => {
           { title: 'Other' },
         ]),
       ),
-    ).toEqual({ valid: false, skipped: false, selectedCategoryCount: 1 })
+    ).toEqual({
+      valid: false,
+      skipped: false,
+      selectedCategoryCount: 1,
+      labels: [],
+    })
   })
 
   it('passes an excluded pull request as skipped before projection', () => {
@@ -68,7 +83,7 @@ describe('pull request validation', () => {
           { title: 'Features', when: { conventional: true } },
         ]),
       ),
-    ).toEqual({ valid: true, skipped: true })
+    ).toEqual({ valid: true, skipped: true, labels: ['skip-changelog'] })
   })
 
   it('does not use paths to qualify a conventional title', () => {
@@ -122,6 +137,49 @@ describe('pull request validation', () => {
       evaluatePullRequest({ title: 'feat: add search', labels: [] }, parsed)
         .valid,
     ).toBe(false)
+  })
+
+  it('reports labels from projected conditions but drops path-only conditions', () => {
+    const parsed = categories([
+      { title: 'Features', when: { label: 'feature', path: 'src/**' } },
+      { title: 'Path only', when: { path: 'docs/**' }, exclusive: false },
+    ])
+    expect(
+      evaluatePullRequest({ labels: ['feature', 'unrelated'] }, parsed).labels,
+    ).toEqual(['feature'])
+  })
+
+  it('does not report a configured label when its compound title condition fails', () => {
+    const parsed = categories([
+      {
+        title: 'Features',
+        when: {
+          label: 'feature',
+          conventional: { type: 'feat' },
+        },
+      },
+    ])
+    expect(
+      evaluatePullRequest({ title: 'fix: user', labels: ['feature'] }, parsed)
+        .labels,
+    ).toEqual([])
+  })
+
+  it('reports only prefilter matches when a PR is skipped', () => {
+    const parsed = categories([
+      { type: 'pre-include', when: { label: 'ready' } },
+      { type: 'pre-exclude', when: { label: 'skip' } },
+      { title: 'Features', when: { label: 'feature' } },
+    ])
+    expect(
+      evaluatePullRequest(
+        { labels: ['ready', 'skip', 'feature', 'unrelated'] },
+        parsed,
+      ),
+    ).toEqual({ valid: true, skipped: true, labels: ['ready', 'skip'] })
+    expect(
+      evaluatePullRequest({ labels: ['skip', 'feature'] }, parsed),
+    ).toEqual({ valid: true, skipped: true, labels: [] })
   })
 
   it('drops path-only branches', () => {

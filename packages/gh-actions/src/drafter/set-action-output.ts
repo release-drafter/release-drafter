@@ -7,6 +7,7 @@ import { actionOutputNames } from './action-metadata.ts'
 export const setActionOutput = ({
   release,
   releasePayload,
+  labels,
 }: DraftReleaseResult): void => {
   core.info('Set action outputs...')
   const outputName = release?.name ?? releasePayload.name
@@ -26,6 +27,7 @@ export const setActionOutput = ({
     minor_version: releasePayload.minorVersion || undefined,
     patch_version: releasePayload.patchVersion || undefined,
     body: releasePayload.body,
+    labels: JSON.stringify(labels),
   })
   core.info('Outputs set!')
 }

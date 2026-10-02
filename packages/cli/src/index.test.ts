@@ -46,6 +46,7 @@ const createResult = (): DraftReleaseResult => ({
     uploadUrl: 'https://uploads.github.example/releases/42/assets',
   },
   releasePayload: payload,
+  labels: [],
 })
 
 const capture = () => {
@@ -290,9 +291,66 @@ describe('check-pr', () => {
       number: 18,
       title: 'Add search',
       status: 'valid',
+      labels: ['feature'],
       valid: true,
       skipped: false,
       selected_category_count: 1,
+    })
+  })
+
+  it.each([
+    {
+      labels: ['z', 'api/user', 'z', 'comma,quote"'],
+      expected: ['api/user', 'comma,quote"'],
+    },
+    { labels: [], expected: [] },
+  ])(
+    'outputs only configured matching PR labels in JSON output',
+    async ({ labels, expected }) => {
+      const state = createAdapter({
+        getConfig: async () => `categories:
+  - title: Features
+    when:
+      labels: [api/user, 'comma,quote"']
+  - title: Other
+    when:
+      conventional:
+        type: feat
+`,
+        pullRequest: {
+          number: 18,
+          title: 'feat: search',
+          labels,
+          baseRefName: 'main',
+        },
+      })
+      const result = await invoke(
+        ['check-pr', 'acme/widgets', '18', '--json'],
+        { adapter: state.adapter },
+      )
+      expect(result.code).toBe(0)
+      expect(JSON.parse(result.stdout.text()).labels).toEqual(expected)
+    },
+  )
+
+  it('includes labels when check-pr skips an excluded pull request', async () => {
+    const state = createAdapter({
+      getConfig: async () =>
+        'categories:\n  - type: pre-exclude\n    when:\n      label: skip\n',
+      pullRequest: {
+        number: 18,
+        title: 'Old title',
+        labels: ['skip', 'api/user'],
+        baseRefName: 'main',
+      },
+    })
+    const result = await invoke(['check-pr', 'acme/widgets', '18', '--json'], {
+      adapter: state.adapter,
+    })
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout.text())).toMatchObject({
+      status: 'skipped',
+      labels: ['skip'],
     })
   })
 
@@ -352,6 +410,7 @@ describe('check-pr', () => {
         action: 'check-pr',
         number: 19,
         status: 'invalid',
+        labels: [],
         valid: false,
         skipped: false,
         selected_category_count: 0,
@@ -942,6 +1001,29 @@ describe('output and release result mapping', () => {
     expect(result.stderr.text()).not.toContain('{"action"')
   })
 
+  it.each([
+    { action: 'create' as const, labels: [] },
+    { action: 'update' as const, labels: ['api/user', 'comma,quote"'] },
+    { action: 'dry-run' as const, labels: ['api/user'] },
+  ])(
+    'includes labels as an array in $action JSON output',
+    async ({ action, labels }) => {
+      const draftResult = createResult()
+      draftResult.labels = labels
+      draftResult.plan =
+        action === 'update'
+          ? {
+              action,
+              draftRelease: { id: 7, tagName: 'v2.0.0' },
+              releasePayload: payload,
+            }
+          : { action, releasePayload: payload }
+      const result = await invoke(['acme/widgets', '--json'], { draftResult })
+      expect(result.code).toBe(0)
+      expect(JSON.parse(result.stdout.text())).toMatchObject({ action, labels })
+    },
+  )
+
   it('keeps stdout empty for JSON failures', async () => {
     const result = await invoke(['acme/widgets', '--to', 'main', '--json'], {
       draft: vi.fn(async () => {
@@ -982,6 +1064,7 @@ describe('output and release result mapping', () => {
           releasePayload: payload,
         },
         releasePayload: payload,
+        labels: [],
       },
     })
 
@@ -1021,6 +1104,7 @@ describe('output and release result mapping', () => {
           plan,
           release: actualRelease,
           releasePayload: payload,
+          labels: [],
         },
       })
 
@@ -1078,6 +1162,7 @@ describe('output and release result mapping', () => {
       result: {
         plan: { action: 'dry-run' as const, releasePayload: payload },
         releasePayload: payload,
+        labels: [],
       },
       expected: undefined,
     },

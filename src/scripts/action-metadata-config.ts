@@ -117,6 +117,10 @@ const drafterOutputs = {
     description: 'The name of the tag associated with the release.',
   },
   body: { description: 'The body of the drafted release.' },
+  labels: {
+    description:
+      'A JSON array of unique, sorted labels matched by configuration conditions on included merged pull requests. Empty results are [].',
+  },
   html_url: {
     description: 'The URL for viewing the release.',
   },
@@ -193,6 +197,11 @@ export const actionManifests = {
   checkPr: {
     paths: ['check-pr/action.yml'],
     inputs: checkPrInputs,
-    outputs: {},
+    outputs: {
+      labels: {
+        description:
+          'A JSON array of unique, sorted PR labels matched by configuration conditions under Check PR validation rules, including prefilter matches for skipped PRs. Empty results are [].',
+      },
+    },
   },
 } as const

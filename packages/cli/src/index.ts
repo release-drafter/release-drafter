@@ -521,6 +521,7 @@ const resultDocument = (result: DraftReleaseResult) => {
     latest: payload.makeLatest,
     dry_run: dryRun,
     body: payload.body,
+    labels: result.labels,
   }
 }
 
@@ -531,6 +532,7 @@ const pullRequestResultDocument = (
   action: 'check-pr' as const,
   number: pullRequest.number,
   title: pullRequest.title,
+  labels: evaluation.labels,
   status: evaluation.skipped
     ? ('skipped' as const)
     : evaluation.valid

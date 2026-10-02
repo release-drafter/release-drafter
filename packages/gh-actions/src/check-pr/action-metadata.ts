@@ -6,4 +6,4 @@ export const actionInputNames = defineActionInputNames<ActionInput>()([
   'token',
 ])
 
-export const actionOutputNames = [] as const
+export const actionOutputNames = ['labels'] as const

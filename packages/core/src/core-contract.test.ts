@@ -128,6 +128,117 @@ const adapter = (params: {
 })
 
 describe('evaluateCategories', () => {
+  it.each([
+    { mode: 'any', actual: ['feature', 'unrelated'], expected: ['feature'] },
+    {
+      mode: 'all',
+      actual: ['feature', 'approved', 'unrelated'],
+      expected: ['approved', 'feature'],
+    },
+    { mode: 'all', actual: ['feature'], expected: [] },
+    { mode: 'only', actual: ['feature'], expected: ['feature'] },
+    { mode: 'only', actual: ['feature', 'unrelated'], expected: [] },
+    {
+      mode: 'exactly',
+      actual: ['feature', 'approved', 'feature'],
+      expected: ['approved', 'feature'],
+    },
+    { mode: 'exactly', actual: ['feature'], expected: [] },
+  ])(
+    'reports present matched labels for labels-mode $mode',
+    ({ mode, actual, expected }) => {
+      const parsed = mergeInputAndConfig({
+        config: configSchema.parse({
+          categories: [
+            {
+              title: 'Features',
+              when: {
+                labels: ['feature', 'approved', 'feature'],
+                'labels-mode': mode,
+              },
+            },
+          ],
+        }),
+        input: {},
+        defaultCommitish: 'main',
+        logger,
+      })
+      expect(
+        evaluateCategories({ labels: actual }, parsed.categories).matchedLabels,
+      ).toEqual(expected)
+    },
+  )
+
+  it('reports only successful conditions in selected categories, including version rules', () => {
+    const parsed = mergeInputAndConfig({
+      config: configSchema.parse({
+        categories: [
+          {
+            title: 'Features',
+            exclusive: true,
+            when: [
+              { labels: ['feature', 'absent'] },
+              { label: 'blocked-title', conventional: { type: 'fix' } },
+              { label: 'blocked-path', path: 'docs/**' },
+            ],
+          },
+          { title: 'Unselected', when: { label: 'after-exclusive' } },
+          {
+            type: 'version-resolver',
+            when: { label: 'major' },
+            'semver-increment': 'major',
+          },
+        ],
+      }),
+      input: {},
+      defaultCommitish: 'main',
+      logger,
+    })
+    expect(
+      evaluateCategories(
+        {
+          title: 'feat: user',
+          changedFiles: ['src/user.ts'],
+          labels: [
+            'feature',
+            'blocked-title',
+            'blocked-path',
+            'after-exclusive',
+            'major',
+            'unrelated',
+          ],
+        },
+        parsed.categories,
+      ).matchedLabels,
+    ).toEqual(['feature', 'major'])
+  })
+
+  it('returns no labels for title-only, path-only or fallback matches', () => {
+    const parsed = mergeInputAndConfig({
+      config: configSchema.parse({
+        categories: [
+          {
+            title: 'Features',
+            when: [{ conventional: { type: 'feat' } }, { label: 'feature' }],
+          },
+          { title: 'Paths', when: { path: 'src/**' }, exclusive: false },
+          { title: 'Other' },
+        ],
+      }),
+      input: {},
+      defaultCommitish: 'main',
+      logger,
+    })
+    for (const title of ['feat: user', 'old title']) {
+      expect(
+        evaluateCategories(
+          { title, labels: ['unrelated'], changedFiles: ['src/user.ts'] },
+          parsed.categories,
+        ).matchedLabels,
+      ).toEqual([])
+    }
+  })
+
   it('combines conventional, labels, paths, prefilters, exclusivity, and version rules', () => {
     const result = evaluateCategories(
       {
@@ -398,6 +509,101 @@ describe('draftRelease', () => {
     name: 'release-drafter',
     serverUrl: 'https://github.com',
   }
+
+  it.each(['create', 'update', 'dry-run'] as const)(
+    'returns only matched configuration labels from included pull requests for %s',
+    async (action) => {
+      const forge = adapter({
+        draftReleases: true,
+        releases: [
+          release({ tagName: 'v1.0.0' }),
+          ...(action === 'update'
+            ? [release({ tagName: 'v1.1.0', draft: true })]
+            : []),
+        ],
+      })
+      vi.mocked(forge.findChanges).mockResolvedValue({
+        commits: [],
+        newContributorLogins: new Set<string>(),
+        pullRequests: [
+          {
+            number: 1,
+            title: 'feat: user',
+            labels: ['included', 'api/user', 'shared', ''],
+            changedFiles: ['src/user.ts'],
+          },
+          {
+            number: 2,
+            title: 'fix: billing',
+            labels: [
+              'shared',
+              'api/billing',
+              'included',
+              'comma,quote"',
+              'ready',
+            ],
+            changedFiles: ['src/billing.ts'],
+          },
+          {
+            number: 3,
+            title: 'docs: excluded',
+            labels: ['included', 'docs-only'],
+            changedFiles: ['docs/readme.md'],
+          },
+          { number: 4, title: 'feat: not included', labels: ['other-service'] },
+          { number: 5, title: 'fix: unlabeled' },
+        ],
+      })
+      const config = orchestrationConfig()
+      config.categories = categories
+      const result = await draftRelease({
+        adapter: forge,
+        config,
+        input: { publish: false, dryRun: action === 'dry-run' },
+        logger,
+        repository,
+      })
+      expect(result.plan.action).toBe(action)
+      expect(result.labels).toEqual(['included', 'ready'])
+      expect(result.releasePayload).not.toHaveProperty('labels')
+    },
+  )
+
+  it.each([
+    { pullRequests: [] },
+    { pullRequests: [{ number: 1, title: 'fix: unlabeled' }] },
+  ])(
+    'returns an empty label array when changes have no labels',
+    async ({ pullRequests }) => {
+      const forge = adapter({ draftReleases: true, releases: [release()] })
+      vi.mocked(forge.findChanges).mockResolvedValue({
+        commits: [],
+        pullRequests,
+        newContributorLogins: new Set<string>(),
+      })
+      const result = await draftRelease({
+        adapter: forge,
+        config: orchestrationConfig(),
+        input: { publish: false, dryRun: true },
+        logger,
+        repository,
+      })
+      expect(result.labels).toEqual([])
+    },
+  )
+
+  it('returns an empty label array when no comparison base is available', async () => {
+    const forge = adapter({ draftReleases: true, releases: [] })
+    const result = await draftRelease({
+      adapter: forge,
+      config: orchestrationConfig(),
+      input: { publish: false, dryRun: true },
+      logger,
+      repository,
+    })
+    expect(forge.findChanges).not.toHaveBeenCalled()
+    expect(result.labels).toEqual([])
+  })
 
   it('uses an explicit from only as the change comparison base', async () => {
     const existingDraft = release({

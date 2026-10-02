@@ -19,4 +19,6 @@ inputs:
       Access token for configuration reads. Default: github.token.
     default: ${{ github.token }}
 
-outputs: {}
+outputs:
+  labels:
+    description: A JSON array of unique, sorted PR labels matched by configuration conditions under Check PR validation rules, including prefilter matches for skipped PRs. Empty results are [].

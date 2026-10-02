@@ -1,4 +1,4 @@
-import { C as context, E as setFailed, T as info, _ as number, a as readActionInputs, i as defineActionInputNames, m as array, p as _enum, r as tokenInputSchema, s as actionLogger, v as object, x as union, y as string } from "../../chunks/config.js";
+import { C as context, E as setFailed, T as info, _ as number, a as readActionInputs, i as defineActionInputNames, m as array, o as writeActionOutputs, p as _enum, r as tokenInputSchema, s as actionLogger, v as object, x as union, y as string } from "../../chunks/config.js";
 import { g as evaluateCategories, n as mergeInputAndConfig, t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
 //#region packages/core/src/pull-request-validation.ts
 /** Remove path predicates and conditions that contain only path predicates. */
@@ -21,15 +21,21 @@ var evaluatePullRequest = (pullRequest, categories) => {
 	const evaluation = evaluateCategories(pullRequest, projectPullRequestValidationCategories(categories));
 	if (!evaluation.included) return {
 		valid: true,
-		skipped: true
+		skipped: true,
+		labels: evaluation.matchedLabels
 	};
 	const selectedCount = evaluation.changelogCategories.length + evaluation.versionResolverCategories.length;
 	return {
+		labels: evaluation.matchedLabels,
 		valid: selectedCount > 0 && !evaluation.fallbackOnly,
 		skipped: false,
 		selectedCategoryCount: selectedCount
 	};
 };
+//#endregion
+//#region packages/gh-actions/src/check-pr/action-metadata.ts
+var actionInputNames = defineActionInputNames()(["config-name", "token"]);
+var actionOutputNames = ["labels"];
 //#endregion
 //#region packages/gh-actions/src/check-pr/event.ts
 var supportedPullRequestActions = [
@@ -71,9 +77,6 @@ var parsePullRequestEvent = (eventName, payload) => {
 //#region packages/gh-actions/src/check-pr/action-input.schema.ts
 var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(tokenInputSchema);
 //#endregion
-//#region packages/gh-actions/src/check-pr/action-metadata.ts
-var actionInputNames = defineActionInputNames()(["config-name", "token"]);
-//#endregion
 //#region packages/gh-actions/src/check-pr/get-action-inputs.ts
 var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
 //#endregion
@@ -105,6 +108,7 @@ async function checkPullRequest(dependencies = defaultDependencies()) {
 		title: pullRequest.title,
 		labels: pullRequest.labels
 	}, config.categories);
+	writeActionOutputs(actionOutputNames, { labels: JSON.stringify(evaluation.labels) });
 	if (evaluation.skipped) {
 		info(`Skipping excluded pull request #${pullRequest.number}.`);
 		return;

@@ -21,13 +21,14 @@ export const projectPullRequestValidationCategories = (
     return when.length > 0 ? [{ ...category, when }] : []
   })
 
-export type PullRequestEvaluation =
+export type PullRequestEvaluation = { labels: string[] } & (
   | { valid: true; skipped: true }
   | {
       valid: boolean
       skipped: false
       selectedCategoryCount: number
     }
+)
 
 /** Evaluate whether a pull request's title or labels select a non-fallback category. */
 export const evaluatePullRequest = (
@@ -38,12 +39,14 @@ export const evaluatePullRequest = (
     pullRequest,
     projectPullRequestValidationCategories(categories),
   )
-  if (!evaluation.included) return { valid: true, skipped: true }
+  if (!evaluation.included)
+    return { valid: true, skipped: true, labels: evaluation.matchedLabels }
   const selectedCount =
     evaluation.changelogCategories.length +
     evaluation.versionResolverCategories.length
 
   return {
+    labels: evaluation.matchedLabels,
     valid: selectedCount > 0 && !evaluation.fallbackOnly,
     skipped: false,
     selectedCategoryCount: selectedCount,
