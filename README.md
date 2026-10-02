@@ -927,8 +927,6 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for contribution instructions.
 
 Maintainers: see [Releasing](docs/CONTRIBUTING.md#releasing) for the release PR
 flow and its protected GitHub and npm environments.
-Publication creates a missing version tag and verifies the commit of an existing
-tag.
 
 > [!IMPORTANT]
 >
