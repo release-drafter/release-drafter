@@ -122,6 +122,390 @@ const createAdapter = (
     limits: options.limits,
   })
 
+describe('REST response fallbacks', () => {
+  it('rejects changing pagination totals', async () => {
+    const fetch = routeFetch((url) => {
+      const page = url.searchParams.get('page')
+      return json(
+        [{ id: Number(page), tag_name: `v${page}` }],
+        {},
+        { 'x-total-count': page === '1' ? '3' : '4' },
+      )
+    })
+    await expect(
+      createAdapter(fetch).listReleases({ repository }),
+    ).rejects.toThrow('total changed from 3 to 4')
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('rejects an advertised total above the operation item limit', async () => {
+    const fetch = routeFetch(() => json([], {}, { 'x-total-count': '3' }))
+    await expect(
+      createAdapter(fetch, { limits: { maxItemsPerList: 2 } }).listReleases({
+        repository,
+      }),
+    ).rejects.toThrow('advertised 3 items, above the 2 item limit')
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
+  it.each([{}, null])(
+    'rejects a non-list response from a paginated endpoint: %j',
+    async (response) => {
+      await expect(
+        createAdapter(routeFetch(() => json(response))).listReleases({
+          repository,
+        }),
+      ).rejects.toThrow('paginated response was not an array')
+    },
+  )
+
+  it('rejects an empty successful response from a list endpoint', async () => {
+    await expect(
+      createAdapter(routeFetch(() => new Response(null))).listReleases({
+        repository,
+      }),
+    ).rejects.toThrow('paginated response was not an array')
+  })
+
+  it.each<Record<string, number>>([
+    { maxPages: 0 },
+    { concurrency: -1 },
+    { pageSize: 1.5 },
+  ])(
+    'rejects invalid operation limits before making requests: %j',
+    (limits) => {
+      const fetch = routeFetch(() => json([]))
+      expect(() => createAdapter(fetch, { limits })).toThrow(
+        'positive safe integer',
+      )
+      expect(fetch).not.toHaveBeenCalled()
+    },
+  )
+
+  it('rejects blank authentication before making requests', () => {
+    const fetch = routeFetch(() => json([]))
+    expect(() => createAdapter(fetch, { token: '  ' })).toThrow(
+      'authentication token is required',
+    )
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('orders undated commits and preserves available author and date fields', async () => {
+    const fetch = routeFetch((url) =>
+      url.pathname.endsWith('/compare/v1...main')
+        ? json({
+            total_commits: 5,
+            commits: [
+              { sha: 'b' },
+              { sha: 'a', author: { username: ' alias ' } },
+              { sha: 'c', created: '2026-01-01' },
+              { sha: 'd', commit: { author: { date: '2026-01-02' } } },
+              { sha: 'e', commit: { author: { name: 'Person' } } },
+            ],
+          })
+        : json({}, { status: 404 }),
+    )
+
+    const result = await createAdapter(fetch).findChanges(request())
+    expect(result.commits).toEqual([
+      { id: 'a', oid: 'a', author: { login: 'alias' } },
+      { id: 'b', oid: 'b' },
+      { id: 'e', oid: 'e', author: { name: 'Person' } },
+      { id: 'c', oid: 'c', committedAt: '2026-01-01' },
+      { id: 'd', oid: 'd', committedAt: '2026-01-02' },
+    ])
+  })
+
+  it.each([
+    [{}, 'without a SHA'],
+    [{ sha: 'a' }, 'valid number'],
+  ])(
+    'rejects incomplete comparison or association data: %j',
+    async (item, message) => {
+      const fetch = routeFetch((url) =>
+        url.pathname.includes('/compare/')
+          ? json({ commits: [item], total_commits: 1 })
+          : json(pull(1, { number: undefined })),
+      )
+      await expect(createAdapter(fetch).findChanges(request())).rejects.toThrow(
+        message,
+      )
+    },
+  )
+
+  it.each([
+    [{ number: 0 }, 'valid number'],
+    [{ title: '' }, 'did not contain a title'],
+  ])(
+    'rejects invalid associated pull requests: %j',
+    async (overrides, message) => {
+      const fetch = routeFetch((url) =>
+        url.pathname.includes('/compare/')
+          ? json({ commits: [{ sha: 'a' }], total_commits: 1 })
+          : json(pull(1, overrides)),
+      )
+      await expect(createAdapter(fetch).findChanges(request())).rejects.toThrow(
+        message,
+      )
+    },
+  )
+
+  it('normalizes sparse pull requests and skips unmerged associations', async () => {
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/')) {
+        return json({
+          commits: ['a', 'b', 'c', 'd'].map((sha) => ({ sha })),
+          total_commits: 4,
+        })
+      }
+      if (url.pathname.endsWith('/a/pull'))
+        return json(pull(3, { merged: false }))
+      if (url.pathname.endsWith('/b/pull'))
+        return json(pull(4, { merged_at: null }))
+      return json(
+        pull(url.pathname.endsWith('/c/pull') ? 2 : 1, {
+          merged_at: '2026-01-01',
+          base: undefined,
+          head: undefined,
+          user: undefined,
+          labels: undefined,
+          body: undefined,
+          html_url: undefined,
+          merge_commit_sha: undefined,
+        }),
+      )
+    })
+
+    const result = await createAdapter(fetch).findChanges(
+      request({ includeNewContributors: true }),
+    )
+    expect(result.pullRequests).toEqual(
+      [1, 2].map((number) => ({
+        number,
+        title: `Pull ${number}`,
+        baseRepository: 'octo/project',
+        isCrossRepository: false,
+        mergedAt: '2026-01-01',
+        mergeCommitOid: null,
+        labels: [],
+        body: null,
+      })),
+    )
+    expect(result.commits.slice(2).map((item) => item.authors)).toEqual([
+      [],
+      [],
+    ])
+    expect(result.newContributorLogins).toEqual(new Set())
+    expect(fetch).toHaveBeenCalledTimes(5)
+  })
+
+  it('honors field selection and coalesces identical commit and pull authors', async () => {
+    const fetch = routeFetch((url) =>
+      url.pathname.includes('/compare/')
+        ? json({
+            commits: [commit('a', '2026-01-01', 'same')],
+            total_commits: 1,
+          })
+        : json(
+            pull(1, {
+              user: { login: 'same', type: 'Bot' },
+              labels: ['feature', '', null, {}, { name: 'fix' }],
+            }),
+          ),
+    )
+    const result = await createAdapter(fetch).findChanges(
+      request({
+        pullRequestFields: {
+          body: false,
+          url: false,
+          baseRefName: false,
+          headRefName: false,
+        },
+      }),
+    )
+    expect(result.pullRequests[0]).toEqual({
+      number: 1,
+      title: 'Pull 1',
+      baseRepository: 'octo/project',
+      isCrossRepository: false,
+      mergedAt: '2026-01-01T00:00:00Z',
+      mergeCommitOid: 'sha-1',
+      labels: ['feature', 'fix'],
+      author: { login: 'same', type: 'Bot' },
+    })
+    expect(result.commits[0]?.authors).toEqual([{ login: 'same', type: 'Bot' }])
+  })
+
+  it('ignores unusable file records when no file count was advertised', async () => {
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/'))
+        return json({ commits: [{ sha: 'a' }], total_commits: 1 })
+      if (url.pathname.endsWith('/files'))
+        return json([null, {}, { filename: '' }, { filename: 'src/a.ts' }])
+      return json(pull(1, { changed_files: undefined }))
+    })
+    const result = await createAdapter(fetch).findChanges(
+      request({ includeChangedFiles: true }),
+    )
+    expect(result.pullRequests[0]?.changedFiles).toEqual(['src/a.ts'])
+  })
+
+  it('uses the earliest current merge and ignores incomplete or current history entries', async () => {
+    const fetch = routeFetch((url) => {
+      if (url.pathname.includes('/compare/'))
+        return json({
+          commits: ['a', 'b', 'c'].map((sha) => ({ sha })),
+          total_commits: 3,
+        })
+      if (url.pathname.endsWith('/pulls')) {
+        expect(url.searchParams.get('poster')).toBe('same')
+        return json([
+          null,
+          {},
+          { merged_at: '2025-01-01' },
+          pull(2, { merged_at: '2025-01-01' }),
+        ])
+      }
+      const number = url.pathname.endsWith('/a/pull')
+        ? 3
+        : url.pathname.endsWith('/b/pull')
+          ? 1
+          : 2
+      return json(pull(number, { user: { username: 'same' } }))
+    })
+    const result = await createAdapter(fetch).findChanges(
+      request({ includeNewContributors: true }),
+    )
+    expect(result.newContributorLogins).toEqual(new Set(['same']))
+    expect(fetch).toHaveBeenCalledTimes(5)
+  })
+
+  it('retains minimal release data and alternate release URLs', async () => {
+    const fetch = routeFetch(() =>
+      json([
+        { id: 1, tag_name: 'v1' },
+        {
+          id: 2,
+          tag_name: 'v2',
+          created_at: '2026-01-01',
+          prerelease: true,
+          url: 'https://forge.example/v2',
+          upload_url: 'https://forge.example/upload',
+        },
+      ]),
+    )
+    await expect(
+      createAdapter(fetch).listReleases({ repository }),
+    ).resolves.toEqual([
+      { id: 1, tagName: 'v1' },
+      {
+        id: 2,
+        tagName: 'v2',
+        createdAt: '2026-01-01',
+        prerelease: true,
+        url: 'https://forge.example/v2',
+        uploadUrl: 'https://forge.example/upload',
+      },
+    ])
+  })
+
+  it.each([{ tag_name: 'v1' }, { id: 1 }])(
+    'rejects malformed releases: %j',
+    async (release) => {
+      await expect(
+        createAdapter(routeFetch(() => json([release]))).listReleases({
+          repository,
+        }),
+      ).rejects.toThrow('omitted its id or tag name')
+    },
+  )
+
+  it.each([{}, { default_branch: '  ' }])(
+    'rejects an absent or blank default branch: %j',
+    async (response) => {
+      await expect(
+        createAdapter(routeFetch(() => json(response))).getDefaultBranch(
+          repository,
+        ),
+      ).rejects.toThrow('blank default branch')
+    },
+  )
+
+  it.each([{ encoding: 'utf-8', content: 'text' }, { encoding: 'base64' }])(
+    'rejects unusable config content without a ref: %j',
+    async (response) => {
+      const fetch = routeFetch((url) => {
+        expect(url.searchParams.has('ref')).toBe(false)
+        return json(response)
+      })
+      await expect(
+        createAdapter(fetch).getRepositoryConfig({
+          repository,
+          path: 'config.yml',
+        }),
+      ).rejects.toThrow('not base64 content')
+    },
+  )
+
+  it.each([
+    'refs/pull/no/head',
+    'refs/pull/1/head',
+    'refs/pull/1/merge',
+    'refs/tags/v1',
+  ])('falls back for malformed refs or missing SHAs: %s', async (commitish) => {
+    const warning = vi.fn()
+    const fetch = routeFetch(() => json({}))
+    await expect(
+      createAdapter(fetch, {
+        logger: { debug: vi.fn(), info: vi.fn(), warning, error: vi.fn() },
+      }).resolveCommitish({ repository, commitish }),
+    ).resolves.toBe('')
+    expect(warning).toHaveBeenCalledOnce()
+    expect(fetch).toHaveBeenCalledTimes(commitish.includes('/no/') ? 0 : 1)
+  })
+
+  it('passes unqualified commit references through without a request', async () => {
+    const fetch = routeFetch(() => json({}))
+    await expect(
+      createAdapter(fetch).resolveCommitish({
+        repository,
+        commitish: 'abc123',
+      }),
+    ).resolves.toBe('abc123')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it.each(['Existing', undefined])(
+    'preserves release tag and optional existing name: %s',
+    async (name) => {
+      const fetch = routeFetch((_url, init) => {
+        expect(JSON.parse(String(init.body))).toEqual({
+          body: 'Updated',
+          draft: false,
+          prerelease: false,
+          tag_name: 'v1',
+          target_commitish: 'main',
+          ...(name ? { name } : {}),
+        })
+        return json({ id: 1, tag_name: 'v1' })
+      })
+      await createAdapter(fetch).updateRelease({
+        repository,
+        release: { id: 1, tagName: 'v1', ...(name ? { name } : {}) },
+        payload: {
+          name: '',
+          tag: '',
+          body: 'Updated',
+          draft: false,
+          prerelease: false,
+          targetCommitish: 'main',
+          makeLatest: false,
+        },
+      })
+    },
+  )
+})
+
 describe('GitHub-compatible REST mechanics', () => {
   it('defines the shared Gitea-compatible endpoint map', () => {
     const endpoints = createGiteaCompatibleRestProfile('normalize').endpoints

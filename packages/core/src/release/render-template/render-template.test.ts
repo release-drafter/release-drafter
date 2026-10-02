@@ -132,6 +132,54 @@ describe('render template', () => {
     )
   })
   describe('with advanced substitutions', () => {
+    it.each([
+      { name: 'empty replacement', search: /b/g, replace: '', expected: 'ac' },
+      {
+        name: 'unmatched optional capture',
+        search: /b(z)?/g,
+        replace: '[$1]',
+        expected: 'a[]c',
+      },
+      {
+        name: 'unmatched named optional capture',
+        search: /b(?<optional>z)?/g,
+        replace: '[$1]',
+        expected: 'a[]c',
+      },
+      {
+        name: 'trailing backslash',
+        search: /b/g,
+        replace: 'end\\',
+        expected: 'aend\\c',
+      },
+      {
+        name: 'trailing dollar',
+        search: /b/g,
+        replace: 'end$',
+        expected: 'aend$c',
+      },
+      {
+        name: 'missing capture index',
+        search: /(b)/g,
+        replace: '$9',
+        expected: 'a$9c',
+      },
+      {
+        name: 'two-digit fallback to available capture',
+        search: /(b)/g,
+        replace: '$12',
+        expected: 'ab2c',
+      },
+    ])('handles $name', ({ search, replace, expected }) => {
+      expect(
+        renderTemplate({
+          template: 'abc',
+          object: {},
+          replacers: [{ search, replace }],
+        }),
+      ).toBe(expected)
+    })
+
     it('supports newline, tab, and backslash escapes', () => {
       const output = renderTemplate({
         template: 'X',

@@ -62,8 +62,18 @@ directly from the repository. Builds generate `packages/*/dist/`, but Git
 ignores these directories. npm includes the generated files when it packs a
 workspace package.
 
+Keep Drafter end-to-end suites in separate files by behavior so Vitest can run
+them in parallel. Tests within a file share environment variables and mocks,
+so keep them sequential. Shared test setup blocks network access and resets
+mocks and environment stubs. GitHub Actions mocks load only for the Action test
+directories listed in `src/tests/setup.ts`; update that list when adding an
+Action test directory.
+
 Common commands:
 
+- `npm run coverage` checks the last test run's coverage report. Statements and
+  branches must each reach 90%. Override the thresholds with
+  `COVERAGE_THRESHOLD` and `BRANCH_COVERAGE_THRESHOLD`, respectively.
 - `npm run ci` runs all repository checks and builds generated files. It
   formats and lints the code, checks dependencies, package boundaries, and
   types, runs tests, generates schemas, and builds action bundles and workspace

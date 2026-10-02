@@ -1602,15 +1602,15 @@ var applyOverrides = (config, input, logger) => {
 	applyReleaseModeOverrides(config, input, logger);
 };
 var applyReleaseModeOverrides = (config, input, logger) => {
-	if (config.latest && config.prerelease) {
-		logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
-		config.latest = false;
-	}
 	const hasInputPrerelease = typeof input.prerelease === "boolean";
 	const hasInputPrereleaseIdentifier = !!input["prerelease-identifier"];
 	if (config["prerelease-identifier"] && !config.prerelease && (!hasInputPrerelease || hasInputPrereleaseIdentifier)) {
 		logger.warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
 		config.prerelease = true;
+	}
+	if (config.prerelease && config.latest !== false) {
+		logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
+		config.latest = false;
 	}
 };
 var applyBooleanOverride = (config, input, key, logger) => {

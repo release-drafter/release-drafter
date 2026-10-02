@@ -75,6 +75,7 @@ The `release-drafter` package also exports `createForgeAdapter`, `loadConfig`,
 and `draftRelease` for GitHub, Gitea, Forgejo, and GitLab. Use `loadConfig` for
 standard configuration loading, inheritance, validation, and normalization, or
 pass your own parsed configuration to `draftRelease`.
+The GitLab adapter requires paginated results to match any advertised total.
 See the [programmatic API examples](./packages/release-drafter/README.md#programmatic-api).
 
 ## Check pull requests
@@ -823,6 +824,8 @@ prerelease contents.
 > - A configuration-file `prerelease-identifier` enables `prerelease: true`
 >   unless the workflow has a `prerelease: false` action input. A
 >   `prerelease-identifier` action input always enables `prerelease: true`.
+> - Prereleases always use `latest: false`, including when a prerelease
+>   identifier enables prerelease mode automatically.
 
 Set `include-pre-releases: true` to include changes since the last prerelease
 instead of the last stable release. The stable release body then contains only

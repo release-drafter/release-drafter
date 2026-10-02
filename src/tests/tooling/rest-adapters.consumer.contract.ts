@@ -43,11 +43,17 @@ describe('built REST adapter declarations', { concurrent: false }, () => {
   let consumerDirectory: string
 
   beforeAll(() => {
-    execNpm(['run', 'build', '--workspace', '@release-drafter/core'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/rest-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/gitea-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/forgejo-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/gitlab-adapter'])
+    // npm runs explicit workspace filters in order, without restarting npm for
+    // each build. Build shared declarations before their consumers.
+    execNpm([
+      'run',
+      'build',
+      '--workspace=@release-drafter/core',
+      '--workspace=@release-drafter/rest-adapter',
+      '--workspace=@release-drafter/gitea-adapter',
+      '--workspace=@release-drafter/forgejo-adapter',
+      '--workspace=@release-drafter/gitlab-adapter',
+    ])
     consumerDirectory = mkdtempSync(
       join(tmpdir(), 'release-drafter-adapter-consumer-'),
     )

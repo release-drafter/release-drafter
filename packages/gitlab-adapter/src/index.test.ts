@@ -74,6 +74,425 @@ const mergeRequest = (
   ...overrides,
 })
 
+describe('GitLab response fallbacks', () => {
+  it('rejects a list whose advertised total changes between pages', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const page = new URL(String(input)).searchParams.get('page')
+      return json(
+        [{ tag_name: `v${page}` }],
+        {},
+        { 'x-total': page === '1' ? '3' : '4', 'x-next-page': '2' },
+      )
+    })
+    await expect(adapter(fetch).listReleases({ repository })).rejects.toThrow(
+      'total changed from 3 to 4',
+    )
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it.each([true, false])(
+    'rejects an empty final page before the advertised total, with total header: %s',
+    async (keepTotal) => {
+      const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+        const first = new URL(String(input)).searchParams.get('page') === '1'
+        return json(
+          first ? [{ tag_name: 'v1' }] : [],
+          {},
+          first
+            ? { 'x-total': '3', 'x-next-page': '2' }
+            : keepTotal
+              ? { 'x-total': '3' }
+              : {},
+        )
+      })
+      await expect(adapter(fetch).listReleases({ repository })).rejects.toThrow(
+        'expected 3 items but received 1',
+      )
+      expect(fetch).toHaveBeenCalledTimes(2)
+    },
+  )
+
+  it('rejects lists exceeding the advertised total', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      json([{ tag_name: 'v1' }, { tag_name: 'v2' }], {}, { 'x-total': '1' }),
+    )
+    await expect(adapter(fetch).listReleases({ repository })).rejects.toThrow(
+      'more items than the advertised total of 1',
+    )
+  })
+
+  it('rejects an advertised total above the operation item limit before fetching another page', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      json([], {}, { 'x-total': '3' }),
+    )
+    await expect(
+      adapter(fetch, { maxItemsPerList: 2 }).listReleases({ repository }),
+    ).rejects.toThrow('advertised 3 items, above the 2 item limit')
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
+  it('rejects an unadvertised list that grows beyond the item limit', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const page = new URL(String(input)).searchParams.get('page')
+      return json(
+        [{ tag_name: `v${page}` }],
+        {},
+        { 'x-next-page': String(Number(page) + 1) },
+      )
+    })
+    await expect(
+      adapter(fetch, { maxItemsPerList: 1, pageSize: 1 }).listReleases({
+        repository,
+      }),
+    ).rejects.toThrow('exceeded the 1 item limit')
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('rejects a response whose advertised byte size exceeds the limit', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      json([], {}, { 'content-length': '1000' }),
+    )
+    await expect(
+      adapter(fetch, { maxResponseBytes: 100 }).listReleases({ repository }),
+    ).rejects.toThrow('100 byte response-size limit')
+  })
+
+  it.each([
+    { maxPages: 0 },
+    { concurrency: -1 },
+    { pageSize: 1.5 },
+    { retries: -1 },
+    { retries: Number.NaN },
+  ])(
+    'rejects invalid operation limits before making requests: %j',
+    async (limits) => {
+      const fetch = vi.fn<typeof globalThis.fetch>()
+      await expect(
+        adapter(fetch, limits).listReleases({ repository }),
+      ).rejects.toThrow('safe integer')
+      expect(fetch).not.toHaveBeenCalled()
+    },
+  )
+
+  it('rejects blank authentication before making requests', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>()
+    await expect(
+      new GitLabAdapter({ token: '  ', fetch }).listReleases({ repository }),
+    ).rejects.toThrow('authentication token is required')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('orders undated commits and falls back to authored or created dates', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) =>
+      pathOf(input).includes('/compare?')
+        ? json({
+            commits: [
+              { id: 'b' },
+              { id: 'a' },
+              { id: 'c', authored_date: '2026-01-01' },
+              { id: 'd', created_at: '2026-01-02' },
+            ],
+          })
+        : json([]),
+    )
+    const result = await adapter(fetch).findChanges(request())
+    expect(result.commits).toEqual([
+      { id: 'a', oid: 'a' },
+      { id: 'b', oid: 'b' },
+      { id: 'c', oid: 'c', committedAt: '2026-01-01' },
+      { id: 'd', oid: 'd', committedAt: '2026-01-02' },
+    ])
+  })
+
+  it('normalizes sparse merged requests and skips unrelated or unmerged requests', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) =>
+      pathOf(input).includes('/compare?')
+        ? json({ commits: [{ id: 'a' }] })
+        : json([
+            mergeRequest(5, { state: 'opened' }),
+            mergeRequest(6, { merged_at: null }),
+            mergeRequest(7, { iid: undefined }),
+            mergeRequest(8, { target_project_id: 20 }),
+            ...[2, 1].map((iid) =>
+              mergeRequest(iid, {
+                merged_at: '2026-01-01',
+                source_project_id: undefined,
+                target_project_id: undefined,
+                description: undefined,
+                web_url: undefined,
+                source_branch: undefined,
+                target_branch: undefined,
+                author: undefined,
+                labels: undefined,
+                merge_commit_sha: undefined,
+              }),
+            ),
+          ]),
+    )
+    const result = await adapter(fetch).findChanges(
+      request({ includeNewContributors: true }),
+    )
+    expect(result.pullRequests).toEqual(
+      [1, 2].map((number) => ({
+        number,
+        title: `MR ${number}`,
+        baseRepository: 'group/subgroup/project',
+        isCrossRepository: false,
+        mergedAt: '2026-01-01',
+        mergeCommitOid: null,
+        labels: [],
+        body: null,
+      })),
+    )
+    expect(result.commits[0]?.authors).toEqual([])
+    expect(result.newContributorLogins).toEqual(new Set())
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('honors field selection, bot identity, labels and squash merge SHAs', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) =>
+      pathOf(input).includes('/compare?')
+        ? json({ commits: [{ id: 'a' }] })
+        : json([
+            mergeRequest(1, {
+              author: { username: ' bot ', bot: true },
+              labels: ['feature', '', { name: 'fix' }, {}],
+              merge_commit_sha: null,
+              squash_commit_sha: 'squashed',
+              source_project_id: 20,
+            }),
+          ]),
+    )
+    const result = await adapter(fetch).findChanges(
+      request({
+        pullRequestFields: {
+          body: false,
+          url: false,
+          baseRefName: false,
+          headRefName: false,
+        },
+      }),
+    )
+    expect(result.pullRequests).toEqual([
+      {
+        number: 1,
+        title: 'MR 1',
+        baseRepository: 'group/subgroup/project',
+        isCrossRepository: true,
+        mergedAt: '2026-01-01T00:00:00Z',
+        mergeCommitOid: 'squashed',
+        labels: ['feature', 'fix'],
+        author: { login: 'bot', type: 'Bot' },
+      },
+    ])
+  })
+
+  it('uses old paths and ignores empty diffs when no file count was advertised', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      const path = pathOf(input)
+      if (path.includes('/compare?')) return json({ commits: [{ id: 'a' }] })
+      if (path.includes('/diffs?'))
+        return json([
+          {},
+          { new_path: '' },
+          { old_path: 'deleted.ts' },
+          { new_path: 'added.ts' },
+          { old_path: 'deleted.ts' },
+        ])
+      return json([mergeRequest(1)])
+    })
+    const result = await adapter(fetch).findChanges(
+      request({ includeChangedFiles: true }),
+    )
+    expect(result.pullRequests[0]?.changedFiles).toEqual([
+      'added.ts',
+      'deleted.ts',
+    ])
+  })
+
+  it.each([
+    ['9007199254740992', 'invalid or capped'],
+    ['3', 'above the 2 file limit'],
+  ])(
+    'rejects unsafe or excessive changed-file counts: %s',
+    async (changes_count, message) => {
+      const fetch = vi.fn<typeof globalThis.fetch>(async (input) =>
+        pathOf(input).includes('/compare?')
+          ? json({ commits: [{ id: 'a' }] })
+          : json([mergeRequest(1, { changes_count })]),
+      )
+      await expect(
+        adapter(fetch, { maxChangedFiles: 2 }).findChanges(
+          request({ includeChangedFiles: true }),
+        ),
+      ).rejects.toThrow(message)
+      expect(fetch).toHaveBeenCalledTimes(2)
+    },
+  )
+
+  it.each(['existing', 'unknown', 'failed'])(
+    'keeps contributors conservative when first contribution is %s',
+    async (state) => {
+      const warning = vi.fn()
+      const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+        const path = pathOf(input)
+        if (path.includes('/compare?')) return json({ commits: [{ id: 'a' }] })
+        if (path.includes('/commits/a/merge_requests?'))
+          return json([mergeRequest(1)])
+        if (state === 'failed')
+          return json({ message: 'Forbidden' }, { status: 403 })
+        return json(
+          mergeRequest(
+            1,
+            state === 'existing' ? { first_contribution: false } : {},
+          ),
+        )
+      })
+      const result = await new GitLabAdapter({
+        token: 'gitlab-token',
+        fetch,
+        logger: { debug: vi.fn(), info: vi.fn(), warning, error: vi.fn() },
+      }).findChanges(request({ includeNewContributors: true }))
+      expect(result.newContributorLogins).toEqual(new Set())
+      expect(warning).toHaveBeenCalledTimes(state === 'existing' ? 0 : 1)
+      if (state !== 'existing')
+        expect(warning).toHaveBeenCalledWith(
+          expect.stringContaining('will not be labeled new'),
+        )
+    },
+  )
+
+  it('retains minimal release data and created-date and tag-URL fallbacks', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      json([
+        { tag_name: 'v1' },
+        {
+          tag_name: 'v2',
+          created_at: '2026-01-01',
+          tag_path: 'https://gitlab.example/v2',
+        },
+        { tag_name: 'v3', upcoming_release: true },
+      ]),
+    )
+    await expect(adapter(fetch).listReleases({ repository })).resolves.toEqual([
+      { id: 'v1', tagName: 'v1', draft: false, prerelease: false },
+      {
+        id: 'v2',
+        tagName: 'v2',
+        createdAt: '2026-01-01',
+        url: 'https://gitlab.example/v2',
+        draft: false,
+        prerelease: false,
+      },
+    ])
+  })
+
+  it.each([{}, { default_branch: '  ' }])(
+    'rejects absent or blank default branches: %j',
+    async (response) => {
+      const fetch = vi.fn<typeof globalThis.fetch>(async () => json(response))
+      await expect(adapter(fetch).getDefaultBranch(repository)).rejects.toThrow(
+        'blank default branch',
+      )
+      await expect(
+        adapter(fetch).getRepositoryConfig({ repository, path: 'config.yml' }),
+      ).rejects.toThrow('blank default branch')
+    },
+  )
+
+  it('uses an explicit config ref without loading the default branch', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
+      expect(pathOf(input)).toContain(
+        '/repository/files/config.yml?ref=release',
+      )
+      return json({
+        encoding: 'base64',
+        content: Buffer.from('template: ok').toString('base64'),
+      })
+    })
+    await expect(
+      adapter(fetch).getRepositoryConfig({
+        repository,
+        path: 'config.yml',
+        ref: ' release ',
+      }),
+    ).resolves.toBe('template: ok')
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
+  it.each([{ content: 'text' }, { encoding: 'base64' }])(
+    'rejects invalid config content: %j',
+    async (response) => {
+      await expect(
+        adapter(
+          vi.fn<typeof globalThis.fetch>(async () => json(response)),
+        ).getRepositoryConfig({ repository, path: 'config.yml', ref: 'main' }),
+      ).rejects.toThrow('not base64 content')
+    },
+  )
+
+  it('defaults validation labels to an empty list', async () => {
+    await expect(
+      adapter(
+        vi.fn<typeof globalThis.fetch>(async () =>
+          json(mergeRequest(1, { labels: undefined })),
+        ),
+      ).getPullRequest({ repository, number: 1 }),
+    ).resolves.toEqual({
+      number: 1,
+      title: 'MR 1',
+      labels: [],
+      baseRefName: 'main',
+    })
+  })
+
+  it.each([
+    'refs/merge-requests/no/head',
+    'refs/merge-requests/1/head',
+    'refs/merge-requests/1/merge',
+    'refs/tags/v1',
+  ])(
+    'falls back when a ref is malformed or its commit is absent: %s',
+    async (commitish) => {
+      const warning = vi.fn()
+      const fetch = vi.fn<typeof globalThis.fetch>(async () => json({}))
+      const gitlab = new GitLabAdapter({
+        token: 'gitlab-token',
+        fetch,
+        logger: { debug: vi.fn(), info: vi.fn(), warning, error: vi.fn() },
+      })
+      await expect(
+        gitlab.resolveCommitish({ repository, commitish }),
+      ).resolves.toBe('')
+      expect(warning).toHaveBeenCalledOnce()
+      expect(fetch).toHaveBeenCalledTimes(
+        commitish.includes('/no/') ? 0 : commitish.endsWith('/merge') ? 2 : 1,
+      )
+    },
+  )
+
+  it('uses a squash SHA for a merge ref', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      json({ squash_commit_sha: 'squashed' }),
+    )
+    await expect(
+      adapter(fetch).resolveCommitish({
+        repository,
+        commitish: 'refs/merge-requests/1/merge',
+      }),
+    ).resolves.toBe('squashed')
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
+  it('passes an unqualified commit reference through without a request', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>()
+    await expect(
+      adapter(fetch).resolveCommitish({ repository, commitish: 'abc123' }),
+    ).resolves.toBe('abc123')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+})
+
 describe('GitLabAdapter', () => {
   it('loads the default branch and repository config through GitBeaker', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
