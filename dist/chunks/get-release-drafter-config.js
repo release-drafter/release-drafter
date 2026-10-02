@@ -853,7 +853,7 @@ var exclusiveConfigSchema = object({
 	*/
 	"change-title-escapes": string().optional(),
 	/**
-	* Characters to escape in `$BODY` outside Markdown code spans and code blocks before inserting into `change-template`.
+	* Characters to escape in `$BODY` when inserting into `change-template`. Uses title escaping rules with multiline backtick matches.
 	*/
 	"change-body-escapes": string().optional(),
 	/**

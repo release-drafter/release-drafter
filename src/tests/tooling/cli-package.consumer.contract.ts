@@ -49,34 +49,6 @@ const expectedBundledDependencyNotices = [
   'compare-versions',
   'conventional-commits-parser',
   'escape-string-regexp',
-  'character-entities',
-  'decode-named-character-reference',
-  'dequal',
-  'devlop',
-  'mdast-util-from-markdown',
-  'mdast-util-to-string',
-  'micromark',
-  'micromark-core-commonmark',
-  'micromark-factory-destination',
-  'micromark-factory-label',
-  'micromark-factory-space',
-  'micromark-factory-title',
-  'micromark-factory-whitespace',
-  'micromark-util-character',
-  'micromark-util-chunked',
-  'micromark-util-classify-character',
-  'micromark-util-combine-extensions',
-  'micromark-util-decode-numeric-character-reference',
-  'micromark-util-decode-string',
-  'micromark-util-encode',
-  'micromark-util-html-tag-name',
-  'micromark-util-normalize-identifier',
-  'micromark-util-resolve-all',
-  'micromark-util-sanitize-uri',
-  'micromark-util-subtokenize',
-  'micromark-util-symbol',
-  'micromark-util-types',
-  'unist-util-stringify-position',
   'minimatch',
   'verkit',
   'yaml',
@@ -603,7 +575,7 @@ describe('release-drafter packed CLI and package consumer', {
               pullRequests: [{
                 number: 42,
                 title: 'Change',
-                body: ${JSON.stringify('<!-- hidden -->\n\n~~~md\n<!-- example -->\n~~~')},
+                body: ${JSON.stringify('<!-- hidden -->\n\n```md\n<!-- example -->\n```')},
               }],
               newContributorLogins: new Set(),
             }
@@ -655,7 +627,7 @@ describe('release-drafter packed CLI and package consumer', {
       if (
         result.plan.action !== 'dry-run' ||
         result.releasePayload.tag !== 'v1.0.1' ||
-        result.releasePayload.body !== ${JSON.stringify('\\<!-- hidden -->\n\n~~~md\n<!-- example -->\n~~~')}
+        result.releasePayload.body !== ${JSON.stringify('\\<!-- hidden -->\n\n```md\n<!-- example -->\n```')}
       ) {
         throw new Error(JSON.stringify(result))
       }

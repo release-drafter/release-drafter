@@ -168,7 +168,7 @@ The `.github/release-drafter.yml` file supports these keys:
 | `change-authors-separator`       | Optional | The separator between authors in `$AUTHORS`. Default: `", "`. Use `"\n"` with a list-style `change-author-template` for multiline output.                                                                                                                                                                                                                            |
 | `change-authors-final-separator` | Optional | The separator before the final author in `$AUTHORS`. For example, `" and "` produces `@octocat, @cchanche and @jetersen`. Default: the value of `change-authors-separator`.                                                                                                                                                                                          |
 | `change-title-escapes`           | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                                                                                                                                 |
-| `change-body-escapes`            | Optional | Characters to escape in `$BODY` outside Markdown code spans and code blocks before inserting into `change-template`. See [Body escaping](#body-escaping). Default: `""`.                                                                                                                                                                                             |
+| `change-body-escapes`            | Optional | Characters to escape in `$BODY` when inserting into `change-template`. Uses title escaping rules with multiline backtick matches. See [Body escaping](#body-escaping). Default: `""`.                                                                                                                                                                                |
 | `no-changes-template`            | Optional | The template to use when there are no changes. Default: `"* No changes"`.                                                                                                                                                                                                                                                                                            |
 | `categories`                     | Optional | Defines how Release Drafter filters and groups changes and selects version increments. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. See [Categorize changes](#categorize-changes).                                                                                                                                      |
 | `exclude-contributors`           | Optional | Excludes specified usernames from `$CONTRIBUTORS`. See [Exclude contributors](#exclude-contributors).                                                                                                                                                                                                                                                                |
@@ -356,7 +356,7 @@ Use these variables in `change-template`:
 | `$AUTHOR`        | The pull request author's username. Example: `gracehopper`.                                                                                                                                                                                                                                |
 | `$AUTHOR_URL`    | The pull request author's GitHub profile URL. Example: `https://github.com/gracehopper`.                                                                                                                                                                                                   |
 | `$AUTHORS`       | The pull request author and associated commit authors, rendered with `change-author-template` and joined with `change-authors-separator`. The pull request author is first.                                                                                                                |
-| `$BODY`          | The pull request body. Example: `Fixed spelling mistake`. Characters in `change-body-escapes` are escaped outside Markdown code spans and code blocks.                                                                                                                                     |
+| `$BODY`          | The pull request body. Example: `Fixed spelling mistake`. Characters in `change-body-escapes` are escaped using the same rules as titles, with multiline backtick matches.                                                                                                                 |
 | `$URL`           | The pull request URL. Example: `https://github.com/octocat/repo/pull/42`.                                                                                                                                                                                                                  |
 | `$BASE_REF_NAME` | The name of the pull request base ref. Example: `main`.                                                                                                                                                                                                                                    |
 | `$HEAD_REF_NAME` | The name of the pull request head ref. Example: `my-bug-fix`.                                                                                                                                                                                                                              |
@@ -392,7 +392,7 @@ required by the output.
 
 Use `change-body-escapes` to escape selected characters in `$BODY` independently
 of `change-title-escapes`. For example, escape `<` to display HTML comments and
-tags as text while preserving comments shown in code examples:
+tags as text:
 
 ```yaml
 change-template: |-
@@ -404,9 +404,10 @@ change-body-escapes: '<'
 
 Release Drafter prefixes selected characters with a backslash, preserving
 existing backslash escapes. As with title escaping, `@` and `#` receive an HTML
-comment to prevent mentions. Inline code spans and fenced or indented code
-blocks keep their original source, including their delimiters, even when those
-characters are selected for escaping.
+comment to prevent mentions. As with title escaping, backtick-delimited text
+is skipped unless backticks are selected for escaping. In bodies, these matches
+can span multiple lines, preserving examples in backtick code fences. This
+setting escapes characters without parsing Markdown.
 
 This setting makes HTML comments visible; it does not remove their contents or
 filter instructions in pull request text. It applies only to `$BODY`, before
