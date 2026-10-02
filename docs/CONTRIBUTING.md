@@ -210,6 +210,13 @@ environment, which can remain restricted to `main`.
 Draft updates and publication share a concurrency group to prevent simultaneous
 edits to the draft release.
 
+The releaser GitHub App installation needs `Contents: write`,
+`Pull requests: write`, and `Workflows: write`. Publication requests all three
+permissions because the release commit can contain different workflow files
+from the current default branch. Preparation requests only contents and pull
+request access. GitHub release publication uses this app token; npm staging
+uses OIDC in `npm-publish.yml`, which grants `id-token: write`.
+
 If GitHub publication fails, a later push to `main` retries discovery of the
 unpublished release. The workflow executes the action from the triggering `main`
 commit and tags the release PR's merge commit, even when a later workflow fix

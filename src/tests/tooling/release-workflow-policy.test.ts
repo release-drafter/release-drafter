@@ -57,6 +57,25 @@ describe('release workflow policy', () => {
     for (const step of tagSteps) expect(step.with.sha).toBe(sha)
   })
 
+  it('authorizes publication at an older release commit without granting preparation workflow access', () => {
+    const tokenStep = (job: { steps: { uses?: string; with?: unknown }[] }) =>
+      job.steps.find((step) =>
+        step.uses?.startsWith('actions/create-github-app-token@'),
+      )
+    expect(tokenStep(workflow.jobs.publish)?.with).toMatchObject({
+      'permission-contents': 'write',
+      'permission-pull-requests': 'write',
+      'permission-workflows': 'write',
+    })
+    expect(tokenStep(workflow.jobs.prepare)?.with).not.toHaveProperty(
+      'permission-workflows',
+    )
+    const release = workflow.jobs.publish.steps.find(
+      (step: { name?: string }) => step.name === 'Publish with Release Drafter',
+    )
+    expect(release.with.token).toBe(`\${{ steps.app-token.outputs.token }}`)
+  })
+
   it('marks release PRs pending at creation and tagged only after publication', () => {
     const createPr = workflow.jobs.prepare.steps.find(
       (step: { uses?: string }) =>

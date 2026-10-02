@@ -182,6 +182,8 @@ jobs:
           private-key: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
+          # The release commit can differ from main in workflow files.
+          permission-workflows: write
 
       - name: Publish with Release Drafter
         id: release
