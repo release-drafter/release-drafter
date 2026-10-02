@@ -1,3 +1,5 @@
+import { getOctokit } from '@actions/github'
+import nock from 'nock'
 import { describe, expect, it, vi } from 'vitest'
 import {
   ensureReleaseLabels,
@@ -43,6 +45,7 @@ const fixture = (pages = [[pull()]]) => {
       ),
     },
     rest: {
+      git: { getRef: vi.fn().mockRejectedValue(notFound()) },
       issues: {
         getLabel: vi.fn().mockResolvedValue({}),
         createLabel: vi.fn().mockResolvedValue({}),
@@ -54,7 +57,14 @@ const fixture = (pages = [[pull()]]) => {
           .fn()
           .mockResolvedValue({ data: { status: 'ahead' } }),
         getContent: vi.fn().mockResolvedValue(content()),
-        getCommit: vi.fn().mockRejectedValue(notFound()),
+        getCommit: vi
+          .fn()
+          .mockRejectedValue(
+            Object.assign(
+              new Error('No commit found for SHA: refs/tags/v7.9.0'),
+              { status: 422 },
+            ),
+          ),
       },
     },
   }
@@ -120,6 +130,9 @@ describe('release candidate discovery', () => {
 
   it('can finish tagging a published release if the pending label remains', async () => {
     const { github, find } = fixture()
+    github.rest.git.getRef.mockResolvedValue({
+      data: { ref: 'refs/tags/v7.9.0' },
+    })
     github.rest.repos.getReleaseByTag.mockResolvedValue({
       data: { draft: false },
     })
@@ -211,6 +224,9 @@ describe('release candidate discovery', () => {
 
   it('accepts an existing version tag at the intended merge commit', async () => {
     const { github, find } = fixture()
+    github.rest.git.getRef.mockResolvedValue({
+      data: { ref: 'refs/tags/v7.9.0' },
+    })
     github.rest.repos.getCommit.mockResolvedValue({ data: { sha: mergeSha } })
     await expect(find()).resolves.toMatchObject({ sha: mergeSha })
     expect(github.rest.repos.getCommit).toHaveBeenCalledWith({
@@ -222,6 +238,9 @@ describe('release candidate discovery', () => {
 
   it('rejects an existing version tag at a different commit', async () => {
     const { github, find } = fixture()
+    github.rest.git.getRef.mockResolvedValue({
+      data: { ref: 'refs/tags/v7.9.0' },
+    })
     github.rest.repos.getCommit.mockResolvedValue({
       data: { sha: workflowSha },
     })
@@ -232,6 +251,10 @@ describe('release candidate discovery', () => {
     'does not treat %s authorization failures as a missing release or tag',
     async (method) => {
       const { github, find } = fixture()
+      if (method === 'getCommit')
+        github.rest.git.getRef.mockResolvedValue({
+          data: { ref: 'refs/tags/v7.9.0' },
+        })
       github.rest.repos[method].mockRejectedValue(
         Object.assign(new Error('Forbidden'), { status: 403 }),
       )
@@ -247,6 +270,97 @@ describe('release candidate discovery', () => {
         'Invalid stable release version',
       )
       expect(github.paginate.iterator).not.toHaveBeenCalled()
+    },
+  )
+
+  it('accepts a missing tag without calling the commit endpoint that returns 422', async () => {
+    const { github, find } = fixture()
+    await expect(find()).resolves.toMatchObject({
+      published: false,
+      sha: mergeSha,
+    })
+    expect(github.rest.git.getRef).toHaveBeenCalledWith({
+      owner: options.owner,
+      repo: options.repo,
+      ref: 'tags/v7.9.0',
+    })
+    expect(github.rest.repos.getCommit).not.toHaveBeenCalled()
+  })
+
+  it('propagates reference lookup errors other than a missing tag', async () => {
+    const { github, find } = fixture()
+    github.rest.git.getRef.mockRejectedValue(
+      Object.assign(new Error('Forbidden'), { status: 403 }),
+    )
+    await expect(find()).rejects.toThrow('Forbidden')
+  })
+
+  it('does not ignore a commit resolution failure for an existing tag', async () => {
+    const { github, find } = fixture()
+    github.rest.git.getRef.mockResolvedValue({
+      data: { ref: 'refs/tags/v7.9.0' },
+    })
+    await expect(find()).rejects.toThrow('No commit found for SHA')
+  })
+})
+
+describe('GitHub release discovery HTTP contract', () => {
+  it.each(['missing', 'annotated'] as const)(
+    'handles a %s tag through the real Octokit client',
+    async (tagState) => {
+      const scope = nock('https://api.github.com')
+        .get(`/repos/${repository}/pulls`)
+        .query({
+          state: 'closed',
+          base: 'main',
+          per_page: 100,
+          sort: 'updated',
+          direction: 'desc',
+        })
+        .reply(200, [pull()])
+        .get(`/repos/${repository}/releases/tags/v7.9.0`)
+        .reply(404, { message: 'Not Found' })
+        .get(`/repos/${repository}/compare/${mergeSha}...${workflowSha}`)
+        .reply(200, { status: 'ahead' })
+        .get(`/repos/${repository}/contents/package.json`)
+        .query({ ref: mergeSha })
+        .reply(200, content().data)
+        .get(
+          `/repos/${repository}/contents/packages%2Frelease-drafter%2Fpackage.json`,
+        )
+        .query({ ref: mergeSha })
+        .reply(200, content().data)
+        .get(
+          new RegExp(`/repos/${repository}/git/ref/tags(?:%2F|/)v7\\.9\\.0$`),
+        )
+        .reply(
+          tagState === 'missing' ? 404 : 200,
+          tagState === 'missing'
+            ? { message: 'Not Found' }
+            : {
+                ref: 'refs/tags/v7.9.0',
+                object: { type: 'tag', sha: 'c'.repeat(40) },
+              },
+        )
+
+      if (tagState === 'annotated') {
+        scope
+          .get(`/repos/${repository}/commits/refs%2Ftags%2Fv7.9.0`)
+          .reply(200, { sha: mergeSha })
+      } else {
+        scope
+          .get(`/repos/${repository}/commits/refs%2Ftags%2Fv7.9.0`)
+          .optionally()
+          .reply(422, { message: 'No commit found for SHA: refs/tags/v7.9.0' })
+      }
+
+      await expect(
+        findReleaseCandidate(
+          getOctokit('test', { request: { fetch: globalThis.fetch } }),
+          options,
+        ),
+      ).resolves.toMatchObject({ sha: mergeSha, published: false })
+      expect(scope.isDone()).toBe(true)
     },
   )
 })

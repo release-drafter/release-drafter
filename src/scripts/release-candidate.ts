@@ -146,8 +146,23 @@ export const findReleaseCandidate = async (
         }
       }
 
-      // A pre-existing tag must already identify the intended release commit.
+      // Missing refs return 404 here; the commit endpoint returns 422 instead.
+      let tagExists = false
       try {
+        await github.rest.git.getRef({
+          owner,
+          repo,
+          ref: `tags/${tag}`,
+        })
+        tagExists = true
+      } catch (error) {
+        if (!isNotFound(error)) throw error
+        if (published)
+          throw new Error(`Published release ${tag} has no version tag`)
+      }
+
+      if (tagExists) {
+        // Resolve annotated tags to their commit rather than comparing tag objects.
         const { data: commit } = await github.rest.repos.getCommit({
           owner,
           repo,
@@ -155,10 +170,6 @@ export const findReleaseCandidate = async (
         })
         if (commit.sha !== mergeSha)
           throw new Error(`Tag ${tag} points to a different commit`)
-      } catch (error) {
-        if (!isNotFound(error)) throw error
-        if (published)
-          throw new Error(`Published release ${tag} has no version tag`)
       }
 
       return {
