@@ -196,6 +196,27 @@ a new issue.
 3. Approve the **Publish npm Package** workflow through the `npm` environment.
 4. Review and approve the staged package on npm with 2FA to make it public.
 
+The workflow creates missing release labels. Release PRs receive the
+`autorelease: pending` label. On each push to `main`, a
+read-only job looks for a merged PR with that label created by the releaser app
+in this repository for the version currently on `main`. It
+verifies that the merge commit is an ancestor of the workflow commit and that
+the root and public package versions match the release branch. Published releases
+are not republished; a pending PR can still finish a failed major-tag update or
+label change. An existing version tag must point to the release PR's merge commit.
+Only a verified candidate enables the publication job in the `releaser`
+environment, which can remain restricted to `main`.
+Draft updates and publication share a concurrency group to prevent simultaneous
+edits to the draft release.
+
+If GitHub publication fails, a later push to `main` retries discovery of the
+unpublished release. The workflow executes the action from the triggering `main`
+commit and tags the release PR's merge commit, even when a later workflow fix
+triggers recovery. After publication and the major-tag update, the workflow
+replaces `autorelease: pending` with `autorelease: tagged`. No structured PR-body
+metadata is required. For release PRs created before this flow, add
+`autorelease: pending` before triggering recovery.
+
 For a failed npm publication, run **Publish npm Package** manually with the
 existing release tag. If the workflow needs a fix, merge it first and run from
 the corrected ref, which must be allowed by the `npm` environment.
