@@ -10,7 +10,7 @@ export type PullRequestFacts = {
 
 export type AutolabelMatch = {
   label: string
-  matcher: 'files' | 'branch' | 'title' | 'body'
+  matcher: 'files' | 'branch' | 'title' | 'body' | 'fallback'
 }
 
 const test = (matcher: RegExp, value: string) => {
@@ -27,7 +27,7 @@ const matchesFiles = (
   return files.some(matches)
 }
 
-/** Evaluates configured rules in files, branch, title, and body order. */
+/** Evaluates rules in configuration order, stopping on request or adding a fallback. */
 export const matchLabels = (params: {
   config: ParsedConfig
   pullRequest: PullRequestFacts
@@ -37,6 +37,7 @@ export const matchLabels = (params: {
   const matches: AutolabelMatch[] = []
 
   for (const rule of config.autolabeler) {
+    if (rule.fallback) continue
     const body = pullRequest.body
     let matcher: AutolabelMatch['matcher'] | undefined
     if (matchesFiles(rule.files, pullRequest.files)) {
@@ -50,8 +51,19 @@ export const matchLabels = (params: {
     }
 
     if (matcher) {
-      labels.add(rule.label)
-      matches.push({ label: rule.label, matcher })
+      for (const label of rule.labels) {
+        labels.add(label)
+        matches.push({ label, matcher })
+      }
+      if (rule['stop-on-match']) break
+    }
+  }
+
+  const fallback = config.autolabeler.find((rule) => rule.fallback)
+  if (labels.size === 0 && fallback) {
+    for (const label of fallback.labels) {
+      labels.add(label)
+      matches.push({ label, matcher: 'fallback' })
     }
   }
 

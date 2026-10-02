@@ -1,19 +1,27 @@
-import { C as context, E as setFailed, S as Minimatch, T as info, a as readActionInputs, c as getGitHubAdapter, d as escapeStringRegexp, i as defineActionInputNames, m as array, n as sharedInputSchema, o as writeActionOutputs, t as composeConfigGet, v as object, w as core_exports, y as string } from "../../chunks/config.js";
+import { C as context, E as setFailed, S as Minimatch, T as info, a as readActionInputs, c as getGitHubAdapter, d as escapeStringRegexp, h as boolean, i as defineActionInputNames, m as array, n as sharedInputSchema, o as writeActionOutputs, t as composeConfigGet, v as object, w as core_exports, y as string } from "../../chunks/config.js";
 import process from "node:process";
 //#region packages/autolabeler/src/config/config.schema.ts
+var labelSchema = string().min(1).describe("Backward-compatible single label. Prefer labels for new rules.");
+var labelsSchema = array(string().min(1)).min(1).describe("Labels to add when this rule matches, in configuration order.");
+var ruleSchema = object({
+	labels: labelsSchema.optional(),
+	label: labelSchema.optional(),
+	/** Add these labels only when no ordinary rule matches. */
+	fallback: boolean().optional().default(false),
+	/** Stop evaluating later rules after this rule matches and adds its labels. */
+	"stop-on-match": boolean().optional().default(false),
+	files: array(string().min(1)).optional().default([]),
+	branch: array(string().min(1)).optional().default([]),
+	title: array(string().min(1)).optional().default([]),
+	body: array(string().min(1)).optional().default([])
+});
 var configSchema = object({ 
 /**
 * Defines pull request label rules.
 * `files` uses glob patterns. `branch`, `title`, and `body` use regular expressions.
 * A rule matches when at least one configured matcher succeeds.
 */
-autolabeler: array(object({
-	label: string().min(1),
-	files: array(string().min(1)).optional().default([]),
-	branch: array(string().min(1)).optional().default([]),
-	title: array(string().min(1)).optional().default([]),
-	body: array(string().min(1)).optional().default([])
-})).min(1) }).meta({
+autolabeler: array(ruleSchema.extend({ labels: labelsSchema }).or(ruleSchema.extend({ label: labelSchema }))) }).meta({
 	title: "JSON schema for Release Drafter's autolabeler action config.",
 	id: "https://github.com/release-drafter/release-drafter/blob/main/autolabeler/schema.json"
 });
@@ -29,14 +37,31 @@ var stringToRegex = (search) => {
 	return new RegExp(search.slice(1, delimiter), flags);
 };
 //#endregion
+//#region packages/autolabeler/src/config/validate-config.ts
+/** Validates fallback rules after structural configuration parsing. */
+var validateConfig = (config) => {
+	const fallbacks = config.autolabeler.filter((rule) => rule.fallback);
+	if (fallbacks.length > 1) throw new Error("Only one Autolabeler fallback rule is supported.");
+	const fallback = fallbacks[0];
+	if (fallback?.["stop-on-match"]) throw new Error("An Autolabeler rule cannot enable both 'fallback' and 'stop-on-match'.");
+	if (fallback && [
+		fallback.files,
+		fallback.branch,
+		fallback.title,
+		fallback.body
+	].some((matchers) => matchers.length > 0)) throw new Error("An Autolabeler fallback rule must not specify matchers.");
+};
+//#endregion
 //#region packages/autolabeler/src/config/parse-config.ts
-/** Compiles configured regex matchers while preserving all other config values. */
+/** Normalizes label shorthand and compiles configured regex matchers. */
 var parseConfig = (params) => {
+	validateConfig(params.config);
 	const config = structuredClone(params.config);
 	const autolabeler = config.autolabeler.map((rule) => {
 		try {
 			return {
 				...rule,
+				labels: [...rule.labels ?? [], ...rule.label !== void 0 ? [rule.label] : []],
 				branch: rule.branch.map(stringToRegex),
 				title: rule.title.map(stringToRegex),
 				body: rule.body.map(stringToRegex)
@@ -121,12 +146,13 @@ var matchesFiles = (patterns, files) => {
 	const matches = createPathMatcher(patterns);
 	return files.some(matches);
 };
-/** Evaluates configured rules in files, branch, title, and body order. */
+/** Evaluates rules in configuration order, stopping on request or adding a fallback. */
 var matchLabels = (params) => {
 	const { config, pullRequest } = params;
 	const labels = /* @__PURE__ */ new Set();
 	const matches = [];
 	for (const rule of config.autolabeler) {
+		if (rule.fallback) continue;
 		const body = pullRequest.body;
 		let matcher;
 		if (matchesFiles(rule.files, pullRequest.files)) matcher = "files";
@@ -134,12 +160,23 @@ var matchLabels = (params) => {
 		else if (rule.title.some((regex) => test(regex, pullRequest.title))) matcher = "title";
 		else if (body != null && rule.body.some((regex) => test(regex, body))) matcher = "body";
 		if (matcher) {
-			labels.add(rule.label);
-			matches.push({
-				label: rule.label,
-				matcher
-			});
+			for (const label of rule.labels) {
+				labels.add(label);
+				matches.push({
+					label,
+					matcher
+				});
+			}
+			if (rule["stop-on-match"]) break;
 		}
+	}
+	const fallback = config.autolabeler.find((rule) => rule.fallback);
+	if (labels.size === 0 && fallback) for (const label of fallback.labels) {
+		labels.add(label);
+		matches.push({
+			label,
+			matcher: "fallback"
+		});
 	}
 	return {
 		labels: [...labels],

@@ -1,0 +1,10 @@
+autolabeler:
+  - labels: ['needs-triage', 'uncategorized', 'needs-triage']
+    fallback: true
+  - label: 'prior'
+    files: ['*.md']
+  - labels: ['documentation', 'chore', 'documentation', 'prior']
+    files: ['*.md']
+    stop-on-match: true
+  - label: 'later'
+    files: ['*.md']

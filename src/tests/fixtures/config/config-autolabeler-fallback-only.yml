@@ -1,0 +1,3 @@
+autolabeler:
+  - labels: ['needs-triage', 'uncategorized', 'needs-triage']
+    fallback: true
