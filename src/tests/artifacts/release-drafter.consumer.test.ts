@@ -434,7 +434,11 @@ describe('release-drafter packed CLI and package consumer', {
           async findChanges() {
             return {
               commits: [],
-              pullRequests: [],
+              pullRequests: [{
+                number: 42,
+                title: 'Change',
+                body: ${JSON.stringify('<!-- hidden -->\n\n~~~md\n<!-- example -->\n~~~')},
+              }],
               newContributorLogins: new Set(),
             }
           },
@@ -449,7 +453,8 @@ describe('release-drafter packed CLI and package consumer', {
           },
         },
         config: {
-          'change-template': '* $TITLE',
+          'change-template': '$BODY',
+          'change-body-escapes': '<',
           'change-author-template': '$AUTHOR_MENTION',
           'change-authors-separator': ', ',
           'no-changes-template': '* No changes',
@@ -483,7 +488,8 @@ describe('release-drafter packed CLI and package consumer', {
 
       if (
         result.plan.action !== 'dry-run' ||
-        result.releasePayload.tag !== 'v1.0.1'
+        result.releasePayload.tag !== 'v1.0.1' ||
+        result.releasePayload.body !== ${JSON.stringify('\\<!-- hidden -->\n\n~~~md\n<!-- example -->\n~~~')}
       ) {
         throw new Error(JSON.stringify(result))
       }

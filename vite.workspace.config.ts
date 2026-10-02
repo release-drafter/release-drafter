@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { dirname, resolve } from 'node:path'
 import { dts } from 'rolldown-plugin-dts'
-import { defaultClientConditions, defaultServerConditions } from 'vite'
+import { defaultServerConditions } from 'vite'
 import { defineConfig } from 'vitest/config'
 
 const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
@@ -30,7 +30,7 @@ const isWorkspaceRuntimeDependency = (id: string) =>
 const declarationEntries =
   packageName === 'release-drafter' ? ['src/index.ts'] : undefined
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   define:
     packageName === 'release-drafter'
       ? {
@@ -41,7 +41,14 @@ export default defineConfig({
     exclude: [/\.js$/, /\.d\.[cm]?ts$/],
   },
   resolve: {
-    conditions: [WORKSPACE_SOURCE_CONDITION, ...defaultClientConditions],
+    // Package tests build with NODE_ENV=test. Always use production Node
+    // exports for shipped bundles, rather than browser or development exports.
+    conditions: [
+      WORKSPACE_SOURCE_CONDITION,
+      ...(command === 'build'
+        ? ['node', 'module', 'production']
+        : defaultServerConditions),
+    ],
   },
   environments: {
     ssr: {
@@ -127,4 +134,4 @@ export default defineConfig({
           },
         ]
       : [],
-})
+}))

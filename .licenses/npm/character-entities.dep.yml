@@ -1,0 +1,74 @@
+---
+name: character-entities
+version: 2.0.2
+type: npm
+summary: Map of named character references
+homepage:
+license: mit
+licenses:
+- sources: license
+  text: |
+    (The MIT License)
+
+    Copyright (c) 2015 Titus Wormer <tituswormer@gmail.com>
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    'Software'), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- sources: readme.md
+  text: |-
+    [MIT][license] © [Titus Wormer][author]
+
+    <!-- Definitions -->
+
+    [build-badge]: https://github.com/wooorm/character-entities/workflows/main/badge.svg
+
+    [build]: https://github.com/wooorm/character-entities/actions
+
+    [coverage-badge]: https://img.shields.io/codecov/c/github/wooorm/character-entities.svg
+
+    [coverage]: https://codecov.io/github/wooorm/character-entities
+
+    [downloads-badge]: https://img.shields.io/npm/dm/character-entities.svg
+
+    [downloads]: https://www.npmjs.com/package/character-entities
+
+    [size-badge]: https://img.shields.io/bundlephobia/minzip/character-entities.svg
+
+    [size]: https://bundlephobia.com/result?p=character-entities
+
+    [npm]: https://docs.npmjs.com/cli/install
+
+    [esmsh]: https://esm.sh
+
+    [license]: license
+
+    [author]: https://wooorm.com
+
+    [esm]: https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+
+    [typescript]: https://www.typescriptlang.org
+
+    [contribute]: https://opensource.guide/how-to-contribute/
+
+    [parse-entities]: https://github.com/wooorm/parse-entities
+
+    [stringify-entities]: https://github.com/wooorm/stringify-entities
+
+    [html]: https://html.spec.whatwg.org/multipage/syntax.html#named-character-references
+notices: []

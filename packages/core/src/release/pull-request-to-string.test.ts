@@ -93,4 +93,31 @@ describe('pullRequestToString', () => {
       }),
     ).toBe('Bump \\_lib\\_ to 2.0')
   })
+
+  it('escapes the newest body independently of the title and template', () => {
+    const merged = change(
+      [
+        pullRequest(1, { body: '<!-- older -->' }),
+        pullRequest(2, { body: '<!-- hidden -->\n\n`<!-- example -->`' }),
+      ],
+      '<title>',
+    )
+    expect(
+      render([merged], {
+        'change-template': '<!-- template -->\n$TITLE\n$BODY',
+        'change-body-escapes': '<',
+      }),
+    ).toBe(
+      '<!-- template -->\n<title>\n\\<!-- hidden -->\n\n`<!-- example -->`',
+    )
+  })
+
+  it('does not apply title escapes to the body', () => {
+    expect(
+      render([change([pullRequest(1, { body: '<!-- body -->' })], '<title>')], {
+        'change-template': '$TITLE\n$BODY',
+        'change-title-escapes': '<',
+      }),
+    ).toBe('\\<title>\n<!-- body -->')
+  })
 })

@@ -1,0 +1,134 @@
+---
+name: mdast-util-from-markdown
+version: 2.0.3
+type: npm
+summary: mdast utility to parse markdown
+homepage:
+license: mit
+licenses:
+- sources: license
+  text: |
+    (The MIT License)
+
+    Copyright (c) Titus Wormer <tituswormer@gmail.com>
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    'Software'), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- sources: readme.md
+  text: |-
+    [MIT][file-license] © [Titus Wormer][wooorm]
+
+    <!-- Definitions -->
+
+    [api-compile-context]: #compilecontext
+
+    [api-compile-data]: #compiledata
+
+    [api-encoding]: #encoding
+
+    [api-extension]: #extension
+
+    [api-from-markdown]: #frommarkdownvalue-encoding-options
+
+    [api-handle]: #handle
+
+    [api-on-enter-error]: #onentererror
+
+    [api-on-exit-error]: #onexiterror
+
+    [api-options]: #options
+
+    [api-token]: #token
+
+    [api-transform]: #transform
+
+    [api-value]: #value
+
+    [badge-build-image]: https://github.com/syntax-tree/mdast-util-from-markdown/workflows/main/badge.svg
+
+    [badge-build-url]: https://github.com/syntax-tree/mdast-util-from-markdown/actions
+
+    [badge-coverage-image]: https://img.shields.io/codecov/c/github/syntax-tree/mdast-util-from-markdown.svg
+
+    [badge-coverage-url]: https://codecov.io/github/syntax-tree/mdast-util-from-markdown
+
+    [badge-downloads-image]: https://img.shields.io/npm/dm/mdast-util-from-markdown.svg
+
+    [badge-downloads-url]: https://www.npmjs.com/package/mdast-util-from-markdown
+
+    [badge-size-image]: https://img.shields.io/bundlejs/size/mdast-util-from-markdown
+
+    [badge-size-url]: https://bundlejs.com/?q=mdast-util-from-markdown
+
+    [esmsh]: https://esm.sh
+
+    [file-license]: license
+
+    [github-gist-esm]: https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+
+    [github-hast-util-sanitize]: https://github.com/syntax-tree/hast-util-sanitize
+
+    [github-mdast]: https://github.com/syntax-tree/mdast
+
+    [github-mdast-nodes]: https://github.com/syntax-tree/mdast#nodes
+
+    [github-mdast-root]: https://github.com/syntax-tree/mdast#root
+
+    [github-mdast-util-directive]: https://github.com/syntax-tree/mdast-util-directive
+
+    [github-mdast-util-frontmatter]: https://github.com/syntax-tree/mdast-util-frontmatter
+
+    [github-mdast-util-gfm]: https://github.com/syntax-tree/mdast-util-gfm
+
+    [github-mdast-util-math]: https://github.com/syntax-tree/mdast-util-math
+
+    [github-mdast-util-mdx]: https://github.com/syntax-tree/mdast-util-mdx
+
+    [github-micromark]: https://github.com/micromark/micromark
+
+    [github-micromark-api]: https://github.com/micromark/micromark/tree/main/packages/micromark#micromarkvalue-encoding-options
+
+    [github-micromark-extension]: https://github.com/micromark/micromark#extensions
+
+    [github-remark]: https://github.com/remarkjs/remark
+
+    [github-remark-parse]: https://github.com/remarkjs/remark/tree/main/packages/remark-parse
+
+    [health]: https://github.com/syntax-tree/.github
+
+    [health-coc]: https://github.com/syntax-tree/.github/blob/main/code-of-conduct.md
+
+    [health-contributing]: https://github.com/syntax-tree/.github/blob/main/contributing.md
+
+    [health-support]: https://github.com/syntax-tree/.github/blob/main/support.md
+
+    [mozilla-uint8-array]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
+
+    [node-packages-conditions]: https://nodejs.org/api/packages.html#packages_resolving_user_conditions
+
+    [node-util-encoding]: https://nodejs.org/api/util.html#whatwg-supported-encodings
+
+    [npmjs-install]: https://docs.npmjs.com/cli/install
+
+    [typescript]: https://www.typescriptlang.org
+
+    [wikipedia-xss]: https://en.wikipedia.org/wiki/Cross-site_scripting
+
+    [wooorm]: https://wooorm.com
+notices: []

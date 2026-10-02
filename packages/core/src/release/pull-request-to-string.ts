@@ -1,6 +1,7 @@
 import regexEscape from 'escape-string-regexp'
 import type { Config } from '../config/config.schema.ts'
 import type { Commit, PullRequest } from '../types.ts'
+import { escapeBody } from './escape-body.ts'
 import { generateAuthorsSentence } from './generate-contributors-sentence.ts'
 import type { ChangeGroup } from './group-changes.ts'
 import { renderTemplate } from './render-template/index.ts'
@@ -17,6 +18,7 @@ export const pullRequestToString = (params: {
     Config,
     | 'change-template'
     | 'change-title-escapes'
+    | 'change-body-escapes'
     | 'change-author-template'
     | 'change-authors-separator'
     | 'change-authors-final-separator'
@@ -64,7 +66,10 @@ export const pullRequestToString = (params: {
           }),
           $AUTHOR: pullAuthor,
           $AUTHOR_URL: pullRequest.author?.url ?? '',
-          $BODY: pullRequest.body,
+          $BODY: escapeBody(
+            pullRequest.body,
+            params.config['change-body-escapes'],
+          ),
           $URL: pullRequest.url,
           $BASE_REF_NAME: pullRequest.baseRefName,
           $HEAD_REF_NAME: pullRequest.headRefName,

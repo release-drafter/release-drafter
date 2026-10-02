@@ -1,0 +1,135 @@
+---
+name: micromark
+version: 4.0.2
+type: npm
+summary: small commonmark compliant markdown parser with positional info and concrete
+  tokens
+homepage:
+license: mit
+licenses:
+- sources: license
+  text: |
+    (The MIT License)
+
+    Copyright (c) Titus Wormer <tituswormer@gmail.com>
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    'Software'), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- sources: readme.md
+  text: |-
+    [MIT][license] © [Titus Wormer][author]
+
+    <!-- Definitions -->
+
+    [api-micromark]: #micromarkvalue-encoding-options
+
+    [api-options]: #options
+
+    [api-stream]: #streamoptions
+
+    [author]: https://wooorm.com
+
+    [backers-badge]: https://opencollective.com/unified/backers/badge.svg
+
+    [build]: https://github.com/micromark/micromark/actions
+
+    [build-badge]: https://github.com/micromark/micromark/workflows/main/badge.svg
+
+    [bundle-size]: https://bundlejs.com/?q=micromark
+
+    [bundle-size-badge]: https://img.shields.io/badge/dynamic/json?label=minzipped%20size&query=$.size.compressedSize&url=https://deno.bundlejs.com/?q=micromark
+
+    [chat]: https://github.com/micromark/micromark/discussions
+
+    [chat-badge]: https://img.shields.io/badge/chat-discussions-success.svg
+
+    [cheat]: https://commonmark.org/help/
+
+    [coc]: https://github.com/micromark/.github/blob/main/code-of-conduct.md
+
+    [commonmark]: https://commonmark.org
+
+    [comparison]: https://github.com/micromark/micromark#comparison
+
+    [contribute]: #contribute
+
+    [contributing]: https://github.com/micromark/.github/blob/main/contributing.md
+
+    [coverage]: https://codecov.io/github/micromark/micromark
+
+    [coverage-badge]: https://img.shields.io/codecov/c/github/micromark/micromark.svg
+
+    [development]: https://nodejs.org/api/packages.html#packages_resolving_user_conditions
+
+    [directives]: https://github.com/micromark/micromark-extension-directive
+
+    [downloads]: https://www.npmjs.com/package/micromark
+
+    [downloads-badge]: https://img.shields.io/npm/dm/micromark.svg
+
+    [encoding]: https://nodejs.org/api/util.html#whatwg-supported-encodings
+
+    [esm]: https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+
+    [esmsh]: https://esm.sh
+
+    [extensions]: https://github.com/micromark/micromark#extensions
+
+    [frontmatter]: https://github.com/micromark/micromark-extension-frontmatter
+
+    [gfm]: https://github.com/micromark/micromark-extension-gfm
+
+    [health]: https://github.com/micromark/.github
+
+    [license]: https://github.com/micromark/micromark/blob/main/license
+
+    [markdown-rs]: https://github.com/wooorm/markdown-rs
+
+    [math]: https://github.com/micromark/micromark-extension-math
+
+    [mdast-util-to-markdown]: https://github.com/syntax-tree/mdast-util-to-markdown
+
+    [mdxjs]: https://github.com/micromark/micromark-extension-mdxjs
+
+    [micromark]: https://github.com/micromark/micromark
+
+    [npm]: https://docs.npmjs.com/cli/install
+
+    [opencollective]: https://opencollective.com/unified
+
+    [security]: #security
+
+    [securitymd]: https://github.com/micromark/.github/blob/main/security.md
+
+    [site]: https://unifiedjs.com
+
+    [size-debug]: https://github.com/micromark/micromark#size--debug
+
+    [sponsor]: #sponsor
+
+    [sponsors-badge]: https://opencollective.com/unified/sponsors/badge.svg
+
+    [support]: https://github.com/micromark/.github/blob/main/support.md
+
+    [test]: https://github.com/micromark/micromark#test
+
+    [typescript]: https://www.typescriptlang.org
+
+    [uint8-array]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array
+notices: []
