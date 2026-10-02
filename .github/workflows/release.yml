@@ -8,12 +8,15 @@ on:
         required: true
         default: auto
         type: string
-  pull_request:
-    types: [closed]
+  push:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   prepare:
@@ -87,6 +90,15 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
+      - name: Ensure release labels exist
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const { pathToFileURL } = require('node:url')
+            const { ensureReleaseLabels } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/src/scripts/release-candidate.ts`).href)
+            await ensureReleaseLabels(github, context.repo)
+
       - name: Create GitHub-signed version commit and release PR
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
@@ -96,6 +108,7 @@ jobs:
           branch: release/v${{ steps.version.outputs.version }}
           commit-message: 'chore: release v${{ steps.version.outputs.version }}'
           title: 'chore: release v${{ steps.version.outputs.version }}'
+          labels: 'autorelease: pending'
           add-paths: |
             package.json
             package-lock.json
@@ -109,15 +122,46 @@ jobs:
             Merge after review and checks using GitHub's merge or squash method.
             Release Drafter publishes the release; npm staging requires approval.
 
+  discover:
+    name: Find merged pending release PR
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      github.repository == 'release-drafter/release-drafter'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      candidate: ${{ steps.candidate.outputs.candidate }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Find release candidate
+        id: candidate
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const { pathToFileURL } = require('node:url')
+            const { readFileSync } = require('node:fs')
+            const root = process.env.GITHUB_WORKSPACE
+            const { findReleaseCandidate } = await import(pathToFileURL(`${root}/src/scripts/release-candidate.ts`).href)
+            const { version } = JSON.parse(readFileSync(`${root}/package.json`, 'utf8'))
+            const candidate = await findReleaseCandidate(github, { ...context.repo, sha: context.sha, version })
+            core.setOutput('candidate', candidate ? JSON.stringify(candidate) : '')
+
   publish:
     name: Publish merged release PR
+    needs: discover
+    if: needs.discover.outputs.candidate != ''
     environment: releaser
-    if: >-
-      github.event_name == 'pull_request' && github.event.pull_request.merged == true &&
-      github.repository == 'release-drafter/release-drafter' &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.user.login == 'release-drafter-releaser[bot]' &&
-      startsWith(github.event.pull_request.head.ref, 'release/v')
+    concurrency:
+      group: release-drafter-writes
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -127,12 +171,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
-
-      - name: Read release version
-        id: version
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Create repository-scoped release token
         id: app-token
@@ -141,15 +181,16 @@ jobs:
           client-id: ${{ vars.RELEASER_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
           permission-contents: write
-          permission-pull-requests: read
+          permission-pull-requests: write
 
       - name: Publish with Release Drafter
         id: release
+        if: '!fromJSON(needs.discover.outputs.candidate).published'
         uses: ./
         with:
           token: ${{ steps.app-token.outputs.token }}
-          version: ${{ steps.version.outputs.version }}
-          commitish: ${{ github.event.pull_request.merge_commit_sha }}
+          version: ${{ fromJSON(needs.discover.outputs.candidate).version }}
+          commitish: ${{ fromJSON(needs.discover.outputs.candidate).sha }}
           publish: true
 
       - name: Update major tag
@@ -157,8 +198,8 @@ jobs:
         uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae # v3.0.0
         continue-on-error: true
         with:
-          route: PATCH /repos/${{ github.repository }}/git/refs/tags/v${{ steps.release.outputs.major_version }}
-          sha: ${{ github.event.pull_request.merge_commit_sha }}
+          route: PATCH /repos/${{ github.repository }}/git/refs/tags/v${{ fromJSON(needs.discover.outputs.candidate).major }}
+          sha: ${{ fromJSON(needs.discover.outputs.candidate).sha }}
           force: true
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -168,7 +209,21 @@ jobs:
         uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae # v3.0.0
         with:
           route: POST /repos/${{ github.repository }}/git/refs
-          ref: refs/tags/v${{ steps.release.outputs.major_version }}
-          sha: ${{ github.event.pull_request.merge_commit_sha }}
+          ref: refs/tags/v${{ fromJSON(needs.discover.outputs.candidate).major }}
+          sha: ${{ fromJSON(needs.discover.outputs.candidate).sha }}
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Mark release PR as tagged
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          RELEASE_PR: ${{ fromJSON(needs.discover.outputs.candidate).number }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const { pathToFileURL } = require('node:url')
+            const { ensureReleaseLabels } = await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/src/scripts/release-candidate.ts`).href)
+            await ensureReleaseLabels(github, context.repo)
+            const issue_number = Number(process.env.RELEASE_PR)
+            await github.rest.issues.addLabels({ ...context.repo, issue_number, labels: ['autorelease: tagged'] })
+            await github.rest.issues.removeLabel({ ...context.repo, issue_number, name: 'autorelease: pending' })

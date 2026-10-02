@@ -7,6 +7,9 @@ on:
 
 jobs:
   update_release_draft:
+    concurrency:
+      group: release-drafter-writes
+      cancel-in-progress: false
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

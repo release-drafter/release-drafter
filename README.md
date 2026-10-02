@@ -925,6 +925,9 @@ yourself.
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for contribution instructions.
 
+Maintainers: see [Releasing](docs/CONTRIBUTING.md#releasing) for the release PR
+flow and its protected GitHub and npm environments.
+
 > [!IMPORTANT]
 >
 > Before pushing, run `npm run ci` to format, lint, type-check, test, and
