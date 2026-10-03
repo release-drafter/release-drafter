@@ -6,7 +6,7 @@ export type ConfigTarget = {
 }
 
 export const describeConfigTarget = (target: ConfigTarget) =>
-  `${target.scheme}:${target.filepath}${target.repo ? ` (${target.repo.owner}/${target.repo.repo})` : ''}`
+  `${target.scheme}:${target.filepath}${target.repo ? ` (${target.repo.owner}/${target.repo.repo}${target.ref ? `@${target.ref}` : ''})` : ''}`
 
 /**
  * Parses a config target string into its components

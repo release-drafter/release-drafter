@@ -1,5 +1,5 @@
-import { C as context, E as setFailed, T as info, _ as number, a as readActionInputs, i as defineActionInputNames, m as array, o as writeActionOutputs, p as _enum, r as tokenInputSchema, s as actionLogger, v as object, x as union, y as string } from "../../chunks/config.js";
-import { g as evaluateCategories, n as mergeInputAndConfig, t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
+import { A as setFailed, C as union, E as context, O as error, a as tokenInputSchema, b as object, c as writeActionOutputs, g as array, h as _enum, k as info, l as actionLogger, o as defineActionInputNames, r as ConfigError, s as readActionInputs, x as string, y as number } from "../../chunks/config.js";
+import { b as matchesCategoryCondition, g as evaluateCategories, n as mergeInputAndConfig, t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
 //#region packages/core/src/pull-request-validation.ts
 /** Remove path predicates and conditions that contain only path predicates. */
 var projectPullRequestValidationCategories = (categories) => categories.flatMap((category) => {
@@ -98,29 +98,74 @@ async function checkPullRequest(dependencies = defaultDependencies()) {
 	if (dependencies.eventName !== "pull_request" && dependencies.eventName !== "pull_request_target") throw new Error(`Unsupported event \`${dependencies.eventName}\`. Expected \`pull_request\` or \`pull_request_target\`.`);
 	const pullRequest = parsePullRequestEvent(dependencies.eventName, dependencies.payload);
 	const input = dependencies.getInput();
-	const config = mergeInputAndConfig({
-		config: await dependencies.getConfig(input["config-name"], input.token, pullRequest.baseRef),
-		input: {},
-		defaultCommitish: pullRequest.baseRef,
-		logger: actionLogger
-	});
-	const evaluation = evaluatePullRequest({
-		title: pullRequest.title,
-		labels: pullRequest.labels
-	}, config.categories);
-	writeActionOutputs(actionOutputNames, { labels: JSON.stringify(evaluation.labels) });
-	if (evaluation.skipped) {
-		info(`Skipping excluded pull request #${pullRequest.number}.`);
-		return;
+	const snapshots = [{
+		name: "Base configuration",
+		ref: pullRequest.baseRef
+	}, {
+		name: "Proposed configuration",
+		ref: `refs/pull/${pullRequest.number}/head`
+	}];
+	const failures = [];
+	const evaluations = [];
+	for (const snapshot of snapshots) {
+		info(`${snapshot.name}: loading ${input["config-name"]} (repository ref: ${snapshot.ref}).`);
+		try {
+			const config = mergeInputAndConfig({
+				config: await dependencies.getConfig(input["config-name"], input.token, snapshot.ref),
+				input: {},
+				defaultCommitish: pullRequest.baseRef,
+				logger: actionLogger
+			});
+			const evaluation = evaluatePullRequest(pullRequest, config.categories);
+			evaluations.push(evaluation);
+			if (!evaluation.valid) {
+				logMatchingRules(pullRequest, config.categories);
+				throw new Error(`No configured changelog or version-resolver category matches the title or labels of pull request #${pullRequest.number}. Path-only conditions and fallback categories cannot pass Check PR.`);
+			}
+			info(evaluation.skipped ? `${snapshot.name}: skipping excluded pull request #${pullRequest.number}.` : `${snapshot.name}: pull request #${pullRequest.number} matches the configuration.`);
+		} catch (error$1) {
+			const message = `${snapshot.name} (${snapshot.ref}): ${error$1 instanceof Error ? error$1.message : String(error$1)}`;
+			failures.push(message);
+			error(message, {
+				...error$1 instanceof ConfigError ? error$1.annotation(context.repo, snapshots[1].ref) : {},
+				title: `${snapshot.name}: Check PR failed`
+			});
+		}
 	}
-	if (!evaluation.valid) throw new Error(`No configured changelog or version-resolver category matches the title or labels of pull request #${pullRequest.number}.`);
-	info(`Pull request #${pullRequest.number} matches the configuration.`);
+	if (evaluations.length === snapshots.length) writeActionOutputs(actionOutputNames, { labels: JSON.stringify(evaluations[0].labels) });
+	if (failures.length > 0) throw new Error(failures.join("\n"));
 }
+var logMatchingRules = (pullRequest, categories) => {
+	info(`PR title: ${JSON.stringify(pullRequest.title)}`);
+	info(`PR labels: ${JSON.stringify(pullRequest.labels)}`);
+	categories.forEach((category, index) => {
+		const name = "title" in category ? category.title : void 0;
+		info(`Category ${index + 1}${name ? ` (${JSON.stringify(name)})` : ""}, type ${category.type}: ${JSON.stringify(category.when)}`);
+		if (category.when.length === 0) info("Fallback category: cannot satisfy Check PR on its own.");
+		category.when.forEach((condition, conditionIndex) => {
+			if (!condition.conventional && condition.labels.length === 0) {
+				info(`Condition ${conditionIndex + 1}: ignored (path-only).`);
+				return;
+			}
+			const titleMatches = matchesCategoryCondition({
+				...condition,
+				paths: [],
+				labels: []
+			}, pullRequest);
+			const labelsMatch = matchesCategoryCondition({
+				...condition,
+				paths: [],
+				conventional: void 0
+			}, pullRequest);
+			info(`Condition ${conditionIndex + 1}: title ${titleMatches ? "matches" : "does not match"}, labels ${labelsMatch ? "match" : "do not match"}. Path predicates are ignored.`);
+		});
+	});
+};
 async function run() {
 	try {
 		await checkPullRequest();
 	} catch (error) {
-		if (error instanceof Error) setFailed(error.message);
+		setFailed(error instanceof Error ? error.message : String(error));
 	}
 }
 //#endregion

@@ -1,4 +1,4 @@
-import { S as Minimatch, T as info, _ as number, b as stringbool, d as escapeStringRegexp, f as ZodDefault, g as literal, h as boolean, m as array, p as _enum, t as composeConfigGet, v as object, x as union, y as string } from "./config.js";
+import { C as union, S as stringbool, T as Minimatch, _ as boolean, b as object, g as array, h as _enum, k as info, m as ZodDefault, n as describeConfigTarget, p as escapeStringRegexp, r as ConfigError, t as composeConfigGet, v as literal, w as prettifyError, x as string, y as number } from "./config.js";
 //#region node_modules/conventional-commits-parser/dist/regex.js
 var nomatchRegex = /(?!.*)/;
 function escape(string) {
@@ -1643,7 +1643,9 @@ var getReleaseDrafterConfig = async (configName, currentContext, token) => {
 		const location = scheme === "file" ? `locally from "${filepath}"` : `from "${remotePath}"${ref ? "" : " on the default branch"}`;
 		info(`Config fetched ${location}.`);
 	});
-	return configSchema.parse(config);
+	const result = configSchema.safeParse(config);
+	if (!result.success) throw new ConfigError(`Invalid Release Drafter config composed from ${contexts.map(describeConfigTarget).join(", ")}:\n${prettifyError(result.error)}`, contexts, void 0, { cause: result.error });
+	return result.data;
 };
 //#endregion
-export { filterPullRequestsByPreCategories as _, COERCE as a, needsPullRequestChangedFiles as b, PRERELEASE_LOOSE as c, formatFullVersion as d, parse as f, evaluateCategories as g, commonConfigSchema as h, satisfies as i, compareIdentifiers as l, tryParse as m, mergeInputAndConfig as n, COERCE_FULL as o, safeRegex as p, normalizeRange as r, PRERELEASE as s, getReleaseDrafterConfig as t, formatComparableVersion as u, getChangelogCategories as v, getVersionResolverCategories as y };
+export { filterPullRequestsByPreCategories as _, COERCE as a, matchesCategoryCondition as b, PRERELEASE_LOOSE as c, formatFullVersion as d, parse as f, evaluateCategories as g, commonConfigSchema as h, satisfies as i, compareIdentifiers as l, tryParse as m, mergeInputAndConfig as n, COERCE_FULL as o, safeRegex as p, normalizeRange as r, PRERELEASE as s, getReleaseDrafterConfig as t, formatComparableVersion as u, getChangelogCategories as v, needsPullRequestChangedFiles as x, getVersionResolverCategories as y };
