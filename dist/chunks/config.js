@@ -38279,6 +38279,32 @@ var tokenInputSchema = object({ token: string$1().min(1).default(() => process$1
 /** Inputs shared by the Drafter and Autolabeler Actions. */
 var sharedInputSchema = tokenInputSchema.and(object({ "dry-run": stringbool().or(boolean()).optional() }));
 //#endregion
+//#region packages/gh-actions/src/common/config/config-error.ts
+/** Carries source locations without attaching external config to local files. */
+var ConfigError = class extends Error {
+	targets;
+	position;
+	constructor(message, targets, position, options) {
+		super(message, options);
+		this.targets = targets;
+		this.position = position;
+		this.name = "ConfigError";
+	}
+	/** Only annotate a single local source or one at the PR head being checked. */
+	annotation(repo, headRef) {
+		const target = this.targets.length === 1 ? this.targets[0] : void 0;
+		const isLocal = target && (target.scheme === "file" || target.repo.owner === repo.owner && target.repo.repo === repo.repo && target.ref === headRef);
+		return {
+			title: "Invalid Release Drafter configuration",
+			...isLocal ? { file: target.filepath } : {},
+			...isLocal && this.position ? {
+				startLine: this.position.line,
+				startColumn: this.position.col
+			} : {}
+		};
+	}
+};
+//#endregion
 //#region packages/gh-actions/src/common/config/extends.schema.ts
 var mergeStrategySchema = _enum([
 	"override",
@@ -38378,7 +38404,7 @@ var normalizeFilepath = (config, parentConfig) => {
 };
 //#endregion
 //#region packages/gh-actions/src/common/config/parse-config-target.ts
-var describeConfigTarget = (target) => `${target.scheme}:${target.filepath}${target.repo ? ` (${target.repo.owner}/${target.repo.repo})` : ""}`;
+var describeConfigTarget = (target) => `${target.scheme}:${target.filepath}${target.repo ? ` (${target.repo.owner}/${target.repo.repo}${target.ref ? `@${target.ref}` : ""})` : ""}`;
 /**
 * Parses a config target string into its components
 * @param target - Target string in format `[github:][[owner/]repo:]filepath[@ref]` or `file:filepath`
@@ -38473,12 +38499,17 @@ var getConfigFile = async (configTarget, parentTarget, token) => {
 	} catch (error) {
 		throw new Error(`Repo load failed. ${error.message}`);
 	}
-	const rawConfig = fileExtension === "json" ? JSON.parse(configRaw) : parse(configRaw);
+	let rawConfig;
+	try {
+		rawConfig = fileExtension === "json" ? JSON.parse(configRaw) : parse(configRaw);
+	} catch (error) {
+		throw new ConfigError(`Invalid config in ${describeConfigTarget(_configTarget)}:\n${error instanceof Error ? error.message : String(error)}`, [_configTarget], error instanceof YAMLParseError ? error.linePos?.[0] : void 0, { cause: error });
+	}
 	let config;
 	try {
 		config = configFileSchema.parse(rawConfig);
 	} catch (error) {
-		if (error instanceof ZodError) throw new Error(`Invalid config in ${describeConfigTarget(_configTarget)}:\n${prettifyError$1(error)}`, { cause: error });
+		if (error instanceof ZodError) throw new ConfigError(`Invalid config in ${describeConfigTarget(_configTarget)}:\n${prettifyError$1(error)}`, [_configTarget], void 0, { cause: error });
 		throw error;
 	}
 	return {
@@ -38621,4 +38652,4 @@ async function composeConfigGet(configFilename, currentContext, token) {
 	return result;
 }
 //#endregion
-export { context as C, setFailed as E, Minimatch as S, info as T, number as _, readActionInputs as a, stringbool as b, getGitHubAdapter as c, escapeStringRegexp as d, ZodDefault as f, literal as g, boolean as h, defineActionInputNames as i, getRepository as l, array as m, sharedInputSchema as n, writeActionOutputs as o, _enum as p, tokenInputSchema as r, actionLogger as s, composeConfigGet as t, noopLogger as u, object as v, core_exports as w, union as x, string$1 as y };
+export { setFailed as A, union as C, core_exports as D, context as E, error$1 as O, stringbool as S, Minimatch as T, boolean as _, tokenInputSchema as a, object as b, writeActionOutputs as c, getRepository as d, noopLogger as f, array as g, _enum as h, sharedInputSchema as i, info as k, actionLogger as l, ZodDefault as m, describeConfigTarget as n, defineActionInputNames as o, escapeStringRegexp as p, ConfigError as r, readActionInputs as s, composeConfigGet as t, getGitHubAdapter as u, literal as v, prettifyError$1 as w, string$1 as x, number as y };

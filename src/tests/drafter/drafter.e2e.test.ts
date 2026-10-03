@@ -2429,18 +2429,9 @@ describe('drafter e2e', () => {
       await runDrafter()
 
       expect(mocks.core.setFailed.mock.lastCall?.[0]).toMatchInlineSnapshot(`
-        "[
-          {
-            "expected": "string",
-            "code": "invalid_type",
-            "path": [
-              "replacers",
-              0,
-              "search"
-            ],
-            "message": "Invalid input: expected string, received null"
-          }
-        ]"
+        "Invalid Release Drafter config composed from github:oui (cchanche/proj@main):
+        ✖ Invalid input: expected string, received null
+          → at replacers[0].search"
       `)
     })
 

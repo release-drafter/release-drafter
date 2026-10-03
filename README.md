@@ -50,8 +50,10 @@ configuration, CLI usage, and programmatic API examples.
 
 ## Check pull requests
 
-The read-only Check PR action validates a pull request against the title or
-label conditions in Release Drafter categories. See
+The read-only Check PR action validates base-branch and proposed configuration,
+then checks the pull request against the title or label conditions in both sets
+of Release Drafter categories. Failures identify the configuration source and
+report syntax, schema, or matching errors in GitHub annotations and logs. See
 [`check-pr/README.md`](./check-pr/README.md) for the workflow, permissions,
 supported events, and matching behavior.
 

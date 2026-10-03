@@ -200,7 +200,7 @@ export const actionManifests = {
     outputs: {
       labels: {
         description:
-          'A JSON array of unique, sorted PR labels matched by configuration conditions under Check PR validation rules, including prefilter matches for skipped PRs. Empty results are [].',
+          'A JSON array of unique, sorted PR labels matched by base-configuration conditions under Check PR validation rules, including prefilter matches for skipped PRs. Empty results are [].',
       },
     },
   },
