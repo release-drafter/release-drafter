@@ -1,4 +1,6 @@
-# release-drafter
+<h1 align="center">
+  <img src="https://raw.githubusercontent.com/release-drafter/release-drafter/main/docs/design/logo.svg" alt="Release Drafter Logo" width="450" />
+</h1>
 
 The public `release-drafter` package provides a forge-neutral programmatic API
 and a command-line interface. It requires Node.js 24 or later.

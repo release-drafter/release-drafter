@@ -39,43 +39,14 @@ jobs:
           config-name: release-drafter.yml
 ```
 
-## Command-line interface
+## Use outside GitHub Actions
 
-Release Drafter provides a CLI for local use and automation. The CLI requires
-Node.js 24 or later.
+The `release-drafter` package provides a command-line interface and a programmatic
+API for other CI systems, scripts, and applications. It supports GitHub,
+GitHub Enterprise Server, Gitea, Forgejo, and GitLab.
 
-```sh
-npx release-drafter owner/repo --dry-run
-```
-
-For GitHub.com or GitHub Enterprise Cloud on `*.ghe.com`, authenticate with
-`GH_TOKEN` or `GITHUB_TOKEN`. For GitHub Enterprise Server, use
-`GH_ENTERPRISE_TOKEN` or `GITHUB_ENTERPRISE_TOKEN`.
-Release Drafter does not invoke [`gh`](https://cli.github.com/). To use GitHub
-CLI credentials, pass them through `GH_TOKEN`:
-
-```sh
-GH_TOKEN="$(gh auth token)" npx release-drafter owner/repo --dry-run
-```
-
-The CLI can validate one pull request with the same category rules as the Check
-PR action:
-
-```sh
-npx release-drafter check-pr owner/repo 123
-```
-
-See the [`release-drafter` package README](./packages/release-drafter/README.md)
-for installation instructions, the complete option reference, configuration
-targets, JSON output, and exit codes.
-
-## Programmatic API
-
-The `release-drafter` package also exports `createForgeAdapter`, `loadConfig`,
-and `draftRelease` for GitHub, Gitea, Forgejo, and GitLab. Use `loadConfig` for
-standard configuration loading, inheritance, validation, and normalization, or
-pass your own parsed configuration to `draftRelease`.
-See the [programmatic API examples](./packages/release-drafter/README.md#programmatic-api).
+See the [package README](./packages/release-drafter/README.md) for installation,
+configuration, CLI usage, and programmatic API examples.
 
 ## Check pull requests
 
@@ -890,7 +861,6 @@ labels.
 
 The output covers the comparison range used to draft the release and is also
 set in dry-run mode. Empty results or no available comparison base produce `[]`.
-The CLI exposes the same labels as an array in its `--json` result.
 
 Use it to select later workflow steps, for example deploying a service when one
 of the included pull requests matches a configured `api/user` label condition:
