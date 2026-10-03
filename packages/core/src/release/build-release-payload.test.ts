@@ -51,6 +51,41 @@ const buildPayload = (
 }
 
 describe('resolved tag in release bodies', () => {
+  it.each([undefined, 'global'] as const)(
+    'applies body replacers before escaping and final replacers with target %j',
+    async (target) => {
+      const payload = await buildPayload({
+        config: {
+          header: '<!-- header -->\n',
+          template: '<!-- template -->\n$CHANGES',
+          footer: '\n<!-- footer -->',
+          'change-template': '$TITLE: $BODY',
+          'change-body-escapes': '<@',
+          replacers: [
+            { target, search: 'Visible', replace: 'Final' },
+            {
+              target: 'change-body',
+              search: '/<!--.*?-->/gs',
+              replace: '',
+            },
+            { target: 'change-body', search: 'source', replace: 'Visible' },
+          ],
+        },
+        pullRequests: [
+          {
+            number: 1,
+            title: '<!-- title --> Visible',
+            body: '<!-- instructions\nremove me -->source <b>@user</b>',
+          },
+        ],
+      })
+
+      expect(payload.body).toBe(
+        '<!-- header -->\n<!-- template -->\n<!-- title --> Final: Final \\<b>@<!---->user\\</b>\n<!-- footer -->',
+      )
+    },
+  )
+
   it.each([
     {
       description: 'ordinary version tag',

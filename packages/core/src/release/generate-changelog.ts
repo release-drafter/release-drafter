@@ -14,6 +14,7 @@ export const generateChangeLog = (params: {
     ParsedConfig,
     | 'change-title-escapes'
     | 'change-body-escapes'
+    | 'replacers'
     | 'no-changes-template'
     | 'categories'
     | 'change-template'

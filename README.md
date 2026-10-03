@@ -147,7 +147,7 @@ The `.github/release-drafter.yml` file supports these keys:
 | `no-new-contributor-template`    | Optional | The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list. Default: `"* No new contributors"`.                                                                                                                                                                                                                                          |
 | `no-contributors-template`       | Optional | The template to use when `$CONTRIBUTORS` has no entries. Default: `"No contributors"`.                                                                                                                                                                                                                                                                               |
 | `group-changes`                  | Optional | Groups pull requests whose titles share the same `group` into a single changelog entry. See [Group changes](#group-changes).                                                                                                                                                                                                                                         |
-| `replacers`                      | Optional | Searches and replaces content in the generated changelog body. See [Replacers](#replacers).                                                                                                                                                                                                                                                                          |
+| `replacers`                      | Optional | Searches and replaces content in the generated release body or individual pull request bodies. See [Replacers](#replacers).                                                                                                                                                                                                                                          |
 | `sort-by`                        | Optional | Sorts the changelog by `merged_at` or `title`. Default: `merged_at`.                                                                                                                                                                                                                                                                                                 |
 | `sort-direction`                 | Optional | Sorts the changelog in `ascending` or `descending` order. Default: `descending`.                                                                                                                                                                                                                                                                                     |
 | `prerelease`                     | Optional | Creates a prerelease and includes changes since the previous prerelease when one exists. Default: `false`.                                                                                                                                                                                                                                                           |
@@ -381,9 +381,10 @@ can span multiple lines, preserving examples in backtick code fences. This
 setting escapes characters without parsing Markdown.
 
 This setting makes HTML comments visible; it does not remove their contents or
-filter instructions in pull request text. It applies only to `$BODY`, before
-insertion into `change-template`. Template content stays unchanged, and
-[replacers](#replacers) still run on the generated release body afterward.
+filter instructions in pull request text. Use [replacers](#replacers) with
+`target: change-body` to remove unwanted sections before escaping. Escaping
+applies only to `$BODY`, before insertion into `change-template`. Global
+replacers run on the generated release body afterward.
 
 ## Categorize changes
 
@@ -647,11 +648,22 @@ changelog body exists. `replacers` run last, on the finished body, so their
 
 ## Replacers
 
-Use `replacers` to search and replace content in the generated changelog body.
-Release Drafter applies the regular expressions in configuration order.
+Use `replacers` to search and replace content. Each replacer accepts a `target`:
+
+- `global` (default): the final generated release body, including templates and
+  inserted change content. Existing replacers without a target keep this behavior.
+- `change-body`: each pull request's `$BODY`, before `change-body-escapes` and
+  insertion into `change-template`. Titles and release-template content are
+  unaffected. For grouped entries, this uses the newest pull request's body.
+
+Release Drafter applies change-body rules first, then global rules after
+assembling the release body. Rules run in configuration order within each target.
 
 ```yml
 replacers:
+  - target: change-body
+    search: '/<!--.*?-->/gs'
+    replace: '' # Remove hidden PR-template sections, including multiline comments
   - search: '/CVE-(\d{4})-(\d+)/g'
     replace: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2'
   - search: 'myname'
@@ -662,6 +674,7 @@ replacers:
 
 Release Drafter parses `search` as a regular expression. `replace` supports the
 [Visual Studio Code replacement syntax](https://code.visualstudio.com/docs/editing/codebasics#_case-changing-in-regex-replace).
+Body replacers match raw text, including code examples; they do not parse Markdown.
 
 ## Autolabeler
 
