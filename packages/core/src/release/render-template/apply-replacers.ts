@@ -1,4 +1,5 @@
 import type { ParsedReplacer } from '../../types.ts'
+import { selectSection } from './select-section.ts'
 import { parseReplaceString } from './util/index.ts'
 
 // Keep matching state private and allow regexes to be collected with their configs.
@@ -30,13 +31,22 @@ export const applyReplacers = (
 ): string => {
   for (const replacer of replacers) {
     if ((replacer.target ?? 'global') !== target) continue
+    if (replacer.section !== undefined) {
+      input =
+        selectSection(input, replacer.section) ??
+        (replacer['not-found'] === 'empty' ? '' : input)
+      continue
+    }
     const replacePattern = parseReplaceString(replacer.replace)
     const search = getSearch(replacer.search)
     search.lastIndex = 0
+    let matched = false
     input = input.replace(search, (...args) => {
+      matched = true
       const matches = getReplaceMatches(args)
       return replacePattern.buildReplaceString(matches)
     })
+    if (!matched && replacer['not-found'] === 'empty') input = ''
   }
   return input
 }

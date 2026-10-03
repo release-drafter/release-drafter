@@ -53,9 +53,13 @@ replacers:
   - target: change-body
     search: '/<!--.*?-->/gs'
     replace: ''
+    not-found: empty
   - target: change-title
     search: '/^feat: /'
     replace: ''
+  - target: change-body
+    section: '## Release information'
+    not-found: empty
 categories:
   - title: Features
     label: feature
@@ -73,8 +77,18 @@ categories:
       'exclude-contributors': ['owner', 'bot'],
       replacers: [
         { search: /bug/g, replace: 'fix' },
-        { target: 'change-body', search: /<!--.*?-->/gs, replace: '' },
+        {
+          target: 'change-body',
+          search: /<!--.*?-->/gs,
+          replace: '',
+          'not-found': 'empty',
+        },
         { target: 'change-title', search: /^feat: /, replace: '' },
+        {
+          target: 'change-body',
+          section: '## Release information',
+          'not-found': 'empty',
+        },
       ],
       categories: [
         expect.objectContaining({

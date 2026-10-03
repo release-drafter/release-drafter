@@ -687,7 +687,41 @@ replacers:
 
 Release Drafter parses `search` as a regular expression. `replace` supports the
 [Visual Studio Code replacement syntax](https://code.visualstudio.com/docs/editing/codebasics#_case-changing-in-regex-replace).
-Body replacers match raw text, including code examples; they do not parse Markdown.
+Regex body replacers match raw text, including code examples; they do not parse Markdown.
+
+Each rule also accepts `not-found`: `full` (the default) retains the current
+target text when `search` has no match, while `empty` clears it. Later rules for
+the same target still run. A match with an empty capture is still a match.
+
+To select a section without writing a regex, use `section` in a `change-body`
+rule instead of `search` and `replace`:
+
+```yml
+replacers:
+  - target: change-body
+    section: '## Release information'
+    not-found: empty
+```
+
+The rule selects the content under the first matching heading, excluding the
+heading itself. It retains nested headings and stops at the next heading of
+an equal or higher level, or the end of the body. Selectors use `#`-style
+headings with one to six hashes and match the level and literal heading text
+case-sensitively. Optional closing hashes and surrounding spaces in heading
+text are ignored. Headings inside fenced code blocks and standalone HTML
+comment blocks are ignored.
+
+Section selection scans lines rather than parsing all Markdown. Underlined
+headings do not select or end a section. Inline heading formatting is matched
+literally, and list or block-quote nesting is not interpreted. Regex rules remain
+available for other extraction patterns.
+
+The selected content keeps its whitespace and line endings. `not-found: empty`
+clears the body when the heading is absent; `full` (the default) retains the
+current body. An empty selected section stays empty with either fallback.
+Bodies that are null or omitted are treated as empty when section rules are
+configured. Section and regex rules run in configuration order before body
+escaping and template insertion, so you can combine extraction and cleanup.
 
 ## Autolabeler
 
