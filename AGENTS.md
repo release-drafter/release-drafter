@@ -1,136 +1,60 @@
 # AGENTS.md
 
-## Repository overview
+## Development
 
-The GitHub Actions use TypeScript source files and generated JavaScript bundles.
-The repository contains both forms.
+Read [the contribution guide](docs/CONTRIBUTING.md), especially
+[Workspace development](docs/CONTRIBUTING.md#workspace-development), for setup,
+workspace boundaries, package publication, and release rules.
 
-- `src/`: TypeScript source code
-- `dist/`: tracked generated JavaScript used directly by the actions
-- `packages/*/dist/`: generated, ignored workspace package output
+- Edit source files and use the repository generators for generated output.
+  The root `dist/` is tracked and runs directly in GitHub Actions. Review it
+  alongside its source; never review bundle changes in isolation.
+  `packages/*/dist/` is ignored and must not be committed.
+- Use `@actions/core` for GitHub Action runtime logging.
+- Do not use Zod `refine` or `superRefine` on schemas converted to JSON schema.
+  Keep those schemas JSON-schema-compatible and perform semantic validation
+  during runtime parsing or configuration validation instead.
+- Update tests for behavior changes and `README.md` for functionality or usage
+  changes.
+- Leave version bumps to the release workflow unless the task explicitly asks
+  for a version change.
 
-Do not review changes to the root `dist/` in isolation. The root `dist/` must
-closely match the code generated from `src/`. CI checks for drift. Do not commit
-workspace package output beneath `packages/*/dist/`.
+## Verification
 
-See [Workspace development](docs/CONTRIBUTING.md#workspace-development) for the
-workspace commands and package-development rules.
-
-## Repository structure
-
-| Path              | Description                                 |
-| ----------------- | ------------------------------------------- |
-| `.devcontainer/`  | Development container configuration         |
-| `.github/`        | GitHub configuration                        |
-| `.licenses/`      | License information                         |
-| `.vscode/`        | VS Code configuration                       |
-| `autolabeler/`    | Entrypoint for the Autolabeler action       |
-| `badges/`         | Badges for README                           |
-| `coverage/`       | Non-versioned coverage output               |
-| `dist/`           | Generated JavaScript code                   |
-| `docs/`           | Documentation complementary to `README.md`  |
-| `drafter/`        | Entrypoint for the Drafter action           |
-| `src/`            | TypeScript source code                      |
-| `.node-version`   | Node.js version configuration               |
-| `biome.jsonc`     | Biome linter and formatter configuration    |
-| `.prettierrc.yml` | Prettier configuration, Markdown only       |
-| `action.yml`      | Entrypoint to the Drafter action            |
-| `vite.config.ts`  | Vite configuration for bundling and testing |
-| `LICENSE`         | License file                                |
-| `package.json`    | npm package configuration                   |
-| `README.md`       | Project documentation                       |
-| `tsconfig.json`   | TypeScript configuration                    |
-
-## Setup
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-## Required checks
-
-Before pushing, run the full pipeline so formatting, linting, type checks,
-tests, and generated files are all up to date:
-
-```bash
-npm run ci
-```
-
-CI fails if generated files are stale.
-
-Biome formats every language it supports. Markdown is not one of them, so
-Prettier formats `.md` files via `npm run format:docs` (already included in
-`npm run ci`). Do not point Prettier at any other file type.
-
-## Testing
-
-Type-check with:
-
-```bash
-npm run typecheck
-```
-
-Run unit tests with:
-
-```bash
-npm run test:run
-```
-
-Do not use `npm run test` for normal verification. It starts the Vite
-development server and is intended for interactive sessions.
-
-Tests live in `src/tests` and use `vitest`.
-
-## Bundling
-
-Before you push changes, regenerate `dist/` from the source files:
-
-```bash
-npm run build
-```
-
-## Coding guidelines
-
-- Follow existing TypeScript and JavaScript conventions in the repository.
-- Keep changes minimal and consistent with surrounding patterns.
-- Update documentation and comments when behavior changes.
-- Avoid comments that restate obvious code; explain why when needed.
-- Use consistent error-handling patterns.
-- Lean on TypeScript for type safety and clarity.
-- Keep functions focused and manageable.
-- Use descriptive names.
-- Use JSDoc for public functions, classes, and non-obvious logic.
-- Prefer maintainable, simple solutions over unnecessary complexity.
-- Cover both happy paths and edge cases in unit tests when adding or changing
-  behavior.
-- Use `@actions/core` for logging instead of `console`.
-- Do not use Zod `refine` or `superRefine` on schemas that are converted to JSON
-  schema. Keep those schemas JSON-schema-compatible and perform semantic
-  validation during runtime parsing or configuration validation instead.
-
-## Versioning
-
-GitHub Actions are versioned using branch and tag names. Keep the version in
-`package.json` aligned with codebase changes and follow
-[Semantic Versioning](https://semver.org/).
+- Install dependencies with `npm ci` from this checkout's lockfile before
+  verification. Do not copy `node_modules` from another checkout.
+- Before pushing, run `npm run ci`. It formats, lints, checks types, runs unit
+  tests, regenerates schemas and action metadata, builds bundles and workspace
+  packages, and checks workspace boundaries and dependencies.
+- Review the resulting diff and include intended generated changes. Stage the
+  intended changes, then run `npm run check:clean` to detect unstaged or untracked
+  output. Report failures or checks that could not run accurately.
+- For targeted unit tests, use `npm run test:run`, not the watch-mode
+  `npm run test`.
+- Markdown uses `npm run format:docs` (included in `npm run ci`). Biome owns
+  other supported file types; do not run Prettier on them.
+- `npm run ci` does not run Docker-backed forge conformance tests. For adapter
+  changes, consult the contribution guide's forge conformance section and run
+  the relevant suite.
 
 ## Pull requests
 
-- Keep changes focused and minimal.
-- Ensure formatting, linting, and unit tests pass.
-- Ensure `dist/` is up to date with the latest source changes.
-- Update `README.md` when functionality or usage changes.
-
-Pull request bodies should include:
-
-- A summary of the changes.
-- Any dependency changes.
-- Links to relevant issues or discussions.
-- Extra reviewer context when helpful.
-
-## Code review
-
-- If a change modifies functionality or usage, confirm that `README.md` was
-  updated accordingly.
+- Read `.github/pull_request_template.md` before creating or rewriting a PR
+  body. Preserve its Summary, Testing, and Checklist sections and checklist
+  items; fill them in for the actual change instead of replacing the template
+  with a custom summary.
+- With `gh pr create` or `gh pr edit`, write the completed template to a file
+  and pass `--body-file`. An explicit body bypasses automatic template filling.
+- Use a conventional PR title as required by the template and CI.
+- Describe the final change, dependency changes, relevant issue links, and
+  actual validation. Check only checklist items that are satisfied. Leave
+  human review and policy agreement items for the contributor to confirm;
+  disclose AI assistance.
+- Use repository-relative paths in public PR descriptions. Do not include
+  local checkout paths or private thread history.
+- After creating or updating the PR, read back its title and body with
+  `gh pr view --json title,body,url` and verify that the template sections and
+  checklist survived.
+- Before reporting a PR ready to merge, inspect required checks for its current
+  head commit. Pending, failed, or cancelled required checks still block it,
+  even if another run of the same workflow passed.
