@@ -1,9 +1,8 @@
 import regexEscape from 'escape-string-regexp'
-import type { Config } from '../config/config.schema.ts'
-import type { Commit } from '../types.ts'
+import type { Commit, ParsedConfig } from '../types.ts'
 import { generateAuthorsSentence } from './generate-contributors-sentence.ts'
 import type { ChangeGroup } from './group-changes.ts'
-import { renderTemplate } from './render-template/index.ts'
+import { applyReplacers, renderTemplate } from './render-template/index.ts'
 
 /** Separator between the pull request numbers of `$NUMBERS`. */
 const numbersSeparator = ', '
@@ -14,10 +13,11 @@ export const pullRequestToString = (params: {
   commits: Commit[]
   serverUrl: string
   config: Pick<
-    Config,
+    ParsedConfig,
     | 'change-template'
     | 'change-title-escapes'
     | 'change-body-escapes'
+    | 'replacers'
     | 'change-author-template'
     | 'change-authors-separator'
     | 'change-authors-final-separator'
@@ -66,7 +66,14 @@ export const pullRequestToString = (params: {
           $AUTHOR: pullAuthor,
           $AUTHOR_URL: pullRequest.author?.url ?? '',
           $BODY: escapeChangeText({
-            text: pullRequest.body,
+            text:
+              pullRequest.body == null
+                ? pullRequest.body
+                : applyReplacers(
+                    pullRequest.body,
+                    params.config.replacers,
+                    'change-body',
+                  ),
             escapes: params.config['change-body-escapes'],
             multiline: true,
           }),

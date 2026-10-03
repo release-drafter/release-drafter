@@ -164,6 +164,10 @@
           "replace": {
             "type": "string",
             "minLength": 0
+          },
+          "target": {
+            "type": "string",
+            "enum": ["global", "change-body"]
           }
         },
         "required": ["search", "replace"]

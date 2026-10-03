@@ -277,6 +277,8 @@ export type ParsedCategory =
 export interface ParsedReplacer {
   search: RegExp
   replace: string
+  /** Defaults to `global`, the generated release body. `change-body` runs before body escaping. */
+  target?: 'global' | 'change-body'
 }
 
 export interface ParsedGroupChange {

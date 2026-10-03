@@ -369,6 +369,10 @@ export const exclusiveConfigSchema = object({
     object({
       search: string().min(1),
       replace: string().min(0),
+      /**
+       * Where to apply the replacer. Defaults to `global`, the generated release body. `change-body` runs before body escaping.
+       */
+      target: zenum(['global', 'change-body']).optional(),
     }),
   )
     .optional()

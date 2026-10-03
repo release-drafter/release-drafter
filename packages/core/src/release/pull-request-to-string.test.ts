@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { configSchema } from '../config/config.schema.ts'
+import { configSchema, mergeInputAndConfig } from '../config/index.ts'
+import { noopLogger } from '../ports.ts'
 import type { PullRequest } from '../types.ts'
 import type { ChangeGroup } from './group-changes.ts'
 import { pullRequestToString } from './pull-request-to-string.ts'
 
 const config = (overrides: Record<string, unknown> = {}) =>
-  configSchema.parse({ template: '$CHANGES', ...overrides })
+  mergeInputAndConfig({
+    config: configSchema.parse({
+      template: '$CHANGES',
+      commitish: 'main',
+      ...overrides,
+    }),
+    input: {},
+    logger: noopLogger,
+  })
 
 const pullRequest = (
   number: number,
@@ -119,6 +128,85 @@ describe('pullRequestToString', () => {
         'change-title-escapes': '<',
       }),
     ).toBe('\\<title>\n<!-- body -->')
+  })
+
+  describe('body replacers', () => {
+    const replacers = [
+      { target: 'change-body', search: '/<!--.*?-->/gs', replace: '' },
+    ]
+
+    it('removes multiline comments before escaping only the newest body', () => {
+      const merged = change([
+        pullRequest(1, { body: 'older body' }),
+        pullRequest(2, {
+          title: '<!-- title -->',
+          body: '<!-- first\nsection --><!-- second\r\nsection --><b>Visible</b>',
+        }),
+      ])
+      expect(
+        render([merged], {
+          'change-template': '<!-- template -->\n$TITLE\n$BODY',
+          'change-body-escapes': '<',
+          replacers,
+        }),
+      ).toBe('<!-- template -->\n<!-- title -->\n\\<b>Visible\\</b>')
+    })
+
+    it('applies ordered replacers independently to each body with shared replacement syntax', () => {
+      expect(
+        render(
+          [1, 2].map((number) =>
+            change([pullRequest(number, { body: 'old value $TITLE' })]),
+          ),
+          {
+            'change-template': '$BODY',
+            replacers: [
+              { target: 'change-body', search: '/^(old)/', replace: '\\U$1' },
+              { search: 'value', replace: 'global' },
+              { target: 'change-body', search: 'OLD', replace: 'new' },
+            ],
+          },
+        ),
+      ).toBe('new value $TITLE\nnew value $TITLE')
+    })
+
+    it.each([undefined, null, ''])(
+      'preserves existing behavior for a body of %j',
+      (body) => {
+        expect(
+          render([change([pullRequest(1, { body })])], {
+            'change-template': '$BODY',
+            replacers,
+          }),
+        ).toBe(body == null ? '$BODY' : '')
+      },
+    )
+
+    it('extracts release information without affecting other change fields', () => {
+      expect(
+        render(
+          [
+            change([
+              pullRequest(1, {
+                title: 'Keep title',
+                body: '## Description\nInternal context\n## Release information\nPublic notes\n## Checklist\n- [x] Tested',
+              }),
+            ]),
+          ],
+          {
+            'change-template': '$TITLE\n$BODY',
+            replacers: [
+              {
+                target: 'change-body',
+                search:
+                  '/^[\\s\\S]*?## Release information\\r?\\n([\\s\\S]*?)(?:\\r?\\n## |$)[\\s\\S]*$/',
+                replace: '$1',
+              },
+            ],
+          },
+        ),
+      ).toBe('Keep title\nPublic notes')
+    })
   })
 
   describe('body escaping', () => {
