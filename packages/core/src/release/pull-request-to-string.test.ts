@@ -135,6 +135,27 @@ describe('pullRequestToString', () => {
       { target: 'change-body', search: '/<!--.*?-->/gs', replace: '' },
     ]
 
+    it('applies a custom sticky regex independently to every body and repeated render', () => {
+      const parsedConfig = config({ 'change-template': '$BODY' })
+      const search = /^old/y
+      search.lastIndex = 1
+      parsedConfig.replacers = [
+        { target: 'change-body', search, replace: 'new' },
+      ]
+      const params = {
+        changes: [1, 2, 3].map((number) =>
+          change([pullRequest(number, { body: 'old body' })]),
+        ),
+        commits: [],
+        serverUrl: 'https://github.com',
+        config: parsedConfig,
+      }
+
+      expect(pullRequestToString(params)).toBe('new body\nnew body\nnew body')
+      expect(pullRequestToString(params)).toBe('new body\nnew body\nnew body')
+      expect(search.lastIndex).toBe(1)
+    })
+
     it('removes multiline comments before escaping only the newest body', () => {
       const merged = change([
         pullRequest(1, { body: 'older body' }),

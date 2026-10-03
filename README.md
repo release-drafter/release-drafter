@@ -672,14 +672,14 @@ original title.
 
 `collapse-after` counts entries, so grouped changes count as one. Release
 Drafter matches `pattern` against the original pull request titles, before the
-changelog body exists. `replacers` run last, on the finished body, so their
+changelog body exists. Global replacers run after assembling the body, so their
 `search` sees the title that `title-template` built, not the original ones.
 
 ## Replacers
 
 Use `replacers` to search and replace content. Each replacer accepts a `target`:
 
-- `global` (default): the final generated release body, including templates and
+- `global` (default): the assembled release body, including templates and
   inserted change content. Existing replacers without a target keep this behavior.
 - `change-body`: each pull request's `$BODY`, before `change-body-escapes` and
   insertion into `change-template`. Titles and release-template content are
@@ -687,6 +687,11 @@ Use `replacers` to search and replace content. Each replacer accepts a `target`:
 
 Release Drafter applies change-body rules first, then global rules after
 assembling the release body. Rules run in configuration order within each target.
+
+Version and tag placeholders, such as `$RESOLVED_VERSION` and `$RESOLVED_TAG`,
+expand in a final pass after global replacements. This includes placeholders
+introduced by replacers. Scoped rules see the literal placeholders, and their
+expanded values do not pass through change escaping or replacers again.
 
 ```yml
 replacers:
