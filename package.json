@@ -80,7 +80,7 @@
     "@graphql-codegen/typescript": "^6.1.0",
     "@graphql-codegen/typescript-operations": "^6.1.7",
     "@swc/core": "1.16.2",
-    "@types/node": "^24.13.6",
+    "@types/node": "^24.19.0",
     "@vitest/coverage-v8": "^5.0.2",
     "dependency-cruiser": "18.4.0",
     "knip": "6.38.0",
