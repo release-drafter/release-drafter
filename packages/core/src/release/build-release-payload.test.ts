@@ -51,6 +51,28 @@ const buildPayload = (
 }
 
 describe('resolved tag in release bodies', () => {
+  it('expands placeholders introduced by scoped replacements only after escaping and global replacements', async () => {
+    const payload = await buildPayload({
+      config: {
+        template: '$CHANGES',
+        'change-template': '$BODY',
+        'change-body-escapes': '<',
+        replacers: [
+          {
+            target: 'change-body',
+            search: 'TOKEN',
+            replace: '<b>$RESOLVED_TAG $RESOLVED_VERSION</b>',
+          },
+          { search: '<tag>', replace: 'matched-too-early' },
+        ],
+      },
+      input: { tag: '<tag>' },
+      pullRequests: [{ number: 1, title: 'Change', body: 'TOKEN' }],
+    })
+
+    expect(payload.body).toBe('\\<b><tag> 1.2.4\\</b>')
+  })
+
   it.each([undefined, 'global'] as const)(
     'applies body replacers before escaping and final replacers with target %j',
     async (target) => {

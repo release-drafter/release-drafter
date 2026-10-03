@@ -18,7 +18,9 @@ export const applyReplacers = (
   for (const replacer of replacers) {
     if ((replacer.target ?? 'global') !== target) continue
     const replacePattern = parseReplaceString(replacer.replace)
-    input = input.replace(replacer.search, (...args) => {
+    // Each input starts a fresh match without changing caller-owned regex state.
+    const search = new RegExp(replacer.search)
+    input = input.replace(search, (...args) => {
       const matches = getReplaceMatches(args)
       return replacePattern.buildReplaceString(matches)
     })
