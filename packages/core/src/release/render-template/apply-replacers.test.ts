@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { applyReplacers } from './apply-replacers.ts'
 
 describe('applyReplacers', () => {
-  it.each(['global', 'change-body'] as const)(
+  it.each(['global', 'change-body', 'change-title'] as const)(
     'isolates sticky regex state for repeated %s inputs',
     (target) => {
       const search = /^old/y

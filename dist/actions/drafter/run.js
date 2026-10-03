@@ -735,7 +735,7 @@ var pullRequestToString = (params) => params.changes.map((change) => {
 		object: {
 			$CATEGORY: params.category ?? "",
 			$TITLE: escapeChangeText({
-				text: change.title,
+				text: applyReplacers(change.title, params.config.replacers, "change-title"),
 				escapes: params.config["change-title-escapes"]
 			}),
 			$NUMBER: pullRequest.number.toString(),
