@@ -158,6 +158,29 @@ describe('pullRequestToString', () => {
     ).toBe('feat(ui): Add \\_feature\\_\nbody: add _feature_')
   })
 
+  it('applies a custom sticky regex independently to every title and repeated render', () => {
+    const parsedConfig = config({ 'change-template': '$TITLE: $BODY' })
+    const search = /^old/y
+    search.lastIndex = 1
+    parsedConfig.replacers = [
+      { target: 'change-title', search, replace: 'new' },
+    ]
+    const params = {
+      changes: [1, 2, 3].map((number) =>
+        change([pullRequest(number, { title: 'old title', body: 'old body' })]),
+      ),
+      commits: [],
+      serverUrl: 'https://github.com',
+      config: parsedConfig,
+    }
+
+    const expected =
+      'new title: old body\nnew title: old body\nnew title: old body'
+    expect(pullRequestToString(params)).toBe(expected)
+    expect(pullRequestToString(params)).toBe(expected)
+    expect(search.lastIndex).toBe(1)
+  })
+
   describe('body replacers', () => {
     const replacers = [
       { target: 'change-body', search: '/<!--.*?-->/gs', replace: '' },
