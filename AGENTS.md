@@ -7,8 +7,9 @@ Read [the contribution guide](docs/CONTRIBUTING.md), especially
 workspace boundaries, package publication, and release rules.
 
 - Edit source files and use the repository generators for generated output.
-  The root `dist/` is tracked and runs directly in GitHub Actions. Review it
-  alongside its source; never review bundle changes in isolation.
+  Do not read, search, or review generated `dist/` contents or diffs. Review
+  source changes and verify generated output through regeneration and drift
+  checks. The root `dist/` is tracked and must be regenerated before pushing.
   `packages/*/dist/` is ignored and must not be committed.
 - Use `@actions/core` for GitHub Action runtime logging.
 - Do not use Zod `refine` or `superRefine` on schemas converted to JSON schema.
@@ -26,8 +27,9 @@ workspace boundaries, package publication, and release rules.
 - Before pushing, run `npm run ci`. It formats, lints, checks types, runs unit
   tests, regenerates schemas and action metadata, builds bundles and workspace
   packages, and checks workspace boundaries and dependencies.
-- Review the resulting diff and include intended generated changes. Stage the
-  intended changes, then run `npm run check:clean` to detect unstaged or untracked
+- Review source and documentation diffs. Use file names or diff statistics to
+  identify generated changes without reading `dist/` output. Stage intended
+  changes, then run `npm run check:clean` to detect unstaged or untracked
   output. Report failures or checks that could not run accurately.
 - For targeted unit tests, use `npm run test:run`, not the watch-mode
   `npm run test`.
