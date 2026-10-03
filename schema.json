@@ -58,6 +58,9 @@
     "change-title-escapes": {
       "type": "string"
     },
+    "change-body-escapes": {
+      "type": "string"
+    },
     "no-changes-template": {
       "default": "* No changes",
       "type": "string"

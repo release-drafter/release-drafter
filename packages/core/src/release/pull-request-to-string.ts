@@ -1,6 +1,6 @@
 import regexEscape from 'escape-string-regexp'
 import type { Config } from '../config/config.schema.ts'
-import type { Commit, PullRequest } from '../types.ts'
+import type { Commit } from '../types.ts'
 import { generateAuthorsSentence } from './generate-contributors-sentence.ts'
 import type { ChangeGroup } from './group-changes.ts'
 import { renderTemplate } from './render-template/index.ts'
@@ -17,6 +17,7 @@ export const pullRequestToString = (params: {
     Config,
     | 'change-template'
     | 'change-title-escapes'
+    | 'change-body-escapes'
     | 'change-author-template'
     | 'change-authors-separator'
     | 'change-authors-final-separator'
@@ -38,8 +39,8 @@ export const pullRequestToString = (params: {
         template: params.config['change-template'],
         object: {
           $CATEGORY: params.category ?? '',
-          $TITLE: escapeTitle({
-            title: change.title,
+          $TITLE: escapeChangeText({
+            text: change.title,
             escapes: params.config['change-title-escapes'],
           }),
           $NUMBER: pullRequest.number.toString(),
@@ -64,7 +65,11 @@ export const pullRequestToString = (params: {
           }),
           $AUTHOR: pullAuthor,
           $AUTHOR_URL: pullRequest.author?.url ?? '',
-          $BODY: pullRequest.body,
+          $BODY: escapeChangeText({
+            text: pullRequest.body,
+            escapes: params.config['change-body-escapes'],
+            multiline: true,
+          }),
           $URL: pullRequest.url,
           $BASE_REF_NAME: pullRequest.baseRefName,
           $HEAD_REF_NAME: pullRequest.headRefName,
@@ -73,17 +78,30 @@ export const pullRequestToString = (params: {
     })
     .join('\n')
 
-const escapeTitle = (params: {
-  title: PullRequest['title']
-  escapes: Config['change-title-escapes']
-}) =>
-  // If config['change-title-escapes'] contains backticks, then they will be escaped along with content contained inside backticks
-  // If not, the entire backtick block is matched so that it will become a markdown code block without escaping any of its content
-  params.title.replace(
-    new RegExp(`[${regexEscape(params.escapes || '')}]|\`.*?\``, 'g'),
-    (match: string) => {
+/** Escapes selected characters, skipping backtick-delimited text unless backticks are selected. */
+const escapeChangeText = (params: {
+  text: string | null | undefined
+  escapes: string | undefined
+  multiline?: boolean
+}) => {
+  if (params.text == null || !params.escapes) return params.text
+  return params.text.replace(
+    new RegExp(
+      `[${regexEscape(params.escapes)}]|\`.*?\``,
+      params.multiline ? 'gs' : 'g',
+    ),
+    (match: string, offset: number, text: string) => {
       if (match.length > 1) return match
       if (match === '@' || match === '#') return `${match}<!---->`
+      // An extra backslash could make already escaped HTML hidden again.
+      // Keep title behavior, and preserve existing body escapes unless
+      // backslashes themselves are selected for escaping.
+      if (params.multiline && !params.escapes?.includes('\\')) {
+        let start = offset
+        while (start > 0 && text[start - 1] === '\\') start--
+        if ((offset - start) % 2 === 1) return match
+      }
       return `\\${match}`
     },
   )
+}

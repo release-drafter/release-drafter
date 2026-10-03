@@ -93,4 +93,122 @@ describe('pullRequestToString', () => {
       }),
     ).toBe('Bump \\_lib\\_ to 2.0')
   })
+
+  it('escapes the newest body independently of the title and template', () => {
+    const merged = change(
+      [
+        pullRequest(1, { body: '<!-- older -->' }),
+        pullRequest(2, { body: '<!-- hidden -->\n\n`<!-- example -->`' }),
+      ],
+      '<title>',
+    )
+    expect(
+      render([merged], {
+        'change-template': '<!-- template -->\n$TITLE\n$BODY',
+        'change-body-escapes': '<',
+      }),
+    ).toBe(
+      '<!-- template -->\n<title>\n\\<!-- hidden -->\n\n`<!-- example -->`',
+    )
+  })
+
+  it('does not apply title escapes to the body', () => {
+    expect(
+      render([change([pullRequest(1, { body: '<!-- body -->' })], '<title>')], {
+        'change-template': '$TITLE\n$BODY',
+        'change-title-escapes': '<',
+      }),
+    ).toBe('\\<title>\n<!-- body -->')
+  })
+
+  describe('body escaping', () => {
+    const renderBody = (body: string | null | undefined, escapes?: string) =>
+      render([change([pullRequest(1, { body })])], {
+        'change-template': '$BODY',
+        'change-body-escapes': escapes,
+      })
+
+    it.each([undefined, ''])(
+      'keeps the body unchanged with escapes %j',
+      (escapes) => {
+        const body = '<!-- hidden -->\n**Markdown** and `code`'
+        expect(renderBody(body, escapes)).toBe(body)
+      },
+    )
+
+    it.each([undefined, null])(
+      'keeps existing missing-body behavior for %j',
+      (body) => {
+        expect(renderBody(body, '<')).toBe('$BODY')
+      },
+    )
+
+    it('preserves an empty body', () => {
+      expect(renderBody('', '<')).toBe('')
+    })
+
+    it.each([
+      ['<!-- hidden -->', '\\<!-- hidden -->'],
+      ['<!-- first --><!-- second -->', '\\<!-- first -->\\<!-- second -->'],
+      ['<!-- hidden\nmultiline -->', '\\<!-- hidden\nmultiline -->'],
+      ['<!-- hidden\r\nmultiline -->', '\\<!-- hidden\r\nmultiline -->'],
+      ['<!-- unfinished', '\\<!-- unfinished'],
+      ['Text <b>bold</b>', 'Text \\<b>bold\\</b>'],
+    ])('escapes HTML characters: %j', (body, expected) => {
+      expect(renderBody(body, '<')).toBe(expected)
+    })
+
+    it.each([
+      '`<!-- cspell:words releasedrafter -->`',
+      '```md\n<!-- cspell:words releasedrafter -->\n```',
+      '```md\r\n<!-- @@inject:table.csv -->\r\n```',
+    ])('skips backtick-delimited examples: %j', (example) => {
+      expect(
+        renderBody(`<!-- before -->\n${example}\n<!-- after -->`, '<'),
+      ).toBe(`\\<!-- before -->\n${example}\n\\<!-- after -->`)
+    })
+
+    it('escapes backtick-delimited text when backticks are selected', () => {
+      expect(renderBody('`<tag>`', '`<')).toBe('\\`\\<tag>\\`')
+    })
+
+    it('treats configured regex characters literally', () => {
+      expect(renderBody('[*]', '[*]')).toBe('\\[\\*\\]')
+    })
+
+    it('prevents user and issue mentions like title escaping', () => {
+      expect(renderBody('@octocat #42 `@octocat #42`', '@#')).toBe(
+        '@<!---->octocat #<!---->42 `@octocat #42`',
+      )
+    })
+
+    it.each([0, 1, 2, 3, 4])(
+      'handles %i existing backslashes before HTML',
+      (count) => {
+        expect(renderBody(`${'\\'.repeat(count)}<!-- hidden -->`, '<')).toBe(
+          `${'\\'.repeat(count + (count % 2 === 0 ? 1 : 0))}<!-- hidden -->`,
+        )
+      },
+    )
+
+    it('escapes backslashes without cancelling the HTML escape', () => {
+      expect(renderBody('\\<!-- hidden -->', '\\<')).toBe(
+        '\\\\\\<!-- hidden -->',
+      )
+    })
+  })
+
+  it.each([
+    ['`<tag>` <tag>', '<', '`<tag>` \\<tag>'],
+    ['`<tag>`', '`<', '\\`\\<tag>\\`'],
+    ['\\<tag>', '<', '\\\\<tag>'],
+    ['@octocat #42', '@#', '@<!---->octocat #<!---->42'],
+  ])('preserves title escaping for %j', (title, escapes, expected) => {
+    expect(
+      render([change([pullRequest(1)], title)], {
+        'change-template': '$TITLE',
+        'change-title-escapes': escapes,
+      }),
+    ).toBe(expected)
+  })
 })
