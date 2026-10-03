@@ -50,6 +50,9 @@ exclude-contributors: [bot]
 replacers:
   - search: '/bug/g'
     replace: fix
+  - target: change-body
+    search: '/<!--.*?-->/gs'
+    replace: ''
 categories:
   - title: Features
     label: feature
@@ -65,7 +68,10 @@ categories:
       latest: true,
       prerelease: false,
       'exclude-contributors': ['owner', 'bot'],
-      replacers: [{ search: /bug/g, replace: 'fix' }],
+      replacers: [
+        { search: /bug/g, replace: 'fix' },
+        { target: 'change-body', search: /<!--.*?-->/gs, replace: '' },
+      ],
       categories: [
         expect.objectContaining({
           title: 'Features',
