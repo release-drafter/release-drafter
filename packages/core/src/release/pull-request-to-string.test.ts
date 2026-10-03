@@ -187,9 +187,22 @@ describe('pullRequestToString', () => {
     ]
 
     describe('section extraction with missing-match fallback', () => {
-      // Keep this pattern aligned with the README section-extraction example.
-      const search =
-        '/^[\\s\\S]*?^## Release information[ \\t]*(?:\\r?\\n|$)([\\s\\S]*?)(?=^#{1,2}[ \\t]+|$(?![\\s\\S]))[\\s\\S]*$/m'
+      const section = '## Release information'
+      it.each([undefined, null, ''])(
+        'treats a body of %j as empty when section rules are configured',
+        (body) => {
+          for (const notFound of ['empty', 'full'] as const) {
+            expect(
+              render([change([pullRequest(1, { body })])], {
+                'change-template': '$BODY',
+                replacers: [
+                  { target: 'change-body', section, 'not-found': notFound },
+                ],
+              }),
+            ).toBe('')
+          }
+        },
+      )
       const extract = (body: string, notFound: 'empty' | 'full') =>
         render([change([pullRequest(1, { title: 'Keep _title_', body })])], {
           'change-template': '## Release information\n$TITLE\n$BODY',
@@ -197,8 +210,7 @@ describe('pullRequestToString', () => {
           replacers: [
             {
               target: 'change-body',
-              search,
-              replace: '$1',
+              section,
               'not-found': notFound,
             },
           ],
@@ -268,8 +280,7 @@ describe('pullRequestToString', () => {
               replacers: [
                 {
                   target: 'change-body',
-                  search,
-                  replace: '$1',
+                  section,
                   'not-found': notFound,
                 },
               ],
@@ -278,6 +289,49 @@ describe('pullRequestToString', () => {
             `## Release information: 1\nNotes\n## Release information: 2\n${notFound === 'full' ? '## Description\n\\_Internal notes\\_' : ''}\n## Release information: 3\n\n## Release information: 4\nMore notes`,
           )
         }
+      })
+
+      it('combines extraction and regex cleanup in configuration order', () => {
+        expect(
+          render(
+            [
+              change([
+                pullRequest(1, {
+                  body: '## Old heading\n<!-- hidden -->Public\n## Tests\nPrivate',
+                }),
+              ]),
+            ],
+            {
+              'change-template': '$BODY',
+              replacers: [
+                {
+                  target: 'change-body',
+                  search: 'Old heading',
+                  replace: 'Release information',
+                },
+                { target: 'change-body', section },
+                {
+                  target: 'change-body',
+                  search: '/<!--.*?-->/gs',
+                  replace: '',
+                },
+              ],
+            },
+          ),
+        ).toBe('Public\n')
+        expect(
+          render([change([pullRequest(1, { body: '## Other\nPrivate' })])], {
+            'change-template': '$BODY',
+            replacers: [
+              { target: 'change-body', section, 'not-found': 'empty' },
+              {
+                target: 'change-body',
+                search: '/^$/',
+                replace: 'No release notes',
+              },
+            ],
+          }),
+        ).toBe('No release notes')
       })
     })
 

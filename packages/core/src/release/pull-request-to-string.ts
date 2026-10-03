@@ -26,6 +26,13 @@ export const pullRequestToString = (params: {
   params.changes
     .map((change) => {
       const pullRequest = change.representative
+      const body =
+        pullRequest.body ??
+        (params.config.replacers.some(
+          (rule) => rule.target === 'change-body' && rule.section !== undefined,
+        )
+          ? ''
+          : pullRequest.body)
       let pullAuthor = 'ghost'
       if (pullRequest.author) {
         pullAuthor =
@@ -71,13 +78,9 @@ export const pullRequestToString = (params: {
           $AUTHOR_URL: pullRequest.author?.url ?? '',
           $BODY: escapeChangeText({
             text:
-              pullRequest.body == null
-                ? pullRequest.body
-                : applyReplacers(
-                    pullRequest.body,
-                    params.config.replacers,
-                    'change-body',
-                  ),
+              body == null
+                ? body
+                : applyReplacers(body, params.config.replacers, 'change-body'),
             escapes: params.config['change-body-escapes'],
             multiline: true,
           }),

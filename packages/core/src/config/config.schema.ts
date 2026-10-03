@@ -3,6 +3,7 @@ import {
   array,
   boolean,
   literal,
+  never,
   number,
   object,
   string,
@@ -366,18 +367,32 @@ export const exclusiveConfigSchema = object({
    * Search and replace content in the generated changelog body.
    */
   replacers: array(
-    object({
-      search: string().min(1),
-      replace: string().min(0),
-      /**
-       * Where to apply the replacer. Defaults to `global`, the generated release body. Change title/body targets run before escaping.
-       */
-      target: zenum(['global', 'change-body', 'change-title']).optional(),
-      /**
-       * When search does not match, retain the current input (`full`, the default) or replace it with an empty string.
-       */
-      'not-found': zenum(['empty', 'full']).optional(),
-    }),
+    union([
+      object({
+        search: string().min(1),
+        replace: string().min(0),
+        section: never().optional(),
+        /**
+         * Where to apply the replacer. Defaults to `global`, the generated release body. Change title/body targets run before escaping.
+         */
+        target: zenum(['global', 'change-body', 'change-title']).optional(),
+        /**
+         * When search does not match, retain the current input (`full`, the default) or replace it with an empty string.
+         */
+        'not-found': zenum(['empty', 'full']).optional(),
+      }),
+      object({
+        /** Select the section under an ATX heading, such as `## Release information`. */
+        section: string().regex(
+          /^#{1,6}[ \t]+(?=[^\r\n]*[^# \t\r\n])\S[^\r\n]*$/,
+          'Use a nonempty ATX heading, such as ## Release information',
+        ),
+        target: literal('change-body'),
+        search: never().optional(),
+        replace: never().optional(),
+        'not-found': zenum(['empty', 'full']).optional(),
+      }),
+    ]),
   )
     .optional()
     .default([]),

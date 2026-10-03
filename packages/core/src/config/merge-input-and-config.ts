@@ -60,6 +60,7 @@ export const mergeInputAndConfig = (params: {
     typeof config.prerelease !== 'boolean' ? false : config.prerelease
   const replacers = config.replacers
     .map((replacer) => {
+      if (replacer.section !== undefined) return replacer
       try {
         return { ...replacer, search: stringToRegex(replacer.search) }
       } catch {
