@@ -54,15 +54,15 @@ const expectedBundledDependencyNotices = [
   'yaml',
   'zod',
 ]
-const approvedRuntimeDependencies = {
-  '@gitbeaker/rest': '43.8.0',
-  '@octokit/core': '^7.0.8',
-  '@octokit/plugin-paginate-graphql': '^6.0.0',
-  '@octokit/plugin-paginate-rest': '^15.0.0',
-  '@octokit/plugin-rest-endpoint-methods': '^18.0.0',
-  '@octokit/plugin-retry': '^8.1.1',
-  undici: '^6.28.1',
-}
+const approvedRuntimeDependencies = new Set([
+  '@gitbeaker/rest',
+  '@octokit/core',
+  '@octokit/plugin-paginate-graphql',
+  '@octokit/plugin-paginate-rest',
+  '@octokit/plugin-rest-endpoint-methods',
+  '@octokit/plugin-retry',
+  'undici',
+])
 const nodeBuiltins = new Set(
   builtinModules.map((specifier) => specifier.replace(/^node:/, '')),
 )
@@ -358,7 +358,14 @@ describe('release-drafter packed CLI and package consumer', {
       },
       type: 'module',
     })
-    expect(manifest.dependencies).toEqual(approvedRuntimeDependencies)
+    expect(new Set(Object.keys(manifest.dependencies ?? {}))).toEqual(
+      approvedRuntimeDependencies,
+    )
+    // Dependency updates belong in the source manifest, not test fixtures.
+    const sourceManifest = JSON.parse(
+      readFileSync(join(packageDirectory, 'package.json'), 'utf8'),
+    ) as { dependencies?: Record<string, string> }
+    expect(manifest.dependencies).toEqual(sourceManifest.dependencies)
   })
 
   it('preserves the CLI shebang and executable mode where the platform exposes it', () => {
@@ -745,7 +752,7 @@ describe('release-drafter packed CLI and package consumer', {
           !specifier.startsWith('node:') &&
           !nodeBuiltins.has(bareBuiltin) &&
           !nodeBuiltins.has(bareBuiltin.split('/')[0] ?? '') &&
-          !Object.hasOwn(approvedRuntimeDependencies, packageName)
+          !approvedRuntimeDependencies.has(packageName)
         ) {
           problems.push(`undeclared external import: ${specifier}`)
         }
