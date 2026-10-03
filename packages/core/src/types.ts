@@ -177,9 +177,12 @@ export type ParsedCategory =
       when: ParsedChangeCondition[]
     }
 
-export type ParsedReplacer = Omit<Config['replacers'][number], 'search'> & {
-  search: RegExp
-}
+type ConfiguredReplacer = Config['replacers'][number]
+export type ParsedReplacer =
+  | Extract<ConfiguredReplacer, { section: string }>
+  | (Omit<Extract<ConfiguredReplacer, { search: string }>, 'search'> & {
+      search: RegExp
+    })
 
 export type ParsedGroupChange = Omit<
   Config['group-changes'][number],

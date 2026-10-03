@@ -57,6 +57,9 @@ replacers:
   - target: change-title
     search: '/^feat: /'
     replace: ''
+  - target: change-body
+    section: '## Release information'
+    not-found: empty
 categories:
   - title: Features
     label: feature
@@ -81,6 +84,11 @@ categories:
           'not-found': 'empty',
         },
         { target: 'change-title', search: /^feat: /, replace: '' },
+        {
+          target: 'change-body',
+          section: '## Release information',
+          'not-found': 'empty',
+        },
       ],
       categories: [
         expect.objectContaining({

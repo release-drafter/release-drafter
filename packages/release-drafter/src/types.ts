@@ -273,14 +273,25 @@ export type ParsedCategory =
       when: ParsedChangeCondition[]
     }
 
-export interface ParsedReplacer {
-  search: RegExp
-  replace: string
-  /** Defaults to `global`, the generated release body. Change title/body targets run before escaping. */
-  target?: 'global' | 'change-body' | 'change-title'
-  /** Retain the current input (`full`, the default) or clear it when search does not match. */
-  'not-found'?: 'empty' | 'full'
-}
+export type ParsedReplacer =
+  | {
+      search: RegExp
+      replace: string
+      section?: never
+      /** Defaults to `global`, the generated release body. Change title/body targets run before escaping. */
+      target?: 'global' | 'change-body' | 'change-title'
+      /** Retain the current input (`full`, the default) or clear it when search does not match. */
+      'not-found'?: 'empty' | 'full'
+    }
+  | {
+      /** Select the section under an ATX heading, such as `## Release information`. */
+      section: string
+      target: 'change-body'
+      search?: never
+      replace?: never
+      /** Retain the current body (`full`, the default) or clear it when the heading is absent. */
+      'not-found'?: 'empty' | 'full'
+    }
 
 export interface ParsedGroupChange {
   pattern: RegExp
