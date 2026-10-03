@@ -23,7 +23,8 @@ of the package API.
 - Uses complete comparison commits when `compare_timeout` indicates that only
   the diff is incomplete. It rejects missing comparison commits, capped or
   invalid changed file counts, incomplete changed file responses, and
-  pagination that exceeds a configured limit.
+  pagination that exceeds a configured limit or ends before the advertised
+  total is received.
 - Redacts the complete token before truncating response text in errors.
 - Finds all merged merge requests for each commit without depending on API
   response order. It requests optional body, URL, target branch, source branch,

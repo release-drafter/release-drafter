@@ -55,4 +55,5 @@ jobs:
       - name: Enforce coverage threshold
         env:
           COVERAGE_THRESHOLD: '90'
+          BRANCH_COVERAGE_THRESHOLD: '90'
         run: npm run coverage

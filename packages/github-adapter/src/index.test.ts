@@ -1,4 +1,4 @@
-import type { Repository } from '@release-drafter/core'
+import type { FindChangesRequest, Repository } from '@release-drafter/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GitHubAdapter, type GitHubOctokit } from './index.ts'
 
@@ -38,6 +38,7 @@ const mockOctokit = (overrides: Record<string, unknown> = {}) =>
         createRelease: vi.fn(),
         updateRelease: vi.fn(),
         getContent: vi.fn(),
+        get: vi.fn(),
       },
       pulls: { get: vi.fn(), listFiles: vi.fn() },
     },
@@ -49,7 +50,166 @@ const mockOctokit = (overrides: Record<string, unknown> = {}) =>
 const adapter = (octokit: GitHubOctokit) =>
   new GitHubAdapter({ token: 'token', octokit })
 
+const changesRequest = (
+  overrides: Partial<FindChangesRequest> = {},
+): FindChangesRequest => ({
+  repository,
+  comparison: { baseRef: 'v1', headRef: 'refs/tags/v2' },
+  pullRequestFields: {
+    body: false,
+    url: false,
+    baseRefName: false,
+    headRefName: false,
+  },
+  pullRequestLimit: 20,
+  historyLimit: 100,
+  includeChangedFiles: false,
+  includeNewContributors: false,
+  ...overrides,
+})
+
+const comparisonWithPullRequests = (
+  octokit: GitHubOctokit,
+  pullRequests: unknown[],
+) => {
+  vi.mocked(octokit.paginate.iterator).mockReturnValue(
+    (async function* () {
+      yield { data: { commits: [{ sha: 'commit' }] } }
+    })() as never,
+  )
+  vi.mocked(octokit.graphql).mockResolvedValueOnce({
+    repository: {
+      object: {
+        __typename: 'Commit',
+        history: {
+          pageInfo: { hasNextPage: false },
+          nodes: [
+            { oid: 'commit', associatedPullRequests: { nodes: pullRequests } },
+          ],
+        },
+      },
+    },
+  })
+}
+
 describe('GitHubAdapter', () => {
+  it.each([undefined, null, [null, { number: 1, title: 'Unresolved merge' }]])(
+    'keeps comparison commits when recent PR nodes are incomplete: %j',
+    async (nodes) => {
+      const octokit = mockOctokit()
+      comparisonWithPullRequests(octokit, [])
+      vi.mocked(octokit.graphql).mockReset()
+      vi.mocked(octokit.graphql)
+        .mockResolvedValueOnce({
+          repository: {
+            object: {
+              __typename: 'Commit',
+              history: {
+                pageInfo: { hasNextPage: false },
+                nodes: [
+                  { oid: 'commit', associatedPullRequests: { nodes: null } },
+                ],
+              },
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          repository: {
+            pullRequests: { nodes, pageInfo: { hasNextPage: false } },
+          },
+        })
+      const result = await adapter(octokit).findChanges(
+        changesRequest({ comparison: { baseRef: 'v1', headRef: 'main' } }),
+      )
+      expect(result.commits.map(({ oid }) => oid)).toEqual(['commit'])
+      expect(result.pullRequests).toEqual([])
+      expect(octokit.graphql).toHaveBeenCalledTimes(2)
+    },
+  )
+
+  it.each([undefined, null, [null, {}, { path: '' }, { path: 'src/a.ts' }]])(
+    'handles incomplete file nodes without inventing paths: %j',
+    async (nodes) => {
+      const octokit = mockOctokit()
+      vi.mocked(octokit.graphql).mockResolvedValueOnce({
+        repository: {
+          pullRequest: { files: { nodes, pageInfo: { hasNextPage: false } } },
+        },
+      })
+      await expect(
+        adapter(octokit).findPullRequestChangedFiles({ repository, number: 1 }),
+      ).resolves.toEqual(nodes ? ['src/a.ts'] : [])
+    },
+  )
+
+  it.each(['text/plain; charset=utf-8', 'application/vnd.github.v3.raw'])(
+    'accepts raw config media types: %s',
+    async (contentType) => {
+      const octokit = mockOctokit()
+      vi.mocked(octokit.rest.repos.getContent).mockResolvedValueOnce({
+        data: 'template: "$CHANGES"',
+        headers: { 'content-type': contentType },
+      } as never)
+      await expect(
+        adapter(octokit).getRepositoryConfig({
+          repository,
+          path: 'config.yml',
+        }),
+      ).resolves.toBe('template: "$CHANGES"')
+    },
+  )
+
+  it('decodes a UTF-8 file response without treating it as base64', async () => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.rest.repos.getContent).mockResolvedValueOnce({
+      data: { type: 'file', encoding: 'utf-8', content: 'template: "Résumé"' },
+    } as never)
+    await expect(
+      adapter(octokit).getRepositoryConfig({ repository, path: 'config.yml' }),
+    ).resolves.toBe('template: "Résumé"')
+  })
+
+  it.each(['create', 'update'] as const)(
+    'passes latest false for stable release %s requests',
+    async (operation) => {
+      const octokit = mockOctokit()
+      const send =
+        operation === 'create'
+          ? octokit.rest.repos.createRelease
+          : octokit.rest.repos.updateRelease
+      vi.mocked(send).mockResolvedValueOnce({
+        data: { id: 1, tag_name: 'v1' },
+      } as never)
+      const payload = {
+        name: '',
+        tag: '',
+        body: 'Notes',
+        targetCommitish: '',
+        prerelease: false,
+        makeLatest: false,
+        draft: false,
+      }
+      if (operation === 'create')
+        await adapter(octokit).createRelease({ repository, payload })
+      else
+        await adapter(octokit).updateRelease({
+          repository,
+          release: { id: 1, tagName: 'v1' },
+          payload,
+        })
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({ make_latest: 'false' }),
+      )
+      if (operation === 'update') {
+        expect(vi.mocked(send).mock.calls[0]?.[0]).not.toHaveProperty('name')
+        expect(vi.mocked(send).mock.calls[0]?.[0]).toHaveProperty(
+          'tag_name',
+          'v1',
+        )
+      }
+    },
+  )
+
   it('reads normalized pull request validation data', async () => {
     const octokit = mockOctokit()
     vi.mocked(octokit.rest.pulls.get).mockResolvedValue({
@@ -94,34 +254,45 @@ describe('GitHubAdapter', () => {
   })
 
   it('retries transient server failures but not exempt 404 responses', async () => {
-    const transientFetch = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(new Response('temporary', { status: 500 }))
-      .mockResolvedValueOnce(Response.json({ id: 1, name: 'release-drafter' }))
-    const transient = new GitHubAdapter({
-      token: 'token',
-      fetch: transientFetch,
-    })
+    vi.useFakeTimers()
+    try {
+      const transientFetch = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(new Response('temporary', { status: 500 }))
+        .mockResolvedValueOnce(
+          Response.json({ id: 1, name: 'release-drafter' }),
+        )
+      const transient = new GitHubAdapter({
+        token: 'token',
+        fetch: transientFetch,
+      })
 
-    await expect(
-      transient.octokit.request('GET /repos/{owner}/{repo}', {
-        owner: 'release-drafter',
-        repo: 'release-drafter',
-      }),
-    ).resolves.toMatchObject({ status: 200 })
-    expect(transientFetch).toHaveBeenCalledTimes(2)
+      const transientRequest = expect(
+        transient.octokit.request('GET /repos/{owner}/{repo}', {
+          owner: 'release-drafter',
+          repo: 'release-drafter',
+        }),
+      ).resolves.toMatchObject({ status: 200 })
+      await vi.runAllTimersAsync()
+      await transientRequest
+      expect(transientFetch).toHaveBeenCalledTimes(2)
 
-    const missingFetch = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(new Response('missing', { status: 404 }))
-    const missing = new GitHubAdapter({ token: 'token', fetch: missingFetch })
-    await expect(
-      missing.octokit.request('GET /repos/{owner}/{repo}', {
-        owner: 'release-drafter',
-        repo: 'missing',
-      }),
-    ).rejects.toMatchObject({ status: 404 })
-    expect(missingFetch).toHaveBeenCalledTimes(1)
+      const missingFetch = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(new Response('missing', { status: 404 }))
+      const missing = new GitHubAdapter({ token: 'token', fetch: missingFetch })
+      const missingRequest = expect(
+        missing.octokit.request('GET /repos/{owner}/{repo}', {
+          owner: 'release-drafter',
+          repo: 'missing',
+        }),
+      ).rejects.toMatchObject({ status: 404 })
+      await vi.runAllTimersAsync()
+      await missingRequest
+      expect(missingFetch).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('does not retry transient failures when request retries are zero', async () => {
@@ -637,5 +808,257 @@ describe('GitHubAdapter', () => {
         path: '.github/release-drafter.yml',
       }),
     ).rejects.toThrow('Fetched content is null, expected a file')
+  })
+})
+
+describe('GitHub adapter response boundaries', () => {
+  it('trims the default branch and rejects missing or blank branches', async () => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.rest.repos.get)
+      .mockResolvedValueOnce({ data: { default_branch: ' main ' } } as never)
+      .mockResolvedValueOnce({ data: { default_branch: ' ' } } as never)
+      .mockResolvedValueOnce({ data: {} } as never)
+    const github = adapter(octokit)
+    await expect(github.getDefaultBranch(repository)).resolves.toBe('main')
+    expect(octokit.rest.repos.get).toHaveBeenCalledWith({
+      owner: repository.owner,
+      repo: repository.name,
+    })
+    for (let index = 0; index < 2; index++) {
+      await expect(github.getDefaultBranch(repository)).rejects.toThrow(
+        'GitHub returned a blank default branch',
+      )
+    }
+  })
+
+  it.each([
+    [{ title: ' ', base: { ref: 'main' } }, 'blank title'],
+    [{ title: 'Valid', base: { ref: ' ' } }, 'blank base branch'],
+  ])('rejects invalid pull request validation data', async (data, message) => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.rest.pulls.get).mockResolvedValue({ data } as never)
+    await expect(
+      adapter(octokit).getPullRequest({ repository, number: 7 }),
+    ).rejects.toThrow(`Pull request #7 returned a ${message}`)
+  })
+
+  it.each([
+    { repository: null },
+    { repository: { object: { __typename: 'Tag' } } },
+    { repository: { object: { __typename: 'Commit', history: null } } },
+  ])('rejects a comparison head without commit history', async (response) => {
+    const octokit = mockOctokit()
+    comparisonWithPullRequests(octokit, [])
+    vi.mocked(octokit.graphql).mockReset().mockResolvedValueOnce(response)
+    await expect(
+      adapter(octokit).findChanges(changesRequest()),
+    ).rejects.toThrow(
+      'GitHub GraphQL head ref refs/tags/v2 did not resolve to a commit',
+    )
+  })
+
+  it.each([false, true])(
+    'rejects missing comparison commits with hasNextPage=%s and no cursor',
+    async (hasNextPage) => {
+      const octokit = mockOctokit()
+      comparisonWithPullRequests(octokit, [])
+      vi.mocked(octokit.graphql)
+        .mockReset()
+        .mockResolvedValueOnce({
+          repository: {
+            object: {
+              __typename: 'Commit',
+              history: {
+                pageInfo: { hasNextPage, endCursor: null },
+                nodes: [null, { oid: 'unrelated' }],
+              },
+            },
+          },
+        })
+      await expect(
+        adapter(octokit).findChanges(changesRequest()),
+      ).rejects.toThrow('did not return data for 1 comparison commits: commit')
+      expect(octokit.graphql).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it('requires a recent pull request connection for branch comparisons', async () => {
+    const octokit = mockOctokit()
+    comparisonWithPullRequests(octokit, [null])
+    vi.mocked(octokit.graphql).mockResolvedValueOnce({ repository: null })
+    await expect(
+      adapter(octokit).findChanges(
+        changesRequest({
+          comparison: { baseRef: 'v1', headRef: 'refs/heads/main' },
+        }),
+      ),
+    ).rejects.toThrow('Query returned no recent pull request connection')
+    expect(octokit.graphql).toHaveBeenLastCalledWith(
+      expect.stringContaining('findRecentMergedPullRequests'),
+      expect.objectContaining({ baseRefName: 'main' }),
+    )
+  })
+
+  it('keeps the pull request number and cause when file discovery fails', async () => {
+    const octokit = mockOctokit()
+    comparisonWithPullRequests(octokit, [
+      {
+        number: 7,
+        title: 'Change',
+        merged: true,
+        baseRepository: { nameWithOwner: 'release-drafter/release-drafter' },
+      },
+    ])
+    vi.mocked(octokit.graphql).mockResolvedValueOnce({ repository: null })
+    await expect(
+      adapter(octokit).findChanges(
+        changesRequest({ includeChangedFiles: true }),
+      ),
+    ).rejects.toMatchObject({
+      message: 'Failed to list changed files for pull request #7.',
+      cause: new Error('Query returned no pull request file connection'),
+    })
+  })
+
+  it('finds new human contributors from their earliest merge and batches searches', async () => {
+    const octokit = mockOctokit()
+    const pullRequest = (
+      number: number,
+      login: string,
+      mergedAt: string | null,
+      type = 'User',
+    ) => ({
+      number,
+      title: `Change ${number}`,
+      merged: true,
+      mergedAt,
+      author: { __typename: type, login },
+      baseRepository: { nameWithOwner: 'release-drafter/release-drafter' },
+    })
+    const pullRequests = Array.from({ length: 21 }, (_, index) =>
+      pullRequest(index + 1, `user${index}`, '2026-01-02T00:00:00Z'),
+    )
+    comparisonWithPullRequests(octokit, [
+      ...pullRequests,
+      pullRequest(22, 'user0', '2026-01-01T00:00:00Z'),
+      pullRequest(23, 'user0', '2026-01-03T00:00:00Z'),
+      pullRequest(24, 'automation', '2026-01-01T00:00:00Z', 'Bot'),
+      pullRequest(25, 'undated', null),
+    ])
+    vi.mocked(octokit.graphql)
+      .mockResolvedValueOnce(
+        Object.fromEntries(
+          Array.from({ length: 20 }, (_, index) => [
+            `author${index}`,
+            { issueCount: index === 1 ? 1 : 0 },
+          ]),
+        ),
+      )
+      .mockResolvedValueOnce({ author0: { issueCount: 0 } })
+    const result = await new GitHubAdapter({
+      token: 'token',
+      octokit,
+      contributorConcurrency: 1,
+    }).findChanges(changesRequest({ includeNewContributors: true }))
+    expect(result.newContributorLogins).toEqual(
+      new Set(
+        Array.from({ length: 21 }, (_, index) => `user${index}`).filter(
+          (login) => login !== 'user1',
+        ),
+      ),
+    )
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('findPreviousContributions'),
+      expect.objectContaining({
+        query0:
+          'repo:release-drafter/release-drafter is:pr is:merged author:user0 merged:<2026-01-01T00:00:00Z',
+      }),
+    )
+    expect(octokit.graphql).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining('findPreviousContributions'),
+      {
+        query0:
+          'repo:release-drafter/release-drafter is:pr is:merged author:user20 merged:<2026-01-02T00:00:00Z',
+      },
+    )
+  })
+
+  it.each([
+    ['refs/tags/missing', { repository: { object: { __typename: 'Tag' } } }],
+    ['refs/pull/7/head', { repository: { pullRequest: {} } }],
+    ['refs/pull/7/merge', { repository: null }],
+  ])(
+    'warns and falls back when %s cannot resolve',
+    async (commitish, response) => {
+      const octokit = mockOctokit()
+      vi.mocked(octokit.graphql).mockResolvedValueOnce(response)
+      const logger = {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warning: vi.fn(),
+        error: vi.fn(),
+      }
+      const github = new GitHubAdapter({ token: 'token', octokit, logger })
+      await expect(
+        github.resolveCommitish({ repository, commitish }),
+      ).resolves.toBe('')
+      expect(logger.warning).toHaveBeenCalledWith(
+        `GitHub could not resolve ${commitish} to a commit SHA. Release Drafter will use the default branch.`,
+      )
+    },
+  )
+
+  it('warns about malformed pull refs without querying GitHub', async () => {
+    const octokit = mockOctokit()
+    const logger = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warning: vi.fn(),
+      error: vi.fn(),
+    }
+    const github = new GitHubAdapter({ token: 'token', octokit, logger })
+    await expect(
+      github.resolveCommitish({ repository, commitish: 'refs/pull/7/other' }),
+    ).resolves.toBe('')
+    expect(logger.warning).toHaveBeenCalledWith(
+      expect.stringContaining('is not a supported pull request ref'),
+    )
+    expect(octokit.graphql).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [{ data: [], headers: {} }, 'directory (array)'],
+    [
+      { data: 'not raw', headers: { 'content-type': 'application/json' } },
+      'wrong content-type',
+    ],
+    [{ data: { type: 'symlink', content: 'target' } }, 'wrong type (symlink)'],
+    [{ data: { type: 'file' } }, 'not a string'],
+  ])(
+    'rejects non-file repository config responses',
+    async (response, message) => {
+      const octokit = mockOctokit()
+      vi.mocked(octokit.rest.repos.getContent).mockResolvedValueOnce(
+        response as never,
+      )
+      await expect(
+        adapter(octokit).getRepositoryConfig({
+          repository,
+          path: 'config.yml',
+        }),
+      ).rejects.toThrow(message)
+    },
+  )
+
+  it('reports repository config transport failures', async () => {
+    const octokit = mockOctokit()
+    vi.mocked(octokit.rest.repos.getContent).mockRejectedValueOnce(
+      new Error('connection lost'),
+    )
+    await expect(
+      adapter(octokit).getRepositoryConfig({ repository, path: 'config.yml' }),
+    ).rejects.toThrow('Failed to fetch config from repo: connection lost')
   })
 })

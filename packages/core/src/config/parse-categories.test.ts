@@ -23,6 +23,125 @@ describe('parseCategories', () => {
     vi.clearAllMocks()
   })
 
+  it.each([
+    {
+      type: 'pre-exclude' as const,
+      deprecated: { 'exclude-labels': ['skip'] },
+    },
+    {
+      type: 'pre-exclude' as const,
+      deprecated: { 'exclude-paths': ['docs/**'] },
+    },
+    {
+      type: 'pre-include' as const,
+      deprecated: { 'include-labels': ['feature'] },
+    },
+    {
+      type: 'pre-include' as const,
+      deprecated: { 'include-paths': ['src/**'] },
+    },
+  ])(
+    'rejects migration into an existing $type category: $deprecated',
+    ({ type, deprecated }) => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        categories: [{ type, when: { label: 'explicit' } }],
+        ...deprecated,
+      })
+      expect(() => parseCategories(config, config, logger)).toThrow(
+        `A '${type}' category already exists`,
+      )
+    },
+  )
+
+  it('rejects a deprecated version default that conflicts with an explicit fallback resolver', () => {
+    const config = configSchema.parse({
+      template: '$CHANGES',
+      'version-resolver': { default: 'major' },
+      categories: [
+        { type: 'changelog', when: { label: 'feature' } },
+        { type: 'version-resolver', when: { label: 'breaking' } },
+        { type: 'version-resolver', when: [] },
+      ],
+    })
+    expect(() => parseCategories(config, config, logger)).toThrow(
+      "A 'version-resolver' category with no 'when' condition already exists",
+    )
+  })
+
+  it.each(['include', 'exclude'] as const)(
+    'migrates a deprecated %s path without adding label constraints',
+    (kind) => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        [`${kind}-paths`]: ['src/**'],
+      })
+      const parsed = parseCategories(config, config, logger)
+      expect(parsed).toContainEqual({
+        type: `pre-${kind}`,
+        when: [
+          {
+            labels: [],
+            'labels-mode': 'any',
+            paths: ['src/**'],
+            'paths-mode': 'any',
+          },
+        ],
+      })
+    },
+  )
+
+  it.each(['pre-include', 'pre-exclude', 'version-resolver'] as const)(
+    'warns about ignored display options on %s categories',
+    (type) => {
+      const config = configSchema.parse({
+        template: '$CHANGES',
+        categories: [
+          {
+            type,
+            title: 'Ignored',
+            'semver-increment': 'major',
+            when: { label: 'feature' },
+          },
+        ],
+      })
+      const parsed = parseCategories(config, config, logger)
+      expect(parsed[0]).not.toHaveProperty('title')
+      expect(logger.warning).toHaveBeenCalledWith(
+        `Title "Ignored" ignored for category of type "${type}"`,
+      )
+      if (type !== 'version-resolver') {
+        expect(parsed[0]).not.toHaveProperty('semver-increment')
+        expect(logger.warning).toHaveBeenCalledWith(
+          `"semver-increment" "major" ignored for category of type "${type}"`,
+        )
+      }
+    },
+  )
+
+  it.each([undefined, []])(
+    'preserves deprecated category labels when when is absent or empty: %j',
+    (when) => {
+      const config = configSchema.parse({ template: '$CHANGES' })
+      const parsed = parseCategories(
+        { categories: [{ labels: ['feature'], when }] },
+        config,
+        logger,
+      )
+      expect(parsed[0]?.when).toEqual([
+        {
+          labels: ['feature'],
+          'labels-mode': 'any',
+          paths: [],
+          'paths-mode': 'any',
+        },
+      ])
+      expect(logger.warning).toHaveBeenCalledWith(
+        expect.stringContaining('deprecated'),
+      )
+    },
+  )
+
   it('migrates deprecated top-level include/exclude and version-resolver config into categories', () => {
     const config = configSchema.parse({
       template: '$CHANGES',
