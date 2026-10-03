@@ -3,6 +3,62 @@ import { applyReplacers } from './apply-replacers.ts'
 
 describe('applyReplacers', () => {
   it.each(['global', 'change-body', 'change-title'] as const)(
+    'applies missing-match fallback only when no match exists for %s',
+    (target) => {
+      for (const notFound of [undefined, 'full', 'empty'] as const) {
+        const replacers = [
+          {
+            target,
+            search: /visible/,
+            replace: 'notes',
+            'not-found': notFound,
+          },
+        ]
+        expect(applyReplacers('visible', replacers, target)).toBe('notes')
+        expect(applyReplacers('missing', replacers, target)).toBe(
+          notFound === 'empty' ? '' : 'missing',
+        )
+      }
+    },
+  )
+
+  it('counts an empty match as found', () => {
+    expect(
+      applyReplacers('', [
+        { search: /^$/, replace: 'notes', 'not-found': 'empty' },
+      ]),
+    ).toBe('notes')
+  })
+
+  it('does not apply fallback from another target', () => {
+    expect(
+      applyReplacers('body', [
+        {
+          target: 'change-body',
+          search: /missing/,
+          replace: '',
+          'not-found': 'empty',
+        },
+      ]),
+    ).toBe('body')
+  })
+
+  it('retains the current input on full fallback and continues rules after empty fallback', () => {
+    expect(
+      applyReplacers('old', [
+        { search: /old/, replace: 'new' },
+        { search: /missing/, replace: '', 'not-found': 'full' },
+      ]),
+    ).toBe('new')
+    expect(
+      applyReplacers('old', [
+        { search: /missing/, replace: '', 'not-found': 'empty' },
+        { search: /^$/, replace: 'No release notes' },
+      ]),
+    ).toBe('No release notes')
+  })
+
+  it.each(['global', 'change-body', 'change-title'] as const)(
     'isolates sticky regex state for repeated %s inputs',
     (target) => {
       const search = /^old/y

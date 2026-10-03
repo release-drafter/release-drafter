@@ -373,6 +373,10 @@ export const exclusiveConfigSchema = object({
        * Where to apply the replacer. Defaults to `global`, the generated release body. Change title/body targets run before escaping.
        */
       target: zenum(['global', 'change-body', 'change-title']).optional(),
+      /**
+       * When search does not match, retain the current input (`full`, the default) or replace it with an empty string.
+       */
+      'not-found': zenum(['empty', 'full']).optional(),
     }),
   )
     .optional()

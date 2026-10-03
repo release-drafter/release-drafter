@@ -505,10 +505,13 @@ var applyReplacers = (input, replacers = [], target = "global") => {
 		const replacePattern = parseReplaceString(replacer.replace);
 		const search = getSearch(replacer.search);
 		search.lastIndex = 0;
+		let matched = false;
 		input = input.replace(search, (...args) => {
+			matched = true;
 			const matches = getReplaceMatches(args);
 			return replacePattern.buildReplaceString(matches);
 		});
+		if (!matched && replacer["not-found"] === "empty") input = "";
 	}
 	return input;
 };

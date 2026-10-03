@@ -689,6 +689,26 @@ Release Drafter parses `search` as a regular expression. `replace` supports the
 [Visual Studio Code replacement syntax](https://code.visualstudio.com/docs/editing/codebasics#_case-changing-in-regex-replace).
 Body replacers match raw text, including code examples; they do not parse Markdown.
 
+Each rule also accepts `not-found`: `full` (the default) retains the current
+target text when `search` has no match, while `empty` clears it. Later rules for
+the same target still run. A match with an empty capture is still a match.
+
+For example, extract the first `## Release information` section from each PR
+body, retaining nested headings and stopping at the next level-one or level-two
+heading or the end of the body:
+
+```yml
+replacers:
+  - target: change-body
+    search: '/^[\s\S]*?^## Release information[ \t]*(?:\r?\n|$)([\s\S]*?)(?=^#{1,2}[ \t]+|$(?![\s\S]))[\s\S]*$/m'
+    replace: '$1'
+    not-found: empty
+```
+
+This removes the heading and other sections while preserving the selected
+section's whitespace. Set `not-found: full` to keep the current body when the
+heading is absent. Extraction runs before body escaping and template insertion.
+
 ## Autolabeler
 
 Use the Autolabeler action to add labels to pull requests and optionally remove

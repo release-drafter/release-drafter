@@ -168,6 +168,10 @@
           "target": {
             "type": "string",
             "enum": ["global", "change-body", "change-title"]
+          },
+          "not-found": {
+            "type": "string",
+            "enum": ["empty", "full"]
           }
         },
         "required": ["search", "replace"]
