@@ -1,27 +1,8 @@
 import type { Repository } from '@release-drafter/core'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GitHubAdapter, type GitHubOctokit } from './index.ts'
 
-const undiciMocks = vi.hoisted(() => {
-  class MockEnvHttpProxyAgent {}
-  return {
-    MockEnvHttpProxyAgent,
-    fetch: vi.fn(),
-    EnvHttpProxyAgent: vi.fn(MockEnvHttpProxyAgent),
-  }
-})
-
-vi.mock('undici', () => ({
-  EnvHttpProxyAgent: undiciMocks.EnvHttpProxyAgent,
-  fetch: undiciMocks.fetch,
-}))
-
-beforeEach(() => {
-  undiciMocks.EnvHttpProxyAgent.mockImplementation(
-    undiciMocks.MockEnvHttpProxyAgent,
-  )
-  undiciMocks.fetch.mockReset()
-})
+afterEach(() => vi.restoreAllMocks())
 
 const repository: Repository = {
   owner: 'release-drafter',
@@ -143,31 +124,17 @@ describe('GitHubAdapter', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
-  it('uses the production proxy-aware fetch with proxy and no_proxy settings', async () => {
-    undiciMocks.fetch.mockResolvedValueOnce(
-      Response.json({ id: 1, name: 'release-drafter' }),
-    )
-    const github = new GitHubAdapter({
-      token: 'token',
-      env: {
-        HTTPS_PROXY: 'http://proxy.example.com:8080',
-        NO_PROXY: 'api.github.com,localhost',
-      },
-    })
-    const dispatcher = undiciMocks.EnvHttpProxyAgent.mock.results.at(-1)?.value
-    await github.octokit.request('GET /repos/{owner}/{repo}', {
-      owner: 'release-drafter',
-      repo: 'release-drafter',
-    })
+  it('uses the runtime fetch without adding a proxy dispatcher', async () => {
+    const runtimeFetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(Response.json({ default_branch: 'main' }))
+    const github = new GitHubAdapter({ token: 'token' })
 
-    expect(undiciMocks.EnvHttpProxyAgent).toHaveBeenCalledWith({
-      httpProxy: undefined,
-      httpsProxy: 'http://proxy.example.com:8080',
-      noProxy: 'api.github.com,localhost',
-    })
-    expect(undiciMocks.fetch).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ dispatcher }),
+    await expect(github.getDefaultBranch(repository)).resolves.toBe('main')
+    expect(runtimeFetch).toHaveBeenCalledOnce()
+    expect(runtimeFetch).toHaveBeenCalledWith(
+      'https://api.github.com/repos/release-drafter/release-drafter',
+      expect.not.objectContaining({ dispatcher: expect.anything() }),
     )
   })
 

@@ -1,4 +1,3 @@
-import process from 'node:process'
 import type {
   ChangeSet,
   CreateReleaseRequest,
@@ -33,7 +32,6 @@ import {
   normalizeRelease,
 } from './utils/normalize.ts'
 import {
-  createProxyAwareFetch,
   deriveEndpoints,
   type GitHubOctokit,
   GitHubOctokitClient,
@@ -76,14 +74,12 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
     if (options.octokit) {
       this.octokit = options.octokit
     } else {
-      const requestFetch =
-        options.fetch ?? createProxyAwareFetch(options.env ?? process.env)
       this.octokit = new GitHubOctokitClient({
         auth: options.token,
         baseUrl: this.apiUrl,
         log: { ...this.logger, warn: this.logger.warning.bind(this.logger) },
         request: {
-          fetch: requestFetch,
+          fetch: options.fetch ?? globalThis.fetch,
           ...(options.requestAgent ? { agent: options.requestAgent } : {}),
           ...(options.requestRetries === undefined
             ? {}

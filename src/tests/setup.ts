@@ -6,6 +6,7 @@
  * @see https://vitest.dev/config/setupfiles.html
  */
 
+import type { GitHubFetch } from '@release-drafter/github-adapter'
 import nock from 'nock'
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import type * as z from 'zod'
@@ -20,26 +21,24 @@ vi.mock(
   import('#gh-actions/common/config/index.ts'),
   (await import('#tests/mocks/index.ts')).mockedConfigModule,
 )
-/**
- * `@actions/github` hands octokit an `undici`-backed `fetch` that nock cannot
- * intercept. Swap in Node's global `fetch`, which nock understands.
- *
- * Tests only — production keeps `@actions/github`'s `fetch` so its
- * `http_proxy`/`https_proxy` dispatcher survives.
- */
-vi.mock(import('@actions/github'), async (iom) => {
-  const om = await iom()
+// Nock intercepts Node's fetch, so replace the Actions proxy transport in tests.
+vi.mock(import('#gh-actions/common/github-fetch.ts'), () => ({
+  createProxyAwareFetch: (): GitHubFetch => (input, init) =>
+    globalThis.fetch(input, init),
+}))
+
+// Keep failed HTTP fixtures immediate without changing production retry defaults.
+vi.mock(import('@release-drafter/github-adapter'), async (importOriginal) => {
+  const adapter = await importOriginal()
   return {
-    ...om,
-    getOctokit: ((token, options, ...plugins) =>
-      om.getOctokit(
-        token,
-        {
-          ...options,
-          request: { ...options?.request, fetch: globalThis.fetch },
-        },
-        ...plugins,
-      )) as typeof om.getOctokit,
+    ...adapter,
+    createGitHubAdapter: (
+      options: Parameters<typeof adapter.createGitHubAdapter>[0],
+    ) =>
+      adapter.createGitHubAdapter({
+        ...options,
+        requestRetries: options.requestRetries ?? 0,
+      }),
   }
 })
 

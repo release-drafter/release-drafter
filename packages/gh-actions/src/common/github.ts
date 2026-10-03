@@ -9,6 +9,8 @@ import {
   type GitHubOctokit,
 } from '@release-drafter/github-adapter'
 
+import { createProxyAwareFetch } from './github-fetch.ts'
+
 export const actionLogger = {
   debug: core.debug,
   info: core.info,
@@ -32,15 +34,7 @@ export const getGitHubAdapterOptions = (
   graphqlUrl: process.env.GITHUB_GRAPHQL_URL,
   logger: actionLogger,
   octokit,
-  ...(process.env.VITEST
-    ? {
-        fetch: ((input, init) => globalThis.fetch(input, init)) as typeof fetch,
-        requestRetries: 0,
-        ...((process.env.HTTPS_PROXY ?? process.env.https_proxy)
-          ? { requestAgent: {} }
-          : {}),
-      }
-    : {}),
+  fetch: createProxyAwareFetch(process.env),
 })
 
 let defaultAdapter: { token: string; adapter: GitHubAdapter } | undefined

@@ -645,7 +645,7 @@ export async function runCli(
         serverUrl: options.serverUrl,
         apiUrl: adapterApiUrl,
         ...(options.forge === 'github'
-          ? { graphqlUrl: adapterGraphqlUrl, env }
+          ? { graphqlUrl: adapterGraphqlUrl }
           : {}),
         logger,
       },

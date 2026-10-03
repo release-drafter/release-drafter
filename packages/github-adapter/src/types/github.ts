@@ -11,7 +11,6 @@ export type GitHubAdapterOptions = {
   logger?: Logger
   octokit?: GitHubOctokit
   fetch?: GitHubFetch
-  env?: NodeJS.ProcessEnv
   requestAgent?: object
   requestRetries?: number
   changedFilesConcurrency?: number

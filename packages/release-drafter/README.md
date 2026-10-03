@@ -368,3 +368,28 @@ or perform network requests.
 
 `createForgeAdapter(options)` creates the bundled `github`, `gitea`, `forgejo`,
 and `gitlab` adapters. The programmatic API requires an explicit token.
+
+## Proxies and custom fetch
+
+The CLI and bundled adapters use the runtime's built-in `globalThis.fetch` by
+default. Configure proxy support in the runtime. With Node.js 24, enable
+[environment proxy support](https://nodejs.org/docs/latest-v24.x/api/cli.html#node_use_env_proxy1)
+when starting the process:
+
+```sh
+NODE_USE_ENV_PROXY=1 HTTPS_PROXY=http://proxy.example.com:8080 \
+  NO_PROXY=localhost,127.0.0.1 npx release-drafter owner/repo --dry-run
+```
+
+For the programmatic API, pass a custom `fetch` to `createForgeAdapter` when
+your application manages networking itself:
+
+```ts
+const adapter = createForgeAdapter({
+  forge: 'github',
+  token: process.env.GITHUB_TOKEN!,
+  fetch: customFetch,
+})
+```
+
+Release Drafter does not install a proxy dispatcher or change the global fetch.

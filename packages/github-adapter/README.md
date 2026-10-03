@@ -3,7 +3,7 @@
 This private workspace package implements the `ForgeAdapter` contract for
 GitHub. It creates Octokit clients and derives REST and GraphQL endpoints for
 GitHub.com and GitHub Enterprise Server. It also handles retries, pagination,
-proxies, response mapping, release operations, and repository configuration.
+response mapping, release operations, and repository configuration.
 
 The adapter uses GraphQL to load commits, pull requests, contributors, changed
 files, and refs. It uses REST only when GraphQL cannot provide the required
@@ -38,4 +38,5 @@ const releases = await adapter.listReleases({ repository })
 
 Every operation receives a core `Repository`. The adapter stores connection
 settings but does not store repository state. Tests can inject an Octokit client
-or a `fetch` implementation.
+or a `fetch` implementation. By default, the adapter uses the runtime's
+`globalThis.fetch`. Configure proxies in the runtime or supply a custom `fetch`.

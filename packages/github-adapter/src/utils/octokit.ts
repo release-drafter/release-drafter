@@ -3,7 +3,6 @@ import { paginateGraphQL } from '@octokit/plugin-paginate-graphql'
 import { paginateRest } from '@octokit/plugin-paginate-rest'
 import { restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
 import { retry } from '@octokit/plugin-retry'
-import { EnvHttpProxyAgent, fetch as undiciFetch } from 'undici'
 
 export const GitHubOctokitClient = OctokitCore.plugin(
   restEndpointMethods,
@@ -13,7 +12,6 @@ export const GitHubOctokitClient = OctokitCore.plugin(
 )
 
 export type GitHubOctokit = InstanceType<typeof GitHubOctokitClient>
-export type GitHubFetch = typeof globalThis.fetch
 
 export const deriveEndpoints = (options: {
   serverUrl?: string
@@ -36,20 +34,4 @@ export const deriveEndpoints = (options: {
       : `${serverUrl}/api/graphql`)
   ).replace(/\/$/, '')
   return { serverUrl, apiUrl, graphqlUrl }
-}
-
-export const createProxyAwareFetch = (env: NodeJS.ProcessEnv): GitHubFetch => {
-  const dispatcher = new EnvHttpProxyAgent({
-    httpProxy: env.HTTP_PROXY ?? env.http_proxy,
-    httpsProxy: env.HTTPS_PROXY ?? env.https_proxy,
-    noProxy: env.NO_PROXY ?? env.no_proxy,
-  })
-  const fetchWithDispatcher = undiciFetch as unknown as (
-    input: unknown,
-    init: unknown,
-  ) => ReturnType<GitHubFetch>
-  return ((
-    input: Parameters<GitHubFetch>[0],
-    init?: Parameters<GitHubFetch>[1],
-  ) => fetchWithDispatcher(input, { ...init, dispatcher })) as GitHubFetch
 }
