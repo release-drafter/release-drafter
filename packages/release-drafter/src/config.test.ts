@@ -53,6 +53,9 @@ replacers:
   - target: change-body
     search: '/<!--.*?-->/gs'
     replace: ''
+  - target: change-title
+    search: '/^feat: /'
+    replace: ''
 categories:
   - title: Features
     label: feature
@@ -71,6 +74,7 @@ categories:
       replacers: [
         { search: /bug/g, replace: 'fix' },
         { target: 'change-body', search: /<!--.*?-->/gs, replace: '' },
+        { target: 'change-title', search: /^feat: /, replace: '' },
       ],
       categories: [
         expect.objectContaining({

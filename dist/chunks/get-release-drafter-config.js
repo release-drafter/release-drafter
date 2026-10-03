@@ -942,9 +942,13 @@ var exclusiveConfigSchema = object({
 		search: string().min(1),
 		replace: string().min(0),
 		/**
-		* Where to apply the replacer. Defaults to `global`, the generated release body. `change-body` runs before body escaping.
+		* Where to apply the replacer. Defaults to `global`, the generated release body. Change title/body targets run before escaping.
 		*/
-		target: _enum(["global", "change-body"]).optional()
+		target: _enum([
+			"global",
+			"change-body",
+			"change-title"
+		]).optional()
 	})).optional().default([]),
 	/**
 	* Group changes whose titles share the same `group` into a single changelog entry.

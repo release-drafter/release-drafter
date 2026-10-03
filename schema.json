@@ -167,7 +167,7 @@
           },
           "target": {
             "type": "string",
-            "enum": ["global", "change-body"]
+            "enum": ["global", "change-body", "change-title"]
           }
         },
         "required": ["search", "replace"]

@@ -73,6 +73,33 @@ describe('resolved tag in release bodies', () => {
     expect(payload.body).toBe('\\<b><tag> 1.2.4\\</b>')
   })
 
+  it('uses original titles for categorization and version resolution before title replacements', async () => {
+    const payload = await buildPayload({
+      config: configSchema.parse({
+        template: '$CHANGES',
+        'change-template': '$TITLE',
+        categories: [
+          {
+            title: 'Features',
+            when: { conventional: { type: 'feat' } },
+            'semver-increment': 'minor',
+          },
+        ],
+        replacers: [
+          {
+            target: 'change-title',
+            search: '/^feat: (.*)$/',
+            replace: '\\u$1',
+          },
+          { target: 'global', search: 'Add', replace: 'Introduce' },
+        ],
+      }),
+      pullRequests: [{ number: 1, title: 'feat: add feature' }],
+    })
+    expect(payload.body).toBe('## Features\n\nIntroduce feature')
+    expect(payload.resolvedVersion).toBe('1.3.0')
+  })
+
   it.each([undefined, 'global'] as const)(
     'applies body replacers before escaping and final replacers with target %j',
     async (target) => {
