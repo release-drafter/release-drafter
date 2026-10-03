@@ -484,6 +484,14 @@ function parseReplaceString(replaceString) {
 }
 //#endregion
 //#region packages/core/src/release/render-template/apply-replacers.ts
+var searchCache = /* @__PURE__ */ new WeakMap();
+var getSearch = (search) => {
+	const cached = searchCache.get(search);
+	if (cached?.source === search.source && cached.flags === search.flags) return cached;
+	const compiled = new RegExp(search);
+	searchCache.set(search, compiled);
+	return compiled;
+};
 var getReplaceMatches = (args) => {
 	const lastArg = args[args.length - 1];
 	const hasGroups = typeof lastArg === "object" && lastArg !== null;
@@ -495,7 +503,8 @@ var applyReplacers = (input, replacers = [], target = "global") => {
 	for (const replacer of replacers) {
 		if ((replacer.target ?? "global") !== target) continue;
 		const replacePattern = parseReplaceString(replacer.replace);
-		const search = new RegExp(replacer.search);
+		const search = getSearch(replacer.search);
+		search.lastIndex = 0;
 		input = input.replace(search, (...args) => {
 			const matches = getReplaceMatches(args);
 			return replacePattern.buildReplaceString(matches);

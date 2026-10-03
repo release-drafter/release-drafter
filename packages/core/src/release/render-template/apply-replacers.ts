@@ -1,6 +1,19 @@
 import type { ParsedReplacer } from '../../types.ts'
 import { parseReplaceString } from './util/index.ts'
 
+// Keep matching state private and allow regexes to be collected with their configs.
+const searchCache = new WeakMap<RegExp, RegExp>()
+
+const getSearch = (search: RegExp): RegExp => {
+  const cached = searchCache.get(search)
+  if (cached?.source === search.source && cached.flags === search.flags) {
+    return cached
+  }
+  const compiled = new RegExp(search)
+  searchCache.set(search, compiled)
+  return compiled
+}
+
 const getReplaceMatches = (args: unknown[]): string[] => {
   const lastArg = args[args.length - 1]
   const hasGroups = typeof lastArg === 'object' && lastArg !== null
@@ -18,8 +31,8 @@ export const applyReplacers = (
   for (const replacer of replacers) {
     if ((replacer.target ?? 'global') !== target) continue
     const replacePattern = parseReplaceString(replacer.replace)
-    // Each input starts a fresh match without changing caller-owned regex state.
-    const search = new RegExp(replacer.search)
+    const search = getSearch(replacer.search)
+    search.lastIndex = 0
     input = input.replace(search, (...args) => {
       const matches = getReplaceMatches(args)
       return replacePattern.buildReplaceString(matches)
