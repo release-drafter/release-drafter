@@ -3,10 +3,20 @@ import type {
   GitHubAdapterOptions,
 } from '@release-drafter/github-adapter'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getGitHubAdapter } from './github.ts'
+import { getGitHubAdapter, getGitHubAdapterOptions } from './github.ts'
 
 describe('Action GitHub adapter composition', () => {
   afterEach(() => vi.unstubAllEnvs())
+
+  it('supplies proxy-aware fetch outside the test environment', () => {
+    vi.stubEnv('VITEST', undefined)
+    vi.stubEnv('HTTPS_PROXY', 'http://proxy.example.com:8080')
+
+    const options = getGitHubAdapterOptions('action-token')
+
+    expect(options.fetch).toBeTypeOf('function')
+    expect(options.fetch).not.toBe(globalThis.fetch)
+  })
 
   it('reuses the adapter for one action token', () => {
     const first = getGitHubAdapter('shared-action-token')

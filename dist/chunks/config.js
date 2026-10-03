@@ -37762,18 +37762,6 @@ var deriveEndpoints = (options) => {
 		graphqlUrl: (options.graphqlUrl ?? (githubDotCom ? "https://api.github.com/graphql" : `${serverUrl}/api/graphql`)).replace(/\/$/, "")
 	};
 };
-var createProxyAwareFetch = (env) => {
-	const dispatcher = new import_undici.EnvHttpProxyAgent({
-		httpProxy: env.HTTP_PROXY ?? env.http_proxy,
-		httpsProxy: env.HTTPS_PROXY ?? env.https_proxy,
-		noProxy: env.NO_PROXY ?? env.no_proxy
-	});
-	const fetchWithDispatcher = import_undici.fetch;
-	return ((input, init) => fetchWithDispatcher(input, {
-		...init,
-		dispatcher
-	}));
-};
 //#endregion
 //#region packages/github-adapter/src/index.ts
 var RELEASE_COUNT_LIMIT = 1e3;
@@ -37799,23 +37787,20 @@ var GitHubAdapter = class {
 		this.changedFilesConcurrency = options.changedFilesConcurrency ?? DEFAULT_CONCURRENCY;
 		this.contributorConcurrency = options.contributorConcurrency ?? DEFAULT_CONCURRENCY;
 		if (options.octokit) this.octokit = options.octokit;
-		else {
-			const requestFetch = options.fetch ?? createProxyAwareFetch(options.env ?? process$1.env);
-			this.octokit = new GitHubOctokitClient({
-				auth: options.token,
-				baseUrl: this.apiUrl,
-				log: {
-					...this.logger,
-					warn: this.logger.warning.bind(this.logger)
-				},
-				request: {
-					fetch: requestFetch,
-					...options.requestAgent ? { agent: options.requestAgent } : {},
-					...options.requestRetries === void 0 ? {} : { retries: options.requestRetries }
-				},
-				graphql: { baseUrl: this.graphqlUrl }
-			});
-		}
+		else this.octokit = new GitHubOctokitClient({
+			auth: options.token,
+			baseUrl: this.apiUrl,
+			log: {
+				...this.logger,
+				warn: this.logger.warning.bind(this.logger)
+			},
+			request: {
+				fetch: options.fetch ?? globalThis.fetch,
+				...options.requestAgent ? { agent: options.requestAgent } : {},
+				...options.requestRetries === void 0 ? {} : { retries: options.requestRetries }
+			},
+			graphql: { baseUrl: this.graphqlUrl }
+		});
 		const graphqlEndpoint = new URL(this.graphqlUrl);
 		this.graphql = this.octokit.graphql.defaults ? this.octokit.graphql.defaults({
 			baseUrl: graphqlEndpoint.origin,
@@ -38111,6 +38096,21 @@ var GitHubAdapter = class {
 };
 var createGitHubAdapter = (options) => new GitHubAdapter(options);
 //#endregion
+//#region packages/gh-actions/src/common/github-fetch.ts
+/** Preserve runner proxy settings without changing the process-wide fetch. */
+var createProxyAwareFetch = (env) => {
+	const dispatcher = new import_undici.EnvHttpProxyAgent({
+		httpProxy: env.HTTP_PROXY ?? env.http_proxy,
+		httpsProxy: env.HTTPS_PROXY ?? env.https_proxy,
+		noProxy: env.NO_PROXY ?? env.no_proxy
+	});
+	const fetchWithDispatcher = import_undici.fetch;
+	return ((input, init) => fetchWithDispatcher(input, {
+		...init,
+		dispatcher
+	}));
+};
+//#endregion
 //#region packages/gh-actions/src/common/github.ts
 var actionLogger = {
 	debug,
@@ -38130,8 +38130,8 @@ var getGitHubAdapterOptions = (token, octokit) => ({
 	graphqlUrl: process$1.env.GITHUB_GRAPHQL_URL,
 	logger: actionLogger,
 	octokit,
+	fetch: process$1.env.VITEST ? (input, init) => globalThis.fetch(input, init) : createProxyAwareFetch(process$1.env),
 	...process$1.env.VITEST ? {
-		fetch: ((input, init) => globalThis.fetch(input, init)),
 		requestRetries: 0,
 		...process$1.env.HTTPS_PROXY ?? process$1.env.https_proxy ? { requestAgent: {} } : {}
 	} : {}

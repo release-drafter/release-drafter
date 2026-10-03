@@ -214,7 +214,6 @@ export interface GitLabForgeAdapterLimits extends RestForgeAdapterLimits {
 export interface GitHubForgeAdapterOptions extends CommonForgeAdapterOptions {
   forge: 'github'
   graphqlUrl?: string
-  env?: Record<string, string | undefined>
   requestAgent?: object
   requestRetries?: number
   changedFilesConcurrency?: number
