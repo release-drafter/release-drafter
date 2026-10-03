@@ -279,6 +279,8 @@ export interface ParsedReplacer {
   replace: string
   /** Defaults to `global`, the generated release body. Change title/body targets run before escaping. */
   target?: 'global' | 'change-body' | 'change-title'
+  /** Retain the current input (`full`, the default) or clear it when search does not match. */
+  'not-found'?: 'empty' | 'full'
 }
 
 export interface ParsedGroupChange {

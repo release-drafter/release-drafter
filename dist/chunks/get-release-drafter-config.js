@@ -948,7 +948,11 @@ var exclusiveConfigSchema = object({
 			"global",
 			"change-body",
 			"change-title"
-		]).optional()
+		]).optional(),
+		/**
+		* When search does not match, retain the current input (`full`, the default) or replace it with an empty string.
+		*/
+		"not-found": _enum(["empty", "full"]).optional()
 	})).optional().default([]),
 	/**
 	* Group changes whose titles share the same `group` into a single changelog entry.
