@@ -28,4 +28,28 @@ describe('applyReplacers', () => {
     expect(applyReplacers('oldold', replacers)).toBe(expected)
     expect(applyReplacers('oldold', replacers)).toBe(expected)
   })
+
+  it('keeps frozen caller-owned regexes usable across repeated inputs', () => {
+    const search = /^old/y
+    search.lastIndex = 2
+    Object.freeze(search)
+    const replacers = [
+      { target: 'change-body' as const, search, replace: 'new' },
+    ]
+
+    expect(applyReplacers('old', replacers, 'change-body')).toBe('new')
+    expect(applyReplacers('old', replacers, 'change-body')).toBe('new')
+    expect(search.lastIndex).toBe(2)
+  })
+
+  it('uses changed source and flags when the caller recompiles a regex', () => {
+    const search = /old/
+    const replacers = [{ search, replace: 'new' }]
+
+    expect(applyReplacers('old OLD old', replacers)).toBe('new OLD old')
+    search.compile('old', 'g')
+    expect(applyReplacers('old OLD old', replacers)).toBe('new OLD new')
+    search.compile('OLD', 'g')
+    expect(applyReplacers('old OLD old', replacers)).toBe('old new old')
+  })
 })
