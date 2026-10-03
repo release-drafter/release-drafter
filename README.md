@@ -176,7 +176,7 @@ The `.github/release-drafter.yml` file supports these keys:
 | `no-new-contributor-template`    | Optional | The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list. Default: `"* No new contributors"`.                                                                                                                                                                                                                                          |
 | `no-contributors-template`       | Optional | The template to use when `$CONTRIBUTORS` has no entries. Default: `"No contributors"`.                                                                                                                                                                                                                                                                               |
 | `group-changes`                  | Optional | Groups pull requests whose titles share the same `group` into a single changelog entry. See [Group changes](#group-changes).                                                                                                                                                                                                                                         |
-| `replacers`                      | Optional | Searches and replaces content in the generated release body or individual pull request bodies. See [Replacers](#replacers).                                                                                                                                                                                                                                          |
+| `replacers`                      | Optional | Searches and replaces content in the generated release body or individual change titles and bodies. See [Replacers](#replacers).                                                                                                                                                                                                                                     |
 | `sort-by`                        | Optional | Sorts the changelog by `merged_at` or `title`. Default: `merged_at`.                                                                                                                                                                                                                                                                                                 |
 | `sort-direction`                 | Optional | Sorts the changelog in `ascending` or `descending` order. Default: `descending`.                                                                                                                                                                                                                                                                                     |
 | `prerelease`                     | Optional | Creates a prerelease and includes changes since the previous prerelease when one exists. Default: `false`.                                                                                                                                                                                                                                                           |
@@ -674,6 +674,7 @@ original title.
 Drafter matches `pattern` against the original pull request titles, before the
 changelog body exists. Global replacers run after assembling the body, so their
 `search` sees the title that `title-template` built, not the original ones.
+Replacers with `target: change-title` also see the grouped title, before escaping.
 
 ## Replacers
 
@@ -684,8 +685,12 @@ Use `replacers` to search and replace content. Each replacer accepts a `target`:
 - `change-body`: each pull request's `$BODY`, before `change-body-escapes` and
   insertion into `change-template`. Titles and release-template content are
   unaffected. For grouped entries, this uses the newest pull request's body.
+- `change-title`: the `$TITLE` inserted into `change-template`, before
+  `change-title-escapes`. For grouped entries, this uses the synthesized title.
+  Category matching, grouping rules, sorting, and version resolution use the
+  original pull request data.
 
-Release Drafter applies change-body rules first, then global rules after
+Release Drafter applies title and body rules first, then global rules after
 assembling the release body. Rules run in configuration order within each target.
 
 Version and tag placeholders, such as `$RESOLVED_VERSION` and `$RESOLVED_TAG`,
@@ -695,6 +700,9 @@ expanded values do not pass through change escaping or replacers again.
 
 ```yml
 replacers:
+  - target: change-title
+    search: '/^(?:feat|fix|chore)(?:\([^)]*\))?!?: (.*)$/'
+    replace: '\u$1' # Remove a conventional-commit prefix and capitalize the title
   - target: change-body
     search: '/<!--.*?-->/gs'
     replace: '' # Remove hidden PR-template sections, including multiline comments

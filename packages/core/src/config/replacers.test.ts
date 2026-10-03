@@ -13,6 +13,7 @@ describe('replacer configuration', () => {
           { search: 'literal.*', replace: '' },
           { target: 'global', search: '/value/g', replace: 'new' },
           { target: 'change-body', search: '/<!--.*?-->/gs', replace: '' },
+          { target: 'change-title', search: '/^feat: /', replace: '' },
         ],
       }),
       input: {},
@@ -23,6 +24,7 @@ describe('replacer configuration', () => {
       { search: /literal\.\*/g, replace: '' },
       { target: 'global', search: /value/g, replace: 'new' },
       { target: 'change-body', search: /<!--.*?-->/gs, replace: '' },
+      { target: 'change-title', search: /^feat: /, replace: '' },
     ])
   })
 

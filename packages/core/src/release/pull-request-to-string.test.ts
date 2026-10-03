@@ -130,6 +130,34 @@ describe('pullRequestToString', () => {
     ).toBe('\\<title>\n<!-- body -->')
   })
 
+  it('replaces title prefixes and case before escaping, independently of the body and template', () => {
+    expect(
+      render(
+        [
+          change([
+            pullRequest(1, {
+              title: 'feat(ui): add _feature_',
+              body: 'feat(ui): add _feature_',
+            }),
+          ]),
+        ],
+        {
+          'change-template': 'feat(ui): $TITLE\n$BODY',
+          'change-title-escapes': '_',
+          replacers: [
+            {
+              target: 'change-title',
+              search: '/^feat\\(ui\\): (.*)$/',
+              replace: '\\u$1',
+            },
+            { target: 'change-body', search: 'feat(ui):', replace: 'body:' },
+            { search: 'feature', replace: 'global' },
+          ],
+        },
+      ),
+    ).toBe('feat(ui): Add \\_feature\\_\nbody: add _feature_')
+  })
+
   describe('body replacers', () => {
     const replacers = [
       { target: 'change-body', search: '/<!--.*?-->/gs', replace: '' },
