@@ -34,17 +34,7 @@ export const getGitHubAdapterOptions = (
   graphqlUrl: process.env.GITHUB_GRAPHQL_URL,
   logger: actionLogger,
   octokit,
-  fetch: process.env.VITEST
-    ? (input, init) => globalThis.fetch(input, init)
-    : createProxyAwareFetch(process.env),
-  ...(process.env.VITEST
-    ? {
-        requestRetries: 0,
-        ...((process.env.HTTPS_PROXY ?? process.env.https_proxy)
-          ? { requestAgent: {} }
-          : {}),
-      }
-    : {}),
+  fetch: createProxyAwareFetch(process.env),
 })
 
 let defaultAdapter: { token: string; adapter: GitHubAdapter } | undefined

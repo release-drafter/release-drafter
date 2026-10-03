@@ -5,17 +5,21 @@ import type {
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getGitHubAdapter, getGitHubAdapterOptions } from './github.ts'
 
+vi.unmock(import('./github-fetch.ts'))
+
 describe('Action GitHub adapter composition', () => {
   afterEach(() => vi.unstubAllEnvs())
 
-  it('supplies proxy-aware fetch outside the test environment', () => {
-    vi.stubEnv('VITEST', undefined)
+  it('supplies proxy-aware fetch without changing request defaults', () => {
+    vi.stubEnv('VITEST', 'true')
     vi.stubEnv('HTTPS_PROXY', 'http://proxy.example.com:8080')
 
     const options = getGitHubAdapterOptions('action-token')
 
     expect(options.fetch).toBeTypeOf('function')
     expect(options.fetch).not.toBe(globalThis.fetch)
+    expect(options.requestRetries).toBeUndefined()
+    expect(options.requestAgent).toBeUndefined()
   })
 
   it('reuses the adapter for one action token', () => {

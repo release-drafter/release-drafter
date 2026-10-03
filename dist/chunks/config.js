@@ -38130,11 +38130,7 @@ var getGitHubAdapterOptions = (token, octokit) => ({
 	graphqlUrl: process$1.env.GITHUB_GRAPHQL_URL,
 	logger: actionLogger,
 	octokit,
-	fetch: process$1.env.VITEST ? (input, init) => globalThis.fetch(input, init) : createProxyAwareFetch(process$1.env),
-	...process$1.env.VITEST ? {
-		requestRetries: 0,
-		...process$1.env.HTTPS_PROXY ?? process$1.env.https_proxy ? { requestAgent: {} } : {}
-	} : {}
+	fetch: createProxyAwareFetch(process$1.env)
 });
 var defaultAdapter;
 var getGitHubAdapter = (token, octokit, factory = createGitHubAdapter) => {

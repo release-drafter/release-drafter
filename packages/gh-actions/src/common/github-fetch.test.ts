@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createProxyAwareFetch } from './github-fetch.ts'
 
+vi.unmock(import('./github-fetch.ts'))
+
 const undiciMocks = vi.hoisted(() => {
   class MockEnvHttpProxyAgent {}
   return {
