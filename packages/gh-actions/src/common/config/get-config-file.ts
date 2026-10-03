@@ -1,5 +1,6 @@
-import { parse as parseYaml } from 'yaml'
+import { parse as parseYaml, YAMLParseError } from 'yaml'
 import { prettifyError, ZodError } from 'zod'
+import { ConfigError } from './config-error.ts'
 import { configFileSchema } from './extends.schema.ts'
 import { getConfigFileFromFs } from './get-config-file-from-fs.ts'
 import { getConfigFileFromRepo } from './get-config-file-from-repo.ts'
@@ -57,16 +58,28 @@ export const getConfigFile = async (
     }
   }
 
-  const rawConfig: unknown =
-    fileExtension === 'json' ? JSON.parse(configRaw) : parseYaml(configRaw)
+  let rawConfig: unknown
+  try {
+    rawConfig =
+      fileExtension === 'json' ? JSON.parse(configRaw) : parseYaml(configRaw)
+  } catch (error) {
+    throw new ConfigError(
+      `Invalid config in ${describeConfigTarget(_configTarget)}:\n${error instanceof Error ? error.message : String(error)}`,
+      [_configTarget],
+      error instanceof YAMLParseError ? error.linePos?.[0] : undefined,
+      { cause: error },
+    )
+  }
 
   let config: ReturnType<typeof configFileSchema.parse>
   try {
     config = configFileSchema.parse(rawConfig)
   } catch (error) {
     if (error instanceof ZodError) {
-      throw new Error(
+      throw new ConfigError(
         `Invalid config in ${describeConfigTarget(_configTarget)}:\n${prettifyError(error)}`,
+        [_configTarget],
+        undefined,
         { cause: error },
       )
     }

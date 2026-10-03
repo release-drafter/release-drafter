@@ -1,7 +1,14 @@
 import * as core from '@actions/core'
 import { context } from '@actions/github'
-import { evaluatePullRequest, mergeInputAndConfig } from '@release-drafter/core'
+import {
+  evaluatePullRequest,
+  matchesCategoryCondition,
+  mergeInputAndConfig,
+  type ParsedConfig,
+  type PullRequestEvaluation,
+} from '@release-drafter/core'
 import { writeActionOutputs } from '../common/action-contract.ts'
+import { ConfigError } from '../common/config/config-error.ts'
 import { actionLogger } from '../common/github.ts'
 import { actionOutputNames } from './action-metadata.ts'
 import { parsePullRequestEvent } from './event.ts'
@@ -39,44 +46,101 @@ export async function checkPullRequest(
     dependencies.payload,
   )
   const input = dependencies.getInput()
-  const config = mergeInputAndConfig({
-    config: await dependencies.getConfig(
-      input['config-name'],
-      input.token,
-      pullRequest.baseRef,
-    ),
-    input: {},
-    defaultCommitish: pullRequest.baseRef,
-    logger: actionLogger,
-  })
-  const evaluation = evaluatePullRequest(
+  const snapshots = [
+    { name: 'Base configuration', ref: pullRequest.baseRef },
     {
-      title: pullRequest.title,
-      labels: pullRequest.labels,
+      name: 'Proposed configuration',
+      ref: `refs/pull/${pullRequest.number}/head`,
     },
-    config.categories,
-  )
-
-  writeActionOutputs(actionOutputNames, {
-    labels: JSON.stringify(evaluation.labels),
-  })
-
-  if (evaluation.skipped) {
-    core.info(`Skipping excluded pull request #${pullRequest.number}.`)
-    return
-  }
-  if (!evaluation.valid)
-    throw new Error(
-      `No configured changelog or version-resolver category matches the title or labels of pull request #${pullRequest.number}.`,
+  ]
+  const failures: string[] = []
+  const evaluations: PullRequestEvaluation[] = []
+  for (const snapshot of snapshots) {
+    core.info(
+      `${snapshot.name}: loading ${input['config-name']} (repository ref: ${snapshot.ref}).`,
     )
+    try {
+      const config = mergeInputAndConfig({
+        config: await dependencies.getConfig(
+          input['config-name'],
+          input.token,
+          snapshot.ref,
+        ),
+        input: {},
+        defaultCommitish: pullRequest.baseRef,
+        logger: actionLogger,
+      })
+      const evaluation = evaluatePullRequest(pullRequest, config.categories)
+      evaluations.push(evaluation)
+      if (!evaluation.valid) {
+        logMatchingRules(pullRequest, config.categories)
+        throw new Error(
+          `No configured changelog or version-resolver category matches the title or labels of pull request #${pullRequest.number}. Path-only conditions and fallback categories cannot pass Check PR.`,
+        )
+      }
+      core.info(
+        evaluation.skipped
+          ? `${snapshot.name}: skipping excluded pull request #${pullRequest.number}.`
+          : `${snapshot.name}: pull request #${pullRequest.number} matches the configuration.`,
+      )
+    } catch (error) {
+      const message = `${snapshot.name} (${snapshot.ref}): ${error instanceof Error ? error.message : String(error)}`
+      failures.push(message)
+      core.error(message, {
+        ...(error instanceof ConfigError
+          ? error.annotation(context.repo, snapshots[1].ref)
+          : {}),
+        title: `${snapshot.name}: Check PR failed`,
+      })
+    }
+  }
 
-  core.info(`Pull request #${pullRequest.number} matches the configuration.`)
+  // Preserve the output's base-configuration meaning, even on a PR mismatch.
+  if (evaluations.length === snapshots.length) {
+    writeActionOutputs(actionOutputNames, {
+      labels: JSON.stringify(evaluations[0].labels),
+    })
+  }
+  if (failures.length > 0) throw new Error(failures.join('\n'))
+}
+
+const logMatchingRules = (
+  pullRequest: { title: string; labels: string[] },
+  categories: ParsedConfig['categories'],
+): void => {
+  core.info(`PR title: ${JSON.stringify(pullRequest.title)}`)
+  core.info(`PR labels: ${JSON.stringify(pullRequest.labels)}`)
+  categories.forEach((category, index) => {
+    const name = 'title' in category ? category.title : undefined
+    core.info(
+      `Category ${index + 1}${name ? ` (${JSON.stringify(name)})` : ''}, type ${category.type}: ${JSON.stringify(category.when)}`,
+    )
+    if (category.when.length === 0)
+      core.info('Fallback category: cannot satisfy Check PR on its own.')
+    category.when.forEach((condition, conditionIndex) => {
+      if (!condition.conventional && condition.labels.length === 0) {
+        core.info(`Condition ${conditionIndex + 1}: ignored (path-only).`)
+        return
+      }
+      const titleMatches = matchesCategoryCondition(
+        { ...condition, paths: [], labels: [] },
+        pullRequest,
+      )
+      const labelsMatch = matchesCategoryCondition(
+        { ...condition, paths: [], conventional: undefined },
+        pullRequest,
+      )
+      core.info(
+        `Condition ${conditionIndex + 1}: title ${titleMatches ? 'matches' : 'does not match'}, labels ${labelsMatch ? 'match' : 'do not match'}. Path predicates are ignored.`,
+      )
+    })
+  })
 }
 
 export async function run(): Promise<void> {
   try {
     await checkPullRequest()
   } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+    core.setFailed(error instanceof Error ? error.message : String(error))
   }
 }
