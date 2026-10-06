@@ -61,14 +61,3 @@ if (summaryFile) {
 
   appendFileSync(summaryFile, summary)
 }
-
-if (meetsThreshold) {
-  console.log(
-    `Coverage ${pct.toFixed(2)}% meets required ${threshold.toFixed(0)}%`,
-  )
-} else {
-  console.error(
-    `Coverage ${pct.toFixed(2)}% is below required ${threshold.toFixed(0)}%`,
-  )
-  process.exitCode = 1
-}

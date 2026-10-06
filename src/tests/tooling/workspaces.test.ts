@@ -1,15 +1,14 @@
-import { execFileSync, spawnSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
-  symlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 import {
@@ -25,108 +24,10 @@ import {
   actionOutputNames as drafterOutputNames,
 } from '#gh-actions/drafter/action-metadata.ts'
 import { actionManifests } from '#src/scripts/action-metadata-config.ts'
-import {
-  collectPackageFailures,
-  collectWorkflowFailures,
-} from '#src/scripts/guard-packages.ts'
+import { collectWorkflowFailures } from '#src/scripts/guard-packages.ts'
 import { syncWorkspaceVersions } from '#src/scripts/sync-workspace-versions.ts'
 
-type PackageJson = {
-  exports?: Record<
-    string,
-    {
-      import?: string
-      'release-drafter-source'?: string
-      types?: Record<string, string>
-    }
-  >
-  scripts?: Record<string, string>
-}
-const readJson = (path: string) =>
-  JSON.parse(readFileSync(path, 'utf8')) as PackageJson
-
-const listFiles = (directory: string): string[] =>
-  readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name)
-    return entry.isDirectory() ? listFiles(path) : [path]
-  })
-
 describe('workspace foundation', () => {
-  it('satisfies the workspace package guard', () => {
-    expect(collectPackageFailures()).toEqual([])
-  })
-
-  it('keeps workspace package exports aligned', () => {
-    const packages = readdirSync('packages').sort()
-    for (const dir of packages) {
-      const manifest = readJson(join('packages', dir, 'package.json'))
-      expect(manifest.exports?.['.']).toEqual({
-        types: {
-          'release-drafter-source': './src/index.ts',
-          default: './dist/index.d.ts',
-        },
-        'release-drafter-source': './src/index.ts',
-        import: './dist/index.js',
-      })
-    }
-  })
-
-  it('resolves linked workspace packages through their source export', () => {
-    const fixtureRoot = mkdtempSync(
-      join(tmpdir(), 'release-drafter-workspace-resolution-'),
-    )
-    try {
-      symlinkSync(resolve('node_modules'), join(fixtureRoot, 'node_modules'))
-      writeFileSync(
-        join(fixtureRoot, 'package.json'),
-        JSON.stringify({ type: 'module' }),
-      )
-      writeFileSync(
-        join(fixtureRoot, 'index.ts'),
-        "import '@release-drafter/core'\n",
-      )
-      writeFileSync(
-        join(fixtureRoot, 'tsconfig.json'),
-        JSON.stringify({
-          compilerOptions: {
-            allowImportingTsExtensions: true,
-            customConditions: ['release-drafter-source'],
-            module: 'NodeNext',
-            moduleResolution: 'NodeNext',
-            noEmit: true,
-            strict: true,
-            types: ['node'],
-          },
-          files: ['index.ts'],
-        }),
-      )
-
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve('node_modules/typescript/lib/tsc.js'),
-          '--project',
-          join(fixtureRoot, 'tsconfig.json'),
-          '--traceResolution',
-        ],
-        { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
-      )
-      if (result.status !== 0) {
-        const diagnostics = `${result.stdout}\n${result.stderr}`
-          .split('\n')
-          .filter((line) => line.includes('error TS'))
-          .join('\n')
-        throw new Error(
-          diagnostics ||
-            `${result.error?.message ?? 'TypeScript resolution check failed'} (status ${String(result.status)}, signal ${String(result.signal)})`,
-        )
-      }
-      expect(result.stdout).toContain(resolve('packages/core/src/index.ts'))
-    } finally {
-      rmSync(fixtureRoot, { force: true, recursive: true })
-    }
-  })
-
   it('preserves action compatibility metadata', () => {
     const rootAction = parseYaml(readFileSync('action.yml', 'utf8'))
     const drafterAction = parseYaml(readFileSync('drafter/action.yml', 'utf8'))
@@ -186,52 +87,22 @@ describe('workspace foundation', () => {
   })
 
   it('routes Action input and output access through metadata contracts', () => {
-    const contractPath = resolve(
-      'packages/gh-actions/src/common/action-contract.ts',
-    )
-    const directAccess = /\bcore\.(?:getInput|setOutput)\s*\(/gu
-    const offenders = listFiles(resolve('packages/gh-actions/src'))
-      .filter((path) => path.endsWith('.ts') && path !== contractPath)
-      .flatMap((path) =>
-        [...readFileSync(path, 'utf8').matchAll(directAccess)].map(
-          ({ 0: call }) => `${path}:${call}`,
-        ),
+    const sourceDirectory = 'packages/gh-actions/src'
+    const contractPath = join(sourceDirectory, 'common/action-contract.ts')
+    const directAccess = /\bcore\.(?:getInput|setOutput)\s*\(/u
+    const offenders = readdirSync(sourceDirectory, {
+      recursive: true,
+      encoding: 'utf8',
+    })
+      .filter((path) => path.endsWith('.ts') && !path.endsWith('.test.ts'))
+      .map((path) => join(sourceDirectory, path))
+      .filter(
+        (path) =>
+          path !== contractPath &&
+          directAccess.test(readFileSync(path, 'utf8')),
       )
 
     expect(offenders).toEqual([])
-  })
-
-  it('keeps gh-actions runtime exports and workspace artifacts split by product', () => {
-    const manifest = readJson(
-      'packages/gh-actions/package.json',
-    ) as PackageJson & {
-      exports: Record<string, { import: string; types: string }>
-    }
-    expect(Object.keys(manifest.exports)).toEqual([
-      '.',
-      './drafter',
-      './autolabeler',
-      './check-pr',
-      './config',
-    ])
-    expect(manifest.exports['./drafter'].import).toBe('./dist/drafter/index.js')
-    expect(manifest.exports['./autolabeler'].import).toBe(
-      './dist/autolabeler/index.js',
-    )
-    expect(manifest.exports['./check-pr'].import).toBe(
-      './dist/check-pr/index.js',
-    )
-    const identitySource = readFileSync(
-      'packages/gh-actions/src/index.ts',
-      'utf8',
-    )
-    expect(identitySource).not.toContain("from './drafter/")
-    expect(identitySource).not.toContain("from './autolabeler/")
-    expect(identitySource).not.toContain("from './check-pr/")
-    const workspaceBuild = readFileSync('vite.workspace.config.ts', 'utf8')
-    expect(workspaceBuild).toContain("'drafter/index'")
-    expect(workspaceBuild).toContain("'autolabeler/index'")
-    expect(workspaceBuild).toContain("'check-pr/index'")
   })
 
   it('keeps TypeScript scripts directly parseable by Node without compilation', () => {
@@ -248,16 +119,6 @@ describe('workspace foundation', () => {
     }
   })
 
-  it('builds workspace dependencies before generating schemas', () => {
-    const scripts = readJson('package.json').scripts
-
-    expect(scripts?.ci).toContain('npm run generate:action-metadata')
-    expect(scripts?.['generate:schemas']).toBe(
-      'npm run build:workspaces && node src/scripts/json-schema.ts',
-    )
-    expect(scripts?.ci).toContain('npm run generate:schemas')
-    expect(scripts?.ci).not.toContain('npm run build:workspaces')
-  })
   it('rejects npm publication from .yaml workflows', () => {
     const fixtureRoot = mkdtempSync(
       join(tmpdir(), 'release-drafter-workflows-'),

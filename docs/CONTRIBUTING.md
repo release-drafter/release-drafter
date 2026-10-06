@@ -64,11 +64,17 @@ workspace package.
 
 Common commands:
 
-- `npm run ci` runs all repository checks and builds generated files. It
+- `npm run ci` runs the standard repository checks and builds generated files. It
   formats and lints the code, checks dependencies, package settings, and types,
   runs tests, generates schemas, and builds action bundles and workspace packages.
-  Tooling tests also run Node's `--check` against each `src/scripts/*.ts` entry.
-  This verifies that Node 24 can run the scripts without a compile step.
+  Tooling tests check script syntax with Node. GitHub Actions sets
+  `COVERAGE_THRESHOLD=90`; set it locally to enforce the same statement coverage.
+- `npm run test:run` runs source tests. For a focused run, use
+  `npm run test:run -- path/to/file.test.ts`.
+- `npm run test:artifacts` builds the action bundles and workspace packages,
+  then tests their generated output and package consumers.
+- `npm run coverage` prints statement coverage and, in GitHub Actions, adds a
+  coverage table to the job summary.
 - `npm run check:dependencies` uses Knip to find unused files, unused
   dependencies, and unlisted dependencies. It does not report unused exports.
   It uses Knip's normal parser to avoid raw-transfer buffer allocation failures
@@ -79,16 +85,15 @@ Common commands:
   `release-drafter` package bundles private workspaces from development
   dependencies, so its shipped imports are checked by the package consumer
   tests instead.
-- `npm run check:packages` checks package publication settings and the required
-  Node.js version. Only the `release-drafter` package can be published.
+- `npm run check:packages` checks publication settings and workspace version
+  alignment. Only the `release-drafter` package can be published.
 - `npm run test:package-readiness` builds and packs the public
   `release-drafter` package. It runs the ESM, NodeNext, CLI, and isolated `npx`
   consumer contracts. It checks the package contents and metadata, then runs an
   offline `npm publish --dry-run` against the same tarball.
 - `npm run check:clean` fails if generation leaves unstaged or untracked changes
   relative to the staged tree.
-- `npm run build --workspaces --if-present` builds workspace packages after the
-  root Vite action bundle build.
+- `npm run build:workspaces` builds workspace packages.
 
 ### Forge conformance tests
 

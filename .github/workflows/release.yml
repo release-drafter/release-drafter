@@ -25,6 +25,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'release-drafter/release-drafter'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      COVERAGE_THRESHOLD: '90'
     permissions:
       contents: read
       pull-requests: read
@@ -76,9 +78,8 @@ jobs:
       - name: Verify generated files match the staged tree
         run: npm run check:clean
 
-      - name: Enforce coverage threshold
-        env:
-          COVERAGE_THRESHOLD: '90'
+      - name: Report coverage
+        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
         run: npm run coverage
 
       - name: Create repository-scoped release token

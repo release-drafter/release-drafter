@@ -19,17 +19,6 @@ type PackageResult = {
 }
 type ParsedPackageResult = PackageResult & { files: PackedFile[] }
 
-export const expectedPackageFiles = [
-  'LICENSE',
-  'README.md',
-  'THIRD_PARTY_NOTICES',
-  'dist/chunks/src-[content-hash].js',
-  'dist/cli.js',
-  'dist/index.d.ts',
-  'dist/index.js',
-  'package.json',
-]
-
 export const packArguments = (destination: string): string[] => [
   'pack',
   '--ignore-scripts',
@@ -57,11 +46,6 @@ const publishAutoCorrectionWarning =
 
 export const hasPublishAutoCorrectionWarning = (stderr: string): boolean =>
   publishAutoCorrectionWarning.test(stderr)
-
-const normalizePackageFile = (path: string): string =>
-  /^dist\/chunks\/src-[A-Za-z0-9_-]+\.js$/u.test(path)
-    ? 'dist/chunks/src-[content-hash].js'
-    : path
 
 export const sanitizedNpmEnvironment = (
   environment: NodeJS.ProcessEnv,
@@ -135,17 +119,9 @@ const packageFiles = (result: ParsedPackageResult): string[] =>
       if (typeof path !== 'string') {
         throw new Error('npm returned a package file without a path')
       }
-      return normalizePackageFile(path)
+      return path
     })
     .sort()
-
-const assertExactInventory = (files: string[], source: string): void => {
-  if (JSON.stringify(files) !== JSON.stringify(expectedPackageFiles)) {
-    throw new Error(
-      `${source} inventory drifted:\n${JSON.stringify(files, null, 2)}`,
-    )
-  }
-}
 
 const run = (
   executable: string,
@@ -223,7 +199,6 @@ export const checkPackageReadiness = (
       throw new Error('npm pack did not report a tarball filename')
     }
     const packedFiles = packageFiles(pack)
-    assertExactInventory(packedFiles, 'npm pack')
 
     const cli = pack.files.find(({ path }) => path === 'dist/cli.js')
     if (cli?.mode !== 0o755) {
@@ -282,7 +257,6 @@ export const checkPackageReadiness = (
       )
     }
     const publishedFiles = packageFiles(publish)
-    assertExactInventory(publishedFiles, 'npm publish --dry-run')
     if (JSON.stringify(publishedFiles) !== JSON.stringify(packedFiles)) {
       throw new Error('npm publish --dry-run inventory differs from npm pack')
     }

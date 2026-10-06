@@ -55,12 +55,21 @@ export default defineConfig({
     include: ['src/tests/**/*.test.ts', 'packages/*/src/**/*.test.ts'],
     // Real-forge suites require Docker and unrestricted network access. Keep
     // them opt-in through their dedicated Vitest configurations.
-    exclude: ['**/node_modules/**', '**/dist/**', '**/*.container.test.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/*.container.test.ts',
+      'src/tests/artifacts/**',
+    ],
     testTimeout: 60000,
     setupFiles: ['src/tests/setup.ts'],
     coverage: {
       enabled: true,
       reporter: ['json-summary'],
+      reportOnFailure: true,
+      thresholds: process.env.COVERAGE_THRESHOLD
+        ? { statements: Number(process.env.COVERAGE_THRESHOLD) }
+        : undefined,
       include: ['src/**/*.ts', 'packages/*/src/**/*.ts'],
       exclude: [
         'src/tests/**/*.ts',

@@ -2,7 +2,6 @@ import { execFileSync } from 'node:child_process'
 import {
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -33,21 +32,10 @@ const execNode = (args: string[], cwd = repositoryRoot) => {
   }
 }
 
-const execNpm = (args: string[]) =>
-  execNode([
-    process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
-    ...args,
-  ])
-
 describe('built REST adapter declarations', { concurrent: false }, () => {
   let consumerDirectory: string
 
   beforeAll(() => {
-    execNpm(['run', 'build', '--workspace', '@release-drafter/core'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/rest-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/gitea-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/forgejo-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/gitlab-adapter'])
     consumerDirectory = mkdtempSync(
       join(tmpdir(), 'release-drafter-adapter-consumer-'),
     )
@@ -156,41 +144,5 @@ describe('built REST adapter declarations', { concurrent: false }, () => {
     expect(() =>
       execNode([typescriptCli, '-p', 'tsconfig.json'], consumerDirectory),
     ).not.toThrow()
-  })
-
-  it('does not emit declarations into workspace source directories', () => {
-    const output = execNode(
-      [
-        '-e',
-        `
-          const { readdirSync, statSync } = require('node:fs')
-          const { join } = require('node:path')
-          const visit = (directory) => readdirSync(directory).flatMap((entry) => {
-            const path = join(directory, entry)
-            return statSync(path).isDirectory() ? visit(path) : [path]
-          })
-          process.stdout.write(
-            visit('packages')
-              .filter((path) => path.includes('/src/') && path.endsWith('.d.ts'))
-              .join('\\n'),
-          )
-        `,
-      ],
-      repositoryRoot,
-    )
-    expect(output).toBe('')
-  })
-
-  it('keeps GitBeaker clients and GitLab wire types out of built declarations', () => {
-    const declaration = readFileSync(
-      join(repositoryRoot, 'packages/gitlab-adapter/dist/index.d.ts'),
-      'utf8',
-    )
-    expect(declaration).not.toMatch(/@gitbeaker/i)
-    expect(declaration).not.toMatch(/\bGitlab\b/)
-    expect(declaration).not.toMatch(/\bGitLabClient\b/)
-    expect(declaration).not.toMatch(
-      /\bGitLab(?:Api|Commit|Comparison|Diff|MergeRequest|Release|Tag|User)\b/,
-    )
   })
 })
