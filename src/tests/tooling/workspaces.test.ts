@@ -86,6 +86,25 @@ describe('workspace foundation', () => {
     )
   })
 
+  it('routes Action input and output access through metadata contracts', () => {
+    const sourceDirectory = 'packages/gh-actions/src'
+    const contractPath = join(sourceDirectory, 'common/action-contract.ts')
+    const directAccess = /\bcore\.(?:getInput|setOutput)\s*\(/u
+    const offenders = readdirSync(sourceDirectory, {
+      recursive: true,
+      encoding: 'utf8',
+    })
+      .filter((path) => path.endsWith('.ts') && !path.endsWith('.test.ts'))
+      .map((path) => join(sourceDirectory, path))
+      .filter(
+        (path) =>
+          path !== contractPath &&
+          directAccess.test(readFileSync(path, 'utf8')),
+      )
+
+    expect(offenders).toEqual([])
+  })
+
   it('keeps TypeScript scripts directly parseable by Node without compilation', () => {
     const scripts = readdirSync('src/scripts')
       .filter((path) => path.endsWith('.ts'))

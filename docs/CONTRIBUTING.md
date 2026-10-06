@@ -67,10 +67,9 @@ Common commands:
 - `npm run ci` runs the standard repository checks and builds generated files. It
   formats and lints the code, checks dependencies, package settings, and types,
   runs tests, generates schemas, and builds action bundles and workspace packages.
-  Tooling tests check script syntax with Node.
-- `npm run test:run` runs source tests with a 90% statement coverage threshold.
-  For a focused run, use
-  `npm run test:run -- path/to/file.test.ts --coverage.enabled=false`.
+  It enforces 90% statement coverage. Tooling tests check script syntax with Node.
+- `npm run test:run` runs source tests. For a focused run, use
+  `npm run test:run -- path/to/file.test.ts`.
 - `npm run test:artifacts` builds the action bundles and workspace packages,
   then tests their generated output and package consumers.
 - `npm run coverage` prints statement coverage and, in GitHub Actions, adds a

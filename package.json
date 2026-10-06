@@ -56,7 +56,7 @@
     "check:packages": "node src/scripts/guard-packages.ts",
     "check:package-readiness": "node src/scripts/check-package-readiness.ts",
     "check:workspaces": "npm run check:dependencies && npm run check:dependencies:production && npm run check:packages",
-    "ci": "npm run generate:action-metadata && npm run lint:fix && npm run format:docs && npm run typecheck && npm run test:run && npm run generate:schemas && npm run build:actions && vitest run --config vitest.artifacts.config.ts && npm run check:workspaces",
+    "ci": "npm run generate:action-metadata && npm run lint:fix && npm run format:docs && npm run typecheck && npm run test:run -- --coverage.thresholds.statements=90 && npm run generate:schemas && npm run build:actions && vitest run --config vitest.artifacts.config.ts && npm run check:workspaces",
     "check:clean": "node src/scripts/check-clean.ts",
     "version": "node src/scripts/sync-workspace-versions.ts && npm install --package-lock-only --ignore-scripts && git add package.json package-lock.json packages/*/package.json"
   },
