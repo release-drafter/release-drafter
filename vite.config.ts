@@ -67,6 +67,9 @@ export default defineConfig({
       enabled: true,
       reporter: ['json-summary'],
       reportOnFailure: true,
+      thresholds: process.env.COVERAGE_THRESHOLD
+        ? { statements: Number(process.env.COVERAGE_THRESHOLD) }
+        : undefined,
       include: ['src/**/*.ts', 'packages/*/src/**/*.ts'],
       exclude: [
         'src/tests/**/*.ts',
