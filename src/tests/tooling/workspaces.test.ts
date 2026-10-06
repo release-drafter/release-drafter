@@ -349,6 +349,7 @@ describe('workspace foundation', () => {
         process.execPath,
         [
           process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
+          '--silent',
           'run',
           'check:dependencies:production',
           '--',
