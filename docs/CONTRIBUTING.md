@@ -115,12 +115,15 @@ to run Docker-backed forge conformance tests:
   Omnibus configuration and the test project already applied, so it starts in
   seconds without Sidekiq. Changes to the seeded project belong in that
   repository's `seeds/release-drafter.sh`, followed by an image digest update
-  in `src/tests/integration/forge-conformance/images.ts`.
+  in `src/tests/integration/forge-conformance/images.ts`. The image does not
+  run Workhorse, so tests cannot create files or commits through the API. Add
+  that data to the seed instead.
 
 The CI matrix tests Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
-redacted container logs and fixture metadata. Each job starts its forge
-container with `node src/tests/integration/forge-conformance/containers.ts start
-<forge>` before installing dependencies, and the suite attaches to it when
+redacted container logs and fixture metadata. Each job moves Docker's storage
+to memory, then starts its forge container with
+`node src/tests/integration/forge-conformance/containers.ts start <forge>`
+before installing dependencies, and the suite attaches to it when
 `FORGE_CONFORMANCE_PRESTARTED=true`. Without that variable, the suites start the
 same container definitions with Testcontainers. Jobs restore `node_modules` from
 the Actions cache when `package-lock.json`, `.npmrc`, and `.node-version` are
