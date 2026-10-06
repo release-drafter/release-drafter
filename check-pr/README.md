@@ -30,8 +30,28 @@ jobs:
 ```
 
 The action supports the `pull_request` and `pull_request_target` events. It
-reads the title and labels from the event payload. It also resolves `_extends`
-configuration chains. The action does not modify the pull request.
+reads the title and labels from the event payload. It validates configuration
+and checks the PR against both the base branch and PR head, including `_extends`
+chains. Both checks must pass; a matching exclusion skips only that snapshot's
+PR check, not configuration validation. The action
+reads the PR head through the base repository's `refs/pull/<number>/head` ref,
+including for fork PRs and `pull_request_target`. No checkout is required, and
+the action does not execute PR code or modify the pull request.
+
+Explicit configuration refs and external repositories retain their configured
+refs or default branches. A `file:` target reads the checked-out configuration
+for both checks; it cannot provide separate base and PR-head snapshots.
+
+Failures identify whether the base or proposed configuration failed. Syntax
+errors include the configuration source and, for YAML, its line and column.
+Schema errors identify the invalid fields and all configuration sources involved
+in composition. PR-head or local-file errors produce file annotations when the
+source is unambiguous. Base-branch, explicitly pinned, external, or
+composed-source errors produce run-level annotations rather than pointing to
+unrelated file content. PR matching
+failures log the current title, labels, category conditions, and whether the
+title and labels satisfy each condition. A broken base configuration still fails
+even if the PR proposes a valid replacement.
 
 A condition that contains `conventional` validates the title. A condition that
 contains `label` or `labels` validates the current labels. If a condition
@@ -48,7 +68,8 @@ pull request valid.
 | -------- | ----------------------------------------------------------------------------------------------------- |
 | `labels` | A JSON array of unique, sorted PR labels matched by configuration conditions. Empty results are `[]`. |
 
-The action sets `labels` after loading configuration and evaluating the PR,
+The `labels` output uses the base configuration. The action sets it after both
+configurations load successfully and both PR checks have been evaluated,
 before reporting validation success, a skip, or a failure. It uses the same
 projected conditions as validation: path predicates are ignored. Only labels
 present on the PR and matched by a successful condition are returned. Unrelated
