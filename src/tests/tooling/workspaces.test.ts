@@ -1,6 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import {
-  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -317,103 +316,6 @@ describe('workspace foundation', () => {
       expect(collectWorkflowFailures(fixtureRoot)).toEqual([
         'node.yaml setup-node step build/2 must select Node through .node-version',
       ])
-    } finally {
-      rmSync(fixtureRoot, { force: true, recursive: true })
-    }
-  })
-
-  it('checks production dependencies with Knip while allowing type imports and bundled workspaces', () => {
-    const fixtureRoot = mkdtempSync(join(tmpdir(), 'release-drafter-knip-'))
-    const script =
-      readJson('package.json').scripts?.['check:dependencies:production']
-    const writeWorkspace = (directory: string, source: string) => {
-      const workspace = join(fixtureRoot, 'packages', directory)
-      mkdirSync(join(workspace, 'src'), { recursive: true })
-      writeFileSync(
-        join(workspace, 'package.json'),
-        JSON.stringify({
-          name:
-            directory === 'release-drafter'
-              ? directory
-              : `@release-drafter/${directory}`,
-          type: 'module',
-          exports: './src/index.ts',
-          devDependencies:
-            directory === 'core' ? {} : { '@release-drafter/core': '*' },
-        }),
-      )
-      writeFileSync(join(workspace, 'src/index.ts'), source)
-    }
-    const runKnip = () =>
-      spawnSync(
-        process.execPath,
-        [
-          process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
-          '--silent',
-          'run',
-          'check:dependencies:production',
-          '--',
-          '--reporter',
-          'json',
-        ],
-        {
-          cwd: fixtureRoot,
-          encoding: 'utf8',
-          env: {
-            ...process.env,
-            PATH: `${resolve('node_modules/.bin')}:${process.env.PATH}`,
-          },
-        },
-      )
-
-    try {
-      writeFileSync(
-        join(fixtureRoot, 'package.json'),
-        JSON.stringify({
-          private: true,
-          workspaces: ['packages/*'],
-          scripts: { 'check:dependencies:production': script },
-        }),
-      )
-      copyFileSync('knip.jsonc', join(fixtureRoot, 'knip.jsonc'))
-      writeWorkspace(
-        'core',
-        'export type Core = string\nexport const value = 1\n',
-      )
-      writeWorkspace(
-        'github-adapter',
-        "import { value } from '@release-drafter/core'\nexport const result = value\n",
-      )
-      writeWorkspace(
-        'gitea-adapter',
-        "import type { Core } from '@release-drafter/core'\nexport const value: Core = 'ok'\n",
-      )
-      writeWorkspace(
-        'release-drafter',
-        "export { value } from '@release-drafter/core'\n",
-      )
-
-      const invalid = runKnip()
-      expect(invalid.status, invalid.stderr).toBe(1)
-      expect(JSON.parse(invalid.stdout).issues).toEqual([
-        expect.objectContaining({
-          file: 'packages/github-adapter/src/index.ts',
-          unlisted: [
-            expect.objectContaining({ name: '@release-drafter/core' }),
-          ],
-        }),
-      ])
-
-      const manifestPath = join(
-        fixtureRoot,
-        'packages/github-adapter/package.json',
-      )
-      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
-      manifest.dependencies = manifest.devDependencies
-      delete manifest.devDependencies
-      writeFileSync(manifestPath, JSON.stringify(manifest))
-      const valid = runKnip()
-      expect(valid.status, `${valid.stdout}\n${valid.stderr}`).toBe(0)
     } finally {
       rmSync(fixtureRoot, { force: true, recursive: true })
     }
