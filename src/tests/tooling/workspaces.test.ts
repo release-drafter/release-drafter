@@ -1,5 +1,6 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import {
+  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -25,7 +26,6 @@ import {
   actionOutputNames as drafterOutputNames,
 } from '#gh-actions/drafter/action-metadata.ts'
 import { actionManifests } from '#src/scripts/action-metadata-config.ts'
-import { collectRuntimeDependencyFailures } from '#src/scripts/guard-boundaries.ts'
 import {
   collectPackageFailures,
   collectWorkflowFailures,
@@ -322,159 +322,97 @@ describe('workspace foundation', () => {
     }
   })
 
-  it('rejects runtime workspace imports satisfied only by devDependencies', () => {
-    const fixtureRoot = mkdtempSync(
-      join(tmpdir(), 'release-drafter-boundaries-'),
-    )
-    const writeWorkspace = (params: {
-      name: string
-      directory: string
-      devDependencies?: Record<string, string>
-      source?: string
-    }) => {
-      const workspace = join(fixtureRoot, 'packages', params.directory)
+  it('checks production dependencies with Knip while allowing type imports and bundled workspaces', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'release-drafter-knip-'))
+    const script =
+      readJson('package.json').scripts?.['check:dependencies:production']
+    const writeWorkspace = (directory: string, source: string) => {
+      const workspace = join(fixtureRoot, 'packages', directory)
       mkdirSync(join(workspace, 'src'), { recursive: true })
       writeFileSync(
         join(workspace, 'package.json'),
         JSON.stringify({
-          name: params.name,
-          devDependencies: params.devDependencies,
-        }),
-      )
-      writeFileSync(join(workspace, 'src/index.ts'), params.source ?? '')
-    }
-
-    try {
-      writeWorkspace({
-        directory: 'github-adapter',
-        name: '@release-drafter/github-adapter',
-        devDependencies: { '@release-drafter/core': 'workspace:*' },
-        source: "import '@release-drafter/core'",
-      })
-      writeWorkspace({
-        directory: 'gitea-adapter',
-        name: '@release-drafter/gitea-adapter',
-        devDependencies: { '@release-drafter/core': 'workspace:*' },
-        source: `
-          import type { Core } from '@release-drafter/core'
-          type CoreModule = import('@release-drafter/core').Core
-        `,
-      })
-      writeWorkspace({
-        directory: 'release-drafter',
-        name: 'release-drafter',
-        devDependencies: { '@release-drafter/core': 'workspace:*' },
-        source: "import '@release-drafter/core'",
-      })
-      expect(collectRuntimeDependencyFailures(fixtureRoot)).toEqual([
-        expect.stringContaining(
-          '@release-drafter/github-adapter imports private runtime dependency @release-drafter/core from devDependencies',
-        ),
-      ])
-    } finally {
-      rmSync(fixtureRoot, { force: true, recursive: true })
-    }
-  })
-
-  it('uses dependency-cruiser with SWC for source, JavaScript, and declaration boundaries', () => {
-    const fixtureRoot = mkdtempSync(
-      join(tmpdir(), 'release-drafter-dependency-cruiser-'),
-    )
-    const configPath = join(process.cwd(), '.dependency-cruiser.mjs')
-    const dependencyCruiserCli = join(
-      process.cwd(),
-      'node_modules/dependency-cruiser/bin/dependency-cruiser.mjs',
-    )
-    const writeWorkspace = (params: {
-      name: string
-      directory: string
-      dependencies?: Record<string, string>
-      source?: string
-      javascript?: string
-      declaration?: string
-    }) => {
-      const workspace = join(fixtureRoot, 'packages', params.directory)
-      mkdirSync(join(workspace, 'src'), { recursive: true })
-      mkdirSync(join(workspace, 'dist'), { recursive: true })
-      writeFileSync(
-        join(workspace, 'package.json'),
-        JSON.stringify({
-          name: params.name,
+          name:
+            directory === 'release-drafter'
+              ? directory
+              : `@release-drafter/${directory}`,
           type: 'module',
-          dependencies: params.dependencies,
-          exports: {
-            '.': {
-              types: './dist/index.d.ts',
-              import: './dist/index.js',
-            },
-          },
+          exports: './src/index.ts',
+          devDependencies:
+            directory === 'core' ? {} : { '@release-drafter/core': '*' },
         }),
       )
-      writeFileSync(join(workspace, 'src/index.ts'), params.source ?? '')
-      writeFileSync(join(workspace, 'dist/index.js'), params.javascript ?? '')
-      writeFileSync(
-        join(workspace, 'dist/index.d.ts'),
-        params.declaration ?? '',
-      )
-
-      const packageParts = params.name.split('/')
-      const link = join(fixtureRoot, 'node_modules', ...packageParts)
-      mkdirSync(join(link, '..'), { recursive: true })
-      symlinkSync(
-        workspace,
-        link,
-        process.platform === 'win32' ? 'junction' : 'dir',
-      )
+      writeFileSync(join(workspace, 'src/index.ts'), source)
     }
+    const runKnip = () =>
+      spawnSync(
+        process.execPath,
+        [
+          process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
+          'run',
+          'check:dependencies:production',
+          '--',
+          '--reporter',
+          'json',
+        ],
+        {
+          cwd: fixtureRoot,
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            PATH: `${resolve('node_modules/.bin')}:${process.env.PATH}`,
+          },
+        },
+      )
 
     try {
-      writeWorkspace({
-        directory: 'core',
-        name: '@release-drafter/core',
-        source: "import '@release-drafter/rest-adapter'",
-        javascript: "export * from '@release-drafter/github-adapter'",
-      })
-      writeWorkspace({
-        directory: 'github-adapter',
-        name: '@release-drafter/github-adapter',
-      })
-      writeWorkspace({
-        directory: 'release-drafter',
-        name: 'release-drafter',
-        dependencies: { '@release-drafter/core': 'workspace:*' },
-        declaration: "export * from '@release-drafter/core'",
-      })
-      writeWorkspace({
-        directory: 'gh-actions',
-        name: '@release-drafter/gh-actions',
-        dependencies: { 'release-drafter': 'workspace:*' },
-        source: "import 'release-drafter'",
-      })
-      writeWorkspace({
-        directory: 'rest-adapter',
-        name: '@release-drafter/rest-adapter',
-      })
+      writeFileSync(
+        join(fixtureRoot, 'package.json'),
+        JSON.stringify({
+          private: true,
+          workspaces: ['packages/*'],
+          scripts: { 'check:dependencies:production': script },
+        }),
+      )
+      copyFileSync('knip.jsonc', join(fixtureRoot, 'knip.jsonc'))
+      writeWorkspace(
+        'core',
+        'export type Core = string\nexport const value = 1\n',
+      )
+      writeWorkspace(
+        'github-adapter',
+        "import { value } from '@release-drafter/core'\nexport const result = value\n",
+      )
+      writeWorkspace(
+        'gitea-adapter',
+        "import type { Core } from '@release-drafter/core'\nexport const value: Core = 'ok'\n",
+      )
+      writeWorkspace(
+        'release-drafter',
+        "export { value } from '@release-drafter/core'\n",
+      )
 
-      let output = ''
-      try {
-        execFileSync(
-          process.execPath,
-          [dependencyCruiserCli, '--config', configPath, 'packages'],
-          {
-            cwd: fixtureRoot,
-            encoding: 'utf8',
-            stdio: 'pipe',
-          },
-        )
-      } catch (error) {
-        const failure = error as { stderr?: string; stdout?: string }
-        output = `${failure.stdout ?? ''}${failure.stderr ?? ''}`
-      }
+      const invalid = runKnip()
+      expect(invalid.status, invalid.stderr).toBe(1)
+      expect(JSON.parse(invalid.stdout).issues).toEqual([
+        expect.objectContaining({
+          file: 'packages/github-adapter/src/index.ts',
+          unlisted: [
+            expect.objectContaining({ name: '@release-drafter/core' }),
+          ],
+        }),
+      ])
 
-      expect(output).toContain('workspace-source-dependencies-core')
-      expect(output).toContain('workspace-output-dependencies-core')
-      expect(output).toContain('public-facade-must-bundle-private-workspaces')
-      expect(output).toContain('gh-actions-must-not-use-public-facades')
+      const manifestPath = join(
+        fixtureRoot,
+        'packages/github-adapter/package.json',
+      )
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+      manifest.dependencies = manifest.devDependencies
+      delete manifest.devDependencies
+      writeFileSync(manifestPath, JSON.stringify(manifest))
+      const valid = runKnip()
+      expect(valid.status, `${valid.stdout}\n${valid.stderr}`).toBe(0)
     } finally {
       rmSync(fixtureRoot, { force: true, recursive: true })
     }

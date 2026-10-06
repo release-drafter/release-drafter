@@ -4,7 +4,7 @@
 
 Read [the contribution guide](docs/CONTRIBUTING.md), especially
 [Workspace development](docs/CONTRIBUTING.md#workspace-development), for setup,
-workspace boundaries, package publication, and release rules.
+workspace development, package publication, and release rules.
 
 - Edit source files and use the repository generators for generated output.
   Do not read, search, or review generated `dist/` contents or diffs. Review
@@ -26,7 +26,7 @@ workspace boundaries, package publication, and release rules.
   `node_modules` from another checkout.
 - Before pushing, run `npm run ci`. It formats, lints, checks types, runs unit
   tests, regenerates schemas and action metadata, builds bundles and workspace
-  packages, and checks workspace boundaries and dependencies.
+  packages, and checks package settings and dependencies.
 - Review source and documentation diffs. Use file names or diff statistics to
   identify generated changes without reading `dist/` output. Stage intended
   changes, then run `npm run check:clean` with output redirected to a file.
