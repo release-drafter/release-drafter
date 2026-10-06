@@ -483,27 +483,44 @@ function parseReplaceString(replaceString) {
 	return result.finalize();
 }
 //#endregion
-//#region packages/core/src/release/render-template/render-template.ts
+//#region packages/core/src/release/render-template/apply-replacers.ts
+var searchCache = /* @__PURE__ */ new WeakMap();
+var getSearch = (search) => {
+	const cached = searchCache.get(search);
+	if (cached?.source === search.source && cached.flags === search.flags) return cached;
+	const compiled = new RegExp(search);
+	searchCache.set(search, compiled);
+	return compiled;
+};
 var getReplaceMatches = (args) => {
 	const lastArg = args[args.length - 1];
 	const hasGroups = typeof lastArg === "object" && lastArg !== null;
 	const matchCount = args.length - (hasGroups ? 3 : 2);
 	return args.slice(0, matchCount);
 };
-var applyReplacer = (input, replacer) => {
-	const replacePattern = parseReplaceString(replacer.replace);
-	return input.replace(replacer.search, (...args) => {
-		const matches = getReplaceMatches(args);
-		return replacePattern.buildReplaceString(matches);
-	});
+/** Applies the selected target's replacers in configuration order using the shared replacement syntax. */
+var applyReplacers = (input, replacers = [], target = "global") => {
+	for (const replacer of replacers) {
+		if ((replacer.target ?? "global") !== target) continue;
+		const replacePattern = parseReplaceString(replacer.replace);
+		const search = getSearch(replacer.search);
+		search.lastIndex = 0;
+		input = input.replace(search, (...args) => {
+			const matches = getReplaceMatches(args);
+			return replacePattern.buildReplaceString(matches);
+		});
+	}
+	return input;
 };
+//#endregion
+//#region packages/core/src/release/render-template/render-template.ts
 /**
 * replaces all uppercase dollar templates with their string representation from object
 * if replacement is undefined in object the dollar template string is left untouched
 */
 var renderTemplate = (params) => {
 	const { template, object, replacers } = params;
-	let input = template.replace(/(\$[A-Z_]+)/g, (_, k) => {
+	const input = template.replace(/(\$[A-Z_]+)/g, (_, k) => {
 		let result;
 		const isValidKey = (key) => key in object && object[key] !== void 0 && object[key] !== null;
 		if (!isValidKey(k)) result = k;
@@ -516,8 +533,7 @@ var renderTemplate = (params) => {
 		} else result = `${object[k]}`;
 		return result;
 	});
-	if (replacers) for (const replacer of replacers) input = applyReplacer(input, replacer);
-	return input;
+	return applyReplacers(input, replacers);
 };
 //#endregion
 //#region packages/core/src/release/group-changes.ts
@@ -742,7 +758,7 @@ var pullRequestToString = (params) => params.changes.map((change) => {
 			$AUTHOR: pullAuthor,
 			$AUTHOR_URL: pullRequest.author?.url ?? "",
 			$BODY: escapeChangeText({
-				text: pullRequest.body,
+				text: pullRequest.body == null ? pullRequest.body : applyReplacers(pullRequest.body, params.config.replacers, "change-body"),
 				escapes: params.config["change-body-escapes"],
 				multiline: true
 			}),
