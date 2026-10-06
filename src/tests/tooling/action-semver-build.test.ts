@@ -27,22 +27,6 @@ const listFiles = (directory: string): string[] =>
     return statSync(path).isDirectory() ? listFiles(path) : [path]
   })
 
-const buildActions = () =>
-  execFileSync(
-    process.execPath,
-    [
-      process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
-      'run',
-      'build:actions',
-    ],
-    {
-      cwd: repositoryRoot,
-      encoding: 'utf8',
-      env: { ...process.env, NO_COLOR: '1' },
-      stdio: 'pipe',
-    },
-  )
-
 const packageManifestPaths = () => [
   resolve(repositoryRoot, 'package.json'),
   ...readdirSync(resolve(repositoryRoot, 'packages')).map((workspace) =>
@@ -56,7 +40,6 @@ describe('action build contracts', {
   let generatedJavaScriptFiles: string[]
 
   beforeAll(() => {
-    buildActions()
     generatedJavaScriptFiles = generatedDirectories
       .flatMap(listFiles)
       .filter((path) => path.endsWith('.js'))

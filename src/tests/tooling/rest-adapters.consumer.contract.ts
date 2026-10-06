@@ -33,21 +33,10 @@ const execNode = (args: string[], cwd = repositoryRoot) => {
   }
 }
 
-const execNpm = (args: string[]) =>
-  execNode([
-    process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
-    ...args,
-  ])
-
 describe('built REST adapter declarations', { concurrent: false }, () => {
   let consumerDirectory: string
 
   beforeAll(() => {
-    execNpm(['run', 'build', '--workspace', '@release-drafter/core'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/rest-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/gitea-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/forgejo-adapter'])
-    execNpm(['run', 'build', '--workspace', '@release-drafter/gitlab-adapter'])
     consumerDirectory = mkdtempSync(
       join(tmpdir(), 'release-drafter-adapter-consumer-'),
     )

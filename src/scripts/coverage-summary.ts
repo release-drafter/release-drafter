@@ -28,27 +28,14 @@ if (!total?.statements?.pct && total?.statements?.pct !== 0) {
 }
 
 const pct = total.statements.pct
-const threshold = Number(process.env.COVERAGE_THRESHOLD ?? '90')
-if (Number.isNaN(threshold)) {
-  throw new Error(
-    `Invalid coverage threshold: ${process.env.COVERAGE_THRESHOLD ?? ''}`,
-  )
-}
-const meetsThreshold = pct >= threshold
-
 // Print coverage percentage for logs and local use.
 console.log(pct.toFixed(2))
 
 // Write GitHub Actions job summary if running in CI
 const summaryFile = process.env.GITHUB_STEP_SUMMARY
 if (summaryFile) {
-  const emoji = meetsThreshold ? '🟢' : '🔴'
-  const status = meetsThreshold ? 'meets' : 'is below'
-
   const summary = [
-    `## ${emoji} Code Coverage: ${pct.toFixed(2)}%`,
-    '',
-    `Coverage ${status} the ${threshold.toFixed(0)}% threshold.`,
+    `## Code Coverage: ${pct.toFixed(2)}%`,
     '',
     '| Metric | Coverage | Covered | Total |',
     '| --- | --- | --- | --- |',
@@ -60,15 +47,4 @@ if (summaryFile) {
   ].join('\n')
 
   appendFileSync(summaryFile, summary)
-}
-
-if (meetsThreshold) {
-  console.log(
-    `Coverage ${pct.toFixed(2)}% meets required ${threshold.toFixed(0)}%`,
-  )
-} else {
-  console.error(
-    `Coverage ${pct.toFixed(2)}% is below required ${threshold.toFixed(0)}%`,
-  )
-  process.exitCode = 1
 }

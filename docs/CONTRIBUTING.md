@@ -69,6 +69,14 @@ Common commands:
   runs tests, generates schemas, and builds action bundles and workspace packages.
   Tooling tests also run Node's `--check` against each `src/scripts/*.ts` entry.
   This verifies that Node 24 can run the scripts without a compile step.
+- `npm run test:run` builds action bundles and workspace packages once, then
+  runs Vitest. Consumer tests use those outputs. `npm run ci` performs the same
+  builds before running tests and does not rebuild from test setup.
+- Vitest enforces 90% statement coverage. For a focused test run, use
+  `npm run test:run -- path/to/file.test.ts --coverage.enabled=false`.
+- `npm run coverage` prints the statement percentage and writes the metric
+  table to the GitHub Actions job summary. Reporting also runs when tests or
+  coverage thresholds fail, if a coverage report was generated.
 - `npm run check:dependencies` uses Knip to find unused files, unused
   dependencies, and unlisted dependencies. It does not report unused exports.
   It uses Knip's normal parser to avoid raw-transfer buffer allocation failures
@@ -79,8 +87,8 @@ Common commands:
   `release-drafter` package bundles private workspaces from development
   dependencies, so its shipped imports are checked by the package consumer
   tests instead.
-- `npm run check:packages` checks package publication settings and the required
-  Node.js version. Only the `release-drafter` package can be published.
+- `npm run check:packages` checks publication settings and workspace version
+  alignment. Only the `release-drafter` package can be published.
 - `npm run test:package-readiness` builds and packs the public
   `release-drafter` package. It runs the ESM, NodeNext, CLI, and isolated `npx`
   consumer contracts. It checks the package contents and metadata, then runs an

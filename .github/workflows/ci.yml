@@ -52,7 +52,6 @@ jobs:
       - name: Check for clean working directory
         run: npm run check:clean
 
-      - name: Enforce coverage threshold
-        env:
-          COVERAGE_THRESHOLD: '90'
+      - name: Report coverage
+        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
         run: npm run coverage

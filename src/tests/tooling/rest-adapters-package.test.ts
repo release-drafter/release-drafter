@@ -1,3 +1,1 @@
-await import('./rest-adapters.consumer.contract.ts')
-
-export {}
+import './rest-adapters.consumer.contract.ts'
