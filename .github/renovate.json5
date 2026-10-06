@@ -9,6 +9,15 @@
       "depNameTemplate": "@biomejs/biome",
       "datasourceTemplate": "npm",
     },
+    {
+      // Pinned forge images used by the conformance fixtures.
+      "customType": "regex",
+      "fileMatch": ["^src/tests/integration/.+\\.ts$"],
+      "matchStrings": [
+        "'(?<depName>[a-z0-9][a-z0-9./-]*):(?<currentValue>[A-Za-z0-9][A-Za-z0-9._-]*)@(?<currentDigest>sha256:[a-f0-9]{64})'",
+      ],
+      "datasourceTemplate": "docker",
+    },
   ],
   "dependencyDashboard": false,
   "prHourlyLimit": 0,

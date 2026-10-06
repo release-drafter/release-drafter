@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - main
+      - ci/**
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -24,6 +25,7 @@ jobs:
     runs-on: ubuntu-26.04
     outputs:
       should-run: ${{ steps.scope.outputs.should-run }}
+      forges: ${{ steps.scope.outputs.forges }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -45,11 +47,15 @@ jobs:
           HAS_OVERRIDE_LABEL: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:forge-conformance') }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE_SHA: ${{ github.event.before }}
+          REF_NAME: ${{ github.ref_name }}
         run: node src/scripts/forge-conformance-router.ts
 
   forge-conformance:
     name: Forge conformance (${{ matrix.forge }})
-    runs-on: ubuntu-26.04
+    # GitLab boots about a quarter faster on the Arm runners. Ubuntu 26.04
+    # runners use Docker's containerd image store, which unpacks layers while
+    # they download.
+    runs-on: ${{ matrix.forge == 'gitlab' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     timeout-minutes: 30
     needs: forge-conformance-scope
     if: needs.forge-conformance-scope.outputs.should-run == 'true'
@@ -57,13 +63,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        forge:
-          - gitea
-          - forgejo
-          - gitlab
+        forge: ${{ fromJSON(needs.forge-conformance-scope.outputs.forges) }}
 
     steps:
+      # Image layers are written to disk while the forge boots from them. In
+      # memory, the GitLab image pulls and boots about 7s faster.
+      - name: Keep Docker storage in memory
+        run: |
+          sudo systemctl stop docker.socket docker containerd
+          sudo mount -t tmpfs tmpfs /var/lib/containerd
+          sudo mount -t tmpfs tmpfs /var/lib/docker
+          sudo systemctl start containerd docker
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Start the forge right away so its image pull and boot overlap
+      # dependency installation. The suite attaches to this container. The
+      # runner's preinstalled Node runs this script before setup-node.
+      - name: Start forge container in the background
+        env:
+          FORGE: ${{ matrix.forge }}
+        run: node src/tests/integration/forge-conformance/containers.ts start "$FORGE"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
@@ -120,9 +140,16 @@ jobs:
 
       - name: Run pinned real-forge conformance suite
         env:
+          FORGE_CONFORMANCE_PRESTARTED: 'true'
           GITLAB_TEST_ARTIFACTS: artifacts/gitlab
           REST_FORGE_TEST_ARTIFACTS: artifacts/${{ matrix.forge }}
         run: npm run test:conformance:${{ matrix.forge }}
+
+      - name: Show forge container start log
+        if: failure()
+        env:
+          FORGE: ${{ matrix.forge }}
+        run: cat "$RUNNER_TEMP/forge-conformance-$FORGE.log" || true
 
       - name: Upload forge failure logs
         if: failure()
