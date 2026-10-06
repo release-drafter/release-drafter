@@ -109,6 +109,80 @@ describe('forge conformance router', () => {
     },
   )
 
+  it.each([
+    ['ci/gitlab-warm-start', ['gitlab']],
+    ['ci/Gitea-Forgejo-merge-base', ['gitea', 'forgejo']],
+  ])('runs only the forges named by a %s push', (branch, forges) => {
+    const runGit = gitRunner()
+
+    expect(
+      routeForgeConformance(
+        {
+          ...baseEnvironment,
+          EVENT_NAME: 'push',
+          PR_BASE_SHA: '',
+          PUSH_BEFORE_SHA: 'def456',
+          REF_NAME: branch,
+        },
+        runGit,
+      ),
+    ).toEqual({
+      shouldRun: true,
+      reason: `branch ${branch} targets ${forges.join(', ')}`,
+      forges,
+    })
+    expect(runGit).not.toHaveBeenCalled()
+  })
+
+  it('skips ci branch pushes that do not name a forge', () => {
+    const runGit = gitRunner()
+
+    expect(
+      routeForgeConformance(
+        {
+          ...baseEnvironment,
+          EVENT_NAME: 'push',
+          PR_BASE_SHA: '',
+          PUSH_BEFORE_SHA: 'def456',
+          REF_NAME: 'ci/actionlint-annotations',
+        },
+        runGit,
+      ),
+    ).toEqual({
+      shouldRun: false,
+      reason:
+        'branch ci/actionlint-annotations does not name a conformance forge',
+    })
+    expect(runGit).not.toHaveBeenCalled()
+  })
+
+  it('routes pull requests from ci branches by changed files', () => {
+    expect(
+      routeForgeConformance(
+        { ...baseEnvironment, REF_NAME: 'ci/gitlab-warm-start' },
+        gitRunner(0, 0, 0),
+      ),
+    ).toEqual({
+      shouldRun: false,
+      reason: 'no relevant files or dependencies changed',
+    })
+  })
+
+  it('emits selected forges for targeted branches', () => {
+    const appendFileSync = vi.fn()
+
+    emitForgeConformanceDecision(
+      { shouldRun: true, reason: 'targeted', forges: ['gitlab'] },
+      '/tmp/github-output',
+      { appendFileSync, log: vi.fn(), warn: vi.fn() },
+    )
+
+    expect(appendFileSync).toHaveBeenCalledWith(
+      '/tmp/github-output',
+      'should-run=true\nforges=["gitlab"]\n',
+    )
+  })
+
   it('runs labeled events when the override label already exists', () => {
     const runGit = gitRunner()
 
@@ -545,7 +619,7 @@ describe('forge conformance router', () => {
 
     expect(appendFileSync).toHaveBeenCalledWith(
       '/tmp/github-output',
-      'should-run=true\n',
+      'should-run=true\nforges=["gitea","forgejo","gitlab"]\n',
     )
     expect(warn).toHaveBeenCalledWith(
       '::warning::git diff failed with status 2; running forge conformance',

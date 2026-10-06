@@ -1,33 +1,21 @@
-import { createWriteStream, mkdirSync, rmSync } from 'node:fs'
+import { mkdirSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { pipeline } from 'node:stream/promises'
-import {
-  GenericContainer,
-  type StartedTestContainer,
-  Wait,
-} from 'testcontainers'
 import type { ForgeConformanceFixture } from './contract.ts'
+import { type ForgeInstance, startForgeInstance } from './forge-instance.ts'
 
 export type RestForgeFlavor = 'gitea' | 'forgejo'
 
 const FORGES = {
   gitea: {
-    image:
-      'gitea/gitea:1.27.1@sha256:34e3f6b75f5cbb6aebce588037fc5a53c84213e4d4b00da0a8d73e031a558e52',
     binary: 'gitea',
-    environmentPrefix: 'GITEA',
     expectedVersion: '1.27.1',
   },
   forgejo: {
-    image:
-      'data.forgejo.org/forgejo/forgejo:16.0.2@sha256:2fdfe28b5c68f82f49580e227b84e2afb43af0250e0631a54a386ef3b1d9b759',
     binary: 'forgejo',
-    environmentPrefix: 'FORGEJO',
     expectedVersion: '16.0.2',
   },
 } as const
 
-const PORT = 3000
 const OWNER = 'rdadmin'
 const NEWCOMER = 'newcomer'
 const REPOSITORY = 'conformance'
@@ -84,7 +72,6 @@ const sleep = (milliseconds: number) =>
 
 export const startRestForge = async (flavor: RestForgeFlavor) => {
   const forge = FORGES[flavor]
-  const prefix = forge.environmentPrefix
   const artifactsDirectory = resolve(
     process.env.REST_FORGE_TEST_ARTIFACTS ?? `artifacts/${flavor}`,
   )
@@ -92,51 +79,25 @@ export const startRestForge = async (flavor: RestForgeFlavor) => {
   mkdirSync(artifactsDirectory, { recursive: true })
   rmSync(containerLogPath, { force: true })
 
-  let container: StartedTestContainer | undefined
+  let instance: ForgeInstance | undefined
   const stopContainer = async (collectLogs = false) => {
-    if (!container) return
-    if (!collectLogs) {
-      await container.stop()
-      return
-    }
-
-    const logs = await container.logs()
-    const writeLogs = pipeline(logs, createWriteStream(containerLogPath))
-    try {
-      await container.stop()
-      await writeLogs
-    } catch (error) {
-      logs.destroy()
-      await writeLogs.catch(() => {})
-      throw error
-    }
+    await instance?.stop(collectLogs ? containerLogPath : undefined)
   }
 
   try {
-    const runningContainer = await new GenericContainer(forge.image)
-      .withExposedPorts(PORT)
-      // Match GitHub's public-runner CPU shape during local verification.
-      .withResourcesQuota({ cpu: 4 })
-      // Keep repository data on overlay storage; only SQLite is safe on tmpfs.
-      .withTmpFs({
-        '/var/lib/forge-test-db':
-          'rw,nosuid,nodev,size=128m,uid=1000,gid=1000,mode=0700',
-      })
-      .withEnvironment({
-        [`${prefix}__database__DB_TYPE`]: 'sqlite3',
-        [`${prefix}__database__PATH`]: '/var/lib/forge-test-db/gitea.db',
-        [`${prefix}__security__INSTALL_LOCK`]: 'true',
-        [`${prefix}__server__HTTP_PORT`]: String(PORT),
-        [`${prefix}__log__LEVEL`]: 'warn',
-      })
-      .withWaitStrategy(
-        Wait.forHttp('/api/v1/version', PORT).forStatusCode(200),
-      )
-      .withStartupTimeout(180_000)
-      .start()
-    container = runningContainer
+    const runningContainer = await startForgeInstance(
+      flavor,
+      async (started) =>
+        (
+          await fetch(`${started.serverUrl}/api/v1/version`, {
+            signal: AbortSignal.timeout(5_000),
+          })
+        ).ok,
+      180_000,
+    )
+    instance = runningContainer
 
-    const serverUrl = `http://${runningContainer.getHost()}:${runningContainer.getMappedPort(PORT)}`
+    const serverUrl = runningContainer.serverUrl
     const apiUrl = `${serverUrl}/api/v1`
 
     const createUser = async (username: string, admin: boolean) => {

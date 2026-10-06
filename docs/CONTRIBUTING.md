@@ -110,12 +110,25 @@ to run Docker-backed forge conformance tests:
 - `npm run test:conformance:gitea-forgejo` runs both images through the shared
   `ForgeAdapter` contract.
 - `npm run test:conformance:gitlab` runs the GitLab suite serially and uses
-  extended startup and teardown timeouts.
+  extended startup and teardown timeouts. It uses a GitLab CE image from
+  [`jetersen/gitlab-ce-warm`](https://github.com/jetersen/gitlab-ce-warm) with
+  Omnibus configuration and the test project already applied, so it starts in
+  seconds without Sidekiq. Changes to the seeded project belong in that
+  repository's `seeds/release-drafter.sh`, followed by an image digest update
+  in `src/tests/integration/forge-conformance/images.ts`. The image does not
+  run Workhorse, so tests cannot create files or commits through the API. Add
+  that data to the seed instead.
 
 The CI matrix tests Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
-redacted container logs and fixture metadata. CI and forge conformance jobs
+redacted container logs and fixture metadata. Each job moves Docker's storage
+to memory, then starts its forge container with
+`node src/tests/integration/forge-conformance/containers.ts start <forge>`
+before installing dependencies, and the suite attaches to it when
+`FORGE_CONFORMANCE_PRESTARTED=true`. Without that variable, the suites start the
+same container definitions with Testcontainers. CI and forge conformance jobs
 restore `node_modules` from the Actions cache when `package-lock.json`,
-`.npmrc`, and `.node-version` are unchanged.
+`.npmrc`, and `.node-version` are unchanged. Renovate updates the pinned images
+in `images.ts`.
 
 The forge conformance workflow runs the matrix for changes to these inputs:
 
@@ -148,6 +161,12 @@ Apply the exact `ci:forge-conformance` label when a change outside this scope
 needs container verification. The label overrides detection. Extend the package
 and tool lists when the suites start using another workspace or test tool.
 The same routing applies to pushes to `main`.
+
+Pushes to `ci/` branches select forges by branch name instead of by changed
+files. A branch name containing `gitea`, `forgejo`, or `gitlab` runs only those
+forges, for example `ci/gitlab-startup`. Other `ci/` branches skip the matrix.
+Use these branches to iterate on forge test infrastructure before opening a
+pull request.
 
 Other pull request label events use changed file detection. The workflow also
 runs the matrix if the base commit is missing or invalid, if Git fails, or if
