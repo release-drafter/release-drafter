@@ -853,6 +853,10 @@ var exclusiveConfigSchema = object({
 	*/
 	"change-title-escapes": string().optional(),
 	/**
+	* Characters to escape in `$BODY` when inserting into `change-template`. Uses title escaping rules with multiline backtick matches.
+	*/
+	"change-body-escapes": string().optional(),
+	/**
 	* The template to use for when there’s no changes.
 	*/
 	"no-changes-template": string().optional().default("* No changes"),

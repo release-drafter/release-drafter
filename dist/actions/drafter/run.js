@@ -718,8 +718,8 @@ var pullRequestToString = (params) => params.changes.map((change) => {
 		template: params.config["change-template"],
 		object: {
 			$CATEGORY: params.category ?? "",
-			$TITLE: escapeTitle({
-				title: change.title,
+			$TITLE: escapeChangeText({
+				text: change.title,
 				escapes: params.config["change-title-escapes"]
 			}),
 			$NUMBER: pullRequest.number.toString(),
@@ -741,18 +741,31 @@ var pullRequestToString = (params) => params.changes.map((change) => {
 			}),
 			$AUTHOR: pullAuthor,
 			$AUTHOR_URL: pullRequest.author?.url ?? "",
-			$BODY: pullRequest.body,
+			$BODY: escapeChangeText({
+				text: pullRequest.body,
+				escapes: params.config["change-body-escapes"],
+				multiline: true
+			}),
 			$URL: pullRequest.url,
 			$BASE_REF_NAME: pullRequest.baseRefName,
 			$HEAD_REF_NAME: pullRequest.headRefName
 		}
 	});
 }).join("\n");
-var escapeTitle = (params) => params.title.replace(new RegExp(`[${escapeStringRegexp(params.escapes || "")}]|\`.*?\``, "g"), (match) => {
-	if (match.length > 1) return match;
-	if (match === "@" || match === "#") return `${match}<!---->`;
-	return `\\${match}`;
-});
+/** Escapes selected characters, skipping backtick-delimited text unless backticks are selected. */
+var escapeChangeText = (params) => {
+	if (params.text == null || !params.escapes) return params.text;
+	return params.text.replace(new RegExp(`[${escapeStringRegexp(params.escapes)}]|\`.*?\``, params.multiline ? "gs" : "g"), (match, offset, text) => {
+		if (match.length > 1) return match;
+		if (match === "@" || match === "#") return `${match}<!---->`;
+		if (params.multiline && !params.escapes?.includes("\\")) {
+			let start = offset;
+			while (start > 0 && text[start - 1] === "\\") start--;
+			if ((offset - start) % 2 === 1) return match;
+		}
+		return `\\${match}`;
+	});
+};
 //#endregion
 //#region packages/core/src/release/generate-changelog.ts
 var generateChangeLog = (params) => {
