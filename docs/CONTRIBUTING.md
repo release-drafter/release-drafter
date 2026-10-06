@@ -110,7 +110,12 @@ to run Docker-backed forge conformance tests:
 - `npm run test:conformance:gitea-forgejo` runs both images through the shared
   `ForgeAdapter` contract.
 - `npm run test:conformance:gitlab` runs the GitLab suite serially and uses
-  extended startup and teardown timeouts.
+  extended startup and teardown timeouts. It uses a GitLab CE image from
+  [`jetersen/gitlab-ce-warm`](https://github.com/jetersen/gitlab-ce-warm) with
+  Omnibus configuration and the test project already applied, so it starts in
+  seconds without Sidekiq. Changes to the seeded project belong in that
+  repository's `seeds/release-drafter.sh`, followed by an image digest update
+  here.
 
 The CI matrix tests Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
 redacted container logs and fixture metadata.

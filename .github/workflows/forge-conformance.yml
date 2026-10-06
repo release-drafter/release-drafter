@@ -70,6 +70,14 @@ jobs:
           node-version-file: .node-version
           cache: npm
 
+      # Pulling the GitLab image is bound by disk writes. Starting it before
+      # npm ci overlaps the two, and Testcontainers joins the pull in flight.
+      - name: Pull GitLab image in the background
+        if: matrix.forge == 'gitlab'
+        run: |
+          image=$(node src/tests/integration/gitlab/gitlab-image.ts)
+          nohup docker pull --quiet "$image" > "$RUNNER_TEMP/gitlab-image-pull.log" 2>&1 &
+
       - run: npm ci
 
       - name: Run pinned real-forge conformance suite
