@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: read
-  checks: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -31,6 +30,6 @@ jobs:
       - name: Lint workflow files
         uses: reviewdog/action-actionlint@2085657ab2c7f48c58edcc767fba576f63bea76b # v1.77.0
         with:
-          reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-check' }}
+          reporter: github-annotations
           filter_mode: nofilter
           fail_level: error
