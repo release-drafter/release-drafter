@@ -1,4 +1,4 @@
-import { C as context, E as setFailed, T as info, a as readActionInputs, b as stringbool, c as getGitHubAdapter, d as escapeStringRegexp, i as defineActionInputNames, l as getRepository, n as sharedInputSchema, o as writeActionOutputs, s as actionLogger, u as noopLogger, v as object, y as string } from "../../chunks/config.js";
+import { D as setFailed, E as info, a as readActionInputs, b as string, c as getGitHubAdapter, d as escapeStringRegexp, i as defineActionInputNames, l as getRepository, n as sharedInputSchema, o as writeActionOutputs, s as actionLogger, u as noopLogger, w as context, x as stringbool, y as object } from "../../chunks/config.js";
 import { _ as filterPullRequestsByPreCategories, a as COERCE, b as needsPullRequestChangedFiles, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
 //#region node_modules/verkit/dist/version-Co1j9Tpq.js
 var COERCE_EXACT = safeRegex(COERCE);
@@ -171,6 +171,55 @@ var categorizePullRequests = (params) => {
 		}
 	}
 	return [uncategorizedPullRequests, categorizedPullRequests];
+};
+//#endregion
+//#region packages/core/src/release/render-template/select-section.ts
+var parseHeading = (line) => {
+	const match = /^ {0,3}(#{1,6})(?:[ \t]+(.*)|[ \t]*)$/.exec(line);
+	if (!match) return void 0;
+	return {
+		depth: match[1].length,
+		text: (match[2] ?? "").replace(/(?:^|[ \t]+)#+[ \t]*$/, "").trim()
+	};
+};
+/** Selects the first matching hash-style section, preserving its raw contents and line endings. */
+var selectSection = (input, selector) => {
+	const selected = parseHeading(selector);
+	if (!selected || !selected.text) throw new Error("Section selectors must be nonempty hash-style headings, such as ## Release information");
+	let start;
+	let fence;
+	let inComment = false;
+	for (const match of input.matchAll(/[^\r\n]*(?:\r\n|\r|\n|$)/g)) {
+		const line = match[0].replace(/(?:\r\n|\r|\n)$/, "");
+		const fenceMatch = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+		if (fence) {
+			if (fenceMatch && fenceMatch[1][0] === fence.character && fenceMatch[1].length >= fence.length && /^[ \t]*$/.test(fenceMatch[2])) fence = void 0;
+			continue;
+		}
+		if (!inComment && fenceMatch && (fenceMatch[1][0] === "~" || !fenceMatch[2].includes("`"))) {
+			fence = {
+				character: fenceMatch[1][0],
+				length: fenceMatch[1].length
+			};
+			continue;
+		}
+		if (inComment || /^ {0,3}<!--/.test(line)) {
+			let offset = 0;
+			while (offset < line.length) {
+				const marker = inComment ? "-->" : "<!--";
+				const index = line.indexOf(marker, offset);
+				if (index === -1) break;
+				inComment = !inComment;
+				offset = index + marker.length;
+			}
+			continue;
+		}
+		const heading = parseHeading(line);
+		if (!heading) continue;
+		if (start !== void 0 && heading.depth <= selected.depth) return input.slice(start, match.index);
+		if (start === void 0 && heading.depth === selected.depth && heading.text === selected.text) start = match.index + match[0].length;
+	}
+	return start === void 0 ? void 0 : input.slice(start);
 };
 //#endregion
 //#region packages/core/src/release/render-template/util/charCode.ts
@@ -502,13 +551,20 @@ var getReplaceMatches = (args) => {
 var applyReplacers = (input, replacers = [], target = "global") => {
 	for (const replacer of replacers) {
 		if ((replacer.target ?? "global") !== target) continue;
+		if (replacer.section !== void 0) {
+			input = selectSection(input, replacer.section) ?? (replacer["not-found"] === "empty" ? "" : input);
+			continue;
+		}
 		const replacePattern = parseReplaceString(replacer.replace);
 		const search = getSearch(replacer.search);
 		search.lastIndex = 0;
+		let matched = false;
 		input = input.replace(search, (...args) => {
+			matched = true;
 			const matches = getReplaceMatches(args);
 			return replacePattern.buildReplaceString(matches);
 		});
+		if (!matched && replacer["not-found"] === "empty") input = "";
 	}
 	return input;
 };
@@ -727,6 +783,7 @@ var generateNewContributorsList = (params) => {
 var numbersSeparator = ", ";
 var pullRequestToString = (params) => params.changes.map((change) => {
 	const pullRequest = change.representative;
+	const body = pullRequest.body ?? (params.config.replacers.some((rule) => rule.target === "change-body" && rule.section !== void 0) ? "" : pullRequest.body);
 	let pullAuthor = "ghost";
 	if (pullRequest.author) pullAuthor = pullRequest.author.type === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
 	const authorTemplate = params.config["change-author-template"];
@@ -758,7 +815,7 @@ var pullRequestToString = (params) => params.changes.map((change) => {
 			$AUTHOR: pullAuthor,
 			$AUTHOR_URL: pullRequest.author?.url ?? "",
 			$BODY: escapeChangeText({
-				text: pullRequest.body == null ? pullRequest.body : applyReplacers(pullRequest.body, params.config.replacers, "change-body"),
+				text: body == null ? body : applyReplacers(body, params.config.replacers, "change-body"),
 				escapes: params.config["change-body-escapes"],
 				multiline: true
 			}),

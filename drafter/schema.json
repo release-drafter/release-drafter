@@ -155,22 +155,57 @@
       "default": [],
       "type": "array",
       "items": {
-        "type": "object",
-        "properties": {
-          "search": {
-            "type": "string",
-            "minLength": 1
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "search": {
+                "type": "string",
+                "minLength": 1
+              },
+              "replace": {
+                "type": "string",
+                "minLength": 0
+              },
+              "section": {
+                "not": {}
+              },
+              "target": {
+                "type": "string",
+                "enum": ["global", "change-body", "change-title"]
+              },
+              "not-found": {
+                "type": "string",
+                "enum": ["empty", "full"]
+              }
+            },
+            "required": ["search", "replace"]
           },
-          "replace": {
-            "type": "string",
-            "minLength": 0
-          },
-          "target": {
-            "type": "string",
-            "enum": ["global", "change-body", "change-title"]
+          {
+            "type": "object",
+            "properties": {
+              "section": {
+                "type": "string",
+                "pattern": "^#{1,6}[ \\t]+(?=[^\\r\\n]*[^# \\t\\r\\n])\\S[^\\r\\n]*$"
+              },
+              "target": {
+                "type": "string",
+                "const": "change-body"
+              },
+              "search": {
+                "not": {}
+              },
+              "replace": {
+                "not": {}
+              },
+              "not-found": {
+                "type": "string",
+                "enum": ["empty", "full"]
+              }
+            },
+            "required": ["section", "target"]
           }
-        },
-        "required": ["search", "replace"]
+        ]
       }
     },
     "group-changes": {

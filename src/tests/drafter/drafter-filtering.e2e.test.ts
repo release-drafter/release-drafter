@@ -863,14 +863,60 @@ describe('drafter e2e', () => {
       expect(mocks.core.setFailed.mock.lastCall?.[0]).toMatchInlineSnapshot(`
         "[
           {
-            "expected": "string",
-            "code": "invalid_type",
+            "code": "invalid_union",
+            "errors": [
+              [
+                {
+                  "expected": "string",
+                  "code": "invalid_type",
+                  "path": [
+                    "search"
+                  ],
+                  "message": "Invalid input: expected string, received null"
+                }
+              ],
+              [
+                {
+                  "expected": "string",
+                  "code": "invalid_type",
+                  "path": [
+                    "section"
+                  ],
+                  "message": "Invalid input: expected string, received undefined"
+                },
+                {
+                  "code": "invalid_value",
+                  "values": [
+                    "change-body"
+                  ],
+                  "path": [
+                    "target"
+                  ],
+                  "message": "Invalid input: expected \\"change-body\\""
+                },
+                {
+                  "expected": "never",
+                  "code": "invalid_type",
+                  "path": [
+                    "search"
+                  ],
+                  "message": "Invalid input: expected never, received null"
+                },
+                {
+                  "expected": "never",
+                  "code": "invalid_type",
+                  "path": [
+                    "replace"
+                  ],
+                  "message": "Invalid input: expected never, received string"
+                }
+              ]
+            ],
             "path": [
               "replacers",
-              0,
-              "search"
+              0
             ],
-            "message": "Invalid input: expected string, received null"
+            "message": "Invalid input"
           }
         ]"
       `)

@@ -1,4 +1,4 @@
-import { S as Minimatch, T as info, _ as number, b as stringbool, d as escapeStringRegexp, f as ZodDefault, g as literal, h as boolean, m as array, p as _enum, t as composeConfigGet, v as object, x as union, y as string } from "./config.js";
+import { C as Minimatch, E as info, S as union, _ as never, b as string, d as escapeStringRegexp, f as ZodDefault, g as literal, h as boolean, m as array, p as _enum, t as composeConfigGet, v as number, x as stringbool, y as object } from "./config.js";
 //#region node_modules/conventional-commits-parser/dist/regex.js
 var nomatchRegex = /(?!.*)/;
 function escape(string) {
@@ -938,9 +938,10 @@ var exclusiveConfigSchema = object({
 	/**
 	* Search and replace content in the generated changelog body.
 	*/
-	replacers: array(object({
+	replacers: array(union([object({
 		search: string().min(1),
 		replace: string().min(0),
+		section: never().optional(),
 		/**
 		* Where to apply the replacer. Defaults to `global`, the generated release body. Change title/body targets run before escaping.
 		*/
@@ -948,8 +949,19 @@ var exclusiveConfigSchema = object({
 			"global",
 			"change-body",
 			"change-title"
-		]).optional()
-	})).optional().default([]),
+		]).optional(),
+		/**
+		* When search does not match, retain the current input (`full`, the default) or replace it with an empty string.
+		*/
+		"not-found": _enum(["empty", "full"]).optional()
+	}), object({
+		/** Select the section under an ATX heading, such as `## Release information`. */
+		section: string().regex(/^#{1,6}[ \t]+(?=[^\r\n]*[^# \t\r\n])\S[^\r\n]*$/, "Use a nonempty ATX heading, such as ## Release information"),
+		target: literal("change-body"),
+		search: never().optional(),
+		replace: never().optional(),
+		"not-found": _enum(["empty", "full"]).optional()
+	})])).optional().default([]),
 	/**
 	* Group changes whose titles share the same `group` into a single changelog entry.
 	*/
@@ -1575,6 +1587,7 @@ var mergeInputAndConfig = (params) => {
 	const latest = typeof config.latest !== "boolean" ? true : config.latest;
 	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
 	const replacers = config.replacers.map((replacer) => {
+		if (replacer.section !== void 0) return replacer;
 		try {
 			return {
 				...replacer,

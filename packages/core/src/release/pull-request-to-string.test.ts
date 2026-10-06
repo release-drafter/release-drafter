@@ -186,6 +186,155 @@ describe('pullRequestToString', () => {
       { target: 'change-body', search: '/<!--.*?-->/gs', replace: '' },
     ]
 
+    describe('section extraction with missing-match fallback', () => {
+      const section = '## Release information'
+      it.each([undefined, null, ''])(
+        'treats a body of %j as empty when section rules are configured',
+        (body) => {
+          for (const notFound of ['empty', 'full'] as const) {
+            expect(
+              render([change([pullRequest(1, { body })])], {
+                'change-template': '$BODY',
+                replacers: [
+                  { target: 'change-body', section, 'not-found': notFound },
+                ],
+              }),
+            ).toBe('')
+          }
+        },
+      )
+      const extract = (body: string, notFound: 'empty' | 'full') =>
+        render([change([pullRequest(1, { title: 'Keep _title_', body })])], {
+          'change-template': '## Release information\n$TITLE\n$BODY',
+          'change-body-escapes': '_',
+          replacers: [
+            {
+              target: 'change-body',
+              section,
+              'not-found': notFound,
+            },
+          ],
+        })
+
+      it.each(['\n', '\r\n'])(
+        'extracts raw section content before escaping with %j line endings',
+        (newline) => {
+          const body = [
+            '## Description',
+            'Internal context',
+            '## Release information',
+            '_Public notes_',
+            '### Details',
+            'Nested notes',
+            '## Checklist',
+            '- [x] Tested',
+          ].join(newline)
+          for (const notFound of ['empty', 'full'] as const) {
+            expect(extract(body, notFound)).toBe(
+              `## Release information\nKeep _title_\n\\_Public notes\\_${newline}### Details${newline}Nested notes${newline}`,
+            )
+          }
+        },
+      )
+
+      it('extracts content at EOF and stops at a level-one heading', () => {
+        expect(extract('## Release information\nPublic notes', 'empty')).toBe(
+          '## Release information\nKeep _title_\nPublic notes',
+        )
+        expect(
+          extract(
+            '## Release information\nPublic notes\n# Other\nInternal notes',
+            'empty',
+          ),
+        ).toBe('## Release information\nKeep _title_\nPublic notes\n')
+      })
+
+      it.each([
+        '## Release information',
+        '## Release information\n## Checklist\nInternal notes',
+      ])(
+        'retains an empty selected section even with full fallback for %j',
+        (body) => {
+          expect(extract(body, 'full')).toBe(
+            '## Release information\nKeep _title_\n',
+          )
+        },
+      )
+
+      it('handles missing sections independently of matches in the template and other bodies', () => {
+        const changes = [
+          change([pullRequest(1, { body: '## Release information\nNotes' })]),
+          change([
+            pullRequest(2, { body: '## Description\n_Internal notes_' }),
+          ]),
+          change([pullRequest(3, { body: '' })]),
+          change([
+            pullRequest(4, { body: '## Release information\nMore notes' }),
+          ]),
+        ]
+        for (const notFound of ['empty', 'full'] as const) {
+          expect(
+            render(changes, {
+              'change-template': '## Release information: $NUMBER\n$BODY',
+              'change-body-escapes': '_',
+              replacers: [
+                {
+                  target: 'change-body',
+                  section,
+                  'not-found': notFound,
+                },
+              ],
+            }),
+          ).toBe(
+            `## Release information: 1\nNotes\n## Release information: 2\n${notFound === 'full' ? '## Description\n\\_Internal notes\\_' : ''}\n## Release information: 3\n\n## Release information: 4\nMore notes`,
+          )
+        }
+      })
+
+      it('combines extraction and regex cleanup in configuration order', () => {
+        expect(
+          render(
+            [
+              change([
+                pullRequest(1, {
+                  body: '## Old heading\n<!-- hidden -->Public\n## Tests\nPrivate',
+                }),
+              ]),
+            ],
+            {
+              'change-template': '$BODY',
+              replacers: [
+                {
+                  target: 'change-body',
+                  search: 'Old heading',
+                  replace: 'Release information',
+                },
+                { target: 'change-body', section },
+                {
+                  target: 'change-body',
+                  search: '/<!--.*?-->/gs',
+                  replace: '',
+                },
+              ],
+            },
+          ),
+        ).toBe('Public\n')
+        expect(
+          render([change([pullRequest(1, { body: '## Other\nPrivate' })])], {
+            'change-template': '$BODY',
+            replacers: [
+              { target: 'change-body', section, 'not-found': 'empty' },
+              {
+                target: 'change-body',
+                search: '/^$/',
+                replace: 'No release notes',
+              },
+            ],
+          }),
+        ).toBe('No release notes')
+      })
+    })
+
     it('applies a custom sticky regex independently to every body and repeated render', () => {
       const parsedConfig = config({ 'change-template': '$BODY' })
       const search = /^old/y

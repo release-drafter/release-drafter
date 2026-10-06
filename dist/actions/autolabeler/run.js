@@ -1,4 +1,4 @@
-import { C as context, E as setFailed, S as Minimatch, T as info, a as readActionInputs, c as getGitHubAdapter, d as escapeStringRegexp, h as boolean, i as defineActionInputNames, m as array, n as sharedInputSchema, o as writeActionOutputs, t as composeConfigGet, v as object, w as core_exports, y as string } from "../../chunks/config.js";
+import { C as Minimatch, D as setFailed, E as info, T as core_exports, a as readActionInputs, b as string, c as getGitHubAdapter, d as escapeStringRegexp, h as boolean, i as defineActionInputNames, m as array, n as sharedInputSchema, o as writeActionOutputs, t as composeConfigGet, w as context, y as object } from "../../chunks/config.js";
 import process from "node:process";
 //#region packages/autolabeler/src/config/config.schema.ts
 var labelSchema = string().min(1).describe("Backward-compatible single label. Prefer labels for new rules.");
