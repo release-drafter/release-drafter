@@ -64,19 +64,15 @@ workspace package.
 
 Common commands:
 
-- `npm run ci` runs all repository checks and builds generated files. It
+- `npm run ci` runs the standard repository checks and builds generated files. It
   formats and lints the code, checks dependencies, package settings, and types,
   runs tests, generates schemas, and builds action bundles and workspace packages.
-  Tooling tests also run Node's `--check` against each `src/scripts/*.ts` entry.
-  This verifies that Node 24 can run the scripts without a compile step.
-- `npm run test:run` builds action bundles and workspace packages once, then
-  runs Vitest. Consumer tests use those outputs. `npm run ci` performs the same
-  builds before running tests and does not rebuild from test setup.
-- Vitest enforces 90% statement coverage. For a focused test run, use
+  Tooling tests check script syntax with Node.
+- `npm run test:run` builds the action bundles and workspace packages, then
+  runs tests with a 90% statement coverage threshold. For a focused run, use
   `npm run test:run -- path/to/file.test.ts --coverage.enabled=false`.
-- `npm run coverage` prints the statement percentage and writes the metric
-  table to the GitHub Actions job summary. Reporting also runs when tests or
-  coverage thresholds fail, if a coverage report was generated.
+- `npm run coverage` prints statement coverage and, in GitHub Actions, adds a
+  coverage table to the job summary.
 - `npm run check:dependencies` uses Knip to find unused files, unused
   dependencies, and unlisted dependencies. It does not report unused exports.
   It uses Knip's normal parser to avoid raw-transfer buffer allocation failures
@@ -95,8 +91,7 @@ Common commands:
   offline `npm publish --dry-run` against the same tarball.
 - `npm run check:clean` fails if generation leaves unstaged or untracked changes
   relative to the staged tree.
-- `npm run build --workspaces --if-present` builds workspace packages after the
-  root Vite action bundle build.
+- `npm run build:workspaces` builds workspace packages.
 
 ### Forge conformance tests
 
