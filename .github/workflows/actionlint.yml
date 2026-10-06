@@ -3,11 +3,13 @@ name: Lint GitHub Actions
 on:
   pull_request:
     paths:
+      - '.github/actionlint.yaml'
       - '.github/workflows/**'
   push:
     branches:
       - main
     paths:
+      - '.github/actionlint.yaml'
       - '.github/workflows/**'
 
 permissions:
@@ -20,7 +22,7 @@ concurrency:
 jobs:
   actionlint:
     name: actionlint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

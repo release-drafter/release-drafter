@@ -23,7 +23,7 @@ jobs:
     name: Prepare release PR
     environment: releaser
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'release-drafter/release-drafter'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     env:
       COVERAGE_THRESHOLD: '90'
@@ -129,7 +129,7 @@ jobs:
     if: >-
       github.event_name == 'push' && github.ref == 'refs/heads/main' &&
       github.repository == 'release-drafter/release-drafter'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -164,7 +164,7 @@ jobs:
     concurrency:
       group: release-drafter-writes
       cancel-in-progress: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read
