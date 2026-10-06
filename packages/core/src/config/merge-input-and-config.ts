@@ -120,10 +120,12 @@ const applyReleaseModeOverrides = (
     )
     config.prerelease = true
   }
-  if (config.prerelease && config.latest !== false) {
-    logger.warning(
-      "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.",
-    )
+  if (config.prerelease) {
+    if (config.latest === true) {
+      logger.warning(
+        "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.",
+      )
+    }
     config.latest = false
   }
 }

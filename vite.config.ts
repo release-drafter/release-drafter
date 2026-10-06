@@ -1,6 +1,7 @@
 import { builtinModules } from 'node:module'
 import { defaultClientConditions, defaultServerConditions } from 'vite'
 import { defineConfig } from 'vitest/config'
+import { readCoverageThreshold } from './src/scripts/coverage-threshold.ts'
 
 const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
 
@@ -68,12 +69,8 @@ export default defineConfig({
       reporter: ['json-summary'],
       reportOnFailure: true,
       thresholds: {
-        statements: process.env.COVERAGE_THRESHOLD
-          ? Number(process.env.COVERAGE_THRESHOLD)
-          : undefined,
-        branches: process.env.BRANCH_COVERAGE_THRESHOLD
-          ? Number(process.env.BRANCH_COVERAGE_THRESHOLD)
-          : undefined,
+        statements: readCoverageThreshold('COVERAGE_THRESHOLD'),
+        branches: readCoverageThreshold('BRANCH_COVERAGE_THRESHOLD'),
       },
       include: ['src/**/*.ts', 'packages/*/src/**/*.ts'],
       exclude: [

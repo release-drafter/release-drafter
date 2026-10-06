@@ -1,5 +1,6 @@
 import { appendFileSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { readCoverageThreshold } from './coverage-threshold.ts'
 
 type CoverageSummary = {
   total?: {
@@ -32,18 +33,10 @@ if (
   throw new Error('Unable to read coverage data from coverage-summary.json')
 }
 
-const readThreshold = (name: string) => {
-  const value = process.env[name] ?? '90'
-  const threshold = Number(value)
-  if (!Number.isFinite(threshold) || threshold < 0 || threshold > 100) {
-    throw new Error(`Invalid coverage threshold (${name}): ${value}`)
-  }
-  return threshold
-}
 const pct = total.statements.pct
 const branchPct = total.branches.pct
-const threshold = readThreshold('COVERAGE_THRESHOLD')
-const branchThreshold = readThreshold('BRANCH_COVERAGE_THRESHOLD')
+const threshold = readCoverageThreshold('COVERAGE_THRESHOLD') ?? 90
+const branchThreshold = readCoverageThreshold('BRANCH_COVERAGE_THRESHOLD') ?? 90
 const meetsThreshold = pct >= threshold && branchPct >= branchThreshold
 
 // Print coverage percentage for logs and local use.

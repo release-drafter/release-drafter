@@ -16,33 +16,57 @@ describe('release-mode normalization', () => {
       name: 'config identifier and explicit latest',
       config: { latest: true, 'prerelease-identifier': 'beta' },
       input: {},
+      warns: true,
     },
     {
       name: 'config identifier and default latest',
       config: { 'prerelease-identifier': 'beta' },
       input: {},
+      warns: false,
     },
     {
       name: 'input identifier and explicit latest',
       config: { latest: true },
       input: { 'prerelease-identifier': 'rc' },
+      warns: true,
+    },
+    {
+      name: 'input identifier and default latest',
+      config: {},
+      input: { 'prerelease-identifier': 'rc' },
+      warns: false,
     },
     {
       name: 'input prerelease and default latest',
       config: {},
       input: { prerelease: true },
+      warns: false,
     },
     {
       name: 'config prerelease and default latest',
       config: { prerelease: true },
       input: {},
+      warns: false,
+    },
+    {
+      name: 'input latest true overriding config latest false',
+      config: { prerelease: true, latest: false },
+      input: { latest: true },
+      warns: true,
+    },
+    {
+      name: 'input latest false overriding config latest true',
+      config: { prerelease: true, latest: true },
+      input: { latest: false },
+      warns: false,
     },
     {
       name: 'input identifier despite input prerelease false',
       config: { latest: true },
       input: { prerelease: false, 'prerelease-identifier': 'rc' },
+      warns: true,
     },
-  ])('never marks a prerelease latest: $name', ({ config, input }) => {
+  ])('never marks a prerelease latest: $name', ({ config, input, warns }) => {
     const original = configSchema.parse({
       template: '$CHANGES',
       commitish: 'main',
@@ -55,9 +79,14 @@ describe('release-mode normalization', () => {
     })
     expect(result).toMatchObject({ prerelease: true, latest: false })
     expect(original.latest).toBe(config.latest)
-    expect(logger.warning).toHaveBeenCalledWith(
-      expect.stringContaining("'prerelease' and 'latest' cannot be both true"),
+    const conflictWarning = expect.stringContaining(
+      "'prerelease' and 'latest' cannot be both true",
     )
+    if (warns) {
+      expect(logger.warning).toHaveBeenCalledWith(conflictWarning)
+    } else {
+      expect(logger.warning).not.toHaveBeenCalledWith(conflictWarning)
+    }
   })
 
   it('keeps an explicit stable-release input authoritative over a config identifier', () => {

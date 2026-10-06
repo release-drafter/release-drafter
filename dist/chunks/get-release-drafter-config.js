@@ -1608,8 +1608,8 @@ var applyReleaseModeOverrides = (config, input, logger) => {
 		logger.warning(`You specified a 'prerelease-identifier' (${config["prerelease-identifier"]}), but 'prerelease' is set to false. Switching to true.`);
 		config.prerelease = true;
 	}
-	if (config.prerelease && config.latest !== false) {
-		logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
+	if (config.prerelease) {
+		if (config.latest === true) logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
 		config.latest = false;
 	}
 };
