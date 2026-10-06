@@ -130,6 +130,57 @@ describe('pullRequestToString', () => {
     ).toBe('\\<title>\n<!-- body -->')
   })
 
+  it('replaces title prefixes and case before escaping, independently of the body and template', () => {
+    expect(
+      render(
+        [
+          change([
+            pullRequest(1, {
+              title: 'feat(ui): add _feature_',
+              body: 'feat(ui): add _feature_',
+            }),
+          ]),
+        ],
+        {
+          'change-template': 'feat(ui): $TITLE\n$BODY',
+          'change-title-escapes': '_',
+          replacers: [
+            {
+              target: 'change-title',
+              search: '/^feat\\(ui\\): (.*)$/',
+              replace: '\\u$1',
+            },
+            { target: 'change-body', search: 'feat(ui):', replace: 'body:' },
+            { search: 'feature', replace: 'global' },
+          ],
+        },
+      ),
+    ).toBe('feat(ui): Add \\_feature\\_\nbody: add _feature_')
+  })
+
+  it('applies a custom sticky regex independently to every title and repeated render', () => {
+    const parsedConfig = config({ 'change-template': '$TITLE: $BODY' })
+    const search = /^old/y
+    search.lastIndex = 1
+    parsedConfig.replacers = [
+      { target: 'change-title', search, replace: 'new' },
+    ]
+    const params = {
+      changes: [1, 2, 3].map((number) =>
+        change([pullRequest(number, { title: 'old title', body: 'old body' })]),
+      ),
+      commits: [],
+      serverUrl: 'https://github.com',
+      config: parsedConfig,
+    }
+
+    const expected =
+      'new title: old body\nnew title: old body\nnew title: old body'
+    expect(pullRequestToString(params)).toBe(expected)
+    expect(pullRequestToString(params)).toBe(expected)
+    expect(search.lastIndex).toBe(1)
+  })
+
   describe('body replacers', () => {
     const replacers = [
       { target: 'change-body', search: '/<!--.*?-->/gs', replace: '' },
