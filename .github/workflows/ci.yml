@@ -34,7 +34,8 @@ jobs:
 
   tests:
     name: Tests & Build-Checks
-    runs-on: ubuntu-latest
+    # The checks run a few seconds faster and more consistently on Arm.
+    runs-on: ubuntu-26.04-arm
     env:
       COVERAGE_THRESHOLD: '90'
       BRANCH_COVERAGE_THRESHOLD: '90'

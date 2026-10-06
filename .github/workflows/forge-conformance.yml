@@ -21,7 +21,7 @@ permissions:
 jobs:
   forge-conformance-scope:
     name: Forge conformance scope
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       should-run: ${{ steps.scope.outputs.should-run }}
 

@@ -18,7 +18,7 @@ jobs:
   publish:
     if: github.repository == 'release-drafter/release-drafter'
     environment: npm
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
 
     steps:
