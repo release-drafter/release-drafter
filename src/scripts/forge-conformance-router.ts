@@ -15,6 +15,9 @@ const FORGE_WORKSPACES = [
 ] as const
 
 const FORGE_TEST_TOOLS = ['vitest', 'vite', 'testcontainers'] as const
+export const CONFORMANCE_FORGES = ['gitea', 'forgejo', 'gitlab'] as const
+export type ConformanceForge = (typeof CONFORMANCE_FORGES)[number]
+const TARGETED_BRANCH_PREFIX = 'ci/'
 const FORGE_MANIFESTS = [
   'package.json',
   ...FORGE_WORKSPACES.map((workspace) => `packages/${workspace}/package.json`),
@@ -47,6 +50,7 @@ export type ForgeConformanceEnvironment = {
   HAS_OVERRIDE_LABEL?: string
   PR_BASE_SHA?: string
   PUSH_BEFORE_SHA?: string
+  REF_NAME?: string
 }
 
 export type GitRunner = (
@@ -175,6 +179,8 @@ export type ForgeConformanceDecision = {
   shouldRun: boolean
   reason: string
   warning?: string
+  /** Forges to test when running; defaults to every conformance forge. */
+  forges?: ConformanceForge[]
 }
 
 const failOpen = (warning: string): ForgeConformanceDecision => ({
@@ -197,6 +203,24 @@ export const routeForgeConformance = (
   const eventAction = environment.EVENT_ACTION ?? ''
   const labelName = environment.LABEL_NAME ?? ''
   const overrideLabel = environment.OVERRIDE_LABEL ?? 'ci:forge-conformance'
+  const refName = environment.REF_NAME ?? ''
+
+  // Pushes to ci/ branches iterate on forge test infrastructure before a pull
+  // request exists, so the branch name selects the forges to run.
+  if (eventName === 'push' && refName.startsWith(TARGETED_BRANCH_PREFIX)) {
+    const branch = refName.toLowerCase()
+    const forges = CONFORMANCE_FORGES.filter((forge) => branch.includes(forge))
+    return forges.length > 0
+      ? {
+          shouldRun: true,
+          reason: `branch ${refName} targets ${forges.join(', ')}`,
+          forges,
+        }
+      : {
+          shouldRun: false,
+          reason: `branch ${refName} does not name a conformance forge`,
+        }
+  }
 
   if (eventName === 'pull_request' && eventAction === 'labeled') {
     if (labelName === overrideLabel) {
@@ -327,7 +351,7 @@ export const emitForgeConformanceDecision = (
 ) => {
   effects.appendFileSync(
     outputPath,
-    `should-run=${decision.shouldRun ? 'true' : 'false'}\n`,
+    `should-run=${decision.shouldRun ? 'true' : 'false'}\nforges=${JSON.stringify(decision.forges ?? CONFORMANCE_FORGES)}\n`,
   )
   if (decision.warning) effects.warn(`::warning::${decision.warning}`)
   effects.log(

@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - main
+      - ci/**
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -24,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should-run: ${{ steps.scope.outputs.should-run }}
+      forges: ${{ steps.scope.outputs.forges }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -45,6 +47,7 @@ jobs:
           HAS_OVERRIDE_LABEL: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'ci:forge-conformance') }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE_SHA: ${{ github.event.before }}
+          REF_NAME: ${{ github.ref_name }}
         run: node src/scripts/forge-conformance-router.ts
 
   forge-conformance:
@@ -57,10 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        forge:
-          - gitea
-          - forgejo
-          - gitlab
+        forge: ${{ fromJSON(needs.forge-conformance-scope.outputs.forges) }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

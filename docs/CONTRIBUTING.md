@@ -147,6 +147,12 @@ needs container verification. The label overrides detection. Extend the package
 and tool lists when the suites start using another workspace or test tool.
 The same routing applies to pushes to `main`.
 
+Pushes to `ci/` branches select forges by branch name instead of by changed
+files. A branch name containing `gitea`, `forgejo`, or `gitlab` runs only those
+forges, for example `ci/gitlab-startup`. Other `ci/` branches skip the matrix.
+Use these branches to iterate on forge test infrastructure before opening a
+pull request.
+
 Other pull request label events use changed file detection. The workflow also
 runs the matrix if the base commit is missing or invalid, if Git fails, or if
 changed dependency inputs cannot be inspected.
