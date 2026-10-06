@@ -69,17 +69,45 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .node-version
-          cache: npm
 
-      # Pulling the GitLab image is bound by disk writes. Starting it before
-      # npm ci overlaps the two, and Testcontainers joins the pull in flight.
-      - name: Pull GitLab image in the background
-        if: matrix.forge == 'gitlab'
+      # Overlap the image pull with dependency installation. Testcontainers
+      # joins the pull if it is still running when the suite starts.
+      - name: Pull forge image in the background
+        env:
+          FORGE: ${{ matrix.forge }}
         run: |
-          image=$(node src/tests/integration/gitlab/gitlab-image.ts)
-          nohup docker pull --quiet "$image" > "$RUNNER_TEMP/gitlab-image-pull.log" 2>&1 &
+          image=$(node src/tests/integration/forge-conformance/images.ts "$FORGE")
+          nohup docker pull --quiet "$image" > "$RUNNER_TEMP/forge-image-pull.log" 2>&1 &
 
-      - run: npm ci
+      # Restoring installed dependencies is faster than npm ci. The key covers
+      # everything npm ci reads, so a hit matches a fresh install.
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.npmrc', 'package-lock.json') }}
+
+      - name: Locate npm download cache
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        id: npm-cache
+        run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+
+      # On a miss, reuse the npm download cache that setup-node saves for the
+      # other workflows, falling back to the closest earlier lockfile. The path
+      # must match setup-node's resolved path for the cache entry to match.
+      - name: Restore npm download cache
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: node-cache-${{ runner.os }}-${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: node-cache-${{ runner.os }}-${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}-npm-
+
+      - if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci
 
       - name: Run pinned real-forge conformance suite
         env:

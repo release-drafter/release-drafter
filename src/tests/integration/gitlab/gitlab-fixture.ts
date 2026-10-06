@@ -8,7 +8,7 @@ import {
   Wait,
 } from 'testcontainers'
 import type { ForgeConformanceFixture } from '../forge-conformance/contract.ts'
-import { GITLAB_IMAGE } from './gitlab-image.ts'
+import { FORGE_IMAGES } from '../forge-conformance/images.ts'
 
 // The image's documented root token for disposable test instances.
 const GITLAB_TOKEN = 'glpat-gitlab-ce-warm-root-token'
@@ -66,7 +66,7 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
   }
 
   try {
-    container = await new GenericContainer(GITLAB_IMAGE)
+    container = await new GenericContainer(FORGE_IMAGES.gitlab)
       .withExposedPorts(HTTP_PORT)
       .withWaitStrategy(
         Wait.forAll([
@@ -100,7 +100,7 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
       join(artifactsDirectory, 'metadata.json'),
       `${JSON.stringify(
         {
-          image: GITLAB_IMAGE,
+          image: FORGE_IMAGES.gitlab,
           containerId: container.getId(),
           serverUrl,
           repository: `${repository.owner}/${repository.name}`,

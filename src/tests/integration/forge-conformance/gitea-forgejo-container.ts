@@ -7,20 +7,19 @@ import {
   Wait,
 } from 'testcontainers'
 import type { ForgeConformanceFixture } from './contract.ts'
+import { FORGE_IMAGES } from './images.ts'
 
 export type RestForgeFlavor = 'gitea' | 'forgejo'
 
 const FORGES = {
   gitea: {
-    image:
-      'gitea/gitea:1.27.1@sha256:34e3f6b75f5cbb6aebce588037fc5a53c84213e4d4b00da0a8d73e031a558e52',
+    image: FORGE_IMAGES.gitea,
     binary: 'gitea',
     environmentPrefix: 'GITEA',
     expectedVersion: '1.27.1',
   },
   forgejo: {
-    image:
-      'data.forgejo.org/forgejo/forgejo:16.0.2@sha256:2fdfe28b5c68f82f49580e227b84e2afb43af0250e0631a54a386ef3b1d9b759',
+    image: FORGE_IMAGES.forgejo,
     binary: 'forgejo',
     environmentPrefix: 'FORGEJO',
     expectedVersion: '16.0.2',

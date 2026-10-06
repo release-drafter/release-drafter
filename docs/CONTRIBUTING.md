@@ -115,10 +115,13 @@ to run Docker-backed forge conformance tests:
   Omnibus configuration and the test project already applied, so it starts in
   seconds without Sidekiq. Changes to the seeded project belong in that
   repository's `seeds/release-drafter.sh`, followed by an image digest update
-  here.
+  in `src/tests/integration/forge-conformance/images.ts`.
 
 The CI matrix tests Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
-redacted container logs and fixture metadata.
+redacted container logs and fixture metadata. Each job starts pulling its
+pinned image before installing dependencies, and restores `node_modules` from
+the Actions cache when `package-lock.json`, `.npmrc`, and `.node-version` are
+unchanged. Renovate updates the pinned images in `images.ts`.
 
 The forge conformance workflow runs the matrix for changes to these inputs:
 
