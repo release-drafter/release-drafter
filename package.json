@@ -78,7 +78,7 @@
     "@graphql-codegen/cli": "^7.4.3",
     "@graphql-codegen/typed-document-node": "^7.1.1",
     "@graphql-codegen/typescript": "^6.1.0",
-    "@graphql-codegen/typescript-operations": "^6.1.8",
+    "@graphql-codegen/typescript-operations": "^6.1.9",
     "@types/node": "^24.19.0",
     "@vitest/coverage-v8": "^5.0.2",
     "knip": "6.38.0",
