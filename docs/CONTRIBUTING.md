@@ -65,29 +65,26 @@ workspace package.
 Common commands:
 
 - `npm run ci` runs all repository checks and builds generated files. It
-  formats and lints the code, checks dependencies, package boundaries, and
-  types, runs tests, generates schemas, and builds action bundles and workspace
-  packages.
+  formats and lints the code, checks dependencies, package settings, and types,
+  runs tests, generates schemas, and builds action bundles and workspace packages.
   Tooling tests also run Node's `--check` against each `src/scripts/*.ts` entry.
   This verifies that Node 24 can run the scripts without a compile step.
 - `npm run check:dependencies` uses Knip to find unused files, unused
   dependencies, and unlisted dependencies. It does not report unused exports.
   It uses Knip's normal parser to avoid raw-transfer buffer allocation failures
   on memory-limited workers, including Mend Renovate.
-- `npm run check:boundaries` uses dependency-cruiser's SWC parser to validate
-  internal imports in workspace source, generated JavaScript, and declarations.
+- `npm run check:dependencies:production` uses Knip strict mode to report
+  production imports missing from each private workspace's runtime dependencies.
+  Type-only source imports may use development dependencies. The public
+  `release-drafter` package bundles private workspaces from development
+  dependencies, so its shipped imports are checked by the package consumer
+  tests instead.
 - `npm run check:packages` checks package publication settings and the required
   Node.js version. Only the `release-drafter` package can be published.
 - `npm run test:package-readiness` builds and packs the public
   `release-drafter` package. It runs the ESM, NodeNext, CLI, and isolated `npx`
   consumer contracts. It checks the package contents and metadata, then runs an
   offline `npm publish --dry-run` against the same tarball.
-- `npm run check:package-boundaries` reports runtime imports whose packages are
-  listed only in `devDependencies`. Dependency-cruiser checks the source and
-  generated dependency graphs. The SWC check separately identifies type-only
-  imports because dependency-cruiser does not preserve that information.
-- Run `npm run build:workspaces` before `npm run check:boundaries` outside
-  `npm run ci` so generated JavaScript and declaration files are available.
 - `npm run check:clean` fails if generation leaves unstaged or untracked changes
   relative to the staged tree.
 - `npm run build --workspaces --if-present` builds workspace packages after the
