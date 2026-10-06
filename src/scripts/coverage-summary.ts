@@ -1,5 +1,6 @@
 import { appendFileSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { readCoverageThreshold } from './coverage-threshold.ts'
 
 type CoverageSummary = {
   total?: {
@@ -23,18 +24,20 @@ const coverageSummaryContent = readFileSync(coverageSummaryPath, {
 const coverageSummary = JSON.parse(coverageSummaryContent) as CoverageSummary
 
 const total = coverageSummary.total
-if (!total?.statements?.pct && total?.statements?.pct !== 0) {
+if (
+  typeof total?.statements?.pct !== 'number' ||
+  typeof total?.branches?.pct !== 'number' ||
+  !Number.isFinite(total.statements.pct) ||
+  !Number.isFinite(total.branches.pct)
+) {
   throw new Error('Unable to read coverage data from coverage-summary.json')
 }
 
 const pct = total.statements.pct
-const threshold = Number(process.env.COVERAGE_THRESHOLD ?? '90')
-if (Number.isNaN(threshold)) {
-  throw new Error(
-    `Invalid coverage threshold: ${process.env.COVERAGE_THRESHOLD ?? ''}`,
-  )
-}
-const meetsThreshold = pct >= threshold
+const branchPct = total.branches.pct
+const threshold = readCoverageThreshold('COVERAGE_THRESHOLD') ?? 90
+const branchThreshold = readCoverageThreshold('BRANCH_COVERAGE_THRESHOLD') ?? 90
+const meetsThreshold = pct >= threshold && branchPct >= branchThreshold
 
 // Print coverage percentage for logs and local use.
 console.log(pct.toFixed(2))
@@ -48,12 +51,12 @@ if (summaryFile) {
   const summary = [
     `## ${emoji} Code Coverage: ${pct.toFixed(2)}%`,
     '',
-    `Coverage ${status} the ${threshold.toFixed(0)}% threshold.`,
+    `Coverage ${status} the required thresholds: ${threshold}% statements and ${branchThreshold}% branches.`,
     '',
     '| Metric | Coverage | Covered | Total |',
     '| --- | --- | --- | --- |',
-    `| Statements | ${total.statements.pct?.toFixed(2)}% | ${total.statements.covered} | ${total.statements.total} |`,
-    `| Branches | ${total.branches?.pct?.toFixed(2)}% | ${total.branches?.covered} | ${total.branches?.total} |`,
+    `| Statements | ${pct.toFixed(2)}% | ${total.statements.covered} | ${total.statements.total} |`,
+    `| Branches | ${branchPct.toFixed(2)}% | ${total.branches.covered} | ${total.branches.total} |`,
     `| Functions | ${total.functions?.pct?.toFixed(2)}% | ${total.functions?.covered} | ${total.functions?.total} |`,
     `| Lines | ${total.lines?.pct?.toFixed(2)}% | ${total.lines?.covered} | ${total.lines?.total} |`,
     '',
