@@ -46,9 +46,55 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .node-version
-          cache: npm
 
-      - run: npm ci
+      # Restoring installed dependencies is faster than npm ci. The key covers
+      # everything npm ci reads, and npm runs no install scripts (.npmrc), so a
+      # hit matches a fresh install.
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.npmrc', 'package-lock.json') }}
+
+      - name: Locate npm download cache
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        id: npm-cache
+        run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+
+      # Same key as setup-node's npm cache. The path must match npm's resolved
+      # cache path for the key to match.
+      - name: Restore npm download cache
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        id: npm-download
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: node-cache-${{ runner.os }}-${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: node-cache-${{ runner.os }}-${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}-npm-
+
+      - if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # Save right after installing, before later steps write tool caches into
+      # node_modules. CI and forge conformance share both caches.
+      - name: Save npm download cache
+        if: steps.node-modules.outputs.cache-hit != 'true' && steps.npm-download.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: ${{ steps.npm-download.outputs.cache-primary-key }}
+
+      - name: Save node_modules
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ steps.node-modules.outputs.cache-primary-key }}
 
       - name: Run all checks and rebuild artifacts
         run: npm run ci

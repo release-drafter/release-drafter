@@ -113,7 +113,9 @@ to run Docker-backed forge conformance tests:
   extended startup and teardown timeouts.
 
 The CI matrix tests Gitea, Forgejo, and GitLab. Failed GitLab jobs upload
-redacted container logs and fixture metadata.
+redacted container logs and fixture metadata. CI and forge conformance jobs
+restore `node_modules` from the Actions cache when `package-lock.json`,
+`.npmrc`, and `.node-version` are unchanged.
 
 The forge conformance workflow runs the matrix for changes to these inputs:
 
