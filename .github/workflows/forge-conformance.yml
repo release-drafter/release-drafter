@@ -70,14 +70,12 @@ jobs:
         with:
           node-version-file: .node-version
 
-      # Overlap the image pull with dependency installation. Testcontainers
-      # joins the pull if it is still running when the suite starts.
-      - name: Pull forge image in the background
+      # Start the forge right away so its image pull and boot overlap
+      # dependency installation. The suite attaches to this container.
+      - name: Start forge container in the background
         env:
           FORGE: ${{ matrix.forge }}
-        run: |
-          image=$(node src/tests/integration/forge-conformance/images.ts "$FORGE")
-          nohup docker pull --quiet "$image" > "$RUNNER_TEMP/forge-image-pull.log" 2>&1 &
+        run: node src/tests/integration/forge-conformance/containers.ts start "$FORGE"
 
       # Restoring installed dependencies is faster than npm ci. The key covers
       # everything npm ci reads, so a hit matches a fresh install.
@@ -111,9 +109,16 @@ jobs:
 
       - name: Run pinned real-forge conformance suite
         env:
+          FORGE_CONFORMANCE_PRESTARTED: 'true'
           GITLAB_TEST_ARTIFACTS: artifacts/gitlab
           REST_FORGE_TEST_ARTIFACTS: artifacts/${{ matrix.forge }}
         run: npm run test:conformance:${{ matrix.forge }}
+
+      - name: Show forge container start log
+        if: failure()
+        env:
+          FORGE: ${{ matrix.forge }}
+        run: cat "$RUNNER_TEMP/forge-conformance-$FORGE.log" || true
 
       - name: Upload forge failure logs
         if: failure()

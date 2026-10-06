@@ -1,13 +1,11 @@
-import { createWriteStream, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { pipeline } from 'node:stream/promises'
 import type { Repository } from '@release-drafter/core'
-import {
-  GenericContainer,
-  type StartedTestContainer,
-  Wait,
-} from 'testcontainers'
 import type { ForgeConformanceFixture } from '../forge-conformance/contract.ts'
+import {
+  type ForgeInstance,
+  startForgeInstance,
+} from '../forge-conformance/forge-instance.ts'
 import { FORGE_IMAGES } from '../forge-conformance/images.ts'
 
 // The image's documented root token for disposable test instances.
@@ -16,6 +14,8 @@ const SEED_PATH = '/etc/gitlab-ce-warm/seed.json'
 
 const HTTP_PORT = 8181
 const STARTUP_TIMEOUT_MS = 5 * 60_000
+// GitLab answers health checks only from localhost, so run them in the container.
+const READY_COMMAND = `curl --fail --silent http://127.0.0.1:${HTTP_PORT}/-/health | grep --quiet 'GitLab OK' && curl --fail --silent 'http://127.0.0.1:${HTTP_PORT}/-/readiness?all=1' >/dev/null`
 const artifactsDirectory = resolve(
   process.env.GITLAB_TEST_ARTIFACTS ?? 'artifacts/gitlab',
 )
@@ -44,51 +44,27 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
   const containerLogPath = join(artifactsDirectory, 'container.log')
   rmSync(containerLogPath, { force: true })
   const startedAt = performance.now()
-  let container: StartedTestContainer | undefined
+  let instance: ForgeInstance | undefined
 
   const stopContainer = async (collectLogs = false) => {
-    if (!container) return
-    if (!collectLogs) {
-      await container.stop()
-      return
-    }
-
-    const logs = await container.logs()
-    const writeLogs = pipeline(logs, createWriteStream(containerLogPath))
-    try {
-      await container.stop()
-      await writeLogs
-    } catch (error) {
-      logs.destroy()
-      await writeLogs.catch(() => {})
-      throw error
-    }
+    await instance?.stop(collectLogs ? containerLogPath : undefined)
   }
 
   try {
-    container = await new GenericContainer(FORGE_IMAGES.gitlab)
-      .withExposedPorts(HTTP_PORT)
-      .withWaitStrategy(
-        Wait.forAll([
-          Wait.forSuccessfulCommand(
-            `curl --fail --silent http://127.0.0.1:${HTTP_PORT}/-/health | grep --quiet 'GitLab OK'`,
-          ),
-          Wait.forSuccessfulCommand(
-            `curl --fail --silent 'http://127.0.0.1:${HTTP_PORT}/-/readiness?all=1' >/dev/null`,
-          ),
-        ]),
-      )
-      .withStartupTimeout(STARTUP_TIMEOUT_MS)
-      .start()
-
-    const seedResult = await container.exec(['cat', SEED_PATH])
+    instance = await startForgeInstance(
+      'gitlab',
+      async (started) =>
+        (await started.exec(['sh', '-c', READY_COMMAND])).exitCode === 0,
+      STARTUP_TIMEOUT_MS,
+    )
+    const seedResult = await instance.exec(['cat', SEED_PATH])
     if (seedResult.exitCode !== 0) {
       throw new Error(`Cannot read ${SEED_PATH}: ${seedResult.output}`)
     }
-    const seed = JSON.parse(seedResult.stdout) as GitLabSeed
-    const serverUrl = `http://${container.getHost()}:${container.getMappedPort(HTTP_PORT)}`
+    const seed = JSON.parse(seedResult.output) as GitLabSeed
+    const serverUrl = instance.serverUrl
     console.log(
-      `GitLab started in ${((performance.now() - startedAt) / 1_000).toFixed(1)}s`,
+      `GitLab ready ${((performance.now() - startedAt) / 1_000).toFixed(1)}s after the suite started`,
     )
     const repository: Repository = {
       owner: 'release-drafter-tests/nested-fixtures',
@@ -101,7 +77,7 @@ export const startGitLabFixture = async (): Promise<GitLabFixture> => {
       `${JSON.stringify(
         {
           image: FORGE_IMAGES.gitlab,
-          containerId: container.getId(),
+          containerId: instance.id,
           serverUrl,
           repository: `${repository.owner}/${repository.name}`,
         },

@@ -1,9 +1,4 @@
-import { pathToFileURL } from 'node:url'
-
-/**
- * Pinned conformance images. The workflow runs this file with a forge name to
- * start pulling its image before npm ci.
- */
+/** Pinned conformance images. Renovate updates the tags and digests. */
 export const FORGE_IMAGES = {
   // Gitea's official GHCR copy of the Docker Hub image, with the same digest.
   gitea:
@@ -19,11 +14,3 @@ export const FORGE_IMAGES = {
   gitlab:
     'ghcr.io/jetersen/gitlab-ce-warm:19.1.3-ce.0-release-drafter@sha256:b6f7d46b399afbdd28e9f4addb2c537a4fa46d538d2fb33ec5158d0de3d2b363',
 } as const
-
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
-  const forge = process.argv[2] ?? ''
-  if (!Object.hasOwn(FORGE_IMAGES, forge)) {
-    throw new Error(`Unknown conformance forge: ${forge}`)
-  }
-  console.log(FORGE_IMAGES[forge as keyof typeof FORGE_IMAGES])
-}
