@@ -52,7 +52,8 @@ jobs:
 
   forge-conformance:
     name: Forge conformance (${{ matrix.forge }})
-    runs-on: ubuntu-latest
+    # GitLab boots about a quarter faster on the Arm runners.
+    runs-on: ${{ matrix.forge == 'gitlab' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     timeout-minutes: 30
     needs: forge-conformance-scope
     if: needs.forge-conformance-scope.outputs.should-run == 'true'
