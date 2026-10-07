@@ -74,7 +74,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
+    "@biomejs/biome": "2.5.15",
     "@graphql-codegen/cli": "^7.4.3",
     "@graphql-codegen/typed-document-node": "^7.1.1",
     "@graphql-codegen/typescript": "^6.1.0",
