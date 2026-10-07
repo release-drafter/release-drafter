@@ -12,5 +12,5 @@ export const FORGE_IMAGES = {
   // applied, built by https://github.com/jetersen/gitlab-ce-warm from
   // seeds/release-drafter.sh.
   gitlab:
-    'ghcr.io/jetersen/gitlab-ce-warm:19.1.3-ce.0-release-drafter@sha256:772027d7c3def1507c4897bf9cfc17fc6968e0e89b555da5058e000b96631f72',
+    'ghcr.io/jetersen/gitlab-ce-warm:19.4.1-ce.0-release-drafter@sha256:d4d558a1ad380ecd56f9babb399b56d92d272b93e61eb3d5df0d90c232b87b6c',
 } as const

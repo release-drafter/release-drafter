@@ -6,6 +6,7 @@ import {
 } from 'release-drafter'
 import { inject } from 'vitest'
 import { defineForgeAdapterConformance } from '../forge-conformance/contract.ts'
+import { FORGE_IMAGES } from '../forge-conformance/images.ts'
 import type { ProvidedGitLabFixture } from './gitlab-global-setup.ts'
 
 type GitLabExtension = ForgeAdapter & {
@@ -18,6 +19,7 @@ type GitLabExtension = ForgeAdapter & {
 }
 
 const fixture = inject('gitlabFixture') as ProvidedGitLabFixture
+const gitlabVersion = FORGE_IMAGES.gitlab.match(/:(\d+\.\d+\.\d+)-ce/)?.[1]
 const adapter = createForgeAdapter({
   forge: 'gitlab',
   token: fixture.token,
@@ -46,7 +48,7 @@ const releaseApi = async <T>(release: Release, method = 'GET'): Promise<T> => {
 }
 
 defineForgeAdapterConformance({
-  name: 'GitLab CE 19.1.3',
+  name: `GitLab CE ${gitlabVersion}`,
   adapter,
   fixture: fixture.conformance,
   extensions: {
