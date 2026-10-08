@@ -49,7 +49,13 @@ workspace development, package publication, and release rules.
   with a custom summary.
 - With `gh pr create` or `gh pr edit`, write the completed template to a file
   and pass `--body-file`. An explicit body bypasses automatic template filling.
-- Use a conventional PR title as required by the template and CI.
+- Use Conventional Commits for commit messages and PR titles. Check
+  `.github/release-drafter.yml` for the resulting changelog category and version
+  increment before creating or changing a PR title.
+- Use `ci` for repository workflow changes, including release automation fixes;
+  use `fix` for bugs in the released action, CLI, or package. Scopes add context
+  to the type: `fix(ci)` still matches Bug Fixes, while `ci(release)` matches
+  Maintenance.
 - Describe the final change, dependency changes, relevant issue links, and
   actual validation. Check only checklist items that are satisfied. Leave
   human review and policy agreement items for the contributor to confirm;
