@@ -76,12 +76,20 @@ describe('release workflow policy', () => {
     expect(release.with.token).toBe(`\${{ steps.app-token.outputs.token }}`)
   })
 
-  it('marks release PRs pending at creation and tagged only after publication', () => {
+  it('excludes release PRs from the changelog and tracks publication state', () => {
     const createPr = workflow.jobs.prepare.steps.find(
       (step: { uses?: string }) =>
         step.uses?.startsWith('peter-evans/create-pull-request@'),
     )
-    expect(createPr.with.labels).toBe('autorelease: pending')
+    expect(createPr.with.labels.trim().split('\n')).toEqual([
+      'autorelease: pending',
+      'skip-changelog',
+    ])
+    const config = parse(readFileSync('.github/release-drafter.yml', 'utf8'))
+    expect(config.categories).toContainEqual({
+      type: 'pre-exclude',
+      when: { label: 'skip-changelog' },
+    })
     const steps = workflow.jobs.publish.steps
     const labelStep = steps.find(
       (step: { name?: string }) => step.name === 'Mark release PR as tagged',

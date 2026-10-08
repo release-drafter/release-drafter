@@ -16,7 +16,7 @@ const isNotFound = (error: unknown) =>
   'status' in error &&
   error.status === 404
 
-/** Create missing release-state labels without overwriting existing styling. */
+/** Create missing release PR labels without overwriting existing styling. */
 export const ensureReleaseLabels = async (
   github: GitHub,
   repository: { owner: string; repo: string },
@@ -31,6 +31,11 @@ export const ensureReleaseLabels = async (
       name: 'autorelease: tagged',
       color: '0e8a16',
       description: 'Release PR has been published',
+    },
+    {
+      name: 'skip-changelog',
+      color: 'D9AEE1',
+      description: 'Exclude PR from the changelog',
     },
   ]) {
     try {

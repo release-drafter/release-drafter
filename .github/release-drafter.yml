@@ -1,5 +1,9 @@
 name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
+replacers:
+  - target: 'change-title'
+    search: '/^(?:build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(?:\([^)]*\))?!?: (.*)$/'
+    replace: '\u$1'
 template: |
   # What's Changed
 
