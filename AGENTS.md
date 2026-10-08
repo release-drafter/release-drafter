@@ -51,9 +51,9 @@ workspace development, package publication, and release rules.
   and pass `--body-file`. An explicit body bypasses automatic template filling.
 - Use Conventional Commits for commits and PR titles. Check titles against
   `.github/release-drafter.yml` for category and version impact.
-- Use `ci` for workflow and release automation changes, including fixes; use
-  `fix` for bugs in released functionality. Scopes add context: `fix(ci)` still
-  belongs under Bug Fixes.
+- Use `ci` for changes to this repository's own CI workflows and maintenance
+  automations, including fixes; use `fix` for bugs in Release Drafter's released
+  functionality. Scopes add context: `fix(ci)` still belongs under Bug Fixes.
 - Describe the final change, dependency changes, relevant issue links, and
   actual validation. Check only checklist items that are satisfied. Leave
   human review and policy agreement items for the contributor to confirm;
