@@ -224,7 +224,8 @@ a new issue.
 3. Approve the **Publish npm Package** workflow through the `npm` environment.
 4. Review and approve the staged package on npm with 2FA to make it public.
 
-Release PRs are excluded from the changelog automatically.
+Release PRs are excluded from the changelog automatically. Changelog entries
+omit Conventional Commit prefixes.
 
 A later push to `main` retries failed GitHub publication. For a failed npm
 publication, rerun **Publish npm Package** with the existing release tag.
