@@ -369,16 +369,20 @@ describe('release label setup', () => {
   it('leaves existing labels unchanged', async () => {
     const { github, ensureLabels } = fixture()
     await ensureLabels()
-    expect(github.rest.issues.getLabel).toHaveBeenCalledTimes(2)
+    expect(github.rest.issues.getLabel).toHaveBeenCalledTimes(3)
     expect(github.rest.issues.createLabel).not.toHaveBeenCalled()
   })
 
-  it('creates missing pending and tagged labels', async () => {
+  it('creates missing release state and changelog exclusion labels', async () => {
     const { github, ensureLabels } = fixture()
     github.rest.issues.getLabel.mockRejectedValue(notFound())
     await ensureLabels()
-    expect(github.rest.issues.createLabel).toHaveBeenCalledTimes(2)
-    for (const name of ['autorelease: pending', 'autorelease: tagged']) {
+    expect(github.rest.issues.createLabel).toHaveBeenCalledTimes(3)
+    for (const name of [
+      'autorelease: pending',
+      'autorelease: tagged',
+      'skip-changelog',
+    ]) {
       expect(github.rest.issues.createLabel).toHaveBeenCalledWith(
         expect.objectContaining({
           owner: options.owner,
@@ -405,7 +409,7 @@ describe('release label setup', () => {
       Object.assign(new Error('Already exists'), { status: 422 }),
     )
     await expect(ensureLabels()).resolves.toBeUndefined()
-    expect(github.rest.issues.getLabel).toHaveBeenCalledTimes(3)
+    expect(github.rest.issues.getLabel).toHaveBeenCalledTimes(4)
   })
 
   it('propagates failed label creation', async () => {

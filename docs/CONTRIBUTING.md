@@ -224,10 +224,11 @@ a new issue.
 3. Approve the **Publish npm Package** workflow through the `npm` environment.
 4. Review and approve the staged package on npm with 2FA to make it public.
 
-The workflow creates missing release labels. Release PRs receive the
-`autorelease: pending` label. On each push to `main`, a
-read-only job looks for a merged PR with that label created by the releaser app
-in this repository for the version currently on `main`. It
+The workflow creates missing release labels. Release PRs receive
+`autorelease: pending` and `skip-changelog` so version bumps stay out of the
+changelog. On each push to `main`, a read-only job looks for a merged PR with
+`autorelease: pending` created by the releaser app in this repository for the
+version currently on `main`. It
 verifies that the merge commit is an ancestor of the workflow commit and that
 the root and public package versions match the release branch. Published releases
 are not republished; a pending PR can still finish a failed major-tag update or

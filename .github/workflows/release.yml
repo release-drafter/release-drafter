@@ -110,7 +110,9 @@ jobs:
           branch: release/v${{ steps.version.outputs.version }}
           commit-message: 'chore: release v${{ steps.version.outputs.version }}'
           title: 'chore: release v${{ steps.version.outputs.version }}'
-          labels: 'autorelease: pending'
+          labels: |
+            autorelease: pending
+            skip-changelog
           add-paths: |
             package.json
             package-lock.json
