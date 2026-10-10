@@ -130,7 +130,7 @@ restore `node_modules` from the Actions cache when `package-lock.json`,
 `.npmrc`, and `.node-version` are unchanged. Renovate updates the pinned images
 in `images.ts`.
 
-The forge conformance workflow runs the matrix for changes to these inputs:
+The CI forge conformance jobs run the matrix for changes to these inputs:
 
 - Source or TypeScript configurations in the core, public package, or adapters
   (`github-adapter`, `rest-adapter`, `gitea-adapter`, `forgejo-adapter`, and
@@ -138,7 +138,7 @@ The forge conformance workflow runs the matrix for changes to these inputs:
   are included automatically. Unit tests and the public CLI entrypoint are excluded.
 - The conformance suites and fixtures under `src/tests/integration/forge-conformance`
   and `src/tests/integration/gitlab`, excluding the mocked GitHub unit suite.
-- `.github/workflows/forge-conformance.yml`, `.node-version`, `.npmrc`, root
+- `.github/workflows/ci.yml`, `.node-version`, `.npmrc`, root
   TypeScript configurations, `vitest.forge.config.ts`, `vitest.gitlab.config.ts`,
   or `src/scripts/forge-conformance-router.ts`.
 - Runtime dependency or module-resolution settings in the core, public package,
@@ -157,10 +157,10 @@ containers. A dependency update still runs the matrix if it changes a runtime
 package shared with the forge suites. Shared package source changes remain
 conservative triggers even when a particular function is not exercised.
 
-Apply the exact `ci:forge-conformance` label when a change outside this scope
-needs container verification. The label overrides detection. Extend the package
-and tool lists when the suites start using another workspace or test tool.
-The same routing applies to pushes to `main`.
+For PRs outside this scope, use a `ci/` source branch containing `gitea`,
+`forgejo`, or `gitlab` to run the named forges, for example `ci/gitlab-startup`.
+Relevant changes still run all forges regardless of the branch name.
+The same changed-file detection applies to pushes to `main`.
 
 Pushes to `ci/` branches select forges by branch name instead of by changed
 files. A branch name containing `gitea`, `forgejo`, or `gitlab` runs only those
@@ -168,9 +168,8 @@ forges, for example `ci/gitlab-startup`. Other `ci/` branches skip the matrix.
 Use these branches to iterate on forge test infrastructure before opening a
 pull request.
 
-Other pull request label events use changed file detection. The workflow also
-runs the matrix if the base commit is missing or invalid, if Git fails, or if
-changed dependency inputs cannot be inspected.
+The workflow runs all forges if the base commit is missing or invalid, Git fails,
+or changed dependency inputs cannot be inspected.
 
 The scope job runs the checked-in TypeScript router with the repository's pinned
 Node version. It passes fixed pathspec arguments directly to Git without shell
@@ -183,7 +182,7 @@ Some forge fixtures also verify default-branch and repository configuration
 loading. These commands require a working Docker-compatible daemon. They fail if
 the daemon is not available.
 
-The package-readiness workflow checks packaging only. It receives no
+The CI package-readiness job checks packaging only. It receives no
 credentials and runs npm in offline and dry-run modes. It disables provenance
 and grants only `contents: read`.
 

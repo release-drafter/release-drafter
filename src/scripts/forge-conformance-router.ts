@@ -24,7 +24,7 @@ const FORGE_MANIFESTS = [
 ]
 
 export const FORGE_CONFORMANCE_PATHSPECS = [
-  '.github/workflows/forge-conformance.yml',
+  '.github/workflows/ci.yml',
   '.node-version',
   '.npmrc',
   ':(glob)tsconfig*.json',
@@ -44,10 +44,7 @@ export const FORGE_CONFORMANCE_PATHSPECS = [
 
 export type ForgeConformanceEnvironment = {
   EVENT_NAME?: string
-  EVENT_ACTION?: string
-  LABEL_NAME?: string
-  OVERRIDE_LABEL?: string
-  HAS_OVERRIDE_LABEL?: string
+  HEAD_REF?: string
   PR_BASE_SHA?: string
   PUSH_BEFORE_SHA?: string
   REF_NAME?: string
@@ -200,9 +197,6 @@ export const routeForgeConformance = (
   runGit: GitRunner = defaultGitRunner,
 ): ForgeConformanceDecision => {
   const eventName = environment.EVENT_NAME ?? ''
-  const eventAction = environment.EVENT_ACTION ?? ''
-  const labelName = environment.LABEL_NAME ?? ''
-  const overrideLabel = environment.OVERRIDE_LABEL ?? 'ci:forge-conformance'
   const refName = environment.REF_NAME ?? ''
 
   // Pushes to ci/ branches iterate on forge test infrastructure before a pull
@@ -220,25 +214,6 @@ export const routeForgeConformance = (
           shouldRun: false,
           reason: `branch ${refName} does not name a conformance forge`,
         }
-  }
-
-  if (eventName === 'pull_request' && eventAction === 'labeled') {
-    if (labelName === overrideLabel) {
-      return {
-        shouldRun: true,
-        reason: `override label ${overrideLabel} was added`,
-      }
-    }
-  }
-
-  if (
-    eventName === 'pull_request' &&
-    environment.HAS_OVERRIDE_LABEL === 'true'
-  ) {
-    return {
-      shouldRun: true,
-      reason: `pull request has override label ${overrideLabel}`,
-    }
   }
 
   const baseSha =
@@ -320,6 +295,25 @@ export const routeForgeConformance = (
         return failOpen(
           'Dependency input inspection failed; running forge conformance',
         )
+      }
+    }
+    // PR branch names add coverage only after automatic detection finds no
+    // relevant changes. Relevant changes and inspection failures run all forges.
+    const headRef = environment.HEAD_REF ?? ''
+    if (
+      eventName === 'pull_request' &&
+      headRef.startsWith(TARGETED_BRANCH_PREFIX)
+    ) {
+      const branch = headRef.toLowerCase()
+      const forges = CONFORMANCE_FORGES.filter((forge) =>
+        branch.includes(forge),
+      )
+      if (forges.length > 0) {
+        return {
+          shouldRun: true,
+          reason: `branch ${headRef} targets ${forges.join(', ')}`,
+          forges,
+        }
       }
     }
     return {

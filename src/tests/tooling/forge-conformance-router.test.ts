@@ -13,10 +13,6 @@ import {
 
 const baseEnvironment: ForgeConformanceEnvironment = {
   EVENT_NAME: 'pull_request',
-  EVENT_ACTION: 'synchronize',
-  LABEL_NAME: '',
-  OVERRIDE_LABEL: 'ci:forge-conformance',
-  HAS_OVERRIDE_LABEL: 'false',
   PR_BASE_SHA: 'abc123',
   PUSH_BEFORE_SHA: '',
 }
@@ -68,47 +64,6 @@ describe('forge conformance router', () => {
     ).toMatchObject({ shouldRun })
   })
 
-  it('runs only for the exact override label on labeled events', () => {
-    const runGit = gitRunner()
-
-    expect(
-      routeForgeConformance(
-        {
-          ...baseEnvironment,
-          EVENT_ACTION: 'labeled',
-          LABEL_NAME: 'ci:forge-conformance',
-        },
-        runGit,
-      ),
-    ).toEqual({
-      shouldRun: true,
-      reason: 'override label ci:forge-conformance was added',
-    })
-    expect(runGit).not.toHaveBeenCalled()
-  })
-
-  it.each([
-    ['relevant diff', 1, true],
-    ['irrelevant diff', 0, false],
-  ])(
-    'routes an unrelated labeled event using its %s',
-    (_name, diffStatus, shouldRun) => {
-      const runGit = gitRunner(0, diffStatus, 0)
-
-      expect(
-        routeForgeConformance(
-          {
-            ...baseEnvironment,
-            EVENT_ACTION: 'labeled',
-            LABEL_NAME: 'documentation',
-          },
-          runGit,
-        ),
-      ).toMatchObject({ shouldRun })
-      expect(runGit).toHaveBeenCalledTimes(diffStatus === 0 ? 3 : 2)
-    },
-  )
-
   it.each([
     ['ci/gitlab-warm-start', ['gitlab']],
     ['ci/Gitea-Forgejo-merge-base', ['gitea', 'forgejo']],
@@ -156,16 +111,59 @@ describe('forge conformance router', () => {
     expect(runGit).not.toHaveBeenCalled()
   })
 
-  it('routes pull requests from ci branches by changed files', () => {
+  it.each([
+    ['ci/gitlab-warm-start', ['gitlab']],
+    ['ci/Gitea-Forgejo-merge-base', ['gitea', 'forgejo']],
+  ])(
+    'adds the forges named by PR branch %s for irrelevant changes',
+    (branch, forges) => {
+      expect(
+        routeForgeConformance(
+          { ...baseEnvironment, HEAD_REF: branch, REF_NAME: '1/merge' },
+          gitRunner(0, 0, 0),
+        ),
+      ).toEqual({
+        shouldRun: true,
+        reason: `branch ${branch} targets ${forges.join(', ')}`,
+        forges,
+      })
+    },
+  )
+
+  it.each(['ci/gitlab-warm-start', 'ci/actionlint-annotations'])(
+    'keeps automatic coverage for PR branch %s',
+    (branch) => {
+      expect(
+        routeForgeConformance(
+          { ...baseEnvironment, HEAD_REF: branch },
+          gitRunner(0, 1),
+        ),
+      ).toEqual({ shouldRun: true, reason: 'relevant files changed' })
+    },
+  )
+
+  it.each(['ci/actionlint-annotations', 'fix/gitlab-startup'])(
+    'does not force coverage for PR branch %s',
+    (branch) => {
+      expect(
+        routeForgeConformance(
+          { ...baseEnvironment, HEAD_REF: branch },
+          gitRunner(0, 0, 0),
+        ),
+      ).toEqual({
+        shouldRun: false,
+        reason: 'no relevant files or dependencies changed',
+      })
+    },
+  )
+
+  it('runs all forges on inspection failure even for a targeted PR branch', () => {
     expect(
       routeForgeConformance(
-        { ...baseEnvironment, REF_NAME: 'ci/gitlab-warm-start' },
-        gitRunner(0, 0, 0),
+        { ...baseEnvironment, HEAD_REF: 'ci/gitlab-startup', PR_BASE_SHA: '' },
+        gitRunner(),
       ),
-    ).toEqual({
-      shouldRun: false,
-      reason: 'no relevant files or dependencies changed',
-    })
+    ).toMatchObject({ shouldRun: true, warning: expect.any(String) })
   })
 
   it('emits selected forges for targeted branches', () => {
@@ -181,41 +179,6 @@ describe('forge conformance router', () => {
       '/tmp/github-output',
       'should-run=true\nforges=["gitlab"]\n',
     )
-  })
-
-  it('runs labeled events when the override label already exists', () => {
-    const runGit = gitRunner()
-
-    expect(
-      routeForgeConformance(
-        {
-          ...baseEnvironment,
-          EVENT_ACTION: 'labeled',
-          LABEL_NAME: 'documentation',
-          HAS_OVERRIDE_LABEL: 'true',
-        },
-        runGit,
-      ),
-    ).toEqual({
-      shouldRun: true,
-      reason: 'pull request has override label ci:forge-conformance',
-    })
-    expect(runGit).not.toHaveBeenCalled()
-  })
-
-  it('runs non-labeled pull request events when the override label exists', () => {
-    const runGit = gitRunner()
-
-    expect(
-      routeForgeConformance(
-        { ...baseEnvironment, HAS_OVERRIDE_LABEL: 'true' },
-        runGit,
-      ),
-    ).toEqual({
-      shouldRun: true,
-      reason: 'pull request has override label ci:forge-conformance',
-    })
-    expect(runGit).not.toHaveBeenCalled()
   })
 
   it.each(['', '0'.repeat(40)])(
@@ -319,12 +282,15 @@ describe('forge conformance router', () => {
         'node_modules/transitive': { version: '1.0.0' },
       } as Record<string, Record<string, unknown>>,
     })
-    const routeLocks = (before: unknown, after: unknown) => {
+    const routeLocks = (before: unknown, after: unknown, headRef = '') => {
       const runGit = gitRunner(0, 0)
       runGit.mockReturnValueOnce({ status: 0, stdout: 'package-lock.json\n' })
       runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(before) })
       runGit.mockReturnValueOnce({ status: 0, stdout: JSON.stringify(after) })
-      return routeForgeConformance(baseEnvironment, runGit)
+      return routeForgeConformance(
+        { ...baseEnvironment, HEAD_REF: headRef },
+        runGit,
+      )
     }
 
     it('skips a gh-actions webhook dependency replacement', () => {
@@ -356,6 +322,16 @@ describe('forge conformance router', () => {
         })
       },
     )
+
+    it('does not narrow dependency-triggered coverage to the PR branch forge', () => {
+      const before = lockfile()
+      const after = lockfile()
+      after.packages['node_modules/shared'].version = '99.0.0'
+      expect(routeLocks(before, after, 'ci/gitlab-startup')).toEqual({
+        shouldRun: true,
+        reason: 'forge dependencies changed',
+      })
+    })
 
     it('skips unrelated root tooling and workspace development dependencies', () => {
       const before = lockfile()
@@ -576,7 +552,7 @@ describe('forge conformance router', () => {
         ['src/tests/integration/forge-conformance/contract.ts', true],
         ['vite.config.ts', false],
         ['vitest.gitlab.config.ts', true],
-        ['.github/workflows/ci.yml', false],
+        ['.github/workflows/ci.yml', true],
         ['packages/gitlab-adapter/tsconfig.json', true],
         ['packages/rest-adapter/src/index.ts', true],
       ] as const) {

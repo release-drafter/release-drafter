@@ -5,9 +5,11 @@ on:
   push:
     branches:
       - main
+      - ci/**
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name == 'workflow_dispatch' && 'manual' || 'code' }}
   cancel-in-progress: true
 
 permissions:
@@ -81,7 +83,9 @@ jobs:
       # Save right after installing, before later steps write tool caches into
       # node_modules. CI and forge conformance share both caches.
       - name: Save npm download cache
-        if: steps.node-modules.outputs.cache-hit != 'true' && steps.npm-download.outputs.cache-hit != 'true'
+        if: >-
+          steps.node-modules.outputs.cache-hit != 'true' &&
+          steps.npm-download.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.npm-cache.outputs.dir }}
@@ -103,5 +107,186 @@ jobs:
         run: npm run check:clean
 
       - name: Report coverage
-        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        if: >-
+          !cancelled() &&
+          hashFiles('coverage/coverage-summary.json') != ''
         run: npm run coverage
+
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Lint workflow files
+        uses: reviewdog/action-actionlint@13465d022aa41c282f730be17574b5ce692d0186 # v1.78.1
+        with:
+          reporter: github-annotations
+          filter_mode: nofilter
+          fail_level: error
+
+  package-readiness:
+    name: Package publication readiness
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+
+      - name: Select the tested npm version
+        run: npm install --global npm@12.0.1 --ignore-scripts
+
+      - run: npm ci
+
+      - name: Build, consume, pack, and dry-run the public facade
+        run: npm run test:package-readiness
+
+      - name: Verify package checks left the checkout clean
+        run: npm run check:clean
+
+  forge-conformance-scope:
+    if: github.event_name != 'workflow_dispatch'
+    name: Forge conformance scope
+    runs-on: ubuntu-26.04
+    outputs:
+      should-run: ${{ steps.scope.outputs.should-run }}
+      forges: ${{ steps.scope.outputs.forges }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+
+      - name: Detect forge conformance scope
+        id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          REF_NAME: ${{ github.ref_name }}
+        run: node src/scripts/forge-conformance-router.ts
+
+  forge-conformance:
+    name: Forge conformance (${{ matrix.forge }})
+    # GitLab boots about a quarter faster on the Arm runners. Ubuntu 26.04
+    # runners use Docker's containerd image store, which unpacks layers while
+    # they download.
+    runs-on: ${{ matrix.forge == 'gitlab' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
+    timeout-minutes: 30
+    needs: forge-conformance-scope
+    if: needs.forge-conformance-scope.outputs.should-run == 'true'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        forge: ${{ fromJSON(needs.forge-conformance-scope.outputs.forges) }}
+
+    steps:
+      # Image layers are written to disk while the forge boots from them. In
+      # memory, the GitLab image pulls and boots about 7s faster.
+      - name: Keep Docker storage in memory
+        run: |
+          sudo systemctl stop docker.socket docker containerd
+          sudo mount -t tmpfs tmpfs /var/lib/containerd
+          sudo mount -t tmpfs tmpfs /var/lib/docker
+          sudo systemctl start containerd docker
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Start the forge right away so its image pull and boot overlap
+      # dependency installation. The suite attaches to this container. The
+      # runner's preinstalled Node runs this script before setup-node.
+      - name: Start forge container in the background
+        env:
+          FORGE: ${{ matrix.forge }}
+        run: node src/tests/integration/forge-conformance/containers.ts start "$FORGE"
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .node-version
+
+      # Restoring installed dependencies is faster than npm ci. The key covers
+      # everything npm ci reads, and npm runs no install scripts (.npmrc), so a
+      # hit matches a fresh install.
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.npmrc', 'package-lock.json') }}
+
+      - name: Locate npm download cache
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        id: npm-cache
+        run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+
+      # Same key as setup-node's npm cache. The path must match npm's resolved
+      # cache path for the key to match.
+      - name: Restore npm download cache
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        id: npm-download
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: node-cache-${{ runner.os }}-${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: node-cache-${{ runner.os }}-${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}-npm-
+
+      - if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # Save right after installing, before later steps write tool caches into
+      # node_modules. CI and forge conformance share both caches.
+      - name: Save npm download cache
+        if: >-
+          steps.node-modules.outputs.cache-hit != 'true' &&
+          steps.npm-download.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: ${{ steps.npm-download.outputs.cache-primary-key }}
+
+      - name: Save node_modules
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: ${{ steps.node-modules.outputs.cache-primary-key }}
+
+      - name: Run pinned real-forge conformance suite
+        env:
+          FORGE_CONFORMANCE_PRESTARTED: 'true'
+          GITLAB_TEST_ARTIFACTS: artifacts/gitlab
+          REST_FORGE_TEST_ARTIFACTS: artifacts/${{ matrix.forge }}
+        run: npm run test:conformance:${{ matrix.forge }}
+
+      - name: Show forge container start log
+        if: failure()
+        env:
+          FORGE: ${{ matrix.forge }}
+        run: cat "$RUNNER_TEMP/forge-conformance-$FORGE.log" || true
+
+      - name: Upload forge failure logs
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ matrix.forge }}-integration-logs
+          path: artifacts/${{ matrix.forge }}
+          if-no-files-found: warn
+          retention-days: 7

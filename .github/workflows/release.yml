@@ -22,7 +22,10 @@ jobs:
   prepare:
     name: Prepare release PR
     environment: releaser
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'release-drafter/release-drafter'
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.repository == 'release-drafter/release-drafter'
     runs-on: ubuntu-26.04
     timeout-minutes: 20
     env:
@@ -80,7 +83,9 @@ jobs:
         run: npm run check:clean
 
       - name: Report coverage
-        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        if: >-
+          !cancelled() &&
+          hashFiles('coverage/coverage-summary.json') != ''
         run: npm run coverage
 
       - name: Create repository-scoped release token
@@ -129,7 +134,8 @@ jobs:
   discover:
     name: Find merged pending release PR
     if: >-
-      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
       github.repository == 'release-drafter/release-drafter'
     runs-on: ubuntu-26.04
     timeout-minutes: 5
@@ -233,3 +239,23 @@ jobs:
             const issue_number = Number(process.env.RELEASE_PR)
             await github.rest.issues.addLabels({ ...context.repo, issue_number, labels: ['autorelease: tagged'] })
             await github.rest.issues.removeLabel({ ...context.repo, issue_number, name: 'autorelease: pending' })
+
+  update_release_draft:
+    name: Update release draft
+    needs: [discover, publish]
+    if: >-
+      !cancelled() &&
+      github.event_name == 'push' &&
+      github.repository == 'release-drafter/release-drafter' &&
+      needs.discover.result == 'success' &&
+      needs.publish.result != 'failure'
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: release-drafter-writes
+      cancel-in-progress: false
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./

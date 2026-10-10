@@ -99,12 +99,12 @@ describe('npm package readiness', () => {
 
   it('runs package readiness without publishing credentials', () => {
     const contents = readFileSync(
-      join(repositoryRoot, '.github/workflows/npm-package-readiness.yml'),
+      join(repositoryRoot, '.github/workflows/ci.yml'),
       'utf8',
     )
     const workflow = parseYaml(contents)
     expect(workflow.permissions).toEqual({ contents: 'read' })
-    expect(contents).not.toMatch(
+    expect(JSON.stringify(workflow.jobs['package-readiness'])).not.toMatch(
       /id-token|registry-url|NODE_AUTH_TOKEN|NPM_TOKEN|secrets\.|cache:/u,
     )
   })

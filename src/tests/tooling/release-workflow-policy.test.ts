@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { runInNewContext } from 'node:vm'
 import { describe, expect, it } from 'vitest'
 import { parse } from 'yaml'
 
@@ -102,13 +103,60 @@ describe('release workflow policy', () => {
     )
   })
 
+  it.each([
+    ['push', 'success', true],
+    ['push', 'skipped', true],
+    ['push', 'failure', false],
+    ['workflow_dispatch', 'skipped', false],
+  ])(
+    'updates drafts for %s after publication is %s',
+    (event, result, expected) => {
+      expect(
+        runInNewContext(workflow.jobs.update_release_draft.if, {
+          cancelled: () => false,
+          github: {
+            event_name: event,
+            repository: 'release-drafter/release-drafter',
+          },
+          needs: { discover: { result: 'success' }, publish: { result } },
+        }),
+      ).toBe(expected)
+    },
+  )
+
+  it.each([
+    ['release-drafter/release-drafter', 'skipped', false],
+    ['release-drafter/release-drafter', 'failure', false],
+    ['contributor/release-drafter', 'skipped', false],
+    ['contributor/release-drafter', 'success', false],
+    ['contributor/release-drafter', 'failure', false],
+  ])(
+    'handles draft discovery in %s when %s',
+    (repository, result, expected) => {
+      expect(
+        runInNewContext(workflow.jobs.update_release_draft.if, {
+          cancelled: () => false,
+          github: { event_name: 'push', repository },
+          needs: { discover: { result }, publish: { result: 'skipped' } },
+        }),
+      ).toBe(expected)
+    },
+  )
+
   it('serializes publication and draft updates', () => {
-    const draft = parse(readFileSync('.github/workflows/draft.yml', 'utf8'))
     expect(workflow.jobs.publish.concurrency).toEqual({
       group: 'release-drafter-writes',
       'cancel-in-progress': false,
     })
-    expect(draft.jobs.update_release_draft.concurrency).toEqual(
+    expect(workflow.jobs.update_release_draft.needs).toEqual([
+      'discover',
+      'publish',
+    ])
+    expect(workflow.jobs.update_release_draft.permissions).toEqual({
+      contents: 'write',
+      'pull-requests': 'write',
+    })
+    expect(workflow.jobs.update_release_draft.concurrency).toEqual(
       workflow.jobs.publish.concurrency,
     )
   })
