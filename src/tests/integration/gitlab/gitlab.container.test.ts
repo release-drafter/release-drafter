@@ -4,7 +4,7 @@ import {
   type Release,
   type Repository,
 } from 'release-drafter'
-import { inject } from 'vitest'
+import { inject } from 'vite-plus/test'
 import { defineForgeAdapterConformance } from '../forge-conformance/contract.ts'
 import { FORGE_IMAGES } from '../forge-conformance/images.ts'
 import type { ProvidedGitLabFixture } from './gitlab-global-setup.ts'

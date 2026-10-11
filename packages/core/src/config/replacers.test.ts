@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { ZodError } from 'zod'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { noopLogger } from '../ports.ts'
 import { configSchema } from './config.schema.ts'
 import { mergeInputAndConfig } from './merge-input-and-config.ts'
@@ -54,7 +55,7 @@ describe('replacer configuration', () => {
   ])('rejects an invalid or ambiguous section rule %j', (rule) => {
     expect(() =>
       configSchema.parse({ template: '$CHANGES', replacers: [rule] }),
-    ).toThrow()
+    ).toThrow(ZodError)
   })
   it('preserves targets while compiling regex and literal searches', () => {
     const config = mergeInputAndConfig({
@@ -96,7 +97,7 @@ describe('replacer configuration', () => {
         template: '$CHANGES',
         replacers: [{ search: 'value', replace: '', target }],
       }),
-    ).toThrow()
+    ).toThrow(ZodError)
   })
 
   it.each([undefined, 'full', 'empty'])('accepts not-found %j', (notFound) => {
@@ -113,11 +114,11 @@ describe('replacer configuration', () => {
         template: '$CHANGES',
         replacers: [{ search: 'value', replace: '', 'not-found': notFound }],
       }),
-    ).toThrow()
+    ).toThrow(ZodError)
   })
 
   it('warns and skips an invalid body regex while keeping valid rules', () => {
-    const warning = vi.fn()
+    const warning = vi.fn<(message: string | Error) => void>()
     const config = mergeInputAndConfig({
       config: configSchema.parse({
         commitish: 'main',

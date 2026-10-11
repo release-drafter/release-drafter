@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import nock from 'nock'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { getConfig } from '#gh-actions/check-pr/get-config.ts'
 import { checkPullRequest } from '#gh-actions/check-pr/runner.ts'
 

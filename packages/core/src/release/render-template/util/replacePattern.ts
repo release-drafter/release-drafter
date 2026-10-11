@@ -1,4 +1,3 @@
-/* eslint-disable no-fallthrough */
 // Ported from VSCode commit 6b924c51528e663dda5091a1493229a361676aca.
 // Source: src/vs/editor/contrib/find/browser/replacePattern.ts
 /*---------------------------------------------------------------------------------------------

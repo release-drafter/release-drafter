@@ -23,7 +23,6 @@ inputs:
       Prevents label updates. The action logs the labels that it would add.
     required: false
     default: ''
-
 outputs:
   number:
     description: The pull request number that was evaluated.

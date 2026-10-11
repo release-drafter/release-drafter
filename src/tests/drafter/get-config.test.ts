@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { getConfig } from '#gh-actions/drafter/get-config.ts'
 import { mocks } from '#tests/mocks/index.ts'
 

@@ -1,7 +1,16 @@
-import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
+import { requestUrl } from '../../../src/tests/fetch.ts'
+import {
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  vi,
+} from 'vite-plus/test'
 
 const { coreDraftRelease } = vi.hoisted(() => ({
-  coreDraftRelease: vi.fn(),
+  coreDraftRelease:
+    vi.fn<typeof import('@release-drafter/core').draftRelease>(),
 }))
 
 vi.mock('@release-drafter/core', async (importOriginal) => ({
@@ -75,15 +84,25 @@ const payload: ReleasePayload = {
 
 const adapter: ForgeAdapter = {
   capabilities: { draftReleases: true },
-  listReleases: vi.fn().mockResolvedValue([]),
-  findChanges: vi.fn().mockResolvedValue({
-    commits: [],
-    pullRequests: [],
-    newContributorLogins: new Set<string>(),
-  }),
-  resolveCommitish: vi.fn().mockResolvedValue('main'),
-  createRelease: vi.fn().mockResolvedValue({ id: 1, tagName: 'v1.0.0' }),
-  updateRelease: vi.fn().mockResolvedValue({ id: 1, tagName: 'v1.0.0' }),
+  listReleases: vi
+    .fn<import('@release-drafter/core').ForgeAdapter['listReleases']>()
+    .mockResolvedValue([]),
+  findChanges: vi
+    .fn<import('@release-drafter/core').ForgeAdapter['findChanges']>()
+    .mockResolvedValue({
+      commits: [],
+      pullRequests: [],
+      newContributorLogins: new Set<string>(),
+    }),
+  resolveCommitish: vi
+    .fn<import('@release-drafter/core').ForgeAdapter['resolveCommitish']>()
+    .mockResolvedValue('main'),
+  createRelease: vi
+    .fn<import('@release-drafter/core').ForgeAdapter['createRelease']>()
+    .mockResolvedValue({ id: 1, tagName: 'v1.0.0' }),
+  updateRelease: vi
+    .fn<import('@release-drafter/core').ForgeAdapter['updateRelease']>()
+    .mockResolvedValue({ id: 1, tagName: 'v1.0.0' }),
 }
 
 const options: DraftReleaseOptions = {
@@ -130,10 +149,10 @@ describe('draftRelease', () => {
 
   it('passes an injected logger through unchanged', async () => {
     const logger: Logger = {
-      debug: vi.fn(),
-      info: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
+      debug: vi.fn<(message: string) => void>(),
+      info: vi.fn<(message: string) => void>(),
+      warning: vi.fn<(error: string | Error) => void>(),
+      error: vi.fn<(error: string | Error) => void>(),
     }
 
     await draftRelease({ ...options, logger })
@@ -219,7 +238,7 @@ describe('createForgeAdapter', () => {
     'wires the default $forge endpoint and authentication',
     async ({ forge, draftReleases, url, header, authorization }) => {
       const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
-        expect(String(input)).toBe(url)
+        expect(requestUrl(input)).toBe(url)
         expect(new Headers(init?.headers).get(header)).toBe(authorization)
         return new Response('[]', {
           status: 200,
@@ -256,7 +275,7 @@ describe('createForgeAdapter', () => {
       const created = createForgeAdapter({
         forge,
         token: 'facade-token',
-        fetch: vi.fn(),
+        fetch: vi.fn<typeof globalThis.fetch>(),
       })
 
       await expect(

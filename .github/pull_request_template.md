@@ -19,7 +19,7 @@ Allowed types: build, chore, ci, docs, feat, fix, perf, refactor, revert, style,
 ## Checklist
 
 - [ ] My pull request title uses the conventional format required by CI.
-- [ ] I ran `npm run ci` locally.
+- [ ] I ran `vp run ci` locally.
 - [ ] I updated tests and documentation where needed.
 - [ ] I read the [contribution guide](https://github.com/release-drafter/release-drafter/blob/main/docs/CONTRIBUTING.md) and agree to follow the [Code of Conduct](https://github.com/release-drafter/release-drafter/blob/main/docs/CODE_OF_CONDUCT.md).
 - [ ] I have read and reviewed my own submission.

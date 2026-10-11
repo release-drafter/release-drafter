@@ -56,7 +56,7 @@ export interface LoadConfigOptions {
 export interface ReleaseAuthor {
   login: string
   url?: string
-  type?: 'Bot' | 'User' | string
+  type?: string
 }
 
 export interface PullRequest {

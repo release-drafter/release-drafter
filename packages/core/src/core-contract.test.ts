@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { evaluateCategories } from './category-matching.ts'
 import { configSchema, mergeInputAndConfig } from './config/index.ts'
 import type { ForgeAdapter, Logger } from './ports.ts'
@@ -16,12 +16,12 @@ import type {
   ReleasePayload,
 } from './types.ts'
 
-const logger: Logger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
-}
+const logger = {
+  debug: vi.fn<(message: string) => void>(),
+  info: vi.fn<(message: string) => void>(),
+  warning: vi.fn<(error: string | Error) => void>(),
+  error: vi.fn<(error: string | Error) => void>(),
+} satisfies Logger
 const condition = (overrides: Record<string, unknown> = {}) => ({
   labels: [],
   'labels-mode': 'any' as const,
@@ -101,31 +101,31 @@ const orchestrationConfig = () =>
     input: {},
     logger,
   })
-const adapter = (params: {
-  draftReleases: boolean
-  releases: Release[]
-}): ForgeAdapter => ({
-  capabilities: { draftReleases: params.draftReleases },
-  listReleases: vi.fn().mockResolvedValue(params.releases),
-  findChanges: vi.fn().mockResolvedValue({
-    commits: [],
-    pullRequests: [],
-    newContributorLogins: new Set<string>(),
-  }),
-  resolveCommitish: vi
-    .fn()
-    .mockImplementation(({ commitish }) => Promise.resolve(commitish)),
-  createRelease: vi
-    .fn()
-    .mockImplementation(({ payload }) =>
-      Promise.resolve(release({ id: 'created', tagName: payload.tag })),
-    ),
-  updateRelease: vi
-    .fn()
-    .mockImplementation(({ release: existingRelease }) =>
-      Promise.resolve(existingRelease),
-    ),
-})
+const adapter = (params: { draftReleases: boolean; releases: Release[] }) =>
+  ({
+    capabilities: { draftReleases: params.draftReleases },
+    listReleases: vi
+      .fn<ForgeAdapter['listReleases']>()
+      .mockResolvedValue(params.releases),
+    findChanges: vi.fn<ForgeAdapter['findChanges']>().mockResolvedValue({
+      commits: [],
+      pullRequests: [],
+      newContributorLogins: new Set<string>(),
+    }),
+    resolveCommitish: vi
+      .fn<ForgeAdapter['resolveCommitish']>()
+      .mockImplementation(({ commitish }) => Promise.resolve(commitish)),
+    createRelease: vi
+      .fn<ForgeAdapter['createRelease']>()
+      .mockImplementation(({ payload }) =>
+        Promise.resolve(release({ id: 'created', tagName: payload.tag })),
+      ),
+    updateRelease: vi
+      .fn<ForgeAdapter['updateRelease']>()
+      .mockImplementation(({ release: existingRelease }) =>
+        Promise.resolve(existingRelease),
+      ),
+  }) satisfies ForgeAdapter
 
 describe('evaluateCategories', () => {
   it.each([
@@ -312,7 +312,10 @@ describe('release write protection', () => {
   })
 
   it('never invokes create or update writes during dry-run', async () => {
-    const adapter = { createRelease: vi.fn(), updateRelease: vi.fn() }
+    const adapter = {
+      createRelease: vi.fn<ForgeAdapter['createRelease']>(),
+      updateRelease: vi.fn<ForgeAdapter['updateRelease']>(),
+    }
     const createPlan = buildReleasePlan({
       input: { dryRun: true },
       releasePayload: payload,
@@ -342,8 +345,12 @@ describe('release write protection', () => {
     const createdRelease = release({ id: 'created', tagName: payload.tag })
     const updatedRelease = release({ id: 'updated', tagName: payload.tag })
     const adapter = {
-      createRelease: vi.fn().mockResolvedValue(createdRelease),
-      updateRelease: vi.fn().mockResolvedValue(updatedRelease),
+      createRelease: vi
+        .fn<ForgeAdapter['createRelease']>()
+        .mockResolvedValue(createdRelease),
+      updateRelease: vi
+        .fn<ForgeAdapter['updateRelease']>()
+        .mockResolvedValue(updatedRelease),
     }
     const draftRelease = release({ id: 'draft', tagName: 'v0.9.0' })
 

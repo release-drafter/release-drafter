@@ -1,5 +1,5 @@
 import type * as core from '@actions/core'
-import { vi } from 'vitest'
+import { vi } from 'vite-plus/test'
 import type { composeConfigGet } from '#gh-actions/common/config/index.ts'
 import type { AvailableConfigs } from './config.ts'
 
@@ -12,19 +12,19 @@ const mocks = vi.hoisted(() => {
      * can be defined as :
      * @example expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
      */
-    postReleaseBody: vi.fn(() => true),
+    postReleaseBody: vi.fn<() => boolean>(() => true),
     /**
      * Use this mock as a nock().patch() body matcher, such as expectations
      * can be defined as :
      * @example expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
      */
-    patchReleaseBody: vi.fn(() => true),
+    patchReleaseBody: vi.fn<() => boolean>(() => true),
     /**
      * Use this mock as a nock().patch() body matcher, such as expectations
      * can be defined as :
      * @example expect(mocks.postPrLabelsBody.mock.lastCall).toMatchInlineSnapshot('...')
      */
-    postPrLabelsBody: vi.fn(() => true),
+    postPrLabelsBody: vi.fn<() => boolean>(() => true),
     config: vi.fn<() => AvailableConfigs | undefined>(() => undefined),
     getContextsConfigWasFetchedFrom: vi.fn<
       () => Awaited<ReturnType<typeof composeConfigGet>>['contexts']

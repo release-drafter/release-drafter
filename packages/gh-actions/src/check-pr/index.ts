@@ -3,10 +3,7 @@ export {
   type PullRequestEvaluation,
   projectPullRequestValidationCategories,
 } from '@release-drafter/core'
-export {
-  type ActionInput,
-  actionInputSchema,
-} from './action-input.schema.ts'
+export { type ActionInput, actionInputSchema } from './action-input.schema.ts'
 export {
   type CheckPullRequest,
   parsePullRequestEvent,

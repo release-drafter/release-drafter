@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { configSchema, mergeInputAndConfig } from './config/index.ts'
 import {
   evaluatePullRequest,
@@ -7,10 +7,10 @@ import {
 import type { ParsedConfig } from './types.ts'
 
 const logger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
+  debug: vi.fn<(message: string) => void>(),
+  info: vi.fn<(message: string) => void>(),
+  warning: vi.fn<(message: string | Error) => void>(),
+  error: vi.fn<(message: string | Error) => void>(),
 }
 
 const categories = (value: unknown[]): ParsedConfig['categories'] =>

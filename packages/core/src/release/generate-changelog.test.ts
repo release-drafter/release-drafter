@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   commonConfigSchema,
   configSchema,
@@ -9,10 +9,10 @@ import type { PullRequest } from '../types.ts'
 import { generateChangeLog } from './generate-changelog.ts'
 
 const logger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
+  debug: vi.fn<(message: string) => void>(),
+  info: vi.fn<(message: string) => void>(),
+  warning: vi.fn<(error: string | Error) => void>(),
+  error: vi.fn<(error: string | Error) => void>(),
 } satisfies Logger
 
 const parsedConfig = (config: Record<string, unknown>) =>

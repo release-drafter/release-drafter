@@ -1,6 +1,6 @@
 import { getOctokit } from '@actions/github'
 import nock from 'nock'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   ensureReleaseLabels,
   findReleaseCandidate,
@@ -36,29 +36,95 @@ const content = (version = '7.9.0') => ({
 })
 
 const fixture = (pages = [[pull()]]) => {
+  const iteratorImplementation = () =>
+    (async function* () {
+      for (const data of pages) yield { data }
+    })()
   const github = {
     paginate: {
-      iterator: vi.fn(() =>
-        (async function* () {
-          for (const data of pages) yield { data }
-        })(),
-      ),
+      iterator: vi.fn<typeof iteratorImplementation>(iteratorImplementation),
     },
     rest: {
-      git: { getRef: vi.fn().mockRejectedValue(notFound()) },
-      issues: {
-        getLabel: vi.fn().mockResolvedValue({}),
-        createLabel: vi.fn().mockResolvedValue({}),
+      git: {
+        getRef: vi
+          .fn<
+            (
+              params: Parameters<
+                ReturnType<typeof getOctokit>['rest']['git']['getRef']
+              >[0],
+            ) => Promise<unknown>
+          >()
+          .mockRejectedValue(notFound()),
       },
-      pulls: { list: vi.fn() },
+      issues: {
+        getLabel: vi
+          .fn<
+            (
+              params: Parameters<
+                ReturnType<typeof getOctokit>['rest']['issues']['getLabel']
+              >[0],
+            ) => Promise<unknown>
+          >()
+          .mockResolvedValue({}),
+        createLabel: vi
+          .fn<
+            (
+              params: Parameters<
+                ReturnType<typeof getOctokit>['rest']['issues']['createLabel']
+              >[0],
+            ) => Promise<unknown>
+          >()
+          .mockResolvedValue({}),
+      },
+      pulls: {
+        list: vi.fn<
+          (
+            params: Parameters<
+              ReturnType<typeof getOctokit>['rest']['pulls']['list']
+            >[0],
+          ) => Promise<unknown>
+        >(),
+      },
       repos: {
-        getReleaseByTag: vi.fn().mockRejectedValue(notFound()),
+        getReleaseByTag: vi
+          .fn<
+            (
+              params: Parameters<
+                ReturnType<
+                  typeof getOctokit
+                >['rest']['repos']['getReleaseByTag']
+              >[0],
+            ) => Promise<unknown>
+          >()
+          .mockRejectedValue(notFound()),
         compareCommitsWithBasehead: vi
-          .fn()
+          .fn<
+            (
+              params: Parameters<
+                ReturnType<
+                  typeof getOctokit
+                >['rest']['repos']['compareCommitsWithBasehead']
+              >[0],
+            ) => Promise<unknown>
+          >()
           .mockResolvedValue({ data: { status: 'ahead' } }),
-        getContent: vi.fn().mockResolvedValue(content()),
+        getContent: vi
+          .fn<
+            (
+              params: Parameters<
+                ReturnType<typeof getOctokit>['rest']['repos']['getContent']
+              >[0],
+            ) => Promise<unknown>
+          >()
+          .mockResolvedValue(content()),
         getCommit: vi
-          .fn()
+          .fn<
+            (
+              params: Parameters<
+                ReturnType<typeof getOctokit>['rest']['repos']['getCommit']
+              >[0],
+            ) => Promise<unknown>
+          >()
           .mockRejectedValue(
             Object.assign(
               new Error('No commit found for SHA: refs/tags/v7.9.0'),

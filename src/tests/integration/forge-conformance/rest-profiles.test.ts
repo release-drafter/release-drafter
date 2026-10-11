@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { requestUrl, requestBody } from '../../fetch.ts'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { ForgejoAdapter } from '../../../../packages/forgejo-adapter/src/index.ts'
 import { GiteaAdapter } from '../../../../packages/gitea-adapter/src/index.ts'
 
@@ -30,15 +31,17 @@ describe.each([
 ] as const)('%s public REST adapter', (_name, Adapter, resolvedBranch) => {
   it('lists, creates, and updates normalized releases with the correct requests', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
-      const url = new URL(String(input))
+      const url = new URL(requestUrl(input))
       expect(new Headers(init?.headers).get('authorization')).toBe(
         'token test-token',
       )
+      expect(url.pathname).toBe(
+        `/api/v1/repos/owner/repo/releases${init?.method === 'PATCH' ? '/7' : ''}`,
+      )
       if (!init?.method || init.method === 'GET') {
-        expect(url.pathname).toBe('/api/v1/repos/owner/repo/releases')
         return Response.json([release])
       }
-      expect(JSON.parse(String(init.body))).toEqual({
+      expect(JSON.parse(requestBody(init))).toEqual({
         name: payload.name,
         tag_name: payload.tag,
         body: payload.body,
@@ -47,7 +50,6 @@ describe.each([
         prerelease: false,
       })
       if (init.method === 'POST') {
-        expect(url.pathname).toBe('/api/v1/repos/owner/repo/releases')
         return Response.json({
           ...release,
           id: 8,
@@ -92,7 +94,7 @@ describe.each([
 
   it('reads default branches, validation data, and base64 configuration through public methods', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
-      const url = new URL(String(input))
+      const url = new URL(requestUrl(input))
       switch (url.pathname) {
         case '/api/v1/repos/owner/repo':
           return Response.json({ default_branch: ' main ' })
@@ -104,13 +106,12 @@ describe.each([
             labels: ['feature', '', { name: 'approved' }, { name: '' }, null],
           })
         case '/api/v1/repos/owner/repo/contents/.github/custom%20config.yml':
-          expect(url.searchParams.get('ref')).toBe('stable')
           return Response.json({
             encoding: 'base64',
             content: Buffer.from('template: notes\n').toString('base64'),
           })
         default:
-          throw new Error(`Unexpected request: ${url}`)
+          throw new Error(`Unexpected request: ${url.href}`)
       }
     })
     const adapter = new Adapter({ token: 'test-token', fetch })
@@ -137,5 +138,17 @@ describe.each([
       }),
     ).resolves.toBe(resolvedBranch)
     expect(fetch).toHaveBeenCalledTimes(3)
+
+    const verifiedRequests1 = fetch.mock.calls
+      .map(([input]) => new URL(requestUrl(input)))
+      .filter(
+        (url) =>
+          url.pathname ===
+          '/api/v1/repos/owner/repo/contents/.github/custom%20config.yml',
+      )
+    expect(verifiedRequests1).not.toHaveLength(0)
+    for (const url of verifiedRequests1) {
+      expect(url.searchParams.get('ref')).toBe('stable')
+    }
   })
 })

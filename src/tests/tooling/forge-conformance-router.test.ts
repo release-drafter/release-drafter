@@ -2,7 +2,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   emitForgeConformanceDecision,
   FORGE_CONFORMANCE_PATHSPECS,
@@ -167,12 +167,16 @@ describe('forge conformance router', () => {
   })
 
   it('emits selected forges for targeted branches', () => {
-    const appendFileSync = vi.fn()
+    const appendFileSync = vi.fn<typeof import('node:fs').appendFileSync>()
 
     emitForgeConformanceDecision(
       { shouldRun: true, reason: 'targeted', forges: ['gitlab'] },
       '/tmp/github-output',
-      { appendFileSync, log: vi.fn(), warn: vi.fn() },
+      {
+        appendFileSync,
+        log: vi.fn<(message: string) => void>(),
+        warn: vi.fn<(message: string) => void>(),
+      },
     )
 
     expect(appendFileSync).toHaveBeenCalledWith(
@@ -248,6 +252,7 @@ describe('forge conformance router', () => {
       packages: {
         '': {
           devDependencies: {
+            'vite-plus': '^1',
             vitest: '^4',
             vite: '^8',
             testcontainers: '^12',
@@ -270,6 +275,10 @@ describe('forge conformance router', () => {
         ),
         'packages/gh-actions': { devDependencies: { webhooks: '^1' } },
         'node_modules/webhooks': { version: '1.0.0', dev: true },
+        'node_modules/vite-plus': {
+          version: '1.0.0',
+          dependencies: { vitest: '^4' },
+        },
         'node_modules/vitest': { version: '4.0.0' },
         'node_modules/vite': { version: '8.0.0' },
         'node_modules/@vitest/coverage-v8': { version: '4.0.0' },
@@ -310,18 +319,37 @@ describe('forge conformance router', () => {
       })
     })
 
-    it.each(['shared', 'transitive', 'vitest', 'vite', 'testcontainers'])(
-      'runs when the resolved %s dependency changes',
-      (name) => {
-        const before = lockfile()
-        const after = lockfile()
-        after.packages[`node_modules/${name}`].version = '99.0.0'
-        expect(routeLocks(before, after)).toEqual({
-          shouldRun: true,
-          reason: 'forge dependencies changed',
-        })
-      },
-    )
+    it.each([
+      'shared',
+      'transitive',
+      'vite-plus',
+      'vitest',
+      'vite',
+      'testcontainers',
+    ])('runs when the resolved %s dependency changes', (name) => {
+      const before = lockfile()
+      const after = lockfile()
+      after.packages[`node_modules/${name}`].version = '99.0.0'
+      expect(routeLocks(before, after)).toEqual({
+        shouldRun: true,
+        reason: 'forge dependencies changed',
+      })
+    })
+
+    it('follows bundled Vitest without a direct root dependency', () => {
+      const before = lockfile()
+      const after = lockfile()
+      delete (
+        before.packages[''] as { devDependencies: Record<string, string> }
+      ).devDependencies.vitest
+      delete (after.packages[''] as { devDependencies: Record<string, string> })
+        .devDependencies.vitest
+      after.packages['node_modules/vitest'].version = '99.0.0'
+      expect(routeLocks(before, after)).toEqual({
+        shouldRun: true,
+        reason: 'forge dependencies changed',
+      })
+    })
 
     it('does not narrow dependency-triggered coverage to the PR branch forge', () => {
       const before = lockfile()
@@ -342,6 +370,7 @@ describe('forge conformance router', () => {
       }
       const after = structuredClone(before)
       after.packages[''].devDependencies = {
+        'vite-plus': '^1',
         vitest: '^4',
         vite: '^8',
         testcontainers: '^12',
@@ -493,6 +522,7 @@ describe('forge conformance router', () => {
 
     it.each([
       ['package.json', { devDependencies: { vitest: '^5' } }],
+      ['package.json', { devDependencies: { 'vite-plus': '^2' } }],
       [
         'package.json',
         { scripts: { 'test:conformance:gitlab': 'different-command' } },
@@ -579,9 +609,9 @@ describe('forge conformance router', () => {
   })
 
   it('appends the GitHub output and reports the decision and warning', () => {
-    const appendFileSync = vi.fn()
-    const log = vi.fn()
-    const warn = vi.fn()
+    const appendFileSync = vi.fn<typeof import('node:fs').appendFileSync>()
+    const log = vi.fn<(message: string) => void>()
+    const warn = vi.fn<(message: string) => void>()
 
     emitForgeConformanceDecision(
       {

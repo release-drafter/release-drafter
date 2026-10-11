@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { configSchema, mergeInputAndConfig } from '../config/index.ts'
 import { noopLogger } from '../ports.ts'
 import type { PullRequest } from '../types.ts'

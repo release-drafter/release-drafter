@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import type { Logger } from '../ports.ts'
 import {
   commonConfigSchema,
@@ -9,10 +9,10 @@ import {
 } from './index.ts'
 
 const logger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
+  debug: vi.fn<(message: string) => void>(),
+  info: vi.fn<(message: string) => void>(),
+  warning: vi.fn<(error: string | Error) => void>(),
+  error: vi.fn<(error: string | Error) => void>(),
 } satisfies Logger
 
 const migrationDocumentationUrl =
@@ -110,12 +110,15 @@ describe('parseCategories', () => {
       expect(logger.warning).toHaveBeenCalledWith(
         `Title "Ignored" ignored for category of type "${type}"`,
       )
-      if (type !== 'version-resolver') {
-        expect(parsed[0]).not.toHaveProperty('semver-increment')
-        expect(logger.warning).toHaveBeenCalledWith(
-          `"semver-increment" "major" ignored for category of type "${type}"`,
-        )
-      }
+      expect(Object.hasOwn(parsed[0] ?? {}, 'semver-increment')).toBe(
+        type === 'version-resolver',
+      )
+      const ignoredIncrementWarning = `"semver-increment" "major" ignored for category of type "${type}"`
+      expect(
+        logger.warning.mock.calls.some(
+          ([message]) => message === ignoredIncrementWarning,
+        ),
+      ).toBe(type !== 'version-resolver')
     },
   )
 

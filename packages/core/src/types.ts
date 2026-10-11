@@ -7,7 +7,7 @@ import type {
 export type ReleaseAuthor = {
   login: string
   url?: string
-  type?: 'Bot' | 'User' | string
+  type?: string
 }
 
 export type PullRequest = {

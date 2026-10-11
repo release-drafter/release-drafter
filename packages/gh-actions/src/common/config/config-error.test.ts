@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { ConfigError } from './config-error.ts'
 import type { ConfigTarget } from './parse-config-target.ts'
 

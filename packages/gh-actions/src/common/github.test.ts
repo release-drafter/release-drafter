@@ -2,7 +2,7 @@ import type {
   GitHubAdapter,
   GitHubAdapterOptions,
 } from '@release-drafter/github-adapter'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import { getGitHubAdapter, getGitHubAdapterOptions } from './github.ts'
 
 vi.unmock(import('./github-fetch.ts'))
@@ -40,7 +40,7 @@ describe('Action GitHub adapter composition', () => {
     vi.stubEnv('GITHUB_SERVER_URL', 'https://github.example.test')
     vi.stubEnv('GITHUB_API_URL', 'https://github.example.test/api/v3')
     vi.stubEnv('GITHUB_GRAPHQL_URL', 'https://github.example.test/api/graphql')
-    const factory = vi.fn(
+    const factory = vi.fn<(_options: GitHubAdapterOptions) => GitHubAdapter>(
       (_options: GitHubAdapterOptions) => ({}) as GitHubAdapter,
     )
 

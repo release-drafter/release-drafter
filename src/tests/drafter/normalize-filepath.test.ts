@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { captureResult } from '../result.ts'
+import { describe, expect, it } from 'vite-plus/test'
 import { normalizeFilepath } from '#gh-actions/common/config/normalize-filepath.ts'
 
 const testSuites: Array<{
@@ -219,11 +220,14 @@ const testSuites: Array<{
 describe('normalize filepath', () => {
   testSuites.forEach(({ input, expected }) => {
     it(`should normalize to ${expected instanceof Error ? 'Error' : JSON.stringify(expected)}`, () => {
-      if (expected instanceof Error) {
-        expect(() => normalizeFilepath(...input)).toThrowError(expected.message)
-      } else {
-        expect(normalizeFilepath(...input)).toBe(expected)
-      }
+      const errorMessage = expect.stringContaining(
+        expected instanceof Error ? expected.message : '',
+      )
+      const error = expect.objectContaining({ message: errorMessage })
+      const outcome = captureResult(() => normalizeFilepath(...input))
+      expect(outcome).toEqual(
+        expected instanceof Error ? { error } : { value: expected },
+      )
     })
   })
 })
