@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { runInNewContext } from 'node:vm'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { parse } from 'yaml'
 
 const workflow = parse(readFileSync('.github/workflows/release.yml', 'utf8'))

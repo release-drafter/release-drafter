@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { configSchema } from '@release-drafter/core'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { ConfigError } from '../common/config/config-error.ts'
 import { checkPullRequest, type RunnerDependencies } from './runner.ts'
 
@@ -27,7 +27,7 @@ const dependencies = (
     token: 'token',
   }),
   getConfig: vi
-    .fn()
+    .fn<RunnerDependencies['getConfig']>()
     .mockResolvedValue(configSchema.parse({ categories: categoryConfig })),
   ...overrides,
 })
@@ -134,52 +134,58 @@ describe('check PR runner', () => {
         { title: 'Features', when: { conventional: { type: 'feat' } } },
       ])
       const validConfig = await value.getConfig('release-drafter.yml')
-      value.getConfig = vi.fn(async (_name, _token, ref) => {
-        if (ref === invalidRef)
-          throw new ConfigError(
-            'Invalid config: categories must be an array',
-            [
-              {
-                scheme: 'github',
-                filepath: '.github/release-drafter.yml',
-                repo: { owner: 'acme', repo: 'widgets' },
-                ref,
-              },
-            ],
-            { line: 3, col: 1 },
-          )
-        return validConfig
-      })
+      value.getConfig = vi.fn<RunnerDependencies['getConfig']>(
+        async (_name, _token, ref) => {
+          if (ref === invalidRef)
+            throw new ConfigError(
+              'Invalid config: categories must be an array',
+              [
+                {
+                  scheme: 'github',
+                  filepath: '.github/release-drafter.yml',
+                  repo: { owner: 'acme', repo: 'widgets' },
+                  ref,
+                },
+              ],
+              { line: 3, col: 1 },
+            )
+          return validConfig
+        },
+      )
       await expect(checkPullRequest(value)).rejects.toThrow(invalidRef)
       expect(value.getConfig).toHaveBeenCalledTimes(2)
       const annotation = vi.mocked(core.error).mock.calls[0][1]
-      if (invalidRef === 'main') {
-        expect(annotation?.file).toBeUndefined()
-      } else {
-        expect(annotation).toMatchObject({
-          file: '.github/release-drafter.yml',
-          startLine: 3,
-        })
-      }
+      expect(annotation?.file).toBe(
+        invalidRef === 'main' ? undefined : '.github/release-drafter.yml',
+      )
+      expect(annotation ?? {}).toMatchObject(
+        invalidRef === 'main'
+          ? {}
+          : {
+              file: '.github/release-drafter.yml',
+              startLine: 3,
+            },
+      )
       expect(core.setOutput).not.toHaveBeenCalled()
     },
   )
 
   it('cannot loosen base rules by editing the proposed configuration', async () => {
     const value = dependencies('fix: title', [])
-    value.getConfig = vi.fn(async (_name, _token, ref) =>
-      configSchema.parse({
-        categories: [
-          {
-            title: 'Changes',
-            when: {
-              conventional: {
-                type: ref === 'main' ? 'feat' : 'fix',
+    value.getConfig = vi.fn<RunnerDependencies['getConfig']>(
+      async (_name, _token, ref) =>
+        configSchema.parse({
+          categories: [
+            {
+              title: 'Changes',
+              when: {
+                conventional: {
+                  type: ref === 'main' ? 'feat' : 'fix',
+                },
               },
             },
-          },
-        ],
-      }),
+          ],
+        }),
     )
     await expect(checkPullRequest(value)).rejects.toThrow(
       'Base configuration (main)',
@@ -193,19 +199,20 @@ describe('check PR runner', () => {
 
   it('rejects proposed rules that stop the PR matching', async () => {
     const value = dependencies('feat: title', [])
-    value.getConfig = vi.fn(async (_name, _token, ref) =>
-      configSchema.parse({
-        categories: [
-          {
-            title: 'Changes',
-            when: {
-              conventional: {
-                type: ref === 'main' ? 'feat' : 'fix',
+    value.getConfig = vi.fn<RunnerDependencies['getConfig']>(
+      async (_name, _token, ref) =>
+        configSchema.parse({
+          categories: [
+            {
+              title: 'Changes',
+              when: {
+                conventional: {
+                  type: ref === 'main' ? 'feat' : 'fix',
+                },
               },
             },
-          },
-        ],
-      }),
+          ],
+        }),
     )
     await expect(checkPullRequest(value)).rejects.toThrow(
       'Proposed configuration (refs/pull/42/head)',
@@ -216,13 +223,14 @@ describe('check PR runner', () => {
 
   it('validates proposed config even when the base config excludes the PR', async () => {
     const value = dependencies('title', [])
-    value.getConfig = vi.fn(async (_name, _token, ref) =>
-      configSchema.parse({
-        categories:
-          ref === 'main'
-            ? [{ type: 'pre-exclude', when: { label: 'skip' } }]
-            : [{ type: 'changelog', when: { label: 'skip' } }],
-      }),
+    value.getConfig = vi.fn<RunnerDependencies['getConfig']>(
+      async (_name, _token, ref) =>
+        configSchema.parse({
+          categories:
+            ref === 'main'
+              ? [{ type: 'pre-exclude', when: { label: 'skip' } }]
+              : [{ type: 'changelog', when: { label: 'skip' } }],
+        }),
     )
     value.payload = payload('title', ['skip'])
     await expect(checkPullRequest(value)).rejects.toThrow('non-empty')
@@ -235,15 +243,16 @@ describe('check PR runner', () => {
   it('retains base labels when proposed conditions select different labels', async () => {
     const value = dependencies('feat: title', [])
     value.payload = payload('feat: title', ['base', 'proposed'])
-    value.getConfig = vi.fn(async (_name, _token, ref) =>
-      configSchema.parse({
-        categories: [
-          {
-            title: 'Changes',
-            when: { label: ref === 'main' ? 'base' : 'proposed' },
-          },
-        ],
-      }),
+    value.getConfig = vi.fn<RunnerDependencies['getConfig']>(
+      async (_name, _token, ref) =>
+        configSchema.parse({
+          categories: [
+            {
+              title: 'Changes',
+              when: { label: ref === 'main' ? 'base' : 'proposed' },
+            },
+          ],
+        }),
     )
     await checkPullRequest(value)
     expect(core.setOutput).toHaveBeenCalledWith('labels', '["base"]')

@@ -26,12 +26,13 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
+          version-file: package.json
           node-version-file: .node-version
-
-      - name: Select the tested npm version
-        run: npm install --global npm@12.0.1 --ignore-scripts
+          cache: true
+          run-install: |
+            args: ['--frozen-lockfile']
 
       - name: Verify release tag and package versions
         env:
@@ -42,16 +43,14 @@ jobs:
           test "$RELEASE_TAG" = "v$root_version"
           test "$package_version" = "$root_version"
 
-      - run: npm ci
-
       - name: Run all checks and rebuild artifacts
-        run: npm run ci
+        run: vp run --no-cache ci
 
       - name: Verify package publication readiness
-        run: npm run test:package-readiness
+        run: vp run --no-cache test:package-readiness
 
       - name: Check for clean working directory
-        run: npm run check:clean
+        run: vp run check:clean
 
       - name: Stage release-drafter for npm approval
         working-directory: packages/release-drafter

@@ -1,6 +1,6 @@
 import { context } from '@actions/github'
 import nock from 'nock'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { runAutolabeler } from '#tests/helpers/index.ts'
 import {
   mockContext,
@@ -370,17 +370,19 @@ describe('autolabeler e2e', async () => {
         expect(mocks.core.info).toHaveBeenCalledWith(
           "[dry-run] Would remove label 'patch' from PR #1475",
         )
-        if (selected) {
-          expect(mocks.core.setOutput).toHaveBeenCalledWith('labels', selected)
-          expect(mocks.core.info).toHaveBeenCalledWith(
-            '[dry-run] Would add labels [needs-triage, uncategorized] to PR #1475',
-          )
-        } else {
-          expect(mocks.core.setOutput).not.toHaveBeenCalledWith(
-            'labels',
-            expect.anything(),
-          )
-        }
+        expect(
+          mocks.core.setOutput.mock.calls.filter(([key]) => key === 'labels'),
+        ).toEqual(selected ? [['labels', selected]] : [])
+        const additions = mocks.core.info.mock.calls
+          .map(([message]) => message)
+          .filter((message) => message.startsWith('[dry-run] Would add labels'))
+        expect(additions).toEqual(
+          selected
+            ? [
+                '[dry-run] Would add labels [needs-triage, uncategorized] to PR #1475',
+              ]
+            : [],
+        )
         expect(filesScope.isDone()).toBe(true)
         expect(labelsScope.isDone()).toBe(true)
       },

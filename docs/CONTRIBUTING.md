@@ -26,17 +26,18 @@ The pull request cannot be merged until this acknowledgement is recorded.
 ## Submitting a pull request
 
 1. [Fork][fork] and clone the repository.
-2. Install the dependencies with `npm install`.
+2. Install the dependencies with `vp install`.
 3. Create a branch with `git checkout -b my-branch-name`.
-4. Make your change and add tests. Before you push, run `npm run ci`. This
-   command formats and lints the code, checks types, runs tests, and builds the
+4. Make your change and add tests. Before you push, run `vp run ci`. This
+   command checks formatting, lint rules, and types, runs tests, and builds the
    root action bundles and workspace packages. CI fails if the command changes a
    tracked generated file.
 5. Push the branch to your fork and [submit a pull request][pr].
 
 Follow these rules when you prepare a pull request:
 
-- Run `npm run ci` and fix each reported error.
+- Run `vp run fix` to apply formatting and lint fixes, then run `vp run ci`
+  and fix each reported error.
 - Write and update tests.
 - Keep the change focused. Submit independent changes as separate pull requests.
 - Use a
@@ -49,13 +50,52 @@ Open a draft pull request to request early feedback or report a blocker.
 
 ## Workspace development
 
-Release Drafter uses npm workspaces. Run `npm install` from the repository root.
-npm links each workspace under `packages/*` and updates `package-lock.json`.
+Release Drafter uses Vite+ with npm workspaces. Run `vp install` from the repository
+root. The `packageManager` field pins npm; installation links each workspace under
+`packages/*` and updates `package-lock.json`.
+
+Use `vp run <name>` for repository scripts. Built-in commands such as `vp check`,
+`vp test`, and `vp build` run their tools directly. `vp run build` builds both the
+action bundles and workspace libraries; workspace libraries use `vp pack`.
+Library builds use `packages/*/tsconfig.build.json` to exclude test declarations.
+`vp check` uses the normal TypeScript configurations, including test sources.
+
+Action builds, workspace package builds, source test runs, schema and Action
+metadata generation, and Knip checks use Vite Task caching. A cache hit restores
+generated outputs and replays the previous result.
+Source tests also restore coverage reports and fingerprint both coverage
+threshold environment variables. Run `vp run --no-cache ci` to execute all checks
+fresh, or `vp cache clean` to clear local task results.
+
+Build and artifact-test tasks declare their prerequisites in `vite.config.ts`.
+Formatting, GraphQL generation, artifact and package-readiness checks, package
+guards, forge conformance, and publication are not cached by default. GraphQL
+generation reads GitHub's live schema and must fetch it each time.
+Release workflows explicitly disable
+task caching. Ordinary CI shares the task cache separately from installed
+dependencies; cross-run caching is experimental, so compare cache transfer time
+with execution savings before extending it to other jobs.
+
+A global Vite+ installation is optional. Without one, install with `npm ci` and
+invoke the local CLI with `npm exec -- vp run ci` or `npm exec -- vp check`.
+
+Toolchain workflows use SHA-pinned `voidzero-dev/setup-vp`. They select Vite+
+from `package.json`, Node from `.node-version`, and npm from `packageManager`.
+Installation uses `vp install --frozen-lockfile`, which invokes `npm ci` for this
+project and respects `.npmrc`. Main CI and forge jobs preserve their installed
+dependency caches; other toolchain jobs use the action's package-manager cache.
+The forge scope job only runs Node scripts and retains `actions/setup-node`.
 
 The public action entrypoints are `action.yml`, `drafter/action.yml`,
 `autolabeler/action.yml`, and `check-pr/action.yml`. The tracked bundles are
 under `dist/actions/*/run.js`. Workspace packages provide internal code
 boundaries without changing the public action paths.
+
+Edit authored Action fields such as names, branding, and runtime entrypoints in
+`src/scripts/action-metadata/**/*.yml`. Input and output definitions live in
+`src/scripts/action-metadata-config.ts`. Run `vp run generate:action-metadata` to
+regenerate the public manifests; do not edit those generated manifests directly.
+Schema generation depends on workspace builds and fingerprints their outputs.
 
 Only the root `dist/` directory is tracked. GitHub runs these JavaScript bundles
 directly from the repository. Builds generate `packages/*/dist/`, but Git
@@ -66,50 +106,61 @@ Split Drafter end-to-end tests into files by behavior, keeping cases within each
 file sequential. `src/tests/setup.ts` selects the directories that need Action
 mocks; update it when adding an Action test directory.
 
+Formatting uses Oxfmt through Vite+, with settings in the root `vite.config.ts`.
+Oxlint handles linting through `vp lint` and `vp check`. `vp run fix` applies
+formatting and lint fixes; `vp check` checks them without editing source files.
+`vp check` also checks TypeScript using each file’s project configuration, including
+workspace NodeNext resolution and package boundaries. Separate `tsc` runs are not
+needed for source validation. Consumer tests still use TypeScript to verify the
+published declarations from an isolated project.
+
 Common commands:
 
-- `npm run ci` runs the standard repository checks and builds generated files. It
-  formats and lints the code, checks dependencies, package settings, and types,
+- `vp run format` formats supported source, configuration, and Markdown files.
+  `vp run format:check` checks formatting without writing changes.
+
+- `vp run ci` runs the standard repository checks and builds generated files. It
+  checks formatting, lint rules, dependencies, package settings, and types,
   runs tests, generates schemas, and builds action bundles and workspace packages.
   Tooling tests check script syntax with Node. GitHub Actions sets
   `COVERAGE_THRESHOLD=90` and `BRANCH_COVERAGE_THRESHOLD=90`; set them locally
   to enforce the same statement and branch coverage.
-- `npm run test:run` runs source tests. For a focused run, use
-  `npm run test:run -- path/to/file.test.ts`.
-- `npm run test:artifacts` builds the action bundles and workspace packages,
+- `vp run test:run` runs source tests. For a focused run, use
+  `vp run test:run path/to/file.test.ts`.
+- `vp run test:artifacts` builds the action bundles and workspace packages,
   then tests their generated output and package consumers.
-- `npm run coverage` prints statement coverage and, in GitHub Actions, adds a
+- `vp run coverage` prints statement coverage and, in GitHub Actions, adds a
   coverage table to the job summary.
-- `npm run check:dependencies` uses Knip to find unused files, unused
+- `vp run check:dependencies` uses Knip to find unused files, unused
   dependencies, and unlisted dependencies. It does not report unused exports.
   It uses Knip's normal parser to avoid raw-transfer buffer allocation failures
   on memory-limited workers, including Mend Renovate.
-- `npm run check:dependencies:production` uses Knip strict mode to report
+- `vp run check:dependencies:production` uses Knip strict mode to report
   production imports missing from each private workspace's runtime dependencies.
   Type-only source imports may use development dependencies. The public
   `release-drafter` package bundles private workspaces from development
   dependencies, so its shipped imports are checked by the package consumer
   tests instead.
-- `npm run check:packages` checks publication settings and workspace version
+- `vp run check:packages` checks publication settings and workspace version
   alignment. Only the `release-drafter` package can be published.
-- `npm run test:package-readiness` builds and packs the public
+- `vp run test:package-readiness` builds and packs the public
   `release-drafter` package. It runs the ESM, NodeNext, CLI, and isolated `npx`
   consumer contracts. It checks the package contents and metadata, then runs an
   offline `npm publish --dry-run` against the same tarball.
-- `npm run check:clean` fails if generation leaves unstaged or untracked changes
+- `vp run check:clean` fails if generation leaves unstaged or untracked changes
   relative to the staged tree.
-- `npm run build:workspaces` builds workspace packages.
+- `vp run build:workspaces` builds workspace packages.
 
 ### Forge conformance tests
 
-`npm run test:run` and `npm run ci` do not start containers. Use these commands
+`vp run test:run` and `vp run ci` do not start containers. Use these commands
 to run Docker-backed forge conformance tests:
 
-- `npm run test:conformance:gitea` runs the Gitea image.
-- `npm run test:conformance:forgejo` runs the Forgejo image.
-- `npm run test:conformance:gitea-forgejo` runs both images through the shared
+- `vp run test:conformance:gitea` runs the Gitea image.
+- `vp run test:conformance:forgejo` runs the Forgejo image.
+- `vp run test:conformance:gitea-forgejo` runs both images through the shared
   `ForgeAdapter` contract.
-- `npm run test:conformance:gitlab` runs the GitLab suite serially and uses
+- `vp run test:conformance:gitlab` runs the GitLab suite serially and uses
   extended startup and teardown timeouts. It uses a GitLab CE image from
   [`jetersen/gitlab-ce-warm`](https://github.com/jetersen/gitlab-ce-warm) with
   Omnibus configuration and the test project already applied, so it starts in
@@ -127,7 +178,7 @@ before installing dependencies, and the suite attaches to it when
 `FORGE_CONFORMANCE_PRESTARTED=true`. Without that variable, the suites start the
 same container definitions with Testcontainers. CI and forge conformance jobs
 restore `node_modules` from the Actions cache when `package-lock.json`,
-`.npmrc`, and `.node-version` are unchanged. Renovate updates the pinned images
+workspace manifests, `.npmrc`, and `.node-version` are unchanged. Renovate updates the pinned images
 in `images.ts`.
 
 The CI forge conformance jobs run the matrix for changes to these inputs:
@@ -143,9 +194,9 @@ The CI forge conformance jobs run the matrix for changes to these inputs:
   or `src/scripts/forge-conformance-router.ts`.
 - Runtime dependency or module-resolution settings in the core, public package,
   or adapter manifests. Root manifest triggers are limited to conformance
-  commands, Vitest, Vite, Testcontainers, installation overrides, and runtime
+  commands, Vite+, Vitest, Vite, Testcontainers, installation overrides, and runtime
   and workspace resolution settings.
-- Lockfile changes affecting runtime dependencies of those packages, or Vitest,
+- Lockfile changes affecting runtime dependencies of those packages, or Vite+, Vitest,
   Vite, and Testcontainers. The router follows transitive, nested, installed
   optional, required peer, and workspace dependencies in both lockfile versions.
   Workspace development dependencies and unused optional peer integrations

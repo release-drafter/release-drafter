@@ -44,12 +44,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
+          version-file: package.json
           node-version-file: .node-version
-          cache: npm
-
-      - run: npm ci
+          cache: true
+          run-install: |
+            args: ['--frozen-lockfile']
 
       - name: Capture release base
         id: base
@@ -74,19 +75,19 @@ jobs:
           echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Run all checks and rebuild artifacts
-        run: npm run ci
+        run: vp run --no-cache ci
 
       - name: Verify package publication readiness
-        run: npm run test:package-readiness
+        run: vp run --no-cache test:package-readiness
 
       - name: Verify generated files match the staged tree
-        run: npm run check:clean
+        run: vp run check:clean
 
       - name: Report coverage
         if: >-
           !cancelled() &&
           hashFiles('coverage/coverage-summary.json') != ''
-        run: npm run coverage
+        run: vp run coverage
 
       - name: Create repository-scoped release token
         id: app-token

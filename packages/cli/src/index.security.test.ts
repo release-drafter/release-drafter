@@ -2,7 +2,7 @@ import type {
   DraftReleaseResult,
   LocalConfigFileReader,
 } from '@release-drafter/core'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import type {
   CliAdapter,
   CliDependencies,
@@ -14,7 +14,7 @@ import { runCli } from './index.ts'
 const CONFIG = 'template: "$CHANGES"\n'
 
 const localConfigReader = (contents = CONFIG): LocalConfigFileReader =>
-  vi.fn(async (path, cwd) => ({
+  vi.fn<LocalConfigFileReader>(async (path, cwd) => ({
     contents,
     canonicalCwd: cwd,
     canonicalPath: path,
@@ -49,20 +49,27 @@ const releaseResult = (
 const createAdapter = (): CliAdapter =>
   ({
     capabilities: { draftReleases: true },
-    getDefaultBranch: vi.fn(async () => 'main'),
+    getDefaultBranch: vi.fn<() => Promise<string>>(async () => 'main'),
     octokit: {
       rest: {
         repos: {
-          get: vi.fn(async () => ({ data: { default_branch: 'main' } })),
+          get: vi.fn<() => Promise<{ data: { default_branch: string } }>>(
+            async () => ({ data: { default_branch: 'main' } }),
+          ),
         },
       },
     },
-    getRepositoryConfig: vi.fn(async () => CONFIG),
-    listReleases: vi.fn(),
-    findChanges: vi.fn(),
-    resolveCommitish: vi.fn(),
-    createRelease: vi.fn(),
-    updateRelease: vi.fn(),
+    getRepositoryConfig: vi.fn<() => Promise<string>>(async () => CONFIG),
+    listReleases:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['listReleases']>(),
+    findChanges:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['findChanges']>(),
+    resolveCommitish:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['resolveCommitish']>(),
+    createRelease:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['createRelease']>(),
+    updateRelease:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['updateRelease']>(),
   }) as unknown as CliAdapter
 
 const invoke = async (
@@ -72,7 +79,9 @@ const invoke = async (
   const stdout = capture()
   const stderr = capture()
   const adapter = createAdapter()
-  const adapterFactory = vi.fn((_params?: unknown) => adapter)
+  const adapterFactory = vi.fn<(_params?: unknown) => CliAdapter>(
+    (_params?: unknown) => adapter,
+  )
   const draft = vi.fn<DraftFunction>(async () => releaseResult())
   const code = await runCli(argv, {
     stdout: stdout.stream,
@@ -182,7 +191,13 @@ describe('CLI runtime security', () => {
   )
 
   it('routes local configs through the injected atomic reader boundary', async () => {
-    const readLocalFile = vi.fn(async () => ({
+    const readLocalFile = vi.fn<
+      () => Promise<{
+        contents: string
+        canonicalCwd: string
+        canonicalPath: string
+      }>
+    >(async () => ({
       contents: '{"template":"local"}',
       canonicalCwd: '/canonical/workspace',
       canonicalPath: '/canonical/workspace/configs/release.json',

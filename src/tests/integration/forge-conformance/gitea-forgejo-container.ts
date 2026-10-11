@@ -47,19 +47,19 @@ const authenticatedFetch = (
   fixture: Pick<RestForgeFixture, 'apiUrl' | 'token'>,
   path: string,
   init: RequestInit = {},
-) =>
-  fetch(`${fixture.apiUrl}${path}`, {
+) => {
+  const headers = new Headers(init.headers)
+  if (!headers.has('accept')) headers.set('accept', 'application/json')
+  if (!headers.has('authorization'))
+    headers.set('authorization', `token ${fixture.token}`)
+  if (init.body !== undefined && !headers.has('content-type'))
+    headers.set('content-type', 'application/json')
+  return fetch(`${fixture.apiUrl}${path}`, {
     ...init,
     signal: init.signal ?? AbortSignal.timeout(15_000),
-    headers: {
-      Accept: 'application/json',
-      Authorization: `token ${fixture.token}`,
-      ...(init.body === undefined
-        ? {}
-        : { 'Content-Type': 'application/json' }),
-      ...init.headers,
-    },
+    headers,
   })
+}
 
 export const forgeApi = async <T>(
   fixture: Pick<RestForgeFixture, 'apiUrl' | 'token'>,

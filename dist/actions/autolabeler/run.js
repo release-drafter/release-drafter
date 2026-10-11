@@ -69,7 +69,7 @@ var parseConfig = (params) => {
 				body: rule.body.map(stringToRegex)
 			};
 		} catch {
-			params.logger.warning(`Bad autolabeler regex: '${rule.branch}', '${rule.title}' or '${rule.body}'`);
+			params.logger.warning(`Bad autolabeler regex: '${rule.branch.join(",")}', '${rule.title.join(",")}' or '${rule.body.join(",")}'`);
 			return false;
 		}
 	}).filter((rule) => !!rule);

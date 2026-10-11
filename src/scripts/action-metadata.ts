@@ -1,15 +1,20 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { parseDocument } from 'yaml'
 import { actionManifests } from './action-metadata-config.ts'
 
 for (const metadata of Object.values(actionManifests)) {
   for (const path of metadata.paths) {
-    const source = readFileSync(path, 'utf8')
+    const templatePath = join('src/scripts/action-metadata', path)
+    const source = readFileSync(templatePath, 'utf8')
     const document = parseDocument(source)
     if (document.errors.length > 0) {
-      throw new Error(`Cannot update invalid Action metadata at ${path}`, {
-        cause: document.errors[0],
-      })
+      throw new Error(
+        `Cannot generate invalid Action metadata from ${templatePath}`,
+        {
+          cause: document.errors[0],
+        },
+      )
     }
     document.set('inputs', metadata.inputs)
     document.set('outputs', metadata.outputs)
@@ -18,7 +23,7 @@ for (const metadata of Object.values(actionManifests)) {
       lineWidth: 0,
       singleQuote: true,
     })
-    if (generated !== source) {
+    if (!existsSync(path) || generated !== readFileSync(path, 'utf8')) {
       writeFileSync(path, generated)
       console.log(`Updated ${path}`)
     }

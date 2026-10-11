@@ -3,13 +3,6 @@
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
   "customManagers": [
     {
-      "customType": "regex",
-      "fileMatch": ["^biome\\.jsonc$"],
-      "matchStrings": ["biomejs\\.dev/schemas/(?<currentValue>[^/]+)"],
-      "depNameTemplate": "@biomejs/biome",
-      "datasourceTemplate": "npm",
-    },
-    {
       // Pinned forge images used by the conformance fixtures.
       "customType": "regex",
       "fileMatch": ["^src/tests/integration/.+\\.ts$"],
@@ -91,10 +84,6 @@
     {
       "matchDepTypes": ["devDependencies"],
       "labels": ["type: maintenance"],
-    },
-    {
-      "matchPackageNames": ["@biomejs/biome"],
-      "groupName": "biome",
     },
     {
       "matchPackageNames": ["vitest", "@vitest/*"],

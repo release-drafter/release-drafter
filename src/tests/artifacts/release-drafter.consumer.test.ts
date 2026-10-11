@@ -7,8 +7,8 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { join, resolve } from 'node:path'
+import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test'
 
 type PackResult = { filename: string }
 type PackOutput = PackResult[] | Record<string, PackResult>
@@ -23,11 +23,6 @@ type CommandResult = {
 const repositoryRoot = resolve(import.meta.dirname, '../../..')
 const packageDirectory = join(repositoryRoot, 'packages/release-drafter')
 const typescriptCli = join(repositoryRoot, 'node_modules/typescript/lib/tsc.js')
-const npmCli = resolve(
-  repositoryRoot,
-  process.env.npm_execpath ?? 'node_modules/npm/bin/npm-cli.js',
-)
-const npxCli = join(dirname(npmCli), 'npx-cli.js')
 const parsePackResult = (output: string): PackResult => {
   const parsed = JSON.parse(output) as PackOutput
   const result = Array.isArray(parsed) ? parsed[0] : Object.values(parsed)[0]
@@ -56,6 +51,9 @@ const isolatedEnvironment = (): NodeJS.ProcessEnv => {
   }
   return {
     ...environment,
+    VP_PACKAGE_MANAGER: JSON.parse(
+      readFileSync(join(repositoryRoot, 'package.json'), 'utf8'),
+    ).packageManager,
     CI: 'true',
     FORCE_COLOR: '0',
     HTTP_PROXY: 'http://127.0.0.1:9',
@@ -111,11 +109,12 @@ const runExecutable = (
   executable: string,
   args: string[],
   cwd: string,
+  environment: NodeJS.ProcessEnv = isolatedEnvironment(),
 ): CommandResult => {
   const result = spawnSync(executable, args, {
     cwd,
     encoding: 'utf8',
-    env: isolatedEnvironment(),
+    env: environment,
     stdio: 'pipe',
   })
   return {
@@ -147,7 +146,7 @@ const expectExit = (result: CommandResult, status: number): void => {
 }
 
 const runNpm = (args: string[], cwd = repositoryRoot): CommandResult =>
-  runNode([npmCli, ...args], cwd, packageManagerEnvironment())
+  runExecutable('npm', args, cwd, packageManagerEnvironment())
 
 const expectSuccessfulNpm = (args: string[], cwd = repositoryRoot): string => {
   const result = runNpm(args, cwd)
@@ -164,88 +163,93 @@ const containsJsonOutput = (output: string): boolean =>
     )
   })
 
-describe('release-drafter packed CLI and package consumer', {
-  concurrent: false,
-}, () => {
-  let temporaryDirectory: string
-  let consumerDirectory: string
-  let installedPackageDirectory: string
-  let installedCli: string
-  let manifest: { version: string }
+describe(
+  'release-drafter packed CLI and package consumer',
+  {
+    concurrent: false,
+  },
+  () => {
+    let temporaryDirectory: string
+    let consumerDirectory: string
+    let installedPackageDirectory: string
+    let installedCli: string
+    let manifest: { version: string }
 
-  beforeAll(async () => {
-    temporaryDirectory = mkdtempSync(join(tmpdir(), 'release-drafter-cli-'))
-    const packDirectory = join(temporaryDirectory, 'pack')
-    consumerDirectory = join(temporaryDirectory, 'consumer')
-    mkdirSync(packDirectory)
-    mkdirSync(consumerDirectory)
+    beforeAll(async () => {
+      temporaryDirectory = mkdtempSync(join(tmpdir(), 'release-drafter-cli-'))
+      const packDirectory = join(temporaryDirectory, 'pack')
+      consumerDirectory = join(temporaryDirectory, 'consumer')
+      mkdirSync(packDirectory)
+      mkdirSync(consumerDirectory)
 
-    const packResult = parsePackResult(
+      const packResult = parsePackResult(
+        expectSuccessfulNpm(
+          [
+            'pack',
+            '--ignore-scripts',
+            '--json',
+            '--pack-destination',
+            packDirectory,
+          ],
+          packageDirectory,
+        ),
+      )
+
+      writeFileSync(
+        join(consumerDirectory, 'package.json'),
+        JSON.stringify({
+          name: 'isolated-release-drafter-consumer',
+          private: true,
+          type: 'module',
+        }),
+      )
       expectSuccessfulNpm(
         [
-          'pack',
+          'install',
           '--ignore-scripts',
-          '--json',
-          '--pack-destination',
-          packDirectory,
+          '--no-audit',
+          '--no-fund',
+          '--package-lock=false',
+          join(packDirectory, packResult.filename),
         ],
-        packageDirectory,
-      ),
-    )
+        consumerDirectory,
+      )
 
-    writeFileSync(
-      join(consumerDirectory, 'package.json'),
-      JSON.stringify({
-        name: 'isolated-release-drafter-consumer',
-        private: true,
-        type: 'module',
-      }),
-    )
-    expectSuccessfulNpm(
-      [
-        'install',
-        '--ignore-scripts',
-        '--no-audit',
-        '--no-fund',
-        '--package-lock=false',
-        join(packDirectory, packResult.filename),
-      ],
-      consumerDirectory,
-    )
+      installedPackageDirectory = join(
+        consumerDirectory,
+        'node_modules/release-drafter',
+      )
+      installedCli =
+        process.platform === 'win32'
+          ? join(consumerDirectory, 'node_modules/.bin/release-drafter.cmd')
+          : join(consumerDirectory, 'node_modules/.bin/release-drafter')
+      manifest = JSON.parse(
+        readFileSync(join(installedPackageDirectory, 'package.json'), 'utf8'),
+      ) as typeof manifest
+    }, 120_000)
 
-    installedPackageDirectory = join(
-      consumerDirectory,
-      'node_modules/release-drafter',
-    )
-    installedCli =
-      process.platform === 'win32'
-        ? join(consumerDirectory, 'node_modules/.bin/release-drafter.cmd')
-        : join(consumerDirectory, 'node_modules/.bin/release-drafter')
-    manifest = JSON.parse(
-      readFileSync(join(installedPackageDirectory, 'package.json'), 'utf8'),
-    ) as typeof manifest
-  }, 120_000)
+    afterAll(() => {
+      rmSync(temporaryDirectory, { force: true, recursive: true })
+    })
 
-  afterAll(() => {
-    rmSync(temporaryDirectory, { force: true, recursive: true })
-  })
+    it('includes the package license and third-party notices', () => {
+      expect(
+        readFileSync(join(installedPackageDirectory, 'LICENSE'), 'utf8'),
+      ).toBe(readFileSync(join(repositoryRoot, 'LICENSE'), 'utf8'))
+      expect(
+        readFileSync(
+          join(installedPackageDirectory, 'THIRD_PARTY_NOTICES'),
+          'utf8',
+        ),
+      ).toBe(
+        readFileSync(join(packageDirectory, 'THIRD_PARTY_NOTICES'), 'utf8'),
+      )
+    })
 
-  it('includes the package license and third-party notices', () => {
-    expect(
-      readFileSync(join(installedPackageDirectory, 'LICENSE'), 'utf8'),
-    ).toBe(readFileSync(join(repositoryRoot, 'LICENSE'), 'utf8'))
-    expect(
-      readFileSync(
-        join(installedPackageDirectory, 'THIRD_PARTY_NOTICES'),
-        'utf8',
-      ),
-    ).toBe(readFileSync(join(packageDirectory, 'THIRD_PARTY_NOTICES'), 'utf8'))
-  })
-
-  it('type-checks and imports the programmatic API without CLI side effects', () => {
-    writeFileSync(
-      join(consumerDirectory, 'consumer.mts'),
-      `
+    it('type-checks and imports the programmatic API without CLI side effects', () => {
+      writeFileSync(
+        join(consumerDirectory, 'consumer.mts'),
+        `
       import { createForgeAdapter, draftRelease, loadConfig } from 'release-drafter'
       import type {
         CreateForgeAdapterOptions,
@@ -308,31 +312,31 @@ describe('release-drafter packed CLI and package consumer', {
       void factoryOptions
       void [githubOptions, giteaOptions, forgejoOptions, gitlabOptions]
     `,
-    )
-    writeFileSync(
-      join(consumerDirectory, 'tsconfig.json'),
-      JSON.stringify({
-        compilerOptions: {
-          module: 'NodeNext',
-          moduleResolution: 'NodeNext',
-          noEmit: true,
-          skipLibCheck: false,
-          strict: true,
-          target: 'ES2024',
-          types: [],
-        },
-        include: ['consumer.mts'],
-      }),
-    )
-    const typecheck = runNode(
-      [typescriptCli, '-p', 'tsconfig.json'],
-      consumerDirectory,
-    )
-    expectExit(typecheck, 0)
+      )
+      writeFileSync(
+        join(consumerDirectory, 'tsconfig.json'),
+        JSON.stringify({
+          compilerOptions: {
+            module: 'NodeNext',
+            moduleResolution: 'NodeNext',
+            noEmit: true,
+            skipLibCheck: false,
+            strict: true,
+            target: 'ES2024',
+            types: [],
+          },
+          include: ['consumer.mts'],
+        }),
+      )
+      const typecheck = runNode(
+        [typescriptCli, '-p', 'tsconfig.json'],
+        consumerDirectory,
+      )
+      expectExit(typecheck, 0)
 
-    writeFileSync(
-      join(consumerDirectory, 'import-api.mjs'),
-      `
+      writeFileSync(
+        join(consumerDirectory, 'import-api.mjs'),
+        `
       process.argv = [process.execPath, import.meta.filename, '--help']
       process.exit = (code) => {
         throw new Error('root import attempted to exit with code ' + code)
@@ -371,17 +375,17 @@ describe('release-drafter packed CLI and package consumer', {
       }
       stdoutWrite.call(process.stdout, 'imported\\n')
     `,
-    )
-    const imported = runNode(['import-api.mjs'], consumerDirectory)
-    expectExit(imported, 0)
-    expect(imported.stderr, formatResult(imported)).toBe('')
-    expect(imported.stdout, formatResult(imported)).toBe('imported\n')
-  })
+      )
+      const imported = runNode(['import-api.mjs'], consumerDirectory)
+      expectExit(imported, 0)
+      expect(imported.stderr, formatResult(imported)).toBe('')
+      expect(imported.stdout, formatResult(imported)).toBe('imported\n')
+    })
 
-  it('constructs and exercises all bundled forge adapters without private workspace packages', () => {
-    writeFileSync(
-      join(consumerDirectory, 'construct-adapters.mjs'),
-      `
+    it('constructs and exercises all bundled forge adapters without private workspace packages', () => {
+      writeFileSync(
+        join(consumerDirectory, 'construct-adapters.mjs'),
+        `
       import { createForgeAdapter } from 'release-drafter'
 
       const repository = {
@@ -409,20 +413,20 @@ describe('release-drafter packed CLI and package consumer', {
       )
       process.stdout.write(JSON.stringify(results) + '\\n')
     `,
-    )
+      )
 
-    const constructed = runNode(['construct-adapters.mjs'], consumerDirectory)
-    expectExit(constructed, 0)
-    expect(constructed.stderr, formatResult(constructed)).toBe('')
-    expect(constructed.stdout, formatResult(constructed)).toBe(
-      '[["github",true,0],["gitea",true,0],["forgejo",true,0],["gitlab",false,0]]\n',
-    )
-  })
+      const constructed = runNode(['construct-adapters.mjs'], consumerDirectory)
+      expectExit(constructed, 0)
+      expect(constructed.stderr, formatResult(constructed)).toBe('')
+      expect(constructed.stdout, formatResult(constructed)).toBe(
+        '[["github",true,0],["gitea",true,0],["forgejo",true,0],["gitlab",false,0]]\n',
+      )
+    })
 
-  it('runs a dry-run release through the bundled core implementation', () => {
-    writeFileSync(
-      join(consumerDirectory, 'draft-release.mjs'),
-      `
+    it('runs a dry-run release through the bundled core implementation', () => {
+      writeFileSync(
+        join(consumerDirectory, 'draft-release.mjs'),
+        `
       import { draftRelease } from 'release-drafter'
 
       const result = await draftRelease({
@@ -495,70 +499,72 @@ describe('release-drafter packed CLI and package consumer', {
       }
       process.stdout.write(result.releasePayload.tag + '\\n')
     `,
-    )
+      )
 
-    const dryRun = runNode(['draft-release.mjs'], consumerDirectory)
-    expectExit(dryRun, 0)
-    expect(dryRun.stderr, formatResult(dryRun)).toBe('')
-    expect(dryRun.stdout, formatResult(dryRun)).toBe('v1.0.1\n')
-  })
+      const dryRun = runNode(['draft-release.mjs'], consumerDirectory)
+      expectExit(dryRun, 0)
+      expect(dryRun.stderr, formatResult(dryRun)).toBe('')
+      expect(dryRun.stdout, formatResult(dryRun)).toBe('v1.0.1\n')
+    })
 
-  it('runs help and version through the installed binary without auth, network, or JSON noise', () => {
-    const help = runExecutable(installedCli, ['--help'], consumerDirectory)
-    expectExit(help, 0)
-    expect(help.stderr, formatResult(help)).toBe('')
-    expect(help.stdout).toMatch(/usage:/i)
-    expect(help.stdout).toMatch(/release-drafter/i)
-    expect(containsJsonOutput(help.stdout)).toBe(false)
+    it('runs help and version through the installed binary without auth, network, or JSON noise', () => {
+      const help = runExecutable(installedCli, ['--help'], consumerDirectory)
+      expectExit(help, 0)
+      expect(help.stderr, formatResult(help)).toBe('')
+      expect(help.stdout).toMatch(/usage:/i)
+      expect(help.stdout).toMatch(/release-drafter/i)
+      expect(containsJsonOutput(help.stdout)).toBe(false)
 
-    const version = runExecutable(
-      installedCli,
-      ['--version'],
-      consumerDirectory,
-    )
-    expectExit(version, 0)
-    expect(version.stderr, formatResult(version)).toBe('')
-    expect(version.stdout, formatResult(version)).toBe(
-      `release-drafter ${manifest.version}\n`,
-    )
-    expect(containsJsonOutput(version.stdout)).toBe(false)
-  })
+      const version = runExecutable(
+        installedCli,
+        ['--version'],
+        consumerDirectory,
+      )
+      expectExit(version, 0)
+      expect(version.stderr, formatResult(version)).toBe('')
+      expect(version.stdout, formatResult(version)).toBe(
+        `release-drafter ${manifest.version}\n`,
+      )
+      expect(containsJsonOutput(version.stdout)).toBe(false)
+    })
 
-  it('resolves the packed-installed CLI through actual offline npx execution', () => {
-    const npxHome = join(temporaryDirectory, 'npx-home')
-    const npxCache = join(temporaryDirectory, 'npx-cache')
-    mkdirSync(npxHome)
-    mkdirSync(npxCache)
-    const version = runNode(
-      [npxCli, '--offline', '--no-install', 'release-drafter', '--version'],
-      consumerDirectory,
-      {
-        ...isolatedEnvironment(),
-        HOME: npxHome,
-        npm_config_cache: npxCache,
-        npm_config_loglevel: 'error',
-        npm_config_yes: 'false',
-      },
-    )
-    expectExit(version, 0)
-    expect(version.stderr, formatResult(version)).toBe('')
-    expect(version.stdout, formatResult(version)).toBe(
-      `release-drafter ${manifest.version}\n`,
-    )
-    expect(containsJsonOutput(version.stdout)).toBe(false)
-  })
+    it('resolves the packed-installed CLI through actual offline npx execution', () => {
+      const npxHome = join(temporaryDirectory, 'npx-home')
+      const npxCache = join(temporaryDirectory, 'npx-cache')
+      mkdirSync(npxHome)
+      mkdirSync(npxCache)
+      const version = runExecutable(
+        'npx',
+        ['--offline', '--no-install', 'release-drafter', '--version'],
+        consumerDirectory,
+        {
+          ...isolatedEnvironment(),
+          HOME: npxHome,
+          npm_config_cache: npxCache,
+          npm_config_loglevel: 'error',
+          npm_config_yes: 'false',
+        },
+      )
+      expectExit(version, 0)
+      expect(version.stderr, formatResult(version)).toBe('')
+      expect(version.stdout, formatResult(version)).toBe(
+        `release-drafter ${manifest.version}\n`,
+      )
+      expect(containsJsonOutput(version.stdout)).toBe(false)
+    })
 
-  it('rejects an invalid forge with usage status before auth or network access', () => {
-    const invalid = runExecutable(
-      installedCli,
-      ['owner/repository', '--forge', 'definitely-not-a-forge'],
-      consumerDirectory,
-    )
-    expectExit(invalid, 2)
-    expect(invalid.stdout, formatResult(invalid)).toBe('')
-    const diagnostic = invalid.stderr.split('\n', 1)[0]
-    expect(diagnostic).toMatch(/forge/i)
-    expect(diagnostic).toMatch(/invalid|supported|unknown|usage/i)
-    expect(diagnostic).not.toMatch(/token|authenticat|network|fetch|ECONN/i)
-  })
-})
+    it('rejects an invalid forge with usage status before auth or network access', () => {
+      const invalid = runExecutable(
+        installedCli,
+        ['owner/repository', '--forge', 'definitely-not-a-forge'],
+        consumerDirectory,
+      )
+      expectExit(invalid, 2)
+      expect(invalid.stdout, formatResult(invalid)).toBe('')
+      const diagnostic = invalid.stderr.split('\n', 1)[0]
+      expect(diagnostic).toMatch(/forge/i)
+      expect(diagnostic).toMatch(/invalid|supported|unknown|usage/i)
+      expect(diagnostic).not.toMatch(/token|authenticat|network|fetch|ECONN/i)
+    })
+  },
+)

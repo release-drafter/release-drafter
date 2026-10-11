@@ -2,7 +2,7 @@ import {
   GitHubAdapter,
   type GitHubOctokit,
 } from '@release-drafter/github-adapter'
-import { vi } from 'vitest'
+import { vi } from 'vite-plus/test'
 import { defineForgeAdapterConformance } from './contract.ts'
 
 const repository = {
@@ -24,9 +24,12 @@ const baselineRelease = {
 const releases = [baselineRelease]
 const releaseBodies = new Map([[baselineRelease.id, 'Baseline release.']])
 
-const listReleases = vi.fn()
-const compareCommitsWithBasehead = vi.fn()
-const createRelease = vi.fn(async (request: Record<string, unknown>) => {
+const listReleases = vi.fn<GitHubOctokit['rest']['repos']['listReleases']>()
+const compareCommitsWithBasehead =
+  vi.fn<GitHubOctokit['rest']['repos']['compareCommitsWithBasehead']>()
+const createReleaseImplementation = async (
+  request: Record<string, unknown>,
+) => {
   const release = {
     id: releases.length + 1,
     tag_name: String(request.tag_name),
@@ -39,8 +42,13 @@ const createRelease = vi.fn(async (request: Record<string, unknown>) => {
   releases.push(release)
   releaseBodies.set(release.id, String(request.body))
   return { data: release }
-})
-const updateRelease = vi.fn(async (request: Record<string, unknown>) => {
+}
+const createRelease = vi.fn<typeof createReleaseImplementation>(
+  createReleaseImplementation,
+)
+const updateReleaseImplementation = async (
+  request: Record<string, unknown>,
+) => {
   const release = releases.find(({ id }) => id === Number(request.release_id))
   if (!release)
     throw new Error(`Release ${String(request.release_id)} not found`)
@@ -53,99 +61,109 @@ const updateRelease = vi.fn(async (request: Record<string, unknown>) => {
   })
   releaseBodies.set(release.id, String(request.body))
   return { data: release }
-})
+}
+const updateRelease = vi.fn<typeof updateReleaseImplementation>(
+  updateReleaseImplementation,
+)
 
+const iteratorImplementation = (
+  method: unknown,
+  request: { basehead?: string },
+) => {
+  if (
+    method !== compareCommitsWithBasehead ||
+    request.basehead !== 'v1.0.0...refs/tags/v1.1.0'
+  ) {
+    throw new Error('Unexpected GitHub comparison request')
+  }
+  return (async function* () {
+    yield { data: { commits: [{ sha: 'merge-oid' }] } }
+  })()
+}
+const paginateImplementation = async (method: unknown) => {
+  if (method === listReleases) return releases
+  throw new Error('Unexpected GitHub pagination request')
+}
 const paginate = Object.assign(
-  vi.fn(async (method: unknown) => {
-    if (method === listReleases) return releases
-    throw new Error('Unexpected GitHub pagination request')
-  }),
+  vi.fn<typeof paginateImplementation>(paginateImplementation),
   {
-    iterator: vi.fn((method: unknown, request: { basehead?: string }) => {
-      if (
-        method !== compareCommitsWithBasehead ||
-        request.basehead !== 'v1.0.0...refs/tags/v1.1.0'
-      ) {
-        throw new Error('Unexpected GitHub comparison request')
-      }
-      return (async function* () {
-        yield { data: { commits: [{ sha: 'merge-oid' }] } }
-      })()
-    }),
+    iterator: vi.fn<typeof iteratorImplementation>(iteratorImplementation),
   },
 )
 
-const graphql = vi.fn(
-  async (_query: string, variables: Record<string, unknown>) => {
-    if (variables.expression === 'refs/tags/v1.0.0^{commit}') {
-      return {
-        repository: { object: { __typename: 'Commit', oid: 'base-oid' } },
-      }
+const graphqlImplementation = async (
+  _query: string,
+  variables: Record<string, unknown>,
+) => {
+  if (variables.expression === 'refs/tags/v1.0.0^{commit}') {
+    return {
+      repository: { object: { __typename: 'Commit', oid: 'base-oid' } },
     }
-    if (variables.number === 7) {
-      return {
-        repository: {
-          pullRequest: {
-            headRefOid: 'head-oid',
-            mergeCommit: { oid: 'merge-oid' },
-          },
+  }
+  if (variables.number === 7) {
+    return {
+      repository: {
+        pullRequest: {
+          headRefOid: 'head-oid',
+          mergeCommit: { oid: 'merge-oid' },
         },
-      }
+      },
     }
-    if (variables.headRef === 'refs/tags/v1.1.0^{commit}') {
-      return {
-        repository: {
-          object: {
-            __typename: 'Commit',
-            history: {
-              pageInfo: { hasNextPage: false, endCursor: null },
-              nodes: [
-                {
-                  id: 'commit-node',
-                  oid: 'merge-oid',
-                  committedDate: '2026-08-04T00:00:00Z',
-                  message: 'Merge pull request #7',
-                  author: {
-                    name: 'Octo Cat',
-                    user: { login: 'octocat' },
-                  },
-                  associatedPullRequests: {
-                    nodes: [
-                      {
-                        number: 7,
-                        title: 'Exercise shared conformance',
-                        body: 'Shared contract coverage for GitHub.',
-                        url: 'https://github.com/release-drafter/release-drafter/pull/7',
-                        mergedAt: '2026-08-04T00:00:00Z',
-                        baseRefName: 'main',
-                        headRefName: 'feature/conformance',
-                        baseRepository: {
-                          nameWithOwner: 'release-drafter/release-drafter',
-                        },
-                        isCrossRepository: false,
-                        author: {
-                          __typename: 'User',
-                          login: 'octocat',
-                          url: 'https://github.com/octocat',
-                        },
-                        labels: { nodes: [{ name: 'feature' }] },
-                        merged: true,
-                        mergeCommit: { oid: 'merge-oid' },
-                      },
-                    ],
-                  },
+  }
+  if (variables.headRef === 'refs/tags/v1.1.0^{commit}') {
+    return {
+      repository: {
+        object: {
+          __typename: 'Commit',
+          history: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: [
+              {
+                id: 'commit-node',
+                oid: 'merge-oid',
+                committedDate: '2026-08-04T00:00:00Z',
+                message: 'Merge pull request #7',
+                author: {
+                  name: 'Octo Cat',
+                  user: { login: 'octocat' },
                 },
-              ],
-            },
+                associatedPullRequests: {
+                  nodes: [
+                    {
+                      number: 7,
+                      title: 'Exercise shared conformance',
+                      body: 'Shared contract coverage for GitHub.',
+                      url: 'https://github.com/release-drafter/release-drafter/pull/7',
+                      mergedAt: '2026-08-04T00:00:00Z',
+                      baseRefName: 'main',
+                      headRefName: 'feature/conformance',
+                      baseRepository: {
+                        nameWithOwner: 'release-drafter/release-drafter',
+                      },
+                      isCrossRepository: false,
+                      author: {
+                        __typename: 'User',
+                        login: 'octocat',
+                        url: 'https://github.com/octocat',
+                      },
+                      labels: { nodes: [{ name: 'feature' }] },
+                      merged: true,
+                      mergeCommit: { oid: 'merge-oid' },
+                    },
+                  ],
+                },
+              },
+            ],
           },
         },
-      }
+      },
     }
-    throw new Error(
-      `Unexpected GitHub GraphQL variables: ${JSON.stringify(variables)}`,
-    )
-  },
-)
+  }
+  throw new Error(
+    `Unexpected GitHub GraphQL variables: ${JSON.stringify(variables)}`,
+  )
+}
+const graphql = vi.fn<typeof graphqlImplementation>(graphqlImplementation)
 
 const octokit = {
   rest: {
@@ -154,9 +172,9 @@ const octokit = {
       compareCommitsWithBasehead,
       createRelease,
       updateRelease,
-      getContent: vi.fn(),
+      getContent: vi.fn<GitHubOctokit['rest']['repos']['getContent']>(),
     },
-    pulls: { listFiles: vi.fn() },
+    pulls: { listFiles: vi.fn<GitHubOctokit['rest']['pulls']['listFiles']>() },
   },
   paginate,
   graphql,

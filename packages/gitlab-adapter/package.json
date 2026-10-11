@@ -20,16 +20,14 @@
     }
   },
   "scripts": {
-    "build": "vite build --config ../../vite.workspace.config.ts",
-    "test:run": "vitest run --config ../../vite.workspace.config.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "test:run": "vp test run --config ../../vite.workspace.config.ts"
   },
   "dependencies": {
     "@gitbeaker/rest": "43.8.0",
     "@release-drafter/core": "*"
   },
   "devDependencies": {
-    "vitest": "^5.0.3"
+    "vite-plus": "1.1.0"
   },
   "license": "ISC",
   "private": true

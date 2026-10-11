@@ -1,13 +1,15 @@
 import type { GitHubAdapter } from '@release-drafter/github-adapter'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import { getGitHubAdapter } from '../github.ts'
 import { getConfigFileFromRepo } from './get-config-file-from-repo.ts'
 
 vi.mock(import('../github.ts'), () => ({
-  getGitHubAdapter: vi.fn(
+  getGitHubAdapter: vi.fn<() => GitHubAdapter>(
     () =>
       ({
-        getRepositoryConfig: vi.fn().mockResolvedValue('name-template: test'),
+        getRepositoryConfig: vi
+          .fn<GitHubAdapter['getRepositoryConfig']>()
+          .mockResolvedValue('name-template: test'),
       }) as unknown as GitHubAdapter,
   ),
 }))

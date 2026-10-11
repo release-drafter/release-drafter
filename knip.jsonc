@@ -8,10 +8,13 @@
         "src/scripts/*.ts",
         "src/tests/setup.ts",
         "src/tests/**/*.test.ts",
-        "vite.config.ts",
+        "vite.workspace.config.ts",
         "vitest.*.config.ts",
+        "src/tests/integration/forge-conformance/gitea-forgejo-global-setup.ts",
       ],
       "project": ["src/**/*.{ts,tsx}", "*.{ts,mts,cts,js,mjs,cjs}"],
+      // Coverage is loaded by Vite+; its required Vitest peer is pinned by migration.
+      "ignoreDependencies": ["@vitest/coverage-v8", "vitest"],
     },
     "packages/*": {
       "project": ["src/**/*.{ts,tsx}!"],

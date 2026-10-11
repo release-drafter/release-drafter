@@ -6,7 +6,7 @@ import type {
   ReleasePayload,
   Repository,
 } from '@release-drafter/core'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 export type ForgeConformanceFixture = {
   repository: Repository
@@ -80,11 +80,10 @@ export const defineForgeAdapterConformance = ({
       )
       expect(changes.commits).toHaveLength(expectedCommitOids.length)
       for (const pullRequest of expectedPullRequests) {
+        const expectedAuthor = expect.objectContaining(pullRequest.author ?? {})
         const expected = {
           ...pullRequest,
-          ...(pullRequest.author
-            ? { author: expect.objectContaining(pullRequest.author) }
-            : {}),
+          ...(pullRequest.author ? { author: expectedAuthor } : {}),
         }
         expect(changes.pullRequests).toEqual(
           expect.arrayContaining([expect.objectContaining(expected)]),
@@ -135,11 +134,12 @@ export const defineForgeAdapterConformance = ({
         expect(updated).toEqual(
           expect.objectContaining(fixture.expectedUpdatedRelease),
         )
-        if (extensions.inspectReleaseBody) {
-          await expect(extensions.inspectReleaseBody(updated)).resolves.toBe(
-            fixture.updatePayload.body,
-          )
-        }
+        const inspectedBody = await extensions.inspectReleaseBody?.(updated)
+        expect(inspectedBody).toBe(
+          extensions.inspectReleaseBody
+            ? fixture.updatePayload.body
+            : undefined,
+        )
       } finally {
         if (created && extensions.deleteRelease) {
           await extensions.deleteRelease(created)
@@ -147,6 +147,7 @@ export const defineForgeAdapterConformance = ({
       }
     })
 
+    // oxlint-disable-next-line vitest/no-conditional-tests -- Register only capabilities provided by this forge.
     if (extensions.getDefaultBranch) {
       it('loads the default branch through the forge extension', async () => {
         await expect(extensions.getDefaultBranch?.()).resolves.toBe(
@@ -155,6 +156,7 @@ export const defineForgeAdapterConformance = ({
       })
     }
 
+    // oxlint-disable-next-line vitest/no-conditional-tests -- Register only capabilities provided by this forge.
     if (extensions.getRepositoryConfig) {
       it('loads repository config through the forge extension', async () => {
         await expect(extensions.getRepositoryConfig?.()).resolves.toBe(

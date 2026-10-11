@@ -1,5 +1,5 @@
 import nock from 'nock'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { runDrafter } from '#tests/helpers/index.ts'
 import type { AvailableConfigs } from '#tests/mocks/config.ts'
 import {

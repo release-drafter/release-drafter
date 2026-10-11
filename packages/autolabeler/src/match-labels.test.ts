@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { configSchema } from './config/config.schema.ts'
 import { parseConfig } from './config/parse-config.ts'
 import { matchLabels } from './match-labels.ts'
 
 const compile = (autolabeler: unknown[], fallback?: string) => {
-  const warning = vi.fn()
+  const warning = vi.fn<(message: string | Error) => void>()
   const config = parseConfig({
     config: configSchema.parse({
       autolabeler:

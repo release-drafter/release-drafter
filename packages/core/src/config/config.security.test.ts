@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   type ConfigLogger,
   type LoadConfigOptions,
@@ -13,10 +13,10 @@ const repository = {
 }
 
 const logger = (): ConfigLogger => ({
-  debug: vi.fn(),
-  info: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
+  debug: vi.fn<(message: string) => void>(),
+  info: vi.fn<(message: string) => void>(),
+  warning: vi.fn<(message: string) => void>(),
+  error: vi.fn<(message: string) => void>(),
 })
 
 const options = (
@@ -27,7 +27,9 @@ const options = (
   ref: 'main',
   cwd: '/checkout',
   reader: {
-    getRepositoryConfig: vi.fn(async () => 'template: safe\n'),
+    getRepositoryConfig: vi.fn<() => Promise<string>>(
+      async () => 'template: safe\n',
+    ),
   },
   logger: logger(),
   ...overrides,
@@ -35,7 +37,13 @@ const options = (
 
 describe('config loader security', () => {
   it('reads a local config through the injected canonical path boundary', async () => {
-    const readLocalFile = vi.fn(async () => ({
+    const readLocalFile = vi.fn<
+      () => Promise<{
+        contents: string
+        canonicalCwd: string
+        canonicalPath: string
+      }>
+    >(async () => ({
       contents: 'template: local\n',
       canonicalCwd: '/real/checkout',
       canonicalPath: '/real/checkout/configs/release.yml',
@@ -57,7 +65,7 @@ describe('config loader security', () => {
   })
 
   it('rejects a local symlink target whose canonical path escapes cwd', async () => {
-    const readLocalFile = vi.fn(async () => {
+    const readLocalFile = vi.fn<() => Promise<never>>(async () => {
       throw new LocalConfigFileBoundaryError(
         'Local config path must remain within cwd.',
         'outside-cwd',
@@ -76,7 +84,7 @@ describe('config loader security', () => {
   })
 
   it('reports a local path replacement detected by the atomic reader', async () => {
-    const readLocalFile = vi.fn(async () => {
+    const readLocalFile = vi.fn<() => Promise<never>>(async () => {
       throw new LocalConfigFileBoundaryError(
         'Local config path changed while it was being opened.',
         'changed',
@@ -115,7 +123,9 @@ describe('config loader security', () => {
       key: 'prototype',
     },
   ])('rejects $name recursively', async ({ target, contents, key }) => {
-    const getRepositoryConfig = vi.fn(async () => contents)
+    const getRepositoryConfig = vi.fn<() => Promise<string>>(
+      async () => contents,
+    )
 
     await expect(
       loadConfig(
@@ -133,7 +143,13 @@ describe('config loader security', () => {
     const notFound = Object.assign(new Error('Config not found'), {
       status: 404,
     })
-    const getRepositoryConfig = vi.fn(
+    const getRepositoryConfig = vi.fn<
+      ({
+        ref,
+      }: Parameters<
+        LoadConfigOptions['reader']['getRepositoryConfig']
+      >[0]) => Promise<string>
+    >(
       async ({
         ref,
       }: Parameters<LoadConfigOptions['reader']['getRepositoryConfig']>[0]) => {
