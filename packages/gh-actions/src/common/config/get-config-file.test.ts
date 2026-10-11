@@ -1,11 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { ConfigError } from './config-error.ts'
 import { getConfigFile } from './get-config-file.ts'
 import { getConfigFileFromRepo } from './get-config-file-from-repo.ts'
 import type { ConfigTarget } from './parse-config-target.ts'
 
 vi.mock(import('./get-config-file-from-repo.ts'), () => ({
-  getConfigFileFromRepo: vi.fn(),
+  getConfigFileFromRepo: vi.fn<typeof getConfigFileFromRepo>(),
 }))
 
 const target: ConfigTarget = {

@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { ZodError } from 'zod'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { configSchema } from './config.schema.ts'
 import { parseConfig } from './parse-config.ts'
 import { parseConfigFile } from './parse-config-file.ts'
@@ -50,7 +51,10 @@ autolabeler:
     )
     expect(config['sync-labels']).toBe(syncLabels)
     expect(
-      parseConfig({ config, logger: { warning: vi.fn() } })['sync-labels'],
+      parseConfig({
+        config,
+        logger: { warning: vi.fn<(message: string) => void>() },
+      })['sync-labels'],
     ).toBe(syncLabels)
   })
 
@@ -59,12 +63,12 @@ autolabeler:
     (syncLabels) => {
       expect(() =>
         configSchema.parse({ autolabeler: [], 'sync-labels': syncLabels }),
-      ).toThrow()
+      ).toThrow(ZodError)
     },
   )
 
   it('rejects missing rules and empty matcher values', async () => {
-    await expect(parseConfigFile('{}')).rejects.toThrow()
+    await expect(parseConfigFile('{}')).rejects.toThrow(ZodError)
     await expect(
       parseConfigFile(`
 autolabeler:
@@ -72,7 +76,7 @@ autolabeler:
     title:
       - ''
 `),
-    ).rejects.toThrow()
+    ).rejects.toThrow(ZodError)
   })
 
   it('parses multiple labels and an explicit stop option', async () => {
@@ -95,7 +99,9 @@ autolabeler:
       label,
     })),
   )('rejects invalid label configuration $label', ({ label }) => {
-    expect(() => configSchema.parse({ autolabeler: [{ label }] })).toThrow()
+    expect(() => configSchema.parse({ autolabeler: [{ label }] })).toThrow(
+      ZodError,
+    )
   })
 
   it.each(
@@ -103,23 +109,25 @@ autolabeler:
   )(
     'rejects invalid labels configuration $labels even with a valid scalar label',
     ({ labels }) => {
-      expect(() => configSchema.parse({ autolabeler: [{ labels }] })).toThrow()
+      expect(() => configSchema.parse({ autolabeler: [{ labels }] })).toThrow(
+        ZodError,
+      )
       expect(() =>
         configSchema.parse({ autolabeler: [{ labels, label: 'valid' }] }),
-      ).toThrow()
+      ).toThrow(ZodError)
     },
   )
 
   it('requires labels or the backward-compatible label option', () => {
     expect(() =>
       configSchema.parse({ autolabeler: [{ files: ['docs/**'] }] }),
-    ).toThrow()
+    ).toThrow(ZodError)
   })
 
   it('rejects an invalid scalar label even with a valid labels list', () => {
     expect(() =>
       configSchema.parse({ autolabeler: [{ labels: ['valid'], label: '' }] }),
-    ).toThrow()
+    ).toThrow(ZodError)
   })
 
   it('normalizes the scalar label and combines both forms without mutating config', () => {
@@ -131,7 +139,10 @@ autolabeler:
       ],
     })
     const original = structuredClone(config)
-    const parsed = parseConfig({ config, logger: { warning: vi.fn() } })
+    const parsed = parseConfig({
+      config,
+      logger: { warning: vi.fn<(message: string) => void>() },
+    })
 
     expect(config).toEqual(original)
     expect(parsed.autolabeler.map(({ labels }) => labels)).toEqual([
@@ -148,7 +159,7 @@ autolabeler:
         configSchema.parse({
           autolabeler: [{ labels: ['needs-triage'], fallback }],
         }),
-      ).toThrow()
+      ).toThrow(ZodError)
     },
   )
 
@@ -181,7 +192,10 @@ autolabeler:
     async ({ rules, error }) => {
       const config = configSchema.parse({ autolabeler: rules })
       expect(() =>
-        parseConfig({ config, logger: { warning: vi.fn() } }),
+        parseConfig({
+          config,
+          logger: { warning: vi.fn<(message: string) => void>() },
+        }),
       ).toThrow(error)
       await expect(
         parseConfigFile(JSON.stringify({ autolabeler: rules })),
@@ -194,7 +208,7 @@ autolabeler:
       configSchema.parse({
         autolabeler: [{ label: 'bug', 'stop-on-match': 'true' }],
       }),
-    ).toThrow()
+    ).toThrow(ZodError)
   })
 
   it('compiles regex matchers without mutating parsed config', () => {
@@ -213,7 +227,7 @@ autolabeler:
     const original = structuredClone(config)
     const parsed = parseConfig({
       config,
-      logger: { warning: vi.fn() },
+      logger: { warning: vi.fn<(message: string) => void>() },
     })
 
     expect(config).toEqual(original)
@@ -226,7 +240,7 @@ autolabeler:
   })
 
   it('drops only rules containing an invalid regex and reports legacy warning text', () => {
-    const warning = vi.fn()
+    const warning = vi.fn<(message: string | Error) => void>()
     const config = configSchema.parse({
       autolabeler: [
         { label: 'broken', branch: ['/[/'], title: ['feat'], body: ['body'] },

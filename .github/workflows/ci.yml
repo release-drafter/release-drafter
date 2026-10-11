@@ -45,9 +45,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
+          version-file: package.json
           node-version-file: .node-version
+          run-install: false
+          cache: false
 
       # Restoring installed dependencies is faster than npm ci. The key covers
       # everything npm ci reads, and npm runs no install scripts (.npmrc), so a
@@ -59,14 +62,14 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.npmrc', 'package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.npmrc', 'package.json', 'packages/*/package.json', 'package-lock.json') }}
 
       - name: Locate npm download cache
         if: steps.node-modules.outputs.cache-hit != 'true'
         id: npm-cache
         run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
 
-      # Same key as setup-node's npm cache. The path must match npm's resolved
+      # Keep the existing npm download-cache key. The path must match npm's resolved
       # cache path for the key to match.
       - name: Restore npm download cache
         if: steps.node-modules.outputs.cache-hit != 'true'
@@ -78,7 +81,7 @@ jobs:
           restore-keys: node-cache-${{ runner.os }}-${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}-npm-
 
       - if: steps.node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+        run: vp install --frozen-lockfile
 
       # Save right after installing, before later steps write tool caches into
       # node_modules. CI and forge conformance share both caches.
@@ -100,17 +103,34 @@ jobs:
             packages/*/node_modules
           key: ${{ steps.node-modules.outputs.cache-primary-key }}
 
+      # Restore after installation and the dependency-cache save so task results
+      # stay separate from node_modules. Vite Task fingerprints task inputs.
+      - name: Restore Vite Task cache
+        id: vite-task-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: node_modules/.vite/task-cache
+          key: vite-task-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: vite-task-${{ runner.os }}-${{ runner.arch }}-
+
       - name: Run all checks and rebuild artifacts
-        run: npm run ci
+        run: vp run ci
 
       - name: Check for clean working directory
-        run: npm run check:clean
+        run: vp run check:clean
 
       - name: Report coverage
         if: >-
           !cancelled() &&
           hashFiles('coverage/coverage-summary.json') != ''
-        run: npm run coverage
+        run: vp run coverage
+
+      - name: Save Vite Task cache
+        if: success()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ steps.vite-task-cache.outputs.cache-primary-key }}
 
   actionlint:
     name: actionlint
@@ -136,20 +156,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
+          version-file: package.json
           node-version-file: .node-version
-
-      - name: Select the tested npm version
-        run: npm install --global npm@12.0.1 --ignore-scripts
-
-      - run: npm ci
+          cache: true
+          run-install: |
+            args: ['--frozen-lockfile']
 
       - name: Build, consume, pack, and dry-run the public facade
-        run: npm run test:package-readiness
+        run: vp run --no-cache test:package-readiness
 
       - name: Verify package checks left the checkout clean
-        run: npm run check:clean
+        run: vp run check:clean
 
   forge-conformance-scope:
     if: github.event_name != 'workflow_dispatch'
@@ -208,15 +227,18 @@ jobs:
 
       # Start the forge right away so its image pull and boot overlap
       # dependency installation. The suite attaches to this container. The
-      # runner's preinstalled Node runs this script before setup-node.
+      # runner's preinstalled Node runs this script before setup-vp.
       - name: Start forge container in the background
         env:
           FORGE: ${{ matrix.forge }}
         run: node src/tests/integration/forge-conformance/containers.ts start "$FORGE"
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
         with:
+          version-file: package.json
           node-version-file: .node-version
+          run-install: false
+          cache: false
 
       # Restoring installed dependencies is faster than npm ci. The key covers
       # everything npm ci reads, and npm runs no install scripts (.npmrc), so a
@@ -228,14 +250,14 @@ jobs:
           path: |
             node_modules
             packages/*/node_modules
-          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.npmrc', 'package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.npmrc', 'package.json', 'packages/*/package.json', 'package-lock.json') }}
 
       - name: Locate npm download cache
         if: steps.node-modules.outputs.cache-hit != 'true'
         id: npm-cache
         run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
 
-      # Same key as setup-node's npm cache. The path must match npm's resolved
+      # Keep the existing npm download-cache key. The path must match npm's resolved
       # cache path for the key to match.
       - name: Restore npm download cache
         if: steps.node-modules.outputs.cache-hit != 'true'
@@ -247,7 +269,7 @@ jobs:
           restore-keys: node-cache-${{ runner.os }}-${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}-npm-
 
       - if: steps.node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+        run: vp install --frozen-lockfile
 
       # Save right after installing, before later steps write tool caches into
       # node_modules. CI and forge conformance share both caches.
@@ -274,7 +296,7 @@ jobs:
           FORGE_CONFORMANCE_PRESTARTED: 'true'
           GITLAB_TEST_ARTIFACTS: artifacts/gitlab
           REST_FORGE_TEST_ARTIFACTS: artifacts/${{ matrix.forge }}
-        run: npm run test:conformance:${{ matrix.forge }}
+        run: vp run test:conformance:${{ matrix.forge }}
 
       - name: Show forge container start log
         if: failure()

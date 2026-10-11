@@ -283,7 +283,7 @@ export const mapConcurrent = async <Input, Output>(
   if (!Number.isSafeInteger(concurrency) || concurrency <= 0) {
     throw new Error('REST concurrency must be a positive safe integer')
   }
-  const outputs = new Array<Output>(inputs.length)
+  const outputs: Output[] = []
   let next = 0
   const workers = Array.from(
     { length: Math.min(concurrency, inputs.length) },

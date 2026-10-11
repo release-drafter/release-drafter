@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { captureResult } from '../result.ts'
+import { describe, expect, it } from 'vite-plus/test'
 import {
   type ConfigTarget,
   parseConfigTarget,
@@ -354,11 +355,14 @@ const testSuites: Array<{
 describe('parse a config target', () => {
   testSuites.forEach(({ input, expected, suiteName }) => {
     it(`${suiteName}`, () => {
-      if (expected instanceof Error) {
-        expect(() => parseConfigTarget(...input)).toThrowError(expected.message)
-      } else {
-        expect(parseConfigTarget(...input)).toEqual(expected)
-      }
+      const errorMessage = expect.stringContaining(
+        expected instanceof Error ? expected.message : '',
+      )
+      const error = expect.objectContaining({ message: errorMessage })
+      const outcome = captureResult(() => parseConfigTarget(...input))
+      expect(outcome).toEqual(
+        expected instanceof Error ? { error } : { value: expected },
+      )
     })
   })
 })

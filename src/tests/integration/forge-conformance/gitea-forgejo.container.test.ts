@@ -1,6 +1,6 @@
 import type { ForgeAdapter, Release, Repository } from '@release-drafter/core'
 import { createForgeAdapter } from 'release-drafter'
-import { inject } from 'vitest'
+import { inject } from 'vite-plus/test'
 import { defineForgeAdapterConformance } from './contract.ts'
 import { forgeApi, type RestForgeFixture } from './gitea-forgejo-container.ts'
 

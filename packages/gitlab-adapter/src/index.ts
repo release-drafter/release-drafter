@@ -43,7 +43,7 @@ const mapConcurrent = async <Input, Output>(
   concurrency: number,
   callback: (input: Input, index: number) => Promise<Output>,
 ) => {
-  const outputs = new Array<Output>(inputs.length)
+  const outputs: Output[] = []
   let next = 0
   await Promise.all(
     Array.from({ length: Math.min(inputs.length, concurrency) }, async () => {

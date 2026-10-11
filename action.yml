@@ -7,7 +7,6 @@ branding:
 runs:
   using: node24
   main: dist/actions/drafter/run.js
-
 inputs:
   config-name:
     description: |
@@ -91,7 +90,6 @@ inputs:
       Filter releases whose tag names satisfy this SemVer range.
     required: false
     default: ''
-
 outputs:
   id:
     description: The ID of the release that was created or updated.

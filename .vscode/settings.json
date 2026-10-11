@@ -15,27 +15,25 @@
     }
   ],
   "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "explicit"
+    "source.fixAll.oxc": "explicit"
   },
-  "biome.enabled": true,
   "eslint.enable": false,
-  "editor.defaultFormatter": "biomejs.biome",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
   "[jsonc]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "json.validate.enable": false,
   "[yaml]": {
-    "editor.defaultFormatter": "biomejs.biome",
-    "yaml.format.enable": false // waiting for https://github.com/biomejs/biome/issues/2365
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "yaml.format.enable": false
   },
   "[github-actions-workflow]": {
-    "editor.defaultFormatter": "biomejs.biome",
-    "yaml.format.enable": false // waiting for https://github.com/biomejs/biome/issues/2365
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "yaml.format.enable": false
   },
   "markdown.validate.enabled": true,
   "[markdown]": {
-    // Biome cannot format Markdown yet, so Prettier owns it.
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "search.exclude": {
     "**/node_modules": true,
@@ -51,7 +49,21 @@
     "**/Thumbs.db": true
   },
   "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
-  "js/ts.tsdk.path": "node_modules/typescript/lib"
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "[javascript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "oxc.disableNestedConfig": true,
+  "oxc.fmt.disableNestedConfig": true,
+  "npm.scriptRunner": "vp",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file"
 }

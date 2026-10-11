@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import type { Logger } from '../ports.ts'
 import {
   commonConfigSchema,
@@ -7,10 +7,10 @@ import {
 } from './index.ts'
 
 const logger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
+  debug: vi.fn<(message: string) => void>(),
+  info: vi.fn<(message: string) => void>(),
+  warning: vi.fn<(error: string | Error) => void>(),
+  error: vi.fn<(error: string | Error) => void>(),
 } satisfies Logger
 
 const parse = (groupChanges: unknown[]) =>

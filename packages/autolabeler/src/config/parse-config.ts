@@ -22,7 +22,7 @@ export const parseConfig = (params: { config: Config; logger: Logger }) => {
         }
       } catch {
         params.logger.warning(
-          `Bad autolabeler regex: '${rule.branch}', '${rule.title}' or '${rule.body}'`,
+          `Bad autolabeler regex: '${rule.branch.join(',')}', '${rule.title.join(',')}' or '${rule.body.join(',')}'`,
         )
         return false
       }

@@ -1431,7 +1431,7 @@ function parseCategories(categories, deprecatedConfig, logger) {
 					type: categoryType,
 					when: parsedWhenConditions
 				};
-			default: throw new Error(`Unsupported category type: ${categoryType}`);
+			default: throw new Error(`Unsupported category type: ${String(categoryType)}`);
 		}
 	});
 	if (deprecatedConfig["exclude-labels"] && deprecatedConfig["exclude-labels"].length > 0 || deprecatedConfig["exclude-paths"] && deprecatedConfig["exclude-paths"].length > 0) logger.warning(withMigrationDocumentationLink(`Use of deprecated 'exclude-labels' or 'exclude-paths' field detected. Please migrate. This field will be removed in a future release. To migrate, add the correspoding labels or paths to a 'type: "pre-exclude"' category.`));

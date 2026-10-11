@@ -3,7 +3,7 @@ import type {
   LocalConfigFileReader,
   PullRequestValidationData,
 } from '@release-drafter/core'
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vite-plus/test'
 import type {
   CliAdapter,
   CliDependencies,
@@ -16,7 +16,7 @@ const CONVENTIONAL_CONFIG = `${BASE_CONFIG}categories:\n  - title: Features\n   
 const LABEL_CONFIG = `${BASE_CONFIG}categories:\n  - title: Features\n    when:\n      label: feature\n`
 
 const localConfigReader = (contents = BASE_CONFIG): LocalConfigFileReader =>
-  vi.fn(async (path, cwd) => ({
+  vi.fn<LocalConfigFileReader>(async (path, cwd) => ({
     contents,
     canonicalCwd: cwd,
     canonicalPath: path,
@@ -68,13 +68,15 @@ const createAdapter = (options?: {
     ref?: string
   }) => Promise<string>
 }) => {
-  const get = vi.fn(async (_params?: unknown) => ({
+  const get = vi.fn<
+    (_params?: unknown) => Promise<{ data: { default_branch: string } }>
+  >(async (_params?: unknown) => ({
     data: { default_branch: options?.defaultBranch ?? 'main' },
   }))
-  const getRepositoryConfig = vi.fn(
+  const getRepositoryConfig = vi.fn<CliAdapter['getRepositoryConfig']>(
     options?.getConfig ?? (async () => BASE_CONFIG),
   )
-  const getPullRequest = vi.fn(
+  const getPullRequest = vi.fn<() => Promise<PullRequestValidationData>>(
     async () =>
       options?.pullRequest ?? {
         number: 42,
@@ -86,20 +88,27 @@ const createAdapter = (options?: {
   const adapter = {
     capabilities: { draftReleases: true },
     octokit: { rest: { repos: { get } } },
-    getDefaultBranch: vi.fn(async (repository) => {
-      const response = await get({
-        owner: repository.owner,
-        repo: repository.name,
-      })
-      return response.data.default_branch
-    }),
+    getDefaultBranch: vi.fn<NonNullable<CliAdapter['getDefaultBranch']>>(
+      async (repository) => {
+        const response = await get({
+          owner: repository.owner,
+          repo: repository.name,
+        })
+        return response.data.default_branch
+      },
+    ),
     getRepositoryConfig,
     getPullRequest,
-    listReleases: vi.fn(),
-    findChanges: vi.fn(),
-    resolveCommitish: vi.fn(),
-    createRelease: vi.fn(),
-    updateRelease: vi.fn(),
+    listReleases:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['listReleases']>(),
+    findChanges:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['findChanges']>(),
+    resolveCommitish:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['resolveCommitish']>(),
+    createRelease:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['createRelease']>(),
+    updateRelease:
+      vi.fn<import('@release-drafter/core').ForgeAdapter['updateRelease']>(),
   } as unknown as CliAdapter
   return { adapter, get, getPullRequest, getRepositoryConfig }
 }
@@ -122,7 +131,9 @@ const invoke = async (
   const adapterState = overrides.adapter
     ? { adapter: overrides.adapter }
     : createAdapter()
-  const adapterFactory = vi.fn((_params?: unknown) => adapterState.adapter)
+  const adapterFactory = vi.fn<(_params?: unknown) => CliAdapter>(
+    (_params?: unknown) => adapterState.adapter,
+  )
   const draft = vi.fn<DraftFunction>(async () => createResult())
   if (overrides.draftResult) draft.mockResolvedValue(overrides.draftResult)
   const code = await runCli(argv, {
@@ -181,9 +192,10 @@ describe('usage and informational commands', () => {
   ])(
     '$argv returns zero without resolving a token or creating an adapter',
     async ({ argv, expected }) => {
-      const adapterFactory = vi.fn()
-      const readLocalFile = vi.fn()
-      const draft = vi.fn()
+      const adapterFactory =
+        vi.fn<NonNullable<CliDependencies['adapterFactory']>>()
+      const readLocalFile = vi.fn<LocalConfigFileReader>()
+      const draft = vi.fn<DraftFunction>()
       const stdout = capture()
       const stderr = capture()
 
@@ -524,8 +536,9 @@ describe('option mapping', () => {
 
     expect(result.code).toBe(0)
     const call = result.draft.mock.calls[0][0]
-    if (option === 'publish') expect(call.input.publish).toBe(value)
-    else expect(call.config[option]).toBe(value)
+    const forwarded =
+      option === 'publish' ? call.input.publish : call.config[option]
+    expect(forwarded).toBe(value)
   })
 })
 
@@ -1026,7 +1039,7 @@ describe('output and release result mapping', () => {
 
   it('keeps stdout empty for JSON failures', async () => {
     const result = await invoke(['acme/widgets', '--to', 'main', '--json'], {
-      draft: vi.fn(async () => {
+      draft: vi.fn<() => Promise<never>>(async () => {
         throw new Error('draft failed')
       }),
     })
@@ -1185,19 +1198,12 @@ describe('output and release result mapping', () => {
         patch_version: '0',
         body: 'Changes',
       })
-      if (expected) {
-        expect(document).toEqual(
-          expect.objectContaining({
-            id: expected.id,
-            html_url: expected.url,
-            upload_url: expected.uploadUrl,
-          }),
-        )
-      } else {
-        expect(document).not.toHaveProperty('id')
-        expect(document).not.toHaveProperty('html_url')
-        expect(document).not.toHaveProperty('upload_url')
+      for (const key of ['id', 'html_url', 'upload_url']) {
+        expect(Object.hasOwn(document, key)).toBe(expected !== undefined)
       }
+      expect(document.id).toBe(expected?.id)
+      expect(document.html_url).toBe(expected?.url)
+      expect(document.upload_url).toBe(expected?.uploadUrl)
     },
   )
 })

@@ -1,13 +1,13 @@
 // @ts-expect-error readFileSyncOriginal is the original unmocked function, whose mock is hoisted above
 import { readFileSyncOriginal } from 'node:fs'
 import nock from 'nock'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { getConfigFile } from '#gh-actions/common/config/get-config-file.ts'
 import { getConfigFiles } from '#gh-actions/common/config/get-config-files.ts'
 
 const mocks = vi.hoisted(() => ({
-  existsSync: vi.fn(),
-  readFileSync: vi.fn(),
+  existsSync: vi.fn<typeof import('node:fs').existsSync>(),
+  readFileSync: vi.fn<typeof import('node:fs').readFileSync>(),
 }))
 
 vi.mock(import('node:fs'), async (iom) => {
@@ -16,7 +16,7 @@ vi.mock(import('node:fs'), async (iom) => {
     ...fs,
     readFileSyncOriginal: fs.readFileSync,
     existsSync: mocks.existsSync,
-    readFileSync: mocks.readFileSync,
+    readFileSync: mocks.readFileSync as typeof fs.readFileSync,
   }
 })
 

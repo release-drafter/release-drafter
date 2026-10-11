@@ -160,7 +160,7 @@ export const generateAuthorsSentence = (params: {
     renderAuthorMention(contributor, params.serverUrl),
   )
   if (mentions.length > 1) {
-    return `${mentions.slice(0, -1).join(', ')} and ${mentions.slice(-1)}`
+    return `${mentions.slice(0, -1).join(', ')} and ${mentions.slice(-1).join('')}`
   }
   return mentions[0]
 }

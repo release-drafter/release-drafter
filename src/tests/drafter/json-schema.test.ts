@@ -4,7 +4,7 @@ import {
   configSchema as drafterConfigSchema,
   exclusiveConfigSchema,
 } from '@release-drafter/core'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { globalRegistry, object, toJSONSchema } from 'zod'
 import { extendsDeclarationSchema } from '#gh-actions/common/config/extends.schema.ts'
 

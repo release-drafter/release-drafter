@@ -1,5 +1,6 @@
+import { requestUrl } from '../../../src/tests/fetch.ts'
 import type { Repository } from '@release-drafter/core'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { ForgejoAdapter, forgejoProfile } from './index.ts'
 
 const repository: Repository = {
@@ -11,7 +12,7 @@ const repository: Repository = {
 describe('Forgejo profile', () => {
   it('is an explicit draft-capable ForgeAdapter profile with Forgejo endpoints and auth', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
-      expect(String(input)).toBe(
+      expect(requestUrl(input)).toBe(
         'https://forgejo.example/api/v1/repos/owner/repo/compare/v1...main',
       )
       expect(new Headers(init?.headers).get('authorization')).toBe(

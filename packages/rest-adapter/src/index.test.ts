@@ -1,9 +1,10 @@
+import { requestUrl, requestBody } from '../../../src/tests/fetch.ts'
 import type {
   FindChangesRequest,
   Logger,
   Repository,
 } from '@release-drafter/core'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { mapConcurrent, RequestBudget } from './client.ts'
 import {
   createGiteaCompatibleRestProfile,
@@ -102,7 +103,7 @@ const routeFetch = (
   route: (url: URL, init: RequestInit) => Response | Promise<Response>,
 ) =>
   vi.fn<typeof fetch>(async (input, init = {}) =>
-    route(new URL(String(input)), init),
+    route(new URL(requestUrl(input)), init),
   )
 
 const createAdapter = (
@@ -358,7 +359,6 @@ describe('REST response fallbacks', () => {
           total_commits: 3,
         })
       if (url.pathname.endsWith('/pulls')) {
-        expect(url.searchParams.get('poster')).toBe('same')
         return json([
           null,
           {},
@@ -378,6 +378,14 @@ describe('REST response fallbacks', () => {
     )
     expect(result.newContributorLogins).toEqual(new Set(['same']))
     expect(fetch).toHaveBeenCalledTimes(5)
+
+    const verifiedRequests1 = fetch.mock.calls
+      .map(([input]) => new URL(requestUrl(input)))
+      .filter((url) => url.pathname.endsWith('/pulls'))
+    expect(verifiedRequests1).not.toHaveLength(0)
+    for (const url of verifiedRequests1) {
+      expect(url.searchParams.get('poster')).toBe('same')
+    }
   })
 
   it('retains minimal release data and alternate release URLs', async () => {
@@ -453,11 +461,16 @@ describe('REST response fallbacks', () => {
     'refs/pull/1/merge',
     'refs/tags/v1',
   ])('falls back for malformed refs or missing SHAs: %s', async (commitish) => {
-    const warning = vi.fn()
+    const warning = vi.fn<(message: string | Error) => void>()
     const fetch = routeFetch(() => json({}))
     await expect(
       createAdapter(fetch, {
-        logger: { debug: vi.fn(), info: vi.fn(), warning, error: vi.fn() },
+        logger: {
+          debug: vi.fn<(message: string) => void>(),
+          info: vi.fn<(message: string) => void>(),
+          warning,
+          error: vi.fn<(error: string | Error) => void>(),
+        },
       }).resolveCommitish({ repository, commitish }),
     ).resolves.toBe('')
     expect(warning).toHaveBeenCalledOnce()
@@ -479,7 +492,7 @@ describe('REST response fallbacks', () => {
     'preserves release tag and optional existing name: %s',
     async (name) => {
       const fetch = routeFetch((_url, init) => {
-        expect(JSON.parse(String(init.body))).toEqual({
+        expect(JSON.parse(requestBody(init))).toEqual({
           body: 'Updated',
           draft: false,
           prerelease: false,
@@ -621,7 +634,7 @@ describe('GitHub-compatible REST mechanics', () => {
       if (url.pathname.includes('/compare/')) {
         return json({ total_commits: commits.length, commits })
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
 
     await expect(
@@ -637,7 +650,6 @@ describe('GitHub-compatible REST mechanics', () => {
         'token secret-token',
       )
       if (url.pathname.includes('/compare/')) {
-        expect(url.pathname).toContain('v1...main')
         return json({
           total_commits: 1,
           commits: [commit('a', '2026-01-01T00:00:00Z')],
@@ -650,10 +662,18 @@ describe('GitHub-compatible REST mechanics', () => {
     }).findChanges(request())
     expect(result.commits).toHaveLength(1)
     expect(result.pullRequests).toEqual([])
-    expect(fetch.mock.calls.map(([input]) => String(input))).toEqual([
+    expect(fetch.mock.calls.map(([input]) => requestUrl(input))).toEqual([
       'https://api.example/custom/repos/octo/project/compare/v1...main',
       'https://api.example/custom/repos/octo/project/commits/a/pull',
     ])
+
+    const verifiedRequests2 = fetch.mock.calls
+      .map(([input]) => new URL(requestUrl(input)))
+      .filter((url) => url.pathname.includes('/compare/'))
+    expect(verifiedRequests2).not.toHaveLength(0)
+    for (const url of verifiedRequests2) {
+      expect(url.pathname).toContain('v1...main')
+    }
   })
 
   it('normalizes independently of comparison response ordering and deduplicates PRs by repository and number', async () => {
@@ -751,7 +771,7 @@ describe('GitHub-compatible REST mechanics', () => {
           ],
         })
       }
-      throw new Error(`Commit lookup should not have started: ${url}`)
+      throw new Error(`Commit lookup should not have started: ${url.href}`)
     })
     await expect(
       createAdapter(fetch, {
@@ -816,7 +836,7 @@ describe('GitHub-compatible REST mechanics', () => {
             )
           : json([{ filename: 'c.ts' }], {}, { 'x-total-count': '3' })
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
     const result = await createAdapter(fetch, {
       limits: { pageSize: 2 },
@@ -842,7 +862,7 @@ describe('GitHub-compatible REST mechanics', () => {
       if (url.pathname.endsWith('/pulls/1/files')) {
         return json([{ filename: 'only.ts' }])
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
     await expect(
       createAdapter(fetch).findChanges(request({ includeChangedFiles: true })),
@@ -860,7 +880,7 @@ describe('GitHub-compatible REST mechanics', () => {
       if (url.pathname.endsWith('/commits/a/pull')) {
         return json(pull(1, { changed_files: 2 }))
       }
-      throw new Error(`File pagination should not have started: ${url}`)
+      throw new Error(`File pagination should not have started: ${url.href}`)
     })
     await expect(
       createAdapter(advertisedFetch, {
@@ -882,7 +902,7 @@ describe('GitHub-compatible REST mechanics', () => {
       if (url.pathname.endsWith('/pulls/1/files')) {
         return json([{ filename: 'one.ts' }, { filename: 'two.ts' }])
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
     await expect(
       createAdapter(itemFetch, { limits: { maxChangedFiles: 1 } }).findChanges(
@@ -948,7 +968,7 @@ describe('GitHub-compatible REST mechanics', () => {
         return json({ sha: 'commit-sha' })
       if (url.pathname.endsWith('/git/commits/annotated'))
         return json({ sha: 'peeled-sha' })
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
     const adapter = createAdapter(fetch)
     await expect(
@@ -1014,7 +1034,7 @@ describe('GitHub-compatible REST mechanics', () => {
           merge_commit_sha: 'merge-sha',
         })
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
     const adapter = createAdapter(fetch)
     const changes = await adapter.findChanges(request())
@@ -1032,7 +1052,7 @@ describe('GitHub-compatible REST mechanics', () => {
     const bodies: unknown[] = []
     const fetch = routeFetch(async (_url, init) => {
       methods.push(init.method ?? 'GET')
-      if (init.body) bodies.push(JSON.parse(String(init.body)))
+      if (init.body) bodies.push(JSON.parse(requestBody(init)))
       if ((init.method ?? 'GET') === 'GET') {
         return json([
           {
@@ -1133,10 +1153,10 @@ describe('GitHub-compatible REST mechanics', () => {
 
   it('prefers PR login identity, never invents an email user, and labels new only with bounded proof', async () => {
     const logger = {
-      debug: vi.fn(),
-      info: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
+      debug: vi.fn<(message: string) => void>(),
+      info: vi.fn<(message: string) => void>(),
+      warning: vi.fn<(error: string | Error) => void>(),
+      error: vi.fn<(error: string | Error) => void>(),
     } satisfies Logger
     let bounded = false
     const fetch = routeFetch((url) => {
@@ -1156,8 +1176,6 @@ describe('GitHub-compatible REST mechanics', () => {
         )
       }
       if (url.pathname.endsWith('/pulls')) {
-        expect(url.searchParams.get('poster')).toBe('pr-user')
-        expect(url.searchParams.get('limit')).toBe('2')
         return bounded
           ? json([pull(1)], {}, { 'x-total-count': '100' })
           : json([
@@ -1167,7 +1185,7 @@ describe('GitHub-compatible REST mechanics', () => {
               }),
             ])
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
     const adapter = createAdapter(fetch, { logger })
     const proven = await adapter.findChanges(
@@ -1185,6 +1203,15 @@ describe('GitHub-compatible REST mechanics', () => {
     expect(logger.warning).toHaveBeenCalledWith(
       expect.stringContaining('will not be labeled new'),
     )
+
+    const verifiedRequests3 = fetch.mock.calls
+      .map(([input]) => new URL(requestUrl(input)))
+      .filter((url) => url.pathname.endsWith('/pulls'))
+    expect(verifiedRequests3).not.toHaveLength(0)
+    for (const url of verifiedRequests3) {
+      expect(url.searchParams.get('poster')).toBe('pr-user')
+      expect(url.searchParams.get('limit')).toBe('2')
+    }
   })
 
   it('uses historyLimit as the requested window while searching later pages', async () => {
@@ -1206,7 +1233,6 @@ describe('GitHub-compatible REST mechanics', () => {
         )
       }
       if (url.pathname.endsWith('/pulls')) {
-        expect(url.searchParams.get('limit')).toBe('2')
         const page = Number(url.searchParams.get('page'))
         historyPages.push(page)
         return page === 1
@@ -1235,13 +1261,21 @@ describe('GitHub-compatible REST mechanics', () => {
               { 'x-total-count': '3' },
             )
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
     const result = await createAdapter(fetch).findChanges(
       request({ includeNewContributors: true, historyLimit: 2 }),
     )
     expect(result.newContributorLogins).toEqual(new Set())
     expect(historyPages).toEqual([1, 2])
+
+    const verifiedRequests4 = fetch.mock.calls
+      .map(([input]) => new URL(requestUrl(input)))
+      .filter((url) => url.pathname.endsWith('/pulls'))
+    expect(verifiedRequests4).not.toHaveLength(0)
+    for (const url of verifiedRequests4) {
+      expect(url.searchParams.get('limit')).toBe('2')
+    }
   })
 })
 

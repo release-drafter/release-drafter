@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { ZodError } from 'zod'
+import { describe, expect, it } from 'vite-plus/test'
 import {
   configFileSchema,
   extendsDeclarationSchema,
@@ -216,9 +217,13 @@ describe('mergeConfigChain', () => {
       }),
     ])
 
-    expect(merged.toString).toBe('child')
+    expect(Object.getOwnPropertyDescriptor(merged, 'toString')?.value).toBe(
+      'child',
+    )
     expect(merged.constructor).toBe('child')
-    expect(merged.hasOwnProperty).toBe('child')
+    expect(
+      Object.getOwnPropertyDescriptor(merged, 'hasOwnProperty')?.value,
+    ).toBe('child')
   })
 })
 
@@ -297,6 +302,6 @@ describe('extendsDeclarationSchema', () => {
   })
 
   it('should throw when _extends is neither a string nor a mapping', () => {
-    expect(() => extendsDeclarationSchema.parse(['base.yml'])).toThrow()
+    expect(() => extendsDeclarationSchema.parse(['base.yml'])).toThrow(ZodError)
   })
 })

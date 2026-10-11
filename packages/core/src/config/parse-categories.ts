@@ -216,7 +216,7 @@ export function parseCategories(
           when: parsedWhenConditions,
         }
       default:
-        throw new Error(`Unsupported category type: ${categoryType}`)
+        throw new Error(`Unsupported category type: ${String(categoryType)}`)
     }
   })
 

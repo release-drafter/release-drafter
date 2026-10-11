@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { configSchema } from '../config/config.schema.ts'
 import { mergeInputAndConfig } from '../config/merge-input-and-config.ts'
 import { noopLogger } from '../ports.ts'
@@ -6,6 +6,20 @@ import { getVersionInfo } from './get-version-info.ts'
 import { VersionDescriptor } from './version-descriptor.ts'
 
 const versionTemplate = '$MAJOR.$MINOR.$PATCH$PRERELEASE'
+
+it('includes the invalid release fields in the version warning', () => {
+  const warning = vi.fn<typeof noopLogger.warning>()
+  const release = { tagName: 'not-a-version', name: 'invalid' }
+  const descriptor = new VersionDescriptor(release, {
+    logger: { ...noopLogger, warning },
+  })
+
+  expect(descriptor.version).toBeNull()
+  expect(warning).toHaveBeenCalledWith(
+    `Failed to parse version from input ${JSON.stringify(release)}. Defaulting coerced version to null.`,
+  )
+})
+
 type ReleaseType = Parameters<typeof getVersionInfo>[0]['versionKeyIncrement']
 
 const describeVersion = (
@@ -53,7 +67,7 @@ describe('version semantic parity', () => {
     it.each([undefined, '', 'not-a-version', '*'])(
       'keeps nullable outputs for unparseable input %j',
       (input) => {
-        const warning = vi.fn()
+        const warning = vi.fn<(message: string | Error) => void>()
         const descriptor = new VersionDescriptor(input, {
           logger: { ...noopLogger, warning },
         })

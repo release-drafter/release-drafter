@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   commonConfigSchema,
   configSchema,
@@ -9,10 +9,10 @@ import type { PullRequest } from '../types.ts'
 import { generateChangeLog } from './generate-changelog.ts'
 
 const logger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
+  debug: vi.fn<(message: string) => void>(),
+  info: vi.fn<(message: string) => void>(),
+  warning: vi.fn<(error: string | Error) => void>(),
+  error: vi.fn<(error: string | Error) => void>(),
 } satisfies Logger
 
 const parsedConfig = (config: Record<string, unknown>) =>
@@ -105,9 +105,8 @@ describe('generateChangeLog', () => {
   )
 
   it('renders one entry per pull request without grouping rules', () => {
-    expect(
-      changelog({ 'change-template': '* $TITLE ($NUMBERS)' }),
-    ).toMatchInlineSnapshot(`
+    expect(changelog({ 'change-template': '* $TITLE ($NUMBERS)' }))
+      .toMatchInlineSnapshot(`
       "* Bump njord.version from 0.9.1 to 0.9.2 (#308)
       * Bump org.codehaus.mojo:versions-maven-plugin from 2.20.1 to 2.21.0 (#309)
       * Bump njord.version from 0.9.2 to 0.9.3 (#310)

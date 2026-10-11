@@ -21,9 +21,7 @@
     }
   },
   "scripts": {
-    "build": "vite build --config ../../vite.workspace.config.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test:run": "vitest run --config ../../vite.workspace.config.ts"
+    "test:run": "vp test run --config ../../vite.workspace.config.ts"
   },
   "dependencies": {
     "compare-versions": "^6.1.1",
@@ -36,7 +34,7 @@
   },
   "license": "ISC",
   "devDependencies": {
-    "vitest": "^5.0.3"
+    "vite-plus": "1.1.0"
   },
   "private": true
 }

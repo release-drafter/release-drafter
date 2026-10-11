@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import {
+  cpSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -8,8 +9,8 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { join, resolve } from 'node:path'
+import { describe, expect, it } from 'vite-plus/test'
 import { parse as parseYaml } from 'yaml'
 import {
   actionInputNames as autolabelerInputNames,
@@ -26,8 +27,49 @@ import {
 import { actionManifests } from '#src/scripts/action-metadata-config.ts'
 import { collectWorkflowFailures } from '#src/scripts/guard-packages.ts'
 import { syncWorkspaceVersions } from '#src/scripts/sync-workspace-versions.ts'
+import { publicPackageConfig } from '../../../packages/release-drafter/vite.config.ts'
 
 describe('workspace foundation', () => {
+  it('discovers the public build task with notice generation from the workspace root', () => {
+    const build = publicPackageConfig.run.tasks.build
+    expect(build.command).toBe(
+      'vp pack && node ../../src/scripts/third-party-notices.ts',
+    )
+    expect(build.cache.output).toEqual(['dist/**', 'THIRD_PARTY_NOTICES'])
+  })
+
+  it('regenerates missing Action manifests from authored templates', () => {
+    const root = mkdtempSync(join(tmpdir(), 'action-metadata-'))
+    try {
+      cpSync(
+        'src/scripts/action-metadata',
+        join(root, 'src/scripts/action-metadata'),
+        {
+          recursive: true,
+        },
+      )
+      for (const directory of ['drafter', 'autolabeler', 'check-pr']) {
+        mkdirSync(join(root, directory))
+      }
+      execFileSync(
+        process.execPath,
+        [resolve('src/scripts/action-metadata.ts')],
+        {
+          cwd: root,
+        },
+      )
+      for (const metadata of Object.values(actionManifests)) {
+        for (const path of metadata.paths) {
+          expect(parseYaml(readFileSync(join(root, path), 'utf8'))).toEqual(
+            parseYaml(readFileSync(path, 'utf8')),
+          )
+        }
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
   it('preserves action compatibility metadata', () => {
     const rootAction = parseYaml(readFileSync('action.yml', 'utf8'))
     const drafterAction = parseYaml(readFileSync('drafter/action.yml', 'utf8'))
@@ -176,6 +218,42 @@ describe('workspace foundation', () => {
 
       expect(collectWorkflowFailures(fixtureRoot)).toEqual([
         'node.yaml setup-node step build/2 must select Node through .node-version',
+      ])
+    } finally {
+      rmSync(fixtureRoot, { force: true, recursive: true })
+    }
+  })
+
+  it('requires setup-vp to use repository pins without version overrides', () => {
+    const fixtureRoot = mkdtempSync(
+      join(tmpdir(), 'release-drafter-workflows-'),
+    )
+    try {
+      mkdirSync(join(fixtureRoot, '.github/workflows'), { recursive: true })
+      writeFileSync(
+        join(fixtureRoot, '.github/workflows/vp.yml'),
+        `
+jobs:
+  build:
+    steps:
+      - uses: voidzero-dev/setup-vp@pinned
+        with:
+          version-file: package.json
+          node-version-file: .node-version
+      - uses: voidzero-dev/setup-vp@pinned
+        with:
+          version-file: package.json
+          node-version-file: .node-version
+          node-version: '26'
+      - uses: voidzero-dev/setup-vp@pinned
+        with:
+          node-version-file: .node-version
+          version: latest
+`,
+      )
+      expect(collectWorkflowFailures(fixtureRoot)).toEqual([
+        'vp.yml setup-vp step build/2 must select Node through .node-version',
+        'vp.yml setup-vp step build/3 must select Vite+ through package.json',
       ])
     } finally {
       rmSync(fixtureRoot, { force: true, recursive: true })

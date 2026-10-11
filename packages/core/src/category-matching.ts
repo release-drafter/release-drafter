@@ -7,7 +7,6 @@ type ReleaseType = Exclude<IncrementType, 'release'>
 type ParsedCategory = ParsedConfig['categories'][number]
 type ParsedCondition = ParsedCategory['when'][number]
 type LabelsMode = ParsedCondition['labels-mode']
-type PathsMode = ParsedCondition['paths-mode']
 
 export type PullRequestLike = Partial<
   Pick<PullRequest, 'title' | 'labels' | 'changedFiles'>
@@ -31,7 +30,7 @@ const getPullRequestLabels = (pullRequest: PullRequestLike) =>
 const matchesValues = (
   actualValues: string[],
   expectedValues: string[],
-  mode: LabelsMode | PathsMode,
+  mode: LabelsMode,
 ) => {
   const actual = unique(actualValues)
   const expected = unique(expectedValues)

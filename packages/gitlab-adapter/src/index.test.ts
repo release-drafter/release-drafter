@@ -1,5 +1,6 @@
+import { requestUrl, requestBody } from '../../../src/tests/fetch.ts'
 import type { FindChangesRequest, Repository } from '@release-drafter/core'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { GitLabAdapter } from './index.ts'
 
 const repository: Repository = {
@@ -35,7 +36,7 @@ const json = (
     headers: { 'content-type': 'application/json', ...headers },
   })
 const pathOf = (input: Parameters<typeof globalThis.fetch>[0]) => {
-  const url = new URL(String(input))
+  const url = new URL(requestUrl(input))
   return `${url.pathname}${url.search}`
 }
 const adapter = (
@@ -77,7 +78,7 @@ const mergeRequest = (
 describe('GitLab response fallbacks', () => {
   it('rejects a list whose advertised total changes between pages', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
-      const page = new URL(String(input)).searchParams.get('page')
+      const page = new URL(requestUrl(input)).searchParams.get('page')
       return json(
         [{ tag_name: `v${page}` }],
         {},
@@ -94,7 +95,8 @@ describe('GitLab response fallbacks', () => {
     'rejects an empty final page before the advertised total, with total header: %s',
     async (keepTotal) => {
       const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
-        const first = new URL(String(input)).searchParams.get('page') === '1'
+        const first =
+          new URL(requestUrl(input)).searchParams.get('page') === '1'
         return json(
           first ? [{ tag_name: 'v1' }] : [],
           {},
@@ -133,7 +135,7 @@ describe('GitLab response fallbacks', () => {
 
   it('rejects an unadvertised list that grows beyond the item limit', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
-      const page = new URL(String(input)).searchParams.get('page')
+      const page = new URL(requestUrl(input)).searchParams.get('page')
       return json(
         [{ tag_name: `v${page}` }],
         {},
@@ -333,7 +335,7 @@ describe('GitLab response fallbacks', () => {
   it.each(['existing', 'unknown', 'failed'])(
     'keeps contributors conservative when first contribution is %s',
     async (state) => {
-      const warning = vi.fn()
+      const warning = vi.fn<(message: string | Error) => void>()
       const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
         const path = pathOf(input)
         if (path.includes('/compare?')) return json({ commits: [{ id: 'a' }] })
@@ -351,14 +353,19 @@ describe('GitLab response fallbacks', () => {
       const result = await new GitLabAdapter({
         token: 'gitlab-token',
         fetch,
-        logger: { debug: vi.fn(), info: vi.fn(), warning, error: vi.fn() },
+        logger: {
+          debug: vi.fn<(message: string) => void>(),
+          info: vi.fn<(message: string) => void>(),
+          warning,
+          error: vi.fn<(error: string | Error) => void>(),
+        },
       }).findChanges(request({ includeNewContributors: true }))
       expect(result.newContributorLogins).toEqual(new Set())
       expect(warning).toHaveBeenCalledTimes(state === 'existing' ? 0 : 1)
-      if (state !== 'existing')
-        expect(warning).toHaveBeenCalledWith(
-          expect.stringContaining('will not be labeled new'),
-        )
+      const warningMessage = expect.stringContaining('will not be labeled new')
+      expect(warning.mock.calls).toEqual(
+        state === 'existing' ? [] : [[warningMessage]],
+      )
     },
   )
 
@@ -454,12 +461,17 @@ describe('GitLab response fallbacks', () => {
   ])(
     'falls back when a ref is malformed or its commit is absent: %s',
     async (commitish) => {
-      const warning = vi.fn()
+      const warning = vi.fn<(message: string | Error) => void>()
       const fetch = vi.fn<typeof globalThis.fetch>(async () => json({}))
       const gitlab = new GitLabAdapter({
         token: 'gitlab-token',
         fetch,
-        logger: { debug: vi.fn(), info: vi.fn(), warning, error: vi.fn() },
+        logger: {
+          debug: vi.fn<(message: string) => void>(),
+          info: vi.fn<(message: string) => void>(),
+          warning,
+          error: vi.fn<(error: string | Error) => void>(),
+        },
       })
       await expect(
         gitlab.resolveCommitish({ repository, commitish }),
@@ -535,7 +547,7 @@ describe('GitLabAdapter', () => {
 
   it('uses normalized self-managed host, encoded project id, and private-token auth', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
-      expect(String(input)).toContain(
+      expect(requestUrl(input)).toContain(
         'https://gitlab.example/api/v4/projects/group%2Fsubgroup%2Fproject/repository/compare',
       )
       expect(new Headers(init?.headers).get('private-token')).toBe(
@@ -692,7 +704,7 @@ describe('GitLabAdapter', () => {
   )
 
   it('continues merge-request discovery when only comparison diffs timed out', async () => {
-    const debug = vi.fn()
+    const debug = vi.fn<(message: string) => void>()
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
       const path = pathOf(input)
       if (path.includes('/repository/compare')) {
@@ -770,7 +782,7 @@ describe('GitLabAdapter', () => {
     )
     const pages: number[] = []
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
-      const url = new URL(String(input))
+      const url = new URL(requestUrl(input))
       if (url.pathname.includes('/repository/compare')) {
         return json({
           compare_timeout: false,
@@ -778,7 +790,6 @@ describe('GitLabAdapter', () => {
         })
       }
       if (url.pathname.includes('/commits/a/merge_requests')) {
-        expect(url.searchParams.get('per_page')).toBe('100')
         const page = Number(url.searchParams.get('page'))
         pages.push(page)
         return json(
@@ -790,7 +801,7 @@ describe('GitLabAdapter', () => {
           },
         )
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
 
     const result = await adapter(fetch, {
@@ -800,6 +811,14 @@ describe('GitLabAdapter', () => {
 
     expect(result.pullRequests).toHaveLength(150)
     expect(pages).toEqual([1, 2])
+
+    const verifiedRequests1 = fetch.mock.calls
+      .map(([input]) => new URL(requestUrl(input)))
+      .filter((url) => url.pathname.includes('/commits/a/merge_requests'))
+    expect(verifiedRequests1).not.toHaveLength(0)
+    for (const url of verifiedRequests1) {
+      expect(url.searchParams.get('per_page')).toBe('100')
+    }
   })
 
   it('loads bounded changed files and rejects advertised incompleteness', async () => {
@@ -862,7 +881,7 @@ describe('GitLabAdapter', () => {
   )
 
   it('uses GitLab first_contribution without confusing display names for usernames', async () => {
-    const warning = vi.fn()
+    const warning = vi.fn<(message: string | Error) => void>()
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
       const path = pathOf(input)
       if (path.includes('/repository/compare')) {
@@ -963,7 +982,7 @@ describe('GitLabAdapter', () => {
   ])(
     'uses the correct retry delay for a $name Retry-After header',
     async ({ headers, expectedWait }) => {
-      const debug = vi.fn()
+      const debug = vi.fn<(message: string) => void>()
       const fetch = vi
         .fn<typeof globalThis.fetch>()
         .mockResolvedValueOnce(
@@ -1069,7 +1088,7 @@ describe('GitLabAdapter', () => {
   })
 
   it('resolves branches, GitLab MR refs, tags, and gracefully falls back', async () => {
-    const warning = vi.fn()
+    const warning = vi.fn<(message: string | Error) => void>()
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) => {
       const path = pathOf(input)
       if (path.includes('/merge_requests/7')) {
@@ -1147,7 +1166,7 @@ describe('GitLabAdapter', () => {
     const bodies: unknown[] = []
     const fetch = vi.fn<typeof globalThis.fetch>(async (_input, init) => {
       methods.push(init?.method ?? 'GET')
-      if (init?.body) bodies.push(JSON.parse(String(init.body)))
+      if (init?.body) bodies.push(JSON.parse(requestBody(init)))
       const isWrite = init?.method === 'POST' || init?.method === 'PUT'
       const tag = init?.method === 'POST' ? 'v2' : 'v1'
       const release = {

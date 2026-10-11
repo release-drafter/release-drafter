@@ -752,7 +752,7 @@ var generateAuthorsSentence = (params) => {
 		return authors.join(separator);
 	}
 	const mentions = sortedContributors.map((contributor) => renderAuthorMention(contributor, params.serverUrl));
-	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
+	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1).join("")}`;
 	return mentions[0];
 };
 var generateNewContributorsList = (params) => {
@@ -910,7 +910,7 @@ var VersionDescriptor = class VersionDescriptor {
 		}
 		const version = typeof from === "object" ? this.isRelease(from) ? this.toSemver(this.stripTag(from.tagName)) || this.toSemver(this.stripTag(from.name)) : this.toSemver(from) : this.toSemver(this.stripTag(from));
 		if (version) return version;
-		this.logger.warning(`Failed to parse version from input ${String(from)}. Defaulting coerced version to null.`);
+		this.logger.warning(`Failed to parse version from input ${typeof from === "string" ? from : JSON.stringify(from)}. Defaulting coerced version to null.`);
 		return null;
 	}
 	isRelease(input) {

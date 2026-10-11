@@ -20,5 +20,4 @@ template: |
   - Resolved : $RESOLVED_VERSION
 name-template: 'Release Drafter v$NEXT_PATCH_VERSION'
 tag-template: 'v$NEXT_PATCH_VERSION'
-version-template:
-  'Major: $MAJOR, Minor: $MINOR, Patch: $PATCH, Prerelease: $PRERELEASE'
+version-template: 'Major: $MAJOR, Minor: $MINOR, Patch: $PATCH, Prerelease: $PRERELEASE'

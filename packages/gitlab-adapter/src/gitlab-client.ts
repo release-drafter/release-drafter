@@ -246,7 +246,20 @@ class GitLabTransport {
           if (Array.isArray(value)) {
             for (const item of value)
               url.searchParams.append(`${key}[]`, String(item))
-          } else url.searchParams.set(key, String(value))
+          } else {
+            if (
+              typeof value !== 'string' &&
+              typeof value !== 'number' &&
+              typeof value !== 'boolean' &&
+              typeof value !== 'bigint' &&
+              typeof value !== 'symbol'
+            ) {
+              throw new TypeError(
+                `GitLab query parameter "${key}" must be a primitive value or array`,
+              )
+            }
+            url.searchParams.set(key, String(value))
+          }
         }
         const authHeaders = Object.fromEntries(
           await Promise.all(

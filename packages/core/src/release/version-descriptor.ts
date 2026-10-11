@@ -68,7 +68,7 @@ export class VersionDescriptor {
         : this.toSemver(this.stripTag(from))
     if (version) return version
     this.logger.warning(
-      `Failed to parse version from input ${String(from)}. Defaulting coerced version to null.`,
+      `Failed to parse version from input ${typeof from === 'string' ? from : JSON.stringify(from)}. Defaulting coerced version to null.`,
     )
     return null
   }

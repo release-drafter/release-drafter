@@ -29,36 +29,22 @@
     "#tests/*": "./src/tests/*"
   },
   "scripts": {
-    "build": "npm run build:actions && npm run build:workspaces",
-    "build:actions": "vite build",
-    "build:workspaces": "npm run build --workspaces --if-present",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:artifacts": "npm run build && vitest run --config vitest.artifacts.config.ts",
-    "test:package-readiness": "npm run build --workspace release-drafter && vitest run --config vitest.artifacts.config.ts src/tests/artifacts/release-drafter && npm run check:package-readiness",
-    "test:conformance:gitea": "FORGE_CONFORMANCE_TARGET=gitea vitest run --config vitest.forge.config.ts",
-    "test:conformance:forgejo": "FORGE_CONFORMANCE_TARGET=forgejo vitest run --config vitest.forge.config.ts",
-    "test:conformance:gitea-forgejo": "vitest run --config vitest.forge.config.ts",
-    "test:conformance:gitlab": "vitest run --config vitest.gitlab.config.ts",
+    "test": "vp test",
+    "test:conformance:gitea": "FORGE_CONFORMANCE_TARGET=gitea vp test run --config vitest.forge.config.ts",
+    "test:conformance:forgejo": "FORGE_CONFORMANCE_TARGET=forgejo vp test run --config vitest.forge.config.ts",
+    "test:conformance:gitea-forgejo": "vp test run --config vitest.forge.config.ts",
+    "test:conformance:gitlab": "vp test run --config vitest.gitlab.config.ts",
     "coverage": "node src/scripts/coverage-summary.ts",
-    "typecheck": "tsc --noEmit && npm run typecheck --workspaces --if-present",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
-    "format:docs": "prettier --write \"**/*.md\"",
-    "format:docs:check": "prettier --check \"**/*.md\"",
-    "lint": "biome lint .",
-    "lint:fix": "biome check --write .",
-    "generate:action-metadata": "node src/scripts/action-metadata.ts",
-    "generate:graphql": "graphql-codegen -c src/scripts/graphql.codegen-config.ts -v",
-    "generate:schemas": "npm run build:workspaces && node src/scripts/json-schema.ts",
-    "check:dependencies": "KNIP_DISABLE_RAW_TRANSFER=1 knip --config knip.jsonc --no-progress",
-    "check:dependencies:production": "KNIP_DISABLE_RAW_TRANSFER=1 knip --config knip.jsonc --no-progress --strict --exclude dependencies,files --workspace './packages/*' --workspace '!release-drafter'",
-    "check:packages": "node src/scripts/guard-packages.ts",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "lint": "vp lint",
+    "lint:fix": "vp lint --fix",
     "check:package-readiness": "node src/scripts/check-package-readiness.ts",
-    "check:workspaces": "npm run check:dependencies && npm run check:dependencies:production && npm run check:packages",
-    "ci": "npm run generate:action-metadata && npm run lint:fix && npm run format:docs && npm run typecheck && npm run test:run && npm run generate:schemas && npm run build:actions && vitest run --config vitest.artifacts.config.ts && npm run check:workspaces",
+    "ci": "vp run generate:action-metadata && vp check && vp run test:run && vp run generate:schemas && vp run build:actions && vp test run --config vitest.artifacts.config.ts && vp run check:workspaces",
     "check:clean": "node src/scripts/check-clean.ts",
-    "version": "node src/scripts/sync-workspace-versions.ts && npm install --package-lock-only --ignore-scripts && git add package.json package-lock.json packages/*/package.json"
+    "version": "node src/scripts/sync-workspace-versions.ts && npm install --package-lock-only --ignore-scripts && git add package.json package-lock.json packages/*/package.json",
+    "prepare": "vp config",
+    "fix": "vp check --fix"
   },
   "license": "ISC",
   "dependencies": {
@@ -74,23 +60,25 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
     "@graphql-codegen/cli": "^7.4.3",
     "@graphql-codegen/typed-document-node": "^7.1.1",
     "@graphql-codegen/typescript": "^6.1.0",
     "@graphql-codegen/typescript-operations": "^6.1.9",
     "@types/node": "^24.19.1",
-    "@vitest/coverage-v8": "^5.0.3",
+    "@vitest/coverage-v8": "5.0.3",
     "knip": "6.39.0",
     "nock": "^14.0.17",
-    "prettier": "^3.9.9",
-    "rolldown-plugin-dts": "^0.28.6",
     "testcontainers": "12.2.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.2",
-    "vitest": "^5.0.3"
+    "vite-plus": "1.1.0",
+    "vitest": "5.0.3"
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.1.0",
+    "vitest": "5.0.3"
+  },
+  "packageManager": "npm@12.0.1"
 }

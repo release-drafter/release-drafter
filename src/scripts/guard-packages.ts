@@ -39,13 +39,29 @@ export function collectWorkflowFailures(rootDir = '.') {
     const parsedWorkflow = parse(contents) as Workflow
     for (const [jobName, job] of Object.entries(parsedWorkflow.jobs ?? {})) {
       for (const [stepIndex, step] of (job.steps ?? []).entries()) {
+        const uses = step.uses
+        const setupAction =
+          typeof uses === 'string'
+            ? ['actions/setup-node', 'voidzero-dev/setup-vp'].find((action) =>
+                uses.startsWith(`${action}@`),
+              )
+            : undefined
         if (
-          typeof step.uses === 'string' &&
-          step.uses.startsWith('actions/setup-node@') &&
-          step.with?.['node-version-file'] !== '.node-version'
+          setupAction &&
+          (step.with?.['node-version-file'] !== '.node-version' ||
+            step.with?.['node-version'] !== undefined)
         ) {
           failures.push(
-            `${workflow} setup-node step ${jobName}/${stepIndex + 1} must select Node through .node-version`,
+            `${workflow} ${setupAction.split('/')[1]} step ${jobName}/${stepIndex + 1} must select Node through .node-version`,
+          )
+        }
+        if (
+          setupAction === 'voidzero-dev/setup-vp' &&
+          (step.with?.['version-file'] !== 'package.json' ||
+            step.with?.version !== undefined)
+        ) {
+          failures.push(
+            `${workflow} setup-vp step ${jobName}/${stepIndex + 1} must select Vite+ through package.json`,
           )
         }
       }

@@ -1,7 +1,14 @@
 import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
+import {
+  afterEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  vi,
+} from 'vite-plus/test'
 import {
   type DraftReleaseConfig,
   type LoadConfigOptions,
@@ -15,15 +22,18 @@ const repository = {
   serverUrl: 'https://forge.example',
 }
 
-const reader = (files: Record<string, string>): RepositoryConfigReader => ({
-  getDefaultBranch: vi.fn(async () => 'main'),
-  getRepositoryConfig: vi.fn(async ({ repository, path }) => {
-    const contents = files[`${repository.name}/${path}`]
-    if (contents === undefined)
-      throw Object.assign(new Error(), { status: 404 })
-    return contents
-  }),
-})
+const reader = (files: Record<string, string>) =>
+  ({
+    getDefaultBranch: vi.fn<() => Promise<string>>(async () => 'main'),
+    getRepositoryConfig: vi.fn<RepositoryConfigReader['getRepositoryConfig']>(
+      async ({ repository, path }) => {
+        const contents = files[`${repository.name}/${path}`]
+        if (contents === undefined)
+          throw Object.assign(new Error(), { status: 404 })
+        return contents
+      },
+    ),
+  }) satisfies RepositoryConfigReader
 
 describe('public configuration loader', () => {
   const directories: string[] = []

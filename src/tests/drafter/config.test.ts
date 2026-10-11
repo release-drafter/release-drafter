@@ -1,11 +1,11 @@
 import * as core from '@actions/core'
 import nock from 'nock'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { composeConfigGet } from '#gh-actions/common/config/index.ts'
 
 const mocks = vi.hoisted(() => ({
-  existsSync: vi.fn(),
-  readFileSync: vi.fn(),
+  existsSync: vi.fn<typeof import('node:fs').existsSync>(),
+  readFileSync: vi.fn<typeof import('node:fs').readFileSync>(),
 }))
 
 vi.mock(import('node:fs'), async (iom) => {
@@ -13,7 +13,7 @@ vi.mock(import('node:fs'), async (iom) => {
   return {
     ...fs,
     existsSync: mocks.existsSync,
-    readFileSync: mocks.readFileSync,
+    readFileSync: mocks.readFileSync as typeof fs.readFileSync,
   }
 })
 
@@ -246,7 +246,7 @@ describe('get config file', () => {
       }
 
       vi.stubEnv('GITHUB_WORKSPACE', workspace)
-      mocks.existsSync.mockImplementation((path: string) => path === workspace) // workspace exists but file doesn't
+      mocks.existsSync.mockImplementation((path) => path === workspace) // workspace exists but file doesn't
 
       // set up an interceptor for the .github fallback — it must NOT be called
       const orgFallbackEndpoint = getContentEndpoint({
@@ -368,7 +368,7 @@ describe('get config file', () => {
       }
 
       vi.stubEnv('GITHUB_WORKSPACE', workspace)
-      mocks.existsSync.mockImplementation((path: string) => path === workspace) // workspace exists but file doesn't
+      mocks.existsSync.mockImplementation((path) => path === workspace) // workspace exists but file doesn't
       mocks.readFileSync.mockReturnValue(`template: fake-template-content`)
 
       await expect(
@@ -696,10 +696,12 @@ describe('get config file', () => {
         ]
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = configChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const res = await composeConfigGet(inputConfigName, context)
 
@@ -739,10 +741,12 @@ describe('get config file', () => {
         ]
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = configChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const res = await composeConfigGet(inputConfigName, context)
 
@@ -800,10 +804,12 @@ describe('get config file', () => {
         }))
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = configChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const scope = nock('https://api.github.com')
           .get((uri) =>
@@ -865,10 +871,12 @@ describe('get config file', () => {
         ]
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = configChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const res = await composeConfigGet(inputConfigName, context)
 
@@ -904,10 +912,12 @@ describe('get config file', () => {
         ]
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = configChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const res = await composeConfigGet(inputConfigName, context)
 
@@ -964,10 +974,12 @@ describe('get config file', () => {
         }))
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = configChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const scope = nock('https://api.github.com')
           .get((uri) =>
@@ -1050,10 +1062,12 @@ describe('get config file', () => {
         }))
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = configChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const scope = nock('https://api.github.com')
           .get((uri) =>
@@ -1134,9 +1148,12 @@ describe('get config file', () => {
         }))
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) => localChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = localChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const scope = nock('https://api.github.com')
           .get((uri) => remoteChain.map((c) => c.endpoint).includes(uri))
@@ -1206,9 +1223,12 @@ describe('get config file', () => {
         }))
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) => localChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = localChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const scope = nock('https://api.github.com')
           .get((uri) => remoteChain.map((c) => c.endpoint).includes(uri))
@@ -1287,10 +1307,12 @@ describe('get config file', () => {
         }))
 
         mocks.existsSync.mockReturnValue(true)
-        mocks.readFileSync.mockImplementation(
-          (path: string) =>
-            configChain.find((c) => c.pathToFile === path)?.file,
-        )
+        mocks.readFileSync.mockImplementation((path) => {
+          const file = configChain.find((c) => c.pathToFile === path)?.file
+          if (file === undefined)
+            throw new Error(`Unexpected file: ${String(path)}`)
+          return file
+        })
 
         const scope = nock('https://api.github.com')
           .get((uri) =>
