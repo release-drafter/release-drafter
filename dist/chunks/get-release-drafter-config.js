@@ -18,10 +18,11 @@ function getReferencePartsRegex(issuePrefixes, issuePrefixesCaseSensitive) {
 	const flags = issuePrefixesCaseSensitive ? "g" : "gi";
 	return new RegExp(`(?:.*?)??\\s*([\\w-\\.\\/]*?)??(${joinOr(issuePrefixes)})([\\w-]+)(?=\\s|$|[,;.)\\]])`, flags);
 }
-function getReferencesRegex(referenceActions) {
+function getReferencesRegex(referenceActions, separator = "") {
 	if (!referenceActions) return /()(.+)/gi;
 	const joinedKeywords = joinOr(referenceActions);
-	return new RegExp(`(${joinedKeywords})(?:\\s+(.*?))(?=(?:${joinedKeywords})|$)`, "gi");
+	const nextKeyword = `(?<!\\w)(?:${joinedKeywords})(?!\\w)`;
+	return new RegExp(`(?<!\\w)(${joinedKeywords})${separator}(?:\\s+(.*?))(?=${nextKeyword}|$)`, "gi");
 }
 function getFooterTokenRegex(issuePrefixes) {
 	const issuePrefixSeparator = issuePrefixes ? `|\\s+(?:${joinOr(issuePrefixes)})` : "";
@@ -37,6 +38,7 @@ function getParserRegexes(options = {}) {
 		notes: getNotesRegex(options.noteKeywords, options.notesPattern),
 		referenceParts: getReferencePartsRegex(options.issuePrefixes, options.issuePrefixesCaseSensitive),
 		references: getReferencesRegex(options.referenceActions),
+		footerReferences: getReferencesRegex(options.referenceActions, ":?"),
 		footerToken: getFooterTokenRegex(options.issuePrefixes),
 		mentions: /@([\w-]+)/g,
 		url: /\b(?:https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%_+.~#?&//=])+\b/
@@ -203,9 +205,10 @@ var CommitParser = class {
 			issue
 		};
 	}
-	parseReferences(input) {
+	parseReferences(input, isFooterToken = false) {
 		const { regexes } = this;
-		const regex = input.match(regexes.references) ? regexes.references : /()(.+)/gi;
+		const referencesRegex = isFooterToken ? regexes.footerReferences : regexes.references;
+		const regex = input.match(referencesRegex) ? referencesRegex : /()(.+)/gi;
 		const references = [];
 		let matches;
 		let action;
@@ -295,7 +298,7 @@ var CommitParser = class {
 				if (this.parseMeta()) return true;
 				if (this.parseNotes()) return true;
 				isFooterToken = regexes.footerToken.test(this.currentLine());
-				commit.references.push(...this.parseReferences(this.currentLine()));
+				commit.references.push(...this.parseReferences(this.currentLine(), isFooterToken));
 				if (!isFooterToken) note.text = appendLine(note.text, this.currentLine());
 				commit.footer = appendLine(commit.footer, this.currentLine());
 				this.nextLine();
@@ -308,8 +311,9 @@ var CommitParser = class {
 	parseBodyAndFooter(isBody) {
 		const { commit, regexes } = this;
 		if (!this.isLineAvailable()) return isBody;
-		const isStillBody = !regexes.footerToken.test(this.currentLine()) && isBody;
-		commit.references.push(...this.parseReferences(this.currentLine()));
+		const isFooterToken = regexes.footerToken.test(this.currentLine());
+		const isStillBody = !isFooterToken && isBody;
+		commit.references.push(...this.parseReferences(this.currentLine(), isFooterToken));
 		if (isStillBody) commit.body = appendLine(commit.body, this.currentLine());
 		else commit.footer = appendLine(commit.footer, this.currentLine());
 		this.nextLine();
