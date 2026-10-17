@@ -79,7 +79,7 @@
     "@graphql-codegen/typed-document-node": "^7.1.1",
     "@graphql-codegen/typescript": "^6.1.1",
     "@graphql-codegen/typescript-operations": "^6.1.10",
-    "@types/node": "^24.19.1",
+    "@types/node": "^24.19.2",
     "@vitest/coverage-v8": "^5.0.3",
     "knip": "6.40.0",
     "nock": "^14.0.17",
