@@ -208,6 +208,7 @@ export type ParsedConfig = Omit<
   | 'replacers'
   | 'categories'
   | 'group-changes'
+  | 'change-authors-exclude-bots'
 > & {
   commitish: string
   latest: boolean
@@ -215,6 +216,7 @@ export type ParsedConfig = Omit<
   replacers: ParsedReplacer[]
   categories: ParsedCategory[]
   'group-changes'?: ParsedGroupChange[]
+  'change-authors-exclude-bots'?: boolean
 }
 
 export type ReleaseInput = {

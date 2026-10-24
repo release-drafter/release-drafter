@@ -711,10 +711,13 @@ var generateAuthorsSentence = (params) => {
 	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
 	for (const commit of commits) {
 		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
-		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) if (author?.login) {
-			const login = normalizeLogin(author.login);
-			contributors.set(`login:${login}`, { login });
-		} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
+		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) {
+			if (params.excludeBots && (author?.type === "Bot" || author?.login?.endsWith(botSuffix))) continue;
+			if (author?.login) {
+				const login = normalizeLogin(author.login);
+				contributors.set(`login:${login}`, { login });
+			} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
+		}
 	}
 	for (const pullRequest of pullRequests) if (pullRequest.author) {
 		const isBot = pullRequest.author.type === "Bot";
@@ -801,6 +804,7 @@ var pullRequestToString = (params) => params.changes.map((change) => {
 				commits: params.commits,
 				pullRequests: change.pullRequests,
 				serverUrl: params.serverUrl,
+				excludeBots: params.config["change-authors-exclude-bots"],
 				noAuthorsTemplate: renderTemplate({
 					template: authorTemplate,
 					object: {

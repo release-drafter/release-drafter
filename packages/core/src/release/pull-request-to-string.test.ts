@@ -92,6 +92,128 @@ describe('pullRequestToString', () => {
     )
   })
 
+  it.each([undefined, false, true])(
+    'filters bot co-authors only when enabled: %j',
+    (excludeBots) => {
+      const params = {
+        changes: [
+          change([
+            pullRequest(1, {
+              author: { login: 'robot', type: 'Bot' },
+            }),
+            pullRequest(2, {
+              author: { login: 'alice' },
+              mergeCommitOid: 'merge',
+            }),
+          ]),
+        ],
+        commits: [
+          {
+            oid: 'merge',
+            authors: [
+              { login: 'worker[bot]' },
+              { login: 'typed-worker', type: 'Bot' },
+              { name: 'Service', type: 'Bot' },
+              { name: 'Named Author' },
+            ],
+          },
+        ],
+        serverUrl: 'https://github.com',
+        config: config({
+          'change-template': '$AUTHORS',
+          'change-authors-exclude-bots': excludeBots,
+          'change-authors-separator': ' | ',
+          'change-authors-final-separator': ' + ',
+        }),
+      }
+      expect(pullRequestToString(params)).toBe(
+        excludeBots
+          ? '@alice | [@robot[bot]](https://github.com/apps/robot) + Named Author'
+          : '@alice | [@robot[bot]](https://github.com/apps/robot) | Named Author | Service | @typed-worker + [@worker[bot]](https://github.com/apps/worker)',
+      )
+    },
+  )
+
+  it.each([
+    [
+      { login: 'robot', type: 'Bot', url: 'https://forge.example/bots/robot' },
+      '[@robot[bot]](https://forge.example/bots/robot)',
+    ],
+    [
+      { login: 'worker[bot]', type: 'User' },
+      '[@worker[bot]](https://github.com/apps/worker)',
+    ],
+  ])('retains bot PR authors with human co-authors: %j', (author, expected) => {
+    expect(
+      pullRequestToString({
+        changes: [
+          change([pullRequest(1, { author, mergeCommitOid: 'merge' })]),
+        ],
+        commits: [
+          {
+            oid: 'merge',
+            authors: [author, { login: 'alice' }, { login: 'formatter[bot]' }],
+          },
+        ],
+        serverUrl: 'https://github.com',
+        config: config({
+          'change-template': '($AUTHORS)',
+          'change-authors-exclude-bots': true,
+        }),
+      }),
+    ).toBe(`(${expected}, @alice)`)
+  })
+
+  it('preserves custom author formatting and separators for bot-only changes', () => {
+    const merged = change([
+      pullRequest(1, { author: { login: 'alpha', type: 'Bot' } }),
+      pullRequest(2, { author: { login: 'robot', type: 'Bot' } }),
+      pullRequest(3, { author: { login: 'worker[bot]' } }),
+    ])
+    expect(
+      render([merged], {
+        'change-template': '$AUTHORS',
+        'change-author-template': '$AUTHOR',
+        'change-authors-separator': ' | ',
+        'change-authors-final-separator': ' + ',
+        'change-authors-exclude-bots': true,
+      }),
+    ).toBe('alpha[bot] | robot[bot] + worker[bot]')
+  })
+
+  it.each([
+    { login: 'worker[bot]' },
+    { login: 'automation', type: 'Bot' },
+    { name: 'Service', type: 'Bot' },
+  ])(
+    'filters bot co-authors when the PR author is unavailable: %j',
+    (author) => {
+      expect(
+        pullRequestToString({
+          changes: [
+            change([pullRequest(1, { author: null, mergeCommitOid: 'merge' })]),
+          ],
+          commits: [{ oid: 'merge', author }],
+          serverUrl: 'https://github.com',
+          config: config({
+            'change-template': '$AUTHORS',
+            'change-authors-exclude-bots': true,
+          }),
+        }),
+      ).toBe('@ghost')
+    },
+  )
+
+  it('preserves the deleted-author fallback when there are no known authors', () => {
+    expect(
+      render([change([pullRequest(1, { author: null })])], {
+        'change-template': '$AUTHORS',
+        'change-author-template': '$AUTHOR: $AUTHOR_MENTION',
+        'change-authors-exclude-bots': true,
+      }),
+    ).toBe('ghost: @ghost')
+  })
+
   it('escapes the merged title', () => {
     const merged = change([pullRequest(1), pullRequest(2)], 'Bump _lib_ to 2.0')
 

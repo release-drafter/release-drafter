@@ -19,6 +19,7 @@ export const generateChangeLog = (params: {
     | 'categories'
     | 'change-template'
     | 'change-author-template'
+    | 'change-authors-exclude-bots'
     | 'change-authors-separator'
     | 'change-authors-final-separator'
     | 'category-template'

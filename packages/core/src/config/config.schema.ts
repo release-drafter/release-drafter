@@ -261,6 +261,10 @@ export const exclusiveConfigSchema = object({
    */
   'change-author-template': string().optional().default('$AUTHOR_MENTION'),
   /**
+   * Exclude bot co-authors from `$AUTHORS`. Pull request authors are always retained.
+   */
+  'change-authors-exclude-bots': boolean().optional().default(false),
+  /**
    * The separator to use between authors in `$AUTHORS`.
    */
   'change-authors-separator': string().optional().default(', '),

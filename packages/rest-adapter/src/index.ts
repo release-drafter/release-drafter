@@ -53,7 +53,13 @@ const normalizeCommit = (commit: RestCommit): Commit => {
     ...(committedAt ? { committedAt } : {}),
     ...(commit.commit?.message ? { message: commit.commit.message } : {}),
     ...(login || name
-      ? { author: { ...(name ? { name } : {}), ...(login ? { login } : {}) } }
+      ? {
+          author: {
+            ...(name ? { name } : {}),
+            ...(login ? { login } : {}),
+            ...(commit.author?.type ? { type: commit.author.type } : {}),
+          },
+        }
       : {}),
   }
 }
