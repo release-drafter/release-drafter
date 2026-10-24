@@ -5,12 +5,13 @@ import {
   mergeInputAndConfig,
 } from '../config/index.ts'
 import { noopLogger } from '../ports.ts'
-import type { PullRequest, Release, ReleaseInput } from '../types.ts'
+import type { Commit, PullRequest, Release, ReleaseInput } from '../types.ts'
 import { buildReleasePayload } from './build-release-payload.ts'
 
 const buildPayload = (
   params: {
     config?: Partial<Config>
+    commits?: Commit[]
     input?: Partial<ReleaseInput>
     lastRelease?: Release
     pullRequests?: PullRequest[]
@@ -26,7 +27,7 @@ const buildPayload = (
     adapter: {
       resolveCommitish: async ({ commitish }) => commitish,
     },
-    commits: [],
+    commits: params.commits ?? [],
     config: mergeInputAndConfig({
       config: configSchema.parse({
         commitish: 'main',
@@ -51,7 +52,7 @@ const buildPayload = (
 }
 
 describe('resolved tag in release bodies', () => {
-  it('filters bots from mixed change authors while retaining contributor credit', async () => {
+  it('filters bot co-authors while retaining PR authors and contributor credit', async () => {
     const bot = {
       login: 'robot',
       type: 'Bot',
@@ -67,11 +68,13 @@ describe('resolved tag in release bodies', () => {
           { pattern: '/^(?<group>Mixed change)$/', 'title-template': '$GROUP' },
         ],
       },
+      commits: [{ oid: 'merge', author: { login: 'worker[bot]' } }],
       pullRequests: [
         {
           number: 2,
           title: 'Mixed change',
           author: { login: 'alice' },
+          mergeCommitOid: 'merge',
           mergedAt: '2026-01-02',
         },
         {
@@ -83,7 +86,7 @@ describe('resolved tag in release bodies', () => {
       ],
     })
     expect(payload.body).toBe(
-      'Mixed change: [robot[bot]](https://github.com/apps/robot) | @alice\n@alice and [@robot[bot]](https://github.com/apps/robot)',
+      'Mixed change: [robot[bot]](https://github.com/apps/robot) | @alice, [@robot[bot]](https://github.com/apps/robot)\n@alice, [@robot[bot]](https://github.com/apps/robot) and [@worker[bot]](https://github.com/apps/worker)',
     )
   })
 

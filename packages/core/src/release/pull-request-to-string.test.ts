@@ -93,7 +93,7 @@ describe('pullRequestToString', () => {
   })
 
   it.each([undefined, false, true])(
-    'filters bot authors only when enabled: %j',
+    'filters bot co-authors only when enabled: %j',
     (excludeBots) => {
       const params = {
         changes: [
@@ -128,7 +128,7 @@ describe('pullRequestToString', () => {
       }
       expect(pullRequestToString(params)).toBe(
         excludeBots
-          ? '@alice + Named Author'
+          ? '@alice | [@robot[bot]](https://github.com/apps/robot) + Named Author'
           : '@alice | [@robot[bot]](https://github.com/apps/robot) | Named Author | Service | @typed-worker + [@worker[bot]](https://github.com/apps/worker)',
       )
     },
@@ -143,13 +143,25 @@ describe('pullRequestToString', () => {
       { login: 'worker[bot]', type: 'User' },
       '[@worker[bot]](https://github.com/apps/worker)',
     ],
-  ])('retains attribution for a bot-only change: %j', (author, expected) => {
+  ])('retains bot PR authors with human co-authors: %j', (author, expected) => {
     expect(
-      render([change([pullRequest(1, { author })])], {
-        'change-template': '($AUTHORS)',
-        'change-authors-exclude-bots': true,
+      pullRequestToString({
+        changes: [
+          change([pullRequest(1, { author, mergeCommitOid: 'merge' })]),
+        ],
+        commits: [
+          {
+            oid: 'merge',
+            authors: [author, { login: 'alice' }, { login: 'formatter[bot]' }],
+          },
+        ],
+        serverUrl: 'https://github.com',
+        config: config({
+          'change-template': '($AUTHORS)',
+          'change-authors-exclude-bots': true,
+        }),
       }),
-    ).toBe(`(${expected})`)
+    ).toBe(`(${expected}, @alice)`)
   })
 
   it('preserves custom author formatting and separators for bot-only changes', () => {
@@ -170,15 +182,12 @@ describe('pullRequestToString', () => {
   })
 
   it.each([
-    [
-      { login: 'worker[bot]' },
-      '[@worker[bot]](https://github.com/apps/worker)',
-    ],
-    [{ login: 'automation', type: 'Bot' }, '@automation'],
-    [{ name: 'Service', type: 'Bot' }, 'Service'],
+    { login: 'worker[bot]' },
+    { login: 'automation', type: 'Bot' },
+    { name: 'Service', type: 'Bot' },
   ])(
-    'retains attribution for bot-only commit authors: %j',
-    (author, expected) => {
+    'filters bot co-authors when the PR author is unavailable: %j',
+    (author) => {
       expect(
         pullRequestToString({
           changes: [
@@ -191,7 +200,7 @@ describe('pullRequestToString', () => {
             'change-authors-exclude-bots': true,
           }),
         }),
-      ).toBe(expected)
+      ).toBe('@ghost')
     },
   )
 

@@ -56,7 +56,7 @@ export const generateAuthorsSentence = (params: {
   authorTemplate?: string
   authorsSeparator?: string
   authorsFinalSeparator?: string
-}): string => {
+}) => {
   const { commits, pullRequests } = params
   const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey))
   const includedMergeCommitOids = new Set(
@@ -66,7 +66,6 @@ export const generateAuthorsSentence = (params: {
   )
   const contributors = new Map<string, Contributor>()
   const pullRequestAuthorLogins = new Set<string>()
-  let excludedBots = false
 
   // Add from commits belonging to included pull requests
   for (const commit of commits) {
@@ -87,7 +86,6 @@ export const generateAuthorsSentence = (params: {
         params.excludeBots &&
         (author?.type === 'Bot' || author?.login?.endsWith(botSuffix))
       ) {
-        excludedBots = true
         continue
       }
       if (author?.login) {
@@ -104,10 +102,6 @@ export const generateAuthorsSentence = (params: {
     if (pullRequest.author) {
       const isBot = pullRequest.author.type === 'Bot'
       const login = normalizeLogin(pullRequest.author.login, isBot)
-      if (params.excludeBots && (isBot || login.endsWith(botSuffix))) {
-        excludedBots = true
-        continue
-      }
       pullRequestAuthorLogins.add(login)
       contributors.set(`login:${login}`, {
         login,
@@ -146,9 +140,7 @@ export const generateAuthorsSentence = (params: {
       return aName.localeCompare(bName)
     })
   if (sortedContributors.length === 0) {
-    return excludedBots && contributors.size === 0
-      ? generateAuthorsSentence({ ...params, excludeBots: false })
-      : (params.noAuthorsTemplate ?? '')
+    return params.noAuthorsTemplate ?? ''
   }
 
   if (params.authorTemplate !== undefined) {

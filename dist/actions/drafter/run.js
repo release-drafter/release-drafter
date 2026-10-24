@@ -709,14 +709,10 @@ var generateAuthorsSentence = (params) => {
 	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
 	const contributors = /* @__PURE__ */ new Map();
 	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
-	let excludedBots = false;
 	for (const commit of commits) {
 		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
 		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) {
-			if (params.excludeBots && (author?.type === "Bot" || author?.login?.endsWith(botSuffix))) {
-				excludedBots = true;
-				continue;
-			}
+			if (params.excludeBots && (author?.type === "Bot" || author?.login?.endsWith(botSuffix))) continue;
 			if (author?.login) {
 				const login = normalizeLogin(author.login);
 				contributors.set(`login:${login}`, { login });
@@ -726,10 +722,6 @@ var generateAuthorsSentence = (params) => {
 	for (const pullRequest of pullRequests) if (pullRequest.author) {
 		const isBot = pullRequest.author.type === "Bot";
 		const login = normalizeLogin(pullRequest.author.login, isBot);
-		if (params.excludeBots && (isBot || login.endsWith(botSuffix))) {
-			excludedBots = true;
-			continue;
-		}
 		pullRequestAuthorLogins.add(login);
 		contributors.set(`login:${login}`, {
 			login,
@@ -745,10 +737,7 @@ var generateAuthorsSentence = (params) => {
 		const bName = "name" in b ? b.name : b.login;
 		return aName.localeCompare(bName);
 	});
-	if (sortedContributors.length === 0) return excludedBots && contributors.size === 0 ? generateAuthorsSentence({
-		...params,
-		excludeBots: false
-	}) : params.noAuthorsTemplate ?? "";
+	if (sortedContributors.length === 0) return params.noAuthorsTemplate ?? "";
 	if (params.authorTemplate !== void 0) {
 		const authorTemplate = params.authorTemplate;
 		const authors = sortedContributors.map((contributor) => {
