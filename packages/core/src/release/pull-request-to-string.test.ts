@@ -92,6 +92,90 @@ describe('pullRequestToString', () => {
     )
   })
 
+  it.each([undefined, false, true])(
+    'filters bot authors only when enabled: %j',
+    (excludeBots) => {
+      const params = {
+        changes: [
+          change([
+            pullRequest(1, {
+              author: { login: 'robot', type: 'Bot' },
+            }),
+            pullRequest(2, {
+              author: { login: 'alice' },
+              mergeCommitOid: 'merge',
+            }),
+          ]),
+        ],
+        commits: [
+          {
+            oid: 'merge',
+            authors: [
+              { login: 'alice' },
+              { login: 'zoe' },
+              { login: 'worker[bot]' },
+              { login: 'typed-worker', type: 'Bot' },
+              { name: 'Service', type: 'Bot' },
+              { name: 'Named Author' },
+              null,
+            ],
+          },
+        ],
+        serverUrl: 'https://github.com',
+        config: config({
+          'change-template': '$AUTHORS',
+          'change-authors-exclude-bots': excludeBots,
+          'change-author-template': '$AUTHOR_MENTION',
+          'change-authors-separator': ' | ',
+          'change-authors-final-separator': ' + ',
+        }),
+      }
+      expect(pullRequestToString(params)).toBe(
+        excludeBots
+          ? '@alice | Named Author + @zoe'
+          : '@alice | [@robot[bot]](https://github.com/apps/robot) | Named Author | Service | @typed-worker | @zoe + [@worker[bot]](https://github.com/apps/worker)',
+      )
+    },
+  )
+
+  it.each([
+    { login: 'robot', type: 'Bot' },
+    { login: 'worker[bot]', type: 'User' },
+  ])('renders an empty author list when only bots remain: %j', (author) => {
+    expect(
+      render([change([pullRequest(1, { author })])], {
+        'change-template': '($AUTHORS)',
+        'change-authors-exclude-bots': true,
+      }),
+    ).toBe('()')
+  })
+
+  it('does not replace excluded bot commit authors with the deleted-author fallback', () => {
+    expect(
+      pullRequestToString({
+        changes: [
+          change([pullRequest(1, { author: null, mergeCommitOid: 'merge' })]),
+        ],
+        commits: [{ oid: 'merge', author: { login: 'worker[bot]' } }],
+        serverUrl: 'https://github.com',
+        config: config({
+          'change-template': '$AUTHORS',
+          'change-authors-exclude-bots': true,
+        }),
+      }),
+    ).toBe('')
+  })
+
+  it('preserves the deleted-author fallback when there are no known authors', () => {
+    expect(
+      render([change([pullRequest(1, { author: null })])], {
+        'change-template': '$AUTHORS',
+        'change-author-template': '$AUTHOR: $AUTHOR_MENTION',
+        'change-authors-exclude-bots': true,
+      }),
+    ).toBe('ghost: @ghost')
+  })
+
   it('escapes the merged title', () => {
     const merged = change([pullRequest(1), pullRequest(2)], 'Bump _lib_ to 2.0')
 

@@ -138,6 +138,7 @@ The `.github/release-drafter.yml` file supports these keys:
 | `version-template`               | Optional | The template for the next version number. Use it for projects that do not use Semantic Versioning. Default: `"$MAJOR.$MINOR.$PATCH$PRERELEASE"`.                                                                                                                                                                                                                     |
 | `change-template`                | Optional | The template to use for each merged pull request. Use [change template variables](#change-template-variables) to insert values. Default: `"* $TITLE (#$NUMBER) $AUTHORS"`.                                                                                                                                                                                           |
 | `change-author-template`         | Optional | The template to use for each author in `$AUTHORS`. Supports `$AUTHOR` for the raw login/name and `$AUTHOR_MENTION` for a GitHub-formatted mention. Default: `"$AUTHOR_MENTION"`.                                                                                                                                                                                     |
+| `change-authors-exclude-bots`    | Optional | Excludes bot authors from `$AUTHORS`. Default: `false`.                                                                                                                                                                                                                                                                                                              |
 | `change-authors-separator`       | Optional | The separator between authors in `$AUTHORS`. Default: `", "`. Use `"\n"` with a list-style `change-author-template` for multiline output.                                                                                                                                                                                                                            |
 | `change-authors-final-separator` | Optional | The separator before the final author in `$AUTHORS`. For example, `" and "` produces `@octocat, @cchanche and @jetersen`. Default: the value of `change-authors-separator`.                                                                                                                                                                                          |
 | `change-title-escapes`           | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                                                                                                                                 |
@@ -360,6 +361,13 @@ GitHub mentions. Release Drafter renders GitHub App bots as linked
 mentions, for example `[@dependabot[bot]](https://github.com/apps/dependabot)`.
 `$CATEGORY` preserves `categories[].title`; configure the title with the casing
 required by the output.
+
+Set `change-authors-exclude-bots: true` to omit bot authors from `$AUTHORS`.
+Authors identified as bots by the forge or whose logins end in `[bot]` are
+excluded. Unlinked commit authors are retained unless identified as bots.
+When every author is excluded, `$AUTHORS` is empty; surrounding text in
+`change-template` remains. This option does not change `$AUTHOR`,
+`$CONTRIBUTORS`, or `$NEW_CONTRIBUTORS`.
 
 ### Body escaping
 

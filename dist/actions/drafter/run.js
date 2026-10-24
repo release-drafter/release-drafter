@@ -709,16 +709,27 @@ var generateAuthorsSentence = (params) => {
 	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
 	const contributors = /* @__PURE__ */ new Map();
 	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
+	let excludedBots = false;
 	for (const commit of commits) {
 		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
-		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) if (author?.login) {
-			const login = normalizeLogin(author.login);
-			contributors.set(`login:${login}`, { login });
-		} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
+		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) {
+			if (params.excludeBots && (author?.type === "Bot" || author?.login?.endsWith(botSuffix))) {
+				excludedBots = true;
+				continue;
+			}
+			if (author?.login) {
+				const login = normalizeLogin(author.login);
+				contributors.set(`login:${login}`, { login });
+			} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
+		}
 	}
 	for (const pullRequest of pullRequests) if (pullRequest.author) {
 		const isBot = pullRequest.author.type === "Bot";
 		const login = normalizeLogin(pullRequest.author.login, isBot);
+		if (params.excludeBots && (isBot || login.endsWith(botSuffix))) {
+			excludedBots = true;
+			continue;
+		}
 		pullRequestAuthorLogins.add(login);
 		contributors.set(`login:${login}`, {
 			login,
@@ -734,7 +745,7 @@ var generateAuthorsSentence = (params) => {
 		const bName = "name" in b ? b.name : b.login;
 		return aName.localeCompare(bName);
 	});
-	if (sortedContributors.length === 0) return params.noAuthorsTemplate ?? "";
+	if (sortedContributors.length === 0) return excludedBots && contributors.size === 0 ? "" : params.noAuthorsTemplate ?? "";
 	if (params.authorTemplate !== void 0) {
 		const authorTemplate = params.authorTemplate;
 		const authors = sortedContributors.map((contributor) => {
@@ -801,6 +812,7 @@ var pullRequestToString = (params) => params.changes.map((change) => {
 				commits: params.commits,
 				pullRequests: change.pullRequests,
 				serverUrl: params.serverUrl,
+				excludeBots: params.config["change-authors-exclude-bots"],
 				noAuthorsTemplate: renderTemplate({
 					template: authorTemplate,
 					object: {

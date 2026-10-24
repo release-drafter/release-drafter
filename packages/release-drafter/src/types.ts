@@ -310,6 +310,7 @@ export interface ParsedGroupChange {
 export interface DraftReleaseConfig {
   'change-template': string
   'change-author-template': string
+  'change-authors-exclude-bots'?: boolean
   'change-authors-separator': string
   'change-authors-final-separator'?: string
   'change-title-escapes'?: string

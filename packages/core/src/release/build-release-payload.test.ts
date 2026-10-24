@@ -51,6 +51,30 @@ const buildPayload = (
 }
 
 describe('resolved tag in release bodies', () => {
+  it('excludes bots only from change authors, retaining their changes and contributor credit', async () => {
+    const payload = await buildPayload({
+      config: {
+        template: '$CHANGES\n$CONTRIBUTORS',
+        'change-template': '$TITLE: $AUTHOR | $AUTHORS',
+        'change-authors-exclude-bots': true,
+      },
+      pullRequests: [
+        {
+          number: 1,
+          title: 'Bot change',
+          author: {
+            login: 'robot',
+            type: 'Bot',
+            url: 'https://github.com/apps/robot',
+          },
+        },
+      ],
+    })
+    expect(payload.body).toBe(
+      'Bot change: [robot[bot]](https://github.com/apps/robot) |\n[@robot[bot]](https://github.com/apps/robot)',
+    )
+  })
+
   it('expands placeholders introduced by scoped replacements only after escaping and global replacements', async () => {
     const payload = await buildPayload({
       config: {

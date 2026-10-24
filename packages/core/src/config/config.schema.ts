@@ -261,6 +261,10 @@ export const exclusiveConfigSchema = object({
    */
   'change-author-template': string().optional().default('$AUTHOR_MENTION'),
   /**
+   * Exclude bot authors from `$AUTHORS`.
+   */
+  'change-authors-exclude-bots': boolean().optional().default(false),
+  /**
    * The separator to use between authors in `$AUTHORS`.
    */
   'change-authors-separator': string().optional().default(', '),

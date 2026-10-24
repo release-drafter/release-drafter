@@ -48,6 +48,10 @@
       "default": "$AUTHOR_MENTION",
       "type": "string"
     },
+    "change-authors-exclude-bots": {
+      "default": false,
+      "type": "boolean"
+    },
     "change-authors-separator": {
       "default": ", ",
       "type": "string"

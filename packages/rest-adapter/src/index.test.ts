@@ -336,6 +336,29 @@ describe('REST response fallbacks', () => {
     expect(result.commits[0]?.authors).toEqual([{ login: 'same', type: 'Bot' }])
   })
 
+  it('preserves bot metadata for a commit author distinct from the human PR author', async () => {
+    const fetch = routeFetch((url) =>
+      url.pathname.includes('/compare/')
+        ? json({
+            commits: [
+              {
+                ...commit('a', '2026-01-01'),
+                author: { login: 'automation', type: 'Bot' },
+              },
+            ],
+            total_commits: 1,
+          })
+        : json(pull(1, { user: { login: 'alice', type: 'User' } })),
+    )
+    const result = await createAdapter(fetch).findChanges(request())
+    const botAuthor = { name: 'Git a', login: 'automation', type: 'Bot' }
+    expect(result.commits[0]?.author).toEqual(botAuthor)
+    expect(result.commits[0]?.authors).toEqual([
+      { login: 'alice', type: 'User' },
+      botAuthor,
+    ])
+  })
+
   it('ignores unusable file records when no file count was advertised', async () => {
     const fetch = routeFetch((url) => {
       if (url.pathname.includes('/compare/'))
