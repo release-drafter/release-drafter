@@ -51,27 +51,40 @@ const buildPayload = (
 }
 
 describe('resolved tag in release bodies', () => {
-  it('excludes bots only from change authors, retaining their changes and contributor credit', async () => {
+  it('filters bots from mixed change authors while retaining bot-only attribution and contributor credit', async () => {
+    const bot = {
+      login: 'robot',
+      type: 'Bot',
+      url: 'https://github.com/apps/robot',
+    }
     const payload = await buildPayload({
       config: {
         template: '$CHANGES\n$CONTRIBUTORS',
         'change-template': '$TITLE: $AUTHOR | $AUTHORS',
         'change-authors-exclude-bots': true,
+        'sort-direction': 'ascending',
+        'group-changes': [
+          { pattern: '/^(?<group>Mixed change)$/', 'title-template': '$GROUP' },
+        ],
       },
       pullRequests: [
+        { number: 1, title: 'Bot change', author: bot, mergedAt: '2026-01-01' },
         {
-          number: 1,
-          title: 'Bot change',
-          author: {
-            login: 'robot',
-            type: 'Bot',
-            url: 'https://github.com/apps/robot',
-          },
+          number: 2,
+          title: 'Mixed change',
+          author: bot,
+          mergedAt: '2026-01-02',
+        },
+        {
+          number: 3,
+          title: 'Mixed change',
+          author: { login: 'alice' },
+          mergedAt: '2026-01-03',
         },
       ],
     })
     expect(payload.body).toBe(
-      'Bot change: [robot[bot]](https://github.com/apps/robot) |\n[@robot[bot]](https://github.com/apps/robot)',
+      'Bot change: [robot[bot]](https://github.com/apps/robot) | [@robot[bot]](https://github.com/apps/robot)\nMixed change: alice | @alice\n@alice and [@robot[bot]](https://github.com/apps/robot)',
     )
   })
 

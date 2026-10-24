@@ -261,7 +261,7 @@ export const exclusiveConfigSchema = object({
    */
   'change-author-template': string().optional().default('$AUTHOR_MENTION'),
   /**
-   * Exclude bot authors from `$AUTHORS`.
+   * Exclude bot authors from `$AUTHORS` unless every known author is a bot.
    */
   'change-authors-exclude-bots': boolean().optional().default(false),
   /**

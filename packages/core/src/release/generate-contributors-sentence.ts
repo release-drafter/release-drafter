@@ -56,7 +56,7 @@ export const generateAuthorsSentence = (params: {
   authorTemplate?: string
   authorsSeparator?: string
   authorsFinalSeparator?: string
-}) => {
+}): string => {
   const { commits, pullRequests } = params
   const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey))
   const includedMergeCommitOids = new Set(
@@ -147,7 +147,7 @@ export const generateAuthorsSentence = (params: {
     })
   if (sortedContributors.length === 0) {
     return excludedBots && contributors.size === 0
-      ? ''
+      ? generateAuthorsSentence({ ...params, excludeBots: false })
       : (params.noAuthorsTemplate ?? '')
   }
 

@@ -745,7 +745,10 @@ var generateAuthorsSentence = (params) => {
 		const bName = "name" in b ? b.name : b.login;
 		return aName.localeCompare(bName);
 	});
-	if (sortedContributors.length === 0) return excludedBots && contributors.size === 0 ? "" : params.noAuthorsTemplate ?? "";
+	if (sortedContributors.length === 0) return excludedBots && contributors.size === 0 ? generateAuthorsSentence({
+		...params,
+		excludeBots: false
+	}) : params.noAuthorsTemplate ?? "";
 	if (params.authorTemplate !== void 0) {
 		const authorTemplate = params.authorTemplate;
 		const authors = sortedContributors.map((contributor) => {

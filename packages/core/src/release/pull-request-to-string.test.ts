@@ -139,32 +139,65 @@ describe('pullRequestToString', () => {
   )
 
   it.each([
-    { login: 'robot', type: 'Bot' },
-    { login: 'worker[bot]', type: 'User' },
-  ])('renders an empty author list when only bots remain: %j', (author) => {
+    [
+      { login: 'robot', type: 'Bot', url: 'https://forge.example/bots/robot' },
+      '[@robot[bot]](https://forge.example/bots/robot)',
+    ],
+    [
+      { login: 'worker[bot]', type: 'User' },
+      '[@worker[bot]](https://github.com/apps/worker)',
+    ],
+  ])('retains attribution for a bot-only change: %j', (author, expected) => {
     expect(
       render([change([pullRequest(1, { author })])], {
         'change-template': '($AUTHORS)',
         'change-authors-exclude-bots': true,
       }),
-    ).toBe('()')
+    ).toBe(`(${expected})`)
   })
 
-  it('does not replace excluded bot commit authors with the deleted-author fallback', () => {
+  it('preserves custom author formatting and separators for bot-only changes', () => {
+    const merged = change([
+      pullRequest(1, { author: { login: 'alpha', type: 'Bot' } }),
+      pullRequest(2, { author: { login: 'robot', type: 'Bot' } }),
+      pullRequest(3, { author: { login: 'worker[bot]' } }),
+    ])
     expect(
-      pullRequestToString({
-        changes: [
-          change([pullRequest(1, { author: null, mergeCommitOid: 'merge' })]),
-        ],
-        commits: [{ oid: 'merge', author: { login: 'worker[bot]' } }],
-        serverUrl: 'https://github.com',
-        config: config({
-          'change-template': '$AUTHORS',
-          'change-authors-exclude-bots': true,
-        }),
+      render([merged], {
+        'change-template': '$AUTHORS',
+        'change-author-template': '$AUTHOR',
+        'change-authors-separator': ' | ',
+        'change-authors-final-separator': ' + ',
+        'change-authors-exclude-bots': true,
       }),
-    ).toBe('')
+    ).toBe('alpha[bot] | robot[bot] + worker[bot]')
   })
+
+  it.each([
+    [
+      { login: 'worker[bot]' },
+      '[@worker[bot]](https://github.com/apps/worker)',
+    ],
+    [{ login: 'automation', type: 'Bot' }, '@automation'],
+    [{ name: 'Service', type: 'Bot' }, 'Service'],
+  ])(
+    'retains attribution for bot-only commit authors: %j',
+    (author, expected) => {
+      expect(
+        pullRequestToString({
+          changes: [
+            change([pullRequest(1, { author: null, mergeCommitOid: 'merge' })]),
+          ],
+          commits: [{ oid: 'merge', author }],
+          serverUrl: 'https://github.com',
+          config: config({
+            'change-template': '$AUTHORS',
+            'change-authors-exclude-bots': true,
+          }),
+        }),
+      ).toBe(expected)
+    },
+  )
 
   it('preserves the deleted-author fallback when there are no known authors', () => {
     expect(
