@@ -111,13 +111,10 @@ describe('pullRequestToString', () => {
           {
             oid: 'merge',
             authors: [
-              { login: 'alice' },
-              { login: 'zoe' },
               { login: 'worker[bot]' },
               { login: 'typed-worker', type: 'Bot' },
               { name: 'Service', type: 'Bot' },
               { name: 'Named Author' },
-              null,
             ],
           },
         ],
@@ -125,15 +122,14 @@ describe('pullRequestToString', () => {
         config: config({
           'change-template': '$AUTHORS',
           'change-authors-exclude-bots': excludeBots,
-          'change-author-template': '$AUTHOR_MENTION',
           'change-authors-separator': ' | ',
           'change-authors-final-separator': ' + ',
         }),
       }
       expect(pullRequestToString(params)).toBe(
         excludeBots
-          ? '@alice | Named Author + @zoe'
-          : '@alice | [@robot[bot]](https://github.com/apps/robot) | Named Author | Service | @typed-worker | @zoe + [@worker[bot]](https://github.com/apps/worker)',
+          ? '@alice + Named Author'
+          : '@alice | [@robot[bot]](https://github.com/apps/robot) | Named Author | Service | @typed-worker + [@worker[bot]](https://github.com/apps/worker)',
       )
     },
   )

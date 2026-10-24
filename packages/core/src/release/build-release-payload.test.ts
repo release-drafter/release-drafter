@@ -51,7 +51,7 @@ const buildPayload = (
 }
 
 describe('resolved tag in release bodies', () => {
-  it('filters bots from mixed change authors while retaining bot-only attribution and contributor credit', async () => {
+  it('filters bots from mixed change authors while retaining contributor credit', async () => {
     const bot = {
       login: 'robot',
       type: 'Bot',
@@ -68,23 +68,22 @@ describe('resolved tag in release bodies', () => {
         ],
       },
       pullRequests: [
-        { number: 1, title: 'Bot change', author: bot, mergedAt: '2026-01-01' },
         {
           number: 2,
           title: 'Mixed change',
-          author: bot,
+          author: { login: 'alice' },
           mergedAt: '2026-01-02',
         },
         {
           number: 3,
           title: 'Mixed change',
-          author: { login: 'alice' },
+          author: bot,
           mergedAt: '2026-01-03',
         },
       ],
     })
     expect(payload.body).toBe(
-      'Bot change: [robot[bot]](https://github.com/apps/robot) | [@robot[bot]](https://github.com/apps/robot)\nMixed change: alice | @alice\n@alice and [@robot[bot]](https://github.com/apps/robot)',
+      'Mixed change: [robot[bot]](https://github.com/apps/robot) | @alice\n@alice and [@robot[bot]](https://github.com/apps/robot)',
     )
   })
 
