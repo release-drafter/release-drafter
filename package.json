@@ -81,7 +81,7 @@
     "@graphql-codegen/typescript-operations": "^6.1.10",
     "@types/node": "^24.19.2",
     "@vitest/coverage-v8": "^5.0.5",
-    "knip": "6.41.0",
+    "knip": "6.42.0",
     "nock": "^14.0.17",
     "prettier": "^3.9.10",
     "rolldown-plugin-dts": "^0.28.8",
