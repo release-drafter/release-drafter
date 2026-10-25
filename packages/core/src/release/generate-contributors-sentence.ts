@@ -51,6 +51,7 @@ export const generateAuthorsSentence = (params: {
   pullRequests: PullRequest[]
   serverUrl: string
   excludeContributors?: string[]
+  excludeBots?: boolean
   noAuthorsTemplate?: string
   authorTemplate?: string
   authorsSeparator?: string
@@ -81,6 +82,12 @@ export const generateAuthorsSentence = (params: {
 
     for (const author of commit.authors ??
       (commit.author ? [commit.author] : [])) {
+      if (
+        params.excludeBots &&
+        (author?.type === 'Bot' || author?.login?.endsWith(botSuffix))
+      ) {
+        continue
+      }
       if (author?.login) {
         const login = normalizeLogin(author.login)
         contributors.set(`login:${login}`, { login })

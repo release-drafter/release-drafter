@@ -19,6 +19,7 @@ export const pullRequestToString = (params: {
     | 'change-body-escapes'
     | 'replacers'
     | 'change-author-template'
+    | 'change-authors-exclude-bots'
     | 'change-authors-separator'
     | 'change-authors-final-separator'
   >
@@ -62,6 +63,7 @@ export const pullRequestToString = (params: {
             commits: params.commits,
             pullRequests: change.pullRequests,
             serverUrl: params.serverUrl,
+            excludeBots: params.config['change-authors-exclude-bots'],
             noAuthorsTemplate: renderTemplate({
               template: authorTemplate,
               object: {
