@@ -1,6 +1,6 @@
 import { A as info, D as context, E as Minimatch, O as core_exports, S as string, _ as boolean, c as writeActionOutputs, g as array, i as sharedInputSchema, j as setFailed, o as defineActionInputNames, p as escapeStringRegexp, s as readActionInputs, t as composeConfigGet, u as getGitHubAdapter, x as object } from "../../chunks/config.js";
 import process from "node:process";
-//#region packages/autolabeler/src/config/config.schema.ts
+// packages/autolabeler/src/config/config.schema.ts
 var labelSchema = string().min(1).describe("Backward-compatible single label. Prefer labels for new rules.");
 var labelsSchema = array(string().min(1)).min(1).describe("Labels to add when this rule matches, in configuration order.");
 var ruleSchema = object({
@@ -27,8 +27,7 @@ var configSchema = object({
 	title: "JSON schema for Release Drafter's autolabeler action config.",
 	id: "https://github.com/release-drafter/release-drafter/blob/main/autolabeler/schema.json"
 });
-//#endregion
-//#region packages/autolabeler/src/util.ts
+// packages/autolabeler/src/util.ts
 var regexLiteral = /^\/.+\/[AJUXgimsux]*$/;
 var supportedFlags = /* @__PURE__ */ new Set("gimsuy");
 /** Converts a regex literal or plain text matcher into a regular expression. */
@@ -38,8 +37,7 @@ var stringToRegex = (search) => {
 	const flags = [...new Set(search.slice(delimiter + 1))].filter((flag) => supportedFlags.has(flag)).join("");
 	return new RegExp(search.slice(1, delimiter), flags);
 };
-//#endregion
-//#region packages/autolabeler/src/config/validate-config.ts
+// packages/autolabeler/src/config/validate-config.ts
 /** Validates fallback rules after structural configuration parsing. */
 var validateConfig = (config) => {
 	const fallbacks = config.autolabeler.filter((rule) => rule.fallback);
@@ -53,8 +51,7 @@ var validateConfig = (config) => {
 		fallback.body
 	].some((matchers) => matchers.length > 0)) throw new Error("An Autolabeler fallback rule must not specify matchers.");
 };
-//#endregion
-//#region packages/autolabeler/src/config/parse-config.ts
+// packages/autolabeler/src/config/parse-config.ts
 /** Normalizes label shorthand and compiles configured regex matchers. */
 var parseConfig = (params) => {
 	validateConfig(params.config);
@@ -78,8 +75,7 @@ var parseConfig = (params) => {
 		autolabeler
 	};
 };
-//#endregion
-//#region packages/autolabeler/src/path-matcher.ts
+// packages/autolabeler/src/path-matcher.ts
 var trimTrailingUnescapedSpaces = (pattern) => {
 	let end = pattern.length;
 	while (end > 0 && pattern[end - 1] === " ") {
@@ -137,8 +133,7 @@ var createPathMatcher = (patterns) => {
 		return false;
 	};
 };
-//#endregion
-//#region packages/autolabeler/src/match-labels.ts
+// packages/autolabeler/src/match-labels.ts
 var test = (matcher, value) => {
 	matcher.lastIndex = 0;
 	return matcher.test(value);
@@ -185,22 +180,18 @@ var matchLabels = (params) => {
 		matches
 	};
 };
-//#endregion
-//#region packages/gh-actions/src/autolabeler/action-metadata.ts
+// packages/gh-actions/src/autolabeler/action-metadata.ts
 var actionInputNames = defineActionInputNames()([
 	"token",
 	"config-name",
 	"dry-run"
 ]);
 var actionOutputNames = ["number", "labels"];
-//#endregion
-//#region packages/gh-actions/src/autolabeler/action-input.schema.ts
+// packages/gh-actions/src/autolabeler/action-input.schema.ts
 var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(sharedInputSchema);
-//#endregion
-//#region packages/gh-actions/src/autolabeler/get-action-inputs.ts
+// packages/gh-actions/src/autolabeler/get-action-inputs.ts
 var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
-//#endregion
-//#region packages/gh-actions/src/autolabeler/get-config.ts
+// packages/gh-actions/src/autolabeler/get-config.ts
 var getConfig = async (configName, token) => {
 	const { config, contexts } = await composeConfigGet(configName, context, token);
 	if (contexts.length > 1) info(`Config was fetched from ${contexts.length} different contexts.`);
@@ -213,8 +204,7 @@ var getConfig = async (configName, token) => {
 		logger: core_exports
 	});
 };
-//#endregion
-//#region packages/gh-actions/src/autolabeler/runner.ts
+// packages/gh-actions/src/autolabeler/runner.ts
 /** Run the Autolabeler action using package-owned config and matching logic. */
 async function run() {
 	try {
@@ -278,10 +268,8 @@ async function run() {
 		if (error instanceof Error) setFailed(error.message);
 	}
 }
-//#endregion
-//#region packages/gh-actions/src/autolabeler/run.ts
+// packages/gh-actions/src/autolabeler/run.ts
 /*! release-drafter-action-entry:autolabeler */
 /* node:coverage ignore file -- @preserve */
 await run();
-//#endregion
 export {};

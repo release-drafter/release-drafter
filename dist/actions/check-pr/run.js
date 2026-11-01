@@ -1,6 +1,6 @@
 import { A as info, D as context, S as string, a as tokenInputSchema, b as number, c as writeActionOutputs, g as array, h as _enum, j as setFailed, k as error, l as actionLogger, o as defineActionInputNames, r as ConfigError, s as readActionInputs, w as union, x as object } from "../../chunks/config.js";
 import { b as matchesCategoryCondition, g as evaluateCategories, n as mergeInputAndConfig, t as getReleaseDrafterConfig } from "../../chunks/get-release-drafter-config.js";
-//#region packages/core/src/pull-request-validation.ts
+// packages/core/src/pull-request-validation.ts
 /** Remove path predicates and conditions that contain only path predicates. */
 var projectPullRequestValidationCategories = (categories) => categories.flatMap((category) => {
 	if (category.when.length === 0) return [category];
@@ -32,12 +32,10 @@ var evaluatePullRequest = (pullRequest, categories) => {
 		selectedCategoryCount: selectedCount
 	};
 };
-//#endregion
-//#region packages/gh-actions/src/check-pr/action-metadata.ts
+// packages/gh-actions/src/check-pr/action-metadata.ts
 var actionInputNames = defineActionInputNames()(["config-name", "token"]);
 var actionOutputNames = ["labels"];
-//#endregion
-//#region packages/gh-actions/src/check-pr/event.ts
+// packages/gh-actions/src/check-pr/event.ts
 var supportedPullRequestActions = [
 	"opened",
 	"edited",
@@ -73,20 +71,16 @@ var parsePullRequestEvent = (eventName, payload) => {
 		baseRef: result.data.pull_request.base.ref
 	};
 };
-//#endregion
-//#region packages/gh-actions/src/check-pr/action-input.schema.ts
+// packages/gh-actions/src/check-pr/action-input.schema.ts
 var actionInputSchema = object({ "config-name": string().optional().default("release-drafter.yml") }).and(tokenInputSchema);
-//#endregion
-//#region packages/gh-actions/src/check-pr/get-action-inputs.ts
+// packages/gh-actions/src/check-pr/get-action-inputs.ts
 var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
-//#endregion
-//#region packages/gh-actions/src/check-pr/get-config.ts
+// packages/gh-actions/src/check-pr/get-config.ts
 var getConfig = async (configName, token, ref = context.ref) => getReleaseDrafterConfig(configName, {
 	ref,
 	repo: context.repo
 }, token);
-//#endregion
-//#region packages/gh-actions/src/check-pr/runner.ts
+// packages/gh-actions/src/check-pr/runner.ts
 var defaultDependencies = () => ({
 	eventName: context.eventName,
 	payload: context.payload,
@@ -168,10 +162,8 @@ async function run() {
 		setFailed(error instanceof Error ? error.message : String(error));
 	}
 }
-//#endregion
-//#region packages/gh-actions/src/check-pr/run.ts
+// packages/gh-actions/src/check-pr/run.ts
 /*! release-drafter-action-entry:check-pr */
 /* node:coverage ignore file -- @preserve */
 await run();
-//#endregion
 export {};
