@@ -8,23 +8,23 @@ const mocks = vi.hoisted(() => {
 
   return {
     /**
-     * Use this mock as a nock().post() body matcher, such as expectations
-     * can be defined as :
+     * Called with the JSON body of the release creation request from its
+     * nock().post() reply, such as expectations can be defined as :
      * @example expect(mocks.postReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
      */
-    postReleaseBody: vi.fn(() => true),
+    postReleaseBody: vi.fn<(body: unknown) => void>(),
     /**
-     * Use this mock as a nock().patch() body matcher, such as expectations
-     * can be defined as :
+     * Called with the JSON body of the release update request from its
+     * nock().patch() reply, such as expectations can be defined as :
      * @example expect(mocks.patchReleaseBody.mock.lastCall).toMatchInlineSnapshot('...')
      */
-    patchReleaseBody: vi.fn(() => true),
+    patchReleaseBody: vi.fn<(body: unknown) => void>(),
     /**
-     * Use this mock as a nock().patch() body matcher, such as expectations
-     * can be defined as :
+     * Called with the JSON body of the add-labels request from its
+     * nock().post() reply, such as expectations can be defined as :
      * @example expect(mocks.postPrLabelsBody.mock.lastCall).toMatchInlineSnapshot('...')
      */
-    postPrLabelsBody: vi.fn(() => true),
+    postPrLabelsBody: vi.fn<(body: unknown) => void>(),
     config: vi.fn<() => AvailableConfigs | undefined>(() => undefined),
     getContextsConfigWasFetchedFrom: vi.fn<
       () => Awaited<ReturnType<typeof composeConfigGet>>['contexts']

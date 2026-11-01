@@ -559,8 +559,9 @@ describe('drafter e2e', () => {
           .post(
             '/graphql',
             (body) =>
+              typeof body?.query === 'string' &&
               body.query.includes('query resolvePullRequestCommitish') &&
-              body.variables.number === 123,
+              body.variables?.number === 123,
           )
           .reply(200, {
             data: {
@@ -609,8 +610,11 @@ describe('drafter e2e', () => {
           suppressRecentPullRequestMock: true,
         })
         const pullRequestScope = nock('https://api.github.com')
-          .post('/graphql', (body) =>
-            body.query.includes('query resolvePullRequestCommitish'),
+          .post(
+            '/graphql',
+            (body) =>
+              typeof body?.query === 'string' &&
+              body.query.includes('query resolvePullRequestCommitish'),
           )
           .reply(200, {
             data: {
@@ -649,7 +653,7 @@ describe('drafter e2e', () => {
         })
 
         // Only a GET scope — no POST scope, so any attempt to create a release
-        // would trigger an unmatched-request error from nock.
+        // would get nock's 501 ERR_NOCK_NO_MATCH response.
         const scope = nockGetReleases({ releaseFiles: ['release'] })
 
         await runDrafter()
@@ -685,7 +689,7 @@ describe('drafter e2e', () => {
         })
 
         // Only a GET scope — no PATCH scope, so any attempt to update a release
-        // would trigger an unmatched-request error from nock.
+        // would get nock's 501 ERR_NOCK_NO_MATCH response.
         const scope = nockGetReleases({
           releaseFiles: ['release', 'release-draft'],
         })

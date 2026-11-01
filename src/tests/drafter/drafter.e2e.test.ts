@@ -135,8 +135,9 @@ describe('drafter e2e', () => {
           .post(
             '/graphql',
             (body) =>
+              typeof body?.query === 'string' &&
               body.query.includes('query resolveCommitish') &&
-              body.variables.expression === 'refs/tags/v1.0.0^{commit}',
+              body.variables?.expression === 'refs/tags/v1.0.0^{commit}',
           )
           .reply(200, {
             data: {

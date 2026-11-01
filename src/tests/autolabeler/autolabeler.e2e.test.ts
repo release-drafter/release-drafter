@@ -57,7 +57,7 @@ describe('autolabeler e2e', async () => {
       mocks.config.mockReturnValue('config-autolabeler')
 
       // Only a GET scope — no POST scope, so any attempt to add labels
-      // would trigger an unmatched-request error from nock.
+      // would get nock's 501 ERR_NOCK_NO_MATCH response.
       const getScope = nockGetPrFiles({ files: 'files' })
 
       await runAutolabeler()
