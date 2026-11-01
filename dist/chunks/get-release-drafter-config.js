@@ -1,5 +1,5 @@
 import { A as info, C as stringbool, E as Minimatch, S as string, T as prettifyError, _ as boolean, b as number, g as array, h as _enum, m as ZodDefault, n as describeConfigTarget, p as escapeStringRegexp, r as ConfigError, t as composeConfigGet, v as literal, w as union, x as object, y as never } from "./config.js";
-//#region node_modules/conventional-commits-parser/dist/regex.js
+// node_modules/conventional-commits-parser/dist/regex.js
 var nomatchRegex = /(?!.*)/;
 function escape(string) {
 	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -44,8 +44,7 @@ function getParserRegexes(options = {}) {
 		url: /\b(?:https?):\/\/(?:www\.)?([-a-zA-Z0-9@:%_+.~#?&//=])+\b/
 	};
 }
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/utils.js
+// node_modules/conventional-commits-parser/dist/utils.js
 var SCISSOR = "------------------------ >8 ------------------------";
 /**
 * Remove leading and trailing newlines.
@@ -111,8 +110,7 @@ function assignMatchedCorrespondence(target, matches, correspondence) {
 	}
 	return target;
 }
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/options.js
+// node_modules/conventional-commits-parser/dist/options.js
 var defaultOptions = {
 	noteKeywords: ["BREAKING CHANGE", "BREAKING-CHANGE"],
 	issuePrefixes: ["#"],
@@ -137,8 +135,7 @@ var defaultOptions = {
 	revertCorrespondence: ["header", "hash"],
 	fieldPattern: /^-(?=.*\w)(.*?)-$/
 };
-//#endregion
-//#region node_modules/conventional-commits-parser/dist/CommitParser.js
+// node_modules/conventional-commits-parser/dist/CommitParser.js
 /**
 * Helper to create commit object.
 * @param initialData - Initial commit data.
@@ -389,8 +386,7 @@ var CommitParser = class {
 		return commit;
 	}
 };
-//#endregion
-//#region packages/core/src/path-matcher.ts
+// packages/core/src/path-matcher.ts
 var trimTrailingUnescapedSpaces = (pattern) => {
 	let end = pattern.length;
 	while (end > 0 && pattern[end - 1] === " ") {
@@ -448,8 +444,7 @@ var createPathMatcher = (patterns) => {
 		return false;
 	};
 };
-//#endregion
-//#region packages/core/src/category-matching.ts
+// packages/core/src/category-matching.ts
 var conventionalParser = new CommitParser({
 	headerPattern: /^(\w*)(?:\((.*)\))?!?: (.*)$/,
 	breakingHeaderPattern: /^(\w*)(?:\((.*)\))?!: (.*)$/
@@ -560,8 +555,7 @@ var filterPullRequestsByPreCategories = (pullRequests, categories) => pullReques
 var needsPullRequestChangedFiles = (categories) => categories.some((category) => category.when.some((condition) => condition.paths.length > 0));
 var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
 var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
-//#endregion
-//#region packages/core/src/config/common-config.schema.ts
+// packages/core/src/config/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
 * the config file or the action input.
@@ -605,8 +599,7 @@ var commonConfigSchema = object({
 	*/
 	"filter-by-range": string().optional()
 });
-//#endregion
-//#region packages/core/src/config/config.schema.ts
+// packages/core/src/config/config.schema.ts
 /**
 * A single set of predicates that are combined with AND logic.
 * All specified predicates must be satisfied for a change to match.
@@ -1019,8 +1012,7 @@ var configSchemaDefaults = Object.fromEntries(Object.entries({
 	if (value instanceof ZodDefault) return [key, value.def.defaultValue];
 	return [key, void 0];
 }));
-//#endregion
-//#region node_modules/verkit/dist/comparison-CmVirWIW.js
+// node_modules/verkit/dist/comparison-CmVirWIW.js
 var LETTER_DASH_NUMBER = "[a-zA-Z0-9-]";
 var NUMERIC_IDENTIFIER = String.raw`0|[1-9]\d*`;
 var NUMERIC_IDENTIFIER_LOOSE = String.raw`\d+`;
@@ -1131,8 +1123,7 @@ function comparePrereleaseParsed(left, right) {
 function compareParsed(left, right) {
 	return compareMainParsed(left, right) || comparePrereleaseParsed(left, right);
 }
-//#endregion
-//#region node_modules/verkit/dist/set-BGFWKKE8.js
+// node_modules/verkit/dist/set-BGFWKKE8.js
 var STRICT_COMPARATOR = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${FULL_PLAIN})$|^$`);
 var LOOSE_COMPARATOR$1 = safeRegex(String.raw`^${GREATER_LESS_THAN}\s*(${LOOSE_PLAIN})$|^$`);
 function formatComparator(comparator) {
@@ -1171,8 +1162,7 @@ function testComparatorSet(set, version, options) {
 	if (set.some((comparator) => !testParsedComparator(comparator, version))) return false;
 	return !version.prerelease?.length || !!options.includePrerelease || set.some((comparator) => comparatorAllowsPrerelease(comparator, version));
 }
-//#endregion
-//#region node_modules/verkit/dist/range-C5wjdo9a.js
+// node_modules/verkit/dist/range-C5wjdo9a.js
 function formatRange(range) {
 	return range.sets.map((set) => set.map(formatComparator).join(" ")).join("||");
 }
@@ -1340,8 +1330,7 @@ function satisfies(version, range, options = {}) {
 	const parsed = tryParseRange(range, options);
 	return parsed ? testRangeVersion(parsed, version) : false;
 }
-//#endregion
-//#region packages/core/src/string-to-regex.ts
+// packages/core/src/string-to-regex.ts
 var regexLiteral = /^\/.+\/[AJUXgimsux]*$/;
 var supportedFlags = /* @__PURE__ */ new Set("gimsuy");
 /** Converts a regex literal or plain text matcher into a regular expression. */
@@ -1351,8 +1340,7 @@ var stringToRegex = (search) => {
 	const flags = [...new Set(search.slice(delimiter + 1))].filter((flag) => supportedFlags.has(flag)).join("");
 	return new RegExp(search.slice(1, delimiter), flags);
 };
-//#endregion
-//#region packages/core/src/config/parse-categories.ts
+// packages/core/src/config/parse-categories.ts
 var categoryMigrationDocumentationUrl = "https://github.com/release-drafter/release-drafter/pull/1558";
 var withMigrationDocumentationLink = (message) => `${message} Migration documentation: ${categoryMigrationDocumentationUrl}`;
 var normalizeConventional = (conventional, logger) => {
@@ -1522,8 +1510,7 @@ function parseCategories(categories, deprecatedConfig, logger) {
 	}
 	return parsedCategories;
 }
-//#endregion
-//#region packages/core/src/config/parse-group-changes.ts
+// packages/core/src/config/parse-group-changes.ts
 /** Capture group names that `renderTemplate` can expand as `$FIRST_<NAME>`/`$LAST_<NAME>`. */
 var templatableName = /^[A-Za-z_]+$/;
 /** Capture group names that build the grouping key: `group` and every `group_<name>`. */
@@ -1578,8 +1565,7 @@ var captureNamesOf = (pattern) => {
 		return [];
 	}
 };
-//#endregion
-//#region packages/core/src/config/merge-input-and-config.ts
+// packages/core/src/config/merge-input-and-config.ts
 var mergeInputAndConfig = (params) => {
 	const { config: originalConfig, input, defaultCommitish, logger } = params;
 	const { "exclude-labels": excludeLabels, "include-labels": includeLabels, "include-paths": includePaths, "exclude-paths": excludePaths, "version-resolver": versionResolver, ...config } = structuredClone(originalConfig);
@@ -1666,8 +1652,7 @@ var validateParsedConfig = (parsedConfig) => {
 	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.");
 	if (parsedConfig["filter-by-range"] && !normalizeRange(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
 };
-//#endregion
-//#region packages/gh-actions/src/common/config/get-release-drafter-config.ts
+// packages/gh-actions/src/common/config/get-release-drafter-config.ts
 /** Load and validate the standard Release Drafter configuration. */
 var getReleaseDrafterConfig = async (configName, currentContext, token) => {
 	const { config, contexts } = await composeConfigGet(configName, currentContext, token);
@@ -1680,5 +1665,4 @@ var getReleaseDrafterConfig = async (configName, currentContext, token) => {
 	if (!result.success) throw new ConfigError(`Invalid Release Drafter config composed from ${contexts.map(describeConfigTarget).join(", ")}:\n${prettifyError(result.error)}`, contexts, void 0, { cause: result.error });
 	return result.data;
 };
-//#endregion
 export { filterPullRequestsByPreCategories as _, COERCE as a, matchesCategoryCondition as b, PRERELEASE_LOOSE as c, formatFullVersion as d, parse as f, evaluateCategories as g, commonConfigSchema as h, satisfies as i, compareIdentifiers as l, tryParse as m, mergeInputAndConfig as n, COERCE_FULL as o, safeRegex as p, normalizeRange as r, PRERELEASE as s, getReleaseDrafterConfig as t, formatComparableVersion as u, getChangelogCategories as v, needsPullRequestChangedFiles as x, getVersionResolverCategories as y };

@@ -1,6 +1,6 @@
 import { A as info, C as stringbool, D as context, S as string, c as writeActionOutputs, d as getRepository, f as noopLogger, i as sharedInputSchema, j as setFailed, l as actionLogger, o as defineActionInputNames, p as escapeStringRegexp, s as readActionInputs, u as getGitHubAdapter, x as object } from "../../chunks/config.js";
 import { _ as filterPullRequestsByPreCategories, a as COERCE, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, x as needsPullRequestChangedFiles, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
-//#region node_modules/verkit/dist/version-Co1j9Tpq.js
+// node_modules/verkit/dist/version-Co1j9Tpq.js
 var COERCE_EXACT = safeRegex(COERCE);
 var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
 var PRERELEASE_EXACT = safeRegex(`^${PRERELEASE}$`);
@@ -148,8 +148,7 @@ function getPrerelease(version, options = {}) {
 	const parsed = tryParse$1(version, options);
 	return parsed ? [...parsed.prerelease || []] : null;
 }
-//#endregion
-//#region packages/core/src/release/categorize-pull-requests.ts
+// packages/core/src/release/categorize-pull-requests.ts
 var categorizePullRequests = (params) => {
 	const { pullRequests, config } = params;
 	const changelogCategories = getChangelogCategories(config.categories);
@@ -172,8 +171,7 @@ var categorizePullRequests = (params) => {
 	}
 	return [uncategorizedPullRequests, categorizedPullRequests];
 };
-//#endregion
-//#region packages/core/src/release/render-template/select-section.ts
+// packages/core/src/release/render-template/select-section.ts
 var parseHeading = (line) => {
 	const match = /^ {0,3}(#{1,6})(?:[ \t]+(.*)|[ \t]*)$/.exec(line);
 	if (!match) return void 0;
@@ -221,8 +219,7 @@ var selectSection = (input, selector) => {
 	}
 	return start === void 0 ? void 0 : input.slice(start);
 };
-//#endregion
-//#region packages/core/src/release/render-template/util/charCode.ts
+// packages/core/src/release/render-template/util/charCode.ts
 var CharCode = /* @__PURE__ */ function(CharCode) {
 	CharCode[CharCode["Backslash"] = 92] = "Backslash";
 	CharCode[CharCode["Tab"] = 9] = "Tab";
@@ -252,8 +249,7 @@ var CharCode = /* @__PURE__ */ function(CharCode) {
 	CharCode[CharCode["u"] = 117] = "u";
 	return CharCode;
 }({});
-//#endregion
-//#region packages/core/src/release/render-template/util/search.ts
+// packages/core/src/release/render-template/util/search.ts
 function containsUppercaseCharacter(target) {
 	if (!target) return false;
 	return target.toLowerCase() !== target;
@@ -283,8 +279,7 @@ function buildReplaceStringForSpecificSpecialCharacter(matches, pattern, special
 	});
 	return replaceString.slice(0, -1);
 }
-//#endregion
-//#region packages/core/src/release/render-template/util/replacePattern.ts
+// packages/core/src/release/render-template/util/replacePattern.ts
 /**
 * Assigned when the replace pattern is entirely static.
 */
@@ -531,8 +526,7 @@ function parseReplaceString(replaceString) {
 	}
 	return result.finalize();
 }
-//#endregion
-//#region packages/core/src/release/render-template/apply-replacers.ts
+// packages/core/src/release/render-template/apply-replacers.ts
 var searchCache = /* @__PURE__ */ new WeakMap();
 var getSearch = (search) => {
 	const cached = searchCache.get(search);
@@ -568,8 +562,7 @@ var applyReplacers = (input, replacers = [], target = "global") => {
 	}
 	return input;
 };
-//#endregion
-//#region packages/core/src/release/render-template/render-template.ts
+// packages/core/src/release/render-template/render-template.ts
 /**
 * replaces all uppercase dollar templates with their string representation from object
 * if replacement is undefined in object the dollar template string is left untouched
@@ -591,8 +584,7 @@ var renderTemplate = (params) => {
 	});
 	return applyReplacers(input, replacers);
 };
-//#endregion
-//#region packages/core/src/release/group-changes.ts
+// packages/core/src/release/group-changes.ts
 /**
 * Groups pull requests whose titles match the same `group` of a `group-changes`
 * rule into a single changelog entry. Pull requests are neither mutated nor
@@ -681,8 +673,7 @@ var groupTitle = (params) => {
 	logger?.debug(`Grouped ${pullRequests.map(({ number }) => `#${number}`).join(", ")} into '${title}'`);
 	return title;
 };
-//#endregion
-//#region packages/core/src/release/generate-contributors-sentence.ts
+// packages/core/src/release/generate-contributors-sentence.ts
 var botSuffix = "[bot]";
 var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
 var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
@@ -780,8 +771,7 @@ var generateNewContributorsList = (params) => {
 		}
 	})).join("\n");
 };
-//#endregion
-//#region packages/core/src/release/pull-request-to-string.ts
+// packages/core/src/release/pull-request-to-string.ts
 /** Separator between the pull request numbers of `$NUMBERS`. */
 var numbersSeparator = ", ";
 var pullRequestToString = (params) => params.changes.map((change) => {
@@ -843,8 +833,7 @@ var escapeChangeText = (params) => {
 		return `\\${match}`;
 	});
 };
-//#endregion
-//#region packages/core/src/release/generate-changelog.ts
+// packages/core/src/release/generate-changelog.ts
 var generateChangeLog = (params) => {
 	const { commits = [], logger = noopLogger, pullRequests, serverUrl, config } = params;
 	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
@@ -885,8 +874,7 @@ var generateChangeLog = (params) => {
 	}
 	return changeLog.join("").trim();
 };
-//#endregion
-//#region packages/core/src/release/version-descriptor.ts
+// packages/core/src/release/version-descriptor.ts
 var VersionDescriptor = class VersionDescriptor {
 	version = null;
 	major = null;
@@ -954,8 +942,7 @@ var VersionDescriptor = class VersionDescriptor {
 		});
 	}
 };
-//#endregion
-//#region packages/core/src/release/get-version-info.ts
+// packages/core/src/release/get-version-info.ts
 var getVersionInfo = (params) => {
 	const { lastRelease, config, input, logger, versionKeyIncrement: _versionKeyIncrement } = params;
 	logger.info(`Resolving version info based on:`);
@@ -1020,8 +1007,7 @@ var getVersionInfo = (params) => {
 		$RESOLVED_VERSION_PRERELEASE: referenceVersion.incremented(_localIncrement).prerelease
 	};
 };
-//#endregion
-//#region packages/core/src/release/last-release-not-found.ts
+// packages/core/src/release/last-release-not-found.ts
 var lastReleaseNotFoundTemplate = `> [!WARNING]
 > Release Drafter could not find a previous **published release** for \`$OWNER/$REPOSITORY\`. This draft was created **without a comparison baseline**.
 
@@ -1031,8 +1017,7 @@ var lastReleaseNotFoundTemplate = `> [!WARNING]
 
 If you did not expect this to happen, [open an issue](https://github.com/release-drafter/release-drafter/issues/new?template=previous-published-release-not-found.yml).
 `;
-//#endregion
-//#region packages/core/src/release/render-release-name.ts
+// packages/core/src/release/render-release-name.ts
 /**
 * Renders the release name,
 * based on the input and config.
@@ -1051,8 +1036,7 @@ var renderReleaseName = (params) => {
 	logger.debug(`name: ${name}`);
 	return name;
 };
-//#endregion
-//#region packages/core/src/release/render-tag-name.ts
+// packages/core/src/release/render-tag-name.ts
 /**
 * Renders the tag name for the release,
 * based on the input and config.
@@ -1071,8 +1055,7 @@ var renderTagName = (params) => {
 	logger.debug(`tag: ${tagName}`);
 	return tagName;
 };
-//#endregion
-//#region packages/core/src/release/resolve-version-increment.ts
+// packages/core/src/release/resolve-version-increment.ts
 var priority = {
 	patch: 1,
 	minor: 2,
@@ -1100,8 +1083,7 @@ var resolveVersionKeyIncrement = (params) => {
 	logger.info(`Resolved version increment: ${versionKeyIncrement}`);
 	return versionKeyIncrement;
 };
-//#endregion
-//#region packages/core/src/release/sort-pull-requests.ts
+// packages/core/src/release/sort-pull-requests.ts
 var sortPullRequests = (params) => {
 	const { pullRequests, logger, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
 	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
@@ -1134,8 +1116,7 @@ var sortDescending = (a, b) => {
 	if (a < b) return 1;
 	return 0;
 };
-//#endregion
-//#region packages/core/src/release/build-release-payload.ts
+// packages/core/src/release/build-release-payload.ts
 var buildReleasePayload = async (params) => {
 	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests, repository } = params;
 	logger.info("Building release payload and body...");
@@ -1241,8 +1222,7 @@ var buildReleasePayload = async (params) => {
 	logger.info(`  RESOLVED_VERSION_PRERELEASE: ${releasePayload.prereleaseVersion}`);
 	return releasePayload;
 };
-//#endregion
-//#region node_modules/compare-versions/lib/esm/utils.js
+// node_modules/compare-versions/lib/esm/utils.js
 var semver = /^[v^~<>=]*?(\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+)(?:\.([x*]|\d+))?(?:-([\da-z\-]+(?:\.[\da-z\-]+)*))?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?)?)?$/i;
 var validateAndParse = (version) => {
 	if (typeof version !== "string") throw new TypeError("Invalid argument expected string");
@@ -1271,8 +1251,7 @@ var compareSegments = (a, b) => {
 	}
 	return 0;
 };
-//#endregion
-//#region node_modules/compare-versions/lib/esm/compareVersions.js
+// node_modules/compare-versions/lib/esm/compareVersions.js
 /**
 * Compare [semver](https://semver.org/) version strings to find greater, equal or lesser.
 * This library supports the full semver specification, including comparing versions with different number of digits like `1.0.0`, `1.0`, `1`, and pre-release versions like `1.0.0-alpha`.
@@ -1291,8 +1270,7 @@ var compareVersions = (v1, v2) => {
 	else if (p1 || p2) return p1 ? -1 : 1;
 	return 0;
 };
-//#endregion
-//#region packages/core/src/release-orchestration.ts
+// packages/core/src/release-orchestration.ts
 var stripHeadRef = (commitish) => commitish.replace(/^refs\/heads\//, "");
 var sortReleases = (params) => {
 	const stripTagPrefix = (tagName) => params.tagPrefix && tagName.startsWith(params.tagPrefix) ? tagName.slice(params.tagPrefix.length) : tagName;
@@ -1469,8 +1447,7 @@ var draftRelease = async (params) => {
 		}))].sort()
 	};
 };
-//#endregion
-//#region packages/gh-actions/src/drafter/action-input.schema.ts
+// packages/gh-actions/src/drafter/action-input.schema.ts
 var exclusiveInputSchema = object({
 	"config-name": string().optional().default("release-drafter.yml"),
 	/** Ref, tag, branch, or commit SHA used only as the change comparison base. */
@@ -1481,8 +1458,7 @@ var exclusiveInputSchema = object({
 	publish: stringbool().optional().default(false)
 }).and(sharedInputSchema);
 var actionInputSchema = exclusiveInputSchema.and(commonConfigSchema);
-//#endregion
-//#region packages/gh-actions/src/drafter/action-metadata.ts
+// packages/gh-actions/src/drafter/action-metadata.ts
 var actionInputNames = defineActionInputNames()([
 	"config-name",
 	"token",
@@ -1514,16 +1490,13 @@ var actionOutputNames = [
 	"body",
 	"labels"
 ];
-//#endregion
-//#region packages/gh-actions/src/drafter/get-action-inputs.ts
+// packages/gh-actions/src/drafter/get-action-inputs.ts
 var getActionInput = () => actionInputSchema.parse(readActionInputs(actionInputNames));
-//#endregion
-//#region packages/gh-actions/src/drafter/get-config.ts
+// packages/gh-actions/src/drafter/get-config.ts
 var getConfig = async (configName, token) => {
 	return getReleaseDrafterConfig(configName, context, token);
 };
-//#endregion
-//#region packages/gh-actions/src/drafter/set-action-output.ts
+// packages/gh-actions/src/drafter/set-action-output.ts
 /** Set every declared Drafter action output from the release result. */
 var setActionOutput = ({ release, releasePayload, labels }) => {
 	info("Set action outputs...");
@@ -1544,8 +1517,7 @@ var setActionOutput = ({ release, releasePayload, labels }) => {
 	});
 	info("Outputs set!");
 };
-//#endregion
-//#region packages/gh-actions/src/drafter/runner.ts
+// packages/gh-actions/src/drafter/runner.ts
 var toReleaseInput = (input) => ({
 	...input.from !== void 0 ? { from: input.from } : {},
 	...input.name !== void 0 ? { name: input.name } : {},
@@ -1577,10 +1549,8 @@ async function run() {
 		if (error instanceof Error) setFailed(error.message);
 	}
 }
-//#endregion
-//#region packages/gh-actions/src/drafter/run.ts
+// packages/gh-actions/src/drafter/run.ts
 /*! release-drafter-action-entry:drafter */
 /* node:coverage ignore file -- @preserve */
 await run();
-//#endregion
 export {};
