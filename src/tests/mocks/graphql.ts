@@ -106,9 +106,10 @@ export const mockGraphqlQuery = (
           .post(
             '/graphql',
             (body) =>
+              typeof body?.query === 'string' &&
               body.query.includes('query hydrateComparisonCommits') &&
               Object.entries(param.variables || {}).every(
-                ([key, value]) => body.variables[key] === value,
+                ([key, value]) => body.variables?.[key] === value,
               ),
           )
           .reply(200, {
@@ -136,8 +137,11 @@ export const mockGraphqlQuery = (
         !param.suppressRecentPullRequestMock
       ) {
         scope = scope
-          .post('/graphql', (body) =>
-            body.query.includes('query findRecentMergedPullRequests'),
+          .post(
+            '/graphql',
+            (body) =>
+              typeof body?.query === 'string' &&
+              body.query.includes('query findRecentMergedPullRequests'),
           )
           .reply(200, {
             data: {
@@ -164,8 +168,11 @@ export const mockGraphqlQuery = (
         }
       }
       scope = scope
-        .post('/graphql', (body) =>
-          body.query.includes(param.query || defaultQuery),
+        .post(
+          '/graphql',
+          (body) =>
+            typeof body?.query === 'string' &&
+            body.query.includes(param.query || defaultQuery),
         )
         .reply(200, response)
     }

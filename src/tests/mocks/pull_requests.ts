@@ -39,8 +39,9 @@ const nockSinglePrFiles = (params: {
     .post(
       '/graphql',
       (body) =>
+        typeof body?.query === 'string' &&
         body.query.includes('query findPullRequestChangedFiles') &&
-        body.variables.owner === owner &&
+        body.variables?.owner === owner &&
         body.variables.name === repo &&
         body.variables.number === number,
     )
@@ -118,7 +119,8 @@ export const nockPostPrLabels = (params: {
   return nock('https://api.github.com')
     .post(
       `/repos/${pr?.owner || 'release-drafter'}/${pr?.repo || 'release-drafter'}/issues/${pr?.number || 1475}/labels`,
-      mocks.postPrLabelsBody,
     )
-    .reply(201)
+    .reply(201, async (request: Request) => {
+      mocks.postPrLabelsBody(await request.json())
+    })
 }

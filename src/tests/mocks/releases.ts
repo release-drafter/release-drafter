@@ -54,9 +54,11 @@ export const nockPostRelease = (params?: {
   const postScope = nock('https://api.github.com')
     .post(
       `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
-      mocks.postReleaseBody,
     )
-    .reply(200, getReleasePayload(replyRelease || 'release'))
+    .reply(200, async (request: Request) => {
+      mocks.postReleaseBody(await request.json())
+      return getReleasePayload(replyRelease || 'release')
+    })
 
   return postScope
 }
@@ -83,9 +85,11 @@ export const nockGetAndPostReleases = (params: {
     )
     .post(
       `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases`,
-      mocks.postReleaseBody,
     )
-    .reply(200, getReleasePayload(replyRelease || 'release'))
+    .reply(200, async (request: Request) => {
+      mocks.postReleaseBody(await request.json())
+      return getReleasePayload(replyRelease || 'release')
+    })
 }
 
 export const nockGetAndPatchReleases = (params: {
@@ -112,7 +116,9 @@ export const nockGetAndPatchReleases = (params: {
       new RegExp(
         `/repos/${repo?.owner || 'toolmantim'}/${repo?.repo || 'release-drafter-test-project'}/releases/\\d+`,
       ),
-      mocks.patchReleaseBody,
     )
-    .reply(200, getReleasePayload(replyRelease || 'release'))
+    .reply(200, async (request: Request) => {
+      mocks.patchReleaseBody(await request.json())
+      return getReleasePayload(replyRelease || 'release')
+    })
 }
