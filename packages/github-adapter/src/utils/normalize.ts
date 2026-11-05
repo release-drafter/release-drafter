@@ -83,7 +83,7 @@ export const normalizeCommit = (commit: GraphCommit): Commit => ({
     (commit.associatedPullRequests?.totalCount ?? 0) > 0 ||
     (commit.associatedPullRequests?.nodes?.length ?? 0) > 0
       ? 'associated'
-      : 'unknown',
+      : 'unresolved',
   associatedPullRequests: commit.associatedPullRequests
     ? (commit.associatedPullRequests.nodes ?? []).map((pullRequest) =>
         pullRequest

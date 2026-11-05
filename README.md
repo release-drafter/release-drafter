@@ -144,8 +144,8 @@ The `.github/release-drafter.yml` file supports these keys:
 | `change-authors-separator`       | Optional | The separator between authors in `$CHANGE_AUTHORS`. Default: `", "`. Use `"\n"` with a list-style `change-author-template` for multiline output.                                                                                                                                                                                                                     |
 | `change-authors-final-separator` | Optional | The separator before the final author in `$CHANGE_AUTHORS`. For example, `" and "` produces `@octocat, @cchanche and @jetersen`. Default: the value of `change-authors-separator`.                                                                                                                                                                                   |
 | `change-title-escapes`           | Optional | Characters to escape in `$CHANGE_TITLE`, `$PR_TITLE`, and `$COMMIT_TITLE` so that they are not interpreted as Markdown formatting. Default: `""`.                                                                                                                                                                                                                    |
-| `change-authors-exclude-bots`    | Optional | Exclude bot co-authors from `$CHANGE_AUTHORS`. Pull request authors are always retained. Default: `false`.                                                                                                                                                                                                                                                                  |
-| `change-body-escapes`            | Optional | Characters to escape in `$CHANGE_BODY` when inserting into `change-template`. Uses title escaping rules with multiline backtick matches. See [Body escaping](#body-escaping). Default: `""`.                                                                                                                                                                                |
+| `change-authors-exclude-bots`    | Optional | Exclude bot co-authors from `$CHANGE_AUTHORS`. Pull request authors are always retained. Default: `false`.                                                                                                                                                                                                                                                           |
+| `change-body-escapes`            | Optional | Characters to escape in `$CHANGE_BODY` when inserting into `change-template`. Uses title escaping rules with multiline backtick matches. See [Body escaping](#body-escaping). Default: `""`.                                                                                                                                                                         |
 | `no-changes-template`            | Optional | The template to use when there are no changes. Default: `"* No changes"`.                                                                                                                                                                                                                                                                                            |
 | `categories`                     | Optional | Defines how Release Drafter filters and groups changes and selects version increments. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. See [Categorize changes](#categorize-changes).                                                                                                                                      |
 | `exclude-contributors`           | Optional | Excludes specified usernames or exact Git author names from `$CONTRIBUTORS`. See [Exclude contributors](#exclude-contributors).                                                                                                                                                                                                                                      |
@@ -178,7 +178,7 @@ Use these variables in `template`, `header`, and `footer`:
 | `$PREVIOUS_TAG`     | The previous release tag.                                                                                        |
 | `$REPOSITORY`       | The current repository.                                                                                          |
 | `$OWNER`            | The current repository owner.                                                                                    |
-| `$RESOLVED_TAG`     | The final release tag after expanding `tag-template` or the action's `tag` input override.                  |
+| `$RESOLVED_TAG`     | The final release tag after expanding `tag-template` or the action's `tag` input override.                       |
 
 Use `$RESOLVED_TAG` to build compare links that include the complete tag,
 including any prefix in `tag-template`:
@@ -354,7 +354,7 @@ newest member; `$CHANGE_AUTHORS` includes authors of every member.
 `$COMMIT_COMMITTED_DATE`.
 
 Version 8 removes the old unprefixed change variables, including `$TITLE`,
-`$NUMBER`, `$BODY`, `$URL`, and `$AUTHORS`. These names remain valid in their
+`$NUMBER`, `$NUMBERS`, `$BODY`, `$URL`, and `$AUTHORS`. These names remain valid in their
 separate category, author, and version template contexts where documented.
 `new-contributor-template` also replaces `$NUMBER` and `$URL` with
 `$CHANGE_REFERENCE` and `$CHANGE_URL`.
@@ -406,23 +406,23 @@ rebases and cherry-picks can preserve an old authored date even though the
 commit entered the release branch later. `$COMMIT_AUTHORED_DATE` remains
 available when that original metadata is useful in output.
 
-Set `change-authors-exclude-bots: true` to exclude bot co-authors from `$AUTHORS`.
+Set `change-authors-exclude-bots: true` to exclude bot co-authors from `$CHANGE_AUTHORS`.
 Commit authors identified as bots by the forge or whose logins end in `[bot]`
 are excluded. Unlinked commit authors are retained unless identified as bots.
 Pull request authors are always retained. This option does not change
-`$AUTHOR`, `$CONTRIBUTORS`, or `$NEW_CONTRIBUTORS`.
+`$CHANGE_AUTHOR`, `$CONTRIBUTORS`, or `$NEW_CONTRIBUTORS`.
 
 ### Body escaping
 
-Use `change-body-escapes` to escape selected characters in `$BODY` independently
+Use `change-body-escapes` to escape selected characters in `$CHANGE_BODY` independently
 of `change-title-escapes`. For example, escape `<` to display HTML comments and
 tags as text:
 
 ```yaml
 change-template: |-
-  * $TITLE (#$NUMBER)
+  * $CHANGE_TITLE ($CHANGE_REFERENCE)
 
-  $BODY
+  $CHANGE_BODY
 change-body-escapes: '<'
 ```
 
@@ -436,7 +436,7 @@ setting escapes characters without parsing Markdown.
 This setting makes HTML comments visible; it does not remove their contents or
 filter instructions in pull request text. Use [replacers](#replacers) with
 `target: change-body` to remove unwanted sections before escaping. Escaping
-applies only to `$BODY`, before insertion into `change-template`. Global
+applies to `$CHANGE_BODY`, `$PR_BODY`, and `$COMMIT_BODY` before template insertion. Global
 replacers run on the generated release body afterward.
 
 ## Categorize changes
@@ -580,7 +580,7 @@ Release Drafter groups changes that have matching labels or paths:
 Use the [Autolabeler action](#autolabeler) to add these labels.
 
 Set `collapse-after` to collapse a category that has more than the specified
-number of pull requests. A value of `0` always collapses the category. A value
+number of rendered entries. A value of `0` always collapses the category. A value
 of `-1` disables collapsing.
 
 ```yml
@@ -642,7 +642,7 @@ between releases then appears once, with the full version range and every pull
 request number:
 
 ```yml
-change-template: '* $TITLE ($NUMBERS) $AUTHORS'
+pr-template: '* $CHANGE_TITLE ($PR_NUMBERS) $CHANGE_AUTHORS'
 
 group-changes:
   - pattern: '/^Bump (?<group>.+?) from (?<from>\S+) to (?<to>\S+)$/'
@@ -678,7 +678,7 @@ group-changes:
 An entry is one combination of the `group` value and every `group_<name>` value,
 so `lib` in `/module-a` and `lib` in `/module-b` stay two entries.
 
-`title-template` builds `$TITLE` of a grouped entry:
+`title-template` builds `$CHANGE_TITLE` of a grouped entry:
 
 | Variable        | Description                                                                      |
 | --------------- | -------------------------------------------------------------------------------- |
@@ -690,7 +690,7 @@ so `lib` in `/module-a` and `lib` in `/module-b` stay two entries.
 Release Drafter applies the first rule that matches, groups changes within each
 category separately, and orders the pull requests of an entry by merge date. An
 entry keeps the position of its newest pull request, which is also the source of
-`$NUMBER`, `$AUTHOR`, `$BODY`, and `$URL`. `$AUTHORS` lists the authors of every
+`$PR_NUMBER`, `$CHANGE_AUTHOR`, `$CHANGE_BODY`, and `$CHANGE_URL`. `$CHANGE_AUTHORS` lists the authors of every
 pull request of the entry. A capture group that did not participate in the match
 holds an empty value, and a group that matches a single pull request keeps its
 original title.
@@ -707,13 +707,13 @@ Use `replacers` to search and replace content. Each replacer accepts a `target`:
 
 - `global` (default): the assembled release body, including templates and
   inserted change content. Existing replacers without a target keep this behavior.
-- `change-body`: each pull request's `$BODY`, before `change-body-escapes` and
+- `change-body`: each pull request or commit's `$CHANGE_BODY`, before `change-body-escapes` and
   insertion into `change-template`. Titles and release-template content are
   unaffected. For grouped entries, this uses the newest pull request's body.
-- `change-title`: the `$TITLE` inserted into `change-template`, before
+- `change-title`: the `$CHANGE_TITLE` inserted into `change-template`, before
   `change-title-escapes`. For grouped entries, this uses the synthesized title.
   Category matching, grouping rules, sorting, and version resolution use the
-  original pull request data.
+  original pull request or commit data.
 
 Release Drafter applies title and body rules first, then global rules after
 assembling the release body. Rules run in configuration order within each target.

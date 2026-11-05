@@ -186,7 +186,7 @@ describe('GitLab response fallbacks', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
-  it('orders undated commits and falls back to authored or created dates', async () => {
+  it('orders undated commits without substituting authored dates for committed dates', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async (input) =>
       pathOf(input).includes('/compare?')
         ? json({
@@ -200,12 +200,19 @@ describe('GitLab response fallbacks', () => {
         : json([]),
     )
     const result = await adapter(fetch).findChanges(request())
-    expect(result.commits).toEqual([
-      { id: 'a', oid: 'a' },
-      { id: 'b', oid: 'b' },
-      { id: 'c', oid: 'c', committedAt: '2026-01-01' },
-      { id: 'd', oid: 'd', committedAt: '2026-01-02' },
-    ])
+    expect(result.commits).toEqual(
+      [
+        { id: 'a', oid: 'a' },
+        { id: 'b', oid: 'b' },
+        { id: 'c', oid: 'c', authoredAt: '2026-01-01' },
+        { id: 'd', oid: 'd', committedAt: '2026-01-02' },
+      ].map((commit) => ({
+        ...commit,
+        url: `https://gitlab.example/group/subgroup/project/-/commit/${commit.oid}`,
+        associationStatus: 'unassociated',
+        associatedPullRequests: [],
+      })),
+    )
   })
 
   it('normalizes sparse merged requests and skips unrelated or unmerged requests', async () => {
@@ -248,7 +255,7 @@ describe('GitLab response fallbacks', () => {
         body: null,
       })),
     )
-    expect(result.commits[0]?.authors).toEqual([])
+    expect(result.commits[0]?.authors).toBeUndefined()
     expect(result.newContributorLogins).toEqual(new Set())
     expect(fetch).toHaveBeenCalledTimes(2)
   })
@@ -752,7 +759,7 @@ describe('GitLabAdapter', () => {
         associatedPullRequests,
       })),
     ).toEqual([
-      { associationStatus: 'none', associatedPullRequests: [] },
+      { associationStatus: 'unassociated', associatedPullRequests: [] },
       {
         associationStatus: 'associated',
         associatedPullRequests: [

@@ -695,6 +695,7 @@ describe('parseCategories', () => {
   it.each([
     ['change-template', '* $TITLE'],
     ['pr-template', '* #$NUMBER'],
+    ['pr-template', '* $NUMBERS'],
     ['commit-template', '* $AUTHOR'],
   ] as const)('rejects legacy variables in %s', (key, template) => {
     const config = configSchema.parse({

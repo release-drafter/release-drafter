@@ -67,7 +67,9 @@ export const changeToString = (params: {
       const authors = generateAuthorsSentence({
         commits: params.commits,
         pullRequests:
-          change.type === 'pull-request' ? (change.group?.pullRequests ?? [change.pullRequest]) : [],
+          change.type === 'pull-request'
+            ? (change.group?.pullRequests ?? [change.pullRequest])
+            : [],
         directCommits: change.type === 'commit' ? [change.commit] : [],
         serverUrl: params.serverUrl,
         excludeBots: params.config['change-authors-exclude-bots'],
@@ -84,10 +86,18 @@ export const changeToString = (params: {
         authorsFinalSeparator: params.config['change-authors-final-separator'],
       })
 
-      const renderText = (text: string, target: 'change-title' | 'change-body') =>
+      const renderText = (
+        text: string,
+        target: 'change-title' | 'change-body',
+      ) =>
         escapeChangeText({
           text: applyReplacers(text, params.config.replacers, target),
-          escapes: params.config[target === 'change-title' ? 'change-title-escapes' : 'change-body-escapes'],
+          escapes:
+            params.config[
+              target === 'change-title'
+                ? 'change-title-escapes'
+                : 'change-body-escapes'
+            ],
           multiline: target === 'change-body',
         })
 
@@ -99,8 +109,17 @@ export const changeToString = (params: {
             : pullRequest.author.login
           : 'ghost'
         const authorUrl = pullRequest.author?.url ?? ''
-        const title = renderText(change.group?.title ?? pullRequest.title, 'change-title')
-        const body = renderText(pullRequest.body ?? '', 'change-body')
+        const title = renderText(
+          change.group?.title ?? pullRequest.title,
+          'change-title',
+        )
+        const hasSectionRule = params.config.replacers.some(
+          (rule) => rule.target === 'change-body' && rule.section !== undefined,
+        )
+        const body =
+          pullRequest.body == null && !hasSectionRule
+            ? ''
+            : renderText(pullRequest.body ?? '', 'change-body')
         return renderTemplate({
           template:
             params.config['pr-template'] ?? params.config['change-template'],
@@ -116,7 +135,9 @@ export const changeToString = (params: {
             $CHANGE_AUTHORS: authors,
             $CHANGE_DATE: pullRequest.mergedAt ?? '',
             $PR_NUMBER: pullRequest.number,
-            $PR_NUMBERS: (change.group?.pullRequests ?? [pullRequest]).map(({ number }) => `#${number}`).join(', '),
+            $PR_NUMBERS: (change.group?.pullRequests ?? [pullRequest])
+              .map(({ number }) => `#${number}`)
+              .join(', '),
             $PR_TITLE: title,
             $PR_BODY: body,
             $PR_URL: pullRequest.url ?? '',

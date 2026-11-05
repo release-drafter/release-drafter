@@ -32,6 +32,7 @@ describe('contributor rendering', () => {
       commits: [
         {
           oid: 'merge',
+          associationStatus: 'associated' as const,
           authors: [
             { name: 'Named Author' },
             { login: 'zoe' },
@@ -39,7 +40,11 @@ describe('contributor rendering', () => {
             null,
           ],
         },
-        { oid: 'unrelated', author: { name: 'Excluded Author' } },
+        {
+          oid: 'unrelated',
+          associationStatus: 'unassociated' as const,
+          author: { name: 'Excluded Author' },
+        },
       ],
     }
     expect(generateAuthorsSentence(params)).toBe(
@@ -69,12 +74,16 @@ describe('contributor rendering', () => {
     ]
     expect(
       generateNewContributorsList({
-        pullRequests,
+        changes: pullRequests.map((pullRequest) => ({
+          type: 'pull-request',
+          pullRequest,
+        })),
         newContributorLogins: new Set(['alice', 'bob', 'excluded']),
         config: {
           categories: [],
           'exclude-contributors': ['excluded'],
-          'new-contributor-template': '$AUTHOR_MENTION in #$NUMBER ($URL)',
+          'new-contributor-template':
+            '$AUTHOR_MENTION in $CHANGE_REFERENCE ($CHANGE_URL)',
           'no-new-contributor-template': 'None',
         },
       }),
