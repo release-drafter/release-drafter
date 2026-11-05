@@ -28,7 +28,13 @@ export const generateChangeLog = (params: {
     | 'group-changes'
   >
 }) => {
-  const { commits = [], logger = noopLogger, changes, serverUrl, config } = params
+  const {
+    commits = [],
+    logger = noopLogger,
+    changes,
+    serverUrl,
+    config,
+  } = params
   const [uncategorizedChanges, categorizedChanges] = categorizeChanges({
     changes,
     config,
@@ -52,7 +58,9 @@ export const generateChangeLog = (params: {
       rules: config['group-changes'],
       logger,
     })
-    const byRepresentative = new Map(groups.map((group) => [group.representative, group]))
+    const byRepresentative = new Map(
+      groups.map((group) => [group.representative, group]),
+    )
     return changes.flatMap((change): ChangelogChange[] => {
       if (change.type === 'commit') return [change]
       const group = byRepresentative.get(change.pullRequest)

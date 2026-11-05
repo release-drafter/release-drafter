@@ -214,7 +214,7 @@ const validateParsedConfig = (parsedConfig: {
     if (!template) continue
     const legacyVariables = [
       ...template.matchAll(
-        /\$(?:CATEGORY|TITLE|NUMBER|AUTHORS|AUTHOR|AUTHOR_URL|BODY|URL|BASE_REF_NAME|HEAD_REF_NAME)\b/g,
+        /\$(?:CATEGORY|TITLE|NUMBERS|NUMBER|AUTHORS|AUTHOR|AUTHOR_URL|BODY|URL|BASE_REF_NAME|HEAD_REF_NAME)\b/g,
       ),
     ].map(([variable]) => variable)
     if (legacyVariables.length > 0) {

@@ -217,13 +217,15 @@ describe('REST response fallbacks', () => {
     )
 
     const result = await createAdapter(fetch).findChanges(request())
-    expect(result.commits).toEqual([
-      { id: 'a', oid: 'a', author: { login: 'alias' } },
-      { id: 'b', oid: 'b' },
-      { id: 'e', oid: 'e', author: { name: 'Person' } },
-      { id: 'c', oid: 'c', committedAt: '2026-01-01' },
-      { id: 'd', oid: 'd', committedAt: '2026-01-02' },
-    ])
+    expect(result.commits).toEqual(
+      [
+        { id: 'a', oid: 'a', author: { login: 'alias' } },
+        { id: 'b', oid: 'b' },
+        { id: 'd', oid: 'd', authoredAt: '2026-01-02' },
+        { id: 'e', oid: 'e', author: { name: 'Person' } },
+        { id: 'c', oid: 'c', committedAt: '2026-01-01' },
+      ].map((commit) => ({ ...commit, associationStatus: 'unassociated' })),
+    )
   })
 
   it.each([
@@ -302,14 +304,14 @@ describe('REST response fallbacks', () => {
       })),
     )
     expect(result.commits.slice(2).map((item) => item.authors)).toEqual([
-      [],
-      [],
+      undefined,
+      undefined,
     ])
     expect(result.newContributorLogins).toEqual(new Set())
     expect(fetch).toHaveBeenCalledTimes(5)
   })
 
-  it('honors field selection and coalesces identical commit and pull authors', async () => {
+  it('honors field selection and keeps commit and pull author metadata separate', async () => {
     const fetch = routeFetch((url) =>
       url.pathname.includes('/compare/')
         ? json({
@@ -343,7 +345,11 @@ describe('REST response fallbacks', () => {
       labels: ['feature', 'fix'],
       author: { login: 'same', type: 'Bot' },
     })
-    expect(result.commits[0]?.authors).toEqual([{ login: 'same', type: 'Bot' }])
+    expect(result.commits[0]?.authors).toBeUndefined()
+    expect(result.commits[0]?.author).toMatchObject({
+      login: 'same',
+      type: 'User',
+    })
   })
 
   it('preserves bot metadata for a commit author distinct from the human PR author', async () => {
@@ -361,12 +367,18 @@ describe('REST response fallbacks', () => {
         : json(pull(1, { user: { login: 'alice', type: 'User' } })),
     )
     const result = await createAdapter(fetch).findChanges(request())
-    const botAuthor = { name: 'Git a', login: 'automation', type: 'Bot' }
+    const botAuthor = {
+      name: 'Git a',
+      email: 'a@example.com',
+      login: 'automation',
+      type: 'Bot',
+    }
     expect(result.commits[0]?.author).toEqual(botAuthor)
-    expect(result.commits[0]?.authors).toEqual([
-      { login: 'alice', type: 'User' },
-      botAuthor,
-    ])
+    expect(result.commits[0]?.authors).toBeUndefined()
+    expect(result.pullRequests[0]?.author).toMatchObject({
+      login: 'alice',
+      type: 'User',
+    })
   })
 
   it('ignores unusable file records when no file count was advertised', async () => {
@@ -684,7 +696,7 @@ describe('GitHub-compatible REST mechanics', () => {
       apiUrl: 'https://api.example/custom',
     }).findChanges(request())
     expect(result.commits).toHaveLength(1)
-    expect(result.commits[0]?.associationStatus).toBe('none')
+    expect(result.commits[0]?.associationStatus).toBe('unassociated')
     expect(result.pullRequests).toEqual([])
     expect(fetch.mock.calls.map(([input]) => String(input))).toEqual([
       'https://api.example/custom/repos/octo/project/compare/v1...main',

@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { configSchema, mergeInputAndConfig } from '../config/index.ts'
 import { noopLogger } from '../ports.ts'
 import type { PullRequest } from '../types.ts'
-import type { ChangeGroup } from './group-changes.ts'
-import { pullRequestToString } from './pull-request-to-string.ts'
+import { type ChangelogChange, changeToString } from './change-to-string.ts'
 
 const config = (overrides: Record<string, unknown> = {}) =>
   mergeInputAndConfig({
@@ -29,44 +28,61 @@ const pullRequest = (
   ...overrides,
 })
 
-const change = (pullRequests: PullRequest[], title?: string): ChangeGroup => ({
-  pullRequests,
-  representative: pullRequests[pullRequests.length - 1],
-  title: title ?? pullRequests[pullRequests.length - 1].title,
+const change = (
+  pullRequests: PullRequest[],
+  title?: string,
+): ChangelogChange => ({
+  type: 'pull-request',
+  pullRequest: pullRequests[pullRequests.length - 1],
+  group: {
+    pullRequests,
+    representative: pullRequests[pullRequests.length - 1],
+    title: title ?? pullRequests[pullRequests.length - 1].title,
+  },
 })
 
-const render = (changes: ChangeGroup[], overrides?: Record<string, unknown>) =>
-  pullRequestToString({
+const render = (
+  changes: ChangelogChange[],
+  overrides?: Record<string, unknown>,
+) =>
+  changeToString({
     changes,
     commits: [],
     serverUrl: 'https://github.com',
     config: config(overrides),
   })
 
-describe('pullRequestToString', () => {
-  it('renders a single change with the default template', () => {
-    expect(render([change([pullRequest(42)])])).toBe(
-      '* Change 42 (#42) @author-42',
-    )
-  })
+describe('changeToString', () => {
+  it.each([false, true])(
+    'renders a single change with the default template and group metadata %j',
+    (grouped) => {
+      expect(
+        render([
+          grouped
+            ? change([pullRequest(42)])
+            : { type: 'pull-request', pullRequest: pullRequest(42) },
+        ]),
+      ).toBe('* Change 42 (#42) @author-42')
+    },
+  )
 
-  it('renders $NUMBERS of a single change as its own number', () => {
+  it('renders $PR_NUMBERS of a single change as its own number', () => {
     expect(
       render([change([pullRequest(42)])], {
-        'change-template': '* $TITLE ($NUMBERS)',
+        'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)',
       }),
     ).toBe('* Change 42 (#42)')
   })
 
-  it('renders $NUMBERS of a merged change, oldest first', () => {
+  it('renders $PR_NUMBERS of a merged change, oldest first', () => {
     const merged = change(
       [pullRequest(308), pullRequest(310), pullRequest(316)],
       'Bump njord.version from 0.9.1 to 0.9.5',
     )
 
-    expect(render([merged], { 'change-template': '* $TITLE ($NUMBERS)' })).toBe(
-      '* Bump njord.version from 0.9.1 to 0.9.5 (#308, #310, #316)',
-    )
+    expect(
+      render([merged], { 'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)' }),
+    ).toBe('* Bump njord.version from 0.9.1 to 0.9.5 (#308, #310, #316)')
   })
 
   it('takes single valued variables from the newest pull request', () => {
@@ -76,7 +92,9 @@ describe('pullRequestToString', () => {
     ])
 
     expect(
-      render([merged], { 'change-template': '$NUMBER $AUTHOR $BODY $URL' }),
+      render([merged], {
+        'pr-template': '$PR_NUMBER $CHANGE_AUTHOR $CHANGE_BODY $CHANGE_URL',
+      }),
     ).toBe('2 author-2 second https://example.com/2')
   })
 
@@ -87,7 +105,7 @@ describe('pullRequestToString', () => {
       pullRequest(3, { author: { login: 'grace' } }),
     ])
 
-    expect(render([merged], { 'change-template': '$AUTHORS' })).toBe(
+    expect(render([merged], { 'change-template': '$CHANGE_AUTHORS' })).toBe(
       '@ada, @grace',
     )
   })
@@ -110,6 +128,7 @@ describe('pullRequestToString', () => {
         commits: [
           {
             oid: 'merge',
+            associationStatus: 'associated' as const,
             authors: [
               { login: 'worker[bot]' },
               { login: 'typed-worker', type: 'Bot' },
@@ -120,16 +139,16 @@ describe('pullRequestToString', () => {
         ],
         serverUrl: 'https://github.com',
         config: config({
-          'change-template': '$AUTHORS',
+          'change-template': '$CHANGE_AUTHORS',
           'change-authors-exclude-bots': excludeBots,
           'change-authors-separator': ' | ',
           'change-authors-final-separator': ' + ',
         }),
       }
-      expect(pullRequestToString(params)).toBe(
+      expect(changeToString(params)).toBe(
         excludeBots
           ? '@alice | [@robot[bot]](https://github.com/apps/robot) + Named Author'
-          : '@alice | [@robot[bot]](https://github.com/apps/robot) | Named Author | Service | @typed-worker + [@worker[bot]](https://github.com/apps/worker)',
+          : '@alice | [@robot[bot]](https://github.com/apps/robot) | Named Author | Service | [@typed-worker[bot]](https://github.com/apps/typed-worker) + [@worker[bot]](https://github.com/apps/worker)',
       )
     },
   )
@@ -145,19 +164,20 @@ describe('pullRequestToString', () => {
     ],
   ])('retains bot PR authors with human co-authors: %j', (author, expected) => {
     expect(
-      pullRequestToString({
+      changeToString({
         changes: [
           change([pullRequest(1, { author, mergeCommitOid: 'merge' })]),
         ],
         commits: [
           {
             oid: 'merge',
+            associationStatus: 'associated' as const,
             authors: [author, { login: 'alice' }, { login: 'formatter[bot]' }],
           },
         ],
         serverUrl: 'https://github.com',
         config: config({
-          'change-template': '($AUTHORS)',
+          'change-template': '($CHANGE_AUTHORS)',
           'change-authors-exclude-bots': true,
         }),
       }),
@@ -172,7 +192,7 @@ describe('pullRequestToString', () => {
     ])
     expect(
       render([merged], {
-        'change-template': '$AUTHORS',
+        'change-template': '$CHANGE_AUTHORS',
         'change-author-template': '$AUTHOR',
         'change-authors-separator': ' | ',
         'change-authors-final-separator': ' + ',
@@ -189,14 +209,16 @@ describe('pullRequestToString', () => {
     'filters bot co-authors when the PR author is unavailable: %j',
     (author) => {
       expect(
-        pullRequestToString({
+        changeToString({
           changes: [
             change([pullRequest(1, { author: null, mergeCommitOid: 'merge' })]),
           ],
-          commits: [{ oid: 'merge', author }],
+          commits: [
+            { oid: 'merge', associationStatus: 'associated' as const, author },
+          ],
           serverUrl: 'https://github.com',
           config: config({
-            'change-template': '$AUTHORS',
+            'change-template': '$CHANGE_AUTHORS',
             'change-authors-exclude-bots': true,
           }),
         }),
@@ -207,7 +229,7 @@ describe('pullRequestToString', () => {
   it('preserves the deleted-author fallback when there are no known authors', () => {
     expect(
       render([change([pullRequest(1, { author: null })])], {
-        'change-template': '$AUTHORS',
+        'change-template': '$CHANGE_AUTHORS',
         'change-author-template': '$AUTHOR: $AUTHOR_MENTION',
         'change-authors-exclude-bots': true,
       }),
@@ -219,7 +241,7 @@ describe('pullRequestToString', () => {
 
     expect(
       render([merged], {
-        'change-template': '$TITLE',
+        'change-template': '$CHANGE_TITLE',
         'change-title-escapes': '_',
       }),
     ).toBe('Bump \\_lib\\_ to 2.0')
@@ -235,7 +257,7 @@ describe('pullRequestToString', () => {
     )
     expect(
       render([merged], {
-        'change-template': '<!-- template -->\n$TITLE\n$BODY',
+        'change-template': '<!-- template -->\n$CHANGE_TITLE\n$CHANGE_BODY',
         'change-body-escapes': '<',
       }),
     ).toBe(
@@ -246,7 +268,7 @@ describe('pullRequestToString', () => {
   it('does not apply title escapes to the body', () => {
     expect(
       render([change([pullRequest(1, { body: '<!-- body -->' })], '<title>')], {
-        'change-template': '$TITLE\n$BODY',
+        'change-template': '$CHANGE_TITLE\n$CHANGE_BODY',
         'change-title-escapes': '<',
       }),
     ).toBe('\\<title>\n<!-- body -->')
@@ -264,7 +286,7 @@ describe('pullRequestToString', () => {
           ]),
         ],
         {
-          'change-template': 'feat(ui): $TITLE\n$BODY',
+          'change-template': 'feat(ui): $CHANGE_TITLE\n$CHANGE_BODY',
           'change-title-escapes': '_',
           replacers: [
             {
@@ -281,7 +303,9 @@ describe('pullRequestToString', () => {
   })
 
   it('applies a custom sticky regex independently to every title and repeated render', () => {
-    const parsedConfig = config({ 'change-template': '$TITLE: $BODY' })
+    const parsedConfig = config({
+      'change-template': '$CHANGE_TITLE: $CHANGE_BODY',
+    })
     const search = /^old/y
     search.lastIndex = 1
     parsedConfig.replacers = [
@@ -298,8 +322,8 @@ describe('pullRequestToString', () => {
 
     const expected =
       'new title: old body\nnew title: old body\nnew title: old body'
-    expect(pullRequestToString(params)).toBe(expected)
-    expect(pullRequestToString(params)).toBe(expected)
+    expect(changeToString(params)).toBe(expected)
+    expect(changeToString(params)).toBe(expected)
     expect(search.lastIndex).toBe(1)
   })
 
@@ -316,7 +340,7 @@ describe('pullRequestToString', () => {
           for (const notFound of ['empty', 'full'] as const) {
             expect(
               render([change([pullRequest(1, { body })])], {
-                'change-template': '$BODY',
+                'change-template': '$CHANGE_BODY',
                 replacers: [
                   { target: 'change-body', section, 'not-found': notFound },
                 ],
@@ -327,7 +351,8 @@ describe('pullRequestToString', () => {
       )
       const extract = (body: string, notFound: 'empty' | 'full') =>
         render([change([pullRequest(1, { title: 'Keep _title_', body })])], {
-          'change-template': '## Release information\n$TITLE\n$BODY',
+          'change-template':
+            '## Release information\n$CHANGE_TITLE\n$CHANGE_BODY',
           'change-body-escapes': '_',
           replacers: [
             {
@@ -397,7 +422,7 @@ describe('pullRequestToString', () => {
         for (const notFound of ['empty', 'full'] as const) {
           expect(
             render(changes, {
-              'change-template': '## Release information: $NUMBER\n$BODY',
+              'pr-template': '## Release information: $PR_NUMBER\n$CHANGE_BODY',
               'change-body-escapes': '_',
               replacers: [
                 {
@@ -424,7 +449,7 @@ describe('pullRequestToString', () => {
               ]),
             ],
             {
-              'change-template': '$BODY',
+              'change-template': '$CHANGE_BODY',
               replacers: [
                 {
                   target: 'change-body',
@@ -443,7 +468,7 @@ describe('pullRequestToString', () => {
         ).toBe('Public\n')
         expect(
           render([change([pullRequest(1, { body: '## Other\nPrivate' })])], {
-            'change-template': '$BODY',
+            'change-template': '$CHANGE_BODY',
             replacers: [
               { target: 'change-body', section, 'not-found': 'empty' },
               {
@@ -458,7 +483,7 @@ describe('pullRequestToString', () => {
     })
 
     it('applies a custom sticky regex independently to every body and repeated render', () => {
-      const parsedConfig = config({ 'change-template': '$BODY' })
+      const parsedConfig = config({ 'change-template': '$CHANGE_BODY' })
       const search = /^old/y
       search.lastIndex = 1
       parsedConfig.replacers = [
@@ -473,8 +498,8 @@ describe('pullRequestToString', () => {
         config: parsedConfig,
       }
 
-      expect(pullRequestToString(params)).toBe('new body\nnew body\nnew body')
-      expect(pullRequestToString(params)).toBe('new body\nnew body\nnew body')
+      expect(changeToString(params)).toBe('new body\nnew body\nnew body')
+      expect(changeToString(params)).toBe('new body\nnew body\nnew body')
       expect(search.lastIndex).toBe(1)
     })
 
@@ -488,7 +513,7 @@ describe('pullRequestToString', () => {
       ])
       expect(
         render([merged], {
-          'change-template': '<!-- template -->\n$TITLE\n$BODY',
+          'change-template': '<!-- template -->\n$CHANGE_TITLE\n$CHANGE_BODY',
           'change-body-escapes': '<',
           replacers,
         }),
@@ -499,10 +524,10 @@ describe('pullRequestToString', () => {
       expect(
         render(
           [1, 2].map((number) =>
-            change([pullRequest(number, { body: 'old value $TITLE' })]),
+            change([pullRequest(number, { body: 'old value $CHANGE_TITLE' })]),
           ),
           {
-            'change-template': '$BODY',
+            'change-template': '$CHANGE_BODY',
             replacers: [
               { target: 'change-body', search: '/^(old)/', replace: '\\U$1' },
               { search: 'value', replace: 'global' },
@@ -510,18 +535,44 @@ describe('pullRequestToString', () => {
             ],
           },
         ),
-      ).toBe('new value $TITLE\nnew value $TITLE')
+      ).toBe('new value $CHANGE_TITLE\nnew value $CHANGE_TITLE')
     })
 
     it.each([undefined, null, ''])(
-      'preserves existing behavior for a body of %j',
+      'renders a missing or empty body of %j as empty',
       (body) => {
         expect(
           render([change([pullRequest(1, { body })])], {
-            'change-template': '$BODY',
+            'change-template': '$CHANGE_BODY',
             replacers,
           }),
-        ).toBe(body == null ? '$BODY' : '')
+        ).toBe('')
+      },
+    )
+
+    it.each([undefined, null, ''])(
+      'runs empty-string regex rules on body %j only when present or section extraction is configured',
+      (body) => {
+        const fallback = {
+          target: 'change-body',
+          search: '/^$/',
+          replace: 'No release notes',
+        }
+        expect(
+          render([change([pullRequest(1, { body })])], {
+            'change-template': '$CHANGE_BODY',
+            replacers: [fallback],
+          }),
+        ).toBe(body == null ? '' : 'No release notes')
+        expect(
+          render([change([pullRequest(1, { body })])], {
+            'change-template': '$CHANGE_BODY',
+            replacers: [
+              { target: 'change-body', section: '## Release information' },
+              fallback,
+            ],
+          }),
+        ).toBe('No release notes')
       },
     )
 
@@ -537,7 +588,7 @@ describe('pullRequestToString', () => {
             ]),
           ],
           {
-            'change-template': '$TITLE\n$BODY',
+            'change-template': '$CHANGE_TITLE\n$CHANGE_BODY',
             replacers: [
               {
                 target: 'change-body',
@@ -555,7 +606,7 @@ describe('pullRequestToString', () => {
   describe('body escaping', () => {
     const renderBody = (body: string | null | undefined, escapes?: string) =>
       render([change([pullRequest(1, { body })])], {
-        'change-template': '$BODY',
+        'change-template': '$CHANGE_BODY',
         'change-body-escapes': escapes,
       })
 
@@ -567,12 +618,9 @@ describe('pullRequestToString', () => {
       },
     )
 
-    it.each([undefined, null])(
-      'keeps existing missing-body behavior for %j',
-      (body) => {
-        expect(renderBody(body, '<')).toBe('$BODY')
-      },
-    )
+    it.each([undefined, null])('renders missing body %j as empty', (body) => {
+      expect(renderBody(body, '<')).toBe('')
+    })
 
     it('preserves an empty body', () => {
       expect(renderBody('', '<')).toBe('')
@@ -637,7 +685,7 @@ describe('pullRequestToString', () => {
   ])('preserves title escaping for %j', (title, escapes, expected) => {
     expect(
       render([change([pullRequest(1)], title)], {
-        'change-template': '$TITLE',
+        'change-template': '$CHANGE_TITLE',
         'change-title-escapes': escapes,
       }),
     ).toBe(expected)

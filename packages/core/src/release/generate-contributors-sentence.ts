@@ -85,7 +85,8 @@ export const generateAuthorsSentence = (params: {
     if (
       params.excludeBots &&
       (author?.type === 'Bot' || author?.login?.endsWith(botSuffix))
-    ) return
+    )
+      return
     if (author?.login) {
       const isBot = author.type === 'Bot'
       const login = normalizeLogin(author.login, isBot)
@@ -268,8 +269,12 @@ export const generateNewContributorsList = (params: {
     }
   }
 
-  const entries = [...firstChangeByContributor.values()].sort((a, b) =>
-    (changeDate(a.change) ?? '').localeCompare(changeDate(b.change) ?? ''),
+  const entries = [...firstChangeByContributor.values()].sort(
+    (a, b) =>
+      (changeDate(a.change) ?? '').localeCompare(changeDate(b.change) ?? '') ||
+      (a.change.type === 'pull-request' && b.change.type === 'pull-request'
+        ? a.change.pullRequest.number - b.change.pullRequest.number
+        : 0),
   )
   if (entries.length === 0) return config['no-new-contributor-template']
 

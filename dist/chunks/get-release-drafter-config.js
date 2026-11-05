@@ -386,6 +386,37 @@ var CommitParser = class {
 		return commit;
 	}
 };
+// packages/core/src/change.ts
+var splitCommitMessage = (message = "") => {
+	const [title = "", ...body] = message.replaceAll("\r\n", "\n").split("\n");
+	return {
+		title,
+		body: body.join("\n").replace(/^\n+/, "").trimEnd()
+	};
+};
+var changeTitle = (change) => change.type === "pull-request" ? change.pullRequest.title : splitCommitMessage(change.commit.message).title || change.commit.oid;
+var changeDate = (change) => change.type === "pull-request" ? change.pullRequest.mergedAt : change.commit.committedAt;
+var changeForCategory = (change) => change.type === "pull-request" ? change.pullRequest : { title: change.commit.message };
+/** Uses adapter-provided authors when available, falling back to commit trailers. */
+var commitAuthors = (commit) => {
+	if (commit.authors) return commit.authors.filter((author) => author != null);
+	const authors = commit.author ? [commit.author] : [];
+	const coauthorPattern = new RegExp(["^Co-authored-by:", String.raw`\s*(.+?)\s*<([^>]+)>\s*$`].join(""), "gim");
+	for (const match of (commit.message ?? "").matchAll(coauthorPattern)) {
+		const [, name, email] = match;
+		if (!authors.some((author) => email && author.email?.toLowerCase() === email.toLowerCase() || name && author.name === name)) authors.push({
+			name,
+			email
+		});
+	}
+	return authors;
+};
+/** Returns the strongest available stable identity: login, then email, then name. */
+var commitAuthorKey = (author) => {
+	if (author?.login) return `login:${author.login.toLowerCase()}`;
+	if (author?.email) return `email:${author.email.toLowerCase()}`;
+	if (author?.name) return `name:${author.name}`;
+};
 // packages/core/src/path-matcher.ts
 var trimTrailingUnescapedSpaces = (pattern) => {
 	let end = pattern.length;
@@ -551,7 +582,7 @@ var evaluateCategories = (pullRequest, categories) => {
 		versionIncrement: highest
 	};
 };
-var filterPullRequestsByPreCategories = (pullRequests, categories) => pullRequests.filter((pullRequest) => evaluateCategories(pullRequest, categories).included);
+var filterChangesByPreCategories = (changes, categories) => changes.filter((change) => evaluateCategories(changeForCategory(change), categories).included);
 var needsPullRequestChangedFiles = (categories) => categories.some((category) => category.when.some((condition) => condition.paths.length > 0));
 var getChangelogCategories = (categories) => categories.filter((category) => category.type === "changelog");
 var getVersionResolverCategories = (categories) => categories.filter((category) => category.type === "version-resolver");
@@ -824,37 +855,49 @@ var groupChangeSchema = object({
 	*/
 	pattern: string().min(1),
 	/**
-	* The template to use for `$TITLE` of a merged entry. Expands `$GROUP`, every `$GROUP_<NAME>` and, for every other capture group, `$FIRST_<NAME>` and `$LAST_<NAME>`.
+	* The template to use for `$CHANGE_TITLE` of a grouped entry. Expands `$GROUP`, every `$GROUP_<NAME>` and, for every other capture group, `$FIRST_<NAME>` and `$LAST_<NAME>`.
 	*/
 	"title-template": string().min(1)
 });
 var exclusiveConfigSchema = object({
 	/**
-	* The template to use for each merged change.
+	* Include commits that are not associated with a pull request as changes.
 	*/
-	"change-template": string().optional().default("* $TITLE (#$NUMBER) $AUTHORS"),
+	"include-commits": boolean().optional().default(false),
 	/**
-	* The template to use for each author in `$AUTHORS`.
+	* The generic fallback template for every change.
+	*/
+	"change-template": string().optional().default("* $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS"),
+	/**
+	* An optional pull-request-specific template. Falls back to change-template.
+	*/
+	"pr-template": string().optional(),
+	/**
+	* An optional commit-specific template. Falls back to change-template.
+	*/
+	"commit-template": string().optional(),
+	/**
+	* The template to use for each author in `$CHANGE_AUTHORS`.
 	*/
 	"change-author-template": string().optional().default("$AUTHOR_MENTION"),
 	/**
-	* Exclude bot co-authors from `$AUTHORS`. Pull request authors are always retained.
+	* Exclude bot co-authors from `$CHANGE_AUTHORS`. Pull request authors are always retained.
 	*/
 	"change-authors-exclude-bots": boolean().optional().default(false),
 	/**
-	* The separator to use between authors in `$AUTHORS`.
+	* The separator to use between authors in `$CHANGE_AUTHORS`.
 	*/
 	"change-authors-separator": string().optional().default(", "),
 	/**
-	* An optional separator to use before the final author in `$AUTHORS`.
+	* An optional separator to use before the final author in `$CHANGE_AUTHORS`.
 	*/
 	"change-authors-final-separator": string().optional(),
 	/**
-	* Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters.
+	* Characters to escape in change titles when inserting them into a change template so that they are not interpreted as Markdown format characters.
 	*/
 	"change-title-escapes": string().optional(),
 	/**
-	* Characters to escape in `$BODY` when inserting into `change-template`. Uses title escaping rules with multiline backtick matches.
+	* Characters to escape in change bodies before template insertion. Uses title escaping rules with multiline backtick matches.
 	*/
 	"change-body-escapes": string().optional(),
 	/**
@@ -910,7 +953,7 @@ var exclusiveConfigSchema = object({
 	/**
 	* The template to use for each new contributor in `$NEW_CONTRIBUTORS`.
 	*/
-	"new-contributor-template": string().optional().default("* $AUTHOR_MENTION made their first contribution in #$NUMBER"),
+	"new-contributor-template": string().optional().default("* $AUTHOR_MENTION made their first contribution in $CHANGE_REFERENCE"),
 	/**
 	* The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list.
 	*/
@@ -920,9 +963,9 @@ var exclusiveConfigSchema = object({
 	*/
 	"no-contributors-template": string().optional().default("No contributors"),
 	/**
-	* Sort changelog by merged_at or title.
+	* Sort changelog by change date or title.
 	*/
-	"sort-by": _enum(["merged_at", "title"]).optional().default("merged_at"),
+	"sort-by": _enum(["date", "title"]).optional().default("date"),
 	/**
 	* Sort changelog in ascending or descending order.
 	*/
@@ -1651,6 +1694,18 @@ var validateParsedConfig = (parsedConfig) => {
 	if (parsedConfig.categories.some((category) => category.type === "changelog" && !category.title)) throw new Error("Every 'type: \"changelog\"' category must define a non-empty 'title'.");
 	if (parsedConfig.categories.filter((category) => category.type === "changelog" && category.when.length === 0).length > 1) throw new Error("Multiple 'type: \"changelog\"' categories detected with no 'when' condition. Only one such category is supported for uncategorized changes.");
 	if (parsedConfig["filter-by-range"] && !normalizeRange(parsedConfig["filter-by-range"])) throw new Error(`'filter-by-range' value "${parsedConfig["filter-by-range"]}" could not be parsed as a valid semver range.`);
+	for (const key of [
+		"change-template",
+		"pr-template",
+		"commit-template"
+	]) {
+		const template = parsedConfig[key];
+		if (!template) continue;
+		const legacyVariables = [...template.matchAll(/\$(?:CATEGORY|TITLE|NUMBERS|NUMBER|AUTHORS|AUTHOR|AUTHOR_URL|BODY|URL|BASE_REF_NAME|HEAD_REF_NAME)\b/g)].map(([variable]) => variable);
+		if (legacyVariables.length > 0) throw new Error(`'${key}' uses variables removed from change-entry templates: ${[...new Set(legacyVariables)].join(", ")}. Use the namespaced $CHANGE_* variables, plus $PR_* in 'pr-template' or $COMMIT_* in 'commit-template'.`);
+	}
+	const legacyNewContributorVariables = [...parsedConfig["new-contributor-template"].matchAll(/\$(?:NUMBER|URL)\b/g)].map(([variable]) => variable);
+	if (legacyNewContributorVariables.length > 0) throw new Error(`'new-contributor-template' uses removed variables: ${[...new Set(legacyNewContributorVariables)].join(", ")}. Use $CHANGE_REFERENCE or $CHANGE_URL instead.`);
 };
 // packages/gh-actions/src/common/config/get-release-drafter-config.ts
 /** Load and validate the standard Release Drafter configuration. */
@@ -1665,4 +1720,4 @@ var getReleaseDrafterConfig = async (configName, currentContext, token) => {
 	if (!result.success) throw new ConfigError(`Invalid Release Drafter config composed from ${contexts.map(describeConfigTarget).join(", ")}:\n${prettifyError(result.error)}`, contexts, void 0, { cause: result.error });
 	return result.data;
 };
-export { filterPullRequestsByPreCategories as _, COERCE as a, matchesCategoryCondition as b, PRERELEASE_LOOSE as c, formatFullVersion as d, parse as f, evaluateCategories as g, commonConfigSchema as h, satisfies as i, compareIdentifiers as l, tryParse as m, mergeInputAndConfig as n, COERCE_FULL as o, safeRegex as p, normalizeRange as r, PRERELEASE as s, getReleaseDrafterConfig as t, formatComparableVersion as u, getChangelogCategories as v, needsPullRequestChangedFiles as x, getVersionResolverCategories as y };
+export { changeForCategory as C, splitCommitMessage as D, commitAuthors as E, changeDate as S, commitAuthorKey as T, filterChangesByPreCategories as _, COERCE as a, matchesCategoryCondition as b, PRERELEASE_LOOSE as c, formatFullVersion as d, parse as f, evaluateCategories as g, commonConfigSchema as h, satisfies as i, compareIdentifiers as l, tryParse as m, mergeInputAndConfig as n, COERCE_FULL as o, safeRegex as p, normalizeRange as r, PRERELEASE as s, getReleaseDrafterConfig as t, formatComparableVersion as u, getChangelogCategories as v, changeTitle as w, needsPullRequestChangedFiles as x, getVersionResolverCategories as y };
