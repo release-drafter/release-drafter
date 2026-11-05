@@ -85,12 +85,12 @@ describe('incomplete GitHub GraphQL responses', () => {
     expect(result.author).toEqual({
       name: 'Person',
       login: undefined,
-      type: 'User',
+      type: undefined,
     })
     expect(result.authors).toEqual([
       null,
-      { name: 'Coauthor', login: undefined, type: 'User' },
-      { name: undefined, login: 'known', type: 'User' },
+      { name: 'Coauthor', login: undefined, type: undefined },
+      { name: undefined, login: 'known', type: undefined },
     ])
     expect(result.associatedPullRequests).toEqual([
       null,

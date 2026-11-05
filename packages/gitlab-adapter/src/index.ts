@@ -88,7 +88,7 @@ const normalizeCommit = (
           },
         }
       : {}),
-    associationStatus: 'unknown',
+    associationStatus: 'unresolved',
   }
 }
 
@@ -288,7 +288,8 @@ export class GitLabAdapter implements ForgeAdapter, PullRequestReader {
     for (const [index, candidates] of associated.entries()) {
       const commit = commits[index]
       if (commit) {
-        commit.associationStatus = candidates.length > 0 ? 'associated' : 'none'
+        commit.associationStatus =
+          candidates.length > 0 ? 'associated' : 'unassociated'
         commit.associatedPullRequests = candidates
           .flatMap((candidate) =>
             Number.isSafeInteger(candidate.iid) && (candidate.iid ?? 0) > 0

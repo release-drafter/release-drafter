@@ -244,7 +244,7 @@ export const groupChangeSchema = object({
    */
   pattern: string().min(1),
   /**
-   * The template to use for `$TITLE` of a merged entry. Expands `$GROUP`, every `$GROUP_<NAME>` and, for every other capture group, `$FIRST_<NAME>` and `$LAST_<NAME>`.
+   * The template to use for `$CHANGE_TITLE` of a grouped entry. Expands `$GROUP`, every `$GROUP_<NAME>` and, for every other capture group, `$FIRST_<NAME>` and `$LAST_<NAME>`.
    */
   'title-template': string().min(1),
 })
@@ -289,7 +289,7 @@ export const exclusiveConfigSchema = object({
    */
   'change-title-escapes': string().optional(),
   /**
-   * Characters to escape in `$BODY` when inserting into `change-template`. Uses title escaping rules with multiline backtick matches.
+   * Characters to escape in change bodies before template insertion. Uses title escaping rules with multiline backtick matches.
    */
   'change-body-escapes': string().optional(),
   /**

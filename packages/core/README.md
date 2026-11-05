@@ -10,8 +10,8 @@ rendering, version calculation, release planning, and dry-run protection.
 Runtime code must provide a `Logger`, `Repository`, and `ForgeAdapter`.
 
 When `include-commits` is enabled, commits with proven pull request associations
-are suppressed before category filtering. Commits with unknown association
-status are also suppressed rather than risking duplicate release entries.
+are suppressed before category filtering. Commits whose association remains
+unresolved are also suppressed rather than risking duplicate release entries.
 
 Forge clients, GitHub Actions Toolkit modules, environment lookup, and API
 response types do not belong in this package. Each adapter operation receives a

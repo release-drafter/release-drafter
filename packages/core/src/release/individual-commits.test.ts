@@ -23,7 +23,7 @@ const directCommit = (overrides: Partial<Commit> = {}): Commit => ({
     login: 'commit-author',
     url: 'https://example.test/commit-author',
   },
-  associationStatus: 'none',
+  associationStatus: 'unassociated',
   ...overrides,
 })
 
@@ -67,22 +67,30 @@ describe('individual commit changes', () => {
     })
   })
 
-  it('suppresses duplicate, associated, unknown, and merge-result commits', () => {
+  it('suppresses duplicate, associated, unresolved, and merge-result commits', () => {
     const warning = vi.fn()
     const changes = selectChanges({
       commits: [
         directCommit(),
         directCommit(),
+        directCommit({ oid: 'stronger-evidence' }),
+        directCommit({
+          oid: 'stronger-evidence',
+          associationStatus: 'associated',
+        }),
         directCommit({ oid: 'associated', associationStatus: 'associated' }),
         directCommit({
           oid: 'reported-association',
-          associationStatus: 'none',
+          associationStatus: 'unassociated',
           associatedPullRequests: [
             { number: 99, baseRepository: 'someone/else' },
           ],
         }),
-        directCommit({ oid: 'unknown', associationStatus: 'unknown' }),
-        directCommit({ oid: 'merge-result', associationStatus: 'none' }),
+        directCommit({ oid: 'unresolved', associationStatus: 'unresolved' }),
+        directCommit({
+          oid: 'merge-result',
+          associationStatus: 'unassociated',
+        }),
       ],
       pullRequests: [{ ...pullRequest, mergeCommitOid: 'merge-result' }],
       config: config(),
@@ -98,7 +106,7 @@ describe('individual commit changes', () => {
       commit: { oid: '1234567890abcdef' },
     })
     expect(warning).toHaveBeenCalledWith(
-      'Skipped 1 commit because pull request association could not be determined.',
+      'Skipped 1 commit because the forge could not determine its pull request association. It was omitted to prevent a potential duplicate release entry.',
     )
   })
 
@@ -253,6 +261,78 @@ describe('individual commit changes', () => {
         }),
       }),
     ).toBe('* No new contributors')
+  })
+
+  it('keeps direct commits separate from PR groups and applies scoped rendering to both', async () => {
+    const commit = directCommit({
+      message: 'feat: bump lib to 2\n\n## Notes\ncommit <note>',
+      committedAt: '2026-01-02T12:00:00Z',
+      authors: [{ login: 'commit-author' }, { login: 'worker', type: 'Bot' }],
+    })
+    const result = await buildReleasePayload({
+      adapter: { resolveCommitish: async () => 'main' },
+      commits: [commit],
+      pullRequests: [
+        {
+          ...pullRequest,
+          number: 41,
+          title: 'feat: bump lib to 1',
+          mergedAt: '2026-01-01T00:00:00Z',
+        },
+        {
+          ...pullRequest,
+          title: 'feat: bump lib to 3',
+          body: '## Notes\nPR <note>',
+        },
+      ],
+      config: config({
+        'pr-template':
+          '$CHANGE_TITLE ($PR_NUMBERS) $CHANGE_BODY $CHANGE_AUTHORS',
+        'commit-template': '$COMMIT_TITLE $COMMIT_BODY $CHANGE_AUTHORS',
+        'change-authors-exclude-bots': true,
+        'change-title-escapes': '*',
+        'change-body-escapes': '<',
+        categories: [
+          {
+            title: 'Features',
+            'collapse-after': 2,
+            'semver-increment': 'minor',
+            when: { conventional: { type: 'feat' } },
+          },
+        ],
+        'group-changes': [
+          {
+            pattern: '/^feat: bump (?<group>.+) to (?<version>\\d+)$/',
+            'title-template':
+              'feat: bump $GROUP from $FIRST_VERSION to $LAST_VERSION',
+          },
+        ],
+        replacers: [
+          { target: 'change-title', search: '/^feat: (.*)$/', replace: '*$1*' },
+          { target: 'change-body', section: '## Notes' },
+        ],
+      }),
+      input: { publish: false },
+      lastRelease: { id: 1, tagName: 'v1.0.0' },
+      logger: noopLogger,
+      repository: {
+        owner: 'owner',
+        name: 'repo',
+        serverUrl: 'https://example.test',
+      },
+    })
+
+    expect(result.body).toContain(
+      '\\*bump lib from 1 to 3\\* (#41, #42) PR \\<note> @pr-author',
+    )
+    expect(result.body).toContain(
+      '\\*bump lib to 2\\* commit \\<note> @commit-author',
+    )
+    expect(result.body).not.toContain('<details>')
+    expect(result.body).toContain(
+      '[@worker[bot]](https://example.test/apps/worker)',
+    )
+    expect(result.resolvedVersion).toBe('1.1.0')
   })
 
   it('uses the same selected changes for changelog, versioning, and contributors', async () => {
