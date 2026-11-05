@@ -244,40 +244,52 @@ export const groupChangeSchema = object({
    */
   pattern: string().min(1),
   /**
-   * The template to use for `$TITLE` of a merged entry. Expands `$GROUP`, every `$GROUP_<NAME>` and, for every other capture group, `$FIRST_<NAME>` and `$LAST_<NAME>`.
+   * The template to use for `$CHANGE_TITLE` of a grouped entry. Expands `$GROUP`, every `$GROUP_<NAME>` and, for every other capture group, `$FIRST_<NAME>` and `$LAST_<NAME>`.
    */
   'title-template': string().min(1),
 })
 
 export const exclusiveConfigSchema = object({
   /**
-   * The template to use for each merged change.
+   * Include commits that are not associated with a pull request as changes.
+   */
+  'include-commits': boolean().optional().default(false),
+  /**
+   * The generic fallback template for every change.
    */
   'change-template': string()
     .optional()
-    .default('* $TITLE (#$NUMBER) $AUTHORS'),
+    .default('* $CHANGE_TITLE ($CHANGE_REFERENCE) $CHANGE_AUTHORS'),
   /**
-   * The template to use for each author in `$AUTHORS`.
+   * An optional pull-request-specific template. Falls back to change-template.
+   */
+  'pr-template': string().optional(),
+  /**
+   * An optional commit-specific template. Falls back to change-template.
+   */
+  'commit-template': string().optional(),
+  /**
+   * The template to use for each author in `$CHANGE_AUTHORS`.
    */
   'change-author-template': string().optional().default('$AUTHOR_MENTION'),
   /**
-   * Exclude bot co-authors from `$AUTHORS`. Pull request authors are always retained.
+   * Exclude bot co-authors from `$CHANGE_AUTHORS`. Pull request authors are always retained.
    */
   'change-authors-exclude-bots': boolean().optional().default(false),
   /**
-   * The separator to use between authors in `$AUTHORS`.
+   * The separator to use between authors in `$CHANGE_AUTHORS`.
    */
   'change-authors-separator': string().optional().default(', '),
   /**
-   * An optional separator to use before the final author in `$AUTHORS`.
+   * An optional separator to use before the final author in `$CHANGE_AUTHORS`.
    */
   'change-authors-final-separator': string().optional(),
   /**
-   * Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters.
+   * Characters to escape in change titles when inserting them into a change template so that they are not interpreted as Markdown format characters.
    */
   'change-title-escapes': string().optional(),
   /**
-   * Characters to escape in `$BODY` when inserting into `change-template`. Uses title escaping rules with multiline backtick matches.
+   * Characters to escape in change bodies before template insertion. Uses title escaping rules with multiline backtick matches.
    */
   'change-body-escapes': string().optional(),
   /**
@@ -337,7 +349,9 @@ export const exclusiveConfigSchema = object({
    */
   'new-contributor-template': string()
     .optional()
-    .default('* $AUTHOR_MENTION made their first contribution in #$NUMBER'),
+    .default(
+      '* $AUTHOR_MENTION made their first contribution in $CHANGE_REFERENCE',
+    ),
   /**
    * The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list.
    */
@@ -349,9 +363,9 @@ export const exclusiveConfigSchema = object({
    */
   'no-contributors-template': string().optional().default('No contributors'),
   /**
-   * Sort changelog by merged_at or title.
+   * Sort changelog by change date or title.
    */
-  'sort-by': zenum(['merged_at', 'title']).optional().default('merged_at'),
+  'sort-by': zenum(['date', 'title']).optional().default('date'),
   /**
    * Sort changelog in ascending or descending order.
    */

@@ -6,6 +6,7 @@ export type RestEndpointProfile = {
   repository(repository: Repository): string
   contents(repository: Repository, path: string): string
   compare(repository: Repository, baseHead: string): string
+  commits(repository: Repository): string
   commitPull(repository: Repository, sha: string): string
   pullFiles(repository: Repository, number: number): string
   pulls(repository: Repository): string
@@ -78,11 +79,13 @@ export type RestUser = {
 export type RestCommit = {
   sha?: string
   created?: string | null
+  html_url?: string | null
   author?: RestUser | null
   commit?: {
     message?: string | null
     author?: {
       name?: string | null
+      email?: string | null
       date?: string | null
     } | null
     committer?: {
