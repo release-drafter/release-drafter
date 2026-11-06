@@ -122,7 +122,7 @@ jobs:
           persist-credentials: false
 
       - name: Lint workflow files
-        uses: reviewdog/action-actionlint@5d802a8ebdcb24d712925118c3a4596f571d8fcd # v1.81.0
+        uses: reviewdog/action-actionlint@619a81ec64ff8c0211cd6146eb2b21e8f1d7f440 # v1.81.1
         with:
           reporter: github-annotations
           filter_mode: nofilter
