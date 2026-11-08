@@ -15,8 +15,9 @@ function getNotesRegex(noteKeywords, notesPattern) {
 }
 function getReferencePartsRegex(issuePrefixes, issuePrefixesCaseSensitive) {
 	if (!issuePrefixes) return nomatchRegex;
-	const flags = issuePrefixesCaseSensitive ? "g" : "gi";
-	return new RegExp(`(?:.*?)??\\s*([\\w-\\.\\/]*?)??(${joinOr(issuePrefixes)})([\\w-]+)(?=\\s|$|[,;.)\\]])`, flags);
+	const flags = issuePrefixesCaseSensitive ? "gy" : "giy";
+	const repositoryChar = "[\\w-\\.\\/]";
+	return new RegExp(`.*?(?<!${repositoryChar})(?:(${repositoryChar}+)(?!${repositoryChar}))?(${joinOr(issuePrefixes)})((?=[\\w-]*\\d)[\\w-]+)(?=\\s|$|[,;.)\\]])`, flags);
 }
 function getReferencesRegex(referenceActions, separator = "") {
 	if (!referenceActions) return /()(.+)/gi;
@@ -204,23 +205,23 @@ var CommitParser = class {
 	}
 	parseReferences(input, isFooterToken = false) {
 		const { regexes } = this;
-		const referencesRegex = isFooterToken ? regexes.footerReferences : regexes.references;
-		const regex = input.match(referencesRegex) ? referencesRegex : /()(.+)/gi;
-		const references = [];
+		const regex = isFooterToken ? regexes.footerReferences : regexes.references;
+		const sentences = [];
+		let lastIndex = 0;
 		let matches;
-		let action;
-		let sentence;
-		let reference;
 		while (true) {
 			matches = regex.exec(input);
 			if (!matches) break;
-			action = matches[1] || null;
-			sentence = matches[2] || "";
-			while (true) {
-				reference = this.parseReference(sentence, action);
-				if (!reference) break;
-				references.push(reference);
-			}
+			sentences.push([null, input.slice(lastIndex, matches.index)], [matches[1] || null, matches[2] || ""]);
+			lastIndex = regex.lastIndex;
+		}
+		sentences.push([null, input.slice(lastIndex)]);
+		const references = [];
+		let reference;
+		for (const [action, sentence] of sentences) while (true) {
+			reference = this.parseReference(sentence, action);
+			if (!reference) break;
+			references.push(reference);
 		}
 		return references;
 	}
