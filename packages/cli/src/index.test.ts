@@ -514,6 +514,7 @@ describe('option mapping', () => {
     ['prerelease', false],
     ['latest', true],
     ['latest', false],
+    ['latest', 'legacy'],
   ] as const)('maps --%s=%s exactly', async (option, value) => {
     const result = await invoke([
       'acme/widgets',

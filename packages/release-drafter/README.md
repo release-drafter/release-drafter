@@ -67,7 +67,7 @@ Options:
       --dry-run                Calculate without writing
       --publish [true|false]   Publish the release when true (default: false)
       --prerelease [true|false]
-      --latest [true|false]
+      --latest [true|false|legacy]
       --json                   Write one JSON result document to stdout
       --forge <name>           github, gitea, forgejo, or gitlab
       --server-url <url>       Forge web URL
@@ -78,8 +78,9 @@ Options:
       --version                Show version
 ```
 
-`--publish`, `--prerelease`, and `--latest` accept `true` or `false`. If you omit
-the value, the CLI uses `true`.
+`--publish` and `--prerelease` accept `true` or `false`. `--latest` also accepts
+`legacy`, which lets GitHub choose the latest release. If you omit a value, the
+CLI uses `true`.
 
 GitHub is the default forge. Gitea defaults to `https://gitea.com`, Forgejo
 defaults to `https://codeberg.org`, and GitLab defaults to

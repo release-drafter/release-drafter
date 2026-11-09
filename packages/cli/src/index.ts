@@ -12,6 +12,7 @@ import {
   draftRelease,
   evaluatePullRequest,
   type ForgeAdapter,
+  type LatestReleaseSetting,
   type LocalConfigFileReader,
   type Logger,
   loadConfig,
@@ -92,7 +93,7 @@ type ParsedOptions = {
   dryRun: boolean
   publish: boolean
   prerelease?: boolean
-  latest?: boolean
+  latest?: LatestReleaseSetting
   json: boolean
   serverUrl: string
   apiUrl?: string
@@ -119,7 +120,7 @@ Options:
       --dry-run                Calculate without writing
       --publish [true|false]   Publish the release when true (default: false)
       --prerelease [true|false]
-      --latest [true|false]
+      --latest [true|false|legacy]
       --json                   Write one JSON result document to stdout
       --forge <name>           github, gitea, forgejo, or gitlab
       --server-url <url>       Forge web URL
@@ -214,6 +215,17 @@ const parseOptionalBoolean = (
   if (value === 'true') return true
   if (value === 'false') return false
   throw new UsageError(`${option} must be true or false.`)
+}
+
+const parseOptionalLatest = (
+  value: string | undefined,
+): LatestReleaseSetting | undefined => {
+  if (value === 'legacy') return value
+  try {
+    return parseOptionalBoolean(value, '--latest')
+  } catch {
+    throw new UsageError('--latest must be true, false, or legacy.')
+  }
 }
 
 const parseUrl = (value: string | undefined, option: string) => {
@@ -414,7 +426,7 @@ const parseCommandLine = (argv: readonly string[]) => {
     dryRun: values['dry-run'],
     publish: parseOptionalBoolean(values.publish, '--publish') ?? false,
     prerelease: parseOptionalBoolean(values.prerelease, '--prerelease'),
-    latest: parseOptionalBoolean(values.latest, '--latest'),
+    latest: parseOptionalLatest(values.latest),
     json: values.json,
     serverUrl,
     apiUrl,

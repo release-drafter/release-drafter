@@ -7,6 +7,7 @@ import type {
   PullRequestReader,
   PullRequestValidationData,
   Release,
+  ReleasePayload,
   Repository,
   ResolveCommitishRequest,
   UpdateReleaseRequest,
@@ -554,11 +555,7 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
       body: payload.body,
       draft: payload.draft,
       prerelease: payload.prerelease,
-      make_latest: payload.prerelease
-        ? 'false'
-        : payload.makeLatest
-          ? 'true'
-          : 'false',
+      make_latest: this.toMakeLatest(payload),
       name: payload.name,
       tag_name: payload.tag,
       target_commitish: payload.targetCommitish,
@@ -579,11 +576,7 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
       body: payload.body,
       draft: payload.draft,
       prerelease: payload.prerelease,
-      make_latest: payload.prerelease
-        ? 'false'
-        : payload.makeLatest
-          ? 'true'
-          : 'false',
+      make_latest: this.toMakeLatest(payload),
       ...(payload.name || release.name
         ? { name: payload.name || release.name || undefined }
         : {}),
@@ -595,6 +588,12 @@ export class GitHubAdapter implements ForgeAdapter, PullRequestReader {
         : {}),
     })
     return normalizeRelease(response.data)
+  }
+
+  private toMakeLatest(payload: ReleasePayload): 'true' | 'false' | 'legacy' {
+    if (payload.prerelease) return 'false'
+    if (payload.makeLatest === 'legacy') return 'legacy'
+    return payload.makeLatest ? 'true' : 'false'
   }
 
   async getRepositoryConfig({
