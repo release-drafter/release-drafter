@@ -67,7 +67,7 @@
   },
   "devDependencies": {
     "@octokit/openapi-webhooks-types": "^12.2.0",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "license": "ISC",
   "private": true
