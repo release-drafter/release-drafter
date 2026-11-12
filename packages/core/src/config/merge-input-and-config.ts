@@ -99,6 +99,8 @@ const applyOverrides = (
   applyStringOverride(config, input, 'prerelease-identifier', logger)
   applyBooleanOverride(config, input, 'prerelease', logger)
   applyBooleanOverride(config, input, 'include-pre-releases', logger)
+  // Existing override handling for a mixed-type input (`boolean | 'legacy'`).
+  // Generalize if another input needs the same pattern.
   applyLatestOverride(config, input, logger)
   applyStringOverride(config, input, 'filter-by-range', logger)
   applyReleaseModeOverrides(config, input, logger)

@@ -426,6 +426,8 @@ const parseCommandLine = (argv: readonly string[]) => {
     dryRun: values['dry-run'],
     publish: parseOptionalBoolean(values.publish, '--publish') ?? false,
     prerelease: parseOptionalBoolean(values.prerelease, '--prerelease'),
+    // Existing parse handling for a mixed-type input (`boolean | 'legacy'`).
+    // Generalize if another input needs the same pattern.
     latest: parseOptionalLatest(values.latest),
     json: values.json,
     serverUrl,
