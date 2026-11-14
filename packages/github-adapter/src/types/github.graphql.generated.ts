@@ -3021,6 +3021,8 @@ export type FileExtensionRestrictionParametersInput = {
  * being pushed to the commit graph. This includes absolute paths that contain file names.
  */
 export type FilePathRestrictionParametersInput = {
+  /** Files matching these patterns are allowed even when they also match a restricted path. */
+  ignoredFilePaths?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The file paths that are restricted from being pushed to the commit graph. */
   restrictedFilePaths: Array<Scalars['String']['input']>;
 };
@@ -3879,6 +3881,8 @@ export type MaxFilePathLengthParametersInput = {
 
 /** Prevent commits with individual files that exceed the specified limit from being pushed to the commit graph. */
 export type MaxFileSizeParametersInput = {
+  /** Files matching these patterns may exceed the maximum size. */
+  ignoredFilePaths?: InputMaybe<Array<Scalars['String']['input']>>;
   /** The maximum file size allowed in megabytes. This limit does not apply to Git Large File Storage (Git LFS). */
   maxFileSize: Scalars['Int']['input'];
 };
@@ -5102,6 +5106,11 @@ export type PullRequestParametersInput = {
   dismissalRestriction?: InputMaybe<DismissalRestrictionInput>;
   /** Require an approving review in pull requests that modify files that have a designated code owner. */
   requireCodeOwnerReview: Scalars['Boolean']['input'];
+  /**
+   * When Copilot opens a pull request without a human collaborator, require one
+   * more approving review if a non-zero approval count is required.
+   */
+  requireExtraApprovalForUnattributedChanges?: InputMaybe<Scalars['Boolean']['input']>;
   /** Whether the most recent reviewable push must be approved by someone other than the person who pushed it. */
   requireLastPushApproval: Scalars['Boolean']['input'];
   /** The number of approving reviews that are required before a pull request can be merged. */
@@ -8919,7 +8928,6 @@ export type FindRecentMergedPullRequestsQueryVariables = Exact<{
   name: string;
   owner: string;
   baseRefName?: string | null | undefined;
-  cursor?: string | null | undefined;
   limit: number;
   withPullRequestBody: boolean;
   withPullRequestURL: boolean;
@@ -8928,7 +8936,7 @@ export type FindRecentMergedPullRequestsQueryVariables = Exact<{
 }>;
 
 
-export type FindRecentMergedPullRequestsQuery = { repository: { pullRequests: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, nodes: Array<{ title: string, number: number, url?: string, body?: string, isCrossRepository: boolean, mergedAt: string | null, merged: boolean, baseRefName?: string, headRefName?: string, mergeCommit: { oid: string } | null, author:
+export type FindRecentMergedPullRequestsQuery = { repository: { pullRequests: { nodes: Array<{ title: string, number: number, url?: string, body?: string, isCrossRepository: boolean, mergedAt: string | null, merged: boolean, baseRefName?: string, headRefName?: string, mergeCommit: { oid: string } | null, author:
           | { __typename: 'Bot', login: string, url: string }
           | { __typename: 'EnterpriseUserAccount', login: string, url: string }
           | { __typename: 'Mannequin', login: string, url: string }
@@ -8952,7 +8960,7 @@ export type HydrateComparisonCommitsQueryVariables = Exact<{
 
 export type HydrateComparisonCommitsQuery = { repository: { object:
       | { __typename: 'Blob' }
-      | { __typename: 'Commit', history: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, nodes: Array<{ id: string, oid: string, committedDate: string, message: string, author: { name: string | null, user: { login: string } | null } | null, authors: { nodes: Array<{ name: string | null, user: { login: string } | null } | null> | null }, associatedPullRequests: { nodes: Array<{ title: string, number: number, url?: string, body?: string, isCrossRepository: boolean, mergedAt: string | null, merged: boolean, baseRefName?: string, headRefName?: string, author:
+      | { __typename: 'Commit', history: { pageInfo: { hasNextPage: boolean, endCursor: string | null }, nodes: Array<{ id: string, oid: string, url: string, authoredDate: string, committedDate: string, message: string, author: { name: string | null, email: string | null, avatarUrl: string, user: { __typename: 'User', login: string, url: string } | null } | null, authors: { nodes: Array<{ name: string | null, email: string | null, avatarUrl: string, user: { __typename: 'User', login: string, url: string } | null } | null> | null }, associatedPullRequests: { totalCount: number, nodes: Array<{ title: string, number: number, url?: string, body?: string, isCrossRepository: boolean, mergedAt: string | null, merged: boolean, baseRefName?: string, headRefName?: string, author:
                   | { __typename: 'Bot', login: string, url: string }
                   | { __typename: 'EnterpriseUserAccount', login: string, url: string }
                   | { __typename: 'Mannequin', login: string, url: string }
@@ -8962,6 +8970,26 @@ export type HydrateComparisonCommitsQuery = { repository: { object:
       | { __typename: 'Tag' }
       | { __typename: 'Tree' }
      | null } | null };
+
+export type PollCommitAssociationsQueryVariables = Exact<{
+  ids: Array<string | number> | string | number;
+  withPullRequestBody: boolean;
+  withPullRequestURL: boolean;
+  withBaseRefName: boolean;
+  withHeadRefName: boolean;
+}>;
+
+
+export type PollCommitAssociationsQuery = { nodes: Array<
+    | { id: string, associatedPullRequests: { totalCount: number, nodes: Array<{ title: string, number: number, url?: string, body?: string, isCrossRepository: boolean, mergedAt: string | null, merged: boolean, baseRefName?: string, headRefName?: string, mergeCommit: { oid: string } | null, author:
+            | { __typename: 'Bot', login: string, url: string }
+            | { __typename: 'EnterpriseUserAccount', login: string, url: string }
+            | { __typename: 'Mannequin', login: string, url: string }
+            | { __typename: 'Organization', login: string, url: string }
+            | { __typename: 'User', login: string, url: string }
+           | null, baseRepository: { nameWithOwner: string } | null, labels: { nodes: Array<{ name: string } | null> | null } | null } | null> | null } | null }
+    | Record<PropertyKey, never>
+   | null> };
 
 export type AdapterPullRequestFieldsFragment = { title: string, number: number, url?: string, body?: string, isCrossRepository: boolean, mergedAt: string | null, merged: boolean, baseRefName?: string, headRefName?: string, author:
     | { __typename: 'Bot', login: string, url: string }
@@ -9056,19 +9084,14 @@ export const FindPullRequestChangedFilesDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<FindPullRequestChangedFilesQuery, FindPullRequestChangedFilesQueryVariables>;
 export const FindRecentMergedPullRequestsDocument = new TypedDocumentString(`
-    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $cursor: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
+    query findRecentMergedPullRequests($name: String!, $owner: String!, $baseRefName: String, $limit: Int!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
   repository(name: $name, owner: $owner) {
     pullRequests(
       states: [MERGED]
       baseRefName: $baseRefName
       orderBy: { field: UPDATED_AT, direction: DESC }
       first: $limit
-      after: $cursor
     ) {
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
       nodes {
         ...AdapterPullRequestFields
         mergeCommit {
@@ -9116,23 +9139,34 @@ export const HydrateComparisonCommitsDocument = new TypedDocumentString(`
           nodes {
             id
             oid
+            url
+            authoredDate
             committedDate
             message
             author {
               name
+              email
+              avatarUrl
               user {
+                __typename
                 login
+                url
               }
             }
             authors(first: 100) {
               nodes {
                 name
+                email
+                avatarUrl
                 user {
+                  __typename
                   login
+                  url
                 }
               }
             }
             associatedPullRequests(first: $pullRequestLimit) {
+              totalCount
               nodes {
                 ...AdapterPullRequestFields
               }
@@ -9167,6 +9201,47 @@ export const HydrateComparisonCommitsDocument = new TypedDocumentString(`
   baseRefName @include(if: $withBaseRefName)
   headRefName @include(if: $withHeadRefName)
 }`) as unknown as TypedDocumentString<HydrateComparisonCommitsQuery, HydrateComparisonCommitsQueryVariables>;
+export const PollCommitAssociationsDocument = new TypedDocumentString(`
+    query pollCommitAssociations($ids: [ID!]!, $withPullRequestBody: Boolean!, $withPullRequestURL: Boolean!, $withBaseRefName: Boolean!, $withHeadRefName: Boolean!) {
+  nodes(ids: $ids) {
+    ... on Commit {
+      id
+      associatedPullRequests(first: 100) {
+        totalCount
+        nodes {
+          ...AdapterPullRequestFields
+          mergeCommit {
+            oid
+          }
+        }
+      }
+    }
+  }
+}
+    fragment AdapterPullRequestFields on PullRequest {
+  title
+  number
+  url @include(if: $withPullRequestURL)
+  body @include(if: $withPullRequestBody)
+  author {
+    __typename
+    login
+    url
+  }
+  baseRepository {
+    nameWithOwner
+  }
+  isCrossRepository
+  mergedAt
+  labels(first: 100) {
+    nodes {
+      name
+    }
+  }
+  merged
+  baseRefName @include(if: $withBaseRefName)
+  headRefName @include(if: $withHeadRefName)
+}`) as unknown as TypedDocumentString<PollCommitAssociationsQuery, PollCommitAssociationsQueryVariables>;
 export const ResolveCommitishDocument = new TypedDocumentString(`
     query resolveCommitish($name: String!, $owner: String!, $expression: String!) {
   repository(name: $name, owner: $owner) {
