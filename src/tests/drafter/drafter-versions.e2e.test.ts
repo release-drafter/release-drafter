@@ -9,6 +9,7 @@ import {
   nockGetAndPatchReleases,
   nockGetAndPostReleases,
   nockGetReleases,
+  nockPostRelease,
 } from '#tests/mocks/index.ts'
 
 describe('drafter e2e', () => {
@@ -559,7 +560,7 @@ describe('drafter e2e', () => {
           .post(
             '/graphql',
             (body) =>
-              body.query.includes('query resolvePullRequestCommitish') &&
+              body?.query?.includes('query resolvePullRequestCommitish') &&
               body.variables.number === 123,
           )
           .reply(200, {
@@ -576,9 +577,11 @@ describe('drafter e2e', () => {
             },
           })
         const scope = nockGetReleases({ releaseFiles: ['release'] })
+        const postScope = nockPostRelease()
 
         await runDrafter()
 
+        expect(postScope.isDone()).toBe(false)
         expect(mocks.postReleaseBody).not.toHaveBeenCalled()
         expect(mocks.core.warning).toHaveBeenCalledWith(
           'refs/pull/123/merge points to an ephemeral pull request merge commit; forcing dry-run mode and disabling publish. Set dry-run: true explicitly to suppress this warning.',
@@ -610,7 +613,7 @@ describe('drafter e2e', () => {
         })
         const pullRequestScope = nock('https://api.github.com')
           .post('/graphql', (body) =>
-            body.query.includes('query resolvePullRequestCommitish'),
+            body?.query?.includes('query resolvePullRequestCommitish'),
           )
           .reply(200, {
             data: {
@@ -626,9 +629,11 @@ describe('drafter e2e', () => {
             },
           })
         const scope = nockGetReleases({ releaseFiles: ['release'] })
+        const postScope = nockPostRelease()
 
         await runDrafter()
 
+        expect(postScope.isDone()).toBe(false)
         expect(mocks.postReleaseBody).not.toHaveBeenCalled()
         expect(mocks.core.warning).not.toHaveBeenCalled()
         expect(scope.isDone()).toBe(true)
@@ -648,13 +653,12 @@ describe('drafter e2e', () => {
           payload: 'graphql-comparison-no-prs',
         })
 
-        // Only a GET scope — no POST scope, so any attempt to create a release
-        // would trigger an unmatched-request error from nock.
         const scope = nockGetReleases({ releaseFiles: ['release'] })
+        const postScope = nockPostRelease()
 
         await runDrafter()
 
-        // No write request should have been made
+        expect(postScope.isDone()).toBe(false)
         expect(mocks.postReleaseBody).not.toHaveBeenCalled()
 
         // Dry-run message should have been logged
@@ -684,15 +688,19 @@ describe('drafter e2e', () => {
           payload: 'graphql-comparison-no-prs',
         })
 
-        // Only a GET scope — no PATCH scope, so any attempt to update a release
-        // would trigger an unmatched-request error from nock.
         const scope = nockGetReleases({
           releaseFiles: ['release', 'release-draft'],
         })
+        const patchScope = nock('https://api.github.com')
+          .patch(
+            /\/repos\/toolmantim\/release-drafter-test-project\/releases\/\d+/,
+            mocks.patchReleaseBody,
+          )
+          .reply(200)
 
         await runDrafter()
 
-        // No write request should have been made
+        expect(patchScope.isDone()).toBe(false)
         expect(mocks.patchReleaseBody).not.toHaveBeenCalled()
 
         // Dry-run message should have been logged

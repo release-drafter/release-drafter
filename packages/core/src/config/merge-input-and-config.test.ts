@@ -10,63 +10,75 @@ const logger = {
   error: vi.fn(),
 }
 
+const latestTrueWarning =
+  "'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release."
+const latestLegacyWarning =
+  "'latest' cannot be 'legacy' when 'prerelease' is true. Switch 'latest' to false - release will be a pre-release."
+
 describe('release-mode normalization', () => {
   it.each([
     {
       name: 'config identifier and explicit latest',
       config: { latest: true, 'prerelease-identifier': 'beta' },
       input: {},
-      warns: true,
+      warning: latestTrueWarning,
     },
     {
       name: 'config identifier and default latest',
       config: { 'prerelease-identifier': 'beta' },
       input: {},
-      warns: false,
     },
     {
       name: 'input identifier and explicit latest',
       config: { latest: true },
       input: { 'prerelease-identifier': 'rc' },
-      warns: true,
+      warning: latestTrueWarning,
     },
     {
       name: 'input identifier and default latest',
       config: {},
       input: { 'prerelease-identifier': 'rc' },
-      warns: false,
     },
     {
       name: 'input prerelease and default latest',
       config: {},
       input: { prerelease: true },
-      warns: false,
     },
     {
       name: 'config prerelease and default latest',
       config: { prerelease: true },
       input: {},
-      warns: false,
     },
     {
       name: 'input latest true overriding config latest false',
       config: { prerelease: true, latest: false },
       input: { latest: true },
-      warns: true,
+      warning: latestTrueWarning,
     },
     {
       name: 'input latest false overriding config latest true',
       config: { prerelease: true, latest: true },
       input: { latest: false },
-      warns: false,
+    },
+    {
+      name: 'config latest legacy',
+      config: { prerelease: true, latest: 'legacy' },
+      input: {},
+      warning: latestLegacyWarning,
+    },
+    {
+      name: 'input latest legacy',
+      config: { prerelease: true },
+      input: { latest: 'legacy' },
+      warning: latestLegacyWarning,
     },
     {
       name: 'input identifier despite input prerelease false',
       config: { latest: true },
       input: { prerelease: false, 'prerelease-identifier': 'rc' },
-      warns: true,
+      warning: latestTrueWarning,
     },
-  ])('never marks a prerelease latest: $name', ({ config, input, warns }) => {
+  ])('never marks a prerelease latest: $name', ({ config, input, warning }) => {
     const original = configSchema.parse({
       template: '$CHANGES',
       commitish: 'main',
@@ -79,13 +91,11 @@ describe('release-mode normalization', () => {
     })
     expect(result).toMatchObject({ prerelease: true, latest: false })
     expect(original.latest).toBe(config.latest)
-    const conflictWarning = expect.stringContaining(
-      "'prerelease' and 'latest' cannot be both true",
-    )
-    if (warns) {
-      expect(logger.warning).toHaveBeenCalledWith(conflictWarning)
+    if (warning) {
+      expect(logger.warning).toHaveBeenCalledWith(warning)
     } else {
-      expect(logger.warning).not.toHaveBeenCalledWith(conflictWarning)
+      expect(logger.warning).not.toHaveBeenCalledWith(latestTrueWarning)
+      expect(logger.warning).not.toHaveBeenCalledWith(latestLegacyWarning)
     }
   })
 
@@ -115,6 +125,44 @@ describe('release-mode normalization', () => {
     })
     expect(result).toMatchObject({ prerelease: true, latest: false })
     expect(logger.warning).not.toHaveBeenCalled()
+  })
+})
+
+describe('latest configuration', () => {
+  it('defaults latest to true when no value is configured', () => {
+    const result = mergeInputAndConfig({
+      config: configSchema.parse({ commitish: 'main' }),
+      input: commonConfigSchema.parse({}),
+      logger,
+    })
+    expect(result.latest).toBe(true)
+  })
+
+  it('preserves latest legacy from config', () => {
+    const result = mergeInputAndConfig({
+      config: configSchema.parse({ commitish: 'main', latest: 'legacy' }),
+      input: commonConfigSchema.parse({}),
+      logger,
+    })
+    expect(result.latest).toBe('legacy')
+  })
+
+  it('allows input latest legacy to override config latest', () => {
+    const result = mergeInputAndConfig({
+      config: configSchema.parse({ commitish: 'main', latest: false }),
+      input: commonConfigSchema.parse({ latest: 'legacy' }),
+      logger,
+    })
+    expect(result.latest).toBe('legacy')
+  })
+
+  it('allows input latest to override config latest legacy', () => {
+    const result = mergeInputAndConfig({
+      config: configSchema.parse({ commitish: 'main', latest: 'legacy' }),
+      input: commonConfigSchema.parse({ latest: false }),
+      logger,
+    })
+    expect(result.latest).toBe(false)
   })
 })
 

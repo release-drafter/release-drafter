@@ -420,7 +420,10 @@ describe('get config file', () => {
           .times(configChain.length)
           .reply(
             200,
-            (uri) => configChain.find((c) => c.endpoint === uri)?.file,
+            (request: Request) =>
+              configChain.find(
+                (c) => `https://api.github.com${c.endpoint}` === request.url,
+              )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -480,7 +483,10 @@ describe('get config file', () => {
           .times(configChain.length)
           .reply(
             200,
-            (uri) => configChain.find((c) => c.endpoint === uri)?.file,
+            (request: Request) =>
+              configChain.find(
+                (c) => `https://api.github.com${c.endpoint}` === request.url,
+              )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -537,7 +543,10 @@ describe('get config file', () => {
           .times(configChain.length)
           .reply(
             200,
-            (uri) => configChain.find((c) => c.endpoint === uri)?.file,
+            (request: Request) =>
+              configChain.find(
+                (c) => `https://api.github.com${c.endpoint}` === request.url,
+              )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -596,7 +605,10 @@ describe('get config file', () => {
           .times(configChain.length) // no extra call — pre-fetch check stops the loop
           .reply(
             200,
-            (uri) => configChain.find((c) => c.endpoint === uri)?.file,
+            (request: Request) =>
+              configChain.find(
+                (c) => `https://api.github.com${c.endpoint}` === request.url,
+              )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -650,7 +662,10 @@ describe('get config file', () => {
           .times(configChain.length)
           .reply(
             200,
-            (uri) => configChain.find((c) => c.endpoint === uri)?.file,
+            (request: Request) =>
+              configChain.find(
+                (c) => `https://api.github.com${c.endpoint}` === request.url,
+              )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -815,10 +830,12 @@ describe('get config file', () => {
           .times(configChain.filter((c) => !!c.endpoint).length)
           .reply(
             200,
-            (uri) =>
+            (request: Request) =>
               configChain
                 .filter((c) => !!c.endpoint)
-                .find((c) => c.endpoint === uri)?.file,
+                .find(
+                  (c) => `https://api.github.com${c.endpoint}` === request.url,
+                )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -979,10 +996,12 @@ describe('get config file', () => {
           .times(configChain.filter((c) => !!c.endpoint).length) // pre-fetch check stops the self-loop
           .reply(
             200,
-            (uri) =>
+            (request: Request) =>
               configChain
                 .filter((c) => !!c.endpoint)
-                .find((c) => c.endpoint === uri)?.file,
+                .find(
+                  (c) => `https://api.github.com${c.endpoint}` === request.url,
+                )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -1065,10 +1084,12 @@ describe('get config file', () => {
           .times(configChain.filter((c) => !!c.endpoint).length) // pre-fetch check stops the loop
           .reply(
             200,
-            (uri) =>
+            (request: Request) =>
               configChain
                 .filter((c) => !!c.endpoint)
-                .find((c) => c.endpoint === uri)?.file,
+                .find(
+                  (c) => `https://api.github.com${c.endpoint}` === request.url,
+                )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -1143,7 +1164,10 @@ describe('get config file', () => {
           .times(remoteChain.length)
           .reply(
             200,
-            (uri) => remoteChain.find((c) => c.endpoint === uri)?.file,
+            (request: Request) =>
+              remoteChain.find(
+                (c) => `https://api.github.com${c.endpoint}` === request.url,
+              )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -1215,7 +1239,10 @@ describe('get config file', () => {
           .times(remoteChain.length)
           .reply(
             200,
-            (uri) => remoteChain.find((c) => c.endpoint === uri)?.file,
+            (request: Request) =>
+              remoteChain.find(
+                (c) => `https://api.github.com${c.endpoint}` === request.url,
+              )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
@@ -1302,10 +1329,12 @@ describe('get config file', () => {
           .times(configChain.filter((c) => !!c.endpoint).length)
           .reply(
             200,
-            (uri) =>
+            (request: Request) =>
               configChain
                 .filter((c) => !!c.endpoint)
-                .find((c) => c.endpoint === uri)?.file,
+                .find(
+                  (c) => `https://api.github.com${c.endpoint}` === request.url,
+                )?.file,
             {
               'content-type': 'application/vnd.github.v3.raw; charset=utf-8',
             },
