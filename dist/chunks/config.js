@@ -38028,7 +38028,7 @@ var GitHubAdapter = class {
 			body: payload.body,
 			draft: payload.draft,
 			prerelease: payload.prerelease,
-			make_latest: payload.prerelease ? "false" : payload.makeLatest ? "true" : "false",
+			make_latest: this.toMakeLatest(payload),
 			name: payload.name,
 			tag_name: payload.tag,
 			target_commitish: payload.targetCommitish
@@ -38044,12 +38044,17 @@ var GitHubAdapter = class {
 			body: payload.body,
 			draft: payload.draft,
 			prerelease: payload.prerelease,
-			make_latest: payload.prerelease ? "false" : payload.makeLatest ? "true" : "false",
+			make_latest: this.toMakeLatest(payload),
 			...payload.name || release.name ? { name: payload.name || release.name || void 0 } : {},
 			...payload.tag || release.tagName ? { tag_name: payload.tag || release.tagName } : {},
 			...payload.targetCommitish ? { target_commitish: payload.targetCommitish } : {}
 		});
 		return normalizeRelease(response.data);
+	}
+	toMakeLatest(payload) {
+		if (payload.prerelease) return "false";
+		if (payload.makeLatest === "legacy") return "legacy";
+		return payload.makeLatest ? "true" : "false";
 	}
 	async getRepositoryConfig({ repository, path, ref }) {
 		const target = `${repository.owner}/${repository.name}:${path}${ref ? `@${ref}` : ""}`;

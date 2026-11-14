@@ -56,13 +56,12 @@ describe('autolabeler e2e', async () => {
       await mockInput('dry-run', 'true')
       mocks.config.mockReturnValue('config-autolabeler')
 
-      // Only a GET scope — no POST scope, so any attempt to add labels
-      // would trigger an unmatched-request error from nock.
       const getScope = nockGetPrFiles({ files: 'files' })
+      const postScope = nockPostPrLabels({})
 
       await runAutolabeler()
 
-      // No write request should have been made
+      expect(postScope.isDone()).toBe(false)
       expect(mocks.postPrLabelsBody).not.toHaveBeenCalled()
 
       // Dry-run message should have been logged
