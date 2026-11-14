@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/rest-adapter",
-  "version": "7.10.0",
+  "version": "7.11.0",
   "description": "Bounded GitHub-compatible REST protocol mechanics for Release Drafter forge adapters.",
   "type": "module",
   "engines": {
@@ -30,6 +30,6 @@
     "@release-drafter/core": "*"
   },
   "devDependencies": {
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }

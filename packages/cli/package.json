@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/cli",
-  "version": "7.10.0",
+  "version": "7.11.0",
   "description": "Private command-line runtime for Release Drafter.",
   "type": "module",
   "engines": {
@@ -33,7 +33,7 @@
     "@release-drafter/rest-adapter": "*"
   },
   "devDependencies": {
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "license": "ISC",
   "private": true

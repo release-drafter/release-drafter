@@ -25,12 +25,14 @@ export interface RepositoryConfigReader {
 /** Bundled adapters support release operations and configuration loading. */
 export type BundledForgeAdapter = ForgeAdapter & RepositoryConfigReader
 
+export type LatestReleaseSetting = boolean | 'legacy'
+
 /** Optional values applied after configuration inheritance and validation. */
 export interface ConfigOverrides {
   commitish?: string
   header?: string
   footer?: string
-  latest?: boolean
+  latest?: LatestReleaseSetting
   prerelease?: boolean
   'prerelease-identifier'?: string
   'include-pre-releases'?: boolean
@@ -131,7 +133,7 @@ export interface ReleasePayload {
   body: string
   targetCommitish: string
   prerelease: boolean
-  makeLatest: boolean
+  makeLatest: LatestReleaseSetting
   draft: boolean
   resolvedVersion?: string
   majorVersion?: string | null
@@ -354,7 +356,7 @@ export interface DraftReleaseConfig {
   categories: ParsedCategory[]
   'category-template': string
   template: string
-  latest: boolean
+  latest: LatestReleaseSetting
   prerelease: boolean
   'prerelease-identifier'?: string
   'include-pre-releases'?: boolean

@@ -212,6 +212,8 @@ export type ParsedGroupChange = Omit<
   captureNames: string[]
 }
 
+export type LatestReleaseSetting = boolean | 'legacy'
+
 export type ParsedConfig = Omit<
   Config,
   | 'exclude-labels'
@@ -228,7 +230,7 @@ export type ParsedConfig = Omit<
   | 'change-authors-exclude-bots'
 > & {
   commitish: string
-  latest: boolean
+  latest: LatestReleaseSetting
   prerelease: boolean
   replacers: ParsedReplacer[]
   categories: ParsedCategory[]
@@ -252,7 +254,7 @@ export type ReleasePayload = {
   body: string
   targetCommitish: string
   prerelease: boolean
-  makeLatest: boolean
+  makeLatest: LatestReleaseSetting
   draft: boolean
   resolvedVersion?: string
   majorVersion?: string | null

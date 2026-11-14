@@ -33,7 +33,7 @@ const runSmokeConfigDryRun = async (params: {
     })
   const gqlScope = nock('https://api.github.com')
     .post('/graphql', (body) =>
-      body.query.includes('query hydrateComparisonCommits'),
+      body?.query?.includes('query hydrateComparisonCommits'),
     )
     .reply(200, {
       data: {
@@ -49,7 +49,7 @@ const runSmokeConfigDryRun = async (params: {
       },
     })
     .post('/graphql', (body) =>
-      body.query.includes('query findRecentMergedPullRequests'),
+      body?.query?.includes('query findRecentMergedPullRequests'),
     )
     .reply(200, {
       data: {

@@ -106,7 +106,7 @@ export const mockGraphqlQuery = (
           .post(
             '/graphql',
             (body) =>
-              body.query.includes('query hydrateComparisonCommits') &&
+              body?.query?.includes('query hydrateComparisonCommits') &&
               Object.entries(param.variables || {}).every(
                 ([key, value]) => body.variables[key] === value,
               ),
@@ -152,7 +152,7 @@ export const mockGraphqlQuery = (
       ) {
         scope = scope
           .post('/graphql', (body) =>
-            body.query.includes('query findRecentMergedPullRequests'),
+            body?.query?.includes('query findRecentMergedPullRequests'),
           )
           .reply(200, {
             data: {
@@ -180,7 +180,7 @@ export const mockGraphqlQuery = (
       }
       scope = scope
         .post('/graphql', (body) =>
-          body.query.includes(param.query || defaultQuery),
+          body?.query?.includes(param.query || defaultQuery),
         )
         .reply(200, response)
     }

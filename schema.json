@@ -535,7 +535,15 @@
       "type": "string"
     },
     "latest": {
-      "type": ["string", "boolean"]
+      "anyOf": [
+        {
+          "type": ["string", "boolean"]
+        },
+        {
+          "type": "string",
+          "const": "legacy"
+        }
+      ]
     },
     "prerelease": {
       "type": ["string", "boolean"]

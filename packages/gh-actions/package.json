@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/gh-actions",
-  "version": "7.10.0",
+  "version": "7.11.0",
   "description": "Private runtime composition for Release Drafter GitHub Actions.",
   "type": "module",
   "engines": {
@@ -67,7 +67,7 @@
   },
   "devDependencies": {
     "@octokit/openapi-webhooks-types": "^12.2.0",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "license": "ISC",
   "private": true

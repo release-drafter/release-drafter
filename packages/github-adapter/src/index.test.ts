@@ -208,6 +208,40 @@ describe('GitHubAdapter', () => {
     },
   )
 
+  it.each(['create', 'update'] as const)(
+    'passes latest legacy for stable release %s requests',
+    async (operation) => {
+      const octokit = mockOctokit()
+      const send =
+        operation === 'create'
+          ? octokit.rest.repos.createRelease
+          : octokit.rest.repos.updateRelease
+      vi.mocked(send).mockResolvedValueOnce({
+        data: { id: 1, tag_name: 'v1' },
+      } as never)
+      const payload = {
+        name: '',
+        tag: '',
+        body: 'Notes',
+        targetCommitish: '',
+        prerelease: false,
+        makeLatest: 'legacy' as const,
+        draft: false,
+      }
+      if (operation === 'create')
+        await adapter(octokit).createRelease({ repository, payload })
+      else
+        await adapter(octokit).updateRelease({
+          repository,
+          release: { id: 1, tagName: 'v1' },
+          payload,
+        })
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({ make_latest: 'legacy' }),
+      )
+    },
+  )
+
   it('reads normalized pull request validation data', async () => {
     const octokit = mockOctokit()
     vi.mocked(octokit.rest.pulls.get).mockResolvedValue({

@@ -1,6 +1,6 @@
 {
   "name": "release-drafter",
-  "version": "7.10.0",
+  "version": "7.11.0",
   "description": "Programmatic API and command-line interface for Release Drafter.",
   "type": "module",
   "homepage": "https://github.com/release-drafter/release-drafter",
@@ -59,7 +59,7 @@
     "@release-drafter/gitea-adapter": "*",
     "@release-drafter/github-adapter": "*",
     "@release-drafter/gitlab-adapter": "*",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "license": "ISC",
   "publishConfig": {

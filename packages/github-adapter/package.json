@@ -1,6 +1,6 @@
 {
   "name": "@release-drafter/github-adapter",
-  "version": "7.10.0",
+  "version": "7.11.0",
   "description": "Authentication-bound GitHub adapter for Release Drafter core.",
   "type": "module",
   "engines": {
@@ -36,6 +36,6 @@
     "@release-drafter/core": "*"
   },
   "devDependencies": {
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }

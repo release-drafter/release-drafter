@@ -1,6 +1,6 @@
 name: RFC
 description: Propose and discuss a larger change before implementation.
-title: "RFC: "
+title: 'RFC: '
 labels: [rfc]
 body:
   - type: checkboxes
