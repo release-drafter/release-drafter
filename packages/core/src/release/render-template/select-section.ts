@@ -13,7 +13,7 @@ export const selectSection = (
   selector: string,
 ): string | undefined => {
   const selected = parseHeading(selector)
-  if (!selected || !selected.text)
+  if (!selected?.text)
     throw new Error(
       'Section selectors must be nonempty hash-style headings, such as ## Release information',
     )

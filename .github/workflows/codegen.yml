@@ -46,4 +46,4 @@ jobs:
             > CI checks require workflow approval. A maintainer with write access must select "Approve workflows to run" before merging.
           branch: chore/codegen-update
           delete-branch: true
-          labels: "type: maintenance"
+          labels: 'type: maintenance'
