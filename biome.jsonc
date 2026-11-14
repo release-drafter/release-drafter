@@ -71,6 +71,11 @@
       "bracketSameLine": false,
     },
   },
+  "yaml": {
+    "formatter": {
+      "quoteStyle": "single",
+    },
+  },
   "overrides": [
     {
       "includes": ["*.jsonc", "*.json5"],
