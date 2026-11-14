@@ -568,9 +568,9 @@ var getVersionResolverCategories = (categories) => categories.filter((category) 
 */
 var commonConfigSchema = object({
 	/**
-	* A boolean indicating whether the release being created or updated should be marked as latest.
+	* Whether the release should be marked as latest, or `legacy` to let GitHub choose.
 	*/
-	latest: stringbool().or(boolean()).optional(),
+	latest: stringbool().or(boolean()).or(literal("legacy")).optional(),
 	/**
 	* Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
 	*/
@@ -1579,7 +1579,7 @@ var mergeInputAndConfig = (params) => {
 	};
 	applyOverrides(config, input, logger);
 	const commitish = config.commitish || defaultCommitish || "";
-	const latest = typeof config.latest !== "boolean" ? true : config.latest;
+	const latest = config.latest ?? true;
 	const prerelease = typeof config.prerelease !== "boolean" ? false : config.prerelease;
 	const replacers = config.replacers.map((replacer) => {
 		if (replacer.section !== void 0) return replacer;
@@ -1617,9 +1617,16 @@ var applyOverrides = (config, input, logger) => {
 	applyStringOverride(config, input, "prerelease-identifier", logger);
 	applyBooleanOverride(config, input, "prerelease", logger);
 	applyBooleanOverride(config, input, "include-pre-releases", logger);
-	applyBooleanOverride(config, input, "latest", logger);
+	applyLatestOverride(config, input, logger);
 	applyStringOverride(config, input, "filter-by-range", logger);
 	applyReleaseModeOverrides(config, input, logger);
+};
+var applyLatestOverride = (config, input, logger) => {
+	const inputValue = input.latest;
+	if (inputValue === void 0) return;
+	const configValue = config.latest;
+	if (configValue !== void 0 && configValue !== inputValue) logger.info(`Input's latest "${inputValue}" overrides config's latest "${configValue}"`);
+	config.latest = inputValue;
 };
 var applyReleaseModeOverrides = (config, input, logger) => {
 	const hasInputPrerelease = typeof input.prerelease === "boolean";
@@ -1630,6 +1637,7 @@ var applyReleaseModeOverrides = (config, input, logger) => {
 	}
 	if (config.prerelease) {
 		if (config.latest === true) logger.warning("'prerelease' and 'latest' cannot be both true. Switch 'latest' to false - release will be a pre-release.");
+		else if (config.latest === "legacy") logger.warning("'latest' cannot be 'legacy' when 'prerelease' is true. Switch 'latest' to false - release will be a pre-release.");
 		config.latest = false;
 	}
 };

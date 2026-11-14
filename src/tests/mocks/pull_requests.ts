@@ -39,7 +39,7 @@ const nockSinglePrFiles = (params: {
     .post(
       '/graphql',
       (body) =>
-        body.query.includes('query findPullRequestChangedFiles') &&
+        body?.query?.includes('query findPullRequestChangedFiles') &&
         body.variables.owner === owner &&
         body.variables.name === repo &&
         body.variables.number === number,

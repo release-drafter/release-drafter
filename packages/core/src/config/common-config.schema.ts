@@ -1,5 +1,5 @@
 import type * as z from 'zod'
-import { boolean, object, string, stringbool } from 'zod'
+import { boolean, literal, object, string, stringbool } from 'zod'
 
 /**
  * Configuration parameters that can be specified in both
@@ -12,9 +12,9 @@ import { boolean, object, string, stringbool } from 'zod'
  */
 export const commonConfigSchema = object({
   /**
-   * A boolean indicating whether the release being created or updated should be marked as latest.
+   * Whether the release should be marked as latest, or `legacy` to let GitHub choose.
    */
-  latest: stringbool().or(boolean()).optional(),
+  latest: stringbool().or(boolean()).or(literal('legacy')).optional(),
   /**
    * Whether to draft a prerelease, with changes since another prerelease (if applicable). Default `false`.
    */
