@@ -1,0 +1,22 @@
+query pollCommitAssociations(
+  $ids: [ID!]!
+  $withPullRequestBody: Boolean!
+  $withPullRequestURL: Boolean!
+  $withBaseRefName: Boolean!
+  $withHeadRefName: Boolean!
+) {
+  nodes(ids: $ids) {
+    ... on Commit {
+      id
+      associatedPullRequests(first: 100) {
+        totalCount
+        nodes {
+          ...AdapterPullRequestFields
+          mergeCommit {
+            oid
+          }
+        }
+      }
+    }
+  }
+}

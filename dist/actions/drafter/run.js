@@ -1,5 +1,5 @@
 import { A as info, C as stringbool, D as context, S as string, c as writeActionOutputs, d as getRepository, f as noopLogger, i as sharedInputSchema, j as setFailed, l as actionLogger, o as defineActionInputNames, p as escapeStringRegexp, s as readActionInputs, u as getGitHubAdapter, x as object } from "../../chunks/config.js";
-import { _ as filterPullRequestsByPreCategories, a as COERCE, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, x as needsPullRequestChangedFiles, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
+import { C as changeForCategory, D as splitCommitMessage, E as commitAuthors, S as changeDate, T as commitAuthorKey, _ as filterChangesByPreCategories, a as COERCE, c as PRERELEASE_LOOSE, d as formatFullVersion, f as parse, g as evaluateCategories, h as commonConfigSchema, i as satisfies, l as compareIdentifiers, m as tryParse$1, n as mergeInputAndConfig, o as COERCE_FULL, p as safeRegex, r as normalizeRange, s as PRERELEASE, t as getReleaseDrafterConfig, u as formatComparableVersion, v as getChangelogCategories, w as changeTitle, x as needsPullRequestChangedFiles, y as getVersionResolverCategories } from "../../chunks/get-release-drafter-config.js";
 // node_modules/verkit/dist/version-Co1j9Tpq.js
 var COERCE_EXACT = safeRegex(COERCE);
 var COERCE_FULL_EXACT = safeRegex(COERCE_FULL);
@@ -148,28 +148,28 @@ function getPrerelease(version, options = {}) {
 	const parsed = tryParse$1(version, options);
 	return parsed ? [...parsed.prerelease || []] : null;
 }
-// packages/core/src/release/categorize-pull-requests.ts
-var categorizePullRequests = (params) => {
-	const { pullRequests, config } = params;
+// packages/core/src/release/categorize-changes.ts
+var categorizeChanges = (params) => {
+	const { changes, config } = params;
 	const changelogCategories = getChangelogCategories(config.categories);
-	const categorizedPullRequests = changelogCategories.map((category) => ({
+	const categorizedChanges = changelogCategories.map((category) => ({
 		...category,
-		pullRequests: []
+		changes: []
 	}));
-	const uncategorizedPullRequests = [];
-	for (const pullRequest of pullRequests) {
-		const evaluation = evaluateCategories(pullRequest, config.categories);
+	const uncategorizedChanges = [];
+	for (const change of changes) {
+		const evaluation = evaluateCategories(changeForCategory(change), config.categories);
 		if (!evaluation.included) continue;
 		if (evaluation.changelogCategories.length === 0) {
-			uncategorizedPullRequests.push(pullRequest);
+			uncategorizedChanges.push(change);
 			continue;
 		}
 		for (const matchedCategory of evaluation.changelogCategories) {
 			const index = changelogCategories.indexOf(matchedCategory);
-			if (index !== -1) categorizedPullRequests[index].pullRequests.push(pullRequest);
+			if (index !== -1) categorizedChanges[index].changes.push(change);
 		}
 	}
-	return [uncategorizedPullRequests, categorizedPullRequests];
+	return [uncategorizedChanges, categorizedChanges];
 };
 // packages/core/src/release/render-template/select-section.ts
 var parseHeading = (line) => {
@@ -584,6 +584,250 @@ var renderTemplate = (params) => {
 	});
 	return applyReplacers(input, replacers);
 };
+// packages/core/src/release/generate-contributors-sentence.ts
+var botSuffix = "[bot]";
+var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
+var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
+var renderAuthorMention = (contributor, serverUrl) => {
+	if ("name" in contributor) return contributor.name;
+	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.url ?? `${serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
+	if (botUrl) return `[@${contributor.login}](${botUrl})`;
+	return `@${contributor.login}`;
+};
+var generateContributorsSentence = (params) => {
+	const { commits, changes, config, serverUrl } = params;
+	const includedChanges = filterChangesByPreCategories(changes, config.categories);
+	return generateAuthorsSentence({
+		commits,
+		pullRequests: includedChanges.flatMap((change) => change.type === "pull-request" ? [change.pullRequest] : []),
+		directCommits: includedChanges.flatMap((change) => change.type === "commit" ? [change.commit] : []),
+		serverUrl,
+		excludeContributors: config["exclude-contributors"],
+		noAuthorsTemplate: config["no-contributors-template"]
+	});
+};
+var generateAuthorsSentence = (params) => {
+	const { commits, pullRequests, directCommits = [] } = params;
+	const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey));
+	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
+	const contributors = /* @__PURE__ */ new Map();
+	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
+	const addAuthor = (author) => {
+		if (params.excludeBots && (author?.type === "Bot" || author?.login?.endsWith(botSuffix))) return;
+		if (author?.login) {
+			const isBot = author.type === "Bot";
+			const login = normalizeLogin(author.login, isBot);
+			contributors.set(`login:${login}`, {
+				login,
+				url: author.url,
+				isBot
+			});
+		} else if (author?.name) contributors.set(author.email ? `email:${author.email.toLowerCase()}` : `name:${author.name}`, {
+			name: author.name,
+			url: author.url
+		});
+	};
+	for (const commit of commits) {
+		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
+		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) addAuthor(author);
+	}
+	for (const commit of directCommits) for (const author of commitAuthors(commit)) addAuthor(author);
+	for (const pullRequest of pullRequests) if (pullRequest.author) {
+		const isBot = pullRequest.author.type === "Bot";
+		const login = normalizeLogin(pullRequest.author.login, isBot);
+		pullRequestAuthorLogins.add(login);
+		contributors.set(`login:${login}`, {
+			login,
+			url: pullRequest.author.url,
+			isBot
+		});
+	}
+	const sortedContributors = [...contributors.values()].filter((contributor) => !(params.excludeContributors ?? []).some((excluded) => "name" in contributor ? excluded === contributor.name : excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
+		const aIsPullRequestAuthor = "login" in a && pullRequestAuthorLogins.has(a.login);
+		if (aIsPullRequestAuthor !== ("login" in b && pullRequestAuthorLogins.has(b.login))) return aIsPullRequestAuthor ? -1 : 1;
+		const aIsBot = "login" in a && (a.isBot || a.login.endsWith(botSuffix));
+		if (aIsBot !== ("login" in b && (b.isBot || b.login.endsWith(botSuffix)))) return aIsBot ? 1 : -1;
+		const aName = "name" in a ? a.name : a.login;
+		const bName = "name" in b ? b.name : b.login;
+		return aName.localeCompare(bName);
+	});
+	if (sortedContributors.length === 0) return params.noAuthorsTemplate ?? "";
+	if (params.authorTemplate !== void 0) {
+		const authorTemplate = params.authorTemplate;
+		const authors = sortedContributors.map((contributor) => {
+			const author = "name" in contributor ? contributor.name : contributor.login;
+			return renderTemplate({
+				template: authorTemplate,
+				object: {
+					$AUTHOR: author,
+					$AUTHOR_MENTION: renderAuthorMention(contributor, params.serverUrl),
+					$AUTHOR_URL: contributor.url ?? ""
+				}
+			});
+		});
+		const separator = params.authorsSeparator ?? ", ";
+		if (params.authorsFinalSeparator !== void 0 && authors.length > 1) return `${authors.slice(0, -1).join(separator)}${params.authorsFinalSeparator}${authors.at(-1)}`;
+		return authors.join(separator);
+	}
+	const mentions = sortedContributors.map((contributor) => renderAuthorMention(contributor, params.serverUrl));
+	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
+	return mentions[0];
+};
+var generateNewContributorsList = (params) => {
+	const { changes, newContributorLogins, newCommitContributors = [], config } = params;
+	const includedChanges = filterChangesByPreCategories(changes, config.categories);
+	const firstChangeByContributor = /* @__PURE__ */ new Map();
+	const newCommitContributorKeys = new Set(newCommitContributors.flatMap((author) => {
+		const key = commitAuthorKey(author);
+		return key ? [key] : [];
+	}));
+	for (const change of includedChanges) {
+		const author = change.type === "pull-request" ? change.pullRequest.author : change.commit.author;
+		if (!author) continue;
+		const key = commitAuthorKey(author);
+		if (!key) continue;
+		if (!(change.type === "pull-request" ? Boolean(author.login && newContributorLogins.has(author.login)) : newCommitContributorKeys.has(key))) continue;
+		const identity = author.login ?? ("name" in author ? author.name : void 0);
+		if (identity && config["exclude-contributors"].includes(identity)) continue;
+		const previous = firstChangeByContributor.get(key);
+		if (!previous || (changeDate(change) ?? "") < (changeDate(previous.change) ?? "")) firstChangeByContributor.set(key, {
+			change,
+			author
+		});
+	}
+	const entries = [...firstChangeByContributor.values()].sort((a, b) => (changeDate(a.change) ?? "").localeCompare(changeDate(b.change) ?? "") || (a.change.type === "pull-request" && b.change.type === "pull-request" ? a.change.pullRequest.number - b.change.pullRequest.number : 0));
+	if (entries.length === 0) return config["no-new-contributor-template"];
+	return entries.map(({ change, author }) => {
+		const login = author.login;
+		const title = change.type === "pull-request" ? change.pullRequest.title : change.commit.message?.split(/\r?\n/, 1)[0] ?? change.commit.oid;
+		const url = change.type === "pull-request" ? change.pullRequest.url ?? "" : change.commit.url ?? "";
+		const reference = change.type === "pull-request" ? `#${change.pullRequest.number}` : change.commit.url ? `[\`${change.commit.oid.slice(0, 7)}\`](${change.commit.url})` : `\`${change.commit.oid.slice(0, 7)}\``;
+		return renderTemplate({
+			template: config["new-contributor-template"],
+			object: {
+				$AUTHOR: login ?? author.name ?? "ghost",
+				$AUTHOR_MENTION: login ? `@${login}` : author.name ?? "ghost",
+				$AUTHOR_URL: author.url ?? "",
+				$CHANGE_TYPE: change.type,
+				$CHANGE_TITLE: title,
+				$CHANGE_URL: url,
+				$CHANGE_REFERENCE: reference,
+				$CHANGE_DATE: changeDate(change) ?? ""
+			}
+		});
+	}).join("\n");
+};
+// packages/core/src/release/change-to-string.ts
+/** Escapes selected characters, skipping backtick-delimited text unless backticks are selected. */
+var escapeChangeText = (params) => {
+	if (params.text == null || !params.escapes) return params.text;
+	return params.text.replace(new RegExp(`[${escapeStringRegexp(params.escapes)}]|\`.*?\``, params.multiline ? "gs" : "g"), (match, offset, text) => {
+		if (match.length > 1) return match;
+		if (match === "@" || match === "#") return `${match}<!---->`;
+		if (params.multiline && !params.escapes?.includes("\\")) {
+			let start = offset;
+			while (start > 0 && text[start - 1] === "\\") start--;
+			if ((offset - start) % 2 === 1) return match;
+		}
+		return `\\${match}`;
+	});
+};
+var commitAuthorName = (author) => {
+	if (!author) return "ghost";
+	return author.login ?? author.name ?? "ghost";
+};
+var changeToString = (params) => params.changes.map((change) => {
+	const authorTemplate = params.config["change-author-template"];
+	const authors = generateAuthorsSentence({
+		commits: params.commits,
+		pullRequests: change.type === "pull-request" ? change.group?.pullRequests ?? [change.pullRequest] : [],
+		directCommits: change.type === "commit" ? [change.commit] : [],
+		serverUrl: params.serverUrl,
+		excludeBots: params.config["change-authors-exclude-bots"],
+		noAuthorsTemplate: renderTemplate({
+			template: authorTemplate,
+			object: {
+				$AUTHOR: "ghost",
+				$AUTHOR_MENTION: "@ghost",
+				$AUTHOR_URL: ""
+			}
+		}),
+		authorTemplate,
+		authorsSeparator: params.config["change-authors-separator"],
+		authorsFinalSeparator: params.config["change-authors-final-separator"]
+	});
+	const renderText = (text, target) => escapeChangeText({
+		text: applyReplacers(text, params.config.replacers, target),
+		escapes: params.config[target === "change-title" ? "change-title-escapes" : "change-body-escapes"],
+		multiline: target === "change-body"
+	});
+	if (change.type === "pull-request") {
+		const { pullRequest } = change;
+		const author = pullRequest.author ? pullRequest.author.type === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login : "ghost";
+		const authorUrl = pullRequest.author?.url ?? "";
+		const title = renderText(change.group?.title ?? pullRequest.title, "change-title");
+		const hasSectionRule = params.config.replacers.some((rule) => rule.target === "change-body" && rule.section !== void 0);
+		const body = pullRequest.body == null && !hasSectionRule ? "" : renderText(pullRequest.body ?? "", "change-body");
+		return renderTemplate({
+			template: params.config["pr-template"] ?? params.config["change-template"],
+			object: {
+				$CHANGE_TYPE: "pull-request",
+				$CHANGE_CATEGORY: params.categoryTitle ?? "",
+				$CHANGE_TITLE: title,
+				$CHANGE_BODY: body,
+				$CHANGE_URL: pullRequest.url ?? "",
+				$CHANGE_REFERENCE: `#${pullRequest.number}`,
+				$CHANGE_AUTHOR: author,
+				$CHANGE_AUTHOR_URL: authorUrl,
+				$CHANGE_AUTHORS: authors,
+				$CHANGE_DATE: pullRequest.mergedAt ?? "",
+				$PR_NUMBER: pullRequest.number,
+				$PR_NUMBERS: (change.group?.pullRequests ?? [pullRequest]).map(({ number }) => `#${number}`).join(", "),
+				$PR_TITLE: title,
+				$PR_BODY: body,
+				$PR_URL: pullRequest.url ?? "",
+				$PR_AUTHOR: author,
+				$PR_AUTHOR_URL: authorUrl,
+				$PR_BASE_REF_NAME: pullRequest.baseRefName ?? "",
+				$PR_HEAD_REF_NAME: pullRequest.headRefName ?? "",
+				$PR_MERGED_DATE: pullRequest.mergedAt ?? ""
+			}
+		});
+	}
+	const { commit } = change;
+	const message = splitCommitMessage(commit.message);
+	const author = commitAuthorName(commit.author);
+	const authorUrl = commit.author?.url ?? "";
+	const title = renderText(message.title || commit.oid, "change-title");
+	const body = renderText(message.body, "change-body");
+	const shortSha = commit.oid.slice(0, 7);
+	const reference = commit.url ? `[\`${shortSha}\`](${commit.url})` : `\`${shortSha}\``;
+	return renderTemplate({
+		template: params.config["commit-template"] ?? params.config["change-template"],
+		object: {
+			$CHANGE_TYPE: "commit",
+			$CHANGE_CATEGORY: params.categoryTitle ?? "",
+			$CHANGE_TITLE: title,
+			$CHANGE_BODY: body,
+			$CHANGE_URL: commit.url ?? "",
+			$CHANGE_REFERENCE: reference,
+			$CHANGE_AUTHOR: author,
+			$CHANGE_AUTHOR_URL: authorUrl,
+			$CHANGE_AUTHORS: authors,
+			$CHANGE_DATE: commit.committedAt ?? "",
+			$COMMIT_SHA: commit.oid,
+			$COMMIT_SHA_SHORT: shortSha,
+			$COMMIT_TITLE: title,
+			$COMMIT_BODY: body,
+			$COMMIT_MESSAGE: commit.message ?? "",
+			$COMMIT_URL: commit.url ?? "",
+			$COMMIT_AUTHOR: author,
+			$COMMIT_AUTHOR_URL: authorUrl,
+			$COMMIT_AUTHORED_DATE: commit.authoredAt ?? "",
+			$COMMIT_COMMITTED_DATE: commit.committedAt ?? ""
+		}
+	});
+}).join("\n");
 // packages/core/src/release/group-changes.ts
 /**
 * Groups pull requests whose titles match the same `group` of a `group-changes`
@@ -673,203 +917,54 @@ var groupTitle = (params) => {
 	logger?.debug(`Grouped ${pullRequests.map(({ number }) => `#${number}`).join(", ")} into '${title}'`);
 	return title;
 };
-// packages/core/src/release/generate-contributors-sentence.ts
-var botSuffix = "[bot]";
-var pullRequestKey = (pullRequest) => `${pullRequest.baseRepository}#${pullRequest.number}`;
-var normalizeLogin = (login, isBot = false) => isBot && !login.endsWith(botSuffix) ? `${login}${botSuffix}` : login;
-var renderAuthorMention = (contributor, serverUrl) => {
-	if ("name" in contributor) return contributor.name;
-	const botUrl = contributor.login.endsWith(botSuffix) ? contributor.botUrl ?? `${serverUrl.replace(/\/$/, "")}/apps/${contributor.login.slice(0, -5)}` : void 0;
-	if (botUrl) return `[@${contributor.login}](${botUrl})`;
-	return `@${contributor.login}`;
-};
-var generateContributorsSentence = (params) => {
-	const { commits, pullRequests, config, serverUrl } = params;
-	const includedPullRequests = filterPullRequestsByPreCategories(pullRequests, config.categories);
-	return generateAuthorsSentence({
-		commits,
-		pullRequests: includedPullRequests,
-		serverUrl,
-		excludeContributors: config["exclude-contributors"],
-		noAuthorsTemplate: config["no-contributors-template"]
-	});
-};
-var generateAuthorsSentence = (params) => {
-	const { commits, pullRequests } = params;
-	const includedPullRequestKeys = new Set(pullRequests.map(pullRequestKey));
-	const includedMergeCommitOids = new Set(pullRequests.flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
-	const contributors = /* @__PURE__ */ new Map();
-	const pullRequestAuthorLogins = /* @__PURE__ */ new Set();
-	for (const commit of commits) {
-		if (!includedMergeCommitOids.has(commit.oid) && !commit.associatedPullRequests?.some((pullRequest) => pullRequest && includedPullRequestKeys.has(pullRequestKey(pullRequest)))) continue;
-		for (const author of commit.authors ?? (commit.author ? [commit.author] : [])) {
-			if (params.excludeBots && (author?.type === "Bot" || author?.login?.endsWith(botSuffix))) continue;
-			if (author?.login) {
-				const login = normalizeLogin(author.login);
-				contributors.set(`login:${login}`, { login });
-			} else if (author?.name) contributors.set(`name:${author.name}`, { name: author.name });
-		}
-	}
-	for (const pullRequest of pullRequests) if (pullRequest.author) {
-		const isBot = pullRequest.author.type === "Bot";
-		const login = normalizeLogin(pullRequest.author.login, isBot);
-		pullRequestAuthorLogins.add(login);
-		contributors.set(`login:${login}`, {
-			login,
-			botUrl: isBot ? pullRequest.author.url : void 0
-		});
-	}
-	const sortedContributors = [...contributors.values()].filter((contributor) => "name" in contributor || !(params.excludeContributors ?? []).some((excluded) => excluded === contributor.login || `${excluded}${botSuffix}` === contributor.login)).sort((a, b) => {
-		const aIsPullRequestAuthor = "login" in a && pullRequestAuthorLogins.has(a.login);
-		if (aIsPullRequestAuthor !== ("login" in b && pullRequestAuthorLogins.has(b.login))) return aIsPullRequestAuthor ? -1 : 1;
-		const aIsBot = "login" in a && (a.botUrl !== void 0 || a.login.endsWith(botSuffix));
-		if (aIsBot !== ("login" in b && (b.botUrl !== void 0 || b.login.endsWith(botSuffix)))) return aIsBot ? 1 : -1;
-		const aName = "name" in a ? a.name : a.login;
-		const bName = "name" in b ? b.name : b.login;
-		return aName.localeCompare(bName);
-	});
-	if (sortedContributors.length === 0) return params.noAuthorsTemplate ?? "";
-	if (params.authorTemplate !== void 0) {
-		const authorTemplate = params.authorTemplate;
-		const authors = sortedContributors.map((contributor) => {
-			const author = "name" in contributor ? contributor.name : contributor.login;
-			return renderTemplate({
-				template: authorTemplate,
-				object: {
-					$AUTHOR: author,
-					$AUTHOR_MENTION: renderAuthorMention(contributor, params.serverUrl)
-				}
-			});
-		});
-		const separator = params.authorsSeparator ?? ", ";
-		if (params.authorsFinalSeparator !== void 0 && authors.length > 1) return `${authors.slice(0, -1).join(separator)}${params.authorsFinalSeparator}${authors.at(-1)}`;
-		return authors.join(separator);
-	}
-	const mentions = sortedContributors.map((contributor) => renderAuthorMention(contributor, params.serverUrl));
-	if (mentions.length > 1) return `${mentions.slice(0, -1).join(", ")} and ${mentions.slice(-1)}`;
-	return mentions[0];
-};
-var generateNewContributorsList = (params) => {
-	const { pullRequests, newContributorLogins, config } = params;
-	const firstPullRequestByLogin = /* @__PURE__ */ new Map();
-	const includedPullRequestKeys = new Set(filterPullRequestsByPreCategories(pullRequests, config.categories).map(pullRequestKey));
-	for (const pullRequest of pullRequests) {
-		if (!pullRequest.author || !newContributorLogins.has(pullRequest.author.login) || config["exclude-contributors"].includes(pullRequest.author.login)) continue;
-		const previous = firstPullRequestByLogin.get(pullRequest.author.login);
-		if (!previous || (pullRequest.mergedAt ?? "") < (previous.mergedAt ?? "")) firstPullRequestByLogin.set(pullRequest.author.login, pullRequest);
-	}
-	const entries = [...firstPullRequestByLogin.entries()].filter(([, pullRequest]) => includedPullRequestKeys.has(pullRequestKey(pullRequest))).sort(([, a], [, b]) => (a.mergedAt ?? "").localeCompare(b.mergedAt ?? "") || a.number - b.number);
-	if (entries.length === 0) return config["no-new-contributor-template"];
-	return entries.map(([login, pullRequest]) => renderTemplate({
-		template: config["new-contributor-template"],
-		object: {
-			$AUTHOR: login,
-			$AUTHOR_MENTION: `@${login}`,
-			$AUTHOR_URL: pullRequest.author?.url,
-			$NUMBER: pullRequest.number,
-			$URL: pullRequest.url
-		}
-	})).join("\n");
-};
-// packages/core/src/release/pull-request-to-string.ts
-/** Separator between the pull request numbers of `$NUMBERS`. */
-var numbersSeparator = ", ";
-var pullRequestToString = (params) => params.changes.map((change) => {
-	const pullRequest = change.representative;
-	const body = pullRequest.body ?? (params.config.replacers.some((rule) => rule.target === "change-body" && rule.section !== void 0) ? "" : pullRequest.body);
-	let pullAuthor = "ghost";
-	if (pullRequest.author) pullAuthor = pullRequest.author.type === "Bot" ? `[${pullRequest.author.login}[bot]](${pullRequest.author.url})` : pullRequest.author.login;
-	const authorTemplate = params.config["change-author-template"];
-	return renderTemplate({
-		template: params.config["change-template"],
-		object: {
-			$CATEGORY: params.category ?? "",
-			$TITLE: escapeChangeText({
-				text: applyReplacers(change.title, params.config.replacers, "change-title"),
-				escapes: params.config["change-title-escapes"]
-			}),
-			$NUMBER: pullRequest.number.toString(),
-			$NUMBERS: change.pullRequests.map(({ number }) => `#${number}`).join(numbersSeparator),
-			$AUTHORS: generateAuthorsSentence({
-				commits: params.commits,
-				pullRequests: change.pullRequests,
-				serverUrl: params.serverUrl,
-				excludeBots: params.config["change-authors-exclude-bots"],
-				noAuthorsTemplate: renderTemplate({
-					template: authorTemplate,
-					object: {
-						$AUTHOR: "ghost",
-						$AUTHOR_MENTION: "@ghost"
-					}
-				}),
-				authorTemplate,
-				authorsSeparator: params.config["change-authors-separator"],
-				authorsFinalSeparator: params.config["change-authors-final-separator"]
-			}),
-			$AUTHOR: pullAuthor,
-			$AUTHOR_URL: pullRequest.author?.url ?? "",
-			$BODY: escapeChangeText({
-				text: body == null ? body : applyReplacers(body, params.config.replacers, "change-body"),
-				escapes: params.config["change-body-escapes"],
-				multiline: true
-			}),
-			$URL: pullRequest.url,
-			$BASE_REF_NAME: pullRequest.baseRefName,
-			$HEAD_REF_NAME: pullRequest.headRefName
-		}
-	});
-}).join("\n");
-/** Escapes selected characters, skipping backtick-delimited text unless backticks are selected. */
-var escapeChangeText = (params) => {
-	if (params.text == null || !params.escapes) return params.text;
-	return params.text.replace(new RegExp(`[${escapeStringRegexp(params.escapes)}]|\`.*?\``, params.multiline ? "gs" : "g"), (match, offset, text) => {
-		if (match.length > 1) return match;
-		if (match === "@" || match === "#") return `${match}<!---->`;
-		if (params.multiline && !params.escapes?.includes("\\")) {
-			let start = offset;
-			while (start > 0 && text[start - 1] === "\\") start--;
-			if ((offset - start) % 2 === 1) return match;
-		}
-		return `\\${match}`;
-	});
-};
 // packages/core/src/release/generate-changelog.ts
 var generateChangeLog = (params) => {
-	const { commits = [], logger = noopLogger, pullRequests, serverUrl, config } = params;
-	const [uncategorizedPullRequests, categorizedPullRequests] = categorizePullRequests({
-		pullRequests,
+	const { commits = [], logger = noopLogger, changes, serverUrl, config } = params;
+	const [uncategorizedChanges, categorizedChanges] = categorizeChanges({
+		changes,
 		config
 	});
-	if (uncategorizedPullRequests.length + categorizedPullRequests.reduce((sum, category) => sum + category.pullRequests.length, 0) === 0) return config["no-changes-template"];
+	if (uncategorizedChanges.length + categorizedChanges.reduce((sum, category) => sum + category.changes.length, 0) === 0) return config["no-changes-template"];
 	const changeLog = [];
-	const toGroupedChanges = (categoryPullRequests) => groupChanges({
-		pullRequests: categoryPullRequests,
-		rules: config["group-changes"],
-		logger
-	});
-	if (uncategorizedPullRequests.length > 0) changeLog.push(pullRequestToString({
-		changes: toGroupedChanges(uncategorizedPullRequests),
+	const toGroupedChanges = (changes) => {
+		const groups = groupChanges({
+			pullRequests: changes.flatMap((change) => change.type === "pull-request" ? [change.pullRequest] : []),
+			rules: config["group-changes"],
+			logger
+		});
+		const byRepresentative = new Map(groups.map((group) => [group.representative, group]));
+		return changes.flatMap((change) => {
+			if (change.type === "commit") return [change];
+			const group = byRepresentative.get(change.pullRequest);
+			return group ? [{
+				...change,
+				group
+			}] : [];
+		});
+	};
+	if (uncategorizedChanges.length > 0) changeLog.push(changeToString({
 		commits,
+		changes: toGroupedChanges(uncategorizedChanges),
 		serverUrl,
 		config
 	}), "\n\n");
-	const nonEmptyCategories = categorizedPullRequests.filter((category) => category.pullRequests.length > 0);
+	const nonEmptyCategories = categorizedChanges.filter((category) => category.changes.length > 0);
 	for (const [index, category] of nonEmptyCategories.entries()) {
 		const categoryTitle = renderTemplate({
 			template: config["category-template"],
 			object: { $TITLE: category.title }
 		});
 		if (categoryTitle) changeLog.push(categoryTitle, "\n\n");
-		const changes = toGroupedChanges(category.pullRequests);
-		const pullRequestString = pullRequestToString({
-			category: category.title,
-			changes,
+		const groupedChanges = toGroupedChanges(category.changes);
+		const changeString = changeToString({
+			categoryTitle: category.title,
+			changes: groupedChanges,
 			commits,
 			serverUrl,
 			config
 		});
-		if (category["collapse-after"] !== -1 && changes.length > category["collapse-after"]) changeLog.push("<details>", "\n", `<summary>${changes.length} change${changes.length > 1 ? "s" : ""}</summary>`, "\n\n", pullRequestString, "\n", "</details>");
-		else changeLog.push(pullRequestString);
+		if (category["collapse-after"] !== -1 && groupedChanges.length > category["collapse-after"]) changeLog.push("<details>", "\n", `<summary>${groupedChanges.length} change${groupedChanges.length > 1 ? "s" : ""}</summary>`, "\n\n", changeString, "\n", "</details>");
+		else changeLog.push(changeString);
 		if (index + 1 !== nonEmptyCategories.length) changeLog.push("\n\n");
 	}
 	return changeLog.join("").trim();
@@ -1063,11 +1158,11 @@ var priority = {
 };
 var highestIncrement = (increments, fallback = "patch") => increments.reduce((current, increment) => priority[increment] > priority[current] ? increment : current, fallback);
 var resolveVersionKeyIncrement = (params) => {
-	const { pullRequests, config, logger } = params;
+	const { changes, config, logger } = params;
 	const changelogIncrements = [];
 	const explicitResolverIncrements = [];
-	for (const pullRequest of pullRequests) {
-		const evaluation = evaluateCategories(pullRequest, config.categories);
+	for (const change of changes) {
+		const evaluation = evaluateCategories(changeForCategory(change), config.categories);
 		if (!evaluation.included) continue;
 		for (const category of evaluation.changelogCategories) if (category["semver-increment"] in priority) changelogIncrements.push(category["semver-increment"]);
 		if (!evaluation.usedVersionFallback) {
@@ -1083,23 +1178,74 @@ var resolveVersionKeyIncrement = (params) => {
 	logger.info(`Resolved version increment: ${versionKeyIncrement}`);
 	return versionKeyIncrement;
 };
-// packages/core/src/release/sort-pull-requests.ts
-var sortPullRequests = (params) => {
-	const { pullRequests, logger, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
-	const getSortField = sortBy === "title" ? getTitle : getMergedAt;
+// packages/core/src/release/select-changes.ts
+var hasLocalPrAssociation = (commit, mergeCommitOids) => mergeCommitOids.has(commit.oid) || Boolean(commit.associatedPullRequests?.some(Boolean));
+var hasExplicitForgePrAssociation = (commit) => commit.associationStatus === "associated";
+var hasUnresolvedForgePrAssociation = (commit) => commit.associationStatus === "unresolved";
+var associationRank = {
+	unresolved: 0,
+	unassociated: 1,
+	associated: 2
+};
+/** Selects the deduplicated release entries, omitting commits represented by PRs. */
+var selectChanges = (params) => {
+	const pullRequests = /* @__PURE__ */ new Map();
+	for (const pullRequest of params.pullRequests) {
+		const key = `${pullRequest.baseRepository ?? ""}#${pullRequest.number}`;
+		if (!pullRequests.has(key)) pullRequests.set(key, pullRequest);
+	}
+	const changes = [...pullRequests.values()].map((pullRequest) => ({
+		type: "pull-request",
+		pullRequest
+	}));
+	if (!params.config["include-commits"]) return changes;
+	const mergeCommitOids = new Set([...pullRequests.values()].flatMap((pullRequest) => pullRequest.mergeCommitOid ? [pullRequest.mergeCommitOid] : []));
+	const commits = /* @__PURE__ */ new Map();
+	for (const commit of params.commits) {
+		const existing = commits.get(commit.oid);
+		if (!existing || associationRank[commit.associationStatus] > associationRank[existing.associationStatus] || !existing.associatedPullRequests?.some(Boolean) && commit.associatedPullRequests?.some(Boolean)) commits.set(commit.oid, commit);
+	}
+	let unresolvedCount = 0;
+	for (const commit of commits.values()) {
+		if (hasUnresolvedForgePrAssociation(commit)) {
+			unresolvedCount += 1;
+			continue;
+		}
+		if (hasLocalPrAssociation(commit, mergeCommitOids) || hasExplicitForgePrAssociation(commit)) continue;
+		changes.push({
+			type: "commit",
+			commit
+		});
+	}
+	if (unresolvedCount > 0) params.logger?.warning(unresolvedCount === 1 ? "Skipped 1 commit because the forge could not determine its pull request association. It was omitted to prevent a potential duplicate release entry." : `Skipped ${unresolvedCount} commits because the forge could not determine their pull request associations. They were omitted to prevent potential duplicate release entries.`);
+	return changes;
+};
+// packages/core/src/release/sort-changes.ts
+var sortChanges = (params) => {
+	const { changes, logger, config: { "sort-by": sortBy, "sort-direction": sortDirection } } = params;
+	const getSortField = sortBy === "title" ? changeTitle : changeDate;
 	const sort = sortDirection === "ascending" ? sortAscending : sortDescending;
-	return structuredClone(pullRequests).sort((a, b) => {
+	return structuredClone(changes).sort((a, b) => {
 		try {
-			return sort(getSortField(a), getSortField(b));
+			const left = getSortField(a);
+			const right = getSortField(b);
+			return sort(sortBy === "date" ? parseDate(left, logger) : left, sortBy === "date" ? parseDate(right, logger) : right);
 		} catch (error) {
-			logger.warning(`Failed to sort pull-requests ${a.number} and ${b.number} by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
+			logger.warning(`Failed to sort changes by ${sortBy} in ${sortDirection} order. Returning unsorted.`);
 			logger.error(error);
 			return 0;
 		}
 	});
 };
-var getTitle = (pr) => pr.title;
-var getMergedAt = (pr) => pr.mergedAt;
+var parseDate = (value, logger) => {
+	if (value == null) return value;
+	const timestamp = Date.parse(value);
+	if (Number.isNaN(timestamp)) {
+		logger.warning(`Failed to parse change date "${value}". Sorting it last.`);
+		return;
+	}
+	return timestamp;
+};
 var sortAscending = (a, b) => {
 	if (a == null && b == null) return 0;
 	if (a == null) return 1;
@@ -1110,18 +1256,21 @@ var sortAscending = (a, b) => {
 };
 var sortDescending = (a, b) => {
 	if (a == null && b == null) return 0;
-	if (a == null) return -1;
-	if (b == null) return 1;
-	if (a > b) return -1;
-	if (a < b) return 1;
-	return 0;
+	if (a == null) return 1;
+	if (b == null) return -1;
+	return sortAscending(a, b) * -1;
 };
 // packages/core/src/release/build-release-payload.ts
 var buildReleasePayload = async (params) => {
-	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = /* @__PURE__ */ new Set(), pullRequests, repository } = params;
+	const { adapter, commits, config, input, lastRelease, logger, newContributorLogins = /* @__PURE__ */ new Set(), newCommitContributors = [], pullRequests, repository } = params;
 	logger.info("Building release payload and body...");
-	const sortedPullRequests = sortPullRequests({
-		pullRequests,
+	const changes = sortChanges({
+		changes: selectChanges({
+			commits,
+			pullRequests,
+			config,
+			logger
+		}),
 		config,
 		logger
 	});
@@ -1139,19 +1288,20 @@ var buildReleasePayload = async (params) => {
 			$CHANGES: generateChangeLog({
 				commits,
 				logger,
-				pullRequests: sortedPullRequests,
+				changes,
 				serverUrl: repository.serverUrl,
 				config
 			}),
 			$CONTRIBUTORS: generateContributorsSentence({
 				commits,
-				pullRequests: sortedPullRequests,
+				changes,
 				serverUrl: repository.serverUrl,
 				config
 			}),
 			$NEW_CONTRIBUTORS: generateNewContributorsList({
-				pullRequests: sortedPullRequests,
+				changes,
 				newContributorLogins,
+				newCommitContributors,
 				config
 			}),
 			$OWNER: repository.owner,
@@ -1160,7 +1310,7 @@ var buildReleasePayload = async (params) => {
 		replacers: config.replacers
 	});
 	const versionKeyIncrement = resolveVersionKeyIncrement({
-		pullRequests,
+		changes,
 		config,
 		logger
 	});
@@ -1387,17 +1537,18 @@ var draftRelease = async (params) => {
 		releases
 	});
 	const comparisonBase = input.from ?? (lastRelease ? `refs/tags/${lastRelease.tagName}` : void 0);
-	const { commits, newContributorLogins, pullRequests } = comparisonBase ? await adapter.findChanges({
+	const pullRequestTemplate = config["pr-template"] ?? config["change-template"];
+	const { commits, newContributorLogins, newCommitContributors = [], pullRequests } = comparisonBase ? await adapter.findChanges({
 		repository,
 		comparison: {
 			baseRef: comparisonBase,
 			headRef: config.commitish
 		},
 		pullRequestFields: {
-			body: config["change-template"].includes("$BODY"),
-			url: config["change-template"].includes("$URL"),
-			baseRefName: config["change-template"].includes("$BASE_REF_NAME"),
-			headRefName: config["change-template"].includes("$HEAD_REF_NAME")
+			body: pullRequestTemplate.includes("$CHANGE_BODY") || pullRequestTemplate.includes("$PR_BODY"),
+			url: pullRequestTemplate.includes("$CHANGE_URL") || pullRequestTemplate.includes("$PR_URL") || config["new-contributor-template"].includes("$CHANGE_URL"),
+			baseRefName: pullRequestTemplate.includes("$PR_BASE_REF_NAME"),
+			headRefName: pullRequestTemplate.includes("$PR_HEAD_REF_NAME")
 		},
 		pullRequestLimit: config["pull-request-limit"],
 		historyLimit: config["history-limit"],
@@ -1406,16 +1557,22 @@ var draftRelease = async (params) => {
 			config.header,
 			config.template,
 			config.footer
-		].some((template) => template?.includes("$NEW_CONTRIBUTORS"))
+		].some((template) => template?.includes("$NEW_CONTRIBUTORS")),
+		includeCommits: config["include-commits"]
 	}) : (() => {
 		logger.warning("A previous (published) release is required to find changes");
 		return {
 			commits: [],
 			newContributorLogins: /* @__PURE__ */ new Set(),
+			newCommitContributors: [],
 			pullRequests: []
 		};
 	})();
 	if (pullRequests.length > 0) logger.info(`Found ${pullRequests.length} merged pull requests targeting ${repository.owner}/${repository.name}: ${pullRequests.map(({ number }) => `#${number}`).join(", ")}`);
+	if (config["include-commits"]) {
+		const directCommitCount = commits.filter((commit) => commit.associationStatus === "unassociated").length;
+		if (directCommitCount > 0) logger.info(`Found ${directCommitCount} commit${directCommitCount === 1 ? "" : "s"} without pull request associations.`);
+	}
 	const releasePayload = await buildReleasePayload({
 		adapter,
 		commits,
@@ -1424,6 +1581,7 @@ var draftRelease = async (params) => {
 		lastRelease,
 		logger,
 		newContributorLogins,
+		newCommitContributors,
 		pullRequests,
 		repository
 	});

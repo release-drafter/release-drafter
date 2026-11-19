@@ -6,7 +6,7 @@ repository root to run the Drafter action.
 ```yaml
 steps:
   # Runs Autolabeler.
-  - uses: release-drafter/release-drafter/autolabeler@v7
+  - uses: release-drafter/release-drafter/autolabeler@v8
   # Runs Drafter.
-  - uses: release-drafter/release-drafter@v7
+  - uses: release-drafter/release-drafter@v8
 ```
