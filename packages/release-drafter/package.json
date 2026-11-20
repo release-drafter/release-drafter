@@ -45,7 +45,7 @@
     "test:run": "vitest run --config ../../vite.workspace.config.ts"
   },
   "dependencies": {
-    "@gitbeaker/rest": "43.8.0",
+    "@gitbeaker/rest": "44.0.5",
     "@octokit/core": "^7.0.8",
     "@octokit/plugin-paginate-graphql": "^6.0.0",
     "@octokit/plugin-paginate-rest": "^16.0.0",

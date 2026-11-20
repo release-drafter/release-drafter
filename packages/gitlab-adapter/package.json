@@ -25,7 +25,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@gitbeaker/rest": "43.8.0",
+    "@gitbeaker/rest": "44.0.5",
     "@release-drafter/core": "*"
   },
   "devDependencies": {
