@@ -600,7 +600,8 @@ describe('GitLabAdapter', () => {
     ).rejects.toThrow(expected)
   })
 
-  it('rejects comparison request timeouts', async () => {
+  it('rejects comparison request timeouts using only the transport deadline', async () => {
+    const timeout = vi.spyOn(AbortSignal, 'timeout')
     const timeoutFetch = vi.fn<typeof globalThis.fetch>(
       async (_input, init) =>
         new Promise<Response>((_resolve, reject) => {
@@ -611,9 +612,15 @@ describe('GitLabAdapter', () => {
           })
         }),
     )
-    await expect(
-      adapter(timeoutFetch, { timeoutMs: 1 }).findChanges(request()),
-    ).rejects.toThrow('timed out after 1ms')
+    try {
+      await expect(
+        adapter(timeoutFetch, { timeoutMs: 1 }).findChanges(request()),
+      ).rejects.toThrow('timed out after 1ms')
+      expect(timeout.mock.calls).toEqual([[1]])
+      expect(timeoutFetch).toHaveBeenCalledOnce()
+    } finally {
+      timeout.mockRestore()
+    }
   })
 
   it('rejects comparisons without a complete commits array', async () => {

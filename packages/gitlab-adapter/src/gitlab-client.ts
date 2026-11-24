@@ -410,7 +410,8 @@ export class GitLabClient {
     this.api = new Gitlab({
       token: options.token,
       host,
-      queryTimeout: null,
+      // Disable GitBeaker's timeout; the transport times each request attempt.
+      queryTimeout: 0,
       requesterFn: this.transport.requesterFn as never,
     }) as unknown as GitLabApi
   }
