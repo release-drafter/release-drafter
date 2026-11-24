@@ -21,7 +21,7 @@
     }
   },
   "scripts": {
-    "test:run": "vp test run --config ../../vite.workspace.config.ts"
+    "test:run": "vp test run"
   },
   "dependencies": {
     "escape-string-regexp": "^5.0.0",

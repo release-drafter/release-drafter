@@ -40,7 +40,7 @@
   },
   "scripts": {
     "prepack": "node ../../src/scripts/third-party-notices.ts",
-    "test:run": "vp test run --config ../../vite.workspace.config.ts"
+    "test:run": "vp test run"
   },
   "dependencies": {
     "@gitbeaker/rest": "44.1.5",

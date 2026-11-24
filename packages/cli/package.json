@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "test:run": "vp test run --config ../../vite.workspace.config.ts"
+    "test:run": "vp test run"
   },
   "dependencies": {
     "@release-drafter/core": "*",

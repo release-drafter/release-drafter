@@ -1,16 +1,26 @@
 import { defineConfig, type ViteUserConfig } from 'vite-plus'
-import { workspaceConfig } from '../../vite.workspace.config.ts'
+import { createWorkspaceConfig } from '../../vite.workspace.config.ts'
+
+const workspaceConfig = createWorkspaceConfig(import.meta.dirname)
 
 export const publicPackageConfig = {
   ...workspaceConfig,
   run: {
     tasks: {
-      build: {
-        command: 'vp pack && node ../../src/scripts/third-party-notices.ts',
+      'build:package': workspaceConfig.run.tasks.build,
+      'generate:notices': {
+        command: 'node ../../src/scripts/third-party-notices.ts',
         cache: {
-          ...workspaceConfig.run.tasks.build.cache,
-          output: ['dist/**', 'THIRD_PARTY_NOTICES'],
+          input: [{ auto: true }, '!THIRD_PARTY_NOTICES'],
+          output: ['THIRD_PARTY_NOTICES'],
         },
+      },
+      build: {
+        // Each cached step owns only its outputs, so replaying notices cannot
+        // restore an older bundle over a freshly built package.
+        command: 'vp run generate:notices',
+        dependsOn: ['build:package'],
+        cache: false,
       },
     },
   },

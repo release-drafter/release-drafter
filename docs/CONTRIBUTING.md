@@ -57,12 +57,18 @@ root. The `packageManager` field pins npm; installation links each workspace und
 Use `vp run <name>` for repository scripts. Built-in commands such as `vp check`,
 `vp test`, and `vp build` run their tools directly. `vp run build` builds both the
 action bundles and workspace libraries; workspace libraries use `vp pack`.
+Each package's `vite.config.ts` calls `createWorkspaceConfig(import.meta.dirname)`
+from `vite.workspace.config.ts`. The factory resolves package metadata, build
+paths, and the test root from that directory, independently of the caller's
+working directory. Workspace test commands use their package-local config.
 Library builds use `packages/*/tsconfig.build.json` to exclude test declarations.
 `vp check` uses the normal TypeScript configurations, including test sources.
 
 Action builds, workspace package builds, source test runs, schema and Action
 metadata generation, and Knip checks use Vite Task caching. A cache hit restores
 generated outputs and replays the previous result.
+The public package caches its bundles and third-party notices in separate tasks,
+so a notice cache hit cannot overwrite a newly built bundle.
 Source tests also restore coverage reports and fingerprint both coverage
 threshold environment variables. Run `vp run --no-cache ci` to execute all checks
 fresh, or `vp cache clean` to clear local task results.

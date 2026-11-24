@@ -28,14 +28,124 @@ import { actionManifests } from '#src/scripts/action-metadata-config.ts'
 import { collectWorkflowFailures } from '#src/scripts/guard-packages.ts'
 import { syncWorkspaceVersions } from '#src/scripts/sync-workspace-versions.ts'
 import { publicPackageConfig } from '../../../packages/release-drafter/vite.config.ts'
+import { createWorkspaceConfig } from '../../../vite.workspace.config.ts'
 
 describe('workspace foundation', () => {
-  it('discovers the public build task with notice generation from the workspace root', () => {
-    const build = publicPackageConfig.run.tasks.build
-    expect(build.command).toBe(
-      'vp pack && node ../../src/scripts/third-party-notices.ts',
+  it('loads the public package config from the repository root with package-local paths', () => {
+    const root = resolve('packages/release-drafter')
+    const manifest = JSON.parse(
+      readFileSync(join(root, 'package.json'), 'utf8'),
     )
-    expect(build.cache.output).toEqual(['dist/**', 'THIRD_PARTY_NOTICES'])
+
+    expect(publicPackageConfig.root).toBe(root)
+    expect(publicPackageConfig.pack).toMatchObject({
+      cwd: root,
+      entry: {
+        index: join(root, 'src/index.ts'),
+        cli: join(root, 'src/cli.ts'),
+      },
+      outDir: join(root, 'dist'),
+      tsconfig: join(root, 'tsconfig.build.json'),
+      dts: { cwd: root, tsconfig: join(root, 'tsconfig.build.json') },
+      define: { __RELEASE_DRAFTER_VERSION__: JSON.stringify(manifest.version) },
+    })
+  })
+
+  it('keeps package entrypoints and runtime dependencies independent in the same process', () => {
+    const core = createWorkspaceConfig(resolve('packages/core'))
+    const actions = createWorkspaceConfig(resolve('packages/gh-actions'))
+
+    expect(core.pack.entry).toEqual({
+      index: resolve('packages/core/src/index.ts'),
+    })
+    expect(actions.pack.entry).toEqual({
+      index: resolve('packages/gh-actions/src/index.ts'),
+      'drafter/index': resolve('packages/gh-actions/src/drafter/index.ts'),
+      'autolabeler/index': resolve(
+        'packages/gh-actions/src/autolabeler/index.ts',
+      ),
+      'check-pr/index': resolve('packages/gh-actions/src/check-pr/index.ts'),
+      config: resolve('packages/gh-actions/src/config.ts'),
+    })
+    expect(core.pack.inputOptions.external('zod')).toBe(true)
+    expect(publicPackageConfig.pack.inputOptions.external('zod')).toBe(false)
+    expect(core.pack.inputOptions.external('@gitbeaker/rest')).toBe(false)
+    expect(
+      publicPackageConfig.pack.inputOptions.external('@gitbeaker/rest'),
+    ).toBe(true)
+    expect(core.pack.define).toBeUndefined()
+    expect(actions.pack.define).toBeUndefined()
+  })
+
+  it('preserves rebuilt package exports when notice generation hits the cache', () => {
+    const root = mkdtempSync(join(tmpdir(), 'release-drafter-build-cache-'))
+    try {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({ name: 'build-cache-fixture', type: 'module' }),
+      )
+      // Exercise the real task graph and cache settings with lightweight
+      // generators that have the same independent inputs and output locations.
+      const tasks = Object.fromEntries(
+        Object.entries(publicPackageConfig.run.tasks).map(([name, task]) => [
+          name,
+          {
+            ...task,
+            command: task.command
+              .replace('vp pack', 'node build.mjs')
+              .replace(
+                'node ../../src/scripts/third-party-notices.ts',
+                'node notices.mjs',
+              ),
+          },
+        ]),
+      )
+      writeFileSync(
+        join(root, 'vite.config.ts'),
+        `export default ${JSON.stringify({ run: { tasks } })}`,
+      )
+      writeFileSync(
+        join(root, 'build.mjs'),
+        `import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+mkdirSync('dist', { recursive: true })
+writeFileSync('dist/index.js', 'export default ' + readFileSync('version.json', 'utf8'))
+`,
+      )
+      writeFileSync(
+        join(root, 'notices.mjs'),
+        `import { writeFileSync } from 'node:fs'
+writeFileSync('THIRD_PARTY_NOTICES', 'fixture notices')
+`,
+      )
+      const build = () =>
+        execFileSync(resolve('node_modules/.bin/vp'), ['run', 'build'], {
+          cwd: root,
+          encoding: 'utf8',
+        })
+      const version = () =>
+        execFileSync(
+          process.execPath,
+          [
+            '--input-type=module',
+            '-e',
+            "import version from './dist/index.js'; process.stdout.write(String(version))",
+          ],
+          { cwd: root, encoding: 'utf8' },
+        )
+
+      writeFileSync(join(root, 'version.json'), '1')
+      build()
+      expect(version()).toBe('1')
+
+      writeFileSync(join(root, 'version.json'), '2')
+      expect(build()).toMatch(/node notices\.mjs[^\n]*cache hit/u)
+      expect(version()).toBe('2')
+      expect(readFileSync(join(root, 'THIRD_PARTY_NOTICES'), 'utf8')).toBe(
+        'fixture notices',
+      )
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 
   it('regenerates missing Action manifests from authored templates', () => {
