@@ -26,7 +26,8 @@ The pull request cannot be merged until this acknowledgement is recorded.
 ## Submitting a pull request
 
 1. [Fork][fork] and clone the repository.
-2. Install the dependencies with `vp install`.
+2. Install the dependencies with `vp install`, then enable the commit hooks with
+   `vp hooks enable`.
 3. Create a branch with `git checkout -b my-branch-name`.
 4. Make your change and add tests. Before you push, run `vp run ci`. This
    command checks formatting, lint rules, and types, runs tests, and builds the
@@ -50,9 +51,19 @@ Open a draft pull request to request early feedback or report a blocker.
 
 ## Workspace development
 
-Release Drafter uses Vite+ with npm workspaces. Run `vp install` from the repository
-root. The `packageManager` field pins npm; installation links each workspace under
-`packages/*` and updates `package-lock.json`.
+Release Drafter uses Vite+ with npm workspaces. Set up each new clone from the
+repository root:
+
+```sh
+vp install
+vp hooks enable
+```
+
+The `packageManager` field pins npm; installation links each workspace under
+`packages/*` and updates `package-lock.json`. The repository's `.npmrc` sets
+`ignore-scripts=true`, so installation skips the `prepare` script. Enable hooks
+explicitly once per clone; `vp hooks status` verifies the setup. The pre-commit
+hook runs `vp staged` to format, lint, and type-check staged files.
 
 Use `vp run <name>` for repository scripts. Built-in commands such as `vp check`,
 `vp test`, and `vp build` run their tools directly. `vp run build` builds both the
@@ -82,8 +93,15 @@ task caching. Ordinary CI shares the task cache separately from installed
 dependencies; cross-run caching is experimental, so compare cache transfer time
 with execution savings before extending it to other jobs.
 
-A global Vite+ installation is optional. Without one, install with `npm ci` and
-invoke the local CLI with `npm exec -- vp run ci` or `npm exec -- vp check`.
+A global Vite+ installation is optional. Without one, set up the clone with:
+
+```sh
+npm ci
+npm exec -- vp hooks enable
+```
+
+Then invoke the local CLI with `npm exec -- vp run ci` or `npm exec -- vp check`.
+The devcontainer runs dependency installation and hook setup automatically.
 
 Toolchain workflows use SHA-pinned `voidzero-dev/setup-vp`. They select Vite+
 from `package.json`, Node from `.node-version`, and npm from `packageManager`.

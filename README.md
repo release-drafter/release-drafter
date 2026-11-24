@@ -1039,6 +1039,9 @@ yourself.
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for contribution instructions.
 
+After installing dependencies, run `vp hooks enable` once per clone to enable
+pre-commit checks. With the local CLI, use `npm exec -- vp hooks enable`.
+
 Maintainers: see [Releasing](docs/CONTRIBUTING.md#releasing) for the release PR
 flow and its protected GitHub and npm environments.
 
