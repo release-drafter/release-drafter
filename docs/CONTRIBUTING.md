@@ -52,6 +52,27 @@ Open a draft pull request to request early feedback or report a blocker.
 Release Drafter uses npm workspaces. Run `npm install` from the repository root.
 npm links each workspace under `packages/*` and updates `package-lock.json`.
 
+### Node.js versions
+
+Workspace packages require Node.js 24.16 or later, matching GitBeaker's minimum
+runtime version. The root `package.json` declares the supported development
+Node.js and npm versions.
+
+Use the exact Node.js version in `.node-version` for development and CI. All
+`actions/setup-node` steps read that file, and `mise.toml` enables it for local
+development. The devcontainer uses the Node.js 24 image; check its installed
+version against `.node-version` when creating or rebuilding the container.
+
+When changing the minimum Node.js version, update the root and workspace
+`package.json` engine declarations, regenerate `package-lock.json`, and update
+the root and public package READMEs. Review `.node-version`, the devcontainer
+image, Renovate's `@types/node` rule, Vite's build targets, and the Action
+`runs.using` values for compatibility. GitHub Action runtimes use major-only
+identifiers such as `node24`; Vite's `node24` target specifies JavaScript syntax
+compatibility rather than the installed runtime version.
+
+### Workspace layout and commands
+
 The public action entrypoints are `action.yml`, `drafter/action.yml`,
 `autolabeler/action.yml`, and `check-pr/action.yml`. The tracked bundles are
 under `dist/actions/*/run.js`. Workspace packages provide internal code

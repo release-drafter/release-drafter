@@ -43,7 +43,8 @@ jobs:
 
 The `release-drafter` package provides a command-line interface and a programmatic
 API for other CI systems, scripts, and applications. It supports GitHub,
-GitHub Enterprise Server, Gitea, Forgejo, and GitLab.
+GitHub Enterprise Server, Gitea, Forgejo, and GitLab, and requires Node.js 24.16
+or later.
 
 See the [package README](./packages/release-drafter/README.md) for installation,
 configuration, CLI usage, and programmatic API examples.

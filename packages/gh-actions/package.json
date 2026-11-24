@@ -4,7 +4,7 @@
   "description": "Private runtime composition for Release Drafter GitHub Actions.",
   "type": "module",
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.16.0"
   },
   "files": [
     "dist"
