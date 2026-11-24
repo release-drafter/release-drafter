@@ -55,11 +55,10 @@ const autolabelerFilePath = resolve(
 
 async function writeFormatted(filePath: string, content: unknown) {
   const raw = JSON.stringify(content, null, 2)
-  const formatted = execFileSync(
-    'npx',
-    ['biome', 'format', '--stdin-file-path', filePath],
-    { input: raw, encoding: 'utf-8' },
-  )
+  const formatted = execFileSync('vp', ['fmt', '--stdin-filepath', filePath], {
+    input: raw,
+    encoding: 'utf-8',
+  })
   await writeFile(filePath, formatted, { encoding: 'utf-8', flag: 'w' })
 }
 

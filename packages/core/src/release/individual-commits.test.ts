@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { splitCommitMessage } from '../change.ts'
 import { configSchema } from '../config/config.schema.ts'
 import { mergeInputAndConfig } from '../config/merge-input-and-config.ts'
-import { noopLogger } from '../ports.ts'
+import { type ForgeAdapter, type Logger, noopLogger } from '../ports.ts'
 import type { Commit, PullRequest } from '../types.ts'
 import { buildReleasePayload } from './build-release-payload.ts'
 import { changeToString } from './change-to-string.ts'
@@ -68,7 +68,7 @@ describe('individual commit changes', () => {
   })
 
   it('suppresses duplicate, associated, unresolved, and merge-result commits', () => {
-    const warning = vi.fn()
+    const warning = vi.fn<Logger['warning']>()
     const changes = selectChanges({
       commits: [
         directCommit(),
@@ -146,7 +146,7 @@ describe('individual commit changes', () => {
   })
 
   it('sorts missing and invalid dates last', () => {
-    const warning = vi.fn()
+    const warning = vi.fn<Logger['warning']>()
     const changes = [
       {
         type: 'commit' as const,
@@ -336,7 +336,9 @@ describe('individual commit changes', () => {
   })
 
   it('uses the same selected changes for changelog, versioning, and contributors', async () => {
-    const resolveCommitish = vi.fn().mockResolvedValue('main')
+    const resolveCommitish = vi
+      .fn<ForgeAdapter['resolveCommitish']>()
+      .mockResolvedValue('main')
     const result = await buildReleasePayload({
       adapter: { resolveCommitish },
       commits: [directCommit()],

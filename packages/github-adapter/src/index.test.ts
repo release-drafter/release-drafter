@@ -1,10 +1,14 @@
-import type { FindChangesRequest, Repository } from '@release-drafter/core'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type {
+  FindChangesRequest,
+  Logger,
+  Repository,
+} from '@release-drafter/core'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { GitHubAdapter, type GitHubOctokit } from './index.ts'
 import { sleep } from './utils/sleep.ts'
 
 vi.mock('./utils/sleep.ts', () => ({
-  sleep: vi.fn().mockResolvedValue(undefined),
+  sleep: vi.fn<typeof sleep>().mockResolvedValue(undefined),
 }))
 
 afterEach(() => vi.restoreAllMocks())
@@ -20,18 +24,24 @@ const mockOctokit = (overrides: Record<string, unknown> = {}) =>
   ({
     rest: {
       repos: {
-        listReleases: vi.fn(),
-        listCommits: vi.fn(),
-        compareCommitsWithBasehead: vi.fn(),
-        createRelease: vi.fn(),
-        updateRelease: vi.fn(),
-        getContent: vi.fn(),
-        get: vi.fn(),
+        listReleases: vi.fn<GitHubOctokit['rest']['repos']['listReleases']>(),
+        listCommits: vi.fn<GitHubOctokit['rest']['repos']['listCommits']>(),
+        compareCommitsWithBasehead:
+          vi.fn<GitHubOctokit['rest']['repos']['compareCommitsWithBasehead']>(),
+        createRelease: vi.fn<GitHubOctokit['rest']['repos']['createRelease']>(),
+        updateRelease: vi.fn<GitHubOctokit['rest']['repos']['updateRelease']>(),
+        getContent: vi.fn<GitHubOctokit['rest']['repos']['getContent']>(),
+        get: vi.fn<GitHubOctokit['rest']['repos']['get']>(),
       },
-      pulls: { get: vi.fn(), listFiles: vi.fn() },
+      pulls: {
+        get: vi.fn<GitHubOctokit['rest']['pulls']['get']>(),
+        listFiles: vi.fn<GitHubOctokit['rest']['pulls']['listFiles']>(),
+      },
     },
-    paginate: Object.assign(vi.fn(), { iterator: vi.fn() }),
-    graphql: vi.fn(),
+    paginate: Object.assign(vi.fn(), {
+      iterator: vi.fn<GitHubOctokit['paginate']['iterator']>(),
+    }),
+    graphql: vi.fn<GitHubOctokit['graphql']>(),
     ...overrides,
   }) as unknown as GitHubOctokit
 
@@ -198,13 +208,13 @@ describe('GitHubAdapter', () => {
       expect(send).toHaveBeenCalledWith(
         expect.objectContaining({ make_latest: 'false' }),
       )
-      if (operation === 'update') {
-        expect(vi.mocked(send).mock.calls[0]?.[0]).not.toHaveProperty('name')
-        expect(vi.mocked(send).mock.calls[0]?.[0]).toHaveProperty(
-          'tag_name',
-          'v1',
-        )
-      }
+      const sent = vi.mocked(send).mock.calls[0]?.[0]
+      expect(Object.hasOwn(sent ?? {}, 'name')).toBe(operation === 'create')
+      expect(sent?.name).toBe(operation === 'create' ? payload.name : undefined)
+      expect(sent).toHaveProperty(
+        'tag_name',
+        operation === 'update' ? 'v1' : payload.tag,
+      )
     },
   )
 
@@ -271,7 +281,10 @@ describe('GitHubAdapter', () => {
     expect(() => new GitHubAdapter({ token: '' })).toThrow(
       'GitHub authentication token is required',
     )
-    const github = new GitHubAdapter({ token: 'token', fetch: vi.fn() })
+    const github = new GitHubAdapter({
+      token: 'token',
+      fetch: vi.fn<typeof globalThis.fetch>(),
+    })
     expect(github.apiUrl).toBe('https://api.github.com')
     expect(github.graphqlUrl).toBe('https://api.github.com/graphql')
 
@@ -279,7 +292,7 @@ describe('GitHubAdapter', () => {
       token: 'token',
       serverUrl: 'https://github.example.com/',
       graphqlUrl: 'https://graphql.example.com/custom',
-      fetch: vi.fn(),
+      fetch: vi.fn<typeof globalThis.fetch>(),
     })
     expect(ghes.apiUrl).toBe('https://github.example.com/api/v3')
     expect(ghes.graphqlUrl).toBe('https://graphql.example.com/custom')
@@ -299,28 +312,30 @@ describe('GitHubAdapter', () => {
         fetch: transientFetch,
       })
 
-      const transientRequest = expect(
-        transient.octokit.request('GET /repos/{owner}/{repo}', {
-          owner: 'release-drafter',
-          repo: 'release-drafter',
-        }),
-      ).resolves.toMatchObject({ status: 200 })
-      await vi.runAllTimersAsync()
-      await transientRequest
+      await Promise.all([
+        expect(
+          transient.octokit.request('GET /repos/{owner}/{repo}', {
+            owner: 'release-drafter',
+            repo: 'release-drafter',
+          }),
+        ).resolves.toMatchObject({ status: 200 }),
+        vi.runAllTimersAsync(),
+      ])
       expect(transientFetch).toHaveBeenCalledTimes(2)
 
       const missingFetch = vi
         .fn<typeof fetch>()
         .mockResolvedValue(new Response('missing', { status: 404 }))
       const missing = new GitHubAdapter({ token: 'token', fetch: missingFetch })
-      const missingRequest = expect(
-        missing.octokit.request('GET /repos/{owner}/{repo}', {
-          owner: 'release-drafter',
-          repo: 'missing',
-        }),
-      ).rejects.toMatchObject({ status: 404 })
-      await vi.runAllTimersAsync()
-      await missingRequest
+      await Promise.all([
+        expect(
+          missing.octokit.request('GET /repos/{owner}/{repo}', {
+            owner: 'release-drafter',
+            repo: 'missing',
+          }),
+        ).rejects.toMatchObject({ status: 404 }),
+        vi.runAllTimersAsync(),
+      ])
       expect(missingFetch).toHaveBeenCalledTimes(1)
     } finally {
       vi.useRealTimers()
@@ -593,7 +608,7 @@ describe('GitHubAdapter', () => {
       warning: shouldWarn,
     }) => {
       const octokit = mockOctokit()
-      const warning = vi.fn()
+      const warning = vi.fn<Logger['warning']>()
       vi.mocked(octokit.paginate.iterator).mockReturnValue(
         (async function* () {
           yield { data: { commits: [{ sha: 'direct' }] } }
@@ -939,7 +954,7 @@ describe('GitHubAdapter', () => {
 
   it('leaves commits unresolved when a poll response omits a contradictory merge commit', async () => {
     const octokit = mockOctokit()
-    const warning = vi.fn()
+    const warning = vi.fn<Logger['warning']>()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
         yield {
@@ -993,7 +1008,7 @@ describe('GitHubAdapter', () => {
 
   it('leaves commits unresolved when the final sibling refresh is incomplete', async () => {
     const octokit = mockOctokit()
-    const warning = vi.fn()
+    const warning = vi.fn<Logger['warning']>()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
         yield {
@@ -1058,9 +1073,9 @@ describe('GitHubAdapter', () => {
 
   it('leaves unresolved commits unresolved after polling timeout', async () => {
     const octokit = mockOctokit()
-    const debug = vi.fn()
-    const info = vi.fn()
-    const warning = vi.fn()
+    const debug = vi.fn<Logger['debug']>()
+    const info = vi.fn<Logger['info']>()
+    const warning = vi.fn<Logger['warning']>()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
         yield {
@@ -1655,10 +1670,10 @@ describe('GitHub adapter response boundaries', () => {
       const octokit = mockOctokit()
       vi.mocked(octokit.graphql).mockResolvedValueOnce(response)
       const logger = {
-        debug: vi.fn(),
-        info: vi.fn(),
-        warning: vi.fn(),
-        error: vi.fn(),
+        debug: vi.fn<(message: string) => void>(),
+        info: vi.fn<(message: string) => void>(),
+        warning: vi.fn<(message: string | Error) => void>(),
+        error: vi.fn<(message: string | Error) => void>(),
       }
       const github = new GitHubAdapter({ token: 'token', octokit, logger })
       await expect(
@@ -1673,10 +1688,10 @@ describe('GitHub adapter response boundaries', () => {
   it('warns about malformed pull refs without querying GitHub', async () => {
     const octokit = mockOctokit()
     const logger = {
-      debug: vi.fn(),
-      info: vi.fn(),
-      warning: vi.fn(),
-      error: vi.fn(),
+      debug: vi.fn<(message: string) => void>(),
+      info: vi.fn<(message: string) => void>(),
+      warning: vi.fn<(message: string | Error) => void>(),
+      error: vi.fn<(message: string | Error) => void>(),
     }
     const github = new GitHubAdapter({ token: 'token', octokit, logger })
     await expect(

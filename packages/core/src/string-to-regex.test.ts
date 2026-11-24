@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { stringToRegex } from './string-to-regex.ts'
 
 describe('stringToRegex', () => {

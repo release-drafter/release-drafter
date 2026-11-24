@@ -1,9 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { ConfigError } from './config-error.ts'
 import { getReleaseDrafterConfig } from './get-release-drafter-config.ts'
 import { composeConfigGet } from './index.ts'
 
-vi.mock(import('./index.ts'), () => ({ composeConfigGet: vi.fn() }))
+vi.mock(import('./index.ts'), () => ({
+  composeConfigGet: vi.fn<typeof composeConfigGet>(),
+}))
 
 const currentContext = { repo: { owner: 'acme', repo: 'widgets' }, ref: 'main' }
 const contexts = [

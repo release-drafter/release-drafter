@@ -14,7 +14,12 @@ const FORGE_WORKSPACES = [
   'gitlab-adapter',
 ] as const
 
-const FORGE_TEST_TOOLS = ['vitest', 'vite', 'testcontainers'] as const
+const FORGE_TEST_TOOLS = [
+  'vite-plus',
+  'vitest',
+  'vite',
+  'testcontainers',
+] as const
 export const CONFORMANCE_FORGES = ['gitea', 'forgejo', 'gitlab'] as const
 export type ConformanceForge = (typeof CONFORMANCE_FORGES)[number]
 const TARGETED_BRANCH_PREFIX = 'ci/'
@@ -167,7 +172,9 @@ const forgeLockPackages = (source: string) => {
     }
   }
 
-  for (const name of FORGE_TEST_TOOLS) visit(resolve('', name))
+  for (const name of FORGE_TEST_TOOLS) {
+    if (packages[''].devDependencies?.[name]) visit(resolve('', name))
+  }
   for (const workspace of FORGE_WORKSPACES) visit(`packages/${workspace}`)
   return selected
 }

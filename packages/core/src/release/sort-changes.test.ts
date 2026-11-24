@@ -1,5 +1,5 @@
-import { assert, describe, expect, it, vi } from 'vitest'
-import { noopLogger } from '../ports.ts'
+import { assert, describe, expect, it, vi } from 'vite-plus/test'
+import { type Logger, noopLogger } from '../ports.ts'
 import type { Change, PullRequest } from '../types.ts'
 import { sortChanges } from './sort-changes.ts'
 
@@ -59,7 +59,7 @@ describe('change sorting', () => {
   it.each(['ascending', 'descending'] as const)(
     'warns and sorts invalid dates last in %s order',
     (direction) => {
-      const warning = vi.fn()
+      const warning = vi.fn<Logger['warning']>()
       const result = sortChanges({
         changes: [
           {

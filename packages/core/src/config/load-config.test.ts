@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, type Mock } from 'vite-plus/test'
 import { type LoadConfigOptions, loadConfig } from './load-config.ts'
 
 const repository = {
@@ -6,17 +6,39 @@ const repository = {
   name: 'widgets',
   serverUrl: 'https://github.com',
 }
+type MockConfigOptions = Omit<LoadConfigOptions, 'reader' | 'logger'> & {
+  reader: {
+    getRepositoryConfig: Mock<
+      LoadConfigOptions['reader']['getRepositoryConfig']
+    >
+  }
+  logger: {
+    [K in keyof LoadConfigOptions['logger']]: Mock<
+      LoadConfigOptions['logger'][K]
+    >
+  }
+}
 const options = (
   overrides: Partial<LoadConfigOptions> = {},
-): LoadConfigOptions => ({
-  target: 'release-drafter.yml',
-  repository,
-  ref: 'main',
-  cwd: '/checkout',
-  reader: { getRepositoryConfig: vi.fn(async () => 'template: safe\n') },
-  logger: { debug: vi.fn(), info: vi.fn(), warning: vi.fn(), error: vi.fn() },
-  ...overrides,
-})
+): MockConfigOptions =>
+  ({
+    target: 'release-drafter.yml',
+    repository,
+    ref: 'main',
+    cwd: '/checkout',
+    reader: {
+      getRepositoryConfig: vi.fn<
+        LoadConfigOptions['reader']['getRepositoryConfig']
+      >(async () => 'template: safe\n'),
+    },
+    logger: {
+      debug: vi.fn<LoadConfigOptions['logger']['debug']>(),
+      info: vi.fn<LoadConfigOptions['logger']['info']>(),
+      warning: vi.fn<LoadConfigOptions['logger']['warning']>(),
+      error: vi.fn<LoadConfigOptions['logger']['error']>(),
+    },
+    ...overrides,
+  }) as MockConfigOptions
 
 describe('configuration target validation', () => {
   it.each([
@@ -128,7 +150,11 @@ describe('configuration target validation', () => {
   })
 
   it('does not use organization fallback for non-object transport failures', async () => {
-    const getRepositoryConfig = vi.fn().mockRejectedValue('connection lost')
+    const getRepositoryConfig = vi
+      .fn<
+        import('./load-config.ts').RepositoryConfigReader['getRepositoryConfig']
+      >()
+      .mockRejectedValue('connection lost')
     await expect(
       loadConfig(options({ reader: { getRepositoryConfig } })),
     ).rejects.toThrow(
@@ -158,7 +184,11 @@ describe('configuration parsing and inheritance', () => {
     async (target, contents, message) => {
       const params = options({
         target,
-        reader: { getRepositoryConfig: vi.fn(async () => contents) },
+        reader: {
+          getRepositoryConfig: vi.fn<() => Promise<string>>(
+            async () => contents,
+          ),
+        },
       })
       await expect(loadConfig(params)).rejects.toThrow(message)
       expect(params.reader.getRepositoryConfig).toHaveBeenCalledTimes(1)
@@ -189,7 +219,9 @@ describe('configuration parsing and inheritance', () => {
     'uses %s with an absent inherited list and warns about unused strategies',
     async (strategy) => {
       const getRepositoryConfig = vi
-        .fn()
+        .fn<
+          import('./load-config.ts').RepositoryConfigReader['getRepositoryConfig']
+        >()
         .mockResolvedValueOnce(
           JSON.stringify({
             template: 'child',
@@ -226,7 +258,9 @@ describe('configuration parsing and inheritance', () => {
     'rejects %s of scalar values',
     async (strategy) => {
       const getRepositoryConfig = vi
-        .fn()
+        .fn<
+          import('./load-config.ts').RepositoryConfigReader['getRepositoryConfig']
+        >()
         .mockResolvedValueOnce(
           JSON.stringify({
             template: 'child',

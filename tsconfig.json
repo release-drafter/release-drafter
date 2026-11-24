@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["ES2024"],
-    "types": ["node", "vite/client"],
+    "types": ["node", "vite-plus/client"],
     "newLine": "lf",
     "noImplicitAny": true,
     "noUnusedLocals": true,

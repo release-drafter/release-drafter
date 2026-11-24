@@ -1,6 +1,6 @@
 import type { actionInputSchema as checkPrInputSchema } from '@release-drafter/gh-actions/check-pr'
 import type { actionInputSchema } from '@release-drafter/gh-actions/drafter'
-import { expect, vi } from 'vitest'
+import { expect, vi } from 'vite-plus/test'
 import type * as z from 'zod'
 
 /**

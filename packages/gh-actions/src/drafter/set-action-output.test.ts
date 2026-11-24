@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { setActionOutput } from './set-action-output.ts'
 
 describe('Drafter action outputs', () => {

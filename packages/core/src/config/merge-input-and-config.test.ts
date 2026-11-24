@@ -1,13 +1,13 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import { commonConfigSchema } from './common-config.schema.ts'
 import { configSchema } from './config.schema.ts'
 import { mergeInputAndConfig } from './merge-input-and-config.ts'
 
 const logger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warning: vi.fn(),
-  error: vi.fn(),
+  debug: vi.fn<(message: string) => void>(),
+  info: vi.fn<(message: string) => void>(),
+  warning: vi.fn<(message: string | Error) => void>(),
+  error: vi.fn<(message: string | Error) => void>(),
 }
 
 const latestTrueWarning =
@@ -91,12 +91,11 @@ describe('release-mode normalization', () => {
     })
     expect(result).toMatchObject({ prerelease: true, latest: false })
     expect(original.latest).toBe(config.latest)
-    if (warning) {
-      expect(logger.warning).toHaveBeenCalledWith(warning)
-    } else {
-      expect(logger.warning).not.toHaveBeenCalledWith(latestTrueWarning)
-      expect(logger.warning).not.toHaveBeenCalledWith(latestLegacyWarning)
-    }
+    const latestWarnings = logger.warning.mock.calls.filter(
+      ([message]) =>
+        message === latestTrueWarning || message === latestLegacyWarning,
+    )
+    expect(latestWarnings).toEqual(warning ? [[warning]] : [])
   })
 
   it('keeps an explicit stable-release input authoritative over a config identifier', () => {

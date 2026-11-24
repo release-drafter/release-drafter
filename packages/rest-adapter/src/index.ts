@@ -167,8 +167,7 @@ const stablePullRequestOrder = (left: PullRequest, right: PullRequest) =>
   left.number - right.number
 
 export interface GitHubCompatibleRestAdapterRuntime
-  extends ForgeAdapter,
-    PullRequestReader {
+  extends ForgeAdapter, PullRequestReader {
   getDefaultBranch(repository: Repository): Promise<string>
   getRepositoryConfig(options: {
     repository: Repository
@@ -177,9 +176,7 @@ export interface GitHubCompatibleRestAdapterRuntime
   }): Promise<string>
 }
 
-class GitHubCompatibleRestAdapter
-  implements GitHubCompatibleRestAdapterRuntime
-{
+class GitHubCompatibleRestAdapter implements GitHubCompatibleRestAdapterRuntime {
   readonly capabilities: RestForgeProfile['capabilities']
   private readonly client: RestClient
 

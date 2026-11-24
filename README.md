@@ -1039,14 +1039,17 @@ yourself.
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for contribution instructions.
 
+After installing dependencies, run `vp hooks enable` once per clone to enable
+pre-commit checks. With the local CLI, use `npm exec -- vp hooks enable`.
+
 Maintainers: see [Releasing](docs/CONTRIBUTING.md#releasing) for the release PR
 flow and its protected GitHub and npm environments.
 
 > [!IMPORTANT]
 >
-> Before pushing, run `npm run ci` to format, lint, type-check, test, and
-> regenerate all build artifacts. The CI pipeline enforces that no uncommitted
-> changes remain after these steps.
+> Before pushing, run `vp run ci` to check formatting, lint, type-check, test, and
+> regenerate all build artifacts. Lint warnings fail the checks. The CI pipeline
+> enforces that no uncommitted changes remain after these steps.
 
 For help, open
 [a GitHub issue](https://github.com/release-drafter/release-drafter/issues/new).

@@ -1,5 +1,8 @@
-import { defaultClientConditions, defaultServerConditions } from 'vite'
-import { defineConfig } from 'vitest/config'
+import {
+  defaultClientConditions,
+  defaultServerConditions,
+  defineConfig,
+} from 'vite-plus'
 
 const WORKSPACE_SOURCE_CONDITION = 'release-drafter-source'
 

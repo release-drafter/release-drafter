@@ -8,7 +8,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test'
 
 const repositoryRoot = resolve(import.meta.dirname, '../../..')
 const typescriptCli = join(repositoryRoot, 'node_modules/typescript/lib/tsc.js')

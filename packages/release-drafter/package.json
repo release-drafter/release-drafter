@@ -39,10 +39,8 @@
     }
   },
   "scripts": {
-    "build": "vite build --config ../../vite.workspace.config.ts && node ../../src/scripts/third-party-notices.ts",
     "prepack": "node ../../src/scripts/third-party-notices.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test:run": "vitest run --config ../../vite.workspace.config.ts"
+    "test:run": "vp test run"
   },
   "dependencies": {
     "@gitbeaker/rest": "44.1.5",
@@ -59,7 +57,7 @@
     "@release-drafter/gitea-adapter": "*",
     "@release-drafter/github-adapter": "*",
     "@release-drafter/gitlab-adapter": "*",
-    "vitest": "^5.1.0"
+    "vite-plus": "1.7.0"
   },
   "license": "ISC",
   "publishConfig": {

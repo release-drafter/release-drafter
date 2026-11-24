@@ -34362,7 +34362,7 @@ var ResolvePullRequestCommitishDocument = new TypedDocumentString(`
     `);
 // packages/github-adapter/src/utils/map-concurrent.ts
 var mapConcurrent = async (items, concurrency, task) => {
-	const results = new Array(items.length);
+	const results = [];
 	let next = 0;
 	const workers = Array.from({ length: Math.min(Math.max(1, concurrency), items.length) }, async () => {
 		while (next < items.length) {

@@ -1,0 +1,9 @@
+name: 'Release Drafter - Check PR'
+description: 'Check whether a pull request title or labels match configured categories.'
+author: release-drafter
+branding:
+  icon: check-circle
+  color: orange
+runs:
+  using: node24
+  main: ../dist/actions/check-pr/run.js

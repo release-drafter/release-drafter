@@ -8,7 +8,7 @@
 
 import type { GitHubFetch } from '@release-drafter/github-adapter'
 import nock from 'nock'
-import { beforeEach, vi } from 'vitest'
+import { beforeEach, vi } from 'vite-plus/test'
 import type * as z from 'zod'
 import type { sharedInputSchema } from '#gh-actions/common/shared-input.schema.ts'
 import { mocks } from '#tests/mocks/index.ts'

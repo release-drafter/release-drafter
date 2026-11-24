@@ -1,5 +1,5 @@
 import { constants } from 'node:fs'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 import {
   createLocalConfigFileReader,
   type LocalConfigFileHandle,
@@ -31,29 +31,30 @@ const setup = ({
   fileCanonicalIdentity?: LocalConfigFileIdentity
   contents?: string
 } = {}) => {
-  const cwdHandle: LocalConfigFileHandle = {
-    readFile: vi.fn(),
-    stat: vi.fn(async () => cwdOpenedIdentity),
-    close: vi.fn(async () => undefined),
-  }
-  const fileHandle: LocalConfigFileHandle = {
-    readFile: vi.fn(async () => contents),
-    stat: vi.fn(async () => fileOpenedIdentity),
-    close: vi.fn(async () => undefined),
-  }
-  const fileSystem: LocalConfigFileSystem = {
-    open: vi.fn(async (path: string) =>
+  const cwdHandle = {
+    readFile:
+      vi.fn<(options: { encoding: 'utf8' }) => string | Promise<string>>(),
+    stat: vi.fn<LocalConfigFileHandle['stat']>(async () => cwdOpenedIdentity),
+    close: vi.fn<LocalConfigFileHandle['close']>(async () => undefined),
+  } satisfies LocalConfigFileHandle
+  const fileHandle = {
+    readFile: vi.fn<LocalConfigFileHandle['readFile']>(async () => contents),
+    stat: vi.fn<LocalConfigFileHandle['stat']>(async () => fileOpenedIdentity),
+    close: vi.fn<LocalConfigFileHandle['close']>(async () => undefined),
+  } satisfies LocalConfigFileHandle
+  const fileSystem = {
+    open: vi.fn<LocalConfigFileSystem['open']>(async (path: string) =>
       path === CWD ? cwdHandle : fileHandle,
     ),
-    realpath: vi.fn(async (path: string) => {
+    realpath: vi.fn<LocalConfigFileSystem['realpath']>(async (path: string) => {
       if (path === CWD) return CANONICAL_CWD
       if (path === FILE) return CANONICAL_FILE
       throw new Error(`Unexpected path: ${path}`)
     }),
-    stat: vi.fn(async (path: string) =>
+    stat: vi.fn<LocalConfigFileSystem['stat']>(async (path: string) =>
       path === CANONICAL_CWD ? cwdOpenedIdentity : fileCanonicalIdentity,
     ),
-  }
+  } satisfies LocalConfigFileSystem
   return {
     cwdHandle,
     fileHandle,

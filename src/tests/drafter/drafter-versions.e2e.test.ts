@@ -1,5 +1,5 @@
 import nock from 'nock'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { runDrafter } from '#tests/helpers/index.ts'
 import {
   mockContext,

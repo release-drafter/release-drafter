@@ -1,0 +1,9 @@
+name: 'Release Drafter'
+description: 'Draft release notes when pull requests merge into a branch.'
+author: release-drafter
+branding:
+  icon: edit-2
+  color: orange
+runs:
+  using: node24
+  main: dist/actions/drafter/run.js

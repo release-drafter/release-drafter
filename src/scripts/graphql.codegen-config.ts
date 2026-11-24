@@ -2,7 +2,7 @@ import type { CodegenConfig } from '@graphql-codegen/cli'
 
 /**
  * This config is meant to be executed by the codegen CLI tool
- * @see package.json#scripts.codegen
+ * @see vite.config.ts (generate:graphql task)
  */
 const githubConfig: CodegenConfig = {
   schema: {

@@ -1,0 +1,9 @@
+name: 'Release Drafter - Autolabeler'
+description: 'Apply pull request labels from the Autolabeler configuration.'
+author: release-drafter
+branding:
+  icon: edit-2
+  color: orange
+runs:
+  using: node24
+  main: ../dist/actions/autolabeler/run.js

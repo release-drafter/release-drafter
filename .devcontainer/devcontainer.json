@@ -1,7 +1,7 @@
 {
   "name": "Release Drafter",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
-  "postCreateCommand": "npm install",
+  "postCreateCommand": "npm ci && npm exec -- vp hooks enable",
   "customizations": {
     "codespaces": {
       "openFiles": ["README.md"]
