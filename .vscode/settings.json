@@ -19,6 +19,12 @@
   },
   "eslint.enable": false,
   "editor.defaultFormatter": "oxc.oxc-vscode",
+  "[json]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[json5]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
   "[jsonc]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
@@ -33,6 +39,9 @@
   },
   "markdown.validate.enabled": true,
   "[markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[graphql]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "search.exclude": {
@@ -61,6 +70,9 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+  "oxc.enable.oxlint": true,
+  "oxc.enable.oxfmt": true,
+  "oxc.lint.run": "onType",
   "oxc.disableNestedConfig": true,
   "oxc.fmt.disableNestedConfig": true,
   "npm.scriptRunner": "vp",
