@@ -149,7 +149,7 @@ export default defineConfig({
       // Vitest accepts an optional assertion message as its second argument.
       'vitest/valid-expect': ['error', { maxArgs: 2 }],
     },
-    options: { typeAware: true, typeCheck: true },
+    options: { typeAware: true, typeCheck: true, denyWarnings: true },
   },
   fmt: {
     printWidth: 80,

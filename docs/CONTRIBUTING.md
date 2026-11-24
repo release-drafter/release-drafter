@@ -92,10 +92,10 @@ Workspace packages require Node.js 24.16 or later, matching GitBeaker's minimum
 runtime version. The root `package.json` declares the supported development
 Node.js and npm versions.
 
-Use the exact Node.js version in `.node-version` for development and CI. All
-`actions/setup-node` steps read that file, and `mise.toml` enables it for local
-development. The devcontainer uses the Node.js 24 image; check its installed
-version against `.node-version` when creating or rebuilding the container.
+Use the exact Node.js version in `.node-version` for development and CI.
+`setup-vp` and `actions/setup-node` steps read that file, and `mise.toml` enables
+it for local development. The devcontainer uses the Node.js 24 image; check its
+installed version against `.node-version` when creating or rebuilding the container.
 
 When changing the minimum Node.js version, update the root and workspace
 `package.json` engine declarations, regenerate `package-lock.json`, and update
@@ -130,6 +130,7 @@ mocks; update it when adding an Action test directory.
 Formatting uses Oxfmt through Vite+, with settings in the root `vite.config.ts`.
 Oxlint handles linting through `vp lint` and `vp check`. `vp run fix` applies
 formatting and lint fixes; `vp check` checks them without editing source files.
+Lint warnings fail both `vp lint` and `vp check`; keep the warning count at zero.
 `vp check` also checks TypeScript using each file’s project configuration, including
 workspace NodeNext resolution and package boundaries. Separate `tsc` runs are not
 needed for source validation. Consumer tests still use TypeScript to verify the

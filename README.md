@@ -1045,8 +1045,8 @@ flow and its protected GitHub and npm environments.
 > [!IMPORTANT]
 >
 > Before pushing, run `vp run ci` to check formatting, lint, type-check, test, and
-> regenerate all build artifacts. The CI pipeline enforces that no uncommitted
-> changes remain after these steps.
+> regenerate all build artifacts. Lint warnings fail the checks. The CI pipeline
+> enforces that no uncommitted changes remain after these steps.
 
 For help, open
 [a GitHub issue](https://github.com/release-drafter/release-drafter/issues/new).
