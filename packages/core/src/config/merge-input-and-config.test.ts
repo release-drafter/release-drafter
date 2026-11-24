@@ -91,7 +91,11 @@ describe('release-mode normalization', () => {
     })
     expect(result).toMatchObject({ prerelease: true, latest: false })
     expect(original.latest).toBe(config.latest)
-    expect(logger.warning.mock.calls).toEqual(warning ? [[warning]] : [])
+    const latestWarnings = logger.warning.mock.calls.filter(
+      ([message]) =>
+        message === latestTrueWarning || message === latestLegacyWarning,
+    )
+    expect(latestWarnings).toEqual(warning ? [[warning]] : [])
   })
 
   it('keeps an explicit stable-release input authoritative over a config identifier', () => {

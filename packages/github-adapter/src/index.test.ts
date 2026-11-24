@@ -1,10 +1,14 @@
-import type { FindChangesRequest, Repository } from '@release-drafter/core'
+import type {
+  FindChangesRequest,
+  Logger,
+  Repository,
+} from '@release-drafter/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { GitHubAdapter, type GitHubOctokit } from './index.ts'
 import { sleep } from './utils/sleep.ts'
 
 vi.mock('./utils/sleep.ts', () => ({
-  sleep: vi.fn().mockResolvedValue(undefined),
+  sleep: vi.fn<typeof sleep>().mockResolvedValue(undefined),
 }))
 
 afterEach(() => vi.restoreAllMocks())
@@ -604,7 +608,7 @@ describe('GitHubAdapter', () => {
       warning: shouldWarn,
     }) => {
       const octokit = mockOctokit()
-      const warning = vi.fn()
+      const warning = vi.fn<Logger['warning']>()
       vi.mocked(octokit.paginate.iterator).mockReturnValue(
         (async function* () {
           yield { data: { commits: [{ sha: 'direct' }] } }
@@ -950,7 +954,7 @@ describe('GitHubAdapter', () => {
 
   it('leaves commits unresolved when a poll response omits a contradictory merge commit', async () => {
     const octokit = mockOctokit()
-    const warning = vi.fn()
+    const warning = vi.fn<Logger['warning']>()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
         yield {
@@ -1004,7 +1008,7 @@ describe('GitHubAdapter', () => {
 
   it('leaves commits unresolved when the final sibling refresh is incomplete', async () => {
     const octokit = mockOctokit()
-    const warning = vi.fn()
+    const warning = vi.fn<Logger['warning']>()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
         yield {
@@ -1069,9 +1073,9 @@ describe('GitHubAdapter', () => {
 
   it('leaves unresolved commits unresolved after polling timeout', async () => {
     const octokit = mockOctokit()
-    const debug = vi.fn()
-    const info = vi.fn()
-    const warning = vi.fn()
+    const debug = vi.fn<Logger['debug']>()
+    const info = vi.fn<Logger['info']>()
+    const warning = vi.fn<Logger['warning']>()
     vi.mocked(octokit.paginate.iterator).mockReturnValue(
       (async function* () {
         yield {

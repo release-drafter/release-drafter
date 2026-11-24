@@ -1349,14 +1349,12 @@ describe('GitHub-compatible REST mechanics', () => {
         return json({ message: 'not found' }, { status: 404 })
       }
       if (url.pathname.endsWith('/commits')) {
-        expect(url.searchParams.get('sha')).toBe('v1')
         return json([], {}, { 'x-total-count': '0' })
       }
       if (url.pathname.endsWith('/pulls')) {
-        expect(url.searchParams.get('poster')).toBe('new-user')
         return json([], {}, { 'x-total-count': '0' })
       }
-      throw new Error(`Unexpected ${url}`)
+      throw new Error(`Unexpected ${url.href}`)
     })
 
     const result = await createAdapter(fetch).findChanges(
@@ -1366,6 +1364,19 @@ describe('GitHub-compatible REST mechanics', () => {
     expect(result.newCommitContributors).toEqual([
       expect.objectContaining({ login: 'new-user' }),
     ])
+    const requests = fetch.mock.calls.map(
+      ([input]) => new URL(requestUrl(input)),
+    )
+    expect(
+      requests
+        .filter((url) => url.pathname.endsWith('/commits'))
+        .map((url) => url.searchParams.get('sha')),
+    ).toEqual(['v1'])
+    expect(
+      requests
+        .filter((url) => url.pathname.endsWith('/pulls'))
+        .map((url) => url.searchParams.get('poster')),
+    ).toEqual(['new-user'])
   })
 })
 

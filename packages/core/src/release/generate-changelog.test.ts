@@ -108,9 +108,8 @@ describe('generateChangeLog', () => {
   )
 
   it('renders one entry per pull request without grouping rules', () => {
-    expect(
-      changelog({ 'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)' }),
-    ).toMatchInlineSnapshot(`
+    expect(changelog({ 'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)' }))
+      .toMatchInlineSnapshot(`
       "* Bump njord.version from 0.9.1 to 0.9.2 (#308)
       * Bump org.codehaus.mojo:versions-maven-plugin from 2.20.1 to 2.21.0 (#309)
       * Bump njord.version from 0.9.2 to 0.9.3 (#310)
