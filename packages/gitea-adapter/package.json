@@ -4,7 +4,7 @@
   "description": "Private Gitea REST forge adapter for Release Drafter core.",
   "type": "module",
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.16.0"
   },
   "files": [
     "dist"

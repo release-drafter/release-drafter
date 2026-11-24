@@ -3,7 +3,7 @@
 </h1>
 
 The public `release-drafter` package provides a forge-neutral programmatic API
-and a command-line interface. It requires Node.js 24 or later.
+and a command-line interface. It requires Node.js 24.16 or later.
 
 ## CLI
 

@@ -4,7 +4,7 @@
   "description": "Private GitLab forge adapter for Release Drafter.",
   "type": "module",
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.16.0"
   },
   "files": [
     "dist"
@@ -25,7 +25,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@gitbeaker/rest": "43.8.0",
+    "@gitbeaker/rest": "44.1.5",
     "@release-drafter/core": "*"
   },
   "devDependencies": {
