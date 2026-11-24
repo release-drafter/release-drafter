@@ -78,20 +78,35 @@ export interface PullRequest {
 export interface CommitAuthor {
   name?: string | null
   login?: string | null
+  email?: string | null
+  avatarUrl?: string
+  url?: string
   type?: string
 }
 
 export interface Commit {
   id?: string
   oid: string
+  url?: string
+  authoredAt?: string
   committedAt?: string
   message?: string
   author?: CommitAuthor | null
   authors?: (CommitAuthor | null)[] | null
+  /**
+   * `associated`: positive forge evidence links this commit to a pull request.
+   * `unassociated`: a completed forge lookup found no pull request.
+   * `unresolved`: the forge could not safely decide, so the commit is omitted.
+   */
+  associationStatus: 'associated' | 'unassociated' | 'unresolved'
   associatedPullRequests?:
     | (Pick<PullRequest, 'number' | 'baseRepository'> | null)[]
     | null
 }
+
+export type Change =
+  | { type: 'pull-request'; pullRequest: PullRequest }
+  | { type: 'commit'; commit: Commit }
 
 export interface Release {
   id: string | number
@@ -109,6 +124,7 @@ export interface ChangeSet {
   commits: Commit[]
   pullRequests: PullRequest[]
   newContributorLogins: ReadonlySet<string>
+  newCommitContributors?: readonly CommitAuthor[]
 }
 
 export interface ReleasePayload {
@@ -142,6 +158,7 @@ export interface FindChangesRequest {
   historyLimit: number
   includeChangedFiles: boolean
   includeNewContributors: boolean
+  includeCommits?: boolean
 }
 
 export interface ListReleasesRequest {
@@ -310,7 +327,10 @@ export interface ParsedGroupChange {
  * their own parsed configuration.
  */
 export interface DraftReleaseConfig {
+  'include-commits': boolean
   'change-template': string
+  'pr-template'?: string
+  'commit-template'?: string
   'change-author-template': string
   'change-authors-exclude-bots'?: boolean
   'change-authors-separator': string
@@ -326,7 +346,7 @@ export interface DraftReleaseConfig {
   'new-contributor-template': string
   'no-new-contributor-template': string
   'no-contributors-template': string
-  'sort-by': 'merged_at' | 'title'
+  'sort-by': 'date' | 'title'
   'sort-direction': 'ascending' | 'descending'
   'filter-by-commitish': boolean
   'pull-request-limit': number
