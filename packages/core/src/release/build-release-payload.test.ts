@@ -61,14 +61,20 @@ describe('resolved tag in release bodies', () => {
     const payload = await buildPayload({
       config: {
         template: '$CHANGES\n$CONTRIBUTORS',
-        'change-template': '$TITLE: $AUTHOR | $AUTHORS',
+        'change-template': '$CHANGE_TITLE: $CHANGE_AUTHOR | $CHANGE_AUTHORS',
         'change-authors-exclude-bots': true,
         'sort-direction': 'ascending',
         'group-changes': [
           { pattern: '/^(?<group>Mixed change)$/', 'title-template': '$GROUP' },
         ],
       },
-      commits: [{ oid: 'merge', author: { login: 'worker[bot]' } }],
+      commits: [
+        {
+          oid: 'merge',
+          associationStatus: 'associated',
+          author: { login: 'worker[bot]' },
+        },
+      ],
       pullRequests: [
         {
           number: 2,
@@ -94,7 +100,7 @@ describe('resolved tag in release bodies', () => {
     const payload = await buildPayload({
       config: {
         template: '$CHANGES',
-        'change-template': '$BODY',
+        'change-template': '$CHANGE_BODY',
         'change-body-escapes': '<',
         replacers: [
           {
@@ -116,7 +122,7 @@ describe('resolved tag in release bodies', () => {
     const payload = await buildPayload({
       config: configSchema.parse({
         template: '$CHANGES',
-        'change-template': '$TITLE',
+        'change-template': '$CHANGE_TITLE',
         categories: [
           {
             title: 'Features',
@@ -147,7 +153,7 @@ describe('resolved tag in release bodies', () => {
           header: '<!-- header -->\n',
           template: '<!-- template -->\n$CHANGES',
           footer: '\n<!-- footer -->',
-          'change-template': '$TITLE: $BODY',
+          'change-template': '$CHANGE_TITLE: $CHANGE_BODY',
           'change-body-escapes': '<@',
           replacers: [
             { target, search: 'Visible', replace: 'Final' },
@@ -281,7 +287,8 @@ describe('resolved tag in release bodies', () => {
     const payload = await buildPayload({
       config: {
         template: '$CHANGES\nCOMPARE_LINK',
-        'change-template': '- $TITLE for $RESOLVED_TAG ($RESOLVED_VERSION)',
+        'change-template':
+          '- $CHANGE_TITLE for $RESOLVED_TAG ($RESOLVED_VERSION)',
         'tag-template': 'release-$RESOLVED_VERSION',
         replacers: [
           {

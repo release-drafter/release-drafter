@@ -61,7 +61,10 @@ const bumps = [
 const changelog = (config: Record<string, unknown>, pullRequests = bumps) =>
   generateChangeLog({
     logger,
-    pullRequests,
+    changes: pullRequests.map((pullRequest) => ({
+      type: 'pull-request',
+      pullRequest,
+    })),
     serverUrl: 'https://github.com',
     config: parsedConfig(config),
   })
@@ -70,7 +73,7 @@ describe('generateChangeLog', () => {
   it('replaces synthesized titles after matching grouping rules against the original titles', () => {
     expect(
       changelog({
-        'change-template': '$TITLE ($NUMBERS)',
+        'pr-template': '$CHANGE_TITLE ($PR_NUMBERS)',
         'group-changes': [bumpRule],
         replacers: [
           { target: 'change-title', search: 'Bump', replace: 'Upgrade' },
@@ -87,7 +90,7 @@ describe('generateChangeLog', () => {
       expect(
         changelog(
           {
-            'change-template': '$BODY',
+            'change-template': '$CHANGE_BODY',
             'change-body-escapes': '<',
             categories: [{ title: 'Features', labels: ['feature'] }],
           },
@@ -106,7 +109,7 @@ describe('generateChangeLog', () => {
 
   it('renders one entry per pull request without grouping rules', () => {
     expect(
-      changelog({ 'change-template': '* $TITLE ($NUMBERS)' }),
+      changelog({ 'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)' }),
     ).toMatchInlineSnapshot(`
       "* Bump njord.version from 0.9.1 to 0.9.2 (#308)
       * Bump org.codehaus.mojo:versions-maven-plugin from 2.20.1 to 2.21.0 (#309)
@@ -118,7 +121,7 @@ describe('generateChangeLog', () => {
   it('merges changes of the same group into a single entry', () => {
     expect(
       changelog({
-        'change-template': '* $TITLE ($NUMBERS)',
+        'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)',
         'group-changes': [bumpRule],
       }),
     ).toMatchInlineSnapshot(`
@@ -130,7 +133,7 @@ describe('generateChangeLog', () => {
   it('groups within every category separately', () => {
     expect(
       changelog({
-        'change-template': '* $TITLE ($NUMBERS)',
+        'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)',
         'group-changes': [bumpRule],
         categories: [
           { title: 'Dependencies', labels: ['deps'] },
@@ -153,7 +156,7 @@ describe('generateChangeLog', () => {
   it('collapses a category by the number of rendered entries', () => {
     expect(
       changelog({
-        'change-template': '* $TITLE ($NUMBERS)',
+        'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)',
         'group-changes': [bumpRule],
         categories: [
           { title: 'Dependencies', labels: ['deps'], 'collapse-after': 1 },
@@ -174,7 +177,7 @@ describe('generateChangeLog', () => {
   it('does not collapse a category whose changes merge below the threshold', () => {
     expect(
       changelog({
-        'change-template': '* $TITLE ($NUMBERS)',
+        'pr-template': '* $CHANGE_TITLE ($PR_NUMBERS)',
         'group-changes': [bumpRule],
         categories: [
           { title: 'Dependencies', labels: ['deps'], 'collapse-after': 2 },

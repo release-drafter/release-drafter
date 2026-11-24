@@ -141,6 +141,15 @@ const graphql = vi.fn(
         },
       }
     }
+    if (variables.limit === 5) {
+      return {
+        repository: {
+          pullRequests: {
+            nodes: [],
+          },
+        },
+      }
+    }
     throw new Error(
       `Unexpected GitHub GraphQL variables: ${JSON.stringify(variables)}`,
     )
