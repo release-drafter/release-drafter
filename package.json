@@ -68,7 +68,7 @@
     "@vitest/coverage-v8": "5.1.0",
     "knip": "6.46.1",
     "nock": "^15.0.6",
-    "testcontainers": "12.2.1",
+    "testcontainers": "12.2.2",
     "typescript": "^7.0.2",
     "vite-plus": "1.7.0",
     "vitest": "5.1.0"
