@@ -23,7 +23,7 @@
     "test:run": "vp test run"
   },
   "dependencies": {
-    "@gitbeaker/rest": "44.1.5",
+    "@gitbeaker/rest": "44.1.6",
     "@release-drafter/core": "*"
   },
   "devDependencies": {
